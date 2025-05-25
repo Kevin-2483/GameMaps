@@ -1,0 +1,11 @@
+{
+  "@@locale": "zh",
+  "appTitle": "R6盒子",
+  "home": "首页",
+  "settings": "设置",
+  "language": "语言",
+  "theme": "主题",
+  "darkMode": "深色模式",
+  "lightMode": "浅色模式",
+  "systemMode": "跟随系统"
+}

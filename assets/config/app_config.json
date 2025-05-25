@@ -1,0 +1,34 @@
+{
+  "platform": {
+    "Windows": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    },
+    "MacOS": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    },
+    "Linux": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    },
+    "Android": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    },
+    "iOS": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    },
+    "Web": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": [ "DebugMode", "TrayNavigation" ]
+    }
+  },
+  "build": {
+    "appName": "R6Box",
+    "version": "1.0.0",
+    "buildNumber": "1",
+    "enableLogging": true
+  }
+}
