@@ -6,45 +6,29 @@
 
 ```
 lib/
-├── main.dart                    # 应用入口
-├── config/                      # 配置管理
-│   ├── app_config.dart         # 应用配置模型
-│   └── config_manager.dart     # 配置管理器
-├── providers/                   # 状态管理
-│   ├── theme_provider.dart     # 主题管理
-│   └── locale_provider.dart    # 语言管理
-├── router/                      # 路由配置
-│   └── app_router.dart         # 路由定义
-├── pages/                       # 页面
-│   ├── home/                   # 首页
-│   │   └── home_page.dart
-│   └── settings/               # 设置页
-│       └── settings_page.dart
-├── components/                  # 组件
-│   ├── common/                 # 通用组件
-│   │   ├── custom_button.dart
-│   │   ├── custom_card.dart
-│   │   └── platform_aware_component.dart
-│   └── platform/               # 平台特定组件
-│       ├── windows/
-│       │   └── windows_component.dart
-│       ├── macos/
-│       │   └── macos_component.dart
-│       ├── linux/
-│       │   └── linux_component.dart
-│       ├── android/
-│       │   └── android_component.dart
-│       ├── ios/
-│       │   └── ios_component.dart
-│       └── web/
-│           └── web_component.dart
-└── l10n/                       # 国际化资源
-    ├── app_en.arb             # 英文
-    └── app_zh.arb             # 中文
+├─components #组件
+│  ├─common
+│  ├─layout
+│  ├─navigation
+│  └─platform #特定平台组件
+│      ├─android
+│      ├─ios
+│      ├─linux
+│      ├─macos
+│      ├─web
+│      └─windows
+├─config #配置
+├─features #功能模块
+│  ├─component-modules #页面模块
+│  └─page-modules #组件模块
+├─l10n #国际化
+├─pages #页面
+│  ├─config
+│  ├─home
+│  └─settings
+├─providers
+└─router
 
-assets/
-└── config/
-    └── app_config.json         # 应用配置文件
 ```
 
 ## 功能特性
@@ -75,50 +59,114 @@ assets/
 - 组件按平台分类
 - 易于扩展和维护
 
-## 配置说明
 
-### 应用配置 (assets/config/app_config.json)
+## 开发指南
+
+### 配置文件结构
+
+`assets/config/app_config.json` 现在使用以下结构：
 
 ```json
 {
   "platform": {
-    "enableWindows": true,     // 启用 Windows 平台功能
-    "enableMacOS": true,       // 启用 macOS 平台功能
-    "enableLinux": true,       // 启用 Linux 平台功能
-    "enableAndroid": true,     // 启用 Android 平台功能
-    "enableIOS": true,         // 启用 iOS 平台功能
-    "enableWeb": true          // 启用 Web 平台功能
-  },
-  "features": {
-    "enableDarkTheme": true,        // 启用深色主题
-    "enableMultiLanguage": true,    // 启用多语言
-    "enableAdvancedSettings": false, // 启用高级设置
-    "enableDebugMode": true         // 启用调试模式
+    "Windows": {
+      "pages": ["HomePage", "SettingsPage"],
+      "features": ["DarkTheme", "MultiLanguage", "DebugMode"]
+    },
+    "MacOS": {
+      "pages": ["HomePage", "SettingsPage"], 
+      "features": ["DarkTheme", "MultiLanguage"]
+    },
+    "Android": {
+      "pages": ["HomePage"],
+      "features": ["DarkTheme"]
+    }
   },
   "build": {
-    "appName": "R6Box",        // 应用名称
-    "version": "1.0.0",        // 应用版本
-    "buildNumber": "1",        // 构建号
-    "enableLogging": true      // 启用日志
+    "appName": "R6Box",
+    "version": "1.0.0",
+    "buildNumber": "1",
+    "enableLogging": true
   }
 }
 ```
 
-## 开发指南
-
 ### 添加新页面
 1. 在 `lib/pages/` 下创建新的文件夹和页面文件
-2. 在 `lib/router/app_router.dart` 中添加路由
-3. 在国际化文件中添加相关文本
+2. 在 `features/page-modules` 下创建新的模块
+
+### 添加新页面开关
+1. 在 `assets/config/app_config.json` 和 `lib\config\build_config.dart` 中设置默认值
+2. 在相关组件中检查配置状态
+
+页面模块现在需要定义一个 `moduleId` 常量：
+
+```dart
+class HomePageModule extends PageModule {
+  static const String moduleId = 'HomePage';
+  
+  @override
+  bool get isEnabled {
+    // 编译时检查
+    if (!BuildTimeConfig.isPageEnabled(moduleId)) {
+      return false;
+    }
+    
+    // 运行时检查
+    return ConfigManager.instance.isCurrentPlatformPageEnabled(moduleId);
+  }
+}
+```
+
+3. 在 `lib/router/app_router.dart` 中注册路由
+
+```dart
+  /// 初始化页面模块
+  static void _initializePages() {
+    final registry = PageRegistry();
+    
+    // 注册核心页面模块
+    registry.register(HomePageModule());
+    registry.register(SettingsPageModule());
+    registry.register(ConfigEditorModule());
+  }
+```
+4. 在 `scripts/config_validator.dart` 和 `scripts/build_config_generator.dart` 中定义新的配置项
+5. 在国际化文件中添加相关文本
 
 ### 添加新组件
 1. 通用组件：放在 `lib/components/common/`
 2. 平台特定组件：放在对应的 `lib/components/platform/[platform]/`
+3. 在 `features/component-modules` 下创建新的模块
 
 ### 添加新功能开关
-1. 在 `lib/config/app_config.dart` 中定义新的配置项
-2. 在 `assets/config/app_config.json` 中设置默认值
-3. 在相关组件中检查配置状态
+1. 在 `assets/config/app_config.json` 和 `lib\config\build_config.dart` 中设置默认值
+2. 在相关组件模块中检查配置状态
+
+功能模块同样需要定义 `featureId`：
+
+```dart
+class SystemInfoFeature implements FeatureModule {
+  static const String featureId = 'DebugMode';
+  
+  @override
+  bool get isEnabled {
+    return ConfigManager.instance.isCurrentPlatformFeatureEnabled(featureId);
+  }
+}
+```
+
+3. 在对应页面注册组件
+
+```dart
+  void _initializeFeatures() {
+    final registry = FeatureRegistry();
+    registry.register(SystemInfoFeature());
+  }
+```
+
+4. 在 `scripts/config_validator.dart` 和 `scripts/build_config_generator.dart` 中定义新的配置项
+5. 在国际化文件中添加相关文本
 
 ### 添加新语言
 1. 在 `lib/l10n/` 下创建新的 ARB 文件
@@ -126,19 +174,85 @@ assets/
 
 ## 构建命令
 
+## 构建流程
+
+### 1. 生成构建配置
+
 ```bash
-# 安装依赖
-flutter pub get
+# Windows
+dart scripts/build_config_generator.dart Windows
 
-# 生成代码
-dart run build_runner build
+# Android
+dart scripts/build_config_generator.dart Android
 
-# 运行应用
-flutter run
-
-# 构建发布版本
-flutter build [platform]
+# Web
+dart scripts/build_config_generator.dart Web
 ```
+
+### 2. 使用构建脚本
+
+```bash
+# Windows
+scripts/build.ps1 Windows release
+
+# Linux/macOS
+./scripts/build.sh Android debug
+```
+
+## API 参考
+
+### BuildTimeConfig
+
+- `BuildTimeConfig.isPageEnabled(String pageId)` - 检查页面是否在编译时启用
+- `BuildTimeConfig.isFeatureEnabled(String featureId)` - 检查功能是否在编译时启用
+- `BuildTimeConfig.enabledPages` - 获取启用的页面列表
+- `BuildTimeConfig.enabledFeatures` - 获取启用的功能列表
+
+### ConfigManager
+
+- `ConfigManager.instance.isCurrentPlatformPageEnabled(String pageId)` - 检查当前平台是否启用页面
+- `ConfigManager.instance.isCurrentPlatformFeatureEnabled(String featureId)` - 检查当前平台是否启用功能
+- `ConfigManager.instance.getCurrentPlatform()` - 获取当前平台名称
+- `ConfigManager.instance.isPlatformConfigured(String platform)` - 检查平台是否配置
+
+## 可用的 ID
+
+### 页面 ID
+- `HomePage` - 主页
+- `SettingsPage` - 设置页
+- `TrayNavigation` - 托盘导航
+
+### 功能 ID
+- `DarkTheme` - 深色主题
+- `MultiLanguage` - 多语言支持
+- `DebugMode` - 调试模式
+- `ExperimentalFeatures` - 实验性功能
+
+## 最佳实践
+
+1. **为每个模块定义常量 ID**：避免魔法字符串，使用 `static const String moduleId = 'HomePage'`
+2. **同时检查编译时和运行时配置**：确保功能在两个级别都被正确启用
+3. **使用描述性的 ID 名称**：如 `HomePage` 而不是 `home`
+4. **平台特定配置**：根据不同平台的需求配置不同的功能集
+
+## 故障排除
+
+### 常见问题
+
+1. **构建时找不到功能**：确保在 `app_config.json` 中为目标平台配置了相应的功能
+2. **运行时功能不可用**：检查 `ConfigManager` 是否正确加载了配置文件
+3. **编译错误**：确保运行了 `flutter packages pub run build_runner build` 重新生成序列化代码
+
+### 调试技巧
+
+使用 `BuildTimeConfig.buildInfo` 查看当前构建配置：
+
+```dart
+print(BuildTimeConfig.buildInfo);
+```
+
+这将输出当前启用的页面和功能列表。
+
 
 ## 技术栈
 
