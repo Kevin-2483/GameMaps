@@ -420,4 +420,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String legendUpdateFailed(String error) {
     return 'Legend update failed: $error';
   }
+
+  @override
+  String get uploadLocalizationFile => 'Upload Localization File';
+
+  @override
+  String get localizationFileUploaded =>
+      'Localization file uploaded successfully';
+
+  @override
+  String localizationFileUploadFailed(String error) {
+    return 'Failed to upload localization file: $error';
+  }
+
+  @override
+  String get localizationFileVersionLow =>
+      'Localization file version too low or upload cancelled';
+
+  @override
+  String get mapEditor => 'Map Editor';
+
+  @override
+  String get mapPreview => 'Map Preview';
+
+  @override
+  String get editModeEnabled => 'Debug mode: Can edit map';
+
+  @override
+  String get previewModeOnly => 'Preview mode: View only';
+
+  @override
+  String get mapEditorInDevelopment =>
+      'Map editor functionality is under development...';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get layers => 'Layers';
+
+  @override
+  String get legend => 'Legend';
+
+  @override
+  String get addLayer => 'Add Layer';
+
+  @override
+  String get deleteLayer => 'Delete Layer';
+
+  @override
+  String confirmDeleteLayer(String name) {
+    return 'Are you sure you want to delete layer \"$name\"? This action cannot be undone.';
+  }
+
+  @override
+  String get opacity => 'Opacity';
+
+  @override
+  String get elements => 'elements';
+
+  @override
+  String get noLayers => 'No layers';
+
+  @override
+  String get drawingTools => 'Drawing Tools';
+
+  @override
+  String get line => 'Line';
+
+  @override
+  String get dashedLine => 'Dashed Line';
+
+  @override
+  String get arrow => 'Arrow';
+
+  @override
+  String get rectangle => 'Rectangle';
+
+  @override
+  String get hollowRectangle => 'Hollow Rectangle';
+
+  @override
+  String get diagonalLines => 'Diagonal Lines';
+
+  @override
+  String get crossLines => 'Cross Lines';
+
+  @override
+  String get dotGrid => 'Dot Grid';
+
+  @override
+  String get strokeWidth => 'Stroke Width';
+
+  @override
+  String get color => 'Color';
+
+  @override
+  String get addLegendGroup => 'Add Legend Group';
+
+  @override
+  String get deleteLegendGroup => 'Delete Legend Group';
+
+  @override
+  String confirmDeleteLegendGroup(String name) {
+    return 'Are you sure you want to delete legend group \"$name\"?';
+  }
+
+  @override
+  String get noLegendGroups => 'No legend groups';
+
+  @override
+  String get mapInformation => 'Map Information';
+
+  @override
+  String get saveMap => 'Save Map';
+
+  @override
+  String get mapSaved => 'Map saved successfully';
+
+  @override
+  String mapSaveFailed(String error) {
+    return 'Failed to save map: $error';
+  }
+
+  @override
+  String get mode => 'Mode';
+
+  @override
+  String get editMode => 'Edit Mode';
+
+  @override
+  String get previewMode => 'Preview Mode';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
 }

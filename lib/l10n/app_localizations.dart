@@ -823,6 +823,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Legend update failed: {error}'**
   String legendUpdateFailed(String error);
+
+  /// Upload localization file button
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Localization File'**
+  String get uploadLocalizationFile;
+
+  /// Localization file upload success message
+  ///
+  /// In en, this message translates to:
+  /// **'Localization file uploaded successfully'**
+  String get localizationFileUploaded;
+
+  /// Localization file upload error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload localization file: {error}'**
+  String localizationFileUploadFailed(String error);
+
+  /// Localization file version low message
+  ///
+  /// In en, this message translates to:
+  /// **'Localization file version too low or upload cancelled'**
+  String get localizationFileVersionLow;
+
+  /// Map editor page title
+  ///
+  /// In en, this message translates to:
+  /// **'Map Editor'**
+  String get mapEditor;
+
+  /// Map preview page title
+  ///
+  /// In en, this message translates to:
+  /// **'Map Preview'**
+  String get mapPreview;
+
+  /// Edit mode enabled message
+  ///
+  /// In en, this message translates to:
+  /// **'Debug mode: Can edit map'**
+  String get editModeEnabled;
+
+  /// Preview mode only message
+  ///
+  /// In en, this message translates to:
+  /// **'Preview mode: View only'**
+  String get previewModeOnly;
+
+  /// Map editor development message
+  ///
+  /// In en, this message translates to:
+  /// **'Map editor functionality is under development...'**
+  String get mapEditorInDevelopment;
+
+  /// Close button
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// Layers panel title
+  ///
+  /// In en, this message translates to:
+  /// **'Layers'**
+  String get layers;
+
+  /// Legend panel title
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get legend;
+
+  /// Add layer button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Layer'**
+  String get addLayer;
+
+  /// Delete layer confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Layer'**
+  String get deleteLayer;
+
+  /// Delete layer confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete layer \"{name}\"? This action cannot be undone.'**
+  String confirmDeleteLayer(String name);
+
+  /// Opacity label
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get opacity;
+
+  /// Elements count label
+  ///
+  /// In en, this message translates to:
+  /// **'elements'**
+  String get elements;
+
+  /// Empty layers message
+  ///
+  /// In en, this message translates to:
+  /// **'No layers'**
+  String get noLayers;
+
+  /// Drawing tools section title
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing Tools'**
+  String get drawingTools;
+
+  /// Line drawing tool
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get line;
+
+  /// Dashed line drawing tool
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed Line'**
+  String get dashedLine;
+
+  /// Arrow drawing tool
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get arrow;
+
+  /// Rectangle drawing tool
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get rectangle;
+
+  /// Hollow rectangle drawing tool
+  ///
+  /// In en, this message translates to:
+  /// **'Hollow Rectangle'**
+  String get hollowRectangle;
+
+  /// Diagonal lines pattern tool
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal Lines'**
+  String get diagonalLines;
+
+  /// Cross lines pattern tool
+  ///
+  /// In en, this message translates to:
+  /// **'Cross Lines'**
+  String get crossLines;
+
+  /// Dot grid pattern tool
+  ///
+  /// In en, this message translates to:
+  /// **'Dot Grid'**
+  String get dotGrid;
+
+  /// Stroke width label
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke Width'**
+  String get strokeWidth;
+
+  /// Color label
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// Add legend group button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Legend Group'**
+  String get addLegendGroup;
+
+  /// Delete legend group confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Legend Group'**
+  String get deleteLegendGroup;
+
+  /// Delete legend group confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete legend group \"{name}\"?'**
+  String confirmDeleteLegendGroup(String name);
+
+  /// Empty legend groups message
+  ///
+  /// In en, this message translates to:
+  /// **'No legend groups'**
+  String get noLegendGroups;
+
+  /// Map information dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Map Information'**
+  String get mapInformation;
+
+  /// Save map button
+  ///
+  /// In en, this message translates to:
+  /// **'Save Map'**
+  String get saveMap;
+
+  /// Map saved success message
+  ///
+  /// In en, this message translates to:
+  /// **'Map saved successfully'**
+  String get mapSaved;
+
+  /// Map save error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save map: {error}'**
+  String mapSaveFailed(String error);
+
+  /// Mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get mode;
+
+  /// Edit mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Mode'**
+  String get editMode;
+
+  /// Preview mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Mode'**
+  String get previewMode;
+
+  /// Cancel button
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Delete button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 }
 
 class _AppLocalizationsDelegate

@@ -567,8 +567,7 @@
   },
   "legendUpdateSuccessful": "Legend external resources updated successfully",
   "@legendUpdateSuccessful": {
-    "description": "Legend update success message"
-  },
+    "description": "Legend update success message"  },
   "legendUpdateFailed": "Legend update failed: {error}",
   "@legendUpdateFailed": {
     "description": "Legend update error message",
@@ -578,5 +577,196 @@
         "description": "The error message"
       }
     }
+  },
+  "uploadLocalizationFile": "Upload Localization File",
+  "@uploadLocalizationFile": {
+    "description": "Upload localization file button"
+  },
+  "localizationFileUploaded": "Localization file uploaded successfully",
+  "@localizationFileUploaded": {
+    "description": "Localization file upload success message"
+  },
+  "localizationFileUploadFailed": "Failed to upload localization file: {error}",
+  "@localizationFileUploadFailed": {
+    "description": "Localization file upload error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "localizationFileVersionLow": "Localization file version too low or upload cancelled",
+  "@localizationFileVersionLow": {
+    "description": "Localization file version low message"
+  },
+  "mapEditor": "Map Editor",
+  "@mapEditor": {
+    "description": "Map editor page title"
+  },
+  "mapPreview": "Map Preview",
+  "@mapPreview": {
+    "description": "Map preview page title"
+  },
+  "editModeEnabled": "Debug mode: Can edit map",
+  "@editModeEnabled": {
+    "description": "Edit mode enabled message"
+  },
+  "previewModeOnly": "Preview mode: View only",
+  "@previewModeOnly": {
+    "description": "Preview mode only message"
+  },
+  "mapEditorInDevelopment": "Map editor functionality is under development...",
+  "@mapEditorInDevelopment": {
+    "description": "Map editor development message"
+  },  "close": "Close",
+  "@close": {
+    "description": "Close button"
+  },
+  "layers": "Layers",
+  "@layers": {
+    "description": "Layers panel title"
+  },
+  "legend": "Legend",
+  "@legend": {
+    "description": "Legend panel title"
+  },
+  "addLayer": "Add Layer",
+  "@addLayer": {
+    "description": "Add layer button"
+  },
+  "deleteLayer": "Delete Layer",
+  "@deleteLayer": {
+    "description": "Delete layer confirmation title"
+  },
+  "confirmDeleteLayer": "Are you sure you want to delete layer \"{name}\"? This action cannot be undone.",
+  "@confirmDeleteLayer": {
+    "description": "Delete layer confirmation message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "The layer name"
+      }
+    }
+  },
+  "opacity": "Opacity",
+  "@opacity": {
+    "description": "Opacity label"
+  },
+  "elements": "elements",
+  "@elements": {
+    "description": "Elements count label"
+  },
+  "noLayers": "No layers",
+  "@noLayers": {
+    "description": "Empty layers message"
+  },
+  "drawingTools": "Drawing Tools",
+  "@drawingTools": {
+    "description": "Drawing tools section title"
+  },
+  "line": "Line",
+  "@line": {
+    "description": "Line drawing tool"
+  },
+  "dashedLine": "Dashed Line",
+  "@dashedLine": {
+    "description": "Dashed line drawing tool"
+  },
+  "arrow": "Arrow",
+  "@arrow": {
+    "description": "Arrow drawing tool"
+  },
+  "rectangle": "Rectangle",
+  "@rectangle": {
+    "description": "Rectangle drawing tool"
+  },
+  "hollowRectangle": "Hollow Rectangle",
+  "@hollowRectangle": {
+    "description": "Hollow rectangle drawing tool"
+  },
+  "diagonalLines": "Diagonal Lines",
+  "@diagonalLines": {
+    "description": "Diagonal lines pattern tool"
+  },
+  "crossLines": "Cross Lines",
+  "@crossLines": {
+    "description": "Cross lines pattern tool"
+  },
+  "dotGrid": "Dot Grid",
+  "@dotGrid": {
+    "description": "Dot grid pattern tool"
+  },
+  "strokeWidth": "Stroke Width",
+  "@strokeWidth": {
+    "description": "Stroke width label"
+  },
+  "color": "Color",
+  "@color": {
+    "description": "Color label"
+  },
+  "addLegendGroup": "Add Legend Group",
+  "@addLegendGroup": {
+    "description": "Add legend group button"
+  },
+  "deleteLegendGroup": "Delete Legend Group",
+  "@deleteLegendGroup": {
+    "description": "Delete legend group confirmation title"
+  },
+  "confirmDeleteLegendGroup": "Are you sure you want to delete legend group \"{name}\"?",
+  "@confirmDeleteLegendGroup": {
+    "description": "Delete legend group confirmation message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "The legend group name"
+      }
+    }
+  },
+  "noLegendGroups": "No legend groups",
+  "@noLegendGroups": {
+    "description": "Empty legend groups message"
+  },
+  "mapInformation": "Map Information",
+  "@mapInformation": {
+    "description": "Map information dialog title"
+  },
+  "saveMap": "Save Map",
+  "@saveMap": {
+    "description": "Save map button"
+  },
+  "mapSaved": "Map saved successfully",
+  "@mapSaved": {
+    "description": "Map saved success message"
+  },
+  "mapSaveFailed": "Failed to save map: {error}",
+  "@mapSaveFailed": {
+    "description": "Map save error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "mode": "Mode",
+  "@mode": {
+    "description": "Mode label"
+  },
+  "editMode": "Edit Mode",
+  "@editMode": {
+    "description": "Edit mode label"
+  },
+  "previewMode": "Preview Mode",
+  "@previewMode": {
+    "description": "Preview mode label"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
   }
 }

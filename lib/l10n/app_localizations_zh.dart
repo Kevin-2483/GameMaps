@@ -406,4 +406,138 @@ class AppLocalizationsZh extends AppLocalizations {
   String legendUpdateFailed(String error) {
     return '图例更新失败：$error';
   }
+
+  @override
+  String get uploadLocalizationFile => '上传本地化文件';
+
+  @override
+  String get localizationFileUploaded => '本地化文件上传成功';
+
+  @override
+  String localizationFileUploadFailed(String error) {
+    return '上传本地化文件失败：$error';
+  }
+
+  @override
+  String get localizationFileVersionLow => '本地化文件版本过低或取消上传';
+
+  @override
+  String get mapEditor => '地图编辑器';
+
+  @override
+  String get mapPreview => '地图预览';
+
+  @override
+  String get editModeEnabled => '调试模式：可以编辑地图';
+
+  @override
+  String get previewModeOnly => '预览模式：只能查看地图';
+
+  @override
+  String get mapEditorInDevelopment => '地图编辑器功能正在开发中...';
+
+  @override
+  String get close => '关闭';
+
+  @override
+  String get layers => '图层';
+
+  @override
+  String get legend => '图例';
+
+  @override
+  String get addLayer => '添加图层';
+
+  @override
+  String get deleteLayer => '删除图层';
+
+  @override
+  String confirmDeleteLayer(String name) {
+    return '确定要删除图层 \"$name\" 吗？此操作不可撤销。';
+  }
+
+  @override
+  String get opacity => '不透明度';
+
+  @override
+  String get elements => '个元素';
+
+  @override
+  String get noLayers => '暂无图层';
+
+  @override
+  String get drawingTools => '绘制工具';
+
+  @override
+  String get line => '直线';
+
+  @override
+  String get dashedLine => '虚线';
+
+  @override
+  String get arrow => '箭头';
+
+  @override
+  String get rectangle => '矩形';
+
+  @override
+  String get hollowRectangle => '空心矩形';
+
+  @override
+  String get diagonalLines => '对角线';
+
+  @override
+  String get crossLines => '十字线';
+
+  @override
+  String get dotGrid => '点网格';
+
+  @override
+  String get strokeWidth => '笔触宽度';
+
+  @override
+  String get color => '颜色';
+
+  @override
+  String get addLegendGroup => '添加图例组';
+
+  @override
+  String get deleteLegendGroup => '删除图例组';
+
+  @override
+  String confirmDeleteLegendGroup(String name) {
+    return '确定要删除图例组 \"$name\" 吗？';
+  }
+
+  @override
+  String get noLegendGroups => '暂无图例组';
+
+  @override
+  String get mapInformation => '地图信息';
+
+  @override
+  String get saveMap => '保存地图';
+
+  @override
+  String get mapSaved => '地图保存成功';
+
+  @override
+  String mapSaveFailed(String error) {
+    return '保存地图失败：$error';
+  }
+
+  @override
+  String get mode => '模式';
+
+  @override
+  String get editMode => '编辑模式';
+
+  @override
+  String get previewMode => '预览模式';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get delete => '删除';
 }

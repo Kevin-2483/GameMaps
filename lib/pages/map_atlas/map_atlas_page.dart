@@ -7,7 +7,9 @@ import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../services/map_database_service.dart';
+import '../../mixins/map_localization_mixin.dart';
 import '../../components/common/config_aware_widgets.dart';
+import '../map_editor/map_editor_page.dart';
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -25,24 +27,33 @@ class _MapAtlasContent extends StatefulWidget {
   State<_MapAtlasContent> createState() => _MapAtlasContentState();
 }
 
-class _MapAtlasContentState extends State<_MapAtlasContent> {
+class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalizationMixin {
   final MapDatabaseService _databaseService = MapDatabaseService();
   List<MapItem> _maps = [];
   bool _isLoading = true;
+  Map<String, String> _localizedTitles = {};
 
   @override
   void initState() {
     super.initState();
     _loadMaps();
   }
-
   Future<void> _loadMaps() async {
-    setState(() => _isLoading = true);    try {
+    setState(() => _isLoading = true);
+    try {
       final maps = await _databaseService.getAllMaps();
-      setState(() {
-        _maps = maps;
-        _isLoading = false;
-      });
+      
+      // 加载本地化标题
+      if (mounted) {
+        final titles = maps.map((map) => map.title).toList();
+        final localizedTitles = await getLocalizedMapTitles(titles, context);
+        
+        setState(() {
+          _maps = maps;
+          _localizedTitles = localizedTitles;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -274,7 +285,6 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
       _showErrorSnackBar(l10n.importFailed(e.toString()));
     }
   }
-
   Future<void> _updateExternalResources() async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -286,6 +296,35 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
     } catch (e) {
       _showErrorSnackBar(l10n.updateFailed(e.toString()));
     }
+  }  Future<void> _uploadLocalizationFile() async {
+    try {
+      final success = await localizationService.importLocalizationFile();
+      
+      if (success) {
+        await _loadMaps(); // 重新加载以应用新的本地化
+        _showSuccessSnackBar('本地化文件上传成功');
+      } else {
+        _showErrorSnackBar('本地化文件版本过低或取消上传');
+      }
+    } catch (e) {
+      _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
+    }
+  }  void _openMapEditor(MapItem map) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ConfigAwareWidget(
+          featureId: 'DebugMode',
+          child: MapEditorPage(
+            mapItem: map,
+            isPreviewMode: false, // 调试模式下可编辑
+          ),
+          fallback: MapEditorPage(
+            mapItem: map,
+            isPreviewMode: true, // 非调试模式下只能预览
+          ),
+        ),
+      ),
+    );
   }
 
   int _calculateCrossAxisCount(BuildContext context) {
@@ -299,13 +338,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
     final l10n = AppLocalizations.of(context)!;
       return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.mapAtlas),
-        actions: [
+        title: Text(l10n.mapAtlas),        actions: [
           // 更新外部资源按钮（非调试模式）
           IconButton(
             onPressed: _updateExternalResources,
             icon: const Icon(Icons.cloud_download),
             tooltip: l10n.updateExternalResources,
+          ),
+          // 上传本地化文件按钮
+          IconButton(
+            onPressed: _uploadLocalizationFile,
+            icon: const Icon(Icons.translate),
+            tooltip: '上传本地化文件',
           ),
           // 调试模式功能
           ConfigAwareAppBarAction(
@@ -379,13 +423,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
                     ),
                     itemCount: _maps.length,
                     itemBuilder: (context, index) {
-                      final map = _maps[index];
-                      return _MapCard(
+                      final map = _maps[index];                      return _MapCard(
                         map: map,
+                        localizedTitle: _localizedTitles[map.title] ?? map.title,
                         onDelete: () => _deleteMap(map),
-                        onTap: () {
-                          // 暂时不实现点击事件
-                        },
+                        onTap: () => _openMapEditor(map),
                       );
                     },
                   ),
@@ -396,11 +438,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
 
 class _MapCard extends StatelessWidget {
   final MapItem map;
+  final String localizedTitle;
   final VoidCallback onDelete;
   final VoidCallback onTap;
 
   const _MapCard({
     required this.map,
+    required this.localizedTitle,
     required this.onDelete,
     required this.onTap,
   });
@@ -448,9 +492,8 @@ class _MapCard extends StatelessWidget {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              map.title,
+                          children: [                            Text(
+                              localizedTitle,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),

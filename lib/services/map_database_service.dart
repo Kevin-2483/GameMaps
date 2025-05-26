@@ -41,6 +41,8 @@ class MapDatabaseService {
         title TEXT NOT NULL,
         image_data BLOB NOT NULL,
         version INTEGER NOT NULL DEFAULT 1,
+        layers TEXT DEFAULT '[]',
+        legend_groups TEXT DEFAULT '[]',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )

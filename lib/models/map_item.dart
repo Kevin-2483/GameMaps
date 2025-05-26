@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
+import 'map_layer.dart';
 
 part 'map_item.g.dart';
 
@@ -29,6 +30,8 @@ class MapItem {
   @Uint8ListConverter()
   final Uint8List? imageData; // 图片二进制数据
   final int version; // 地图版本
+  final List<MapLayer> layers; // 图层列表
+  final List<LegendGroup> legendGroups; // 图例组列表
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -37,6 +40,8 @@ class MapItem {
     required this.title,
     this.imageData,
     required this.version,
+    this.layers = const [],
+    this.legendGroups = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -45,35 +50,52 @@ class MapItem {
   bool get hasImageData => imageData != null && imageData!.isNotEmpty;
 
   factory MapItem.fromJson(Map<String, dynamic> json) => _$MapItemFromJson(json);
-  Map<String, dynamic> toJson() => _$MapItemToJson(this);
-  /// 从数据库记录创建 MapItem
+  Map<String, dynamic> toJson() => _$MapItemToJson(this);  /// 从数据库记录创建 MapItem
   factory MapItem.fromDatabase(Map<String, dynamic> map) {
+    // 解析图层和图例组数据
+    List<MapLayer> layers = [];
+    List<LegendGroup> legendGroups = [];
+    
+    if (map['layers'] != null) {
+      final layersJson = json.decode(map['layers'] as String);
+      layers = (layersJson as List).map((e) => MapLayer.fromJson(e)).toList();
+    }
+    
+    if (map['legend_groups'] != null) {
+      final legendGroupsJson = json.decode(map['legend_groups'] as String);
+      legendGroups = (legendGroupsJson as List).map((e) => LegendGroup.fromJson(e)).toList();
+    }
+    
     return MapItem(
       id: map['id'] as int?,
       title: map['title'] as String,
       imageData: map['image_data'] as Uint8List?,
       version: map['version'] as int,
+      layers: layers,
+      legendGroups: legendGroups,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
-  }
-  /// 转换为数据库记录
+  }  /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
       if (id != null) 'id': id,
       'title': title,
       'image_data': imageData,
       'version': version,
+      'layers': json.encode(layers.map((e) => e.toJson()).toList()),
+      'legend_groups': json.encode(legendGroups.map((e) => e.toJson()).toList()),
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
-  }
-  /// 创建副本
+  }  /// 创建副本
   MapItem copyWith({
     int? id,
     String? title,
     Uint8List? imageData,
     int? version,
+    List<MapLayer>? layers,
+    List<LegendGroup>? legendGroups,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -82,6 +104,8 @@ class MapItem {
       title: title ?? this.title,
       imageData: imageData ?? this.imageData,
       version: version ?? this.version,
+      layers: layers ?? this.layers,
+      legendGroups: legendGroups ?? this.legendGroups,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
