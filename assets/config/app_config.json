@@ -1,27 +1,27 @@
 {
   "platform": {
     "Windows": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "MacOS": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Linux": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Android": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "iOS": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Web": {
-      "pages": ["HomePage", "SettingsPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     }
   },

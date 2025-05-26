@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../components/layout/main_layout.dart';
+import '../../services/map_database_service.dart';
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
@@ -16,6 +17,30 @@ class SettingsPage extends BasePage {
 
 class _SettingsPageContent extends StatelessWidget {
   const _SettingsPageContent();
+  Future<void> _updateExternalResources(BuildContext context) async {
+    try {
+      final success = await MapDatabaseService().updateExternalResources();
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? l10n.updateSuccessful : l10n.updateFailed('Unknown error')),
+            backgroundColor: success ? Colors.green : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.updateFailed(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +59,11 @@ class _SettingsPageContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
-            _buildThemeSection(context, l10n),
+              _buildThemeSection(context, l10n),
             const SizedBox(height: 16),
             _buildLanguageSection(context, l10n),
+            const SizedBox(height: 16),
+            _buildResourceSection(context, l10n),
           ],
         ),
       ),
@@ -135,6 +161,28 @@ class _SettingsPageContent extends StatelessWidget {
                   ],
                 );
               },
+            ),
+          ],
+        ),      ),
+    );
+  }
+  Widget _buildResourceSection(BuildContext context, AppLocalizations l10n) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.resourceManagement,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.cloud_download),
+              title: Text(l10n.updateExternalResources),
+              subtitle: Text(l10n.updateExternalResourcesDescription),
+              onTap: () => _updateExternalResources(context),
             ),
           ],
         ),

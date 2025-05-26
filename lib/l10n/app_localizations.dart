@@ -553,6 +553,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save config'**
   String get saveConfig;
+
+  /// Map atlas page title
+  ///
+  /// In en, this message translates to:
+  /// **'Map Atlas'**
+  String get mapAtlas;
+
+  /// Empty state message for map atlas
+  ///
+  /// In en, this message translates to:
+  /// **'No maps available'**
+  String get mapAtlasEmpty;
+
+  /// Add map button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Map'**
+  String get addMap;
+
+  /// Map title input label
+  ///
+  /// In en, this message translates to:
+  /// **'Map Title'**
+  String get mapTitle;
+
+  /// Map title input hint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter map title'**
+  String get enterMapTitle;
+
+  /// Delete map dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Map'**
+  String get deleteMap;
+
+  /// Delete map confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the map \"{title}\"?'**
+  String confirmDeleteMap(String title);
+
+  /// Export database button
+  ///
+  /// In en, this message translates to:
+  /// **'Export Database'**
+  String get exportDatabase;
+
+  /// Import database button
+  ///
+  /// In en, this message translates to:
+  /// **'Import Database'**
+  String get importDatabase;
+
+  /// Update external resources button
+  ///
+  /// In en, this message translates to:
+  /// **'Update External Resources'**
+  String get updateExternalResources;
+
+  /// Resource management section title
+  ///
+  /// In en, this message translates to:
+  /// **'Resource Management'**
+  String get resourceManagement;
+
+  /// Update external resources description
+  ///
+  /// In en, this message translates to:
+  /// **'Update map database from external file'**
+  String get updateExternalResourcesDescription;
+
+  /// Export success message
+  ///
+  /// In en, this message translates to:
+  /// **'Database exported successfully: {path}'**
+  String exportSuccessful(String path);
+
+  /// Import success message
+  ///
+  /// In en, this message translates to:
+  /// **'Database imported successfully'**
+  String get importSuccessful;
+
+  /// Update success message
+  ///
+  /// In en, this message translates to:
+  /// **'External resources updated successfully'**
+  String get updateSuccessful;
+
+  /// Export error message
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailed(String error);
+
+  /// Import error message
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String importFailed(String error);
+
+  /// Update error message
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed: {error}'**
+  String updateFailed(String error);
+
+  /// Map add success message
+  ///
+  /// In en, this message translates to:
+  /// **'Map added successfully'**
+  String get mapAddedSuccessfully;
+
+  /// Map delete success message
+  ///
+  /// In en, this message translates to:
+  /// **'Map deleted successfully'**
+  String get mapDeletedSuccessfully;
+
+  /// Map add error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add map: {error}'**
+  String addMapFailed(String error);
+
+  /// Map delete error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete map: {error}'**
+  String deleteMapFailed(String error);
+
+  /// Load maps error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load maps: {error}'**
+  String loadMapsFailed(String error);
 }
 
 class _AppLocalizationsDelegate

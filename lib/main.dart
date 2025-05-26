@@ -9,6 +9,7 @@ import 'config/config_manager.dart';
 import 'features/page_registry.dart';
 import 'features/page-modules/home_page_module.dart';
 import 'features/page-modules/settings_page_module.dart';
+import 'features/page-modules/map_atlas_page_module.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,7 @@ void _initializePageRegistry() {
   // 注册核心页面模块
   registry.register(HomePageModule());
   registry.register(SettingsPageModule());
+  registry.register(MapAtlasPageModule());
   
   // 可以在这里添加更多页面模块
 }

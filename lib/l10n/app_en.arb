@@ -313,9 +313,148 @@
   "printConfigInfo": "Print config information",
   "@printConfigInfo": {
     "description": "Print config tooltip"
-  },
-  "saveConfig": "Save config",
+  },  "saveConfig": "Save config",
   "@saveConfig": {
     "description": "Save config tooltip"
+  },
+  "mapAtlas": "Map Atlas",
+  "@mapAtlas": {
+    "description": "Map atlas page title"
+  },
+  "mapAtlasEmpty": "No maps available",
+  "@mapAtlasEmpty": {
+    "description": "Empty state message for map atlas"
+  },
+  "addMap": "Add Map",
+  "@addMap": {
+    "description": "Add map button"
+  },
+  "mapTitle": "Map Title",
+  "@mapTitle": {
+    "description": "Map title input label"
+  },
+  "enterMapTitle": "Enter map title",
+  "@enterMapTitle": {
+    "description": "Map title input hint"
+  },
+  "deleteMap": "Delete Map",
+  "@deleteMap": {
+    "description": "Delete map dialog title"
+  },
+  "confirmDeleteMap": "Are you sure you want to delete the map \"{title}\"?",
+  "@confirmDeleteMap": {
+    "description": "Delete map confirmation message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "The map title"
+      }
+    }
+  },
+  "exportDatabase": "Export Database",
+  "@exportDatabase": {
+    "description": "Export database button"
+  },
+  "importDatabase": "Import Database",
+  "@importDatabase": {
+    "description": "Import database button"
+  },
+  "updateExternalResources": "Update External Resources",
+  "@updateExternalResources": {
+    "description": "Update external resources button"
+  },
+  "resourceManagement": "Resource Management",
+  "@resourceManagement": {
+    "description": "Resource management section title"
+  },
+  "updateExternalResourcesDescription": "Update map database from external file",
+  "@updateExternalResourcesDescription": {
+    "description": "Update external resources description"
+  },
+  "exportSuccessful": "Database exported successfully: {path}",
+  "@exportSuccessful": {
+    "description": "Export success message",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "description": "The export file path"
+      }
+    }
+  },
+  "importSuccessful": "Database imported successfully",
+  "@importSuccessful": {
+    "description": "Import success message"
+  },
+  "updateSuccessful": "External resources updated successfully",
+  "@updateSuccessful": {
+    "description": "Update success message"
+  },
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "description": "Export error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "importFailed": "Import failed: {error}",
+  "@importFailed": {
+    "description": "Import error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "updateFailed": "Update failed: {error}",
+  "@updateFailed": {
+    "description": "Update error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "mapAddedSuccessfully": "Map added successfully",
+  "@mapAddedSuccessfully": {
+    "description": "Map add success message"
+  },
+  "mapDeletedSuccessfully": "Map deleted successfully",
+  "@mapDeletedSuccessfully": {
+    "description": "Map delete success message"
+  },
+  "addMapFailed": "Failed to add map: {error}",
+  "@addMapFailed": {
+    "description": "Map add error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "deleteMapFailed": "Failed to delete map: {error}",
+  "@deleteMapFailed": {
+    "description": "Map delete error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "loadMapsFailed": "Failed to load maps: {error}",
+  "@loadMapsFailed": {
+    "description": "Load maps error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
   }
 }

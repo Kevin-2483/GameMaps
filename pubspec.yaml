@@ -47,9 +47,20 @@ dependencies:
   
   # Configuration management
   yaml: ^3.1.2
-  
-  # Storage
+    # Storage
   shared_preferences: ^2.3.2
+    # Database
+  sqflite: ^2.3.3+1
+  sqflite_common_ffi: ^2.3.3
+  
+  # File picker
+  file_picker: ^8.1.2
+  
+  # Path utilities
+  path: ^1.9.0
+  
+  # Image handling
+  image: ^4.2.0
   
   # JSON serialization
   json_annotation: ^4.9.0

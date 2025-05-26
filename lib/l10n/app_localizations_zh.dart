@@ -243,4 +243,89 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get saveConfig => '保存配置';
+
+  @override
+  String get mapAtlas => '地图册';
+
+  @override
+  String get mapAtlasEmpty => '暂无地图';
+
+  @override
+  String get addMap => '添加地图';
+
+  @override
+  String get mapTitle => '地图标题';
+
+  @override
+  String get enterMapTitle => '请输入地图标题';
+
+  @override
+  String get deleteMap => '删除地图';
+
+  @override
+  String confirmDeleteMap(String title) {
+    return '确定要删除地图\"$title\"吗？';
+  }
+
+  @override
+  String get exportDatabase => '导出数据库';
+
+  @override
+  String get importDatabase => '导入数据库';
+
+  @override
+  String get updateExternalResources => '更新外部资源';
+
+  @override
+  String get resourceManagement => '资源管理';
+
+  @override
+  String get updateExternalResourcesDescription => '从外部文件更新地图数据库';
+
+  @override
+  String exportSuccessful(String path) {
+    return '数据库导出成功：$path';
+  }
+
+  @override
+  String get importSuccessful => '数据库导入成功';
+
+  @override
+  String get updateSuccessful => '外部资源更新成功';
+
+  @override
+  String exportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String importFailed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String updateFailed(String error) {
+    return '更新失败：$error';
+  }
+
+  @override
+  String get mapAddedSuccessfully => '地图添加成功';
+
+  @override
+  String get mapDeletedSuccessfully => '地图删除成功';
+
+  @override
+  String addMapFailed(String error) {
+    return '添加地图失败：$error';
+  }
+
+  @override
+  String deleteMapFailed(String error) {
+    return '删除地图失败：$error';
+  }
+
+  @override
+  String loadMapsFailed(String error) {
+    return '加载地图失败：$error';
+  }
 }

@@ -252,4 +252,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveConfig => 'Save config';
+
+  @override
+  String get mapAtlas => 'Map Atlas';
+
+  @override
+  String get mapAtlasEmpty => 'No maps available';
+
+  @override
+  String get addMap => 'Add Map';
+
+  @override
+  String get mapTitle => 'Map Title';
+
+  @override
+  String get enterMapTitle => 'Enter map title';
+
+  @override
+  String get deleteMap => 'Delete Map';
+
+  @override
+  String confirmDeleteMap(String title) {
+    return 'Are you sure you want to delete the map \"$title\"?';
+  }
+
+  @override
+  String get exportDatabase => 'Export Database';
+
+  @override
+  String get importDatabase => 'Import Database';
+
+  @override
+  String get updateExternalResources => 'Update External Resources';
+
+  @override
+  String get resourceManagement => 'Resource Management';
+
+  @override
+  String get updateExternalResourcesDescription =>
+      'Update map database from external file';
+
+  @override
+  String exportSuccessful(String path) {
+    return 'Database exported successfully: $path';
+  }
+
+  @override
+  String get importSuccessful => 'Database imported successfully';
+
+  @override
+  String get updateSuccessful => 'External resources updated successfully';
+
+  @override
+  String exportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String importFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String updateFailed(String error) {
+    return 'Update failed: $error';
+  }
+
+  @override
+  String get mapAddedSuccessfully => 'Map added successfully';
+
+  @override
+  String get mapDeletedSuccessfully => 'Map deleted successfully';
+
+  @override
+  String addMapFailed(String error) {
+    return 'Failed to add map: $error';
+  }
+
+  @override
+  String deleteMapFailed(String error) {
+    return 'Failed to delete map: $error';
+  }
+
+  @override
+  String loadMapsFailed(String error) {
+    return 'Failed to load maps: $error';
+  }
 }

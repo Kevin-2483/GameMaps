@@ -13,11 +13,11 @@ class BuildTimeConfig {
   static const String _defaultPlatform = kIsWeb 
     ? 'Web' 
     : 'Unknown';
-
   /// 从环境变量获取启用的页面列表
   static const List<String> enabledPages = [
     if (bool.fromEnvironment('ENABLE_HOME_PAGE', defaultValue: true)) 'HomePage',
     if (bool.fromEnvironment('ENABLE_SETTINGS_PAGE', defaultValue: true)) 'SettingsPage',
+    if (bool.fromEnvironment('ENABLE_MAP_ATLAS_PAGE', defaultValue: true)) 'MapAtlasPage',
   ];
 
   /// 从环境变量获取启用的功能列表
