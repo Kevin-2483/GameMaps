@@ -446,10 +446,132 @@
         "description": "The error message"
       }
     }
-  },
-  "loadMapsFailed": "Failed to load maps: {error}",
+  },  "loadMapsFailed": "Failed to load maps: {error}",
   "@loadMapsFailed": {
     "description": "Load maps error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "legendManager": "Legend Manager",
+  "@legendManager": {
+    "description": "Legend manager page title"
+  },
+  "legendManagerEmpty": "No legends available",
+  "@legendManagerEmpty": {
+    "description": "Message when no legends are available"
+  },
+  "addLegend": "Add Legend",
+  "@addLegend": {
+    "description": "Add legend button"
+  },
+  "legendTitle": "Legend Title",
+  "@legendTitle": {
+    "description": "Legend title field label"
+  },
+  "enterLegendTitle": "Please enter legend title",
+  "@enterLegendTitle": {
+    "description": "Legend title field hint"
+  },
+  "legendVersion": "Legend Version",
+  "@legendVersion": {
+    "description": "Legend version field label"
+  },
+  "selectCenterPoint": "Select Center Point:",
+  "@selectCenterPoint": {
+    "description": "Center point selection label"
+  },
+  "deleteLegend": "Delete Legend",
+  "@deleteLegend": {
+    "description": "Delete legend button"
+  },
+  "confirmDeleteLegend": "Are you sure you want to delete legend \"{title}\"?",
+  "@confirmDeleteLegend": {
+    "description": "Delete legend confirmation message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "The legend title"
+      }
+    }
+  },
+  "legendAddedSuccessfully": "Legend added successfully",
+  "@legendAddedSuccessfully": {
+    "description": "Legend added success message"
+  },
+  "addLegendFailed": "Failed to add legend: {error}",
+  "@addLegendFailed": {
+    "description": "Add legend error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "legendDeletedSuccessfully": "Legend deleted successfully",
+  "@legendDeletedSuccessfully": {
+    "description": "Legend deleted success message"
+  },
+  "deleteLegendFailed": "Failed to delete legend: {error}",
+  "@deleteLegendFailed": {
+    "description": "Delete legend error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "exportLegendDatabase": "Export Legend Database",
+  "@exportLegendDatabase": {
+    "description": "Export legend database button"
+  },
+  "importLegendDatabase": "Import Legend Database",
+  "@importLegendDatabase": {
+    "description": "Import legend database button"
+  },
+  "legendDatabaseExportedSuccessfully": "Legend database exported successfully: {path}",
+  "@legendDatabaseExportedSuccessfully": {
+    "description": "Legend database export success message",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "description": "The export file path"
+      }
+    }
+  },
+  "legendDatabaseImportedSuccessfully": "Legend database imported successfully",
+  "@legendDatabaseImportedSuccessfully": {
+    "description": "Legend database import success message"
+  },  "loadLegendsFailed": "Failed to load legends: {error}",
+  "@loadLegendsFailed": {
+    "description": "Load legends error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "updateLegendExternalResources": "Update Legend External Resources",
+  "@updateLegendExternalResources": {
+    "description": "Update legend external resources button"
+  },
+  "updateLegendExternalResourcesDescription": "Update legend database from external file",
+  "@updateLegendExternalResourcesDescription": {
+    "description": "Update legend external resources description"
+  },
+  "legendUpdateSuccessful": "Legend external resources updated successfully",
+  "@legendUpdateSuccessful": {
+    "description": "Legend update success message"
+  },
+  "legendUpdateFailed": "Legend update failed: {error}",
+  "@legendUpdateFailed": {
+    "description": "Legend update error message",
     "placeholders": {
       "error": {
         "type": "String",

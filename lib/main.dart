@@ -1,38 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
 import 'l10n/app_localizations.dart';
 import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'router/app_router.dart';
 import 'config/config_manager.dart';
-import 'features/page_registry.dart';
-import 'features/page-modules/home_page_module.dart';
-import 'features/page-modules/settings_page_module.dart';
-import 'features/page-modules/map_atlas_page_module.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // 初始化数据库工厂（用于桌面平台）
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  
   // 初始化配置管理器
   await ConfigManager.instance.loadFromAssets();
   
-  // 初始化页面注册系统
-  _initializePageRegistry();
-  
   runApp(const R6BoxApp());
-}
-
-/// 初始化页面注册系统
-void _initializePageRegistry() {
-  final registry = PageRegistry();
-  
-  // 注册核心页面模块
-  registry.register(HomePageModule());
-  registry.register(SettingsPageModule());
-  registry.register(MapAtlasPageModule());
-  
-  // 可以在这里添加更多页面模块
 }
 
 class R6BoxApp extends StatelessWidget {

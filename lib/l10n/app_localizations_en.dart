@@ -338,4 +338,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String loadMapsFailed(String error) {
     return 'Failed to load maps: $error';
   }
+
+  @override
+  String get legendManager => 'Legend Manager';
+
+  @override
+  String get legendManagerEmpty => 'No legends available';
+
+  @override
+  String get addLegend => 'Add Legend';
+
+  @override
+  String get legendTitle => 'Legend Title';
+
+  @override
+  String get enterLegendTitle => 'Please enter legend title';
+
+  @override
+  String get legendVersion => 'Legend Version';
+
+  @override
+  String get selectCenterPoint => 'Select Center Point:';
+
+  @override
+  String get deleteLegend => 'Delete Legend';
+
+  @override
+  String confirmDeleteLegend(String title) {
+    return 'Are you sure you want to delete legend \"$title\"?';
+  }
+
+  @override
+  String get legendAddedSuccessfully => 'Legend added successfully';
+
+  @override
+  String addLegendFailed(String error) {
+    return 'Failed to add legend: $error';
+  }
+
+  @override
+  String get legendDeletedSuccessfully => 'Legend deleted successfully';
+
+  @override
+  String deleteLegendFailed(String error) {
+    return 'Failed to delete legend: $error';
+  }
+
+  @override
+  String get exportLegendDatabase => 'Export Legend Database';
+
+  @override
+  String get importLegendDatabase => 'Import Legend Database';
+
+  @override
+  String legendDatabaseExportedSuccessfully(String path) {
+    return 'Legend database exported successfully: $path';
+  }
+
+  @override
+  String get legendDatabaseImportedSuccessfully =>
+      'Legend database imported successfully';
+
+  @override
+  String loadLegendsFailed(String error) {
+    return 'Failed to load legends: $error';
+  }
+
+  @override
+  String get updateLegendExternalResources =>
+      'Update Legend External Resources';
+
+  @override
+  String get updateLegendExternalResourcesDescription =>
+      'Update legend database from external file';
+
+  @override
+  String get legendUpdateSuccessful =>
+      'Legend external resources updated successfully';
+
+  @override
+  String legendUpdateFailed(String error) {
+    return 'Legend update failed: $error';
+  }
 }

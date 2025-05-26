@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
@@ -26,30 +25,21 @@ class MapDatabaseService {
   }
   /// 初始化数据库
   Future<Database> _initDatabase() async {
-    // 在桌面平台上初始化 databaseFactory
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    }
-    
     final String path = join(await getDatabasesPath(), _databaseName);
-    
-    return await openDatabase(
+      return await openDatabase(
       path,
       version: 1,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
-  }
-  /// 创建数据库表
+  }  /// 创建数据库表
   Future<void> _onCreate(Database db, int version) async {
-    // 创建地图表
+    // 创建地图表（只存储图片数据，不存储路径）
     await db.execute('''
       CREATE TABLE $_tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        image_path TEXT NOT NULL,
-        image_data BLOB,
+        image_data BLOB NOT NULL,
         version INTEGER NOT NULL DEFAULT 1,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
@@ -70,7 +60,6 @@ class MapDatabaseService {
       'value': _currentDbVersion.toString(),
     });
   }
-
   /// 数据库升级
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // 暂时不需要升级逻辑

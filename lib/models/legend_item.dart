@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'map_item.g.dart';
+part 'legend_item.g.dart';
 
 /// Uint8List 转换器，用于 JSON 序列化
 class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
@@ -21,21 +21,25 @@ class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
   }
 }
 
-/// 地图项数据模型
+/// 图例项数据模型
 @JsonSerializable()
-class MapItem {
+class LegendItem {
   final int? id;
   final String title;
   @Uint8ListConverter()
   final Uint8List? imageData; // 图片二进制数据
-  final int version; // 地图版本
+  final double centerX; // 中心点X坐标 (0.0-1.0)
+  final double centerY; // 中心点Y坐标 (0.0-1.0)
+  final int version; // 图例版本
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const MapItem({
+  const LegendItem({
     this.id,
     required this.title,
     this.imageData,
+    required this.centerX,
+    required this.centerY,
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -44,43 +48,54 @@ class MapItem {
   /// 检查是否有图像数据
   bool get hasImageData => imageData != null && imageData!.isNotEmpty;
 
-  factory MapItem.fromJson(Map<String, dynamic> json) => _$MapItemFromJson(json);
-  Map<String, dynamic> toJson() => _$MapItemToJson(this);
-  /// 从数据库记录创建 MapItem
-  factory MapItem.fromDatabase(Map<String, dynamic> map) {
-    return MapItem(
+  factory LegendItem.fromJson(Map<String, dynamic> json) => _$LegendItemFromJson(json);
+  Map<String, dynamic> toJson() => _$LegendItemToJson(this);
+  
+  /// 从数据库记录创建 LegendItem
+  factory LegendItem.fromDatabase(Map<String, dynamic> map) {
+    return LegendItem(
       id: map['id'] as int?,
       title: map['title'] as String,
       imageData: map['image_data'] as Uint8List?,
+      centerX: map['center_x'] as double,
+      centerY: map['center_y'] as double,
       version: map['version'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
   }
+  
   /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
       if (id != null) 'id': id,
       'title': title,
       'image_data': imageData,
+      'center_x': centerX,
+      'center_y': centerY,
       'version': version,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
+  
   /// 创建副本
-  MapItem copyWith({
+  LegendItem copyWith({
     int? id,
     String? title,
     Uint8List? imageData,
+    double? centerX,
+    double? centerY,
     int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return MapItem(
+    return LegendItem(
       id: id ?? this.id,
       title: title ?? this.title,
       imageData: imageData ?? this.imageData,
+      centerX: centerX ?? this.centerX,
+      centerY: centerY ?? this.centerY,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -88,19 +103,19 @@ class MapItem {
   }
 }
 
-/// 数据库版本信息
+/// 图例数据库版本信息
 @JsonSerializable()
-class MapDatabase {
+class LegendDatabase {
   final int version; // 整个数据库版本
-  final List<MapItem> maps;
+  final List<LegendItem> legends;
   final DateTime exportedAt;
 
-  const MapDatabase({
+  const LegendDatabase({
     required this.version,
-    required this.maps,
+    required this.legends,
     required this.exportedAt,
   });
 
-  factory MapDatabase.fromJson(Map<String, dynamic> json) => _$MapDatabaseFromJson(json);
-  Map<String, dynamic> toJson() => _$MapDatabaseToJson(this);
+  factory LegendDatabase.fromJson(Map<String, dynamic> json) => _$LegendDatabaseFromJson(json);
+  Map<String, dynamic> toJson() => _$LegendDatabaseToJson(this);
 }

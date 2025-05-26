@@ -9,7 +9,6 @@ part of 'map_item.dart';
 MapItem _$MapItemFromJson(Map<String, dynamic> json) => MapItem(
   id: (json['id'] as num?)?.toInt(),
   title: json['title'] as String,
-  imagePath: json['imagePath'] as String,
   imageData: const Uint8ListConverter().fromJson(json['imageData'] as String?),
   version: (json['version'] as num).toInt(),
   createdAt: DateTime.parse(json['createdAt'] as String),
@@ -19,7 +18,6 @@ MapItem _$MapItemFromJson(Map<String, dynamic> json) => MapItem(
 Map<String, dynamic> _$MapItemToJson(MapItem instance) => <String, dynamic>{
   'id': instance.id,
   'title': instance.title,
-  'imagePath': instance.imagePath,
   'imageData': const Uint8ListConverter().toJson(instance.imageData),
   'version': instance.version,
   'createdAt': instance.createdAt.toIso8601String(),

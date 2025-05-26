@@ -328,4 +328,82 @@ class AppLocalizationsZh extends AppLocalizations {
   String loadMapsFailed(String error) {
     return '加载地图失败：$error';
   }
+
+  @override
+  String get legendManager => '图例管理';
+
+  @override
+  String get legendManagerEmpty => '暂无图例';
+
+  @override
+  String get addLegend => '添加图例';
+
+  @override
+  String get legendTitle => '图例标题';
+
+  @override
+  String get enterLegendTitle => '请输入图例标题';
+
+  @override
+  String get legendVersion => '图例版本';
+
+  @override
+  String get selectCenterPoint => '选择中心点:';
+
+  @override
+  String get deleteLegend => '删除图例';
+
+  @override
+  String confirmDeleteLegend(String title) {
+    return '确认删除图例 \"$title\" 吗？';
+  }
+
+  @override
+  String get legendAddedSuccessfully => '图例添加成功';
+
+  @override
+  String addLegendFailed(String error) {
+    return '添加图例失败：$error';
+  }
+
+  @override
+  String get legendDeletedSuccessfully => '图例删除成功';
+
+  @override
+  String deleteLegendFailed(String error) {
+    return '删除图例失败：$error';
+  }
+
+  @override
+  String get exportLegendDatabase => '导出图例数据库';
+
+  @override
+  String get importLegendDatabase => '导入图例数据库';
+
+  @override
+  String legendDatabaseExportedSuccessfully(String path) {
+    return '图例数据库导出成功：$path';
+  }
+
+  @override
+  String get legendDatabaseImportedSuccessfully => '图例数据库导入成功';
+
+  @override
+  String loadLegendsFailed(String error) {
+    return '加载图例失败：$error';
+  }
+
+  @override
+  String get updateLegendExternalResources => '更新图例外部资源';
+
+  @override
+  String get updateLegendExternalResourcesDescription => '从外部文件更新图例数据库';
+
+  @override
+  String get legendUpdateSuccessful => '图例外部资源更新成功';
+
+  @override
+  String legendUpdateFailed(String error) {
+    return '图例更新失败：$error';
+  }
 }

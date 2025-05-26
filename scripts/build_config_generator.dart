@@ -41,10 +41,11 @@ class BuildConfigGenerator {
       
       // 添加平台参数
       buildParams.add('--dart-define=TARGET_PLATFORM=$targetPlatform');
-      
-      // 添加页面配置
+        // 添加页面配置
       buildParams.add('--dart-define=ENABLE_HOME_PAGE=${pages.contains('HomePage')}');
       buildParams.add('--dart-define=ENABLE_SETTINGS_PAGE=${pages.contains('SettingsPage')}');
+      buildParams.add('--dart-define=ENABLE_MAP_ATLAS_PAGE=${pages.contains('MapAtlasPage')}');
+      buildParams.add('--dart-define=ENABLE_LEGEND_MANAGER_PAGE=${pages.contains('LegendManagerPage')}');
       
       // 添加功能配置
       buildParams.add('--dart-define=ENABLE_DEBUG_MODE=${features.contains('DebugMode')}');

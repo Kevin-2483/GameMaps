@@ -691,6 +691,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load maps: {error}'**
   String loadMapsFailed(String error);
+
+  /// Legend manager page title
+  ///
+  /// In en, this message translates to:
+  /// **'Legend Manager'**
+  String get legendManager;
+
+  /// Message when no legends are available
+  ///
+  /// In en, this message translates to:
+  /// **'No legends available'**
+  String get legendManagerEmpty;
+
+  /// Add legend button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Legend'**
+  String get addLegend;
+
+  /// Legend title field label
+  ///
+  /// In en, this message translates to:
+  /// **'Legend Title'**
+  String get legendTitle;
+
+  /// Legend title field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter legend title'**
+  String get enterLegendTitle;
+
+  /// Legend version field label
+  ///
+  /// In en, this message translates to:
+  /// **'Legend Version'**
+  String get legendVersion;
+
+  /// Center point selection label
+  ///
+  /// In en, this message translates to:
+  /// **'Select Center Point:'**
+  String get selectCenterPoint;
+
+  /// Delete legend button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Legend'**
+  String get deleteLegend;
+
+  /// Delete legend confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete legend \"{title}\"?'**
+  String confirmDeleteLegend(String title);
+
+  /// Legend added success message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend added successfully'**
+  String get legendAddedSuccessfully;
+
+  /// Add legend error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add legend: {error}'**
+  String addLegendFailed(String error);
+
+  /// Legend deleted success message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend deleted successfully'**
+  String get legendDeletedSuccessfully;
+
+  /// Delete legend error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete legend: {error}'**
+  String deleteLegendFailed(String error);
+
+  /// Export legend database button
+  ///
+  /// In en, this message translates to:
+  /// **'Export Legend Database'**
+  String get exportLegendDatabase;
+
+  /// Import legend database button
+  ///
+  /// In en, this message translates to:
+  /// **'Import Legend Database'**
+  String get importLegendDatabase;
+
+  /// Legend database export success message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend database exported successfully: {path}'**
+  String legendDatabaseExportedSuccessfully(String path);
+
+  /// Legend database import success message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend database imported successfully'**
+  String get legendDatabaseImportedSuccessfully;
+
+  /// Load legends error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load legends: {error}'**
+  String loadLegendsFailed(String error);
+
+  /// Update legend external resources button
+  ///
+  /// In en, this message translates to:
+  /// **'Update Legend External Resources'**
+  String get updateLegendExternalResources;
+
+  /// Update legend external resources description
+  ///
+  /// In en, this message translates to:
+  /// **'Update legend database from external file'**
+  String get updateLegendExternalResourcesDescription;
+
+  /// Legend update success message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend external resources updated successfully'**
+  String get legendUpdateSuccessful;
+
+  /// Legend update error message
+  ///
+  /// In en, this message translates to:
+  /// **'Legend update failed: {error}'**
+  String legendUpdateFailed(String error);
 }
 
 class _AppLocalizationsDelegate

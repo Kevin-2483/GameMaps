@@ -6,9 +6,8 @@ class ConfigValidator {
   static const List<String> _validPlatforms = [
     'Windows', 'MacOS', 'Linux', 'Android', 'iOS', 'Web'
   ];
-
   static const List<String> _validPages = [
-    'HomePage', 'SettingsPage'
+    'HomePage', 'SettingsPage', 'MapAtlasPage', 'LegendManagerPage'
   ];
 
   static const List<String> _validFeatures = [

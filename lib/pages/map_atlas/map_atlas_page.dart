@@ -77,11 +77,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent> {
       final compressedImage = _compressImage(imageBytes);      if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         final mapInfo = await _showAddMapDialog(l10n);
-        if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {
-          try {
+        if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {          try {
             final mapItem = MapItem(
               title: mapInfo['title'],
-              imagePath: result.files.single.name,
               imageData: compressedImage,
               version: mapInfo['version'] ?? 1,
               createdAt: DateTime.now(),
