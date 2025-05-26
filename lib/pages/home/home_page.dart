@@ -52,9 +52,8 @@ class _HomePageContentState extends State<_HomePageContent> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Comprehensive Flutter Cross-Platform Framework',
+              const SizedBox(height: 8),              Text(
+                l10n.comprehensiveFramework,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -68,14 +67,13 @@ class _HomePageContentState extends State<_HomePageContent> {
                     child: Card(
                       child: InkWell(
                         onTap: () => context.go('/settings'),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
+                        borderRadius: BorderRadius.circular(12),                        child: Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Column(
                             children: [
                               Icon(Icons.settings, size: 32),
                               SizedBox(height: 8),
-                              Text('Settings'),
+                              Text(l10n.settings),
                             ],
                           ),
                         ),
@@ -91,21 +89,18 @@ class _HomePageContentState extends State<_HomePageContent> {
                           showAboutDialog(
                             context: context,
                             applicationName: l10n.appTitle,
-                            applicationVersion: '1.0.0',
-                            children: const [
-                              Text('Flutter Cross-Platform Framework\n'
-                                  'Supporting multiple platforms with modern architecture'),
+                            applicationVersion: '1.0.0',                            children: [
+                              Text(l10n.aboutDialogContent),
                             ],
                           );
                         },
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
+                        borderRadius: BorderRadius.circular(12),                        child: Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Column(
                             children: [
                               Icon(Icons.info, size: 32),
                               SizedBox(height: 8),
-                              Text('About'),
+                              Text(l10n.about),
                             ],
                           ),
                         ),
@@ -116,10 +111,9 @@ class _HomePageContentState extends State<_HomePageContent> {
               ),
               
               const SizedBox(height: 16),
-              
-              // Platform component
+                // Platform component
               Text(
-                'Platform Integration',
+                l10n.platformIntegration,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
@@ -129,10 +123,9 @@ class _HomePageContentState extends State<_HomePageContent> {
               ),
               
               const SizedBox(height: 16),
-              
-              // Features section
+                // Features section
               Text(
-                'Features',
+                l10n.features,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
@@ -146,13 +139,13 @@ class _HomePageContentState extends State<_HomePageContent> {
       ),
     );
   }
-
   Widget _buildFeaturesSection() {
+    final l10n = AppLocalizations.of(context)!;
     final registry = FeatureRegistry();
     final enabledFeatures = registry.getEnabledFeatures();
     
     if (enabledFeatures.isEmpty) {
-      return const Card(
+      return Card(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Column(
@@ -161,11 +154,11 @@ class _HomePageContentState extends State<_HomePageContent> {
               Icon(Icons.widgets_outlined, size: 48, color: Colors.grey),
               SizedBox(height: 8),
               Text(
-                'No features enabled',
+                l10n.noFeaturesEnabled,
                 style: TextStyle(color: Colors.grey),
               ),
               Text(
-                'Enable features in settings to see them here',
+                l10n.enableFeaturesInSettings,
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],

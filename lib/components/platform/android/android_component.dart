@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class AndroidComponent extends StatelessWidget {
   const AndroidComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,27 +19,26 @@ class AndroidComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Android Platform',
+            l10n.androidPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Android specific features can be implemented here.',
+            l10n.androidSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Card(
+          const SizedBox(height: 24),          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('Android Features:'),
+                  Text(l10n.androidFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Material Design'),
-                  _buildFeatureItem('Push Notifications'),
-                  _buildFeatureItem('App Shortcuts'),
-                  _buildFeatureItem('Background Services'),
+                  _buildFeatureItem(l10n.materialDesign),
+                  _buildFeatureItem(l10n.pushNotifications),
+                  _buildFeatureItem(l10n.appShortcuts),
+                  _buildFeatureItem(l10n.backgroundServices),
                 ],
               ),
             ),

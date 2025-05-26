@@ -31,5 +31,291 @@
   "systemMode": "System Mode",
   "@systemMode": {
     "description": "System mode setting"
+  },
+  "systemLanguage": "System",
+  "@systemLanguage": {
+    "description": "System language option"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About button text"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "Error page title"
+  },
+  "pageNotFound": "Page not found: {uri}",
+  "@pageNotFound": {
+    "description": "Page not found error message",
+    "placeholders": {
+      "uri": {
+        "type": "String",
+        "description": "The URI that was not found"
+      }
+    }
+  },
+  "goHome": "Go Home",
+  "@goHome": {
+    "description": "Go home button text"
+  },
+  "comprehensiveFramework": "Comprehensive Flutter Cross-Platform Framework",
+  "@comprehensiveFramework": {
+    "description": "App subtitle description"
+  },
+  "platformIntegration": "Platform Integration",
+  "@platformIntegration": {
+    "description": "Platform integration section title"
+  },
+  "features": "Features",
+  "@features": {
+    "description": "Features section title"
+  },
+  "noFeaturesEnabled": "No features enabled",
+  "@noFeaturesEnabled": {
+    "description": "Message when no features are enabled"
+  },
+  "enableFeaturesInSettings": "Enable features in settings to see them here",
+  "@enableFeaturesInSettings": {
+    "description": "Instructions to enable features"
+  },
+  "aboutDialogContent": "Flutter Cross-Platform Framework\nSupporting multiple platforms with modern architecture",
+  "@aboutDialogContent": {
+    "description": "About dialog content"
+  },
+  "windowsPlatform": "Windows Platform",
+  "@windowsPlatform": {
+    "description": "Windows platform title"
+  },
+  "windowsFeatures": "Windows Features:",
+  "@windowsFeatures": {
+    "description": "Windows features section title"
+  },
+  "windowsSpecificFeatures": "Windows specific features can be implemented here.",
+  "@windowsSpecificFeatures": {
+    "description": "Windows platform description"
+  },
+  "nativeWindowsUI": "Native Windows UI",
+  "@nativeWindowsUI": {
+    "description": "Windows feature"
+  },
+  "fileSystemAccess": "File System Access",
+  "@fileSystemAccess": {
+    "description": "File system feature"
+  },
+  "systemTrayIntegration": "System Tray Integration",
+  "@systemTrayIntegration": {
+    "description": "System tray feature"
+  },
+  "windowsNotifications": "Windows Notifications",
+  "@windowsNotifications": {
+    "description": "Windows notifications feature"
+  },
+  "macOSPlatform": "macOS Platform",
+  "@macOSPlatform": {
+    "description": "macOS platform title"
+  },  "macOSFeatures": "macOS Features:",
+  "@macOSFeatures": {
+    "description": "macOS features section title"
+  },
+  "macOSSpecificFeatures": "macOS specific features can be implemented here.",
+  "@macOSSpecificFeatures": {
+    "description": "macOS platform description"
+  },
+  "nativeMacOSUI": "Native macOS UI",
+  "@nativeMacOSUI": {
+    "description": "macOS feature"
+  },
+  "menuBarIntegration": "Menu Bar Integration",
+  "@menuBarIntegration": {
+    "description": "Menu bar feature"
+  },
+  "touchBarSupport": "Touch Bar Support",
+  "@touchBarSupport": {
+    "description": "Touch bar feature"
+  },
+  "macOSNotifications": "macOS Notifications",
+  "@macOSNotifications": {
+    "description": "macOS notifications feature"
+  },  "androidPlatform": "Android Platform",
+  "@androidPlatform": {
+    "description": "Android platform title"
+  },
+  "androidFeatures": "Android Features:",
+  "@androidFeatures": {
+    "description": "Android features section title"
+  },
+  "androidSpecificFeatures": "Android specific features can be implemented here.",
+  "@androidSpecificFeatures": {
+    "description": "Android platform description"
+  },
+  "nativeAndroidUI": "Native Android UI",
+  "@nativeAndroidUI": {
+    "description": "Android feature"
+  },
+  "androidNotifications": "Android Notifications",
+  "@androidNotifications": {
+    "description": "Android notifications feature"
+  },
+  "androidPermissions": "Android Permissions",
+  "@androidPermissions": {
+    "description": "Android permissions feature"
+  },  "materialDesign": "Material Design",
+  "@materialDesign": {
+    "description": "Material design feature"
+  },
+  "pushNotifications": "Push Notifications",
+  "@pushNotifications": {
+    "description": "Push notifications feature"
+  },
+  "appShortcuts": "App Shortcuts",
+  "@appShortcuts": {
+    "description": "App shortcuts feature"
+  },
+  "backgroundServices": "Background Services",
+  "@backgroundServices": {
+    "description": "Background services feature"
+  },"iOSPlatform": "iOS Platform",
+  "@iOSPlatform": {
+    "description": "iOS platform title"
+  },
+  "iOSFeatures": "iOS Features:",
+  "@iOSFeatures": {
+    "description": "iOS features section title"
+  },
+  "iOSSpecificFeatures": "iOS specific features can be implemented here.",
+  "@iOSSpecificFeatures": {
+    "description": "iOS platform description"
+  },
+  "nativeIOSUI": "Native iOS UI",
+  "@nativeIOSUI": {
+    "description": "iOS feature"
+  },
+  "iOSNotifications": "iOS Notifications",
+  "@iOSNotifications": {
+    "description": "iOS notifications feature"
+  },
+  "appStoreIntegration": "App Store Integration",
+  "@appStoreIntegration": {
+    "description": "App Store feature"
+  },  "cupertinoDesign": "Cupertino Design",
+  "@cupertinoDesign": {
+    "description": "Cupertino design feature"
+  },
+  "appClips": "App Clips",
+  "@appClips": {
+    "description": "App Clips feature"
+  },
+  "siriShortcuts": "Siri Shortcuts",
+  "@siriShortcuts": {
+    "description": "Siri Shortcuts feature"
+  },
+  "linuxPlatform": "Linux Platform",
+  "@linuxPlatform": {
+    "description": "Linux platform title"
+  },  "linuxFeatures": "Linux Features:",
+  "@linuxFeatures": {
+    "description": "Linux features section title"
+  },  "linuxSpecificFeatures": "Linux specific features can be implemented here.",
+  "@linuxSpecificFeatures": {
+    "description": "Linux platform description"
+  },
+  "nativeGtkIntegration": "Native GTK Integration",
+  "@nativeGtkIntegration": {
+    "description": "GTK integration feature"
+  },
+  "systemTraySupport": "System Tray Support",
+  "@systemTraySupport": {
+    "description": "System tray feature"
+  },
+  "desktopFiles": "Desktop Files",
+  "@desktopFiles": {
+    "description": "Desktop files feature"
+  },
+  "packageManagement": "Package Management",
+  "@packageManagement": {
+    "description": "Package management feature"
+  },
+  "webPlatform": "Web Platform",
+  "@webPlatform": {
+    "description": "Web platform title"
+  },  "webFeatures": "Web Features:",
+  "@webFeatures": {
+    "description": "Web features section title"
+  },  "webSpecificFeatures": "Web specific features can be implemented here.",
+  "@webSpecificFeatures": {
+    "description": "Web platform description"
+  },
+  "progressiveWebApp": "Progressive Web App",
+  "@progressiveWebApp": {
+    "description": "PWA feature"
+  },
+  "browserStorage": "Browser Storage",
+  "@browserStorage": {
+    "description": "Browser storage feature"
+  },
+  "urlRouting": "URL Routing",
+  "@urlRouting": {
+    "description": "URL routing feature"
+  },
+  "webApis": "Web APIs",
+  "@webApis": {
+    "description": "Web APIs feature"
+  },
+  "configEditor": "Config Editor",
+  "@configEditor": {
+    "description": "Config editor page title"
+  },
+  "configUpdated": "Configuration updated",
+  "@configUpdated": {
+    "description": "Config update success message"
+  },
+  "currentPlatform": "Current Platform: {platform}",
+  "@currentPlatform": {
+    "description": "Current platform display",
+    "placeholders": {
+      "platform": {
+        "type": "String",
+        "description": "The current platform name"
+      }
+    }
+  },
+  "availablePages": "Available Pages: {pages}",
+  "@availablePages": {
+    "description": "Available pages list",
+    "placeholders": {
+      "pages": {
+        "type": "String",
+        "description": "The list of available pages"
+      }
+    }
+  },  "availableFeatures": "Available Features: {features}",
+  "@availableFeatures": {
+    "description": "Available features list",
+    "placeholders": {
+      "features": {
+        "type": "String",
+        "description": "The list of available features"
+      }
+    }
+  },
+  "pageConfiguration": "Page Configuration",
+  "@pageConfiguration": {
+    "description": "Page configuration section title"
+  },
+  "featureConfiguration": "Feature Configuration",
+  "@featureConfiguration": {
+    "description": "Feature configuration section title"
+  },
+  "debugInfo": "Debug Info",
+  "@debugInfo": {
+    "description": "Debug information section title"
+  },
+  "printConfigInfo": "Print config information",
+  "@printConfigInfo": {
+    "description": "Print config tooltip"
+  },
+  "saveConfig": "Save config",
+  "@saveConfig": {
+    "description": "Save config tooltip"
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class WebComponent extends StatelessWidget {
   const WebComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,27 +19,26 @@ class WebComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Web Platform',
+            l10n.webPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Web specific features can be implemented here.',
+            l10n.webSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Card(
+          const SizedBox(height: 24),          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('Web Features:'),
+                  Text(l10n.webFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Progressive Web App'),
-                  _buildFeatureItem('Browser Storage'),
-                  _buildFeatureItem('URL Routing'),
-                  _buildFeatureItem('Web APIs'),
+                  _buildFeatureItem(l10n.progressiveWebApp),
+                  _buildFeatureItem(l10n.browserStorage),
+                  _buildFeatureItem(l10n.urlRouting),
+                  _buildFeatureItem(l10n.webApis),
                 ],
               ),
             ),

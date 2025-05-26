@@ -145,6 +145,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System Mode'**
   String get systemMode;
+
+  /// System language option
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemLanguage;
+
+  /// About button text
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// Error page title
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// Page not found error message
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found: {uri}'**
+  String pageNotFound(String uri);
+
+  /// Go home button text
+  ///
+  /// In en, this message translates to:
+  /// **'Go Home'**
+  String get goHome;
+
+  /// App subtitle description
+  ///
+  /// In en, this message translates to:
+  /// **'Comprehensive Flutter Cross-Platform Framework'**
+  String get comprehensiveFramework;
+
+  /// Platform integration section title
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Integration'**
+  String get platformIntegration;
+
+  /// Features section title
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get features;
+
+  /// Message when no features are enabled
+  ///
+  /// In en, this message translates to:
+  /// **'No features enabled'**
+  String get noFeaturesEnabled;
+
+  /// Instructions to enable features
+  ///
+  /// In en, this message translates to:
+  /// **'Enable features in settings to see them here'**
+  String get enableFeaturesInSettings;
+
+  /// About dialog content
+  ///
+  /// In en, this message translates to:
+  /// **'Flutter Cross-Platform Framework\nSupporting multiple platforms with modern architecture'**
+  String get aboutDialogContent;
+
+  /// Windows platform title
+  ///
+  /// In en, this message translates to:
+  /// **'Windows Platform'**
+  String get windowsPlatform;
+
+  /// Windows features section title
+  ///
+  /// In en, this message translates to:
+  /// **'Windows Features:'**
+  String get windowsFeatures;
+
+  /// Windows platform description
+  ///
+  /// In en, this message translates to:
+  /// **'Windows specific features can be implemented here.'**
+  String get windowsSpecificFeatures;
+
+  /// Windows feature
+  ///
+  /// In en, this message translates to:
+  /// **'Native Windows UI'**
+  String get nativeWindowsUI;
+
+  /// File system feature
+  ///
+  /// In en, this message translates to:
+  /// **'File System Access'**
+  String get fileSystemAccess;
+
+  /// System tray feature
+  ///
+  /// In en, this message translates to:
+  /// **'System Tray Integration'**
+  String get systemTrayIntegration;
+
+  /// Windows notifications feature
+  ///
+  /// In en, this message translates to:
+  /// **'Windows Notifications'**
+  String get windowsNotifications;
+
+  /// macOS platform title
+  ///
+  /// In en, this message translates to:
+  /// **'macOS Platform'**
+  String get macOSPlatform;
+
+  /// macOS features section title
+  ///
+  /// In en, this message translates to:
+  /// **'macOS Features:'**
+  String get macOSFeatures;
+
+  /// macOS platform description
+  ///
+  /// In en, this message translates to:
+  /// **'macOS specific features can be implemented here.'**
+  String get macOSSpecificFeatures;
+
+  /// macOS feature
+  ///
+  /// In en, this message translates to:
+  /// **'Native macOS UI'**
+  String get nativeMacOSUI;
+
+  /// Menu bar feature
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Bar Integration'**
+  String get menuBarIntegration;
+
+  /// Touch bar feature
+  ///
+  /// In en, this message translates to:
+  /// **'Touch Bar Support'**
+  String get touchBarSupport;
+
+  /// macOS notifications feature
+  ///
+  /// In en, this message translates to:
+  /// **'macOS Notifications'**
+  String get macOSNotifications;
+
+  /// Android platform title
+  ///
+  /// In en, this message translates to:
+  /// **'Android Platform'**
+  String get androidPlatform;
+
+  /// Android features section title
+  ///
+  /// In en, this message translates to:
+  /// **'Android Features:'**
+  String get androidFeatures;
+
+  /// Android platform description
+  ///
+  /// In en, this message translates to:
+  /// **'Android specific features can be implemented here.'**
+  String get androidSpecificFeatures;
+
+  /// Android feature
+  ///
+  /// In en, this message translates to:
+  /// **'Native Android UI'**
+  String get nativeAndroidUI;
+
+  /// Android notifications feature
+  ///
+  /// In en, this message translates to:
+  /// **'Android Notifications'**
+  String get androidNotifications;
+
+  /// Android permissions feature
+  ///
+  /// In en, this message translates to:
+  /// **'Android Permissions'**
+  String get androidPermissions;
+
+  /// Material design feature
+  ///
+  /// In en, this message translates to:
+  /// **'Material Design'**
+  String get materialDesign;
+
+  /// Push notifications feature
+  ///
+  /// In en, this message translates to:
+  /// **'Push Notifications'**
+  String get pushNotifications;
+
+  /// App shortcuts feature
+  ///
+  /// In en, this message translates to:
+  /// **'App Shortcuts'**
+  String get appShortcuts;
+
+  /// Background services feature
+  ///
+  /// In en, this message translates to:
+  /// **'Background Services'**
+  String get backgroundServices;
+
+  /// iOS platform title
+  ///
+  /// In en, this message translates to:
+  /// **'iOS Platform'**
+  String get iOSPlatform;
+
+  /// iOS features section title
+  ///
+  /// In en, this message translates to:
+  /// **'iOS Features:'**
+  String get iOSFeatures;
+
+  /// iOS platform description
+  ///
+  /// In en, this message translates to:
+  /// **'iOS specific features can be implemented here.'**
+  String get iOSSpecificFeatures;
+
+  /// iOS feature
+  ///
+  /// In en, this message translates to:
+  /// **'Native iOS UI'**
+  String get nativeIOSUI;
+
+  /// iOS notifications feature
+  ///
+  /// In en, this message translates to:
+  /// **'iOS Notifications'**
+  String get iOSNotifications;
+
+  /// App Store feature
+  ///
+  /// In en, this message translates to:
+  /// **'App Store Integration'**
+  String get appStoreIntegration;
+
+  /// Cupertino design feature
+  ///
+  /// In en, this message translates to:
+  /// **'Cupertino Design'**
+  String get cupertinoDesign;
+
+  /// App Clips feature
+  ///
+  /// In en, this message translates to:
+  /// **'App Clips'**
+  String get appClips;
+
+  /// Siri Shortcuts feature
+  ///
+  /// In en, this message translates to:
+  /// **'Siri Shortcuts'**
+  String get siriShortcuts;
+
+  /// Linux platform title
+  ///
+  /// In en, this message translates to:
+  /// **'Linux Platform'**
+  String get linuxPlatform;
+
+  /// Linux features section title
+  ///
+  /// In en, this message translates to:
+  /// **'Linux Features:'**
+  String get linuxFeatures;
+
+  /// Linux platform description
+  ///
+  /// In en, this message translates to:
+  /// **'Linux specific features can be implemented here.'**
+  String get linuxSpecificFeatures;
+
+  /// GTK integration feature
+  ///
+  /// In en, this message translates to:
+  /// **'Native GTK Integration'**
+  String get nativeGtkIntegration;
+
+  /// System tray feature
+  ///
+  /// In en, this message translates to:
+  /// **'System Tray Support'**
+  String get systemTraySupport;
+
+  /// Desktop files feature
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop Files'**
+  String get desktopFiles;
+
+  /// Package management feature
+  ///
+  /// In en, this message translates to:
+  /// **'Package Management'**
+  String get packageManagement;
+
+  /// Web platform title
+  ///
+  /// In en, this message translates to:
+  /// **'Web Platform'**
+  String get webPlatform;
+
+  /// Web features section title
+  ///
+  /// In en, this message translates to:
+  /// **'Web Features:'**
+  String get webFeatures;
+
+  /// Web platform description
+  ///
+  /// In en, this message translates to:
+  /// **'Web specific features can be implemented here.'**
+  String get webSpecificFeatures;
+
+  /// PWA feature
+  ///
+  /// In en, this message translates to:
+  /// **'Progressive Web App'**
+  String get progressiveWebApp;
+
+  /// Browser storage feature
+  ///
+  /// In en, this message translates to:
+  /// **'Browser Storage'**
+  String get browserStorage;
+
+  /// URL routing feature
+  ///
+  /// In en, this message translates to:
+  /// **'URL Routing'**
+  String get urlRouting;
+
+  /// Web APIs feature
+  ///
+  /// In en, this message translates to:
+  /// **'Web APIs'**
+  String get webApis;
+
+  /// Config editor page title
+  ///
+  /// In en, this message translates to:
+  /// **'Config Editor'**
+  String get configEditor;
+
+  /// Config update success message
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration updated'**
+  String get configUpdated;
+
+  /// Current platform display
+  ///
+  /// In en, this message translates to:
+  /// **'Current Platform: {platform}'**
+  String currentPlatform(String platform);
+
+  /// Available pages list
+  ///
+  /// In en, this message translates to:
+  /// **'Available Pages: {pages}'**
+  String availablePages(String pages);
+
+  /// Available features list
+  ///
+  /// In en, this message translates to:
+  /// **'Available Features: {features}'**
+  String availableFeatures(String features);
+
+  /// Page configuration section title
+  ///
+  /// In en, this message translates to:
+  /// **'Page Configuration'**
+  String get pageConfiguration;
+
+  /// Feature configuration section title
+  ///
+  /// In en, this message translates to:
+  /// **'Feature Configuration'**
+  String get featureConfiguration;
+
+  /// Debug information section title
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Info'**
+  String get debugInfo;
+
+  /// Print config tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Print config information'**
+  String get printConfigInfo;
+
+  /// Save config tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Save config'**
+  String get saveConfig;
 }
 
 class _AppLocalizationsDelegate

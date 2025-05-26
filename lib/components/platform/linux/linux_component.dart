@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class LinuxComponent extends StatelessWidget {
   const LinuxComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,27 +19,26 @@ class LinuxComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Linux Platform',
+            l10n.linuxPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Linux specific features can be implemented here.',
+            l10n.linuxSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Card(
+          const SizedBox(height: 24),          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('Linux Features:'),
+                  Text(l10n.linuxFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Native GTK Integration'),
-                  _buildFeatureItem('System Tray Support'),
-                  _buildFeatureItem('Desktop Files'),
-                  _buildFeatureItem('Package Management'),
+                  _buildFeatureItem(l10n.nativeGtkIntegration),
+                  _buildFeatureItem(l10n.systemTraySupport),
+                  _buildFeatureItem(l10n.desktopFiles),
+                  _buildFeatureItem(l10n.packageManagement),
                 ],
               ),
             ),

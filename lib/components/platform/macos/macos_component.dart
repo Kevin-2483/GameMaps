@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class MacOSComponent extends StatelessWidget {
   const MacOSComponent({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,12 +18,12 @@ class MacOSComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'macOS Platform',
+            l10n.macOSPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'macOS specific features can be implemented here.',
+            l10n.macOSSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -31,12 +33,12 @@ class MacOSComponent extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('macOS Features:'),
+                  Text(l10n.macOSFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Native macOS UI'),
-                  _buildFeatureItem('Menu Bar Integration'),
-                  _buildFeatureItem('Touch Bar Support'),
-                  _buildFeatureItem('macOS Notifications'),
+                  _buildFeatureItem(l10n.nativeMacOSUI),
+                  _buildFeatureItem(l10n.menuBarIntegration),
+                  _buildFeatureItem(l10n.touchBarSupport),
+                  _buildFeatureItem(l10n.macOSNotifications),
                 ],
               ),
             ),

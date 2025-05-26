@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/config_manager.dart';
 import '../../config/app_config.dart';
 import '../../components/common/config_aware_widgets.dart';
+import '../../l10n/app_localizations.dart';
 
 /// 配置编辑器页面
 class ConfigEditorPage extends StatefulWidget {
@@ -77,35 +78,34 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
       platform: newPlatformConfigs,
       build: _config.build,
     );
-    
-    ConfigManager.instance.updateConfig(newConfig);
+      ConfigManager.instance.updateConfig(newConfig);
     setState(() {
       _config = newConfig;
     });
     
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('配置已更新')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.configUpdated)),
     );
   }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('配置编辑器'),
-        actions: [
-          ConfigAwareAppBarAction(
+        title: Text(l10n.configEditor),
+        actions: [          ConfigAwareAppBarAction(
             featureId: 'DebugMode',
             action: IconButton(
               icon: const Icon(Icons.info),
               onPressed: () => ConfigUtils.instance.printConfigInfo(),
-              tooltip: '打印配置信息',
+              tooltip: l10n.printConfigInfo,
             ),
           ),
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _updateConfig,
-            tooltip: '保存配置',
+            tooltip: l10n.saveConfig,
           ),
         ],
       ),
@@ -131,8 +131,9 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
       ),
     );
   }
-
   Widget _buildPlatformTab(String platform) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -141,9 +142,8 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '页面配置',
+              children: [                Text(
+                  l10n.pageConfiguration,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -168,9 +168,8 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '功能配置',
+              children: [                Text(
+                  l10n.featureConfiguration,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -196,15 +195,14 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '调试信息',
+                children: [                  Text(
+                    l10n.debugInfo,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text('当前平台: ${ConfigManager.instance.getCurrentPlatform()}'),
-                  Text('可用页面: ${ConfigUtils.instance.availablePages.join(', ')}'),
-                  Text('可用功能: ${ConfigUtils.instance.availableFeatures.join(', ')}'),
+                  Text(l10n.currentPlatform(ConfigManager.instance.getCurrentPlatform())),
+                  Text(l10n.availablePages(ConfigUtils.instance.availablePages.join(', '))),
+                  Text(l10n.availableFeatures(ConfigUtils.instance.availableFeatures.join(', '))),
                 ],
               ),
             ),

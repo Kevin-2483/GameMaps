@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class IOSComponent extends StatelessWidget {
   const IOSComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,27 +19,26 @@ class IOSComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'iOS Platform',
+            l10n.iOSPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'iOS specific features can be implemented here.',
+            l10n.iOSSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Card(
+          const SizedBox(height: 24),          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('iOS Features:'),
+                  Text(l10n.iOSFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Cupertino Design'),
-                  _buildFeatureItem('Push Notifications'),
-                  _buildFeatureItem('App Clips'),
-                  _buildFeatureItem('Siri Shortcuts'),
+                  _buildFeatureItem(l10n.cupertinoDesign),
+                  _buildFeatureItem(l10n.pushNotifications),
+                  _buildFeatureItem(l10n.appClips),
+                  _buildFeatureItem(l10n.siriShortcuts),
                 ],
               ),
             ),

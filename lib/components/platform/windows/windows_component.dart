@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class WindowsComponent extends StatelessWidget {
   const WindowsComponent({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,12 +18,12 @@ class WindowsComponent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Windows Platform',
+            l10n.windowsPlatform,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Windows specific features can be implemented here.',
+            l10n.windowsSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -31,12 +33,12 @@ class WindowsComponent extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('Windows Features:'),
+                  Text(l10n.windowsFeatures),
                   const SizedBox(height: 8),
-                  _buildFeatureItem('Native Windows UI'),
-                  _buildFeatureItem('File System Access'),
-                  _buildFeatureItem('System Tray Integration'),
-                  _buildFeatureItem('Windows Notifications'),
+                  _buildFeatureItem(l10n.nativeWindowsUI),
+                  _buildFeatureItem(l10n.fileSystemAccess),
+                  _buildFeatureItem(l10n.systemTrayIntegration),
+                  _buildFeatureItem(l10n.windowsNotifications),
                 ],
               ),
             ),

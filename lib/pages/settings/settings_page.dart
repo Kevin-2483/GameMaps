@@ -114,9 +114,8 @@ class _SettingsPageContent extends StatelessWidget {
             Consumer<LocaleProvider>(
               builder: (context, localeProvider, child) {
                 return Column(
-                  children: [
-                    RadioListTile<Locale?>(
-                      title: const Text('System'),
+                  children: [                    RadioListTile<Locale?>(
+                      title: Text(l10n.systemLanguage),
                       value: null,
                       groupValue: localeProvider.locale,
                       onChanged: (value) {
