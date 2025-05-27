@@ -5,6 +5,10 @@ import '../../../models/map_item.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../utils/image_utils.dart';
 
+// 画布固定尺寸常量，确保坐标转换的一致性
+const double kCanvasWidth = 1200.0;
+const double kCanvasHeight = 800.0;
+
 /// 绘制预览数据
 class DrawingPreviewData {
   final Offset start;
@@ -79,7 +83,6 @@ class _MapCanvasState extends State<MapCanvas> {
     _drawingPreviewNotifier.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -93,61 +96,77 @@ class _MapCanvasState extends State<MapCanvas> {
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
-          maxScale: 5.0,          child: Container(
-            width: 1200,
-            height: 800,
-            decoration: BoxDecoration(
-              // 透明背景，使用棋盘格表示透明度
-              color: Colors.white,
-            ),
+          maxScale: 5.0,
+          constrained: false, // 关键：不约束子组件大小
+          child: SizedBox(
+            width: kCanvasWidth,
+            height: kCanvasHeight,
             child: Stack(
               children: [
-                // 透明背景指示器（棋盘格图案）
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _TransparentBackgroundPainter(),
+                // 画布容器
+                Container(
+                  width: kCanvasWidth,
+                  height: kCanvasHeight,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                  ),
+                  child: Stack(
+                    children: [
+                      // 透明背景指示器（棋盘格图案）
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _TransparentBackgroundPainter(),
+                        ),
+                      ),
+                      
+                      // 图层图片（按order排序）
+                      ...() {
+                        final visibleLayers = widget.mapItem.layers
+                            .where((layer) => layer.isVisible && layer.imageData != null)
+                            .toList();
+                        visibleLayers.sort((a, b) => a.order.compareTo(b.order));
+                        return visibleLayers.map((layer) => _buildLayerImageWidget(layer));
+                      }(),
+                      
+                      // Drawing layers (绘制元素)
+                      ...widget.mapItem.layers.map((layer) => _buildLayerWidget(layer)),
+                      
+                      // Legend groups
+                      ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),
+                      
+                      // Current drawing preview
+                      ValueListenableBuilder<DrawingPreviewData?>(
+                        valueListenable: _drawingPreviewNotifier,
+                        builder: (context, previewData, child) {
+                          if (previewData == null) return const SizedBox.shrink();
+                          return CustomPaint(
+                            size: const Size(kCanvasWidth, kCanvasHeight),
+                            painter: _CurrentDrawingPainter(
+                              start: previewData.start,
+                              end: previewData.end,
+                              elementType: previewData.elementType,
+                              color: previewData.color,
+                              strokeWidth: previewData.strokeWidth,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 
-                // 图层图片（按order排序）
-                ...() {
-                  final visibleLayers = widget.mapItem.layers
-                      .where((layer) => layer.isVisible && layer.imageData != null)
-                      .toList();
-                  visibleLayers.sort((a, b) => a.order.compareTo(b.order));
-                  return visibleLayers.map((layer) => _buildLayerImageWidget(layer));
-                }(),
-                
-                // Drawing layers (绘制元素)
-                ...widget.mapItem.layers.map((layer) => _buildLayerWidget(layer)),
-                
-                // Legend groups
-                ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),                // Current drawing preview - 使用 ValueListenableBuilder 避免整个 widget 重绘
-                ValueListenableBuilder<DrawingPreviewData?>(
-                  valueListenable: _drawingPreviewNotifier,
-                  builder: (context, previewData, child) {
-                    if (previewData == null) return const SizedBox.shrink();
-                    
-                    return CustomPaint(
-                      size: const Size(1200, 800),
-                      painter: _CurrentDrawingPainter(
-                        start: previewData.start,
-                        end: previewData.end,
-                        elementType: previewData.elementType,
-                        color: previewData.color,
-                        strokeWidth: previewData.strokeWidth,
-                      ),
-                    );
-                  },
-                ),
-                
-                // Touch handler for drawing
+                // Touch handler for drawing - 覆盖整个画布区域
                 if (!widget.isPreviewMode && _effectiveDrawingTool != null)
-                  Positioned.fill(
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    width: kCanvasWidth,
+                    height: kCanvasHeight,
                     child: GestureDetector(
                       onPanStart: _onDrawingStart,
                       onPanUpdate: _onDrawingUpdate,
                       onPanEnd: _onDrawingEnd,
+                      behavior: HitTestBehavior.translucent,
                     ),
                   ),
               ],
@@ -155,7 +174,8 @@ class _MapCanvasState extends State<MapCanvas> {
           ),
         ),
       ),
-    );  }
+    );
+  }
   Widget _buildLayerImageWidget(MapLayer layer) {
     if (layer.imageData == null) return const SizedBox.shrink();
     
@@ -164,11 +184,10 @@ class _MapCanvasState extends State<MapCanvas> {
     
     return Positioned.fill(
       child: Opacity(
-        opacity: layer.isVisible ? effectiveOpacity : 0.0,
-        child: ImageUtils.buildImageFromBase64(
+        opacity: layer.isVisible ? effectiveOpacity : 0.0,        child: ImageUtils.buildImageFromBase64(
           layer.imageData!,
-          width: 1200,
-          height: 800,
+          width: kCanvasWidth,
+          height: kCanvasHeight,
           fit: BoxFit.contain,
           opacity: 1.0, // 透明度已经通过Opacity widget控制
         ),
@@ -180,11 +199,10 @@ class _MapCanvasState extends State<MapCanvas> {
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity = widget.previewOpacityValues[layer.id] ?? layer.opacity;
     
-    return Positioned.fill(
-      child: Opacity(
+    return Positioned.fill(      child: Opacity(
         opacity: layer.isVisible ? effectiveOpacity : 0.0,
         child: CustomPaint(
-          size: const Size(1200, 800),
+          size: const Size(kCanvasWidth, kCanvasHeight),
           painter: _LayerPainter(
             layer: layer,
             isEditMode: !widget.isPreviewMode,
@@ -268,8 +286,9 @@ class _MapCanvasState extends State<MapCanvas> {
   }  void _onDrawingStart(DragStartDetails details) {
     if (widget.isPreviewMode || _effectiveDrawingTool == null) return;
 
-    _currentDrawingStart = details.localPosition;
-    _currentDrawingEnd = details.localPosition;
+    // 获取相对于画布的坐标
+    _currentDrawingStart = _getCanvasPosition(details.localPosition);
+    _currentDrawingEnd = _currentDrawingStart;
     _isDrawing = true;
     
     // 只更新绘制预览，不触发整个 widget 重绘
@@ -285,7 +304,8 @@ class _MapCanvasState extends State<MapCanvas> {
   void _onDrawingUpdate(DragUpdateDetails details) {
     if (!_isDrawing) return;
 
-    _currentDrawingEnd = details.localPosition;
+    // 获取相对于画布的坐标
+    _currentDrawingEnd = _getCanvasPosition(details.localPosition);
     
     // 只更新绘制预览，不触发整个 widget 重绘
     _drawingPreviewNotifier.value = DrawingPreviewData(
@@ -296,23 +316,30 @@ class _MapCanvasState extends State<MapCanvas> {
       strokeWidth: _effectiveStrokeWidth,
     );
   }
-  void _onDrawingEnd(DragEndDetails details) {
+
+  // 获取相对于画布的正确坐标
+  Offset _getCanvasPosition(Offset localPosition) {
+    // localPosition 已经是相对于画布容器的坐标
+    // 确保坐标在画布范围内
+    final clampedX = localPosition.dx.clamp(0.0, kCanvasWidth);
+    final clampedY = localPosition.dy.clamp(0.0, kCanvasHeight);
+    return Offset(clampedX, clampedY);
+  }void _onDrawingEnd(DragEndDetails details) {
     if (!_isDrawing || _currentDrawingStart == null || _currentDrawingEnd == null || widget.selectedLayer == null) {
       _isDrawing = false;
       _currentDrawingStart = null;
       _currentDrawingEnd = null;
       _drawingPreviewNotifier.value = null; // 清除预览
       return;
-    }
-
-    // Convert screen coordinates to normalized coordinates (0.0-1.0)
+    }    // Convert screen coordinates to normalized coordinates (0.0-1.0)
+    // 使用固定的画布尺寸，与绘制时保持一致
     final normalizedStart = Offset(
-      _currentDrawingStart!.dx / 1200,
-      _currentDrawingStart!.dy / 800,
+      _currentDrawingStart!.dx / kCanvasWidth,
+      _currentDrawingStart!.dy / kCanvasHeight,
     );
     final normalizedEnd = Offset(
-      _currentDrawingEnd!.dx / 1200,
-      _currentDrawingEnd!.dy / 800,
+      _currentDrawingEnd!.dx / kCanvasWidth,
+      _currentDrawingEnd!.dy / kCanvasHeight,
     );
 
     // Add the drawing element to the selected layer
@@ -525,16 +552,15 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.elementType,
     required this.color,
     required this.strokeWidth,
-  });
-
-  @override
+  });  @override
   void paint(Canvas canvas, Size size) {
+    // 使用固定的画布尺寸来确保坐标转换的一致性
     final element = MapDrawingElement(
       id: 'preview',
       type: elementType,
       points: [
-        Offset(start.dx / size.width, start.dy / size.height),
-        Offset(end.dx / size.width, end.dy / size.height),
+        Offset(start.dx / kCanvasWidth, start.dy / kCanvasHeight),
+        Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
       ],
       color: color.withOpacity(0.7),
       strokeWidth: strokeWidth,
