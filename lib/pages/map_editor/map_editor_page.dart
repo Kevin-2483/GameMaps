@@ -8,7 +8,9 @@ import '../../models/legend_item.dart' as legend_db;
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
-import 'widgets/drawing_toolbar_optimized.dart';
+import 'widgets/drawing_toolbar.dart';
+import 'widgets/layer_legend_binding_drawer.dart';
+import 'widgets/legend_group_management_drawer.dart';
 
 class MapEditorPage extends StatefulWidget {
   final MapItem mapItem;
@@ -313,12 +315,71 @@ class _MapEditorPageState extends State<MapEditorPage> {
         _currentMap = _currentMap.copyWith(legendGroups: updatedGroups);
       }
     });
-  }
-  // 处理透明度预览
+  }  // 处理透明度预览
   void _handleOpacityPreview(String layerId, double opacity) {
     setState(() {
       _previewOpacityValues[layerId] = opacity;
     });
+  }
+
+  // 显示图层图例绑定抽屉
+  void _showLayerLegendBindingDrawer(MapLayer layer, List<LegendGroup> allLegendGroups) {
+    if (widget.isPreviewMode) return;
+    
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: SlideTransition(
+            position: animation.drive(Tween(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            )),
+            child: LayerLegendBindingDrawer(
+              layer: layer,
+              allLegendGroups: allLegendGroups,
+              onLayerUpdated: _updateLayer,
+              onLegendGroupTapped: _showLegendGroupManagementDrawer,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 显示图例组管理抽屉
+  void _showLegendGroupManagementDrawer(LegendGroup legendGroup) {
+    if (widget.isPreviewMode) return;
+    
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: SlideTransition(
+            position: animation.drive(Tween(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            )),
+            child: LegendGroupManagementDrawer(
+              legendGroup: legendGroup,
+              availableLegends: _availableLegends,
+              onLegendGroupUpdated: _updateLegendGroup,
+              isPreviewMode: widget.isPreviewMode,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // 处理绘制工具预览
@@ -564,6 +625,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
           onError: _showErrorSnackBar,
           onSuccess: _showSuccessSnackBar,
           onOpacityPreview: _handleOpacityPreview,
+          allLegendGroups: _currentMap.legendGroups,
+          onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
         ),
       ),
     );
@@ -583,14 +646,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
             onPressed: _addLegendGroup,
             tooltip: '添加图例组',
           ),
-        ],
-        child: _isLegendPanelCollapsed ? null : LegendPanel(
+        ],        child: _isLegendPanelCollapsed ? null : LegendPanel(
           legendGroups: _currentMap.legendGroups,
           availableLegends: _availableLegends,
           isPreviewMode: widget.isPreviewMode,
           onLegendGroupUpdated: _updateLegendGroup,
           onLegendGroupDeleted: _deleteLegendGroup,
           onLegendGroupAdded: _addLegendGroup,
+          onLegendGroupTapped: _showLegendGroupManagementDrawer,
         ),
       ),
     );
@@ -884,8 +947,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
         ),
       ],
     );
-  }
-  /// 构建地图画布组件
+  }  /// 构建地图画布组件
   Widget _buildMapCanvas() {
     return MapCanvas(
       mapItem: _currentMap,
@@ -903,12 +965,5 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewStrokeWidth: _previewStrokeWidth,
       selectedElementId: _selectedElementId,
     );
-  }
-
-  // 元素选择处理
-  void _handleElementSelected(String? elementId) {
-    setState(() {
-      _selectedElementId = elementId;
-    });
   }
 }

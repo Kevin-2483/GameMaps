@@ -16,6 +16,9 @@ class LayerPanel extends StatefulWidget {
   final Function(String)? onSuccess;
   // 新增：实时透明度预览回调
   final Function(String layerId, double opacity)? onOpacityPreview;
+  // 新增：图例组相关数据和回调
+  final List<LegendGroup> allLegendGroups;
+  final Function(MapLayer, List<LegendGroup>)? onShowLayerLegendBinding; // 显示图层图例绑定抽屉
 
   const LayerPanel({
     super.key,
@@ -30,6 +33,8 @@ class LayerPanel extends StatefulWidget {
     this.onError,
     this.onSuccess,
     this.onOpacityPreview,
+    required this.allLegendGroups,
+    this.onShowLayerLegendBinding,
   });
 
   @override
@@ -220,34 +225,43 @@ class _LayerPanelState extends State<LayerPanel> {
       ),
     );
   }
-
-  /// 构建优化的透明度滑块
+  /// 构建优化的透明度滑块和图例组绑定
   Widget _buildOpacitySlider(MapLayer layer) {
     // 获取当前显示的透明度值（临时值或实际值）
     final currentOpacity = _tempOpacityValues[layer.id] ?? layer.opacity;
     
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('不透明度:', style: TextStyle(fontSize: 11)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Slider(
-            value: currentOpacity,
-            min: 0.0,
-            max: 1.0,
-            divisions: 20,
-            onChanged: widget.isPreviewMode
-                ? null
-                : (opacity) => _handleOpacityChange(layer, opacity),
-            onChangeEnd: widget.isPreviewMode
-                ? null
-                : (opacity) => _handleOpacityChangeEnd(layer, opacity),
-          ),
+        // 透明度滑块
+        Row(
+          children: [
+            const Text('不透明度:', style: TextStyle(fontSize: 11)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Slider(
+                value: currentOpacity,
+                min: 0.0,
+                max: 1.0,
+                divisions: 20,
+                onChanged: widget.isPreviewMode
+                    ? null
+                    : (opacity) => _handleOpacityChange(layer, opacity),
+                onChangeEnd: widget.isPreviewMode
+                    ? null
+                    : (opacity) => _handleOpacityChangeEnd(layer, opacity),
+              ),
+            ),
+            Text(
+              '${(currentOpacity * 100).round()}%',
+              style: const TextStyle(fontSize: 11),
+            ),
+          ],
         ),
-        Text(
-          '${(currentOpacity * 100).round()}%',
-          style: const TextStyle(fontSize: 11),
-        ),
+        
+        // 图例组绑定 chip
+        const SizedBox(height: 4),
+        _buildLegendGroupsChip(layer),
       ],
     );
   }
@@ -261,7 +275,6 @@ class _LayerPanelState extends State<LayerPanel> {
     // 立即通知画布进行预览
     widget.onOpacityPreview?.call(layer.id, opacity);
   }
-
   /// 处理透明度变化结束（松开滑块时）
   void _handleOpacityChangeEnd(MapLayer layer, double opacity) {
     // 取消之前的定时器
@@ -281,6 +294,57 @@ class _LayerPanelState extends State<LayerPanel> {
         _tempOpacityValues.remove(layer.id);
       });
     });
+  }
+
+  /// 构建图例组绑定 chip
+  Widget _buildLegendGroupsChip(MapLayer layer) {
+    final boundGroupsCount = layer.legendGroupIds.length;
+    
+    return InkWell(
+      onTap: widget.isPreviewMode 
+          ? null 
+          : () => widget.onShowLayerLegendBinding?.call(layer, widget.allLegendGroups),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: boundGroupsCount > 0 
+              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: boundGroupsCount > 0 
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.legend_toggle,
+              size: 12,
+              color: boundGroupsCount > 0 
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              boundGroupsCount > 0 
+                  ? '已绑定 $boundGroupsCount 个图例组'
+                  : '点击绑定图例组',
+              style: TextStyle(
+                fontSize: 10,
+                color: boundGroupsCount > 0 
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey.shade600,
+                fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// 构建图层名称编辑器
