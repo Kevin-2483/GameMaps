@@ -8,6 +8,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final List<legend_db.LegendItem> availableLegends;
   final Function(LegendGroup) onLegendGroupUpdated;
   final bool isPreviewMode;
+  final VoidCallback onClose; // 关闭回调
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -15,6 +16,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     required this.availableLegends,
     required this.onLegendGroupUpdated,
     this.isPreviewMode = false,
+    required this.onClose,
   });
 
   @override
@@ -29,11 +31,15 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
     super.initState();
     _currentGroup = widget.legendGroup;
   }
-
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      width: 400,
+    return Container(
+      width: 400, // 管理图例组宽度
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           // 标题栏
@@ -41,6 +47,10 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,10 +77,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                         icon: const Icon(Icons.edit, size: 18),
                         onPressed: _showEditNameDialog,
                         tooltip: '编辑名称',
-                      ),
-                    IconButton(
+                      ),                    IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: widget.onClose,
                     ),
                   ],
                 ),
@@ -87,10 +96,10 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                       ),
                     ),
                   ],
-                ),
-              ],
+                ),              ],
             ),
           ),
+          const Divider(height: 1),
 
           // 图例组设置
           Container(

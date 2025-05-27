@@ -7,6 +7,7 @@ class LayerLegendBindingDrawer extends StatefulWidget {
   final List<LegendGroup> allLegendGroups;
   final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupTapped; // 点击图例组时的回调
+  final VoidCallback onClose; // 关闭回调
 
   const LayerLegendBindingDrawer({
     super.key,
@@ -14,6 +15,7 @@ class LayerLegendBindingDrawer extends StatefulWidget {
     required this.allLegendGroups,
     required this.onLayerUpdated,
     required this.onLegendGroupTapped,
+    required this.onClose,
   });
 
   @override
@@ -28,7 +30,6 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
     super.initState();
     _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
   }
-
   @override
   Widget build(BuildContext context) {
     // 分离已绑定和未绑定的图例组
@@ -39,8 +40,13 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
         .where((group) => !_selectedLegendGroupIds.contains(group.id))
         .toList();
 
-    return Drawer(
-      width: 350,
+    return Container(
+      width: 400, // 图层图例宽度
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         children: [
           // 标题栏
@@ -48,6 +54,10 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,6 +66,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                   children: [
                     Icon(
                       Icons.layers,
+                      size: 20,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
@@ -71,7 +82,12 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: widget.onClose,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
                     ),
                   ],
                 ),
@@ -85,6 +101,11 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 ),
               ],
             ),
+          ),
+          Divider(
+            height: 1,
+            color: Theme.of(context).dividerColor,
+            thickness: 1,
           ),
 
           // 内容区域
@@ -151,10 +172,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     icon: const Icon(Icons.save),
                     label: const Text('应用更改'),
                   ),
-                ),
-                const SizedBox(width: 8),
+                ),                const SizedBox(width: 8),
                 OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: widget.onClose,
                   child: const Text('取消'),
                 ),
               ],
@@ -233,13 +253,12 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
       }
     });
   }
-
   void _applyChanges() {
     final updatedLayer = widget.layer.copyWith(
       legendGroupIds: _selectedLegendGroupIds.toList(),
       updatedAt: DateTime.now(),
     );
     widget.onLayerUpdated(updatedLayer);
-    Navigator.of(context).pop();
+    widget.onClose();
   }
 }

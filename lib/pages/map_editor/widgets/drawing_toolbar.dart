@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../models/map_layer.dart';
-import 'z_index_inspector.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -26,6 +25,7 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final Function(String elementId)? onElementDeleted;
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
+  final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
   
   const DrawingToolbarOptimized({
     super.key,
@@ -47,6 +47,7 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.onElementDeleted,
     this.selectedElementId,
     this.onElementSelected,
+    this.onZIndexInspectorRequested,
   });
 
   @override
@@ -59,14 +60,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   DrawingElementType? _tempSelectedTool;
   Color? _tempSelectedColor;
   double? _tempSelectedStrokeWidth;
-
   // 定时器，用于延迟提交更改
   Timer? _toolTimer;
   Timer? _colorTimer;
   Timer? _strokeWidthTimer;
-
-  // Z层级检视器抽屉状态
-  bool _isZIndexDrawerOpen = false;
   @override
   void dispose() {
     _toolTimer?.cancel();
@@ -153,299 +150,197 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
 
-    return Stack(
-      children: [
-        // 主工具栏
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drawing tools
+          const Text(
+            '工具',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              // Drawing tools
-              const Text(
-                '工具',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              _buildToolButton(
+                context,
+                icon: Icons.remove,
+                tooltip: '实线',
+                tool: DrawingElementType.line,
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildToolButton(
-                    context,
-                    icon: Icons.remove,
-                    tooltip: '实线',
-                    tool: DrawingElementType.line,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.more_horiz,
-                    tooltip: '虚线',
-                    tool: DrawingElementType.dashedLine,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.arrow_forward,
-                    tooltip: '箭头',
-                    tool: DrawingElementType.arrow,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.rectangle,
-                    tooltip: '实心矩形',
-                    tool: DrawingElementType.rectangle,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.rectangle_outlined,
-                    tooltip: '空心矩形',
-                    tool: DrawingElementType.hollowRectangle,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.line_style,
-                    tooltip: '单斜线',
-                    tool: DrawingElementType.diagonalLines,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.grid_3x3,
-                    tooltip: '交叉线',
-                    tool: DrawingElementType.crossLines,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.grid_on,
-                    tooltip: '点阵',
-                    tool: DrawingElementType.dotGrid,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.gesture,
-                    tooltip: '像素笔',
-                    tool: DrawingElementType.freeDrawing,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.text_fields,
-                    tooltip: '文本框',
-                    tool: DrawingElementType.text,
-                  ),
-                  _buildToolButton(
-                    context,
-                    icon: Icons.cleaning_services,
-                    tooltip: '橡皮擦',
-                    tool: DrawingElementType.eraser,
-                  ),
-                ],
+              _buildToolButton(
+                context,
+                icon: Icons.more_horiz,
+                tooltip: '虚线',
+                tool: DrawingElementType.dashedLine,
               ),
-              const SizedBox(height: 16),
-
-              // Undo/Redo buttons
-              if (widget.onUndo != null || widget.onRedo != null)
-                Row(
-                  children: [
-                    if (widget.onUndo != null)
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: widget.canUndo ? widget.onUndo : null,
-                          icon: const Icon(Icons.undo),
-                          label: const Text('撤销'),
-                        ),
-                      ),
-                    if (widget.onUndo != null && widget.onRedo != null)
-                      const SizedBox(width: 8),
-                    if (widget.onRedo != null)
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: widget.canRedo ? widget.onRedo : null,
-                          icon: const Icon(Icons.redo),
-                          label: const Text('重做'),
-                        ),
-                      ),
-                  ],
-                ),
-
-              const SizedBox(height: 16),
-
-              // Color picker
-              const Text(
-                '颜色',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              _buildToolButton(
+                context,
+                icon: Icons.arrow_forward,
+                tooltip: '箭头',
+                tool: DrawingElementType.arrow,
               ),
-              const SizedBox(height: 8),
-
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildColorButton(Colors.black),
-                  _buildColorButton(Colors.red),
-                  _buildColorButton(Colors.blue),
-                  _buildColorButton(Colors.green),
-                  _buildColorButton(Colors.orange),
-                  _buildColorButton(Colors.purple),
-                  _buildColorButton(Colors.brown),
-                  _buildColorButton(Colors.grey),
-                ],
+              _buildToolButton(
+                context,
+                icon: Icons.rectangle,
+                tooltip: '实心矩形',
+                tool: DrawingElementType.rectangle,
               ),
-
-              const SizedBox(height: 16),
-
-              // Stroke width
-              const Text(
-                '线条粗细',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              _buildToolButton(
+                context,
+                icon: Icons.rectangle_outlined,
+                tooltip: '空心矩形',
+                tool: DrawingElementType.hollowRectangle,
               ),
-              const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: Slider(
-                      value: _effectiveStrokeWidth,
-                      min: 1.0,
-                      max: 10.0,
-                      divisions: 9,
-                      label: _effectiveStrokeWidth.round().toString(),
-                      onChanged: _handleStrokeWidthChange,
-                    ),
-                  ),
-                  Text('${_effectiveStrokeWidth.round()}px'),
-                ],
+              _buildToolButton(
+                context,
+                icon: Icons.line_style,
+                tooltip: '单斜线',
+                tool: DrawingElementType.diagonalLines,
               ),
-
-              const SizedBox(height: 8), // Clear selection button
-              if (_effectiveTool != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => _handleToolSelection(null),
-                    child: const Text('取消选择'),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
-              // Z层级检视器按钮
-              if (widget.selectedLayer != null &&
-                  widget.onElementDeleted != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _isZIndexDrawerOpen = true;
-                      });
-                    },
-                    icon: const Icon(Icons.layers),
-                    label: Text(
-                      'Z层级检视器 (${widget.selectedLayer!.elements.length})',
-                    ),
-                  ),
-                ),
+              _buildToolButton(
+                context,
+                icon: Icons.grid_3x3,
+                tooltip: '交叉线',
+                tool: DrawingElementType.crossLines,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.grid_on,
+                tooltip: '点阵',
+                tool: DrawingElementType.dotGrid,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.gesture,
+                tooltip: '像素笔',
+                tool: DrawingElementType.freeDrawing,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.text_fields,
+                tooltip: '文本框',
+                tool: DrawingElementType.text,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.cleaning_services,
+                tooltip: '橡皮擦',
+                tool: DrawingElementType.eraser,
+              ),
             ],
           ),
-        ), // Z层级检视器抽屉
-        if (_isZIndexDrawerOpen &&
-            widget.selectedLayer != null &&
-            widget.onElementDeleted != null)
-          Positioned.fill(
-            top: 20,
-            bottom: 0,
-            left: 20,
-            right: 20,
-            child: GestureDetector(
-              onTap: () {
-                // 点击空白区域关闭抽屉
-                setState(() {
-                  _isZIndexDrawerOpen = false;
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  border: Border.all(color: Theme.of(context).dividerColor),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: GestureDetector(
-                  onTap: () {}, // 阻止事件冒泡到父容器
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 抽屉标题栏
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.layers,
-                              size: 20,
-                              color: Theme.of(context).iconTheme.color,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Z层级检视器',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.titleMedium?.color,
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isZIndexDrawerOpen = false;
-                                });
-                              },
-                              icon: Icon(
-                                Icons.close,
-                                color: Theme.of(context).iconTheme.color,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(
-                        height: 1,
-                        color: Theme.of(context).dividerColor,
-                        thickness: 1,
-                      ),
+          const SizedBox(height: 16),
 
-                      // Z层级检视器内容 - 占满剩余高度并支持滚动
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),                            child: ZIndexInspector(
-                              selectedLayer: widget.selectedLayer,
-                              onElementDeleted: widget.onElementDeleted!,
-                              selectedElementId: widget.selectedElementId,
-                              onElementSelected: widget.onElementSelected,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+          // Undo/Redo buttons
+          if (widget.onUndo != null || widget.onRedo != null)
+            Row(
+              children: [
+                if (widget.onUndo != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: widget.canUndo ? widget.onUndo : null,
+                      icon: const Icon(Icons.undo),
+                      label: const Text('撤销'),
+                    ),
                   ),
+                if (widget.onUndo != null && widget.onRedo != null)
+                  const SizedBox(width: 8),
+                if (widget.onRedo != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: widget.canRedo ? widget.onRedo : null,
+                      icon: const Icon(Icons.redo),
+                      label: const Text('重做'),
+                    ),
+                  ),
+              ],
+            ),
+
+          const SizedBox(height: 16),
+
+          // Color picker
+          const Text(
+            '颜色',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildColorButton(Colors.black),
+              _buildColorButton(Colors.red),
+              _buildColorButton(Colors.blue),
+              _buildColorButton(Colors.green),
+              _buildColorButton(Colors.orange),
+              _buildColorButton(Colors.purple),
+              _buildColorButton(Colors.brown),
+              _buildColorButton(Colors.grey),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Stroke width
+          const Text(
+            '线条粗细',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: _effectiveStrokeWidth,
+                  min: 1.0,
+                  max: 10.0,
+                  divisions: 9,
+                  label: _effectiveStrokeWidth.round().toString(),
+                  onChanged: _handleStrokeWidthChange,
+                ),
+              ),
+              Text('${_effectiveStrokeWidth.round()}px'),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+          // Clear selection button
+          if (_effectiveTool != null)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => _handleToolSelection(null),
+                child: const Text('取消选择'),
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
+          // Z层级检视器按钮
+          if (widget.selectedLayer != null &&
+              widget.onZIndexInspectorRequested != null)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: widget.onZIndexInspectorRequested,
+                icon: const Icon(Icons.layers),
+                label: Text(
+                  'Z层级检视器 (${widget.selectedLayer!.elements.length})',
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -11,6 +11,7 @@ import 'widgets/legend_panel.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/layer_legend_binding_drawer.dart';
 import 'widgets/legend_group_management_drawer.dart';
+import 'widgets/z_index_inspector.dart';
 
 class MapEditorPage extends StatefulWidget {
   final MapItem mapItem;
@@ -30,7 +31,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   late MapItem _currentMap;
   final MapDatabaseService _mapDatabaseService = MapDatabaseService();
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
-    List<legend_db.LegendItem> _availableLegends = [];
+  List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
   MapLayer? _selectedLayer;
@@ -48,12 +49,18 @@ class _MapEditorPageState extends State<MapEditorPage> {
   bool _isLegendPanelAutoClose = true;
 
   // 悬浮工具栏状态（用于窄屏）
-  bool _isFloatingToolbarVisible = false;
-  // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
+  bool _isFloatingToolbarVisible = false; // 透明度预览状态
+  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
+  // 覆盖层状态
+  bool _isLayerLegendBindingDrawerOpen = false;
+  bool _isLegendGroupManagementDrawerOpen = false;
+  bool _isZIndexInspectorOpen = false;
+  MapLayer? _currentLayerForBinding;
+  List<LegendGroup>? _allLegendGroupsForBinding;
+  LegendGroup? _currentLegendGroupForManagement;
 
   // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
@@ -64,25 +71,26 @@ class _MapEditorPageState extends State<MapEditorPage> {
     super.initState();
     _currentMap = widget.mapItem;
     _loadAvailableLegends();
-    
+
     // 如果没有图层，创建一个默认图层
     if (_currentMap.layers.isEmpty) {
       _addDefaultLayer();
     } else {
       _selectedLayer = _currentMap.layers.first;
     }
-    
+
     // 保存初始状态到撤销历史
     _saveToUndoHistory();
   }
+
   // 撤销历史记录管理方法
   void _saveToUndoHistory() {
     // 保存当前状态到撤销历史
     _undoHistory.add(_currentMap.copyWith());
-    
+
     // 清空重做历史，因为新的操作会使重做历史失效
     _redoHistory.clear();
-    
+
     // 限制历史记录数量
     if (_undoHistory.length > _maxUndoHistory) {
       _undoHistory.removeAt(0);
@@ -91,25 +99,25 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _undo() {
     if (_undoHistory.isEmpty) return;
-    
+
     setState(() {
       // 将当前状态保存到重做历史
       _redoHistory.add(_currentMap.copyWith());
-      
+
       // 限制重做历史记录数量
       if (_redoHistory.length > _maxUndoHistory) {
         _redoHistory.removeAt(0);
       }
-      
+
       _currentMap = _undoHistory.removeLast();
-      
+
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
         final selectedLayerId = _selectedLayer!.id;
         _selectedLayer = _currentMap.layers
             .where((layer) => layer.id == selectedLayerId)
             .firstOrNull;
-        
+
         // 如果原选中图层不存在，选择第一个图层
         if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
           _selectedLayer = _currentMap.layers.first;
@@ -120,25 +128,25 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _redo() {
     if (_redoHistory.isEmpty) return;
-    
+
     setState(() {
       // 将当前状态保存到撤销历史
       _undoHistory.add(_currentMap.copyWith());
-      
+
       // 限制撤销历史记录数量
       if (_undoHistory.length > _maxUndoHistory) {
         _undoHistory.removeAt(0);
       }
-      
+
       _currentMap = _redoHistory.removeLast();
-      
+
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
         final selectedLayerId = _selectedLayer!.id;
         _selectedLayer = _currentMap.layers
             .where((layer) => layer.id == selectedLayerId)
             .firstOrNull;
-        
+
         // 如果原选中图层不存在，选择第一个图层
         if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
           _selectedLayer = _currentMap.layers.first;
@@ -146,36 +154,37 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
+
   bool get _canUndo => _undoHistory.isNotEmpty;
   bool get _canRedo => _redoHistory.isNotEmpty;
 
   // 删除指定图层中的绘制元素
   void _deleteElement(String elementId) {
     if (widget.isPreviewMode || _selectedLayer == null) return;
-    
+
     // 找到要删除的元素
     final elementToDelete = _selectedLayer!.elements
         .where((element) => element.id == elementId)
         .firstOrNull;
-    
+
     if (elementToDelete == null) return;
-    
+
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
-    
+
     // 创建新的元素列表，排除要删除的元素
     final updatedElements = _selectedLayer!.elements
         .where((element) => element.id != elementId)
         .toList();
-    
+
     // 更新图层
     final updatedLayer = _selectedLayer!.copyWith(
       elements: updatedElements,
       updatedAt: DateTime.now(),
     );
-    
+
     _updateLayer(updatedLayer);
-    
+
     // 显示删除成功消息
     _showSuccessSnackBar('已删除绘制元素');
   }
@@ -202,7 +211,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     setState(() {
       _currentMap = _currentMap.copyWith(
         layers: [..._currentMap.layers, defaultLayer],
@@ -213,7 +222,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _addNewLayer() {
     if (widget.isPreviewMode) return;
-    
+
     final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '图层 ${_currentMap.layers.length + 1}',
@@ -221,7 +230,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     setState(() {
       _currentMap = _currentMap.copyWith(
         layers: [..._currentMap.layers, newLayer],
@@ -232,27 +241,32 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _deleteLayer(MapLayer layer) {
     if (widget.isPreviewMode || _currentMap.layers.length <= 1) return;
-    
+
     setState(() {
-      final updatedLayers = _currentMap.layers.where((l) => l.id != layer.id).toList();
+      final updatedLayers = _currentMap.layers
+          .where((l) => l.id != layer.id)
+          .toList();
       _currentMap = _currentMap.copyWith(layers: updatedLayers);
-      
+
       if (_selectedLayer?.id == layer.id) {
         _selectedLayer = updatedLayers.isNotEmpty ? updatedLayers.first : null;
       }
     });
   }
+
   void _updateLayer(MapLayer updatedLayer) {
     // 在修改前保存当前状态
     _saveToUndoHistory();
-    
+
     setState(() {
-      final layerIndex = _currentMap.layers.indexWhere((l) => l.id == updatedLayer.id);
+      final layerIndex = _currentMap.layers.indexWhere(
+        (l) => l.id == updatedLayer.id,
+      );
       if (layerIndex != -1) {
         final updatedLayers = List<MapLayer>.from(_currentMap.layers);
         updatedLayers[layerIndex] = updatedLayer;
         _currentMap = _currentMap.copyWith(layers: updatedLayers);
-        
+
         if (_selectedLayer?.id == updatedLayer.id) {
           _selectedLayer = updatedLayer;
         }
@@ -262,7 +276,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _reorderLayers(int oldIndex, int newIndex) {
     if (widget.isPreviewMode) return;
-    
+
     setState(() {
       final layers = List<MapLayer>.from(_currentMap.layers);
       if (newIndex > oldIndex) {
@@ -270,26 +284,26 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
       final item = layers.removeAt(oldIndex);
       layers.insert(newIndex, item);
-      
+
       // 重新分配order
       for (int i = 0; i < layers.length; i++) {
         layers[i] = layers[i].copyWith(order: i);
       }
-      
+
       _currentMap = _currentMap.copyWith(layers: layers);
     });
   }
 
   void _addLegendGroup() {
     if (widget.isPreviewMode) return;
-    
+
     final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '图例组 ${_currentMap.legendGroups.length + 1}',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     setState(() {
       _currentMap = _currentMap.copyWith(
         legendGroups: [..._currentMap.legendGroups, newGroup],
@@ -299,87 +313,108 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   void _deleteLegendGroup(LegendGroup group) {
     if (widget.isPreviewMode) return;
-    
+
     setState(() {
-      final updatedGroups = _currentMap.legendGroups.where((g) => g.id != group.id).toList();
+      final updatedGroups = _currentMap.legendGroups
+          .where((g) => g.id != group.id)
+          .toList();
       _currentMap = _currentMap.copyWith(legendGroups: updatedGroups);
     });
   }
 
   void _updateLegendGroup(LegendGroup updatedGroup) {
     setState(() {
-      final groupIndex = _currentMap.legendGroups.indexWhere((g) => g.id == updatedGroup.id);
+      final groupIndex = _currentMap.legendGroups.indexWhere(
+        (g) => g.id == updatedGroup.id,
+      );
       if (groupIndex != -1) {
         final updatedGroups = List<LegendGroup>.from(_currentMap.legendGroups);
         updatedGroups[groupIndex] = updatedGroup;
         _currentMap = _currentMap.copyWith(legendGroups: updatedGroups);
       }
     });
-  }  // 处理透明度预览
+  } // 处理透明度预览
+
   void _handleOpacityPreview(String layerId, double opacity) {
     setState(() {
       _previewOpacityValues[layerId] = opacity;
     });
-  }
+  } // 显示图层图例绑定抽屉
 
-  // 显示图层图例绑定抽屉
-  void _showLayerLegendBindingDrawer(MapLayer layer, List<LegendGroup> allLegendGroups) {
+  void _showLayerLegendBindingDrawer(
+    MapLayer layer,
+    List<LegendGroup> allLegendGroups,
+  ) {
     if (widget.isPreviewMode) return;
-    
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black.withOpacity(0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.centerRight,
-          child: SlideTransition(
-            position: animation.drive(Tween(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            )),
-            child: LayerLegendBindingDrawer(
-              layer: layer,
-              allLegendGroups: allLegendGroups,
-              onLayerUpdated: _updateLayer,
-              onLegendGroupTapped: _showLegendGroupManagementDrawer,
-            ),
-          ),
-        );
-      },
-    );
-  }
 
-  // 显示图例组管理抽屉
+    setState(() {
+      // 关闭其他抽屉
+      _isLegendGroupManagementDrawerOpen = false;
+      _isZIndexInspectorOpen = false;
+      _currentLegendGroupForManagement = null;
+
+      // 打开图层图例绑定抽屉
+      _currentLayerForBinding = layer;
+      _allLegendGroupsForBinding = allLegendGroups;
+      _isLayerLegendBindingDrawerOpen = true;
+    });
+  } // 显示图例组管理抽屉
+
   void _showLegendGroupManagementDrawer(LegendGroup legendGroup) {
     if (widget.isPreviewMode) return;
-    
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black.withOpacity(0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.centerRight,
-          child: SlideTransition(
-            position: animation.drive(Tween(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            )),
-            child: LegendGroupManagementDrawer(
-              legendGroup: legendGroup,
-              availableLegends: _availableLegends,
-              onLegendGroupUpdated: _updateLegendGroup,
-              isPreviewMode: widget.isPreviewMode,
-            ),
-          ),
-        );
-      },
-    );
+
+    setState(() {
+      // 关闭其他抽屉
+      _isLayerLegendBindingDrawerOpen = false;
+      _isZIndexInspectorOpen = false;
+      _currentLayerForBinding = null;
+      _allLegendGroupsForBinding = null;
+
+      // 打开图例组管理抽屉
+      _currentLegendGroupForManagement = legendGroup;
+      _isLegendGroupManagementDrawerOpen = true;
+    });
+  }
+
+  // 关闭图层图例绑定抽屉
+  void _closeLayerLegendBindingDrawer() {
+    setState(() {
+      _isLayerLegendBindingDrawerOpen = false;
+      _currentLayerForBinding = null;
+      _allLegendGroupsForBinding = null;
+    });
+  }
+
+  // 关闭图例组管理抽屉
+  void _closeLegendGroupManagementDrawer() {
+    setState(() {
+      _isLegendGroupManagementDrawerOpen = false;
+      _currentLegendGroupForManagement = null;
+    });
+  }
+
+  // 显示Z层级检视器
+  void _showZIndexInspector() {
+    if (widget.isPreviewMode || _selectedLayer == null) return;
+
+    setState(() {
+      // 关闭其他抽屉
+      _isLayerLegendBindingDrawerOpen = false;
+      _isLegendGroupManagementDrawerOpen = false;
+      _currentLayerForBinding = null;
+      _allLegendGroupsForBinding = null;
+      _currentLegendGroupForManagement = null;
+
+      // 打开Z层级检视器
+      _isZIndexInspectorOpen = true;
+    });
+  }
+
+  // 关闭Z层级检视器
+  void _closeZIndexInspector() {
+    setState(() {
+      _isZIndexInspectorOpen = false;
+    });
   }
 
   // 处理绘制工具预览
@@ -403,13 +438,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   Future<void> _saveMap() async {
     if (widget.isPreviewMode) return;
-    
+
     setState(() => _isLoading = true);
     try {
-      final updatedMap = _currentMap.copyWith(
-        updatedAt: DateTime.now(),
-      );
-      
+      final updatedMap = _currentMap.copyWith(updatedAt: DateTime.now());
+
       await _mapDatabaseService.updateMap(updatedMap);
       _showSuccessSnackBar('地图保存成功');
     } catch (e) {
@@ -430,6 +463,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       );
     }
   }
+
   void _showSuccessSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -485,7 +519,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor),
@@ -530,9 +564,143 @@ class _MapEditorPageState extends State<MapEditorPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : isNarrowScreen 
-              ? _buildNarrowScreenLayout()
-              : _buildWideScreenLayout(),      floatingActionButton: isNarrowScreen 
+          : Stack(
+              children: [
+                // 主要内容
+                isNarrowScreen
+                    ? _buildNarrowScreenLayout()
+                    : _buildWideScreenLayout(),
+
+                // 图层图例绑定抽屉覆盖层
+                if (_isLayerLegendBindingDrawerOpen &&
+                    _currentLayerForBinding != null &&
+                    _allLegendGroupsForBinding != null)
+                  Positioned(
+                    top: 16,
+                    bottom: 16,
+                    right: 16,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      child: LayerLegendBindingDrawer(
+                        layer: _currentLayerForBinding!,
+                        allLegendGroups: _allLegendGroupsForBinding!,
+                        onLayerUpdated: _updateLayer,
+                        onLegendGroupTapped: _showLegendGroupManagementDrawer,
+                        onClose: _closeLayerLegendBindingDrawer,
+                      ),
+                    ),
+                  ),
+                // 图例组管理抽屉覆盖层
+                if (_isLegendGroupManagementDrawerOpen &&
+                    _currentLegendGroupForManagement != null)
+                  Positioned(
+                    top: 16,
+                    bottom: 16,
+                    right: 16,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      child: LegendGroupManagementDrawer(
+                        legendGroup: _currentLegendGroupForManagement!,
+                        availableLegends: _availableLegends,
+                        onLegendGroupUpdated: _updateLegendGroup,
+                        isPreviewMode: widget.isPreviewMode,
+                        onClose: _closeLegendGroupManagementDrawer,
+                      ),
+                    ),
+                  ),
+
+                // Z层级检视器覆盖层
+                if (_isZIndexInspectorOpen && _selectedLayer != null)
+                  Positioned(
+                    top: 16,
+                    bottom: 16,
+                    right: 16,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 400, //Z层级检视器宽度
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 标题栏
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(12),
+                                  topRight: Radius.circular(12),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.layers,
+                                    size: 20,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondaryContainer,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Z层级检视器',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: _closeZIndexInspector,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+
+                            // Z层级检视器内容
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: ZIndexInspector(
+                                    selectedLayer: _selectedLayer,
+                                    onElementDeleted: _deleteElement,
+                                    selectedElementId: _selectedElementId,
+                                    onElementSelected: (elementId) {
+                                      setState(
+                                        () => _selectedElementId = elementId,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+      floatingActionButton: isNarrowScreen
           ? AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               child: FloatingActionButton.extended(
@@ -544,7 +712,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 icon: AnimatedRotation(
                   turns: _isFloatingToolbarVisible ? 0.5 : 0.0,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(_isFloatingToolbarVisible ? Icons.close : Icons.menu),
+                  child: Icon(
+                    _isFloatingToolbarVisible ? Icons.close : Icons.menu,
+                  ),
                 ),
                 label: Text(_isFloatingToolbarVisible ? '关闭工具栏' : '工具栏'),
                 tooltip: _isFloatingToolbarVisible ? '关闭工具栏' : '打开工具栏',
@@ -553,9 +723,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
-  }List<Widget> _buildToolPanels() {
+  }
+
+  List<Widget> _buildToolPanels() {
     final List<Widget> panels = [];
-    
+
     // 绘制工具栏（仅编辑模式）
     if (!widget.isPreviewMode) {
       panels.add(
@@ -565,37 +737,44 @@ class _MapEditorPageState extends State<MapEditorPage> {
           isCollapsed: _isDrawingToolbarCollapsed,
           onToggleCollapsed: () => _handlePanelToggle('drawing'),
           autoCloseEnabled: _isDrawingToolbarAutoClose,
-          onAutoCloseToggled: (value) => setState(() => _isDrawingToolbarAutoClose = value),
-          needsScrolling: true,          child: _isDrawingToolbarCollapsed ? null : DrawingToolbarOptimized(
-            selectedTool: _selectedDrawingTool,
-            selectedColor: _selectedColor,
-            selectedStrokeWidth: _selectedStrokeWidth,
-            isEditMode: !widget.isPreviewMode,
-            onToolSelected: (tool) {
-              setState(() => _selectedDrawingTool = tool);
-            },
-            onColorSelected: (color) {
-              setState(() => _selectedColor = color);
-            },
-            onStrokeWidthChanged: (width) {
-              setState(() => _selectedStrokeWidth = width);
-            },            onToolPreview: _handleDrawingToolPreview,
-            onColorPreview: _handleColorPreview,
-            onStrokeWidthPreview: _handleStrokeWidthPreview,
-            onUndo: _undo,
-            onRedo: _redo,
-            canUndo: _canUndo,            canRedo: _canRedo,
-            selectedLayer: _selectedLayer,
-            onElementDeleted: _deleteElement,
-            selectedElementId: _selectedElementId,
-            onElementSelected: (elementId) {
-              setState(() => _selectedElementId = elementId);
-            },
-          ),
+          onAutoCloseToggled: (value) =>
+              setState(() => _isDrawingToolbarAutoClose = value),
+          needsScrolling: true,
+          child: _isDrawingToolbarCollapsed
+              ? null
+              : DrawingToolbarOptimized(
+                  selectedTool: _selectedDrawingTool,
+                  selectedColor: _selectedColor,
+                  selectedStrokeWidth: _selectedStrokeWidth,
+                  isEditMode: !widget.isPreviewMode,
+                  onToolSelected: (tool) {
+                    setState(() => _selectedDrawingTool = tool);
+                  },
+                  onColorSelected: (color) {
+                    setState(() => _selectedColor = color);
+                  },
+                  onStrokeWidthChanged: (width) {
+                    setState(() => _selectedStrokeWidth = width);
+                  },
+                  onToolPreview: _handleDrawingToolPreview,
+                  onColorPreview: _handleColorPreview,
+                  onStrokeWidthPreview: _handleStrokeWidthPreview,
+                  onUndo: _undo,
+                  onRedo: _redo,
+                  canUndo: _canUndo,
+                  canRedo: _canRedo,
+                  selectedLayer: _selectedLayer,
+                  onElementDeleted: _deleteElement,
+                  selectedElementId: _selectedElementId,
+                  onElementSelected: (elementId) {
+                    setState(() => _selectedElementId = elementId);
+                  },
+                  onZIndexInspectorRequested: _showZIndexInspector,
+                ),
         ),
       );
     }
-      // 图层面板
+    // 图层面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图层',
@@ -603,34 +782,42 @@ class _MapEditorPageState extends State<MapEditorPage> {
         isCollapsed: _isLayerPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('layer'),
         autoCloseEnabled: _isLayerPanelAutoClose,
-        onAutoCloseToggled: (value) => setState(() => _isLayerPanelAutoClose = value),
-        collapsedSubtitle: _selectedLayer != null ? '当前: ${_selectedLayer!.name}' : '未选择图层',
-        actions: widget.isPreviewMode ? null : [
-          IconButton(
-            icon: const Icon(Icons.add, size: 18),
-            onPressed: _addNewLayer,
-            tooltip: '添加图层',
-          ),
-        ],        child: _isLayerPanelCollapsed ? null : LayerPanel(
-          layers: _currentMap.layers,
-          selectedLayer: _selectedLayer,
-          isPreviewMode: widget.isPreviewMode,
-          onLayerSelected: (layer) {
-            setState(() => _selectedLayer = layer);
-          },
-          onLayerUpdated: _updateLayer,
-          onLayerDeleted: _deleteLayer,
-          onLayerAdded: _addNewLayer,
-          onLayersReordered: _reorderLayers,
-          onError: _showErrorSnackBar,
-          onSuccess: _showSuccessSnackBar,
-          onOpacityPreview: _handleOpacityPreview,
-          allLegendGroups: _currentMap.legendGroups,
-          onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
-        ),
+        onAutoCloseToggled: (value) =>
+            setState(() => _isLayerPanelAutoClose = value),
+        collapsedSubtitle: _selectedLayer != null
+            ? '当前: ${_selectedLayer!.name}'
+            : '未选择图层',
+        actions: widget.isPreviewMode
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.add, size: 18),
+                  onPressed: _addNewLayer,
+                  tooltip: '添加图层',
+                ),
+              ],
+        child: _isLayerPanelCollapsed
+            ? null
+            : LayerPanel(
+                layers: _currentMap.layers,
+                selectedLayer: _selectedLayer,
+                isPreviewMode: widget.isPreviewMode,
+                onLayerSelected: (layer) {
+                  setState(() => _selectedLayer = layer);
+                },
+                onLayerUpdated: _updateLayer,
+                onLayerDeleted: _deleteLayer,
+                onLayerAdded: _addNewLayer,
+                onLayersReordered: _reorderLayers,
+                onError: _showErrorSnackBar,
+                onSuccess: _showSuccessSnackBar,
+                onOpacityPreview: _handleOpacityPreview,
+                allLegendGroups: _currentMap.legendGroups,
+                onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
+              ),
       ),
     );
-    
+
     // 图例面板
     panels.add(
       _buildCollapsiblePanel(
@@ -639,27 +826,35 @@ class _MapEditorPageState extends State<MapEditorPage> {
         isCollapsed: _isLegendPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('legend'),
         autoCloseEnabled: _isLegendPanelAutoClose,
-        onAutoCloseToggled: (value) => setState(() => _isLegendPanelAutoClose = value),
-        actions: widget.isPreviewMode ? null : [
-          IconButton(
-            icon: const Icon(Icons.add, size: 18),
-            onPressed: _addLegendGroup,
-            tooltip: '添加图例组',
-          ),
-        ],        child: _isLegendPanelCollapsed ? null : LegendPanel(
-          legendGroups: _currentMap.legendGroups,
-          availableLegends: _availableLegends,
-          isPreviewMode: widget.isPreviewMode,
-          onLegendGroupUpdated: _updateLegendGroup,
-          onLegendGroupDeleted: _deleteLegendGroup,
-          onLegendGroupAdded: _addLegendGroup,
-          onLegendGroupTapped: _showLegendGroupManagementDrawer,
-        ),
+        onAutoCloseToggled: (value) =>
+            setState(() => _isLegendPanelAutoClose = value),
+        actions: widget.isPreviewMode
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.add, size: 18),
+                  onPressed: _addLegendGroup,
+                  tooltip: '添加图例组',
+                ),
+              ],
+        child: _isLegendPanelCollapsed
+            ? null
+            : LegendPanel(
+                legendGroups: _currentMap.legendGroups,
+                availableLegends: _availableLegends,
+                isPreviewMode: widget.isPreviewMode,
+                onLegendGroupUpdated: _updateLegendGroup,
+                onLegendGroupDeleted: _deleteLegendGroup,
+                onLegendGroupAdded: _addLegendGroup,
+                onLegendGroupTapped: _showLegendGroupManagementDrawer,
+              ),
       ),
     );
-    
+
     return panels;
-  }  Widget _buildCollapsiblePanel({
+  }
+
+  Widget _buildCollapsiblePanel({
     required String title,
     required IconData icon,
     required bool isCollapsed,
@@ -675,7 +870,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     final isNarrowScreen = screenWidth < 800;
     const double headerHeight = 48.0;
     final double minContentHeight = isNarrowScreen ? 600.0 : 700.0; // 窄屏时减小高度
-      if (isCollapsed) {
+    if (isCollapsed) {
       return Container(
         height: headerHeight,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -693,7 +888,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     Text(
                       title,
                       style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),                    if (collapsedSubtitle != null && collapsedSubtitle.isNotEmpty)
+                    ),
+                    if (collapsedSubtitle != null &&
+                        collapsedSubtitle.isNotEmpty)
                       Text(
                         collapsedSubtitle,
                         style: TextStyle(
@@ -729,9 +926,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     }
 
     return Container(
-      constraints: BoxConstraints(
-        minHeight: minContentHeight,
-      ),
+      constraints: BoxConstraints(minHeight: minContentHeight),
       child: Card(
         margin: EdgeInsets.all(isNarrowScreen ? 2 : 4), // 窄屏时减小边距
         child: Column(
@@ -743,8 +938,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
               height: headerHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.3),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
               ),
               child: InkWell(
                 onTap: onToggleCollapsed,
@@ -781,7 +980,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                               child: Switch(
                                 value: autoCloseEnabled,
                                 onChanged: onAutoCloseToggled,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
                           ],
@@ -796,14 +996,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 ),
               ),
             ),
-            
+
             // 内容
             if (child != null)
               Container(
                 height: minContentHeight,
-                child: needsScrolling 
-                  ? SingleChildScrollView(child: child)
-                  : child,
+                child: needsScrolling
+                    ? SingleChildScrollView(child: child)
+                    : child,
               ),
           ],
         ),
@@ -823,28 +1023,26 @@ class _MapEditorPageState extends State<MapEditorPage> {
               constraints: BoxConstraints(
                 minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
               ),
-              child: Column(
-                children: _buildToolPanels(),
-              ),
+              child: Column(children: _buildToolPanels()),
             ),
           ),
         ),
-        
+
         const VerticalDivider(),
-        
+
         // 右侧地图画布
-        Expanded(
-          child: _buildMapCanvas(),
-        ),
+        Expanded(child: _buildMapCanvas()),
       ],
     );
-  }  /// 窄屏布局（悬浮工具栏）
+  }
+
+  /// 窄屏布局（悬浮工具栏）
   Widget _buildNarrowScreenLayout() {
     return Stack(
       children: [
         // 地图画布占满全屏
         _buildMapCanvas(),
-        
+
         // 半透明遮罩（当工具栏打开时）- 放在工具栏下层，铺满整个屏幕
         if (_isFloatingToolbarVisible)
           Positioned.fill(
@@ -863,7 +1061,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
               ),
             ),
           ),
-        
+
         // 悬浮工具栏 - 放在遮罩上层
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
@@ -932,13 +1130,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     ],
                   ),
                 ),
-                
+
                 // 工具面板内容
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Column(
-                      children: _buildToolPanels(),
-                    ),
+                    child: Column(children: _buildToolPanels()),
                   ),
                 ),
               ],
@@ -947,7 +1143,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
         ),
       ],
     );
-  }  /// 构建地图画布组件
+  }
+
+  /// 构建地图画布组件
   Widget _buildMapCanvas() {
     return MapCanvas(
       mapItem: _currentMap,
