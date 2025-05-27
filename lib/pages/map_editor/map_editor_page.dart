@@ -34,11 +34,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
   MapLayer? _selectedLayer;
   DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
-  double _selectedStrokeWidth = 2.0;
-    // 工具栏折叠状态
+  double _selectedStrokeWidth = 2.0;    // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
+
+  // 自动关闭开关状态
+  bool _isDrawingToolbarAutoClose = true;
+  bool _isLayerPanelAutoClose = true;
+  bool _isLegendPanelAutoClose = true;
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false;
@@ -364,7 +368,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
       );
     }
   }
-
   void _showSuccessSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -376,6 +379,45 @@ class _MapEditorPageState extends State<MapEditorPage> {
       );
     }
   }
+
+  // 处理工具栏自动关闭逻辑
+  void _handlePanelToggle(String panelType) {
+    setState(() {
+      switch (panelType) {
+        case 'drawing':
+          // 如果其他面板开启了自动关闭，则关闭它们
+          if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
+            _isLayerPanelCollapsed = true;
+          }
+          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
+            _isLegendPanelCollapsed = true;
+          }
+          _isDrawingToolbarCollapsed = !_isDrawingToolbarCollapsed;
+          break;
+        case 'layer':
+          // 如果其他面板开启了自动关闭，则关闭它们
+          if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
+            _isDrawingToolbarCollapsed = true;
+          }
+          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
+            _isLegendPanelCollapsed = true;
+          }
+          _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
+          break;
+        case 'legend':
+          // 如果其他面板开启了自动关闭，则关闭它们
+          if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
+            _isDrawingToolbarCollapsed = true;
+          }
+          if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
+            _isLayerPanelCollapsed = true;
+          }
+          _isLegendPanelCollapsed = !_isLegendPanelCollapsed;
+          break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -459,7 +501,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
           title: '绘制工具',
           icon: Icons.brush,
           isCollapsed: _isDrawingToolbarCollapsed,
-          onToggleCollapsed: () => setState(() => _isDrawingToolbarCollapsed = !_isDrawingToolbarCollapsed),
+          onToggleCollapsed: () => _handlePanelToggle('drawing'),
+          autoCloseEnabled: _isDrawingToolbarAutoClose,
+          onAutoCloseToggled: (value) => setState(() => _isDrawingToolbarAutoClose = value),
           needsScrolling: true,          child: _isDrawingToolbarCollapsed ? null : DrawingToolbarOptimized(
             selectedTool: _selectedDrawingTool,
             selectedColor: _selectedColor,
@@ -486,14 +530,16 @@ class _MapEditorPageState extends State<MapEditorPage> {
         ),
       );
     }
-    
-    // 图层面板
+      // 图层面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图层',
         icon: Icons.layers,
         isCollapsed: _isLayerPanelCollapsed,
-        onToggleCollapsed: () => setState(() => _isLayerPanelCollapsed = !_isLayerPanelCollapsed),
+        onToggleCollapsed: () => _handlePanelToggle('layer'),
+        autoCloseEnabled: _isLayerPanelAutoClose,
+        onAutoCloseToggled: (value) => setState(() => _isLayerPanelAutoClose = value),
+        collapsedSubtitle: _selectedLayer != null ? '当前: ${_selectedLayer!.name}' : '未选择图层',
         actions: widget.isPreviewMode ? null : [
           IconButton(
             icon: const Icon(Icons.add, size: 18),
@@ -524,7 +570,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
         title: '图例管理',
         icon: Icons.legend_toggle,
         isCollapsed: _isLegendPanelCollapsed,
-        onToggleCollapsed: () => setState(() => _isLegendPanelCollapsed = !_isLegendPanelCollapsed),
+        onToggleCollapsed: () => _handlePanelToggle('legend'),
+        autoCloseEnabled: _isLegendPanelAutoClose,
+        onAutoCloseToggled: (value) => setState(() => _isLegendPanelAutoClose = value),
         actions: widget.isPreviewMode ? null : [
           IconButton(
             icon: const Icon(Icons.add, size: 18),
@@ -552,13 +600,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
     Widget? child,
     List<Widget>? actions,
     bool needsScrolling = false,
+    bool autoCloseEnabled = true,
+    ValueChanged<bool>? onAutoCloseToggled,
+    String? collapsedSubtitle, // 折叠状态下显示的附加信息
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 800;
     const double headerHeight = 48.0;
-    final double minContentHeight = isNarrowScreen ? 300.0 : 400.0; // 窄屏时减小高度
-    
-    if (isCollapsed) {
+    final double minContentHeight = isNarrowScreen ? 600.0 : 700.0; // 窄屏时减小高度
+      if (isCollapsed) {
       return Container(
         height: headerHeight,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -569,11 +619,41 @@ class _MapEditorPageState extends State<MapEditorPage> {
               Icon(icon, size: 20),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),                    if (collapsedSubtitle != null && collapsedSubtitle.isNotEmpty)
+                      Text(
+                        collapsedSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
               ),
+              // 自动关闭开关（仅在折叠状态时显示）
+              if (onAutoCloseToggled != null) ...[
+                Tooltip(
+                  message: '自动关闭：当点击其他工具栏时自动关闭此工具栏',
+                  child: Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: autoCloseEnabled,
+                      onChanged: onAutoCloseToggled,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
               const Icon(Icons.expand_more, size: 20),
             ],
           ),
@@ -614,6 +694,34 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         ),
                       ),
                     ),
+                    // 自动关闭开关
+                    if (onAutoCloseToggled != null) ...[
+                      Tooltip(
+                        message: '自动关闭：当点击其他工具栏时自动关闭此工具栏',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '自动关闭',
+                              style: TextStyle(
+                                fontSize: isNarrowScreen ? 11 : 12,
+                                color: Theme.of(context).hintColor,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: autoCloseEnabled,
+                                onChanged: onAutoCloseToggled,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     // 动作按钮
                     if (actions != null) ...actions,
                     const Icon(Icons.expand_less, size: 20),
