@@ -134,14 +134,14 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
+                    children: [                      TextField(
                         controller: titleController,
                         decoration: InputDecoration(
                           labelText: l10n.legendTitle,
                           hintText: l10n.enterLegendTitle,
                         ),
                         autofocus: true,
+                        textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -151,6 +151,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                           hintText: '输入图例版本号',
                         ),
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
                       ),
                       const SizedBox(height: 16),
                       Text(l10n.selectCenterPoint, style: const TextStyle(fontWeight: FontWeight.bold)),

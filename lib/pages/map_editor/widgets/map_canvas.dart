@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/legend_item.dart' as legend_db;
+import '../../../utils/image_utils.dart';
 
 class MapCanvas extends StatefulWidget {
   final MapItem mapItem;
@@ -57,35 +58,32 @@ class _MapCanvasState extends State<MapCanvas> {
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
-          maxScale: 5.0,
-          child: Container(
+          maxScale: 5.0,          child: Container(
             width: 1200,
             height: 800,
-            color: Colors.grey.shade100,
+            decoration: BoxDecoration(
+              // 透明背景，使用棋盘格表示透明度
+              color: Colors.white,
+            ),
             child: Stack(
               children: [
-                // Background map image
-                if (widget.mapItem.hasImageData)
-                  Positioned.fill(
-                    child: Image.memory(
-                      widget.mapItem.imageData!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey.shade200,
-                          child: const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                // 透明背景指示器（棋盘格图案）
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _TransparentBackgroundPainter(),
                   ),
+                ),
                 
-                // Drawing layers
+                // 图层图片（按order排序）
+                ...() {
+                  final visibleLayers = widget.mapItem.layers
+                      .where((layer) => layer.isVisible && layer.imageData != null)
+                      .toList();
+                  visibleLayers.sort((a, b) => a.order.compareTo(b.order));
+                  return visibleLayers.map((layer) => _buildLayerImageWidget(layer));
+                }(),
+                
+                // Drawing layers (绘制元素)
                 ...widget.mapItem.layers.map((layer) => _buildLayerWidget(layer)),
                 
                 // Legend groups
@@ -116,6 +114,22 @@ class _MapCanvasState extends State<MapCanvas> {
               ],
             ),
           ),
+        ),
+      ),
+    );  }
+
+  Widget _buildLayerImageWidget(MapLayer layer) {
+    if (layer.imageData == null) return const SizedBox.shrink();
+    
+    return Positioned.fill(
+      child: Opacity(
+        opacity: layer.isVisible ? layer.opacity : 0.0,
+        child: ImageUtils.buildImageFromBase64(
+          layer.imageData!,
+          width: 1200,
+          height: 800,
+          fit: BoxFit.contain,
+          opacity: 1.0, // 透明度已经通过Opacity widget控制
         ),
       ),
     );
@@ -492,4 +506,30 @@ class _CurrentDrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+/// 透明背景画笔，绘制棋盘格图案
+class _TransparentBackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const double squareSize = 20.0;
+    final Paint lightPaint = Paint()..color = Colors.grey.shade100;
+    final Paint darkPaint = Paint()..color = Colors.grey.shade200;
+
+    for (double x = 0; x < size.width; x += squareSize) {
+      for (double y = 0; y < size.height; y += squareSize) {
+        final isEvenRow = (y / squareSize).floor() % 2 == 0;
+        final isEvenCol = (x / squareSize).floor() % 2 == 0;
+        final isLightSquare = (isEvenRow && isEvenCol) || (!isEvenRow && !isEvenCol);
+        
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, squareSize, squareSize),
+          isLightSquare ? lightPaint : darkPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -11,17 +11,18 @@ class MapLayer {
   final int order; // 图层顺序，数字越大越在上层
   final bool isVisible;
   final double opacity; // 透明度 0.0-1.0
+  final String? imageData; // Base64编码的图片数据，null表示透明图层
   final List<MapDrawingElement> elements; // 绘制元素
   final List<String> legendGroupIds; // 关联的图例组ID列表
   final DateTime createdAt;
   final DateTime updatedAt;
-
   const MapLayer({
     required this.id,
     required this.name,
     required this.order,
     this.isVisible = true,
     this.opacity = 1.0,
+    this.imageData,
     this.elements = const [],
     this.legendGroupIds = const [],
     required this.createdAt,
@@ -30,13 +31,13 @@ class MapLayer {
 
   factory MapLayer.fromJson(Map<String, dynamic> json) => _$MapLayerFromJson(json);
   Map<String, dynamic> toJson() => _$MapLayerToJson(this);
-
   MapLayer copyWith({
     String? id,
     String? name,
     int? order,
     bool? isVisible,
     double? opacity,
+    String? imageData,
     List<MapDrawingElement>? elements,
     List<String>? legendGroupIds,
     DateTime? createdAt,
@@ -48,6 +49,7 @@ class MapLayer {
       order: order ?? this.order,
       isVisible: isVisible ?? this.isVisible,
       opacity: opacity ?? this.opacity,
+      imageData: imageData ?? this.imageData,
       elements: elements ?? this.elements,
       legendGroupIds: legendGroupIds ?? this.legendGroupIds,
       createdAt: createdAt ?? this.createdAt,

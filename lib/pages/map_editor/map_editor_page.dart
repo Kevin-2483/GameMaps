@@ -210,15 +210,27 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -347,8 +359,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
             onPressed: _addNewLayer,
             tooltip: '添加图层',
           ),
-        ],
-        child: _isLayerPanelCollapsed ? null : LayerPanel(
+        ],        child: _isLayerPanelCollapsed ? null : LayerPanel(
           layers: _currentMap.layers,
           selectedLayer: _selectedLayer,
           isPreviewMode: widget.isPreviewMode,
@@ -359,6 +370,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
           onLayerDeleted: _deleteLayer,
           onLayerAdded: _addNewLayer,
           onLayersReordered: _reorderLayers,
+          onError: _showErrorSnackBar,
+          onSuccess: _showSuccessSnackBar,
         ),
       ),
     );

@@ -12,6 +12,7 @@ MapLayer _$MapLayerFromJson(Map<String, dynamic> json) => MapLayer(
   order: (json['order'] as num).toInt(),
   isVisible: json['isVisible'] as bool? ?? true,
   opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
+  imageData: json['imageData'] as String?,
   elements:
       (json['elements'] as List<dynamic>?)
           ?.map((e) => MapDrawingElement.fromJson(e as Map<String, dynamic>))
@@ -32,6 +33,7 @@ Map<String, dynamic> _$MapLayerToJson(MapLayer instance) => <String, dynamic>{
   'order': instance.order,
   'isVisible': instance.isVisible,
   'opacity': instance.opacity,
+  'imageData': instance.imageData,
   'elements': instance.elements,
   'legendGroupIds': instance.legendGroupIds,
   'createdAt': instance.createdAt.toIso8601String(),

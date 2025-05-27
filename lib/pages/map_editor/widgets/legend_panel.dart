@@ -245,7 +245,6 @@ class LegendPanel extends StatelessWidget {
       ),
     );
   }
-
   void _showEditLegendGroupDialog(BuildContext context, LegendGroup legendGroup) {
     final TextEditingController nameController = TextEditingController(text: legendGroup.name);
     
@@ -255,6 +254,7 @@ class LegendPanel extends StatelessWidget {
         title: const Text('编辑图例组'),
         content: TextField(
           controller: nameController,
+          textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
             labelText: '图例组名称',
             border: OutlineInputBorder(),
@@ -350,8 +350,7 @@ class LegendPanel extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 16),
-                
-                // Position controls
+                  // Position controls
                 Row(
                   children: [
                     Expanded(
@@ -361,6 +360,7 @@ class LegendPanel extends StatelessWidget {
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
                         onChanged: (value) {
                           positionX = double.tryParse(value) ?? positionX;
                         },
@@ -374,6 +374,7 @@ class LegendPanel extends StatelessWidget {
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
                         onChanged: (value) {
                           positionY = double.tryParse(value) ?? positionY;
                         },
@@ -383,14 +384,14 @@ class LegendPanel extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 16),
-                
-                // Size control
+                  // Size control
                 TextField(
                   decoration: const InputDecoration(
                     labelText: '大小',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   onChanged: (value) {
                     size = double.tryParse(value) ?? size;
                   },
@@ -405,6 +406,7 @@ class LegendPanel extends StatelessWidget {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
                   onChanged: (value) {
                     rotation = double.tryParse(value) ?? rotation;
                   },
