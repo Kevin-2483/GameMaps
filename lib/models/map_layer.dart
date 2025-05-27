@@ -68,6 +68,9 @@ enum DrawingElementType {
   diagonalLines,   // 单斜线区域
   crossLines,      // 交叉线区域
   dotGrid,         // 十字点阵区域
+  eraser,          // 橡皮擦
+  freeDrawing,     // 像素笔（自由绘制）
+  text,            // 文本框
 }
 
 /// 地图绘制元素
@@ -81,8 +84,11 @@ class MapDrawingElement {
   final Color color;
   final double strokeWidth;
   final double rotation; // 旋转角度
+  final int zIndex; // 绘制顺序，数值越大越在上层
+  final String? text; // 文本内容（用于文本框）
+  final double? fontSize; // 字体大小（用于文本框）
   final DateTime createdAt;
-
+  
   const MapDrawingElement({
     required this.id,
     required this.type,
@@ -90,19 +96,23 @@ class MapDrawingElement {
     this.color = const Color(0xFF000000),
     this.strokeWidth = 2.0,
     this.rotation = 0.0,
+    this.zIndex = 0,
+    this.text,
+    this.fontSize,
     required this.createdAt,
   });
 
   factory MapDrawingElement.fromJson(Map<String, dynamic> json) => _$MapDrawingElementFromJson(json);
-  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
-
-  MapDrawingElement copyWith({
+  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);  MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
     List<Offset>? points,
     Color? color,
     double? strokeWidth,
     double? rotation,
+    int? zIndex,
+    String? text,
+    double? fontSize,
     DateTime? createdAt,
   }) {
     return MapDrawingElement(
@@ -112,6 +122,9 @@ class MapDrawingElement {
       color: color ?? this.color,
       strokeWidth: strokeWidth ?? this.strokeWidth,
       rotation: rotation ?? this.rotation,
+      zIndex: zIndex ?? this.zIndex,
+      text: text ?? this.text,
+      fontSize: fontSize ?? this.fontSize,
       createdAt: createdAt ?? this.createdAt,
     );
   }

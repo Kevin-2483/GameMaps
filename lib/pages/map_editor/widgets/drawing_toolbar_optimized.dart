@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../models/map_layer.dart';
+import 'z_index_inspector.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -16,8 +17,15 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final Function(DrawingElementType?)? onToolPreview;
   final Function(Color)? onColorPreview;
   final Function(double)? onStrokeWidthPreview;
-
-  const DrawingToolbarOptimized({
+    // 撤销/重做功能
+  final VoidCallback? onUndo;
+  final VoidCallback? onRedo;
+  final bool canUndo;
+  final bool canRedo;
+  
+  // Z层级检视器相关
+  final MapLayer? selectedLayer;
+  final Function(String elementId)? onElementDeleted;  const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
@@ -29,6 +37,12 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.onToolPreview,
     this.onColorPreview,
     this.onStrokeWidthPreview,
+    this.onUndo,
+    this.onRedo,
+    this.canUndo = false,
+    this.canRedo = false,
+    this.selectedLayer,
+    this.onElementDeleted,
   });
 
   @override
@@ -143,8 +157,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ),
           ),
           const SizedBox(height: 8),
-          
-          Wrap(
+            Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -195,9 +208,52 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 icon: Icons.grid_on,
                 tooltip: '点阵',
                 tool: DrawingElementType.dotGrid,
+              ),              _buildToolButton(
+                context,
+                icon: Icons.gesture,
+                tooltip: '像素笔',
+                tool: DrawingElementType.freeDrawing,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.text_fields,
+                tooltip: '文本框',
+                tool: DrawingElementType.text,
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.cleaning_services,
+                tooltip: '橡皮擦',
+                tool: DrawingElementType.eraser,
               ),
             ],
-          ),
+          ),          
+          const SizedBox(height: 16),
+          
+          // Undo/Redo buttons
+          if (widget.onUndo != null || widget.onRedo != null)
+            Row(
+              children: [
+                if (widget.onUndo != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: widget.canUndo ? widget.onUndo : null,
+                      icon: const Icon(Icons.undo),
+                      label: const Text('撤销'),
+                    ),
+                  ),
+                if (widget.onUndo != null && widget.onRedo != null)
+                  const SizedBox(width: 8),
+                if (widget.onRedo != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: widget.canRedo ? widget.onRedo : null,
+                      icon: const Icon(Icons.redo),
+                      label: const Text('重做'),
+                    ),
+                  ),
+              ],
+            ),
           
           const SizedBox(height: 16),
           
@@ -255,8 +311,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           ),
           
           const SizedBox(height: 8),
-          
-          // Clear selection button
+            // Clear selection button
           if (_effectiveTool != null)
             SizedBox(
               width: double.infinity,
@@ -265,6 +320,33 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 child: const Text('取消选择'),
               ),
             ),
+          
+          const SizedBox(height: 16),
+          
+          // Z层级元素检视器
+          if (widget.selectedLayer != null && widget.onElementDeleted != null) ...[
+            const Text(
+              'Z层级检视器',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: SingleChildScrollView(
+                child: ZIndexInspector(
+                  selectedLayer: widget.selectedLayer,
+                  onElementDeleted: widget.onElementDeleted!,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

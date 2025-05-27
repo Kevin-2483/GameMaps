@@ -16,6 +16,7 @@ class DrawingPreviewData {
   final DrawingElementType elementType;
   final Color color;
   final double strokeWidth;
+  final List<Offset>? freeDrawingPath; // 自由绘制路径
 
   const DrawingPreviewData({
     required this.start,
@@ -23,6 +24,7 @@ class DrawingPreviewData {
     required this.elementType,
     required this.color,
     required this.strokeWidth,
+    this.freeDrawingPath,
   });
 }
 
@@ -69,6 +71,9 @@ class _MapCanvasState extends State<MapCanvas> {
   Offset? _currentDrawingStart;
   Offset? _currentDrawingEnd;
   bool _isDrawing = false;
+  
+  // 自由绘制路径支持
+  List<Offset> _freeDrawingPath = [];
   
   // 绘制预览的 ValueNotifier，避免整个 widget 重绘
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = ValueNotifier(null);
@@ -140,13 +145,13 @@ class _MapCanvasState extends State<MapCanvas> {
                         builder: (context, previewData, child) {
                           if (previewData == null) return const SizedBox.shrink();
                           return CustomPaint(
-                            size: const Size(kCanvasWidth, kCanvasHeight),
-                            painter: _CurrentDrawingPainter(
+                            size: const Size(kCanvasWidth, kCanvasHeight),                            painter: _CurrentDrawingPainter(
                               start: previewData.start,
                               end: previewData.end,
                               elementType: previewData.elementType,
                               color: previewData.color,
                               strokeWidth: previewData.strokeWidth,
+                              freeDrawingPath: previewData.freeDrawingPath,
                             ),
                           );
                         },
@@ -154,20 +159,29 @@ class _MapCanvasState extends State<MapCanvas> {
                     ],
                   ),
                 ),
-                
-                // Touch handler for drawing - 覆盖整个画布区域
+                  // Touch handler for drawing - 覆盖整个画布区域
                 if (!widget.isPreviewMode && _effectiveDrawingTool != null)
                   Positioned(
                     left: 0,
                     top: 0,
                     width: kCanvasWidth,
                     height: kCanvasHeight,
-                    child: GestureDetector(
-                      onPanStart: _onDrawingStart,
-                      onPanUpdate: _onDrawingUpdate,
-                      onPanEnd: _onDrawingEnd,
-                      behavior: HitTestBehavior.translucent,
-                    ),
+                    child: _effectiveDrawingTool == DrawingElementType.text
+                        ? GestureDetector(
+                            // 文本工具使用点击手势
+                            onTapDown: (details) {
+                              _currentDrawingStart = _getCanvasPosition(details.localPosition);
+                              _showTextInputDialog();
+                            },
+                            behavior: HitTestBehavior.translucent,
+                          )
+                        : GestureDetector(
+                            // 其他工具使用拖拽手势
+                            onPanStart: _onDrawingStart,
+                            onPanUpdate: _onDrawingUpdate,
+                            onPanEnd: _onDrawingEnd,
+                            behavior: HitTestBehavior.translucent,
+                          ),
                   ),
               ],
             ),
@@ -291,21 +305,10 @@ class _MapCanvasState extends State<MapCanvas> {
     _currentDrawingEnd = _currentDrawingStart;
     _isDrawing = true;
     
-    // 只更新绘制预览，不触发整个 widget 重绘
-    _drawingPreviewNotifier.value = DrawingPreviewData(
-      start: _currentDrawingStart!,
-      end: _currentDrawingEnd!,
-      elementType: _effectiveDrawingTool!,
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-    );
-  }
-
-  void _onDrawingUpdate(DragUpdateDetails details) {
-    if (!_isDrawing) return;
-
-    // 获取相对于画布的坐标
-    _currentDrawingEnd = _getCanvasPosition(details.localPosition);
+    // 初始化自由绘制路径
+    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _freeDrawingPath = [_currentDrawingStart!];
+    }
     
     // 只更新绘制预览，不触发整个 widget 重绘
     _drawingPreviewNotifier.value = DrawingPreviewData(
@@ -314,6 +317,37 @@ class _MapCanvasState extends State<MapCanvas> {
       elementType: _effectiveDrawingTool!,
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
+      freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
+    );
+  }
+  void _onDrawingUpdate(DragUpdateDetails details) {
+    if (!_isDrawing) return;
+
+    // 获取相对于画布的坐标
+    _currentDrawingEnd = _getCanvasPosition(details.localPosition);
+      // 自由绘制路径处理
+    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _freeDrawingPath.add(_currentDrawingEnd!);
+      // 对于自由绘制，使用路径信息更新预览
+      _drawingPreviewNotifier.value = DrawingPreviewData(
+        start: _freeDrawingPath.first,
+        end: _freeDrawingPath.last,
+        elementType: _effectiveDrawingTool!,
+        color: _effectiveColor,
+        strokeWidth: _effectiveStrokeWidth,
+        freeDrawingPath: _freeDrawingPath,
+      );
+      return;
+    }
+    
+    // 只更新绘制预览，不触发整个 widget 重绘
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: _currentDrawingStart!,
+      end: _currentDrawingEnd!,
+      elementType: _effectiveDrawingTool!,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+      freeDrawingPath: null,
     );
   }
 
@@ -324,14 +358,16 @@ class _MapCanvasState extends State<MapCanvas> {
     final clampedX = localPosition.dx.clamp(0.0, kCanvasWidth);
     final clampedY = localPosition.dy.clamp(0.0, kCanvasHeight);
     return Offset(clampedX, clampedY);
-  }void _onDrawingEnd(DragEndDetails details) {
+  }  void _onDrawingEnd(DragEndDetails details) {
     if (!_isDrawing || _currentDrawingStart == null || _currentDrawingEnd == null || widget.selectedLayer == null) {
       _isDrawing = false;
       _currentDrawingStart = null;
       _currentDrawingEnd = null;
       _drawingPreviewNotifier.value = null; // 清除预览
       return;
-    }    // Convert screen coordinates to normalized coordinates (0.0-1.0)
+    }
+
+    // Convert screen coordinates to normalized coordinates (0.0-1.0)
     // 使用固定的画布尺寸，与绘制时保持一致
     final normalizedStart = Offset(
       _currentDrawingStart!.dx / kCanvasWidth,
@@ -340,30 +376,202 @@ class _MapCanvasState extends State<MapCanvas> {
     final normalizedEnd = Offset(
       _currentDrawingEnd!.dx / kCanvasWidth,
       _currentDrawingEnd!.dy / kCanvasHeight,
-    );
+    );    // 处理橡皮擦功能
+    if (_effectiveDrawingTool == DrawingElementType.eraser) {
+      _handleEraserAction(normalizedStart, normalizedEnd);    } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _handleFreeDrawingEnd();
+    } else {
+      // 计算新元素的 z 值（比当前最大 z 值大 1）
+      final maxZIndex = widget.selectedLayer!.elements.isEmpty 
+          ? 0 
+          : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+      
+      // Add the drawing element to the selected layer
+      final element = MapDrawingElement(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: _effectiveDrawingTool!,
+        points: [normalizedStart, normalizedEnd],
+        color: _effectiveColor,
+        strokeWidth: _effectiveStrokeWidth,
+        zIndex: maxZIndex + 1,
+        createdAt: DateTime.now(),
+      );
 
-    // Add the drawing element to the selected layer
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: _effectiveDrawingTool!,
-      points: [normalizedStart, normalizedEnd],
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      createdAt: DateTime.now(),
-    );
+      final updatedLayer = widget.selectedLayer!.copyWith(
+        elements: [...widget.selectedLayer!.elements, element],
+        updatedAt: DateTime.now(),
+      );
 
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: [...widget.selectedLayer!.elements, element],
-      updatedAt: DateTime.now(),
-    );
-
-    widget.onLayerUpdated(updatedLayer);
+      widget.onLayerUpdated(updatedLayer);
+    }
 
     // 清理绘制状态，不需要 setState
     _isDrawing = false;
     _currentDrawingStart = null;
     _currentDrawingEnd = null;
     _drawingPreviewNotifier.value = null; // 清除预览
+  }  // 处理橡皮擦动作 - 使用 z 值方式
+  void _handleEraserAction(Offset normalizedStart, Offset normalizedEnd) {
+    // 计算橡皮擦的 z 值（比当前最大 z 值大 1）
+    final maxZIndex = widget.selectedLayer!.elements.isEmpty 
+        ? 0 
+        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+    
+    // 创建一个橡皮擦元素，用于遮挡下方的绘制元素
+    final eraserElement = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.eraser,
+      points: [normalizedStart, normalizedEnd],
+      color: Colors.transparent, // 橡皮擦本身是透明的
+      strokeWidth: 0.0,
+      zIndex: maxZIndex + 1,
+      createdAt: DateTime.now(),
+    );    final updatedLayer = widget.selectedLayer!.copyWith(
+      elements: [...widget.selectedLayer!.elements, eraserElement],
+      updatedAt: DateTime.now(),
+    );
+
+    widget.onLayerUpdated(updatedLayer);
+  }
+
+  // 处理自由绘制完成
+  void _handleFreeDrawingEnd() {
+    if (_freeDrawingPath.isEmpty || widget.selectedLayer == null) return;
+    
+    // 将路径点转换为标准化坐标
+    final normalizedPoints = _freeDrawingPath.map((point) => Offset(
+      point.dx / kCanvasWidth,
+      point.dy / kCanvasHeight,
+    )).toList();
+    
+    // 计算新元素的 z 值
+    final maxZIndex = widget.selectedLayer!.elements.isEmpty 
+        ? 0 
+        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+    
+    // 创建自由绘制元素
+    final element = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.freeDrawing,
+      points: normalizedPoints,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+      zIndex: maxZIndex + 1,
+      createdAt: DateTime.now(),
+    );
+    
+    final updatedLayer = widget.selectedLayer!.copyWith(
+      elements: [...widget.selectedLayer!.elements, element],
+      updatedAt: DateTime.now(),
+    );
+    
+    widget.onLayerUpdated(updatedLayer);
+    
+    // 清空路径
+    _freeDrawingPath.clear();
+  }
+  void _showTextInputDialog() async {
+    final textController = TextEditingController();
+    final fontSize = ValueNotifier<double>(16.0);
+    
+    // 保存文本位置，避免在对话框期间被清除
+    final textPosition = _currentDrawingStart;
+    
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('添加文本'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: textController,
+              decoration: const InputDecoration(
+                labelText: '文本内容',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<double>(
+              valueListenable: fontSize,
+              builder: (context, value, child) => Column(
+                children: [
+                  Text('字体大小: ${value.round()}px'),
+                  Slider(
+                    value: value,
+                    min: 10.0,
+                    max: 48.0,
+                    divisions: 19,
+                    onChanged: (newValue) => fontSize.value = newValue,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                Navigator.of(context).pop({
+                  'text': textController.text,
+                  'fontSize': fontSize.value,
+                });
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result['text'] != null && textPosition != null) {
+      _createTextElement(result['text'], result['fontSize'], textPosition);
+    }
+    
+    // 重置绘制状态
+    _isDrawing = false;
+    _currentDrawingStart = null;
+    _currentDrawingEnd = null;
+    _drawingPreviewNotifier.value = null;
+  }
+  
+  void _createTextElement(String text, double fontSize, Offset position) {
+    if (widget.selectedLayer == null) return;
+    
+    final normalizedPosition = Offset(
+      position.dx / kCanvasWidth,
+      position.dy / kCanvasHeight,
+    );
+    
+    final maxZIndex = widget.selectedLayer!.elements.isEmpty 
+        ? 0 
+        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+    
+    final element = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.text,
+      points: [normalizedPosition],
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+      zIndex: maxZIndex + 1,
+      text: text,
+      fontSize: fontSize,
+      createdAt: DateTime.now(),
+    );
+    
+    final updatedLayer = widget.selectedLayer!.copyWith(
+      elements: [...widget.selectedLayer!.elements, element],
+      updatedAt: DateTime.now(),
+    );
+    
+    widget.onLayerUpdated(updatedLayer);
   }
 }
 
@@ -374,15 +582,134 @@ class _LayerPainter extends CustomPainter {
   _LayerPainter({
     required this.layer,
     required this.isEditMode,
-  });
-
-  @override
+  });  @override
   void paint(Canvas canvas, Size size) {
-    for (final element in layer.elements) {
+    // 按 z 值排序元素
+    final sortedElements = List<MapDrawingElement>.from(layer.elements)
+      ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
+    
+    // 找到所有橡皮擦元素
+    final eraserElements = sortedElements.where((e) => e.type == DrawingElementType.eraser).toList();
+    
+    for (final element in sortedElements) {
+      if (element.type == DrawingElementType.eraser) {
+        continue; // 橡皮擦本身不绘制
+      }
+      
+      // 使用裁剪来实现选择性遮挡
+      _drawElementWithEraserMask(canvas, element, eraserElements, size);
+    }
+  }  
+  // 使用遮罩绘制元素，实现选择性遮挡
+  void _drawElementWithEraserMask(Canvas canvas, MapDrawingElement element, List<MapDrawingElement> eraserElements, Size size) {
+    // 找到影响当前元素的橡皮擦（z值更高的）
+    final affectingErasers = eraserElements.where((eraser) => eraser.zIndex > element.zIndex).toList();
+    
+    if (affectingErasers.isEmpty) {
+      // 没有橡皮擦影响，直接绘制
       _drawElement(canvas, element, size);
+      return;
+    }
+    
+    // 保存canvas状态
+    canvas.save();
+      // 创建裁剪路径，排除所有橡皮擦区域
+      Path clipPath = Path();
+    
+    // 添加整个画布区域
+    clipPath.addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    
+    // 减去所有影响当前元素的橡皮擦区域
+    for (final eraser in affectingErasers) {
+      if (eraser.points.length >= 2) {
+        // 转换橡皮擦坐标到屏幕坐标
+        final eraserStart = Offset(
+          eraser.points[0].dx * size.width,
+          eraser.points[0].dy * size.height,
+        );
+        final eraserEnd = Offset(
+          eraser.points[1].dx * size.width,
+          eraser.points[1].dy * size.height,
+        );
+        
+        final eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
+        
+        // 检查橡皮擦是否与当前元素重叠
+        if (_doesEraserAffectElement(element, eraser, size)) {
+          // 从裁剪路径中减去橡皮擦区域
+          final eraserPath = Path()..addRect(eraserRect);
+          clipPath = Path.combine(PathOperation.difference, clipPath, eraserPath);
+        }
+      }
+    }
+    
+    // 应用裁剪
+    canvas.clipPath(clipPath);
+    
+    // 绘制元素
+    _drawElement(canvas, element, size);
+    
+    // 恢复canvas状态
+    canvas.restore();
+  }
+    // 检查橡皮擦是否影响元素
+  bool _doesEraserAffectElement(MapDrawingElement element, MapDrawingElement eraser, Size size) {
+    if (element.points.isEmpty || eraser.points.length < 2) return false;
+    
+    // 获取橡皮擦矩形
+    final eraserStart = Offset(
+      eraser.points[0].dx * size.width,
+      eraser.points[0].dy * size.height,
+    );
+    final eraserEnd = Offset(
+      eraser.points[1].dx * size.width,
+      eraser.points[1].dy * size.height,
+    );
+    final eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
+    
+    // 根据元素类型检查重叠
+    switch (element.type) {
+      case DrawingElementType.text:
+        // 文本元素只有一个点，检查这个点是否在橡皮擦区域内
+        if (element.points.isNotEmpty) {
+          final textPosition = Offset(
+            element.points[0].dx * size.width,
+            element.points[0].dy * size.height,
+          );
+          return eraserRect.contains(textPosition);
+        }
+        return false;
+        
+      case DrawingElementType.freeDrawing:
+        // 自由绘制：检查路径上的任意一点是否与橡皮擦重叠
+        for (final point in element.points) {
+          final screenPoint = Offset(
+            point.dx * size.width,
+            point.dy * size.height,
+          );
+          if (eraserRect.contains(screenPoint)) {
+            return true;
+          }
+        }
+        return false;
+        
+      default:
+        // 其他元素类型：使用原来的两点矩形检查方法
+        if (element.points.length < 2) return false;
+        
+        final elementStart = Offset(
+          element.points[0].dx * size.width,
+          element.points[0].dy * size.height,
+        );
+        final elementEnd = Offset(
+          element.points[1].dx * size.width,
+          element.points[1].dy * size.height,
+        );
+        final elementRect = Rect.fromPoints(elementStart, elementEnd);
+        
+        return eraserRect.overlaps(elementRect);
     }
   }
-
   void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
     final paint = Paint()
       ..color = element.color
@@ -395,6 +722,20 @@ class _LayerPainter extends CustomPainter {
       point.dy * size.height,
     )).toList();
 
+    // 特殊处理：文本元素只需要一个点，自由绘制可能有多个点
+    if (element.type == DrawingElementType.text) {
+      if (points.isEmpty) return;
+      _drawText(canvas, element, size);
+      return;
+    }
+    
+    if (element.type == DrawingElementType.freeDrawing) {
+      if (points.isEmpty) return;
+      _drawFreeDrawingPath(canvas, element, paint, size);
+      return;
+    }
+
+    // 其他绘制类型需要至少两个点
     if (points.length < 2) return;
 
     final start = points[0];
@@ -431,10 +772,20 @@ class _LayerPainter extends CustomPainter {
       
       case DrawingElementType.crossLines:
         _drawCrossPattern(canvas, start, end, paint);
+        break;      case DrawingElementType.dotGrid:
+        _drawDotGrid(canvas, start, end, paint);
         break;
       
-      case DrawingElementType.dotGrid:
-        _drawDotGrid(canvas, start, end, paint);
+      case DrawingElementType.freeDrawing:
+        // 已在上面处理
+        break;
+        
+      case DrawingElementType.text:
+        // 已在上面处理
+        break;
+      
+      case DrawingElementType.eraser:
+        // 橡皮擦不需要绘制，它只是删除元素
         break;
     }
   }
@@ -535,6 +886,48 @@ class _LayerPainter extends CustomPainter {
     }
   }
 
+  void _drawFreeDrawingPath(Canvas canvas, MapDrawingElement element, Paint paint, Size size) {
+    if (element.points.length < 2) return;
+    
+    final path = Path();
+    final screenPoints = element.points.map((point) => Offset(
+      point.dx * size.width,
+      point.dy * size.height,
+    )).toList();
+    
+    path.moveTo(screenPoints[0].dx, screenPoints[0].dy);
+    for (int i = 1; i < screenPoints.length; i++) {
+      path.lineTo(screenPoints[i].dx, screenPoints[i].dy);
+    }
+    
+    paint.style = PaintingStyle.stroke;
+    canvas.drawPath(path, paint);
+  }
+  
+  void _drawText(Canvas canvas, MapDrawingElement element, Size size) {
+    if (element.text == null || element.text!.isEmpty || element.points.isEmpty) return;
+    
+    final position = Offset(
+      element.points[0].dx * size.width,
+      element.points[0].dy * size.height,
+    );
+    
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: element.text!,
+        style: TextStyle(
+          color: element.color,
+          fontSize: element.fontSize ?? 16.0,
+          fontWeight: FontWeight.normal,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    
+    textPainter.layout();
+    textPainter.paint(canvas, position);
+  }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
@@ -545,6 +938,7 @@ class _CurrentDrawingPainter extends CustomPainter {
   final DrawingElementType elementType;
   final Color color;
   final double strokeWidth;
+  final List<Offset>? freeDrawingPath; // 自由绘制路径
 
   _CurrentDrawingPainter({
     required this.start,
@@ -552,16 +946,97 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.elementType,
     required this.color,
     required this.strokeWidth,
+    this.freeDrawingPath,
   });  @override
   void paint(Canvas canvas, Size size) {
+    // 橡皮擦特殊预览
+    if (elementType == DrawingElementType.eraser) {
+      final rect = Rect.fromPoints(start, end);
+      final paint = Paint()
+        ..color = Colors.red.withOpacity(0.3)
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(rect, paint);
+      
+      // 绘制边框
+      final borderPaint = Paint()
+        ..color = Colors.red.withOpacity(0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      canvas.drawRect(rect, borderPaint);
+      return;
+    }    // 自由绘制特殊预览
+    if (elementType == DrawingElementType.freeDrawing && freeDrawingPath != null && freeDrawingPath!.isNotEmpty) {
+      final paint = Paint()
+        ..color = color.withOpacity(0.7)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      
+      final path = Path();
+      path.moveTo(freeDrawingPath![0].dx, freeDrawingPath![0].dy);
+      for (int i = 1; i < freeDrawingPath!.length; i++) {
+        path.lineTo(freeDrawingPath![i].dx, freeDrawingPath![i].dy);
+      }
+      canvas.drawPath(path, paint);
+      return;
+    }
+
+    // 文本工具特殊预览 - 显示一个小方块指示放置位置
+    if (elementType == DrawingElementType.text) {
+      final paint = Paint()
+        ..color = color.withOpacity(0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      
+      // 在文本位置绘制一个小方块作为预览
+      final rect = Rect.fromCenter(
+        center: start,
+        width: 20,
+        height: 20,
+      );
+      canvas.drawRect(rect, paint);
+      
+      // 绘制文本预览提示
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: 'T',
+          style: TextStyle(
+            color: color.withOpacity(0.7),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(
+        start.dx - textPainter.width / 2,
+        start.dy - textPainter.height / 2,
+      ));
+      return;
+    }
+
     // 使用固定的画布尺寸来确保坐标转换的一致性
+    List<Offset> points;
+    if (elementType == DrawingElementType.freeDrawing && freeDrawingPath != null) {
+      // 对于自由绘制，使用路径点
+      points = freeDrawingPath!.map((point) => Offset(
+        point.dx / kCanvasWidth,
+        point.dy / kCanvasHeight,
+      )).toList();
+    } else {
+      // 对于其他绘制类型，使用开始和结束点
+      points = [
+        Offset(start.dx / kCanvasWidth, start.dy / kCanvasHeight),
+        Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
+      ];
+    }
+    
     final element = MapDrawingElement(
       id: 'preview',
       type: elementType,
-      points: [
-        Offset(start.dx / kCanvasWidth, start.dy / kCanvasHeight),
-        Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
-      ],
+      points: points,
       color: color.withOpacity(0.7),
       strokeWidth: strokeWidth,
       createdAt: DateTime.now(),

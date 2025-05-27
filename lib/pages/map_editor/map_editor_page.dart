@@ -35,20 +35,23 @@ class _MapEditorPageState extends State<MapEditorPage> {
   DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
   double _selectedStrokeWidth = 2.0;
-  
-  // 工具栏折叠状态
+    // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
 
-  // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {};
+  // 悬浮工具栏状态（用于窄屏）
+  bool _isFloatingToolbarVisible = false;
 
-  // 绘制工具预览状态
+  // 透明度预览状态
+  final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
-
+  // 撤销/重做历史记录管理
+  final List<MapItem> _undoHistory = [];
+  final List<MapItem> _redoHistory = [];
+  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量
   @override
   void initState() {
     super.initState();
@@ -61,6 +64,113 @@ class _MapEditorPageState extends State<MapEditorPage> {
     } else {
       _selectedLayer = _currentMap.layers.first;
     }
+    
+    // 保存初始状态到撤销历史
+    _saveToUndoHistory();
+  }
+  // 撤销历史记录管理方法
+  void _saveToUndoHistory() {
+    // 保存当前状态到撤销历史
+    _undoHistory.add(_currentMap.copyWith());
+    
+    // 清空重做历史，因为新的操作会使重做历史失效
+    _redoHistory.clear();
+    
+    // 限制历史记录数量
+    if (_undoHistory.length > _maxUndoHistory) {
+      _undoHistory.removeAt(0);
+    }
+  }
+
+  void _undo() {
+    if (_undoHistory.isEmpty) return;
+    
+    setState(() {
+      // 将当前状态保存到重做历史
+      _redoHistory.add(_currentMap.copyWith());
+      
+      // 限制重做历史记录数量
+      if (_redoHistory.length > _maxUndoHistory) {
+        _redoHistory.removeAt(0);
+      }
+      
+      _currentMap = _undoHistory.removeLast();
+      
+      // 更新选中图层，确保引用正确
+      if (_selectedLayer != null) {
+        final selectedLayerId = _selectedLayer!.id;
+        _selectedLayer = _currentMap.layers
+            .where((layer) => layer.id == selectedLayerId)
+            .firstOrNull;
+        
+        // 如果原选中图层不存在，选择第一个图层
+        if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
+          _selectedLayer = _currentMap.layers.first;
+        }
+      }
+    });
+  }
+
+  void _redo() {
+    if (_redoHistory.isEmpty) return;
+    
+    setState(() {
+      // 将当前状态保存到撤销历史
+      _undoHistory.add(_currentMap.copyWith());
+      
+      // 限制撤销历史记录数量
+      if (_undoHistory.length > _maxUndoHistory) {
+        _undoHistory.removeAt(0);
+      }
+      
+      _currentMap = _redoHistory.removeLast();
+      
+      // 更新选中图层，确保引用正确
+      if (_selectedLayer != null) {
+        final selectedLayerId = _selectedLayer!.id;
+        _selectedLayer = _currentMap.layers
+            .where((layer) => layer.id == selectedLayerId)
+            .firstOrNull;
+        
+        // 如果原选中图层不存在，选择第一个图层
+        if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
+          _selectedLayer = _currentMap.layers.first;
+        }
+      }
+    });
+  }
+  bool get _canUndo => _undoHistory.isNotEmpty;
+  bool get _canRedo => _redoHistory.isNotEmpty;
+
+  // 删除指定图层中的绘制元素
+  void _deleteElement(String elementId) {
+    if (widget.isPreviewMode || _selectedLayer == null) return;
+    
+    // 找到要删除的元素
+    final elementToDelete = _selectedLayer!.elements
+        .where((element) => element.id == elementId)
+        .firstOrNull;
+    
+    if (elementToDelete == null) return;
+    
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+    
+    // 创建新的元素列表，排除要删除的元素
+    final updatedElements = _selectedLayer!.elements
+        .where((element) => element.id != elementId)
+        .toList();
+    
+    // 更新图层
+    final updatedLayer = _selectedLayer!.copyWith(
+      elements: updatedElements,
+      updatedAt: DateTime.now(),
+    );
+    
+    _updateLayer(updatedLayer);
+    
+    // 显示删除成功消息
+    _showSuccessSnackBar('已删除绘制元素');
   }
 
   Future<void> _loadAvailableLegends() async {
@@ -125,8 +235,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
-
   void _updateLayer(MapLayer updatedLayer) {
+    // 在修改前保存当前状态
+    _saveToUndoHistory();
+    
     setState(() {
       final layerIndex = _currentMap.layers.indexWhere((l) => l.id == updatedLayer.id);
       if (layerIndex != -1) {
@@ -264,10 +376,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
     
     return Scaffold(
       appBar: AppBar(
@@ -313,43 +426,30 @@ class _MapEditorPageState extends State<MapEditorPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Row(
-              children: [                // 左侧工具面板
-                SizedBox(
-                  width: 300,
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
-                      ),
-                      child: Column(
-                        children: _buildToolPanels(),
-                      ),
-                    ),
-                  ),
+          : isNarrowScreen 
+              ? _buildNarrowScreenLayout()
+              : _buildWideScreenLayout(),      floatingActionButton: isNarrowScreen 
+          ? AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  setState(() {
+                    _isFloatingToolbarVisible = !_isFloatingToolbarVisible;
+                  });
+                },
+                icon: AnimatedRotation(
+                  turns: _isFloatingToolbarVisible ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(_isFloatingToolbarVisible ? Icons.close : Icons.menu),
                 ),
-                
-                const VerticalDivider(),                // 右侧地图画布
-                Expanded(
-                  child: MapCanvas(
-                    mapItem: _currentMap,
-                    selectedLayer: _selectedLayer,
-                    selectedDrawingTool: _selectedDrawingTool,
-                    selectedColor: _selectedColor,
-                    selectedStrokeWidth: _selectedStrokeWidth,
-                    availableLegends: _availableLegends,
-                    isPreviewMode: widget.isPreviewMode,
-                    onLayerUpdated: _updateLayer,
-                    onLegendGroupUpdated: _updateLegendGroup,
-                    previewOpacityValues: _previewOpacityValues,
-                    previewDrawingTool: _previewDrawingTool,
-                    previewColor: _previewColor,
-                    previewStrokeWidth: _previewStrokeWidth,
-                  ),
-                ),
-              ],
-            ),    );
-  }  List<Widget> _buildToolPanels() {
+                label: Text(_isFloatingToolbarVisible ? '关闭工具栏' : '工具栏'),
+                tooltip: _isFloatingToolbarVisible ? '关闭工具栏' : '打开工具栏',
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }List<Widget> _buildToolPanels() {
     final List<Widget> panels = [];
     
     // 绘制工具栏（仅编辑模式）
@@ -373,10 +473,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
             },
             onStrokeWidthChanged: (width) {
               setState(() => _selectedStrokeWidth = width);
-            },
-            onToolPreview: _handleDrawingToolPreview,
+            },            onToolPreview: _handleDrawingToolPreview,
             onColorPreview: _handleColorPreview,
             onStrokeWidthPreview: _handleStrokeWidthPreview,
+            onUndo: _undo,
+            onRedo: _redo,
+            canUndo: _canUndo,
+            canRedo: _canRedo,
+            selectedLayer: _selectedLayer,
+            onElementDeleted: _deleteElement,
           ),
         ),
       );
@@ -448,8 +553,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
     List<Widget>? actions,
     bool needsScrolling = false,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrowScreen = screenWidth < 800;
     const double headerHeight = 48.0;
-    const double minContentHeight = 400.0;
+    final double minContentHeight = isNarrowScreen ? 300.0 : 400.0; // 窄屏时减小高度
     
     if (isCollapsed) {
       return Container(
@@ -475,11 +582,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
     }
 
     return Container(
-      constraints: const BoxConstraints(
+      constraints: BoxConstraints(
         minHeight: minContentHeight,
       ),
       child: Card(
-        margin: const EdgeInsets.all(4),
+        margin: EdgeInsets.all(isNarrowScreen ? 2 : 4), // 窄屏时减小边距
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,7 +608,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     Expanded(
                       child: Text(
                         title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: isNarrowScreen ? 14 : 16, // 窄屏时使用较小字体
+                        ),
                       ),
                     ),
                     // 动作按钮
@@ -522,6 +632,164 @@ class _MapEditorPageState extends State<MapEditorPage> {
               ),
           ],
         ),
-      ),    );
+      ),
+    );
+  }
+
+  /// 宽屏布局（传统横向布局）
+  Widget _buildWideScreenLayout() {
+    return Row(
+      children: [
+        // 左侧工具面板
+        SizedBox(
+          width: 300,
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
+              ),
+              child: Column(
+                children: _buildToolPanels(),
+              ),
+            ),
+          ),
+        ),
+        
+        const VerticalDivider(),
+        
+        // 右侧地图画布
+        Expanded(
+          child: _buildMapCanvas(),
+        ),
+      ],
+    );
+  }  /// 窄屏布局（悬浮工具栏）
+  Widget _buildNarrowScreenLayout() {
+    return Stack(
+      children: [
+        // 地图画布占满全屏
+        _buildMapCanvas(),
+        
+        // 半透明遮罩（当工具栏打开时）- 放在工具栏下层，铺满整个屏幕
+        if (_isFloatingToolbarVisible)
+          Positioned.fill(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _isFloatingToolbarVisible ? 1.0 : 0.0,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isFloatingToolbarVisible = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.black.withOpacity(0.4), // 稍微增加透明度
+                ),
+              ),
+            ),
+          ),
+        
+        // 悬浮工具栏 - 放在遮罩上层
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          top: 0,
+          bottom: 0,
+          left: _isFloatingToolbarVisible ? 0 : -300,
+          child: Container(
+            width: 300,
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(2, 0),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // 工具栏顶部拖拽条
+                Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.drag_handle,
+                        color: Theme.of(context).hintColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '工具栏',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isFloatingToolbarVisible = false;
+                          });
+                        },
+                        icon: const Icon(Icons.close),
+                        iconSize: 20,
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
+                ),
+                
+                // 工具面板内容
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: _buildToolPanels(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建地图画布组件
+  Widget _buildMapCanvas() {
+    return MapCanvas(
+      mapItem: _currentMap,
+      selectedLayer: _selectedLayer,
+      selectedDrawingTool: _selectedDrawingTool,
+      selectedColor: _selectedColor,
+      selectedStrokeWidth: _selectedStrokeWidth,
+      availableLegends: _availableLegends,
+      isPreviewMode: widget.isPreviewMode,
+      onLayerUpdated: _updateLayer,
+      onLegendGroupUpdated: _updateLegendGroup,
+      previewOpacityValues: _previewOpacityValues,
+      previewDrawingTool: _previewDrawingTool,
+      previewColor: _previewColor,
+      previewStrokeWidth: _previewStrokeWidth,
+    );
   }
 }

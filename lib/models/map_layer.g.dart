@@ -52,6 +52,9 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
           : const ColorConverter().fromJson((json['color'] as num).toInt()),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
       rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
+      zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
+      text: json['text'] as String?,
+      fontSize: (json['fontSize'] as num?)?.toDouble(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -63,6 +66,9 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'color': const ColorConverter().toJson(instance.color),
       'strokeWidth': instance.strokeWidth,
       'rotation': instance.rotation,
+      'zIndex': instance.zIndex,
+      'text': instance.text,
+      'fontSize': instance.fontSize,
       'createdAt': instance.createdAt.toIso8601String(),
     };
 
@@ -75,6 +81,9 @@ const _$DrawingElementTypeEnumMap = {
   DrawingElementType.diagonalLines: 'diagonalLines',
   DrawingElementType.crossLines: 'crossLines',
   DrawingElementType.dotGrid: 'dotGrid',
+  DrawingElementType.eraser: 'eraser',
+  DrawingElementType.freeDrawing: 'freeDrawing',
+  DrawingElementType.text: 'text',
 };
 
 LegendGroup _$LegendGroupFromJson(Map<String, dynamic> json) => LegendGroup(
