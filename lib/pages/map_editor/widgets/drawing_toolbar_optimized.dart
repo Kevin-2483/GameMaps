@@ -21,9 +21,12 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
   final bool canUndo;
-  final bool canRedo; // Z层级检视器相关
+  final bool canRedo;  // Z层级检视器相关
   final MapLayer? selectedLayer;
   final Function(String elementId)? onElementDeleted;
+  final String? selectedElementId; // 当前选中的元素ID
+  final Function(String? elementId)? onElementSelected; // 元素选中回调
+  
   const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
@@ -42,6 +45,8 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.canRedo = false,
     this.selectedLayer,
     this.onElementDeleted,
+    this.selectedElementId,
+    this.onElementSelected,
   });
 
   @override
@@ -425,10 +430,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            child: ZIndexInspector(
+                            physics: const BouncingScrollPhysics(),                            child: ZIndexInspector(
                               selectedLayer: widget.selectedLayer,
                               onElementDeleted: widget.onElementDeleted!,
+                              selectedElementId: widget.selectedElementId,
+                              onElementSelected: widget.onElementSelected,
                             ),
                           ),
                         ),

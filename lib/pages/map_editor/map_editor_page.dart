@@ -30,11 +30,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
     List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
-    // 当前选中的图层和绘制工具
+  // 当前选中的图层和绘制工具
   MapLayer? _selectedLayer;
   DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
-  double _selectedStrokeWidth = 2.0;    // 工具栏折叠状态
+  double _selectedStrokeWidth = 2.0;
+  String? _selectedElementId; // 当前选中的元素ID// 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
@@ -522,10 +523,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
             onStrokeWidthPreview: _handleStrokeWidthPreview,
             onUndo: _undo,
             onRedo: _redo,
-            canUndo: _canUndo,
-            canRedo: _canRedo,
+            canUndo: _canUndo,            canRedo: _canRedo,
             selectedLayer: _selectedLayer,
             onElementDeleted: _deleteElement,
+            selectedElementId: _selectedElementId,
+            onElementSelected: (elementId) {
+              setState(() => _selectedElementId = elementId);
+            },
           ),
         ),
       );
@@ -881,7 +885,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
       ],
     );
   }
-
   /// 构建地图画布组件
   Widget _buildMapCanvas() {
     return MapCanvas(
@@ -898,6 +901,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewDrawingTool: _previewDrawingTool,
       previewColor: _previewColor,
       previewStrokeWidth: _previewStrokeWidth,
+      selectedElementId: _selectedElementId,
     );
+  }
+
+  // 元素选择处理
+  void _handleElementSelected(String? elementId) {
+    setState(() {
+      _selectedElementId = elementId;
+    });
   }
 }

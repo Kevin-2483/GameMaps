@@ -5,11 +5,15 @@ import '../../../models/map_layer.dart';
 class ZIndexInspector extends StatelessWidget {
   final MapLayer? selectedLayer;
   final Function(String elementId) onElementDeleted; // 删除元素的回调
+  final String? selectedElementId; // 当前选中的元素ID
+  final Function(String? elementId)? onElementSelected; // 元素选中回调
 
   const ZIndexInspector({
     super.key,
     required this.selectedLayer,
     required this.onElementDeleted,
+    this.selectedElementId,
+    this.onElementSelected,
   });
   @override
   Widget build(BuildContext context) {
@@ -49,18 +53,32 @@ class ZIndexInspector extends StatelessWidget {
         ...sortedElements.map((element) => _buildElementItem(context, element)),
       ],
     );
-  }
-  Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
+  }  Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
+    final isSelected = selectedElementId == element.id;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(
+          color: isSelected 
+              ? Theme.of(context).primaryColor 
+              : Theme.of(context).dividerColor,
+          width: isSelected ? 2 : 1,
+        ),
         borderRadius: BorderRadius.circular(4),
-        color: Theme.of(context).cardColor,
+        color: isSelected 
+            ? Theme.of(context).primaryColor.withOpacity(0.1)
+            : Theme.of(context).cardColor,
       ),
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+        onTap: () {
+          // 点击选中/取消选中元素
+          if (onElementSelected != null) {
+            onElementSelected!(isSelected ? null : element.id);
+          }
+        },
         leading: Container(
           width: 24,
           height: 24,

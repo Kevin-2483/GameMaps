@@ -38,10 +38,14 @@ class MapCanvas extends StatefulWidget {
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;  final Map<String, double> previewOpacityValues;
-    // 绘制工具预览状态
+  // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
   final double? previewStrokeWidth;
+  
+  // 选中元素高亮
+  final String? selectedElementId;
+  
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -57,6 +61,7 @@ class MapCanvas extends StatefulWidget {
     this.previewDrawingTool,
     this.previewColor,
     this.previewStrokeWidth,
+    this.selectedElementId,
   });
 
   @override
@@ -135,20 +140,21 @@ class _MapCanvasState extends State<MapCanvas> {
                       
                       // Legend groups
                       ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),
-                      
-                      // Current drawing preview
+                        // Current drawing preview
                       ValueListenableBuilder<DrawingPreviewData?>(
                         valueListenable: _drawingPreviewNotifier,
                         builder: (context, previewData, child) {
                           if (previewData == null) return const SizedBox.shrink();
                           return CustomPaint(
-                            size: const Size(kCanvasWidth, kCanvasHeight),                            painter: _CurrentDrawingPainter(
+                            size: const Size(kCanvasWidth, kCanvasHeight),
+                            painter: _CurrentDrawingPainter(
                               start: previewData.start,
                               end: previewData.end,
                               elementType: previewData.elementType,
                               color: previewData.color,
                               strokeWidth: previewData.strokeWidth,
                               freeDrawingPath: previewData.freeDrawingPath,
+                              selectedElementId: widget.selectedElementId,
                             ),
                           );
                         },
@@ -205,7 +211,6 @@ class _MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
-
   Widget _buildLayerWidget(MapLayer layer) {
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity = widget.previewOpacityValues[layer.id] ?? layer.opacity;
@@ -217,6 +222,7 @@ class _MapCanvasState extends State<MapCanvas> {
           painter: _LayerPainter(
             layer: layer,
             isEditMode: !widget.isPreviewMode,
+            selectedElementId: widget.selectedElementId,
           ),
         ),
       ),
@@ -575,11 +581,15 @@ class _MapCanvasState extends State<MapCanvas> {
 class _LayerPainter extends CustomPainter {
   final MapLayer layer;
   final bool isEditMode;
+  final String? selectedElementId;
 
   _LayerPainter({
     required this.layer,
     required this.isEditMode,
-  });  @override
+    this.selectedElementId,
+  });
+
+  @override
   void paint(Canvas canvas, Size size) {
     // 按 z 值排序元素
     final sortedElements = List<MapDrawingElement>.from(layer.elements)
@@ -588,6 +598,7 @@ class _LayerPainter extends CustomPainter {
     // 找到所有橡皮擦元素
     final eraserElements = sortedElements.where((e) => e.type == DrawingElementType.eraser).toList();
     
+    // 首先绘制所有常规元素
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
@@ -596,7 +607,175 @@ class _LayerPainter extends CustomPainter {
       // 使用裁剪来实现选择性遮挡
       _drawElementWithEraserMask(canvas, element, eraserElements, size);
     }
-  }  
+      // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
+    if (selectedElementId != null) {
+      MapDrawingElement? selectedElement;
+      try {
+        selectedElement = sortedElements.firstWhere((e) => e.id == selectedElementId);
+        _drawRainbowHighlight(canvas, selectedElement, size);
+      } catch (e) {
+        // 如果找不到元素，忽略绘制
+      }
+    }
+  }
+    // 根据元素类型直接显示内容
+  void _drawRainbowHighlight(Canvas canvas, MapDrawingElement element, Size size) {
+    // 首先获取元素的坐标
+    if (element.points.isEmpty) return;
+    
+    // 彩虹色渐变效果（用于填充文本或形状）
+    final rainbowColors = [
+      Colors.red,
+      Colors.orange,
+      Colors.yellow,
+      Colors.green,
+      Colors.blue,
+      Colors.indigo,
+      Colors.purple,
+    ];
+    
+    // 获取当前时间以创建动画效果
+    final now = DateTime.now().millisecondsSinceEpoch / 1000;
+    final animOffset = now % 1.0; // 0.0 - 1.0 之间循环变化
+    
+    // 根据元素类型绘制不同的内容
+    switch (element.type) {
+      case DrawingElementType.text:
+        // 文本元素
+        if (element.text == null || element.text!.isEmpty) return;
+        
+        final position = Offset(
+          element.points[0].dx * size.width,
+          element.points[0].dy * size.height,
+        );
+        
+        // 创建彩虹渐变文本
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: element.text!,
+            style: TextStyle(
+              fontSize: element.fontSize ?? 16.0,
+              fontWeight: FontWeight.bold,
+              foreground: Paint()
+                ..shader = LinearGradient(
+                  colors: rainbowColors,
+                  transform: GradientRotation(animOffset * math.pi * 2),
+                ).createShader(Rect.fromLTWH(0, 0, 300, 50)),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        
+        textPainter.layout();
+        textPainter.paint(canvas, position);
+        break;
+        
+      case DrawingElementType.freeDrawing:
+        // 自由绘制路径
+        if (element.points.length < 2) return;
+        
+        final path = Path();
+        final screenPoints = element.points.map((point) => Offset(
+          point.dx * size.width,
+          point.dy * size.height,
+        )).toList();
+        
+        path.moveTo(screenPoints[0].dx, screenPoints[0].dy);
+        for (int i = 1; i < screenPoints.length; i++) {
+          path.lineTo(screenPoints[i].dx, screenPoints[i].dy);
+        }
+        
+        // 彩虹渐变画笔
+        final paint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = element.strokeWidth + 2
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..shader = LinearGradient(
+            colors: rainbowColors,
+            transform: GradientRotation(animOffset * math.pi * 2),
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        
+        canvas.drawPath(path, paint);
+        break;
+        
+      default:
+        // 其他基于两点的元素
+        if (element.points.length < 2) return;
+        
+        final start = Offset(
+          element.points[0].dx * size.width,
+          element.points[0].dy * size.height,
+        );
+        
+        final end = Offset(
+          element.points[1].dx * size.width,
+          element.points[1].dy * size.height,
+        );
+        
+        // 彩虹渐变画笔
+        final paint = Paint()
+          ..strokeWidth = element.strokeWidth + 2
+          ..shader = LinearGradient(
+            colors: rainbowColors,
+            transform: GradientRotation(animOffset * math.pi * 2),
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        
+        // 根据不同的绘制类型绘制不同的形状
+        switch (element.type) {
+          case DrawingElementType.line:
+            paint.style = PaintingStyle.stroke;
+            canvas.drawLine(start, end, paint);
+            break;
+            
+          case DrawingElementType.dashedLine:
+            paint.style = PaintingStyle.stroke;
+            _drawDashedLine(canvas, start, end, paint);
+            break;
+            
+          case DrawingElementType.arrow:
+            paint.style = PaintingStyle.stroke;
+            _drawArrow(canvas, start, end, paint);
+            break;
+            
+          case DrawingElementType.rectangle:
+            paint.style = PaintingStyle.fill;
+            final rect = Rect.fromPoints(start, end);
+            canvas.drawRect(rect, paint);
+            break;
+            
+          case DrawingElementType.hollowRectangle:
+            paint.style = PaintingStyle.stroke;
+            final rect = Rect.fromPoints(start, end);
+            canvas.drawRect(rect, paint);
+            break;
+            
+          case DrawingElementType.diagonalLines:
+            paint.style = PaintingStyle.stroke;
+            _drawDiagonalPattern(canvas, start, end, paint);
+            break;
+            
+          case DrawingElementType.crossLines:
+            paint.style = PaintingStyle.stroke;
+            _drawCrossPattern(canvas, start, end, paint);
+            break;
+            
+          case DrawingElementType.dotGrid:
+            paint.style = PaintingStyle.fill;
+            _drawDotGrid(canvas, start, end, paint);
+            break;
+            
+          default:
+            // 默认绘制一个边框
+            paint.style = PaintingStyle.stroke;
+            final rect = Rect.fromPoints(start, end);
+            canvas.drawRect(rect, paint);
+            break;
+        }
+        break;
+    }
+  }
+
   // 使用遮罩绘制元素，实现选择性遮挡
   void _drawElementWithEraserMask(Canvas canvas, MapDrawingElement element, List<MapDrawingElement> eraserElements, Size size) {
     // 找到影响当前元素的橡皮擦（z值更高的）
@@ -936,7 +1115,8 @@ class _CurrentDrawingPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
   final List<Offset>? freeDrawingPath; // 自由绘制路径
-
+  final String? selectedElementId; // 当前选中的元素ID
+  
   _CurrentDrawingPainter({
     required this.start,
     required this.end,
@@ -944,7 +1124,10 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.color,
     required this.strokeWidth,
     this.freeDrawingPath,
-  });  @override
+    this.selectedElementId,
+  });
+  
+  @override
   void paint(Canvas canvas, Size size) {
     // 橡皮擦特殊预览
     if (elementType == DrawingElementType.eraser) {
@@ -956,12 +1139,13 @@ class _CurrentDrawingPainter extends CustomPainter {
       
       // 绘制边框
       final borderPaint = Paint()
-        ..color = Colors.red.withOpacity(0.8)
-        ..style = PaintingStyle.stroke
+        ..color = Colors.red.withOpacity(0.8)        ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
       canvas.drawRect(rect, borderPaint);
       return;
-    }    // 自由绘制特殊预览
+    }
+    
+    // 自由绘制特殊预览
     if (elementType == DrawingElementType.freeDrawing && freeDrawingPath != null && freeDrawingPath!.isNotEmpty) {
       final paint = Paint()
         ..color = color.withOpacity(0.7)
@@ -993,15 +1177,13 @@ class _CurrentDrawingPainter extends CustomPainter {
         height: 20,
       );
       canvas.drawRect(rect, paint);
-      
-      // 绘制文本预览提示
+        // 绘制文本预览提示
       final textPainter = TextPainter(
         text: TextSpan(
-          text: 'T',
+          text: "点击添加文本",
           style: TextStyle(
             color: color.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+            fontSize: 12.0,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -1037,9 +1219,7 @@ class _CurrentDrawingPainter extends CustomPainter {
       color: color.withOpacity(0.7),
       strokeWidth: strokeWidth,
       createdAt: DateTime.now(),
-    );
-
-    final layerPainter = _LayerPainter(
+    );    final layerPainter = _LayerPainter(
       layer: MapLayer(
         id: 'preview',
         name: 'Preview',
@@ -1051,6 +1231,7 @@ class _CurrentDrawingPainter extends CustomPainter {
         updatedAt: DateTime.now(),
       ),
       isEditMode: true,
+      selectedElementId: selectedElementId,
     );
 
     layerPainter.paint(canvas, size);
