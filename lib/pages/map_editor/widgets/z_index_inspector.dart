@@ -11,17 +11,16 @@ class ZIndexInspector extends StatelessWidget {
     required this.selectedLayer,
     required this.onElementDeleted,
   });
-
   @override
   Widget build(BuildContext context) {
     if (selectedLayer == null || selectedLayer!.elements.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Text(
           '当前图层没有绘制元素',
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey,
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
           ),
           textAlign: TextAlign.center,
         ),
@@ -39,10 +38,10 @@ class ZIndexInspector extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: Text(
             '元素列表 (${sortedElements.length})',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Colors.grey,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
           ),
         ),
@@ -51,14 +50,13 @@ class ZIndexInspector extends StatelessWidget {
       ],
     );
   }
-
   Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).dividerColor),
         borderRadius: BorderRadius.circular(4),
-        color: Colors.grey.shade50,
+        color: Theme.of(context).cardColor,
       ),
       child: ListTile(
         dense: true,
@@ -69,7 +67,7 @@ class ZIndexInspector extends StatelessWidget {
           decoration: BoxDecoration(
             color: element.color,
             borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: Colors.grey.shade400),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Center(
             child: Icon(
@@ -81,9 +79,10 @@ class ZIndexInspector extends StatelessWidget {
         ),
         title: Text(
           _getElementTypeDisplayName(element.type),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
+            color: Theme.of(context).textTheme.titleMedium?.color,
           ),
         ),
         subtitle: Column(
@@ -91,22 +90,35 @@ class ZIndexInspector extends StatelessWidget {
           children: [
             Text(
               'Z层级: ${element.zIndex}',
-              style: const TextStyle(fontSize: 10),
+              style: TextStyle(
+                fontSize: 10,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             ),
             if (element.text != null && element.text!.isNotEmpty)
               Text(
                 '内容: ${element.text!.length > 10 ? element.text!.substring(0, 10) + "..." : element.text!}',
-                style: const TextStyle(fontSize: 10),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
               ),
             if (element.type == DrawingElementType.freeDrawing)
               Text(
                 '点数: ${element.points.length}',
-                style: const TextStyle(fontSize: 10),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
               ),
           ],
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.delete, size: 16),
+          icon: Icon(
+            Icons.delete, 
+            size: 16,
+            color: Theme.of(context).iconTheme.color,
+          ),
           onPressed: () => _showDeleteConfirmDialog(context, element),
           tooltip: '删除元素',
           padding: EdgeInsets.zero,

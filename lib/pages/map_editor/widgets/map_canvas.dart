@@ -37,14 +37,11 @@ class MapCanvas extends StatefulWidget {
   final List<legend_db.LegendItem> availableLegends;
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
-  final Function(LegendGroup) onLegendGroupUpdated;
-  final Map<String, double> previewOpacityValues;
-  
-  // 绘制工具预览状态
+  final Function(LegendGroup) onLegendGroupUpdated;  final Map<String, double> previewOpacityValues;
+    // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
   final double? previewStrokeWidth;
-
   const MapCanvas({
     super.key,
     required this.mapItem,

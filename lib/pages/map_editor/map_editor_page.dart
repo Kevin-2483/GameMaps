@@ -46,12 +46,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false;
-
   // 透明度预览状态
   final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
+
   // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
