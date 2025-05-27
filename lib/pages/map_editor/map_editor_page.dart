@@ -8,7 +8,7 @@ import '../../models/legend_item.dart' as legend_db;
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
-import 'widgets/drawing_toolbar.dart';
+import 'widgets/drawing_toolbar_optimized.dart';
 
 class MapEditorPage extends StatefulWidget {
   final MapItem mapItem;
@@ -28,8 +28,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   late MapItem _currentMap;
   final MapDatabaseService _mapDatabaseService = MapDatabaseService();
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
-  
-  List<legend_db.LegendItem> _availableLegends = [];
+    List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
     // 当前选中的图层和绘制工具
   MapLayer? _selectedLayer;
@@ -41,6 +40,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
+
+  // 透明度预览状态
+  final Map<String, double> _previewOpacityValues = {};
+
+  // 绘制工具预览状态
+  DrawingElementType? _previewDrawingTool;
+  Color? _previewColor;
+  double? _previewStrokeWidth;
 
   @override
   void initState() {
@@ -190,6 +197,31 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
+  // 处理透明度预览
+  void _handleOpacityPreview(String layerId, double opacity) {
+    setState(() {
+      _previewOpacityValues[layerId] = opacity;
+    });
+  }
+
+  // 处理绘制工具预览
+  void _handleDrawingToolPreview(DrawingElementType? tool) {
+    setState(() {
+      _previewDrawingTool = tool;
+    });
+  }
+
+  void _handleColorPreview(Color color) {
+    setState(() {
+      _previewColor = color;
+    });
+  }
+
+  void _handleStrokeWidthPreview(double width) {
+    setState(() {
+      _previewStrokeWidth = width;
+    });
+  }
 
   Future<void> _saveMap() async {
     if (widget.isPreviewMode) return;
@@ -297,9 +329,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   ),
                 ),
                 
-                const VerticalDivider(),
-                
-                // 右侧地图画布
+                const VerticalDivider(),                // 右侧地图画布
                 Expanded(
                   child: MapCanvas(
                     mapItem: _currentMap,
@@ -311,6 +341,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     isPreviewMode: widget.isPreviewMode,
                     onLayerUpdated: _updateLayer,
                     onLegendGroupUpdated: _updateLegendGroup,
+                    previewOpacityValues: _previewOpacityValues,
+                    previewDrawingTool: _previewDrawingTool,
+                    previewColor: _previewColor,
+                    previewStrokeWidth: _previewStrokeWidth,
                   ),
                 ),
               ],
@@ -326,8 +360,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
           icon: Icons.brush,
           isCollapsed: _isDrawingToolbarCollapsed,
           onToggleCollapsed: () => setState(() => _isDrawingToolbarCollapsed = !_isDrawingToolbarCollapsed),
-          needsScrolling: true,
-          child: _isDrawingToolbarCollapsed ? null : DrawingToolbar(
+          needsScrolling: true,          child: _isDrawingToolbarCollapsed ? null : DrawingToolbarOptimized(
             selectedTool: _selectedDrawingTool,
             selectedColor: _selectedColor,
             selectedStrokeWidth: _selectedStrokeWidth,
@@ -341,6 +374,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
             onStrokeWidthChanged: (width) {
               setState(() => _selectedStrokeWidth = width);
             },
+            onToolPreview: _handleDrawingToolPreview,
+            onColorPreview: _handleColorPreview,
+            onStrokeWidthPreview: _handleStrokeWidthPreview,
           ),
         ),
       );
@@ -372,6 +408,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
           onLayersReordered: _reorderLayers,
           onError: _showErrorSnackBar,
           onSuccess: _showSuccessSnackBar,
+          onOpacityPreview: _handleOpacityPreview,
         ),
       ),
     );
@@ -485,7 +522,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
               ),
           ],
         ),
-      ),
-    );
+      ),    );
   }
 }

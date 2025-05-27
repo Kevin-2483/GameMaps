@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../../models/map_layer.dart';
 
-class DrawingToolbar extends StatelessWidget {
+/// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
+class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
   final Color selectedColor;
   final double selectedStrokeWidth;
@@ -9,8 +11,13 @@ class DrawingToolbar extends StatelessWidget {
   final Function(DrawingElementType?) onToolSelected;
   final Function(Color) onColorSelected;
   final Function(double) onStrokeWidthChanged;
+  
+  // 预览回调，用于实时更新画布而不修改实际数据
+  final Function(DrawingElementType?)? onToolPreview;
+  final Function(Color)? onColorPreview;
+  final Function(double)? onStrokeWidthPreview;
 
-  const DrawingToolbar({
+  const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
@@ -19,11 +26,108 @@ class DrawingToolbar extends StatelessWidget {
     required this.onToolSelected,
     required this.onColorSelected,
     required this.onStrokeWidthChanged,
+    this.onToolPreview,
+    this.onColorPreview,
+    this.onStrokeWidthPreview,
   });
 
   @override
+  State<DrawingToolbarOptimized> createState() => _DrawingToolbarOptimizedState();
+}
+
+class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
+  // 临时状态，用于预览
+  DrawingElementType? _tempSelectedTool;
+  Color? _tempSelectedColor;
+  double? _tempSelectedStrokeWidth;
+  
+  // 定时器，用于延迟提交更改
+  Timer? _toolTimer;
+  Timer? _colorTimer;
+  Timer? _strokeWidthTimer;
+
+  @override
+  void dispose() {
+    _toolTimer?.cancel();
+    _colorTimer?.cancel();
+    _strokeWidthTimer?.cancel();
+    super.dispose();
+  }
+
+  // 获取有效的工具选择（临时值或实际值）
+  DrawingElementType? get _effectiveTool => _tempSelectedTool ?? widget.selectedTool;
+  Color get _effectiveColor => _tempSelectedColor ?? widget.selectedColor;
+  double get _effectiveStrokeWidth => _tempSelectedStrokeWidth ?? widget.selectedStrokeWidth;
+
+  void _handleToolSelection(DrawingElementType? tool) {
+    setState(() {
+      _tempSelectedTool = tool;
+    });
+
+    // 立即通知预览（如果提供了回调）
+    widget.onToolPreview?.call(tool);
+
+    // 取消之前的定时器
+    _toolTimer?.cancel();
+    
+    // 设置新的定时器，延迟提交更改
+    _toolTimer = Timer(const Duration(milliseconds: 100), () {
+      widget.onToolSelected(tool);
+      if (mounted) {
+        setState(() {
+          _tempSelectedTool = null;
+        });
+      }
+    });
+  }
+
+  void _handleColorSelection(Color color) {
+    setState(() {
+      _tempSelectedColor = color;
+    });
+
+    // 立即通知预览（如果提供了回调）
+    widget.onColorPreview?.call(color);
+
+    // 取消之前的定时器
+    _colorTimer?.cancel();
+    
+    // 设置新的定时器，延迟提交更改
+    _colorTimer = Timer(const Duration(milliseconds: 100), () {
+      widget.onColorSelected(color);
+      if (mounted) {
+        setState(() {
+          _tempSelectedColor = null;
+        });
+      }
+    });
+  }
+
+  void _handleStrokeWidthChange(double width) {
+    setState(() {
+      _tempSelectedStrokeWidth = width;
+    });
+
+    // 立即通知预览（如果提供了回调）
+    widget.onStrokeWidthPreview?.call(width);
+
+    // 取消之前的定时器
+    _strokeWidthTimer?.cancel();
+    
+    // 设置新的定时器，延迟提交更改
+    _strokeWidthTimer = Timer(const Duration(milliseconds: 200), () {
+      widget.onStrokeWidthChanged(width);
+      if (mounted) {
+        setState(() {
+          _tempSelectedStrokeWidth = null;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!isEditMode) return const SizedBox.shrink();
+    if (!widget.isEditMode) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -138,26 +242,26 @@ class DrawingToolbar extends StatelessWidget {
             children: [
               Expanded(
                 child: Slider(
-                  value: selectedStrokeWidth,
+                  value: _effectiveStrokeWidth,
                   min: 1.0,
                   max: 10.0,
                   divisions: 9,
-                  label: selectedStrokeWidth.round().toString(),
-                  onChanged: onStrokeWidthChanged,
+                  label: _effectiveStrokeWidth.round().toString(),
+                  onChanged: _handleStrokeWidthChange,
                 ),
               ),
-              Text('${selectedStrokeWidth.round()}px'),
+              Text('${_effectiveStrokeWidth.round()}px'),
             ],
           ),
           
           const SizedBox(height: 8),
           
           // Clear selection button
-          if (selectedTool != null)
+          if (_effectiveTool != null)
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => onToolSelected(null),
+                onPressed: () => _handleToolSelection(null),
                 child: const Text('取消选择'),
               ),
             ),
@@ -172,12 +276,12 @@ class DrawingToolbar extends StatelessWidget {
     required String tooltip,
     required DrawingElementType tool,
   }) {
-    final isSelected = selectedTool == tool;
+    final isSelected = _effectiveTool == tool;
     
     return Tooltip(
       message: tooltip,
       child: InkWell(
-        onTap: () => onToolSelected(isSelected ? null : tool),
+        onTap: () => _handleToolSelection(isSelected ? null : tool),
         borderRadius: BorderRadius.circular(8),
         child: Container(
           width: 40,
@@ -205,10 +309,10 @@ class DrawingToolbar extends StatelessWidget {
   }
 
   Widget _buildColorButton(Color color) {
-    final isSelected = selectedColor == color;
+    final isSelected = _effectiveColor == color;
     
     return InkWell(
-      onTap: () => onColorSelected(color),
+      onTap: () => _handleColorSelection(color),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: 32,

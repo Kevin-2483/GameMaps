@@ -5,6 +5,23 @@ import '../../../models/map_item.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../utils/image_utils.dart';
 
+/// 绘制预览数据
+class DrawingPreviewData {
+  final Offset start;
+  final Offset end;
+  final DrawingElementType elementType;
+  final Color color;
+  final double strokeWidth;
+
+  const DrawingPreviewData({
+    required this.start,
+    required this.end,
+    required this.elementType,
+    required this.color,
+    required this.strokeWidth,
+  });
+}
+
 class MapCanvas extends StatefulWidget {
   final MapItem mapItem;
   final MapLayer? selectedLayer;
@@ -15,6 +32,12 @@ class MapCanvas extends StatefulWidget {
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
+  final Map<String, double> previewOpacityValues;
+  
+  // 绘制工具预览状态
+  final DrawingElementType? previewDrawingTool;
+  final Color? previewColor;
+  final double? previewStrokeWidth;
 
   const MapCanvas({
     super.key,
@@ -27,6 +50,10 @@ class MapCanvas extends StatefulWidget {
     required this.isPreviewMode,
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
+    this.previewOpacityValues = const {},
+    this.previewDrawingTool,
+    this.previewColor,
+    this.previewStrokeWidth,
   });
 
   @override
@@ -38,10 +65,18 @@ class _MapCanvasState extends State<MapCanvas> {
   Offset? _currentDrawingStart;
   Offset? _currentDrawingEnd;
   bool _isDrawing = false;
+  
+  // 绘制预览的 ValueNotifier，避免整个 widget 重绘
+  final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = ValueNotifier(null);
 
+  // 获取有效的绘制工具状态（预览值或实际值）
+  DrawingElementType? get _effectiveDrawingTool => widget.previewDrawingTool ?? widget.selectedDrawingTool;
+  Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
+  double get _effectiveStrokeWidth => widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
   @override
   void dispose() {
     _transformationController.dispose();
+    _drawingPreviewNotifier.dispose();
     super.dispose();
   }
 
@@ -87,23 +122,27 @@ class _MapCanvasState extends State<MapCanvas> {
                 ...widget.mapItem.layers.map((layer) => _buildLayerWidget(layer)),
                 
                 // Legend groups
-                ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),
-                
-                // Current drawing preview
-                if (_isDrawing && _currentDrawingStart != null && _currentDrawingEnd != null)
-                  CustomPaint(
-                    size: const Size(1200, 800),
-                    painter: _CurrentDrawingPainter(
-                      start: _currentDrawingStart!,
-                      end: _currentDrawingEnd!,
-                      elementType: widget.selectedDrawingTool!,
-                      color: widget.selectedColor,
-                      strokeWidth: widget.selectedStrokeWidth,
-                    ),
-                  ),
+                ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),                // Current drawing preview - 使用 ValueListenableBuilder 避免整个 widget 重绘
+                ValueListenableBuilder<DrawingPreviewData?>(
+                  valueListenable: _drawingPreviewNotifier,
+                  builder: (context, previewData, child) {
+                    if (previewData == null) return const SizedBox.shrink();
+                    
+                    return CustomPaint(
+                      size: const Size(1200, 800),
+                      painter: _CurrentDrawingPainter(
+                        start: previewData.start,
+                        end: previewData.end,
+                        elementType: previewData.elementType,
+                        color: previewData.color,
+                        strokeWidth: previewData.strokeWidth,
+                      ),
+                    );
+                  },
+                ),
                 
                 // Touch handler for drawing
-                if (!widget.isPreviewMode && widget.selectedDrawingTool != null)
+                if (!widget.isPreviewMode && _effectiveDrawingTool != null)
                   Positioned.fill(
                     child: GestureDetector(
                       onPanStart: _onDrawingStart,
@@ -117,13 +156,15 @@ class _MapCanvasState extends State<MapCanvas> {
         ),
       ),
     );  }
-
   Widget _buildLayerImageWidget(MapLayer layer) {
     if (layer.imageData == null) return const SizedBox.shrink();
     
+    // 获取有效透明度（预览值或实际值）
+    final effectiveOpacity = widget.previewOpacityValues[layer.id] ?? layer.opacity;
+    
     return Positioned.fill(
       child: Opacity(
-        opacity: layer.isVisible ? layer.opacity : 0.0,
+        opacity: layer.isVisible ? effectiveOpacity : 0.0,
         child: ImageUtils.buildImageFromBase64(
           layer.imageData!,
           width: 1200,
@@ -136,9 +177,12 @@ class _MapCanvasState extends State<MapCanvas> {
   }
 
   Widget _buildLayerWidget(MapLayer layer) {
+    // 获取有效透明度（预览值或实际值）
+    final effectiveOpacity = widget.previewOpacityValues[layer.id] ?? layer.opacity;
+    
     return Positioned.fill(
       child: Opacity(
-        opacity: layer.isVisible ? layer.opacity : 0.0,
+        opacity: layer.isVisible ? effectiveOpacity : 0.0,
         child: CustomPaint(
           size: const Size(1200, 800),
           painter: _LayerPainter(
@@ -221,33 +265,43 @@ class _MapCanvasState extends State<MapCanvas> {
         ],
       ),
     );
-  }
+  }  void _onDrawingStart(DragStartDetails details) {
+    if (widget.isPreviewMode || _effectiveDrawingTool == null) return;
 
-  void _onDrawingStart(DragStartDetails details) {
-    if (widget.isPreviewMode || widget.selectedDrawingTool == null) return;
-
-    setState(() {
-      _currentDrawingStart = details.localPosition;
-      _currentDrawingEnd = details.localPosition;
-      _isDrawing = true;
-    });
+    _currentDrawingStart = details.localPosition;
+    _currentDrawingEnd = details.localPosition;
+    _isDrawing = true;
+    
+    // 只更新绘制预览，不触发整个 widget 重绘
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: _currentDrawingStart!,
+      end: _currentDrawingEnd!,
+      elementType: _effectiveDrawingTool!,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+    );
   }
 
   void _onDrawingUpdate(DragUpdateDetails details) {
     if (!_isDrawing) return;
 
-    setState(() {
-      _currentDrawingEnd = details.localPosition;
-    });
+    _currentDrawingEnd = details.localPosition;
+    
+    // 只更新绘制预览，不触发整个 widget 重绘
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: _currentDrawingStart!,
+      end: _currentDrawingEnd!,
+      elementType: _effectiveDrawingTool!,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+    );
   }
-
   void _onDrawingEnd(DragEndDetails details) {
     if (!_isDrawing || _currentDrawingStart == null || _currentDrawingEnd == null || widget.selectedLayer == null) {
-      setState(() {
-        _isDrawing = false;
-        _currentDrawingStart = null;
-        _currentDrawingEnd = null;
-      });
+      _isDrawing = false;
+      _currentDrawingStart = null;
+      _currentDrawingEnd = null;
+      _drawingPreviewNotifier.value = null; // 清除预览
       return;
     }
 
@@ -264,10 +318,10 @@ class _MapCanvasState extends State<MapCanvas> {
     // Add the drawing element to the selected layer
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: widget.selectedDrawingTool!,
+      type: _effectiveDrawingTool!,
       points: [normalizedStart, normalizedEnd],
-      color: widget.selectedColor,
-      strokeWidth: widget.selectedStrokeWidth,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
       createdAt: DateTime.now(),
     );
 
@@ -278,11 +332,11 @@ class _MapCanvasState extends State<MapCanvas> {
 
     widget.onLayerUpdated(updatedLayer);
 
-    setState(() {
-      _isDrawing = false;
-      _currentDrawingStart = null;
-      _currentDrawingEnd = null;
-    });
+    // 清理绘制状态，不需要 setState
+    _isDrawing = false;
+    _currentDrawingStart = null;
+    _currentDrawingEnd = null;
+    _drawingPreviewNotifier.value = null; // 清除预览
   }
 }
 
