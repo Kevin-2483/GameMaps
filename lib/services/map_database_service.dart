@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
+import '../models/map_item_summary.dart';
 
 /// 地图数据库服务
 class MapDatabaseService {
@@ -125,6 +126,18 @@ class MapDatabaseService {
     return maps.map((map) => MapItem.fromDatabase(map)).toList();
   }
 
+  /// 获取所有地图摘要（轻量级加载，不包含图层和图例组数据）
+  /// 用于地图册页面的快速加载
+  Future<List<MapItemSummary>> getAllMapsSummary() async {
+    final db = await database;
+    // 只查询基本字段，不包含 layers 和 legend_groups 等重量级数据
+    final List<Map<String, dynamic>> maps = await db.query(
+      _tableName,
+      columns: ['id', 'title', 'image_data', 'version', 'created_at', 'updated_at'],
+    );
+    return maps.map((map) => MapItemSummary.fromDatabase(map)).toList();
+  }
+
   /// 根据ID获取地图
   Future<MapItem?> getMapById(int id) async {
     final db = await database;
@@ -139,16 +152,60 @@ class MapDatabaseService {
     }
     return null;
   }
-
   /// 更新地图
   Future<void> updateMap(MapItem map) async {
-    final db = await database;
-    await db.update(
-      _tableName,
-      map.toDatabase(),
-      where: 'id = ?',
-      whereArgs: [map.id],
-    );
+    try {
+      print('MapDatabaseService.updateMap 开始执行');
+      print('- 地图ID: ${map.id}');
+      print('- 地图标题: ${map.title}');
+      
+      final db = await database;
+      print('数据库连接成功');
+      
+      final databaseData = map.toDatabase();
+      print('数据序列化完成，字段: ${databaseData.keys.toList()}');
+      
+      // 检查图层数据序列化
+      if (map.layers.isNotEmpty) {
+        try {
+          final layersJson = json.encode(map.layers.map((e) => e.toJson()).toList());
+          print('图层数据序列化成功，长度: ${layersJson.length}');
+        } catch (e) {
+          print('图层数据序列化失败: $e');
+          throw Exception('图层数据序列化失败: $e');
+        }
+      }
+      
+      // 检查图例组数据序列化
+      if (map.legendGroups.isNotEmpty) {
+        try {
+          final legendGroupsJson = json.encode(map.legendGroups.map((e) => e.toJson()).toList());
+          print('图例组数据序列化成功，长度: ${legendGroupsJson.length}');
+        } catch (e) {
+          print('图例组数据序列化失败: $e');
+          throw Exception('图例组数据序列化失败: $e');
+        }
+      }
+      
+      final updateResult = await db.update(
+        _tableName,
+        databaseData,
+        where: 'id = ?',
+        whereArgs: [map.id],
+      );
+      
+      print('数据库更新完成，影响行数: $updateResult');
+      
+      if (updateResult == 0) {
+        throw Exception('没有找到要更新的地图记录，ID: ${map.id}');
+      }
+      
+    } catch (e, stackTrace) {
+      print('MapDatabaseService.updateMap 错误:');
+      print('错误: $e');
+      print('堆栈: $stackTrace');
+      rethrow;
+    }
   }
 
   /// 删除地图

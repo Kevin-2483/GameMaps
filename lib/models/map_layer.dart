@@ -245,12 +245,21 @@ class OffsetConverter implements JsonConverter<Offset, Map<String, dynamic>> {
 }
 
 /// JSON转换器用于处理 Offset 列表
-class OffsetListConverter implements JsonConverter<List<Offset>, List<Map<String, dynamic>>> {
+class OffsetListConverter implements JsonConverter<List<Offset>, List<dynamic>> {
   const OffsetListConverter();
 
   @override
-  List<Offset> fromJson(List<Map<String, dynamic>> json) {
-    return json.map((item) => const OffsetConverter().fromJson(item)).toList();
+  List<Offset> fromJson(List<dynamic> json) {
+    return json.map((item) {
+      if (item is Map<String, dynamic>) {
+        return const OffsetConverter().fromJson(item);
+      } else if (item is Map) {
+        // 处理 Map<dynamic, dynamic> 的情况
+        return const OffsetConverter().fromJson(Map<String, dynamic>.from(item));
+      } else {
+        throw FormatException('Invalid offset data: $item');
+      }
+    }).toList();
   }
 
   @override

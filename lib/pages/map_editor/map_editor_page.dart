@@ -14,21 +14,23 @@ import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
 
 class MapEditorPage extends StatefulWidget {
-  final MapItem mapItem;
+  final MapItem? mapItem; // 可选的预加载地图数据
+  final int? mapId; // 地图ID，用于按需加载
   final bool isPreviewMode;
 
   const MapEditorPage({
     super.key,
-    required this.mapItem,
+    this.mapItem,
+    this.mapId,
     this.isPreviewMode = false,
-  });
+  }) : assert(mapItem != null || mapId != null, 'Either mapItem or mapId must be provided');
 
   @override
   State<MapEditorPage> createState() => _MapEditorPageState();
 }
 
 class _MapEditorPageState extends State<MapEditorPage> {
-  late MapItem _currentMap;
+  MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = MapDatabaseService();
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
   List<legend_db.LegendItem> _availableLegends = [];
@@ -65,28 +67,53 @@ class _MapEditorPageState extends State<MapEditorPage> {
   // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
-  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量
-  @override
+  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量  @override
   void initState() {
     super.initState();
-    _currentMap = widget.mapItem;
-    _loadAvailableLegends();
-
-    // 如果没有图层，创建一个默认图层
-    if (_currentMap.layers.isEmpty) {
-      _addDefaultLayer();
-    } else {
-      _selectedLayer = _currentMap.layers.first;
-    }
-
-    // 保存初始状态到撤销历史
-    _saveToUndoHistory();
+    _initializeMap();
   }
 
+  Future<void> _initializeMap() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      // 如果已有 mapItem，直接使用；否则通过 mapId 从数据库加载
+      if (widget.mapItem != null) {
+        _currentMap = widget.mapItem!;
+      } else if (widget.mapId != null) {
+        final loadedMap = await _mapDatabaseService.getMapById(widget.mapId!);
+        if (loadedMap == null) {
+          throw Exception('未找到ID为 ${widget.mapId} 的地图');
+        }
+        _currentMap = loadedMap;
+      } else {
+        throw Exception('mapItem 和 mapId 都为空');
+      }
+
+      // 加载可用图例
+      await _loadAvailableLegends();
+
+      // 如果没有图层，创建一个默认图层
+      if (_currentMap!.layers.isEmpty) {
+        _addDefaultLayer();
+      } else {
+        _selectedLayer = _currentMap!.layers.first;
+      }
+
+      // 保存初始状态到撤销历史
+      _saveToUndoHistory();
+      
+    } catch (e) {
+      _showErrorSnackBar('初始化地图失败: ${e.toString()}');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
   // 撤销历史记录管理方法
   void _saveToUndoHistory() {
+    if (_currentMap == null) return;
     // 保存当前状态到撤销历史
-    _undoHistory.add(_currentMap.copyWith());
+    _undoHistory.add(_currentMap!.copyWith());
 
     // 清空重做历史，因为新的操作会使重做历史失效
     _redoHistory.clear();
@@ -98,11 +125,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   void _undo() {
-    if (_undoHistory.isEmpty) return;
+    if (_undoHistory.isEmpty || _currentMap == null) return;
 
     setState(() {
       // 将当前状态保存到重做历史
-      _redoHistory.add(_currentMap.copyWith());
+      _redoHistory.add(_currentMap!.copyWith());
 
       // 限制重做历史记录数量
       if (_redoHistory.length > _maxUndoHistory) {
@@ -114,24 +141,24 @@ class _MapEditorPageState extends State<MapEditorPage> {
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
         final selectedLayerId = _selectedLayer!.id;
-        _selectedLayer = _currentMap.layers
+        _selectedLayer = _currentMap!.layers
             .where((layer) => layer.id == selectedLayerId)
             .firstOrNull;
 
         // 如果原选中图层不存在，选择第一个图层
-        if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
-          _selectedLayer = _currentMap.layers.first;
+        if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+          _selectedLayer = _currentMap!.layers.first;
         }
       }
     });
   }
 
   void _redo() {
-    if (_redoHistory.isEmpty) return;
+    if (_redoHistory.isEmpty || _currentMap == null) return;
 
     setState(() {
       // 将当前状态保存到撤销历史
-      _undoHistory.add(_currentMap.copyWith());
+      _undoHistory.add(_currentMap!.copyWith());
 
       // 限制撤销历史记录数量
       if (_undoHistory.length > _maxUndoHistory) {
@@ -143,13 +170,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
         final selectedLayerId = _selectedLayer!.id;
-        _selectedLayer = _currentMap.layers
+        _selectedLayer = _currentMap!.layers
             .where((layer) => layer.id == selectedLayerId)
             .firstOrNull;
 
         // 如果原选中图层不存在，选择第一个图层
-        if (_selectedLayer == null && _currentMap.layers.isNotEmpty) {
-          _selectedLayer = _currentMap.layers.first;
+        if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+          _selectedLayer = _currentMap!.layers.first;
         }
       }
     });
@@ -202,8 +229,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _showErrorSnackBar('加载图例失败: ${e.toString()}');
     }
   }
-
   void _addDefaultLayer() {
+    if (_currentMap == null) return;
+    
     final defaultLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '图层 1',
@@ -213,59 +241,58 @@ class _MapEditorPageState extends State<MapEditorPage> {
     );
 
     setState(() {
-      _currentMap = _currentMap.copyWith(
-        layers: [..._currentMap.layers, defaultLayer],
+      _currentMap = _currentMap!.copyWith(
+        layers: [..._currentMap!.layers, defaultLayer],
       );
       _selectedLayer = defaultLayer;
     });
   }
-
   void _addNewLayer() {
-    if (widget.isPreviewMode) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '图层 ${_currentMap.layers.length + 1}',
-      order: _currentMap.layers.length,
+      name: '图层 ${_currentMap!.layers.length + 1}',
+      order: _currentMap!.layers.length,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     setState(() {
-      _currentMap = _currentMap.copyWith(
-        layers: [..._currentMap.layers, newLayer],
+      _currentMap = _currentMap!.copyWith(
+        layers: [..._currentMap!.layers, newLayer],
       );
       _selectedLayer = newLayer;
     });
   }
-
   void _deleteLayer(MapLayer layer) {
-    if (widget.isPreviewMode || _currentMap.layers.length <= 1) return;
+    if (widget.isPreviewMode || _currentMap == null || _currentMap!.layers.length <= 1) return;
 
     setState(() {
-      final updatedLayers = _currentMap.layers
+      final updatedLayers = _currentMap!.layers
           .where((l) => l.id != layer.id)
           .toList();
-      _currentMap = _currentMap.copyWith(layers: updatedLayers);
+      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
       if (_selectedLayer?.id == layer.id) {
         _selectedLayer = updatedLayers.isNotEmpty ? updatedLayers.first : null;
       }
     });
   }
-
   void _updateLayer(MapLayer updatedLayer) {
+    if (widget.isPreviewMode || _currentMap == null) return;
+    
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
     setState(() {
-      final layerIndex = _currentMap.layers.indexWhere(
+      final layerIndex = _currentMap!.layers.indexWhere(
         (l) => l.id == updatedLayer.id,
       );
       if (layerIndex != -1) {
-        final updatedLayers = List<MapLayer>.from(_currentMap.layers);
+        final updatedLayers = List<MapLayer>.from(_currentMap!.layers);
         updatedLayers[layerIndex] = updatedLayer;
-        _currentMap = _currentMap.copyWith(layers: updatedLayers);
+        _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
         if (_selectedLayer?.id == updatedLayer.id) {
           _selectedLayer = updatedLayer;
@@ -273,12 +300,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
-
   void _reorderLayers(int oldIndex, int newIndex) {
-    if (widget.isPreviewMode) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() {
-      final layers = List<MapLayer>.from(_currentMap.layers);
+      final layers = List<MapLayer>.from(_currentMap!.layers);
       if (newIndex > oldIndex) {
         newIndex -= 1;
       }
@@ -290,50 +316,49 @@ class _MapEditorPageState extends State<MapEditorPage> {
         layers[i] = layers[i].copyWith(order: i);
       }
 
-      _currentMap = _currentMap.copyWith(layers: layers);
+      _currentMap = _currentMap!.copyWith(layers: layers);
     });
   }
-
   void _addLegendGroup() {
-    if (widget.isPreviewMode) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '图例组 ${_currentMap.legendGroups.length + 1}',
+      name: '图例组 ${_currentMap!.legendGroups.length + 1}',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     setState(() {
-      _currentMap = _currentMap.copyWith(
-        legendGroups: [..._currentMap.legendGroups, newGroup],
+      _currentMap = _currentMap!.copyWith(
+        legendGroups: [..._currentMap!.legendGroups, newGroup],
       );
     });
   }
-
   void _deleteLegendGroup(LegendGroup group) {
-    if (widget.isPreviewMode) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() {
-      final updatedGroups = _currentMap.legendGroups
+      final updatedGroups = _currentMap!.legendGroups
           .where((g) => g.id != group.id)
           .toList();
-      _currentMap = _currentMap.copyWith(legendGroups: updatedGroups);
+      _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
     });
   }
-
   void _updateLegendGroup(LegendGroup updatedGroup) {
+    if (_currentMap == null) return;
+    
     setState(() {
-      final groupIndex = _currentMap.legendGroups.indexWhere(
+      final groupIndex = _currentMap!.legendGroups.indexWhere(
         (g) => g.id == updatedGroup.id,
       );
       if (groupIndex != -1) {
-        final updatedGroups = List<LegendGroup>.from(_currentMap.legendGroups);
+        final updatedGroups = List<LegendGroup>.from(_currentMap!.legendGroups);
         updatedGroups[groupIndex] = updatedGroup;
-        _currentMap = _currentMap.copyWith(legendGroups: updatedGroups);
+        _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
       }
     });
-  } // 处理透明度预览
+  }// 处理透明度预览
 
   void _handleOpacityPreview(String layerId, double opacity) {
     setState(() {
@@ -375,14 +400,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _isLegendGroupManagementDrawerOpen = true;
     });
   }
-
   // 处理图例项双击事件
   void _handleLegendItemDoubleClick(LegendItem item) {
-    if (widget.isPreviewMode) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
-    for (final legendGroup in _currentMap.legendGroups) {
+    for (final legendGroup in _currentMap!.legendGroups) {
       if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
         containingGroup = legendGroup;
         break;
@@ -459,18 +483,41 @@ class _MapEditorPageState extends State<MapEditorPage> {
     setState(() {
       _previewStrokeWidth = width;
     });
-  }
-
-  Future<void> _saveMap() async {
-    if (widget.isPreviewMode) return;
+  }  Future<void> _saveMap() async {
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() => _isLoading = true);
     try {
-      final updatedMap = _currentMap.copyWith(updatedAt: DateTime.now());
+      final updatedMap = _currentMap!.copyWith(updatedAt: DateTime.now());
+
+      // 添加详细的调试信息
+      print('开始保存地图：');
+      print('- 地图ID: ${updatedMap.id}');
+      print('- 地图标题: ${updatedMap.title}');
+      print('- 图层数量: ${updatedMap.layers.length}');
+      print('- 图例组数量: ${updatedMap.legendGroups.length}');
+      print('- 是否有图像数据: ${updatedMap.imageData != null}');
+      
+      // 验证必要字段
+      if (updatedMap.id == null) {
+        throw Exception('地图ID为空，无法保存');
+      }
+      
+      if (updatedMap.title.isEmpty) {
+        throw Exception('地图标题为空，无法保存');
+      }
+
+      // 尝试序列化数据以检查是否有格式问题
+      final databaseData = updatedMap.toDatabase();
+      print('数据库数据准备完成，字段数量: ${databaseData.keys.length}');
 
       await _mapDatabaseService.updateMap(updatedMap);
+      print('地图保存成功完成');
       _showSuccessSnackBar('地图保存成功');
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('保存失败详细错误:');
+      print('错误: $e');
+      print('堆栈: $stackTrace');
       _showErrorSnackBar('保存失败: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
@@ -555,8 +602,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
               icon: const Icon(Icons.save),
               tooltip: '保存地图',
             ),
-          ],
-          IconButton(
+          ],          IconButton(
             onPressed: () {
               showDialog(
                 context: context,
@@ -566,10 +612,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('标题: ${_currentMap.title}'),
-                      Text('版本: v${_currentMap.version}'),
-                      Text('图层数量: ${_currentMap.layers.length}'),
-                      Text('图例组数量: ${_currentMap.legendGroups.length}'),
+                      Text('标题: ${_currentMap?.title ?? "未知"}'),
+                      Text('版本: v${_currentMap?.version ?? "0"}'),
+                      Text('图层数量: ${_currentMap?.layers.length ?? 0}'),
+                      Text('图例组数量: ${_currentMap?.legendGroups.length ?? 0}'),
                       Text('模式: ${widget.isPreviewMode ? "预览模式" : "编辑模式"}'),
                     ],
                   ),
@@ -820,11 +866,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onPressed: _addNewLayer,
                   tooltip: '添加图层',
                 ),
-              ],
-        child: _isLayerPanelCollapsed
+              ],        child: _isLayerPanelCollapsed
             ? null
             : LayerPanel(
-                layers: _currentMap.layers,
+                layers: _currentMap?.layers ?? [],
                 selectedLayer: _selectedLayer,
                 isPreviewMode: widget.isPreviewMode,
                 onLayerSelected: (layer) {
@@ -837,7 +882,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 onError: _showErrorSnackBar,
                 onSuccess: _showSuccessSnackBar,
                 onOpacityPreview: _handleOpacityPreview,
-                allLegendGroups: _currentMap.legendGroups,
+                allLegendGroups: _currentMap?.legendGroups ?? [],
                 onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
               ),
       ),
@@ -861,11 +906,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onPressed: _addLegendGroup,
                   tooltip: '添加图例组',
                 ),
-              ],
-        child: _isLegendPanelCollapsed
+              ],        child: _isLegendPanelCollapsed
             ? null
             : LegendPanel(
-                legendGroups: _currentMap.legendGroups,
+                legendGroups: _currentMap?.legendGroups ?? [],
                 availableLegends: _availableLegends,
                 isPreviewMode: widget.isPreviewMode,
                 onLegendGroupUpdated: _updateLegendGroup,
@@ -1170,8 +1214,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
     );
   }  /// 构建地图画布组件
   Widget _buildMapCanvas() {
+    if (_currentMap == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    
     return MapCanvas(
-      mapItem: _currentMap,
+      mapItem: _currentMap!,
       selectedLayer: _selectedLayer,
       selectedDrawingTool: _selectedDrawingTool,
       selectedColor: _selectedColor,

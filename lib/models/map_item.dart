@@ -57,13 +57,31 @@ class MapItem {
     List<LegendGroup> legendGroups = [];
     
     if (map['layers'] != null) {
-      final layersJson = json.decode(map['layers'] as String);
-      layers = (layersJson as List).map((e) => MapLayer.fromJson(e)).toList();
+      try {
+        final layersJson = json.decode(map['layers'] as String);
+        if (layersJson is List) {
+          layers = layersJson
+              .map((e) => MapLayer.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (e) {
+        print('解析图层数据失败: $e');
+        // 如果解析失败，继续使用空列表
+      }
     }
     
     if (map['legend_groups'] != null) {
-      final legendGroupsJson = json.decode(map['legend_groups'] as String);
-      legendGroups = (legendGroupsJson as List).map((e) => LegendGroup.fromJson(e)).toList();
+      try {
+        final legendGroupsJson = json.decode(map['legend_groups'] as String);
+        if (legendGroupsJson is List) {
+          legendGroups = legendGroupsJson
+              .map((e) => LegendGroup.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (e) {
+        print('解析图例组数据失败: $e');
+        // 如果解析失败，继续使用空列表
+      }
     }
     
     return MapItem(

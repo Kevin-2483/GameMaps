@@ -44,9 +44,7 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
     MapDrawingElement(
       id: json['id'] as String,
       type: $enumDecode(_$DrawingElementTypeEnumMap, json['type']),
-      points: const OffsetListConverter().fromJson(
-        json['points'] as List<Map<String, dynamic>>,
-      ),
+      points: const OffsetListConverter().fromJson(json['points'] as List),
       color: json['color'] == null
           ? const Color(0xFF000000)
           : const ColorConverter().fromJson((json['color'] as num).toInt()),
