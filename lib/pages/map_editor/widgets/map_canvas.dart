@@ -28,6 +28,19 @@ class DrawingPreviewData {
   });
 }
 
+/// 辅助类：用于管理分层元素
+class _LayeredElement {
+  final int order;
+  final bool isSelected;
+  final Widget widget;
+
+  const _LayeredElement({
+    required this.order,
+    required this.isSelected,
+    required this.widget,
+  });
+}
+
 class MapCanvas extends StatefulWidget {
   final MapItem mapItem;
   final MapLayer? selectedLayer;
@@ -118,8 +131,7 @@ class _MapCanvasState extends State<MapCanvas> {
                   height: kCanvasHeight,
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                  ),
-                  child: Stack(
+                  ),                  child: Stack(
                     children: [
                       // 透明背景指示器（棋盘格图案）
                       Positioned.fill(
@@ -128,20 +140,8 @@ class _MapCanvasState extends State<MapCanvas> {
                         ),
                       ),
                       
-                      // 图层图片（按order排序）
-                      ...() {
-                        final visibleLayers = widget.mapItem.layers
-                            .where((layer) => layer.isVisible && layer.imageData != null)
-                            .toList();
-                        visibleLayers.sort((a, b) => a.order.compareTo(b.order));
-                        return visibleLayers.map((layer) => _buildLayerImageWidget(layer));
-                      }(),
-                      
-                      // Drawing layers (绘制元素)
-                      ...widget.mapItem.layers.map((layer) => _buildLayerWidget(layer)),
-                      
-                      // Legend groups
-                      ...widget.mapItem.legendGroups.map((legendGroup) => _buildLegendWidget(legendGroup)),
+                      // 按层级顺序渲染所有元素
+                      ..._buildLayeredElements(),
                         // Current drawing preview
                       ValueListenableBuilder<DrawingPreviewData?>(
                         valueListenable: _drawingPreviewNotifier,
@@ -689,6 +689,73 @@ class _MapCanvasState extends State<MapCanvas> {
     );
     
     widget.onLayerUpdated(updatedLayer);
+  }
+  
+  /// 构建按层级排序的所有元素
+  List<Widget> _buildLayeredElements() {
+    final List<_LayeredElement> allElements = [];
+
+    // 收集所有图层及其元素
+    for (final layer in widget.mapItem.layers) {
+      if (!layer.isVisible) continue;
+
+      final isSelectedLayer = widget.selectedLayer?.id == layer.id;
+      
+      // 添加图层图片（如果有）
+      if (layer.imageData != null) {
+        allElements.add(_LayeredElement(
+          order: layer.order,
+          isSelected: isSelectedLayer,
+          widget: _buildLayerImageWidget(layer),
+        ));
+      }
+      
+      // 添加图层绘制元素
+      allElements.add(_LayeredElement(
+        order: layer.order,
+        isSelected: isSelectedLayer,
+        widget: _buildLayerWidget(layer),
+      ));
+    }
+
+    // 收集所有图例组
+    for (final legendGroup in widget.mapItem.legendGroups) {
+      if (!legendGroup.isVisible) continue;
+
+      // 计算图例组的层级（基于绑定的最高图层order）
+      int legendOrder = -1;
+      bool isLegendSelected = false;
+      
+      for (final layer in widget.mapItem.layers) {
+        if (layer.legendGroupIds.contains(legendGroup.id)) {
+          legendOrder = math.max(legendOrder, layer.order);
+          // 如果任何绑定的图层被选中，图例也被认为是选中的
+          if (widget.selectedLayer?.id == layer.id) {
+            isLegendSelected = true;
+          }
+        }
+      }
+      
+      // 如果图例组没有绑定到任何图层，使用默认order
+      if (legendOrder == -1) {
+        legendOrder = 0;
+      }
+
+      allElements.add(_LayeredElement(
+        order: legendOrder,
+        isSelected: isLegendSelected,
+        widget: _buildLegendWidget(legendGroup),
+      ));
+    }
+
+    // 按order排序，选中的元素排在最后（显示在最上层）
+    allElements.sort((a, b) {
+      if (a.isSelected && !b.isSelected) return 1;
+      if (!a.isSelected && b.isSelected) return -1;
+      return a.order.compareTo(b.order);
+    });
+
+    return allElements.map((e) => e.widget).toList();
   }
 }
 
