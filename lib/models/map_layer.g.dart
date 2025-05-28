@@ -52,6 +52,9 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
       density: (json['density'] as num?)?.toDouble() ?? 3.0,
       rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
       curvature: (json['curvature'] as num?)?.toDouble() ?? 0.0,
+      triangleCut:
+          $enumDecodeNullable(_$TriangleCutTypeEnumMap, json['triangleCut']) ??
+          TriangleCutType.none,
       zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
       text: json['text'] as String?,
       fontSize: (json['fontSize'] as num?)?.toDouble(),
@@ -68,6 +71,7 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'density': instance.density,
       'rotation': instance.rotation,
       'curvature': instance.curvature,
+      'triangleCut': _$TriangleCutTypeEnumMap[instance.triangleCut]!,
       'zIndex': instance.zIndex,
       'text': instance.text,
       'fontSize': instance.fontSize,
@@ -86,6 +90,14 @@ const _$DrawingElementTypeEnumMap = {
   DrawingElementType.eraser: 'eraser',
   DrawingElementType.freeDrawing: 'freeDrawing',
   DrawingElementType.text: 'text',
+};
+
+const _$TriangleCutTypeEnumMap = {
+  TriangleCutType.none: 'none',
+  TriangleCutType.topLeft: 'topLeft',
+  TriangleCutType.topRight: 'topRight',
+  TriangleCutType.bottomRight: 'bottomRight',
+  TriangleCutType.bottomLeft: 'bottomLeft',
 };
 
 LegendGroup _$LegendGroupFromJson(Map<String, dynamic> json) => LegendGroup(

@@ -592,7 +592,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
               width: isSelected ? 2 : 1,
             ),
             color: isSelected
-                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
                 : Colors.transparent,
           ),
           child: Icon(
@@ -626,7 +626,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: color.withAlpha((0.3 * 255).toInt()),
                     blurRadius: 6,
                     spreadRadius: 2,
                   ),

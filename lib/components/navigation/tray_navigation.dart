@@ -48,11 +48,11 @@ class _TrayNavigationState extends State<TrayNavigation>
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           right: isVertical ? BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
             width: 1,
           ) : BorderSide.none,
           top: !isVertical ? BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
             width: 1,
           ) : BorderSide.none,
         ),

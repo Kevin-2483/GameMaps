@@ -296,6 +296,6 @@ class ColorConverter implements JsonConverter<Color, int> {
 
   @override
   int toJson(Color object) {
-    return object.value;
+    return object.toARGB32();
   }
 }

@@ -97,7 +97,7 @@ class _LayerPanelState extends State<LayerPanel> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : null,
         borderRadius: BorderRadius.circular(8),
         border: isSelected
@@ -327,12 +327,12 @@ class _LayerPanelState extends State<LayerPanel> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: boundGroupsCount > 0
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: boundGroupsCount > 0
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                ? Theme.of(context).colorScheme.primary.withAlpha((0.3 * 255).toInt())
                 : Colors.grey.shade300,
           ),
         ),

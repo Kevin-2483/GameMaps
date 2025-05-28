@@ -93,7 +93,7 @@ class ImageUtils {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        border: Border.all(color: borderColor.withOpacity(0.3)),
+        border: Border.all(color: borderColor.withAlpha((0.3 * 255).toInt())),
         borderRadius: BorderRadius.circular(4),
       ),
       child: const Center(

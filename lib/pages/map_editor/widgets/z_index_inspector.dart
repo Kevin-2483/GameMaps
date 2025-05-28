@@ -24,7 +24,7 @@ class ZIndexInspector extends StatelessWidget {
           '当前图层没有绘制元素',
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha((0.6 * 255).toInt()),
           ),
           textAlign: TextAlign.center,
         ),
@@ -45,7 +45,7 @@ class ZIndexInspector extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha((0.7 * 255).toInt()),
             ),
           ),
         ),
@@ -67,7 +67,7 @@ class ZIndexInspector extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(4),
         color: isSelected 
-            ? Theme.of(context).primaryColor.withOpacity(0.1)
+            ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
             : Theme.of(context).cardColor,
       ),
       child: ListTile(

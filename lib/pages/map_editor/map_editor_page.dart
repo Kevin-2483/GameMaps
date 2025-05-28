@@ -1046,7 +1046,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withOpacity(0.3),
+                ).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
@@ -1162,7 +1162,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   });
                 },
                 child: Container(
-                  color: Colors.black.withOpacity(0.4), // 稍微增加透明度
+                  color: Colors.black.withAlpha((0.4 * 255).toInt()), // 稍微增加透明度
                 ),
               ),
             ),
@@ -1181,7 +1181,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
               color: Theme.of(context).scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withAlpha((0.2 * 255).toInt()),
                   blurRadius: 8,
                   offset: const Offset(2, 0),
                 ),
@@ -1193,7 +1193,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt()),
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context).dividerColor,

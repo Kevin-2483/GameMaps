@@ -193,10 +193,10 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
                       ),
                     ),
                     child: Column(
@@ -322,7 +322,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: _isLegendItemSelected(item)
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : null,
         borderRadius: BorderRadius.circular(12),
         border: _isLegendItemSelected(item)

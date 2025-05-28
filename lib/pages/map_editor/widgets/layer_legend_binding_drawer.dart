@@ -191,12 +191,12 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
       decoration: BoxDecoration(
         border: Border.all(
           color: isBound 
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+              ? Theme.of(context).colorScheme.primary.withAlpha((0.5 * 255).toInt())
               : Colors.grey.shade300,
         ),
         borderRadius: BorderRadius.circular(8),
         color: isBound 
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1)
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.1 * 255).toInt())
             : null,
       ),
       child: ListTile(
