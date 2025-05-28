@@ -559,9 +559,10 @@ class _MapCanvasState extends State<MapCanvas> {
       points: [normalizedStart, normalizedEnd],
       color: Colors.transparent, // 橡皮擦本身是透明的
       strokeWidth: 0.0,
+      curvature: _effectiveCurvature, // 保存曲率参数
       zIndex: maxZIndex + 1,
       createdAt: DateTime.now(),
-    );    final updatedLayer = widget.selectedLayer!.copyWith(
+    );final updatedLayer = widget.selectedLayer!.copyWith(
       elements: [...widget.selectedLayer!.elements, eraserElement],
       updatedAt: DateTime.now(),
     );
@@ -1006,11 +1007,17 @@ class _LayerPainter extends CustomPainter {
         );
         
         final eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
-        
-        // 检查橡皮擦是否与当前元素重叠
+          // 检查橡皮擦是否与当前元素重叠
         if (_doesEraserAffectElement(element, eraser, size)) {
-          // 从裁剪路径中减去橡皮擦区域
-          final eraserPath = Path()..addRect(eraserRect);
+          // 根据橡皮擦的曲率参数创建相应的路径
+          final eraserPath = Path();
+          if (eraser.curvature > 0.0) {
+            // 椭圆形橡皮擦
+            eraserPath.addOval(eraserRect);
+          } else {
+            // 矩形橡皮擦
+            eraserPath.addRect(eraserRect);
+          }
           clipPath = Path.combine(PathOperation.difference, clipPath, eraserPath);
         }
       }
@@ -1025,11 +1032,11 @@ class _LayerPainter extends CustomPainter {
     // 恢复canvas状态
     canvas.restore();
   }
-    // 检查橡皮擦是否影响元素
+  // 检查橡皮擦是否影响元素
   bool _doesEraserAffectElement(MapDrawingElement element, MapDrawingElement eraser, Size size) {
     if (element.points.isEmpty || eraser.points.length < 2) return false;
     
-    // 获取橡皮擦矩形
+    // 获取橡皮擦坐标和形状信息
     final eraserStart = Offset(
       eraser.points[0].dx * size.width,
       eraser.points[0].dy * size.height,
@@ -1039,6 +1046,7 @@ class _LayerPainter extends CustomPainter {
       eraser.points[1].dy * size.height,
     );
     final eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
+    final eraserCurvature = eraser.curvature;
     
     // 根据元素类型检查重叠
     switch (element.type) {
@@ -1049,7 +1057,7 @@ class _LayerPainter extends CustomPainter {
             element.points[0].dx * size.width,
             element.points[0].dy * size.height,
           );
-          return eraserRect.contains(textPosition);
+          return _isPointInEraserShape(textPosition, eraserRect, eraserCurvature);
         }
         return false;
         
@@ -1060,7 +1068,7 @@ class _LayerPainter extends CustomPainter {
             point.dx * size.width,
             point.dy * size.height,
           );
-          if (eraserRect.contains(screenPoint)) {
+          if (_isPointInEraserShape(screenPoint, eraserRect, eraserCurvature)) {
             return true;
           }
         }
@@ -1080,8 +1088,67 @@ class _LayerPainter extends CustomPainter {
         );
         final elementRect = Rect.fromPoints(elementStart, elementEnd);
         
-        return eraserRect.overlaps(elementRect);
+        // 如果橡皮擦没有曲率，使用传统的矩形重叠检测
+        if (eraserCurvature <= 0.0) {
+          return eraserRect.overlaps(elementRect);
+        }
+        
+        // 如果橡皮擦有曲率，检查矩形的角点和中点是否在椭圆内
+        return _isRectOverlappingEraserShape(elementRect, eraserRect, eraserCurvature);
     }
+  }
+  
+  /// 检查点是否在橡皮擦形状内（矩形或椭圆）
+  bool _isPointInEraserShape(Offset point, Rect eraserRect, double curvature) {
+    if (curvature <= 0.0) {
+      // 矩形检测
+      return eraserRect.contains(point);
+    }
+    
+    // 椭圆检测
+    final center = eraserRect.center;
+    final a = eraserRect.width / 2;  // 半宽
+    final b = eraserRect.height / 2; // 半高
+    
+    if (a <= 0 || b <= 0) return false;
+    
+    final dx = point.dx - center.dx;
+    final dy = point.dy - center.dy;
+    
+    // 椭圆方程: (x/a)² + (y/b)² <= 1
+    return (dx * dx) / (a * a) + (dy * dy) / (b * b) <= 1.0;
+  }
+  
+  /// 检查矩形是否与橡皮擦形状重叠
+  bool _isRectOverlappingEraserShape(Rect elementRect, Rect eraserRect, double curvature) {
+    // 检查矩形的角点和中点是否有任何一个在椭圆内
+    final testPoints = [
+      elementRect.topLeft,
+      elementRect.topRight,
+      elementRect.bottomLeft,
+      elementRect.bottomRight,
+      elementRect.center,
+      Offset(elementRect.center.dx, elementRect.top),
+      Offset(elementRect.center.dx, elementRect.bottom),
+      Offset(elementRect.left, elementRect.center.dy),
+      Offset(elementRect.right, elementRect.center.dy),
+    ];
+    
+    for (final point in testPoints) {
+      if (_isPointInEraserShape(point, eraserRect, curvature)) {
+        return true;
+      }
+    }
+    
+    // 如果没有点在椭圆内，还需要检查椭圆是否完全在矩形内
+    if (eraserRect.left >= elementRect.left && 
+        eraserRect.right <= elementRect.right &&
+        eraserRect.top >= elementRect.top && 
+        eraserRect.bottom <= elementRect.bottom) {
+      return true;
+    }
+    
+    return false;
   }
   void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
     final paint = Paint()
@@ -1615,20 +1682,30 @@ class _CurrentDrawingPainter extends CustomPainter {
   });
   
   @override
-  void paint(Canvas canvas, Size size) {
-    // 橡皮擦特殊预览
+  void paint(Canvas canvas, Size size) {    // 橡皮擦特殊预览
     if (elementType == DrawingElementType.eraser) {
       final rect = Rect.fromPoints(start, end);
       final paint = Paint()
         ..color = Colors.red.withOpacity(0.3)
         ..style = PaintingStyle.fill;
-      canvas.drawRect(rect, paint);
+      
+      // 根据曲率参数绘制不同形状：0.0 = 矩形，1.0 = 椭圆
+      if (curvature > 0.0) {
+        _drawCurvedShape(canvas, rect, paint, curvature);
+      } else {
+        canvas.drawRect(rect, paint);
+      }
       
       // 绘制边框
       final borderPaint = Paint()
         ..color = Colors.red.withOpacity(0.8)        ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
-      canvas.drawRect(rect, borderPaint);
+      
+      if (curvature > 0.0) {
+        _drawCurvedShape(canvas, rect, borderPaint, curvature);
+      } else {
+        canvas.drawRect(rect, borderPaint);
+      }
       return;
     }
     
@@ -1719,9 +1796,86 @@ class _CurrentDrawingPainter extends CustomPainter {
       ),
       isEditMode: true,
       selectedElementId: selectedElementId,
-    );
+    );    layerPainter.paint(canvas, size);
+  }
 
-    layerPainter.paint(canvas, size);
+  /// 绘制弧度形状（用于橡皮擦预览）
+  void _drawCurvedShape(Canvas canvas, Rect rect, Paint paint, double curvature) {
+    // 限制弧度值在合理范围内 (0.0 到 1.0)
+    final clampedCurvature = curvature.clamp(0.0, 1.0);
+    
+    if (clampedCurvature <= 0.0) {
+      canvas.drawRect(rect, paint);
+      return;
+    }
+    
+    final centerX = rect.center.dx;
+    final centerY = rect.center.dy;
+    final a = rect.width / 2; // 半宽
+    final b = rect.height / 2; // 半高
+    
+    // 如果矩形太小，直接绘制普通矩形
+    if (a < 2 || b < 2) {
+      canvas.drawRect(rect, paint);
+      return;
+    }
+    
+    final path = Path();
+    const int numPoints = 100; // 用于绘制曲线的点数
+    
+    // 使用三段式插值：
+    // 0.0 - 0.3: 圆角矩形 (超椭圆 n = 8.0 到 n = 4.0)
+    // 0.3 - 0.7: 过渡到椭圆 (超椭圆 n = 4.0 到 n = 2.2)
+    // 0.7 - 1.0: 标准椭圆 (n = 2.0，标准椭圆方程)
+    
+    double n;
+    bool useStandardEllipse = false;
+    
+    if (clampedCurvature <= 0.3) {
+      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
+      final t = clampedCurvature / 0.3;
+      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
+    } else if (clampedCurvature <= 0.7) {
+      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
+      final t = (clampedCurvature - 0.3) / 0.4;
+      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
+    } else {
+      // 椭圆阶段：使用标准椭圆方程
+      useStandardEllipse = true;
+      n = 2.0; // 标准椭圆
+    }
+    
+    bool isFirstPoint = true;
+    
+    for (int i = 0; i <= numPoints; i++) {
+      final t = (i / numPoints) * 2 * math.pi;
+      final cosT = math.cos(t);
+      final sinT = math.sin(t);
+      
+      double x, y;
+      
+      if (useStandardEllipse) {
+        // 标准椭圆方程
+        x = centerX + a * cosT;
+        y = centerY + b * sinT;
+      } else {
+        // 超椭圆方程
+        final signCos = cosT >= 0 ? 1 : -1;
+        final signSin = sinT >= 0 ? 1 : -1;
+        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      }
+      
+      if (isFirstPoint) {
+        path.moveTo(x, y);
+        isFirstPoint = false;
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    
+    path.close();
+    canvas.drawPath(path, paint);
   }
 
   @override
