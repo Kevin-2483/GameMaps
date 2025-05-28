@@ -418,11 +418,10 @@ class _LayerPanelState extends State<LayerPanel> {
       debugPrint('上传图片失败: $e');
     }
   }
-
   /// 移除图层图片
   void _removeLayerImage(MapLayer layer) {
     final updatedLayer = layer.copyWith(
-      imageData: null,
+      clearImageData: true, // 使用新的 clearImageData 参数来明确移除图片
       updatedAt: DateTime.now(),
     );
     widget.onLayerUpdated(updatedLayer);

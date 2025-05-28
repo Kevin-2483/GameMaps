@@ -30,8 +30,7 @@ class MapLayer {
   });
 
   factory MapLayer.fromJson(Map<String, dynamic> json) => _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
-  MapLayer copyWith({
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
     String? id,
     String? name,
     int? order,
@@ -42,6 +41,7 @@ class MapLayer {
     List<String>? legendGroupIds,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearImageData = false, // 新增参数用于明确清除图片数据
   }) {
     return MapLayer(
       id: id ?? this.id,
@@ -49,7 +49,7 @@ class MapLayer {
       order: order ?? this.order,
       isVisible: isVisible ?? this.isVisible,
       opacity: opacity ?? this.opacity,
-      imageData: imageData ?? this.imageData,
+      imageData: clearImageData ? null : (imageData ?? this.imageData),
       elements: elements ?? this.elements,
       legendGroupIds: legendGroupIds ?? this.legendGroupIds,
       createdAt: createdAt ?? this.createdAt,
