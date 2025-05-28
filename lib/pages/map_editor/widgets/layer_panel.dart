@@ -15,10 +15,13 @@ class LayerPanel extends StatefulWidget {
   final Function(String)? onError;
   final Function(String)? onSuccess;
   // 新增：实时透明度预览回调
-  final Function(String layerId, double opacity)? onOpacityPreview;
-  // 新增：图例组相关数据和回调
+  final Function(String layerId, double opacity)?
+  onOpacityPreview; // 新增：图例组相关数据和回调
   final List<LegendGroup> allLegendGroups;
-  final Function(MapLayer, List<LegendGroup>)? onShowLayerLegendBinding; // 显示图层图例绑定抽屉
+  final Function(MapLayer, List<LegendGroup>)?
+  onShowLayerLegendBinding; // 显示图层图例绑定抽屉
+  // 新增：批量更新图层回调
+  final Function(List<MapLayer>)? onLayersBatchUpdated;
 
   const LayerPanel({
     super.key,
@@ -35,6 +38,7 @@ class LayerPanel extends StatefulWidget {
     this.onOpacityPreview,
     required this.allLegendGroups,
     this.onShowLayerLegendBinding,
+    this.onLayersBatchUpdated,
   });
 
   @override
@@ -68,10 +72,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 ? const Center(
                     child: Text(
                       '暂无图层',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   )
                 : ReorderableListView.builder(
@@ -103,133 +104,146 @@ class _LayerPanelState extends State<LayerPanel> {
             ? Border.all(color: Theme.of(context).colorScheme.primary)
             : Border.all(color: Colors.grey.shade300),
       ),
-      child: InkWell(
-        onTap: () => widget.onLayerSelected(layer),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 第一排：可见性按钮 + 图层名称输入框 + 操作按钮
-              Row(
-                children: [
-                  // 可见性按钮
-                  IconButton(
-                    icon: Icon(
-                      layer.isVisible ? Icons.visibility : Icons.visibility_off,
-                      size: 18,
-                      color: layer.isVisible ? null : Colors.grey,
+      child: GestureDetector(
+        onSecondaryTapDown: widget.isPreviewMode
+            ? null
+            : (details) {
+                _showLayerContextMenu(context, layer, details.globalPosition);
+              },
+        child: InkWell(
+          onTap: () => widget.onLayerSelected(layer),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 第一排：可见性按钮 + 图层名称输入框 + 操作按钮
+                Row(
+                  children: [
+                    // 可见性按钮
+                    IconButton(
+                      icon: Icon(
+                        layer.isVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        size: 18,
+                        color: layer.isVisible ? null : Colors.grey,
+                      ),
+                      onPressed: widget.isPreviewMode
+                          ? null
+                          : () {
+                              final updatedLayer = layer.copyWith(
+                                isVisible: !layer.isVisible,
+                                updatedAt: DateTime.now(),
+                              );
+                              widget.onLayerUpdated(updatedLayer);
+                            },
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
                     ),
-                    onPressed: widget.isPreviewMode
-                        ? null
-                        : () {
-                            final updatedLayer = layer.copyWith(
-                              isVisible: !layer.isVisible,
-                              updatedAt: DateTime.now(),
-                            );
-                            widget.onLayerUpdated(updatedLayer);
-                          },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(width: 8),
+                    const SizedBox(width: 8),
 
-                  // 图层名称输入框
-                  Expanded(
-                    child: _buildLayerNameEditor(layer),
-                  ),
+                    // 图层名称输入框
+                    Expanded(child: _buildLayerNameEditor(layer)),
 
-                  // 操作按钮
-                  if (!widget.isPreviewMode) ...[
-                    // 图片管理按钮
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.image, size: 16),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'upload',
-                          child: Row(
-                            children: [
-                              Icon(
-                                layer.imageData != null ? Icons.edit : Icons.upload,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(layer.imageData != null ? '更换图片' : '上传图片'),
-                            ],
-                          ),
-                        ),
-                        if (layer.imageData != null)
-                          const PopupMenuItem(
-                            value: 'remove',
+                    // 操作按钮
+                    if (!widget.isPreviewMode) ...[
+                      // 图片管理按钮
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.image, size: 16),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'upload',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, size: 16),
-                                SizedBox(width: 8),
-                                Text('移除图片'),
+                                Icon(
+                                  layer.imageData != null
+                                      ? Icons.edit
+                                      : Icons.upload,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(layer.imageData != null ? '更换图片' : '上传图片'),
                               ],
                             ),
                           ),
-                      ],
-                      onSelected: (value) async {
-                        switch (value) {
-                          case 'upload':
-                            await _handleImageUpload(layer);
-                            break;
-                          case 'remove':
-                            _removeLayerImage(layer);
-                            break;
-                        }
-                      },
-                    ),
-
-                    // 删除按钮
-                    if (widget.layers.length > 1)
-                      IconButton(
-                        icon: const Icon(Icons.delete, size: 16),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('删除图层'),
-                              content: Text('确定要删除图层 "${layer.name}" 吗？此操作不可撤销。'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('取消'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    widget.onLayerDeleted(layer);
-                                  },
-                                  child: const Text('删除'),
-                                ),
-                              ],
+                          if (layer.imageData != null)
+                            const PopupMenuItem(
+                              value: 'remove',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('移除图片'),
+                                ],
+                              ),
                             ),
-                          );
+                        ],
+                        onSelected: (value) async {
+                          switch (value) {
+                            case 'upload':
+                              await _handleImageUpload(layer);
+                              break;
+                            case 'remove':
+                              _removeLayerImage(layer);
+                              break;
+                          }
                         },
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
                       ),
+
+                      // 删除按钮
+                      if (widget.layers.length > 1)
+                        IconButton(
+                          icon: const Icon(Icons.delete, size: 16),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('删除图层'),
+                                content: Text(
+                                  '确定要删除图层 "${layer.name}" 吗？此操作不可撤销。',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: const Text('取消'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      widget.onLayerDeleted(layer);
+                                    },
+                                    child: const Text('删除'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                        ),
+                    ],
                   ],
-                ],
-              ),
-              
-              // 第二排：透明度滑块
-              const SizedBox(height: 8),
-              _buildOpacitySlider(layer),
-            ],
+                ),
+
+                // 第二排：透明度滑块
+                const SizedBox(height: 8),
+                _buildOpacitySlider(layer),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
   /// 构建优化的透明度滑块和图例组绑定
   Widget _buildOpacitySlider(MapLayer layer) {
     // 获取当前显示的透明度值（临时值或实际值）
     final currentOpacity = _tempOpacityValues[layer.id] ?? layer.opacity;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -258,7 +272,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           ],
         ),
-        
+
         // 图例组绑定 chip
         const SizedBox(height: 4),
         _buildLegendGroupsChip(layer),
@@ -271,15 +285,16 @@ class _LayerPanelState extends State<LayerPanel> {
     setState(() {
       _tempOpacityValues[layer.id] = opacity;
     });
-    
+
     // 立即通知画布进行预览
     widget.onOpacityPreview?.call(layer.id, opacity);
   }
+
   /// 处理透明度变化结束（松开滑块时）
   void _handleOpacityChangeEnd(MapLayer layer, double opacity) {
     // 取消之前的定时器
     _opacityTimers[layer.id]?.cancel();
-    
+
     // 设置一个短延迟，避免频繁更新
     _opacityTimers[layer.id] = Timer(const Duration(milliseconds: 100), () {
       // 更新实际数据
@@ -288,7 +303,7 @@ class _LayerPanelState extends State<LayerPanel> {
         updatedAt: DateTime.now(),
       );
       widget.onLayerUpdated(updatedLayer);
-      
+
       // 清除临时值
       setState(() {
         _tempOpacityValues.remove(layer.id);
@@ -299,21 +314,24 @@ class _LayerPanelState extends State<LayerPanel> {
   /// 构建图例组绑定 chip
   Widget _buildLegendGroupsChip(MapLayer layer) {
     final boundGroupsCount = layer.legendGroupIds.length;
-    
+
     return InkWell(
-      onTap: widget.isPreviewMode 
-          ? null 
-          : () => widget.onShowLayerLegendBinding?.call(layer, widget.allLegendGroups),
+      onTap: widget.isPreviewMode
+          ? null
+          : () => widget.onShowLayerLegendBinding?.call(
+              layer,
+              widget.allLegendGroups,
+            ),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: boundGroupsCount > 0 
+          color: boundGroupsCount > 0
               ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: boundGroupsCount > 0 
+            color: boundGroupsCount > 0
                 ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
                 : Colors.grey.shade300,
           ),
@@ -324,18 +342,16 @@ class _LayerPanelState extends State<LayerPanel> {
             Icon(
               Icons.legend_toggle,
               size: 12,
-              color: boundGroupsCount > 0 
+              color: boundGroupsCount > 0
                   ? Theme.of(context).colorScheme.primary
                   : Colors.grey,
             ),
             const SizedBox(width: 4),
             Text(
-              boundGroupsCount > 0 
-                  ? '已绑定 $boundGroupsCount 个图例组'
-                  : '点击绑定图例组',
+              boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
               style: TextStyle(
                 fontSize: 10,
-                color: boundGroupsCount > 0 
+                color: boundGroupsCount > 0
                     ? Theme.of(context).colorScheme.primary
                     : Colors.grey.shade600,
                 fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
@@ -411,5 +427,104 @@ class _LayerPanelState extends State<LayerPanel> {
     );
     widget.onLayerUpdated(updatedLayer);
     widget.onSuccess?.call('图片已移除');
+  }
+
+  /// 显示图层右键菜单
+  void _showLayerContextMenu(
+    BuildContext context,
+    MapLayer layer,
+    Offset position,
+  ) {
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'hide_others',
+          child: Row(
+            children: const [
+              Icon(Icons.visibility_off_outlined, size: 16),
+              SizedBox(width: 8),
+              Text('隐藏其他图层'),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'show_all',
+          child: Row(
+            children: const [
+              Icon(Icons.visibility_outlined, size: 16),
+              SizedBox(width: 8),
+              Text('显示所有图层'),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value != null) {
+        _handleContextMenuAction(value, layer);
+      }
+    });
+  }
+
+  /// 处理右键菜单操作
+  void _handleContextMenuAction(String action, MapLayer layer) {
+    switch (action) {
+      case 'hide_others':
+        _hideOtherLayers(layer);
+        break;
+      case 'show_all':
+        _showAllLayers();
+        break;
+    }
+  }
+
+  /// 隐藏除指定图层外的所有其他图层
+  void _hideOtherLayers(MapLayer targetLayer) {
+    final updatedLayers = widget.layers.map((layer) {
+      if (layer.id == targetLayer.id) {
+        // 确保目标图层是可见的
+        return layer.copyWith(isVisible: true, updatedAt: DateTime.now());
+      } else {
+        // 隐藏其他图层
+        return layer.copyWith(isVisible: false, updatedAt: DateTime.now());
+      }
+    }).toList();
+
+    // 使用批量更新回调
+    if (widget.onLayersBatchUpdated != null) {
+      widget.onLayersBatchUpdated!(updatedLayers);
+    } else {
+      // 如果没有批量更新回调，逐个更新
+      for (final updatedLayer in updatedLayers) {
+        widget.onLayerUpdated(updatedLayer);
+      }
+    }
+
+    widget.onSuccess?.call('已隐藏其他图层，只显示 "${targetLayer.name}"');
+  }
+
+  /// 显示所有图层
+  void _showAllLayers() {
+    final updatedLayers = widget.layers.map((layer) {
+      return layer.copyWith(isVisible: true, updatedAt: DateTime.now());
+    }).toList();
+
+    // 使用批量更新回调
+    if (widget.onLayersBatchUpdated != null) {
+      widget.onLayersBatchUpdated!(updatedLayers);
+    } else {
+      // 如果没有批量更新回调，逐个更新
+      for (final updatedLayer in updatedLayers) {
+        widget.onLayerUpdated(updatedLayer);
+      }
+    }
+
+    widget.onSuccess?.call('已显示所有图层');
   }
 }

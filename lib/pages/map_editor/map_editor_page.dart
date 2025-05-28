@@ -867,8 +867,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   tooltip: '添加图层',
                 ),
               ],        child: _isLayerPanelCollapsed
-            ? null
-            : LayerPanel(
+            ? null            : LayerPanel(
                 layers: _currentMap?.layers ?? [],
                 selectedLayer: _selectedLayer,
                 isPreviewMode: widget.isPreviewMode,
@@ -884,6 +883,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 onOpacityPreview: _handleOpacityPreview,
                 allLegendGroups: _currentMap?.legendGroups ?? [],
                 onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
+                onLayersBatchUpdated: _updateLayersBatch,
               ),
       ),
     );
@@ -1238,5 +1238,26 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewStrokeWidth: _previewStrokeWidth,
       selectedElementId: _selectedElementId,
     );
+  }
+
+  /// 批量更新图层
+  void _updateLayersBatch(List<MapLayer> updatedLayers) {
+    if (widget.isPreviewMode || _currentMap == null) return;
+    
+    // 在修改前保存当前状态
+    _saveToUndoHistory();
+
+    setState(() {
+      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+      
+      // 如果当前选中的图层也被更新了，同步更新选中图层的引用
+      if (_selectedLayer != null) {
+        final updatedSelectedLayer = updatedLayers.firstWhere(
+          (layer) => layer.id == _selectedLayer!.id,
+          orElse: () => _selectedLayer!,
+        );
+        _selectedLayer = updatedSelectedLayer;
+      }
+    });
   }
 }
