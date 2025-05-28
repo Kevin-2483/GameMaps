@@ -376,6 +376,25 @@ class _MapEditorPageState extends State<MapEditorPage> {
     });
   }
 
+  // 处理图例项双击事件
+  void _handleLegendItemDoubleClick(LegendItem item) {
+    if (widget.isPreviewMode) return;
+
+    // 查找包含此图例项的图例组
+    LegendGroup? containingGroup;
+    for (final legendGroup in _currentMap.legendGroups) {
+      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+        containingGroup = legendGroup;
+        break;
+      }
+    }
+
+    // 如果找到了包含该图例项的图例组，打开管理抽屉
+    if (containingGroup != null) {
+      _showLegendGroupManagementDrawer(containingGroup);
+    }
+  }
+
   // 关闭图层图例绑定抽屉
   void _closeLayerLegendBindingDrawer() {
     setState(() {
@@ -1149,8 +1168,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
         ),
       ],
     );
-  }
-  /// 构建地图画布组件
+  }  /// 构建地图画布组件
   Widget _buildMapCanvas() {
     return MapCanvas(
       mapItem: _currentMap,
@@ -1163,6 +1181,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       onLayerUpdated: _updateLayer,
       onLegendGroupUpdated: _updateLegendGroup,
       onLegendItemSelected: _selectLegendItem,
+      onLegendItemDoubleClicked: _handleLegendItemDoubleClick,
       previewOpacityValues: _previewOpacityValues,
       previewDrawingTool: _previewDrawingTool,
       previewColor: _previewColor,

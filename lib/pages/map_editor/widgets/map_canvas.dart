@@ -38,6 +38,7 @@ class MapCanvas extends StatefulWidget {
   final bool isPreviewMode;  final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
   final Function(String)? onLegendItemSelected; // 图例项选中回调
+  final Function(LegendItem)? onLegendItemDoubleClicked; // 图例项双击回调
   final Map<String, double> previewOpacityValues;
   // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
@@ -45,8 +46,7 @@ class MapCanvas extends StatefulWidget {
   final double? previewStrokeWidth;
   
   // 选中元素高亮
-  final String? selectedElementId;
-    const MapCanvas({
+  final String? selectedElementId;    const MapCanvas({
     super.key,
     required this.mapItem,
     this.selectedLayer,
@@ -58,6 +58,7 @@ class MapCanvas extends StatefulWidget {
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
     this.onLegendItemSelected,
+    this.onLegendItemDoubleClicked,
     this.previewOpacityValues = const {},
     this.previewDrawingTool,
     this.previewColor,
@@ -268,9 +269,7 @@ class _MapCanvasState extends State<MapCanvas> {
     final centerOffset = Offset(
       imageSize * legend.centerX,
       imageSize * legend.centerY,
-    );
-
-    return Positioned(
+    );    return Positioned(
       left: canvasPosition.dx - centerOffset.dx,
       top: canvasPosition.dy - centerOffset.dy,
       child: GestureDetector(
@@ -278,6 +277,7 @@ class _MapCanvasState extends State<MapCanvas> {
         onPanUpdate: widget.isPreviewMode ? null : (details) => _onLegendDragUpdate(item, details),
         onPanEnd: widget.isPreviewMode ? null : (details) => _onLegendDragEnd(item, details),
         onTap: () => _onLegendTap(item),
+        onDoubleTap: () => _onLegendDoubleTap(item),
         child: Transform.rotate(
           angle: item.rotation * (3.14159 / 180), // 转换为弧度
           child: Container(
@@ -330,28 +330,46 @@ class _MapCanvasState extends State<MapCanvas> {
         ),
       ),
     );
-  }
-  // 图例拖拽相关方法
+  }  // 图例拖拽相关方法
   LegendItem? _draggingLegendItem;
+  Offset? _dragStartOffset; // 记录拖拽开始时的偏移量
 
   void _onLegendDragStart(LegendItem item, DragStartDetails details) {
     _draggingLegendItem = item;
-    // 记录拖拽开始的位置用于计算偏移
+    
+    // 计算拖拽开始时的偏移量（点击位置相对于图例中心的偏移）
+    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final itemCanvasPosition = Offset(
+      item.position.dx * kCanvasWidth,
+      item.position.dy * kCanvasHeight,
+    );
+    
+    _dragStartOffset = Offset(
+      canvasPosition.dx - itemCanvasPosition.dx,
+      canvasPosition.dy - itemCanvasPosition.dy,
+    );
+    
     setState(() {
       // 触发重绘以显示拖拽状态
     });
   }
-
   void _onLegendDragUpdate(LegendItem item, DragUpdateDetails details) {
-    if (_draggingLegendItem?.id != item.id) return;
+    if (_draggingLegendItem?.id != item.id || _dragStartOffset == null) return;
     
+    // 获取当前拖拽位置（不限制在画布范围内，以支持正确的偏移计算）
     final canvasPosition = _getCanvasPosition(details.localPosition);
+    final adjustedPosition = Offset(
+      canvasPosition.dx - _dragStartOffset!.dx,
+      canvasPosition.dy - _dragStartOffset!.dy,
+    );
+    
+    // 转换为相对坐标
     final relativePosition = Offset(
-      canvasPosition.dx / kCanvasWidth,
-      canvasPosition.dy / kCanvasHeight,
+      adjustedPosition.dx / kCanvasWidth,
+      adjustedPosition.dy / kCanvasHeight,
     );
 
-    // 限制在画布范围内
+    // 在相对坐标系统中限制范围（0.0 到 1.0）
     final clampedPosition = Offset(
       relativePosition.dx.clamp(0.0, 1.0),
       relativePosition.dy.clamp(0.0, 1.0),
@@ -359,15 +377,19 @@ class _MapCanvasState extends State<MapCanvas> {
 
     // 更新图例位置
     _updateLegendItemPosition(item, clampedPosition);
-  }
-  void _onLegendDragEnd(LegendItem item, DragEndDetails details) {
+  }void _onLegendDragEnd(LegendItem item, DragEndDetails details) {
     _draggingLegendItem = null;
+    _dragStartOffset = null; // 清理偏移量
     // 保存更改到撤销历史
     // 这里可以通过回调通知主页面保存状态
-  }
-  void _onLegendTap(LegendItem item) {
+  }  void _onLegendTap(LegendItem item) {
     // 选中图例项，高亮显示
     widget.onLegendItemSelected?.call(item.id);
+  }
+
+  void _onLegendDoubleTap(LegendItem item) {
+    // 双击图例项，触发双击回调
+    widget.onLegendItemDoubleClicked?.call(item);
   }
 
   void _updateLegendItemPosition(LegendItem item, Offset newPosition) {
@@ -388,11 +410,11 @@ class _MapCanvasState extends State<MapCanvas> {
         break;
       }
     }
-  }void _onDrawingStart(DragStartDetails details) {
+  }  void _onDrawingStart(DragStartDetails details) {
     if (widget.isPreviewMode || _effectiveDrawingTool == null) return;
 
-    // 获取相对于画布的坐标
-    _currentDrawingStart = _getCanvasPosition(details.localPosition);
+    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
+    _currentDrawingStart = _getClampedCanvasPosition(details.localPosition);
     _currentDrawingEnd = _currentDrawingStart;
     _isDrawing = true;
     
@@ -410,12 +432,11 @@ class _MapCanvasState extends State<MapCanvas> {
       strokeWidth: _effectiveStrokeWidth,
       freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
     );
-  }
-  void _onDrawingUpdate(DragUpdateDetails details) {
+  }  void _onDrawingUpdate(DragUpdateDetails details) {
     if (!_isDrawing) return;
 
-    // 获取相对于画布的坐标
-    _currentDrawingEnd = _getCanvasPosition(details.localPosition);
+    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
+    _currentDrawingEnd = _getClampedCanvasPosition(details.localPosition);
       // 自由绘制路径处理
     if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath.add(_currentDrawingEnd!);
@@ -441,15 +462,20 @@ class _MapCanvasState extends State<MapCanvas> {
       freeDrawingPath: null,
     );
   }
-
   // 获取相对于画布的正确坐标
   Offset _getCanvasPosition(Offset localPosition) {
     // localPosition 已经是相对于画布容器的坐标
-    // 确保坐标在画布范围内
+    // 对于绘制操作，需要限制在画布范围内
+    // 对于拖拽操作，不应该限制以避免偏移量计算错误
+    return localPosition;
+  }
+  
+  // 专门用于绘制操作的坐标获取，会进行边界限制
+  Offset _getClampedCanvasPosition(Offset localPosition) {
     final clampedX = localPosition.dx.clamp(0.0, kCanvasWidth);
     final clampedY = localPosition.dy.clamp(0.0, kCanvasHeight);
     return Offset(clampedX, clampedY);
-  }  void _onDrawingEnd(DragEndDetails details) {
+  }void _onDrawingEnd(DragEndDetails details) {
     if (!_isDrawing || _currentDrawingStart == null || _currentDrawingEnd == null || widget.selectedLayer == null) {
       _isDrawing = false;
       _currentDrawingStart = null;

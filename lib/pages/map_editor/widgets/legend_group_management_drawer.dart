@@ -491,18 +491,21 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       ),
     );
   }
-
   void _showAddLegendDialog() {
     if (widget.availableLegends.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('暂无可用图例，请先在图例管理页面添加图例')),
       );
       return;
-    }
-
-    legend_db.LegendItem? selectedLegend;
-    double positionX = 0.5;
-    double positionY = 0.5;
+    }    legend_db.LegendItem? selectedLegend;
+    // 设置更合理的默认位置 - 避免总是在中心，使用较为随机的初始位置
+    final baseX = 0.2; // 左侧起始位置
+    final baseY = 0.2; // 顶部起始位置
+    final offsetX = (_currentGroup.legendItems.length * 0.1) % 0.6; // 水平偏移
+    final offsetY = ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
+    
+    double positionX = (baseX + offsetX).clamp(0.1, 0.9);
+    double positionY = (baseY + offsetY).clamp(0.1, 0.9);
     double size = 1.0;
     double rotation = 0.0;
 
