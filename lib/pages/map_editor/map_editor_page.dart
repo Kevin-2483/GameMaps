@@ -37,8 +37,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
   MapLayer? _selectedLayer;
   DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
-  double _selectedStrokeWidth = 2.0;
-  String? _selectedElementId; // 当前选中的元素ID// 工具栏折叠状态
+  double _selectedStrokeWidth = 2.0;  String? _selectedElementId; // 当前选中的元素ID
+  // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
@@ -416,6 +416,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _isZIndexInspectorOpen = false;
     });
   }
+  // 选中图例项
+  void _selectLegendItem(String legendItemId) {
+    setState(() {
+      _selectedElementId = legendItemId.isEmpty ? null : legendItemId; // 空字符串表示取消选中
+    });
+  }
 
   // 处理绘制工具预览
   void _handleDrawingToolPreview(DrawingElementType? tool) {
@@ -590,8 +596,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         onClose: _closeLayerLegendBindingDrawer,
                       ),
                     ),
-                  ),
-                // 图例组管理抽屉覆盖层
+                  ),                // 图例组管理抽屉覆盖层
                 if (_isLegendGroupManagementDrawerOpen &&
                     _currentLegendGroupForManagement != null)
                   Positioned(
@@ -607,6 +612,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         onLegendGroupUpdated: _updateLegendGroup,
                         isPreviewMode: widget.isPreviewMode,
                         onClose: _closeLegendGroupManagementDrawer,
+                        onLegendItemSelected: _selectLegendItem,
                       ),
                     ),
                   ),
@@ -1144,7 +1150,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
       ],
     );
   }
-
   /// 构建地图画布组件
   Widget _buildMapCanvas() {
     return MapCanvas(
@@ -1157,6 +1162,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       isPreviewMode: widget.isPreviewMode,
       onLayerUpdated: _updateLayer,
       onLegendGroupUpdated: _updateLegendGroup,
+      onLegendItemSelected: _selectLegendItem,
       previewOpacityValues: _previewOpacityValues,
       previewDrawingTool: _previewDrawingTool,
       previewColor: _previewColor,

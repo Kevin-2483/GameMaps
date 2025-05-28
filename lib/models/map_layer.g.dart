@@ -119,6 +119,7 @@ LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
   ),
   size: (json['size'] as num?)?.toDouble() ?? 1.0,
   rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
+  opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
   isVisible: json['isVisible'] as bool? ?? true,
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
@@ -130,6 +131,7 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'position': const OffsetConverter().toJson(instance.position),
       'size': instance.size,
       'rotation': instance.rotation,
+      'opacity': instance.opacity,
       'isVisible': instance.isVisible,
       'createdAt': instance.createdAt.toIso8601String(),
     };

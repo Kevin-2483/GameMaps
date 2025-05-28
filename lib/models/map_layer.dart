@@ -184,28 +184,29 @@ class LegendItem {
   final Offset position; // 在地图上的位置 (相对坐标 0.0-1.0)
   final double size; // 大小缩放比例
   final double rotation; // 旋转角度
+  final double opacity; // 透明度 0.0-1.0
   final bool isVisible;
   final DateTime createdAt;
-
   const LegendItem({
     required this.id,
     required this.legendId,
     required this.position,
     this.size = 1.0,
     this.rotation = 0.0,
+    this.opacity = 1.0,
     this.isVisible = true,
     required this.createdAt,
   });
 
   factory LegendItem.fromJson(Map<String, dynamic> json) => _$LegendItemFromJson(json);
   Map<String, dynamic> toJson() => _$LegendItemToJson(this);
-
   LegendItem copyWith({
     String? id,
     String? legendId,
     Offset? position,
     double? size,
     double? rotation,
+    double? opacity,
     bool? isVisible,
     DateTime? createdAt,
   }) {
@@ -215,6 +216,7 @@ class LegendItem {
       position: position ?? this.position,
       size: size ?? this.size,
       rotation: rotation ?? this.rotation,
+      opacity: opacity ?? this.opacity,
       isVisible: isVisible ?? this.isVisible,
       createdAt: createdAt ?? this.createdAt,
     );

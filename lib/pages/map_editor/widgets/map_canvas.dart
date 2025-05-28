@@ -35,9 +35,10 @@ class MapCanvas extends StatefulWidget {
   final Color selectedColor;
   final double selectedStrokeWidth;
   final List<legend_db.LegendItem> availableLegends;
-  final bool isPreviewMode;
-  final Function(MapLayer) onLayerUpdated;
-  final Function(LegendGroup) onLegendGroupUpdated;  final Map<String, double> previewOpacityValues;
+  final bool isPreviewMode;  final Function(MapLayer) onLayerUpdated;
+  final Function(LegendGroup) onLegendGroupUpdated;
+  final Function(String)? onLegendItemSelected; // 图例项选中回调
+  final Map<String, double> previewOpacityValues;
   // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
@@ -45,8 +46,7 @@ class MapCanvas extends StatefulWidget {
   
   // 选中元素高亮
   final String? selectedElementId;
-  
-  const MapCanvas({
+    const MapCanvas({
     super.key,
     required this.mapItem,
     this.selectedLayer,
@@ -57,6 +57,7 @@ class MapCanvas extends StatefulWidget {
     required this.isPreviewMode,
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
+    this.onLegendItemSelected,
     this.previewOpacityValues = const {},
     this.previewDrawingTool,
     this.previewColor,
@@ -228,79 +229,166 @@ class _MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
-
   Widget _buildLegendWidget(LegendGroup legendGroup) {
     if (!legendGroup.isVisible) return const SizedBox.shrink();
 
-    return Positioned(
-      left: 100, // 默认位置，后续可以改为可拖拽
-      top: 100,
+    return Positioned.fill(
       child: Opacity(
         opacity: legendGroup.opacity,
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.grey.shade400),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                legendGroup.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+        child: Stack(
+          children: legendGroup.legendItems.map((item) => _buildLegendSticker(item)).toList(),
+        ),
+      ),
+    );
+  }
+  Widget _buildLegendSticker(LegendItem item) {
+    // 获取对应的图例数据
+    final legend = widget.availableLegends.firstWhere(
+      (l) => l.id.toString() == item.legendId,
+      orElse: () => legend_db.LegendItem(
+        title: '未知图例',
+        centerX: 0.0,
+        centerY: 0.0,
+        version: 1,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    if (!legend.hasImageData) return const SizedBox.shrink();
+
+    // 转换相对坐标到画布坐标
+    final canvasPosition = Offset(
+      item.position.dx * kCanvasWidth,
+      item.position.dy * kCanvasHeight,
+    );
+
+    // 计算图例的中心点（基于图例的中心点坐标）
+    final imageSize = 60.0 * item.size; // 基础大小60像素
+    final centerOffset = Offset(
+      imageSize * legend.centerX,
+      imageSize * legend.centerY,
+    );
+
+    return Positioned(
+      left: canvasPosition.dx - centerOffset.dx,
+      top: canvasPosition.dy - centerOffset.dy,
+      child: GestureDetector(
+        onPanStart: widget.isPreviewMode ? null : (details) => _onLegendDragStart(item, details),
+        onPanUpdate: widget.isPreviewMode ? null : (details) => _onLegendDragUpdate(item, details),
+        onPanEnd: widget.isPreviewMode ? null : (details) => _onLegendDragEnd(item, details),
+        onTap: () => _onLegendTap(item),
+        child: Transform.rotate(
+          angle: item.rotation * (3.14159 / 180), // 转换为弧度
+          child: Container(
+            width: imageSize,
+            height: imageSize,
+            decoration: BoxDecoration(
+              border: widget.selectedElementId == item.id 
+                ? Border.all(color: Colors.blue, width: 2)
+                : null,
+              borderRadius: BorderRadius.circular(4),
+            ),            child: Opacity(
+              opacity: item.isVisible ? item.opacity : 0.0,
+              child: Stack(
+                children: [
+                  // 图例图片
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.memory(
+                      legend.imageData!,
+                      width: imageSize,
+                      height: imageSize,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  // 中心点指示器（选中时显示）
+                  if (widget.selectedElementId == item.id)
+                    Positioned(
+                      left: centerOffset.dx - 4,
+                      top: centerOffset.dy - 4,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
-              ...legendGroup.legendItems.map((item) => _buildLegendItem(item)),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+  // 图例拖拽相关方法
+  LegendItem? _draggingLegendItem;
 
-  Widget _buildLegendItem(LegendItem item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.blue, // 默认颜色，后续从图例数据获取
-              border: Border.all(color: Colors.grey.shade600),
-            ),
-          ),          const SizedBox(width: 8),
-          Builder(
-            builder: (context) {
-              final legend = widget.availableLegends.firstWhere(
-                (l) => l.id.toString() == item.legendId,
-                orElse: () => legend_db.LegendItem(
-                  title: '未知图例',
-                  centerX: 0.0,
-                  centerY: 0.0,
-                  version: 1,
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ),
-              );
-              return Text(
-                legend.title,
-                style: const TextStyle(fontSize: 12),
-              );
-            },
-          ),
-        ],
-      ),
+  void _onLegendDragStart(LegendItem item, DragStartDetails details) {
+    _draggingLegendItem = item;
+    // 记录拖拽开始的位置用于计算偏移
+    setState(() {
+      // 触发重绘以显示拖拽状态
+    });
+  }
+
+  void _onLegendDragUpdate(LegendItem item, DragUpdateDetails details) {
+    if (_draggingLegendItem?.id != item.id) return;
+    
+    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final relativePosition = Offset(
+      canvasPosition.dx / kCanvasWidth,
+      canvasPosition.dy / kCanvasHeight,
     );
-  }  void _onDrawingStart(DragStartDetails details) {
+
+    // 限制在画布范围内
+    final clampedPosition = Offset(
+      relativePosition.dx.clamp(0.0, 1.0),
+      relativePosition.dy.clamp(0.0, 1.0),
+    );
+
+    // 更新图例位置
+    _updateLegendItemPosition(item, clampedPosition);
+  }
+  void _onLegendDragEnd(LegendItem item, DragEndDetails details) {
+    _draggingLegendItem = null;
+    // 保存更改到撤销历史
+    // 这里可以通过回调通知主页面保存状态
+  }
+  void _onLegendTap(LegendItem item) {
+    // 选中图例项，高亮显示
+    widget.onLegendItemSelected?.call(item.id);
+  }
+
+  void _updateLegendItemPosition(LegendItem item, Offset newPosition) {
+    // 找到包含此图例项的图例组
+    for (final legendGroup in widget.mapItem.legendGroups) {
+      final itemIndex = legendGroup.legendItems.indexWhere((li) => li.id == item.id);
+      if (itemIndex != -1) {
+        final updatedItem = item.copyWith(position: newPosition);
+        final updatedItems = List<LegendItem>.from(legendGroup.legendItems);
+        updatedItems[itemIndex] = updatedItem;
+        
+        final updatedGroup = legendGroup.copyWith(
+          legendItems: updatedItems,
+          updatedAt: DateTime.now(),
+        );
+        
+        widget.onLegendGroupUpdated(updatedGroup);
+        break;
+      }
+    }
+  }void _onDrawingStart(DragStartDetails details) {
     if (widget.isPreviewMode || _effectiveDrawingTool == null) return;
 
     // 获取相对于画布的坐标
