@@ -1339,8 +1339,7 @@ class _LayerPainter extends CustomPainter {
     textPainter.layout();
     textPainter.paint(canvas, position);
   }
-
-  /// 绘制弧度矩形（超椭圆形状）
+  /// 绘制弧度矩形（从圆角矩形到椭圆的渐变）
   void _drawCurvedRectangle(Canvas canvas, Rect rect, Paint paint, double curvature) {
     if (curvature <= 0.0) {
       canvas.drawRect(rect, paint);
@@ -1349,12 +1348,6 @@ class _LayerPainter extends CustomPainter {
     
     // 限制弧度值在合理范围内 (0.0 到 1.0)
     final clampedCurvature = curvature.clamp(0.0, 1.0);
-    
-    // 计算超椭圆参数
-    // curvature = 0.0 -> n = 2 (椭圆)
-    // curvature = 0.5 -> n = 4 (接近圆角矩形)
-    // curvature = 1.0 -> n = 8 (非常尖锐的角)
-    final n = 2.0 + (clampedCurvature * 6.0);
     
     final centerX = rect.center.dx;
     final centerY = rect.center.dy;
@@ -1370,22 +1363,50 @@ class _LayerPainter extends CustomPainter {
     final path = Path();
     const int numPoints = 100; // 用于绘制曲线的点数
     
+    // 使用三段式插值：
+    // 0.0 - 0.3: 圆角矩形 (超椭圆 n = 2.0 到 n = 4.0)
+    // 0.3 - 0.7: 过渡到椭圆 (超椭圆 n = 4.0 到 n = 2.0)
+    // 0.7 - 1.0: 标准椭圆 (n = 2.0，标准椭圆方程)
+    
+    double n;
+    bool useStandardEllipse = false;
+    
+    if (clampedCurvature <= 0.3) {
+      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
+      final t = clampedCurvature / 0.3;
+      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
+    } else if (clampedCurvature <= 0.7) {
+      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
+      final t = (clampedCurvature - 0.3) / 0.4;
+      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
+    } else {
+      // 椭圆阶段：使用标准椭圆方程
+      useStandardEllipse = true;
+      n = 2.0; // 标准椭圆
+    }
+    
     bool isFirstPoint = true;
     
     for (int i = 0; i <= numPoints; i++) {
       final t = (i / numPoints) * 2 * math.pi;
       
-      // 超椭圆参数方程
-      // x = a * sign(cos(t)) * |cos(t)|^(2/n)
-      // y = b * sign(sin(t)) * |sin(t)|^(2/n)
-      final cosT = math.cos(t);
-      final sinT = math.sin(t);
+      double x, y;
       
-      final signCos = cosT >= 0 ? 1.0 : -1.0;
-      final signSin = sinT >= 0 ? 1.0 : -1.0;
-      
-      final x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
-      final y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      if (useStandardEllipse) {
+        // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
+        x = centerX + a * math.cos(t);
+        y = centerY + b * math.sin(t);
+      } else {
+        // 使用超椭圆方程
+        final cosT = math.cos(t);
+        final sinT = math.sin(t);
+        
+        final signCos = cosT >= 0 ? 1.0 : -1.0;
+        final signSin = sinT >= 0 ? 1.0 : -1.0;
+        
+        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      }
       
       if (isFirstPoint) {
         path.moveTo(x, y);
@@ -1492,8 +1513,7 @@ class _LayerPainter extends CustomPainter {
     // 恢复画布状态
     canvas.restore();
   }
-
-  /// 创建超椭圆路径
+  /// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
   Path _createSuperellipsePath(Rect rect, double curvature) {
     if (curvature <= 0.0) {
       return Path()..addRect(rect);
@@ -1501,9 +1521,6 @@ class _LayerPainter extends CustomPainter {
     
     // 限制弧度值在合理范围内 (0.0 到 1.0)
     final clampedCurvature = curvature.clamp(0.0, 1.0);
-    
-    // 计算超椭圆参数
-    final n = 2.0 + (clampedCurvature * 6.0);
     
     final centerX = rect.center.dx;
     final centerY = rect.center.dy;
@@ -1514,6 +1531,24 @@ class _LayerPainter extends CustomPainter {
       return Path()..addRect(rect);
     }
     
+    // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
+    double n;
+    bool useStandardEllipse = false;
+    
+    if (clampedCurvature <= 0.3) {
+      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
+      final t = clampedCurvature / 0.3;
+      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
+    } else if (clampedCurvature <= 0.7) {
+      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
+      final t = (clampedCurvature - 0.3) / 0.4;
+      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
+    } else {
+      // 椭圆阶段：使用标准椭圆方程
+      useStandardEllipse = true;
+      n = 2.0; // 标准椭圆
+    }
+    
     final path = Path();
     const int numPoints = 100;
     
@@ -1522,14 +1557,23 @@ class _LayerPainter extends CustomPainter {
     for (int i = 0; i <= numPoints; i++) {
       final t = (i / numPoints) * 2 * math.pi;
       
-      final cosT = math.cos(t);
-      final sinT = math.sin(t);
+      double x, y;
       
-      final signCos = cosT >= 0 ? 1.0 : -1.0;
-      final signSin = sinT >= 0 ? 1.0 : -1.0;
-      
-      final x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
-      final y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      if (useStandardEllipse) {
+        // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
+        x = centerX + a * math.cos(t);
+        y = centerY + b * math.sin(t);
+      } else {
+        // 使用超椭圆方程
+        final cosT = math.cos(t);
+        final sinT = math.sin(t);
+        
+        final signCos = cosT >= 0 ? 1.0 : -1.0;
+        final signSin = sinT >= 0 ? 1.0 : -1.0;
+        
+        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      }
       
       if (isFirstPoint) {
         path.moveTo(x, y);
