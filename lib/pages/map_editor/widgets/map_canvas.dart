@@ -17,6 +17,7 @@ class DrawingPreviewData {
   final Color color;
   final double strokeWidth;
   final double density;
+  final double curvature; // 弧度值
   final List<Offset>? freeDrawingPath; // 自由绘制路径
 
   const DrawingPreviewData({
@@ -26,6 +27,7 @@ class DrawingPreviewData {
     required this.color,
     required this.strokeWidth,
     required this.density,
+    required this.curvature,
     this.freeDrawingPath,
   });
 }
@@ -50,6 +52,7 @@ class MapCanvas extends StatefulWidget {
   final Color selectedColor;
   final double selectedStrokeWidth;
   final double selectedDensity;
+  final double selectedCurvature; // 弧度值
   final List<legend_db.LegendItem> availableLegends;
   final bool isPreviewMode;  final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
@@ -61,6 +64,7 @@ class MapCanvas extends StatefulWidget {
   final Color? previewColor;
   final double? previewStrokeWidth;
   final double? previewDensity;
+  final double? previewCurvature; // 弧度预览状态
   
   // 选中元素高亮
   final String? selectedElementId;  const MapCanvas({
@@ -71,6 +75,7 @@ class MapCanvas extends StatefulWidget {
     required this.selectedColor,
     required this.selectedStrokeWidth,
     required this.selectedDensity,
+    required this.selectedCurvature,
     required this.availableLegends,
     required this.isPreviewMode,
     required this.onLayerUpdated,
@@ -82,6 +87,7 @@ class MapCanvas extends StatefulWidget {
     this.previewColor,
     this.previewStrokeWidth,
     this.previewDensity,
+    this.previewCurvature,
     this.selectedElementId,
   });
 
@@ -105,6 +111,7 @@ class _MapCanvasState extends State<MapCanvas> {
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth => widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
   double get _effectiveDensity => widget.previewDensity ?? widget.selectedDensity;
+  double get _effectiveCurvature => widget.previewCurvature ?? widget.selectedCurvature;
   @override
   void dispose() {
     _transformationController.dispose();
@@ -161,6 +168,7 @@ class _MapCanvasState extends State<MapCanvas> {
                               color: previewData.color,
                               strokeWidth: previewData.strokeWidth,
                               density: previewData.density,
+                              curvature: previewData.curvature,
                               freeDrawingPath: previewData.freeDrawingPath,
                               selectedElementId: widget.selectedElementId,
                             ),
@@ -436,6 +444,7 @@ class _MapCanvasState extends State<MapCanvas> {
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
       density: _effectiveDensity,
+      curvature: _effectiveCurvature,
       freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
     );
   }  void _onDrawingUpdate(DragUpdateDetails details) {
@@ -453,6 +462,7 @@ class _MapCanvasState extends State<MapCanvas> {
         color: _effectiveColor,
         strokeWidth: _effectiveStrokeWidth,
         density: _effectiveDensity,
+        curvature: _effectiveCurvature,
         freeDrawingPath: _freeDrawingPath,
       );
       return;
@@ -466,6 +476,7 @@ class _MapCanvasState extends State<MapCanvas> {
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
       density: _effectiveDensity,
+      curvature: _effectiveCurvature,
       freeDrawingPath: null,
     );
   }
@@ -508,8 +519,7 @@ class _MapCanvasState extends State<MapCanvas> {
       // 计算新元素的 z 值（比当前最大 z 值大 1）
       final maxZIndex = widget.selectedLayer!.elements.isEmpty 
           ? 0 
-          : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-        // Add the drawing element to the selected layer
+          : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);      // Add the drawing element to the selected layer
       final element = MapDrawingElement(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: _effectiveDrawingTool!,
@@ -517,6 +527,7 @@ class _MapCanvasState extends State<MapCanvas> {
         color: _effectiveColor,
         strokeWidth: _effectiveStrokeWidth,
         density: _effectiveDensity,
+        curvature: _effectiveCurvature,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
       );
@@ -571,8 +582,7 @@ class _MapCanvasState extends State<MapCanvas> {
     // 计算新元素的 z 值
     final maxZIndex = widget.selectedLayer!.elements.isEmpty 
         ? 0 
-        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-      // 创建自由绘制元素
+        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);    // 创建自由绘制元素
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.freeDrawing,
@@ -580,6 +590,7 @@ class _MapCanvasState extends State<MapCanvas> {
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
       density: _effectiveDensity,
+      curvature: _effectiveCurvature,
       zIndex: maxZIndex + 1,
       createdAt: DateTime.now(),
     );
@@ -676,14 +687,14 @@ class _MapCanvasState extends State<MapCanvas> {
     
     final maxZIndex = widget.selectedLayer!.elements.isEmpty 
         ? 0 
-        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-      final element = MapDrawingElement(
+        : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);      final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.text,
       points: [normalizedPosition],
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
       density: _effectiveDensity,
+      curvature: _effectiveCurvature,
       zIndex: maxZIndex + 1,
       text: text,
       fontSize: fontSize,
@@ -1114,27 +1125,50 @@ class _LayerPainter extends CustomPainter {
       case DrawingElementType.arrow:
         _drawArrow(canvas, start, end, paint);
         break;
-      
-      case DrawingElementType.rectangle:
+        case DrawingElementType.rectangle:
         final rect = Rect.fromPoints(start, end);
         paint.style = PaintingStyle.fill;
-        canvas.drawRect(rect, paint);
+        if (element.curvature > 0.0) {
+          _drawCurvedRectangle(canvas, rect, paint, element.curvature);
+        } else {
+          canvas.drawRect(rect, paint);
+        }
         break;
       
       case DrawingElementType.hollowRectangle:
         final rect = Rect.fromPoints(start, end);
         paint.style = PaintingStyle.stroke;
-        canvas.drawRect(rect, paint);
+        if (element.curvature > 0.0) {
+          _drawCurvedRectangle(canvas, rect, paint, element.curvature);
+        } else {
+          canvas.drawRect(rect, paint);
+        }
         break;
-      
-      case DrawingElementType.diagonalLines:
-        _drawDiagonalPattern(canvas, start, end, paint, element.density);
+        case DrawingElementType.diagonalLines:
+        if (element.curvature > 0.0) {
+          final rect = Rect.fromPoints(start, end);
+          _drawCurvedDiagonalPattern(canvas, rect, paint, element.density, element.curvature);
+        } else {
+          _drawDiagonalPattern(canvas, start, end, paint, element.density);
+        }
         break;
       
       case DrawingElementType.crossLines:
-        _drawCrossPattern(canvas, start, end, paint, element.density);
-        break;      case DrawingElementType.dotGrid:
-        _drawDotGrid(canvas, start, end, paint, element.density);
+        if (element.curvature > 0.0) {
+          final rect = Rect.fromPoints(start, end);
+          _drawCurvedCrossPattern(canvas, rect, paint, element.density, element.curvature);
+        } else {
+          _drawCrossPattern(canvas, start, end, paint, element.density);
+        }
+        break;
+
+      case DrawingElementType.dotGrid:
+        if (element.curvature > 0.0) {
+          final rect = Rect.fromPoints(start, end);
+          _drawCurvedDotGrid(canvas, rect, paint, element.density, element.curvature);
+        } else {
+          _drawDotGrid(canvas, start, end, paint, element.density);
+        }
         break;
       
       case DrawingElementType.freeDrawing:
@@ -1306,6 +1340,209 @@ class _LayerPainter extends CustomPainter {
     textPainter.paint(canvas, position);
   }
 
+  /// 绘制弧度矩形（超椭圆形状）
+  void _drawCurvedRectangle(Canvas canvas, Rect rect, Paint paint, double curvature) {
+    if (curvature <= 0.0) {
+      canvas.drawRect(rect, paint);
+      return;
+    }
+    
+    // 限制弧度值在合理范围内 (0.0 到 1.0)
+    final clampedCurvature = curvature.clamp(0.0, 1.0);
+    
+    // 计算超椭圆参数
+    // curvature = 0.0 -> n = 2 (椭圆)
+    // curvature = 0.5 -> n = 4 (接近圆角矩形)
+    // curvature = 1.0 -> n = 8 (非常尖锐的角)
+    final n = 2.0 + (clampedCurvature * 6.0);
+    
+    final centerX = rect.center.dx;
+    final centerY = rect.center.dy;
+    final a = rect.width / 2; // 半宽
+    final b = rect.height / 2; // 半高
+    
+    // 如果矩形太小，直接绘制普通矩形
+    if (a < 2 || b < 2) {
+      canvas.drawRect(rect, paint);
+      return;
+    }
+    
+    final path = Path();
+    const int numPoints = 100; // 用于绘制曲线的点数
+    
+    bool isFirstPoint = true;
+    
+    for (int i = 0; i <= numPoints; i++) {
+      final t = (i / numPoints) * 2 * math.pi;
+      
+      // 超椭圆参数方程
+      // x = a * sign(cos(t)) * |cos(t)|^(2/n)
+      // y = b * sign(sin(t)) * |sin(t)|^(2/n)
+      final cosT = math.cos(t);
+      final sinT = math.sin(t);
+      
+      final signCos = cosT >= 0 ? 1.0 : -1.0;
+      final signSin = sinT >= 0 ? 1.0 : -1.0;
+      
+      final x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+      final y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      
+      if (isFirstPoint) {
+        path.moveTo(x, y);
+        isFirstPoint = false;
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  /// 绘制弧度对角线图案
+  void _drawCurvedDiagonalPattern(Canvas canvas, Rect rect, Paint paint, double density, double curvature) {
+    // 创建超椭圆路径作为裁剪区域
+    final clipPath = _createSuperellipsePath(rect, curvature);
+    
+    // 保存画布状态
+    canvas.save();
+    canvas.clipPath(clipPath);
+    
+    // 在裁剪区域内绘制对角线图案
+    final spacing = paint.strokeWidth * density;
+    final width = rect.width;
+    final height = rect.height;
+    
+    final int totalLines = ((width + height) / spacing).ceil();
+    
+    for (int i = 0; i < totalLines; i++) {
+      final double offset = i * spacing;
+      
+      Offset lineStart;
+      Offset lineEnd;
+      
+      if (offset <= width) {
+        lineStart = Offset(rect.left + offset, rect.top);
+      } else {
+        lineStart = Offset(rect.right, rect.top + (offset - width));
+      }
+      
+      if (offset <= height) {
+        lineEnd = Offset(rect.left, rect.top + offset);
+      } else {
+        lineEnd = Offset(rect.left + (offset - height), rect.bottom);
+      }
+      
+      canvas.drawLine(lineStart, lineEnd, paint);
+    }
+    
+    // 恢复画布状态
+    canvas.restore();
+  }
+
+  /// 绘制弧度十字线图案
+  void _drawCurvedCrossPattern(Canvas canvas, Rect rect, Paint paint, double density, double curvature) {
+    // 创建超椭圆路径作为裁剪区域
+    final clipPath = _createSuperellipsePath(rect, curvature);
+    
+    // 保存画布状态
+    canvas.save();
+    canvas.clipPath(clipPath);
+    
+    // 在裁剪区域内绘制十字线图案
+    final spacing = paint.strokeWidth * density;
+    
+    // 垂直线
+    for (double x = rect.left; x <= rect.right; x += spacing) {
+      canvas.drawLine(Offset(x, rect.top), Offset(x, rect.bottom), paint);
+    }
+    
+    // 水平线
+    for (double y = rect.top; y <= rect.bottom; y += spacing) {
+      canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), paint);
+    }
+    
+    // 恢复画布状态
+    canvas.restore();
+  }
+
+  /// 绘制弧度点网格图案
+  void _drawCurvedDotGrid(Canvas canvas, Rect rect, Paint paint, double density, double curvature) {
+    // 创建超椭圆路径作为裁剪区域
+    final clipPath = _createSuperellipsePath(rect, curvature);
+    
+    // 保存画布状态
+    canvas.save();
+    canvas.clipPath(clipPath);
+    
+    // 在裁剪区域内绘制点网格
+    final spacing = paint.strokeWidth * density;
+    final dotRadius = paint.strokeWidth * 0.5;
+    
+    final dotPaint = Paint()
+      ..color = paint.color
+      ..style = PaintingStyle.fill;
+    
+    for (double x = rect.left; x <= rect.right; x += spacing) {
+      for (double y = rect.top; y <= rect.bottom; y += spacing) {
+        canvas.drawCircle(Offset(x, y), dotRadius, dotPaint);
+      }
+    }
+    
+    // 恢复画布状态
+    canvas.restore();
+  }
+
+  /// 创建超椭圆路径
+  Path _createSuperellipsePath(Rect rect, double curvature) {
+    if (curvature <= 0.0) {
+      return Path()..addRect(rect);
+    }
+    
+    // 限制弧度值在合理范围内 (0.0 到 1.0)
+    final clampedCurvature = curvature.clamp(0.0, 1.0);
+    
+    // 计算超椭圆参数
+    final n = 2.0 + (clampedCurvature * 6.0);
+    
+    final centerX = rect.center.dx;
+    final centerY = rect.center.dy;
+    final a = rect.width / 2;
+    final b = rect.height / 2;
+    
+    if (a < 2 || b < 2) {
+      return Path()..addRect(rect);
+    }
+    
+    final path = Path();
+    const int numPoints = 100;
+    
+    bool isFirstPoint = true;
+    
+    for (int i = 0; i <= numPoints; i++) {
+      final t = (i / numPoints) * 2 * math.pi;
+      
+      final cosT = math.cos(t);
+      final sinT = math.sin(t);
+      
+      final signCos = cosT >= 0 ? 1.0 : -1.0;
+      final signSin = sinT >= 0 ? 1.0 : -1.0;
+      
+      final x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+      final y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      
+      if (isFirstPoint) {
+        path.moveTo(x, y);
+        isFirstPoint = false;
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    
+    path.close();
+    return path;
+  }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
@@ -1317,6 +1554,7 @@ class _CurrentDrawingPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
   final double density;
+  final double curvature; // 曲率参数
   final List<Offset>? freeDrawingPath; // 自由绘制路径
   final String? selectedElementId; // 当前选中的元素ID
   
@@ -1327,6 +1565,7 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.color,
     required this.strokeWidth,
     required this.density,
+    required this.curvature,
     this.freeDrawingPath,
     this.selectedElementId,
   });
@@ -1414,14 +1653,14 @@ class _CurrentDrawingPainter extends CustomPainter {
         Offset(start.dx / kCanvasWidth, start.dy / kCanvasHeight),
         Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
       ];
-    }
-      final element = MapDrawingElement(
+    }    final element = MapDrawingElement(
       id: 'preview',
       type: elementType,
       points: points,
       color: color.withOpacity(0.7),
       strokeWidth: strokeWidth,
       density: density,
+      curvature: curvature, // 使用实际的曲率值进行预览
       createdAt: DateTime.now(),
     );final layerPainter = _LayerPainter(
       layer: MapLayer(

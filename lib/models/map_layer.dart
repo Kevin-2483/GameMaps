@@ -85,6 +85,7 @@ class MapDrawingElement {
   final double strokeWidth;
   final double density; // 图案密度系数，用于计算图案间距 (strokeWidth * density)
   final double rotation; // 旋转角度
+  final double curvature; // 弧度值，0.0=矩形，~0.5=椭圆，~1.0=凹角形状
   final int zIndex; // 绘制顺序，数值越大越在上层
   final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
@@ -97,6 +98,7 @@ class MapDrawingElement {
     this.strokeWidth = 2.0,
     this.density = 3.0, // 默认密度系数
     this.rotation = 0.0,
+    this.curvature = 0.0, // 默认无弧度
     this.zIndex = 0,
     this.text,
     this.fontSize,
@@ -112,6 +114,7 @@ class MapDrawingElement {
     double? strokeWidth,
     double? density,
     double? rotation,
+    double? curvature,
     int? zIndex,
     String? text,
     double? fontSize,
@@ -125,6 +128,7 @@ class MapDrawingElement {
       strokeWidth: strokeWidth ?? this.strokeWidth,
       density: density ?? this.density,
       rotation: rotation ?? this.rotation,
+      curvature: curvature ?? this.curvature,
       zIndex: zIndex ?? this.zIndex,
       text: text ?? this.text,
       fontSize: fontSize ?? this.fontSize,

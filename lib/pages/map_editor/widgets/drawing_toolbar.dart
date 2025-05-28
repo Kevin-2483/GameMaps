@@ -7,16 +7,19 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
   final Color selectedColor;  final double selectedStrokeWidth;
   final double selectedDensity;
+  final double selectedCurvature; // 弧度值
   final bool isEditMode;
   final Function(DrawingElementType?) onToolSelected;
   final Function(Color) onColorSelected;
   final Function(double) onStrokeWidthChanged;
   final Function(double) onDensityChanged;
+  final Function(double) onCurvatureChanged; // 弧度变化回调
   // 预览回调，用于实时更新画布而不修改实际数据
   final Function(DrawingElementType?)? onToolPreview;
   final Function(Color)? onColorPreview;
   final Function(double)? onStrokeWidthPreview;
   final Function(double)? onDensityPreview;
+  final Function(double)? onCurvaturePreview; // 弧度预览回调
   // 撤销/重做功能
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
@@ -33,15 +36,18 @@ class DrawingToolbarOptimized extends StatefulWidget {
     required this.selectedColor,
     required this.selectedStrokeWidth,
     required this.selectedDensity,
+    required this.selectedCurvature,
     required this.isEditMode,
     required this.onToolSelected,
     required this.onColorSelected,
     required this.onStrokeWidthChanged,
     required this.onDensityChanged,
+    required this.onCurvatureChanged,
     this.onToolPreview,
     this.onColorPreview,
     this.onStrokeWidthPreview,
     this.onDensityPreview,
+    this.onCurvaturePreview,
     this.onUndo,
     this.onRedo,
     this.canUndo = false,
@@ -63,16 +69,19 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
   Color? _tempSelectedColor;
   double? _tempSelectedStrokeWidth;
   double? _tempSelectedDensity;
+  double? _tempSelectedCurvature; // 临时弧度值
   // 定时器，用于延迟提交更改
   Timer? _toolTimer;
   Timer? _colorTimer;
   Timer? _strokeWidthTimer;
-  Timer? _densityTimer;  @override
+  Timer? _densityTimer;
+  Timer? _curvatureTimer;  @override
   void dispose() {
     _toolTimer?.cancel();
     _colorTimer?.cancel();
     _strokeWidthTimer?.cancel();
     _densityTimer?.cancel();
+    _curvatureTimer?.cancel();
     super.dispose();
   }
 
@@ -89,6 +98,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
       _tempSelectedStrokeWidth ?? widget.selectedStrokeWidth;
   double get _effectiveDensity => 
       _tempSelectedDensity ?? widget.selectedDensity;
+  double get _effectiveCurvature => 
+      _tempSelectedCurvature ?? widget.selectedCurvature;
 
   void _handleToolSelection(DrawingElementType? tool) {
     setState(() {
@@ -177,6 +188,28 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
     });
   }
 
+  void _handleCurvatureChange(double curvature) {
+    setState(() {
+      _tempSelectedCurvature = curvature;
+    });
+
+    // 立即通知预览（如果提供了回调）
+    widget.onCurvaturePreview?.call(curvature);
+
+    // 取消之前的定时器
+    _curvatureTimer?.cancel();
+
+    // 设置新的定时器，延迟提交更改
+    _curvatureTimer = Timer(const Duration(milliseconds: 200), () {
+      widget.onCurvatureChanged(curvature);
+      if (mounted) {
+        setState(() {
+          _tempSelectedCurvature = null;
+        });
+      }
+    });
+  }
+
   // 判断是否应该显示密度控制（仅对图案工具显示）
   bool _shouldShowDensityControl() {
     return _effectiveTool != null && [
@@ -184,6 +217,18 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
       DrawingElementType.crossLines,
       DrawingElementType.dotGrid,
       DrawingElementType.dashedLine,
+    ].contains(_effectiveTool);
+  }
+  
+  // 判断是否应该显示弧度控制（仅对矩形工具显示）
+  bool _shouldShowCurvatureControl() {
+    return _effectiveTool != null && [
+      DrawingElementType.rectangle,
+      DrawingElementType.hollowRectangle,
+      DrawingElementType.diagonalLines,
+      DrawingElementType.crossLines,
+      DrawingElementType.dotGrid,
+      DrawingElementType.eraser,
     ].contains(_effectiveTool);
   }
   
@@ -376,6 +421,31 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
                   ),
                 ),
                 Text('${_effectiveDensity.toStringAsFixed(1)}x'),
+              ],
+            ),
+          ],
+          
+          // Curvature control (for rectangular selections)
+          if (_shouldShowCurvatureControl()) ...[
+            const SizedBox(height: 8),
+            const Text(
+              '弧度',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _effectiveCurvature,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 20,
+                    label: '${(_effectiveCurvature * 100).round()}%',
+                    onChanged: _handleCurvatureChange,
+                  ),
+                ),
+                Text('${(_effectiveCurvature * 100).round()}%'),
               ],
             ),
           ],

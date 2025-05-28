@@ -40,6 +40,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   Color _selectedColor = Colors.black;
   double _selectedStrokeWidth = 2.0;
   double _selectedDensity = 3.0; // 默认密度为3.0
+  double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
   String? _selectedElementId; // 当前选中的元素ID
   // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
@@ -58,6 +59,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   Color? _previewColor;
   double? _previewStrokeWidth;
   double? _previewDensity;
+  double? _previewCurvature; // 弧度预览状态
   // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
@@ -490,6 +492,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
     setState(() {
       _previewDensity = density;
     });
+  }
+
+  void _handleCurvaturePreview(double curvature) {
+    setState(() {
+      _previewCurvature = curvature;
+    });
   }Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -824,6 +832,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   selectedColor: _selectedColor,
                   selectedStrokeWidth: _selectedStrokeWidth,
                   selectedDensity: _selectedDensity,
+                  selectedCurvature: _selectedCurvature,
                   isEditMode: !widget.isPreviewMode,
                   onToolSelected: (tool) {
                     setState(() => _selectedDrawingTool = tool);
@@ -837,10 +846,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onDensityChanged: (density) {
                     setState(() => _selectedDensity = density);
                   },
+                  onCurvatureChanged: (curvature) {
+                    setState(() => _selectedCurvature = curvature);
+                  },
                   onToolPreview: _handleDrawingToolPreview,
                   onColorPreview: _handleColorPreview,
                   onStrokeWidthPreview: _handleStrokeWidthPreview,
                   onDensityPreview: _handleDensityPreview,
+                  onCurvaturePreview: _handleCurvaturePreview,
                   onUndo: _undo,
                   onRedo: _redo,
                   canUndo: _canUndo,
@@ -1228,14 +1241,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
       return const Center(
         child: CircularProgressIndicator(),
       );
-    }
-      return MapCanvas(
+    }      return MapCanvas(
       mapItem: _currentMap!,
       selectedLayer: _selectedLayer,
       selectedDrawingTool: _selectedDrawingTool,
       selectedColor: _selectedColor,
       selectedStrokeWidth: _selectedStrokeWidth,
       selectedDensity: _selectedDensity,
+      selectedCurvature: _selectedCurvature,
       availableLegends: _availableLegends,
       isPreviewMode: widget.isPreviewMode,
       onLayerUpdated: _updateLayer,
@@ -1247,6 +1260,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewColor: _previewColor,
       previewStrokeWidth: _previewStrokeWidth,
       previewDensity: _previewDensity,
+      previewCurvature: _previewCurvature,
       selectedElementId: _selectedElementId,
     );
   }
