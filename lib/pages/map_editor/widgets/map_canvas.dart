@@ -18,6 +18,7 @@ class DrawingPreviewData {
   final double strokeWidth;
   final double density;
   final double curvature; // 弧度值
+  final TriangleCutType triangleCut; // 三角形切割类型
   final List<Offset>? freeDrawingPath; // 自由绘制路径
 
   const DrawingPreviewData({
@@ -28,6 +29,7 @@ class DrawingPreviewData {
     required this.strokeWidth,
     required this.density,
     required this.curvature,
+    required this.triangleCut,
     this.freeDrawingPath,
   });
 }
@@ -58,16 +60,16 @@ class MapCanvas extends StatefulWidget {
   final Function(LegendGroup) onLegendGroupUpdated;
   final Function(String)? onLegendItemSelected; // 图例项选中回调
   final Function(LegendItem)? onLegendItemDoubleClicked; // 图例项双击回调
-  final Map<String, double> previewOpacityValues;
-  // 绘制工具预览状态
+  final Map<String, double> previewOpacityValues;  // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
   final double? previewStrokeWidth;
   final double? previewDensity;
   final double? previewCurvature; // 弧度预览状态
+  final TriangleCutType? previewTriangleCut; // 三角形切割预览状态
   
   // 选中元素高亮
-  final String? selectedElementId;  const MapCanvas({
+  final String? selectedElementId;const MapCanvas({
     super.key,
     required this.mapItem,
     this.selectedLayer,
@@ -81,13 +83,13 @@ class MapCanvas extends StatefulWidget {
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
     this.onLegendItemSelected,
-    this.onLegendItemDoubleClicked,
-    this.previewOpacityValues = const {},
+    this.onLegendItemDoubleClicked,    this.previewOpacityValues = const {},
     this.previewDrawingTool,
     this.previewColor,
     this.previewStrokeWidth,
     this.previewDensity,
     this.previewCurvature,
+    this.previewTriangleCut,
     this.selectedElementId,
   });
 
@@ -105,13 +107,14 @@ class _MapCanvasState extends State<MapCanvas> {
   List<Offset> _freeDrawingPath = [];
   
   // 绘制预览的 ValueNotifier，避免整个 widget 重绘
-  final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = ValueNotifier(null);
-  // 获取有效的绘制工具状态（预览值或实际值）
+  final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = ValueNotifier(null);  // 获取有效的绘制工具状态（预览值或实际值）
   DrawingElementType? get _effectiveDrawingTool => widget.previewDrawingTool ?? widget.selectedDrawingTool;
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth => widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
   double get _effectiveDensity => widget.previewDensity ?? widget.selectedDensity;
   double get _effectiveCurvature => widget.previewCurvature ?? widget.selectedCurvature;
+  TriangleCutType get _effectiveTriangleCut => widget.previewTriangleCut ?? TriangleCutType.none;
+
   @override
   void dispose() {
     _transformationController.dispose();
@@ -159,8 +162,7 @@ class _MapCanvasState extends State<MapCanvas> {
                       ValueListenableBuilder<DrawingPreviewData?>(
                         valueListenable: _drawingPreviewNotifier,
                         builder: (context, previewData, child) {
-                          if (previewData == null) return const SizedBox.shrink();
-                          return CustomPaint(
+                          if (previewData == null) return const SizedBox.shrink();                          return CustomPaint(
                             size: const Size(kCanvasWidth, kCanvasHeight),                            painter: _CurrentDrawingPainter(
                               start: previewData.start,
                               end: previewData.end,
@@ -169,6 +171,7 @@ class _MapCanvasState extends State<MapCanvas> {
                               strokeWidth: previewData.strokeWidth,
                               density: previewData.density,
                               curvature: previewData.curvature,
+                              triangleCut: previewData.triangleCut,
                               freeDrawingPath: previewData.freeDrawingPath,
                               selectedElementId: widget.selectedElementId,
                             ),
@@ -435,6 +438,37 @@ class _MapCanvasState extends State<MapCanvas> {
     // 初始化自由绘制路径
     if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath = [_currentDrawingStart!];
+    }    // 只更新绘制预览，不触发整个 widget 重绘
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: _currentDrawingStart!,
+      end: _currentDrawingEnd!,
+      elementType: _effectiveDrawingTool!,
+      color: _effectiveColor,
+      strokeWidth: _effectiveStrokeWidth,
+      density: _effectiveDensity,
+      curvature: _effectiveCurvature,
+      triangleCut: _effectiveTriangleCut,
+      freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
+    );
+  }  void _onDrawingUpdate(DragUpdateDetails details) {
+    if (!_isDrawing) return;
+
+    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
+    _currentDrawingEnd = _getClampedCanvasPosition(details.localPosition);    // 自由绘制路径处理
+    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _freeDrawingPath.add(_currentDrawingEnd!);      // 对于自由绘制，使用路径信息更新预览
+      _drawingPreviewNotifier.value = DrawingPreviewData(
+        start: _freeDrawingPath.first,
+        end: _freeDrawingPath.last,
+        elementType: _effectiveDrawingTool!,
+        color: _effectiveColor,
+        strokeWidth: _effectiveStrokeWidth,
+        density: _effectiveDensity,
+        curvature: _effectiveCurvature,
+        triangleCut: _effectiveTriangleCut,
+        freeDrawingPath: _freeDrawingPath,
+      );
+      return;
     }
       // 只更新绘制预览，不触发整个 widget 重绘
     _drawingPreviewNotifier.value = DrawingPreviewData(
@@ -445,38 +479,7 @@ class _MapCanvasState extends State<MapCanvas> {
       strokeWidth: _effectiveStrokeWidth,
       density: _effectiveDensity,
       curvature: _effectiveCurvature,
-      freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
-    );
-  }  void _onDrawingUpdate(DragUpdateDetails details) {
-    if (!_isDrawing) return;
-
-    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
-    _currentDrawingEnd = _getClampedCanvasPosition(details.localPosition);    // 自由绘制路径处理
-    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _freeDrawingPath.add(_currentDrawingEnd!);
-      // 对于自由绘制，使用路径信息更新预览
-      _drawingPreviewNotifier.value = DrawingPreviewData(
-        start: _freeDrawingPath.first,
-        end: _freeDrawingPath.last,
-        elementType: _effectiveDrawingTool!,
-        color: _effectiveColor,
-        strokeWidth: _effectiveStrokeWidth,
-        density: _effectiveDensity,
-        curvature: _effectiveCurvature,
-        freeDrawingPath: _freeDrawingPath,
-      );
-      return;
-    }
-    
-    // 只更新绘制预览，不触发整个 widget 重绘
-    _drawingPreviewNotifier.value = DrawingPreviewData(
-      start: _currentDrawingStart!,
-      end: _currentDrawingEnd!,
-      elementType: _effectiveDrawingTool!,
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      density: _effectiveDensity,
-      curvature: _effectiveCurvature,
+      triangleCut: _effectiveTriangleCut,
       freeDrawingPath: null,
     );
   }
@@ -528,6 +531,7 @@ class _MapCanvasState extends State<MapCanvas> {
         strokeWidth: _effectiveStrokeWidth,
         density: _effectiveDensity,
         curvature: _effectiveCurvature,
+        triangleCut: _effectiveTriangleCut,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
       );
@@ -1149,8 +1153,7 @@ class _LayerPainter extends CustomPainter {
     }
     
     return false;
-  }
-  void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
+  }  void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
     final paint = Paint()
       ..color = element.color
       ..strokeWidth = element.strokeWidth
@@ -1180,6 +1183,16 @@ class _LayerPainter extends CustomPainter {
 
     final start = points[0];
     final end = points[1];
+    final rect = Rect.fromPoints(start, end);    // 检查是否需要应用三角形切割
+    final needsTriangleClip = element.triangleCut != TriangleCutType.none &&
+                             _isTriangleCutApplicable(element.type);
+
+    if (needsTriangleClip) {
+      // 保存画布状态并应用三角形裁剪
+      canvas.save();
+      final trianglePath = _createTrianglePath(rect, element.triangleCut);
+      canvas.clipPath(trianglePath);
+    }
 
     switch (element.type) {
       case DrawingElementType.line:
@@ -1193,7 +1206,6 @@ class _LayerPainter extends CustomPainter {
         _drawArrow(canvas, start, end, paint);
         break;
         case DrawingElementType.rectangle:
-        final rect = Rect.fromPoints(start, end);
         paint.style = PaintingStyle.fill;
         if (element.curvature > 0.0) {
           _drawCurvedRectangle(canvas, rect, paint, element.curvature);
@@ -1203,7 +1215,6 @@ class _LayerPainter extends CustomPainter {
         break;
       
       case DrawingElementType.hollowRectangle:
-        final rect = Rect.fromPoints(start, end);
         paint.style = PaintingStyle.stroke;
         if (element.curvature > 0.0) {
           _drawCurvedRectangle(canvas, rect, paint, element.curvature);
@@ -1213,7 +1224,6 @@ class _LayerPainter extends CustomPainter {
         break;
         case DrawingElementType.diagonalLines:
         if (element.curvature > 0.0) {
-          final rect = Rect.fromPoints(start, end);
           _drawCurvedDiagonalPattern(canvas, rect, paint, element.density, element.curvature);
         } else {
           _drawDiagonalPattern(canvas, start, end, paint, element.density);
@@ -1222,7 +1232,6 @@ class _LayerPainter extends CustomPainter {
       
       case DrawingElementType.crossLines:
         if (element.curvature > 0.0) {
-          final rect = Rect.fromPoints(start, end);
           _drawCurvedCrossPattern(canvas, rect, paint, element.density, element.curvature);
         } else {
           _drawCrossPattern(canvas, start, end, paint, element.density);
@@ -1231,7 +1240,6 @@ class _LayerPainter extends CustomPainter {
 
       case DrawingElementType.dotGrid:
         if (element.curvature > 0.0) {
-          final rect = Rect.fromPoints(start, end);
           _drawCurvedDotGrid(canvas, rect, paint, element.density, element.curvature);
         } else {
           _drawDotGrid(canvas, start, end, paint, element.density);
@@ -1250,7 +1258,72 @@ class _LayerPainter extends CustomPainter {
         // 橡皮擦不需要绘制，它只是删除元素
         break;
     }
+
+    if (needsTriangleClip) {
+      // 恢复画布状态
+      canvas.restore();
+    }
   }
+  /// 检查绘制元素类型是否支持三角形切割
+  bool _isTriangleCutApplicable(DrawingElementType type) {
+    switch (type) {
+      case DrawingElementType.rectangle:
+      case DrawingElementType.hollowRectangle:
+      case DrawingElementType.diagonalLines:
+      case DrawingElementType.crossLines:
+      case DrawingElementType.dotGrid:
+      case DrawingElementType.eraser:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /// 创建三角形裁剪路径
+  Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
+    final path = Path();
+    
+    switch (triangleCut) {
+      case TriangleCutType.topLeft:
+        // 左上三角：保留左上角，切掉右下角
+        path.moveTo(rect.left, rect.top);
+        path.lineTo(rect.right, rect.top);
+        path.lineTo(rect.left, rect.bottom);
+        path.close();
+        break;
+        
+      case TriangleCutType.topRight:
+        // 右上三角：保留右上角，切掉左下角
+        path.moveTo(rect.left, rect.top);
+        path.lineTo(rect.right, rect.top);
+        path.lineTo(rect.right, rect.bottom);
+        path.close();
+        break;
+        
+      case TriangleCutType.bottomRight:
+        // 右下三角：保留右下角，切掉左上角
+        path.moveTo(rect.right, rect.top);
+        path.lineTo(rect.right, rect.bottom);
+        path.lineTo(rect.left, rect.bottom);
+        path.close();
+        break;
+        
+      case TriangleCutType.bottomLeft:
+        // 左下三角：保留左下角，切掉右上角
+        path.moveTo(rect.left, rect.top);
+        path.lineTo(rect.right, rect.bottom);
+        path.lineTo(rect.left, rect.bottom);
+        path.close();
+        break;
+          case TriangleCutType.none:
+        // 无切割：返回整个矩形
+        path.addRect(rect);
+        break;
+    }
+    
+    return path;
+  }
+
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint, double density) {
     final dashWidth = paint.strokeWidth * density * 0.8; // 虚线长度基于密度
     final dashSpace = paint.strokeWidth * density * 0.4; // 间隔基于密度
@@ -1666,6 +1739,7 @@ class _CurrentDrawingPainter extends CustomPainter {
   final double strokeWidth;
   final double density;
   final double curvature; // 曲率参数
+  final TriangleCutType triangleCut; // 三角形切割类型
   final List<Offset>? freeDrawingPath; // 自由绘制路径
   final String? selectedElementId; // 当前选中的元素ID
   
@@ -1677,6 +1751,7 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.strokeWidth,
     required this.density,
     required this.curvature,
+    required this.triangleCut,
     this.freeDrawingPath,
     this.selectedElementId,
   });
@@ -1782,6 +1857,7 @@ class _CurrentDrawingPainter extends CustomPainter {
       strokeWidth: strokeWidth,
       density: density,
       curvature: curvature, // 使用实际的曲率值进行预览
+      triangleCut: triangleCut, // 使用实际的三角形切割值进行预览
       createdAt: DateTime.now(),
     );final layerPainter = _LayerPainter(
       layer: MapLayer(
@@ -1825,7 +1901,7 @@ class _CurrentDrawingPainter extends CustomPainter {
     
     // 使用三段式插值：
     // 0.0 - 0.3: 圆角矩形 (超椭圆 n = 8.0 到 n = 4.0)
-    // 0.3 - 0.7: 过渡到椭圆 (超椭圆 n = 4.0 到 n = 2.2)
+    // 0.3 - 0.7: 过渡到椭圆 (超椭圆 n = 4.0 到 n = 2.0)
     // 0.7 - 1.0: 标准椭圆 (n = 2.0，标准椭圆方程)
     
     double n;

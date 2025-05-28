@@ -36,11 +36,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
-  MapLayer? _selectedLayer;  DrawingElementType? _selectedDrawingTool;
-  Color _selectedColor = Colors.black;
+  MapLayer? _selectedLayer;  DrawingElementType? _selectedDrawingTool;  Color _selectedColor = Colors.black;
   double _selectedStrokeWidth = 2.0;
   double _selectedDensity = 3.0; // 默认密度为3.0
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
+  TriangleCutType _selectedTriangleCut = TriangleCutType.none; // 默认无三角形切割
   String? _selectedElementId; // 当前选中的元素ID
   // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
@@ -60,6 +60,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   double? _previewStrokeWidth;
   double? _previewDensity;
   double? _previewCurvature; // 弧度预览状态
+  TriangleCutType? _previewTriangleCut; // 三角形切割预览状态
   // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
@@ -493,12 +494,19 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _previewDensity = density;
     });
   }
-
   void _handleCurvaturePreview(double curvature) {
     setState(() {
       _previewCurvature = curvature;
     });
-  }Future<void> _saveMap() async {
+  }
+
+  void _handleTriangleCutPreview(TriangleCutType triangleCut) {
+    setState(() {
+      _previewTriangleCut = triangleCut;
+    });
+  }
+
+  Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() => _isLoading = true);
@@ -833,6 +841,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   selectedStrokeWidth: _selectedStrokeWidth,
                   selectedDensity: _selectedDensity,
                   selectedCurvature: _selectedCurvature,
+                  selectedTriangleCut: _selectedTriangleCut,
                   isEditMode: !widget.isPreviewMode,
                   onToolSelected: (tool) {
                     setState(() => _selectedDrawingTool = tool);
@@ -849,11 +858,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onCurvatureChanged: (curvature) {
                     setState(() => _selectedCurvature = curvature);
                   },
+                  onTriangleCutChanged: (triangleCut) {
+                    setState(() => _selectedTriangleCut = triangleCut);
+                  },
                   onToolPreview: _handleDrawingToolPreview,
                   onColorPreview: _handleColorPreview,
                   onStrokeWidthPreview: _handleStrokeWidthPreview,
                   onDensityPreview: _handleDensityPreview,
                   onCurvaturePreview: _handleCurvaturePreview,
+                  onTriangleCutPreview: _handleTriangleCutPreview,
                   onUndo: _undo,
                   onRedo: _redo,
                   canUndo: _canUndo,
@@ -863,7 +876,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   selectedElementId: _selectedElementId,
                   onElementSelected: (elementId) {
                     setState(() => _selectedElementId = elementId);
-                  },                  onZIndexInspectorRequested: _showZIndexInspector,
+                  },
+                  onZIndexInspectorRequested: _showZIndexInspector,
                 ),
         ),
       );
@@ -1241,7 +1255,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       return const Center(
         child: CircularProgressIndicator(),
       );
-    }      return MapCanvas(
+    }    return MapCanvas(
       mapItem: _currentMap!,
       selectedLayer: _selectedLayer,
       selectedDrawingTool: _selectedDrawingTool,
@@ -1261,6 +1275,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewStrokeWidth: _previewStrokeWidth,
       previewDensity: _previewDensity,
       previewCurvature: _previewCurvature,
+      previewTriangleCut: _previewTriangleCut,
       selectedElementId: _selectedElementId,
     );
   }
