@@ -16,6 +16,7 @@ class DrawingPreviewData {
   final DrawingElementType elementType;
   final Color color;
   final double strokeWidth;
+  final double density;
   final List<Offset>? freeDrawingPath; // 自由绘制路径
 
   const DrawingPreviewData({
@@ -24,6 +25,7 @@ class DrawingPreviewData {
     required this.elementType,
     required this.color,
     required this.strokeWidth,
+    required this.density,
     this.freeDrawingPath,
   });
 }
@@ -47,6 +49,7 @@ class MapCanvas extends StatefulWidget {
   final DrawingElementType? selectedDrawingTool;
   final Color selectedColor;
   final double selectedStrokeWidth;
+  final double selectedDensity;
   final List<legend_db.LegendItem> availableLegends;
   final bool isPreviewMode;  final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
@@ -57,15 +60,17 @@ class MapCanvas extends StatefulWidget {
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
   final double? previewStrokeWidth;
+  final double? previewDensity;
   
   // 选中元素高亮
-  final String? selectedElementId;    const MapCanvas({
+  final String? selectedElementId;  const MapCanvas({
     super.key,
     required this.mapItem,
     this.selectedLayer,
     this.selectedDrawingTool,
     required this.selectedColor,
     required this.selectedStrokeWidth,
+    required this.selectedDensity,
     required this.availableLegends,
     required this.isPreviewMode,
     required this.onLayerUpdated,
@@ -76,6 +81,7 @@ class MapCanvas extends StatefulWidget {
     this.previewDrawingTool,
     this.previewColor,
     this.previewStrokeWidth,
+    this.previewDensity,
     this.selectedElementId,
   });
 
@@ -94,11 +100,11 @@ class _MapCanvasState extends State<MapCanvas> {
   
   // 绘制预览的 ValueNotifier，避免整个 widget 重绘
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = ValueNotifier(null);
-
   // 获取有效的绘制工具状态（预览值或实际值）
   DrawingElementType? get _effectiveDrawingTool => widget.previewDrawingTool ?? widget.selectedDrawingTool;
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth => widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
+  double get _effectiveDensity => widget.previewDensity ?? widget.selectedDensity;
   @override
   void dispose() {
     _transformationController.dispose();
@@ -148,13 +154,13 @@ class _MapCanvasState extends State<MapCanvas> {
                         builder: (context, previewData, child) {
                           if (previewData == null) return const SizedBox.shrink();
                           return CustomPaint(
-                            size: const Size(kCanvasWidth, kCanvasHeight),
-                            painter: _CurrentDrawingPainter(
+                            size: const Size(kCanvasWidth, kCanvasHeight),                            painter: _CurrentDrawingPainter(
                               start: previewData.start,
                               end: previewData.end,
                               elementType: previewData.elementType,
                               color: previewData.color,
                               strokeWidth: previewData.strokeWidth,
+                              density: previewData.density,
                               freeDrawingPath: previewData.freeDrawingPath,
                               selectedElementId: widget.selectedElementId,
                             ),
@@ -422,22 +428,21 @@ class _MapCanvasState extends State<MapCanvas> {
     if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath = [_currentDrawingStart!];
     }
-    
-    // 只更新绘制预览，不触发整个 widget 重绘
+      // 只更新绘制预览，不触发整个 widget 重绘
     _drawingPreviewNotifier.value = DrawingPreviewData(
       start: _currentDrawingStart!,
       end: _currentDrawingEnd!,
       elementType: _effectiveDrawingTool!,
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
+      density: _effectiveDensity,
       freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing ? _freeDrawingPath : null,
     );
   }  void _onDrawingUpdate(DragUpdateDetails details) {
     if (!_isDrawing) return;
 
     // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
-    _currentDrawingEnd = _getClampedCanvasPosition(details.localPosition);
-      // 自由绘制路径处理
+    _currentDrawingEnd = _getClampedCanvasPosition(details.localPosition);    // 自由绘制路径处理
     if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath.add(_currentDrawingEnd!);
       // 对于自由绘制，使用路径信息更新预览
@@ -447,6 +452,7 @@ class _MapCanvasState extends State<MapCanvas> {
         elementType: _effectiveDrawingTool!,
         color: _effectiveColor,
         strokeWidth: _effectiveStrokeWidth,
+        density: _effectiveDensity,
         freeDrawingPath: _freeDrawingPath,
       );
       return;
@@ -459,6 +465,7 @@ class _MapCanvasState extends State<MapCanvas> {
       elementType: _effectiveDrawingTool!,
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
+      density: _effectiveDensity,
       freeDrawingPath: null,
     );
   }
@@ -502,14 +509,14 @@ class _MapCanvasState extends State<MapCanvas> {
       final maxZIndex = widget.selectedLayer!.elements.isEmpty 
           ? 0 
           : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-      
-      // Add the drawing element to the selected layer
+        // Add the drawing element to the selected layer
       final element = MapDrawingElement(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: _effectiveDrawingTool!,
         points: [normalizedStart, normalizedEnd],
         color: _effectiveColor,
         strokeWidth: _effectiveStrokeWidth,
+        density: _effectiveDensity,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
       );
@@ -565,14 +572,14 @@ class _MapCanvasState extends State<MapCanvas> {
     final maxZIndex = widget.selectedLayer!.elements.isEmpty 
         ? 0 
         : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-    
-    // 创建自由绘制元素
+      // 创建自由绘制元素
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.freeDrawing,
       points: normalizedPoints,
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
+      density: _effectiveDensity,
       zIndex: maxZIndex + 1,
       createdAt: DateTime.now(),
     );
@@ -670,13 +677,13 @@ class _MapCanvasState extends State<MapCanvas> {
     final maxZIndex = widget.selectedLayer!.elements.isEmpty 
         ? 0 
         : widget.selectedLayer!.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-    
-    final element = MapDrawingElement(
+      final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.text,
       points: [normalizedPosition],
       color: _effectiveColor,
       strokeWidth: _effectiveStrokeWidth,
+      density: _effectiveDensity,
       zIndex: maxZIndex + 1,
       text: text,
       fontSize: fontSize,
@@ -908,10 +915,9 @@ class _LayerPainter extends CustomPainter {
             paint.style = PaintingStyle.stroke;
             canvas.drawLine(start, end, paint);
             break;
-            
-          case DrawingElementType.dashedLine:
+              case DrawingElementType.dashedLine:
             paint.style = PaintingStyle.stroke;
-            _drawDashedLine(canvas, start, end, paint);
+            _drawDashedLine(canvas, start, end, paint, element.density);
             break;
             
           case DrawingElementType.arrow:
@@ -930,20 +936,19 @@ class _LayerPainter extends CustomPainter {
             final rect = Rect.fromPoints(start, end);
             canvas.drawRect(rect, paint);
             break;
-            
-          case DrawingElementType.diagonalLines:
+              case DrawingElementType.diagonalLines:
             paint.style = PaintingStyle.stroke;
-            _drawDiagonalPattern(canvas, start, end, paint);
+            _drawDiagonalPattern(canvas, start, end, paint, element.density);
             break;
             
           case DrawingElementType.crossLines:
             paint.style = PaintingStyle.stroke;
-            _drawCrossPattern(canvas, start, end, paint);
+            _drawCrossPattern(canvas, start, end, paint, element.density);
             break;
             
           case DrawingElementType.dotGrid:
             paint.style = PaintingStyle.fill;
-            _drawDotGrid(canvas, start, end, paint);
+            _drawDotGrid(canvas, start, end, paint, element.density);
             break;
             
           default:
@@ -1102,9 +1107,8 @@ class _LayerPainter extends CustomPainter {
       case DrawingElementType.line:
         canvas.drawLine(start, end, paint);
         break;
-      
-      case DrawingElementType.dashedLine:
-        _drawDashedLine(canvas, start, end, paint);
+        case DrawingElementType.dashedLine:
+        _drawDashedLine(canvas, start, end, paint, element.density);
         break;
       
       case DrawingElementType.arrow:
@@ -1124,13 +1128,13 @@ class _LayerPainter extends CustomPainter {
         break;
       
       case DrawingElementType.diagonalLines:
-        _drawDiagonalPattern(canvas, start, end, paint);
+        _drawDiagonalPattern(canvas, start, end, paint, element.density);
         break;
       
       case DrawingElementType.crossLines:
-        _drawCrossPattern(canvas, start, end, paint);
+        _drawCrossPattern(canvas, start, end, paint, element.density);
         break;      case DrawingElementType.dotGrid:
-        _drawDotGrid(canvas, start, end, paint);
+        _drawDotGrid(canvas, start, end, paint, element.density);
         break;
       
       case DrawingElementType.freeDrawing:
@@ -1146,10 +1150,9 @@ class _LayerPainter extends CustomPainter {
         break;
     }
   }
-
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
-    const dashWidth = 5.0;
-    const dashSpace = 3.0;
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint, double density) {
+    final dashWidth = paint.strokeWidth * density * 0.8; // 虚线长度基于密度
+    final dashSpace = paint.strokeWidth * density * 0.4; // 间隔基于密度
     
     final distance = (end - start).distance;
     if (distance == 0) return;
@@ -1196,9 +1199,9 @@ class _LayerPainter extends CustomPainter {
     
     canvas.drawLine(end, arrowPoint1, paint);
     canvas.drawLine(end, arrowPoint2, paint);
-  }  void _drawDiagonalPattern(Canvas canvas, Offset start, Offset end, Paint paint) {
+  }  void _drawDiagonalPattern(Canvas canvas, Offset start, Offset end, Paint paint, double density) {
     final rect = Rect.fromPoints(start, end);
-    const spacing = 10.0;
+    final spacing = paint.strokeWidth * density;
     
     final width = rect.width;
     final height = rect.height;
@@ -1231,10 +1234,9 @@ class _LayerPainter extends CustomPainter {
       canvas.drawLine(lineStart, lineEnd, paint);
     }
   }
-
-  void _drawCrossPattern(Canvas canvas, Offset start, Offset end, Paint paint) {
+  void _drawCrossPattern(Canvas canvas, Offset start, Offset end, Paint paint, double density) {
     final rect = Rect.fromPoints(start, end);
-    const spacing = 15.0;
+    final spacing = paint.strokeWidth * density;
     
     // Vertical lines
     for (double x = rect.left; x <= rect.right; x += spacing) {
@@ -1246,11 +1248,10 @@ class _LayerPainter extends CustomPainter {
       canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), paint);
     }
   }
-
-  void _drawDotGrid(Canvas canvas, Offset start, Offset end, Paint paint) {
+  void _drawDotGrid(Canvas canvas, Offset start, Offset end, Paint paint, double density) {
     final rect = Rect.fromPoints(start, end);
-    const spacing = 10.0;
-    const dotRadius = 1.0;
+    final spacing = paint.strokeWidth * density;
+    final dotRadius = paint.strokeWidth * 0.5; // 点的半径基于线宽
     
     final dotPaint = Paint()
       ..color = paint.color
@@ -1315,6 +1316,7 @@ class _CurrentDrawingPainter extends CustomPainter {
   final DrawingElementType elementType;
   final Color color;
   final double strokeWidth;
+  final double density;
   final List<Offset>? freeDrawingPath; // 自由绘制路径
   final String? selectedElementId; // 当前选中的元素ID
   
@@ -1324,6 +1326,7 @@ class _CurrentDrawingPainter extends CustomPainter {
     required this.elementType,
     required this.color,
     required this.strokeWidth,
+    required this.density,
     this.freeDrawingPath,
     this.selectedElementId,
   });
@@ -1412,15 +1415,15 @@ class _CurrentDrawingPainter extends CustomPainter {
         Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
       ];
     }
-    
-    final element = MapDrawingElement(
+      final element = MapDrawingElement(
       id: 'preview',
       type: elementType,
       points: points,
       color: color.withOpacity(0.7),
       strokeWidth: strokeWidth,
+      density: density,
       createdAt: DateTime.now(),
-    );    final layerPainter = _LayerPainter(
+    );final layerPainter = _LayerPainter(
       layer: MapLayer(
         id: 'preview',
         name: 'Preview',

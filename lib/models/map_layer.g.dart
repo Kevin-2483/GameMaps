@@ -49,6 +49,7 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
           ? const Color(0xFF000000)
           : const ColorConverter().fromJson((json['color'] as num).toInt()),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
+      density: (json['density'] as num?)?.toDouble() ?? 3.0,
       rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
       zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
       text: json['text'] as String?,
@@ -63,6 +64,7 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'points': const OffsetListConverter().toJson(instance.points),
       'color': const ColorConverter().toJson(instance.color),
       'strokeWidth': instance.strokeWidth,
+      'density': instance.density,
       'rotation': instance.rotation,
       'zIndex': instance.zIndex,
       'text': instance.text,

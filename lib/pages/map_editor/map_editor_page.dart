@@ -36,10 +36,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
-  MapLayer? _selectedLayer;
-  DrawingElementType? _selectedDrawingTool;
+  MapLayer? _selectedLayer;  DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
-  double _selectedStrokeWidth = 2.0;  String? _selectedElementId; // 当前选中的元素ID
+  double _selectedStrokeWidth = 2.0;
+  double _selectedDensity = 3.0; // 默认密度为3.0
+  String? _selectedElementId; // 当前选中的元素ID
   // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
@@ -52,10 +53,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false; // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
+  final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
+  double? _previewDensity;
   // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
@@ -478,12 +480,17 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _previewColor = color;
     });
   }
-
   void _handleStrokeWidthPreview(double width) {
     setState(() {
       _previewStrokeWidth = width;
     });
-  }  Future<void> _saveMap() async {
+  }
+
+  void _handleDensityPreview(double density) {
+    setState(() {
+      _previewDensity = density;
+    });
+  }Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() => _isLoading = true);
@@ -812,11 +819,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
               setState(() => _isDrawingToolbarAutoClose = value),
           needsScrolling: true,
           child: _isDrawingToolbarCollapsed
-              ? null
-              : DrawingToolbarOptimized(
+              ? null              : DrawingToolbarOptimized(
                   selectedTool: _selectedDrawingTool,
                   selectedColor: _selectedColor,
                   selectedStrokeWidth: _selectedStrokeWidth,
+                  selectedDensity: _selectedDensity,
                   isEditMode: !widget.isPreviewMode,
                   onToolSelected: (tool) {
                     setState(() => _selectedDrawingTool = tool);
@@ -827,9 +834,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onStrokeWidthChanged: (width) {
                     setState(() => _selectedStrokeWidth = width);
                   },
+                  onDensityChanged: (density) {
+                    setState(() => _selectedDensity = density);
+                  },
                   onToolPreview: _handleDrawingToolPreview,
                   onColorPreview: _handleColorPreview,
                   onStrokeWidthPreview: _handleStrokeWidthPreview,
+                  onDensityPreview: _handleDensityPreview,
                   onUndo: _undo,
                   onRedo: _redo,
                   canUndo: _canUndo,
@@ -839,8 +850,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   selectedElementId: _selectedElementId,
                   onElementSelected: (elementId) {
                     setState(() => _selectedElementId = elementId);
-                  },
-                  onZIndexInspectorRequested: _showZIndexInspector,
+                  },                  onZIndexInspectorRequested: _showZIndexInspector,
                 ),
         ),
       );
@@ -1219,13 +1229,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
         child: CircularProgressIndicator(),
       );
     }
-    
-    return MapCanvas(
+      return MapCanvas(
       mapItem: _currentMap!,
       selectedLayer: _selectedLayer,
       selectedDrawingTool: _selectedDrawingTool,
       selectedColor: _selectedColor,
       selectedStrokeWidth: _selectedStrokeWidth,
+      selectedDensity: _selectedDensity,
       availableLegends: _availableLegends,
       isPreviewMode: widget.isPreviewMode,
       onLayerUpdated: _updateLayer,
@@ -1236,6 +1246,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       previewDrawingTool: _previewDrawingTool,
       previewColor: _previewColor,
       previewStrokeWidth: _previewStrokeWidth,
+      previewDensity: _previewDensity,
       selectedElementId: _selectedElementId,
     );
   }

@@ -83,18 +83,19 @@ class MapDrawingElement {
   @ColorConverter()
   final Color color;
   final double strokeWidth;
+  final double density; // 图案密度系数，用于计算图案间距 (strokeWidth * density)
   final double rotation; // 旋转角度
   final int zIndex; // 绘制顺序，数值越大越在上层
   final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
-  final DateTime createdAt;
-  
+  final DateTime createdAt;  
   const MapDrawingElement({
     required this.id,
     required this.type,
     required this.points,
     this.color = const Color(0xFF000000),
     this.strokeWidth = 2.0,
+    this.density = 3.0, // 默认密度系数
     this.rotation = 0.0,
     this.zIndex = 0,
     this.text,
@@ -109,6 +110,7 @@ class MapDrawingElement {
     List<Offset>? points,
     Color? color,
     double? strokeWidth,
+    double? density,
     double? rotation,
     int? zIndex,
     String? text,
@@ -121,6 +123,7 @@ class MapDrawingElement {
       points: points ?? this.points,
       color: color ?? this.color,
       strokeWidth: strokeWidth ?? this.strokeWidth,
+      density: density ?? this.density,
       rotation: rotation ?? this.rotation,
       zIndex: zIndex ?? this.zIndex,
       text: text ?? this.text,

@@ -5,17 +5,18 @@ import '../../../models/map_layer.dart';
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
-  final Color selectedColor;
-  final double selectedStrokeWidth;
+  final Color selectedColor;  final double selectedStrokeWidth;
+  final double selectedDensity;
   final bool isEditMode;
   final Function(DrawingElementType?) onToolSelected;
   final Function(Color) onColorSelected;
   final Function(double) onStrokeWidthChanged;
-
+  final Function(double) onDensityChanged;
   // 预览回调，用于实时更新画布而不修改实际数据
   final Function(DrawingElementType?)? onToolPreview;
   final Function(Color)? onColorPreview;
   final Function(double)? onStrokeWidthPreview;
+  final Function(double)? onDensityPreview;
   // 撤销/重做功能
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
@@ -26,19 +27,21 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
-  
-  const DrawingToolbarOptimized({
+    const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
     required this.selectedStrokeWidth,
+    required this.selectedDensity,
     required this.isEditMode,
     required this.onToolSelected,
     required this.onColorSelected,
     required this.onStrokeWidthChanged,
+    required this.onDensityChanged,
     this.onToolPreview,
     this.onColorPreview,
     this.onStrokeWidthPreview,
+    this.onDensityPreview,
     this.onUndo,
     this.onRedo,
     this.canUndo = false,
@@ -55,20 +58,21 @@ class DrawingToolbarOptimized extends StatefulWidget {
       _DrawingToolbarOptimizedState();
 }
 
-class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
-  // 临时状态，用于预览
+class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  // 临时状态，用于预览
   DrawingElementType? _tempSelectedTool;
   Color? _tempSelectedColor;
   double? _tempSelectedStrokeWidth;
+  double? _tempSelectedDensity;
   // 定时器，用于延迟提交更改
   Timer? _toolTimer;
   Timer? _colorTimer;
   Timer? _strokeWidthTimer;
-  @override
+  Timer? _densityTimer;  @override
   void dispose() {
     _toolTimer?.cancel();
     _colorTimer?.cancel();
     _strokeWidthTimer?.cancel();
+    _densityTimer?.cancel();
     super.dispose();
   }
 
@@ -77,13 +81,14 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     super.didUpdateWidget(oldWidget);
     // didUpdateWidget - 保留方法但移除画布交互逻辑
   }
-
   // 获取有效的工具选择（临时值或实际值）
   DrawingElementType? get _effectiveTool =>
       _tempSelectedTool ?? widget.selectedTool;
   Color get _effectiveColor => _tempSelectedColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth =>
       _tempSelectedStrokeWidth ?? widget.selectedStrokeWidth;
+  double get _effectiveDensity => 
+      _tempSelectedDensity ?? widget.selectedDensity;
 
   void _handleToolSelection(DrawingElementType? tool) {
     setState(() {
@@ -128,7 +133,6 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       }
     });
   }
-
   void _handleStrokeWidthChange(double width) {
     setState(() {
       _tempSelectedStrokeWidth = width;
@@ -150,6 +154,39 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       }
     });
   }
+
+  void _handleDensityChange(double density) {
+    setState(() {
+      _tempSelectedDensity = density;
+    });
+
+    // 立即通知预览（如果提供了回调）
+    widget.onDensityPreview?.call(density);
+
+    // 取消之前的定时器
+    _densityTimer?.cancel();
+
+    // 设置新的定时器，延迟提交更改
+    _densityTimer = Timer(const Duration(milliseconds: 200), () {
+      widget.onDensityChanged(density);
+      if (mounted) {
+        setState(() {
+          _tempSelectedDensity = null;
+        });
+      }
+    });
+  }
+
+  // 判断是否应该显示密度控制（仅对图案工具显示）
+  bool _shouldShowDensityControl() {
+    return _effectiveTool != null && [
+      DrawingElementType.diagonalLines,
+      DrawingElementType.crossLines,
+      DrawingElementType.dotGrid,
+      DrawingElementType.dashedLine,
+    ].contains(_effectiveTool);
+  }
+  
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
@@ -316,9 +353,33 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               Text('${_effectiveStrokeWidth.round()}px'),
             ],
-          ),
-
-          const SizedBox(height: 8),
+          ),          const SizedBox(height: 8),
+          
+          // Pattern density (only show for pattern tools)
+          if (_shouldShowDensityControl()) ...[
+            const SizedBox(height: 8),
+            const Text(
+              '图案密度',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _effectiveDensity,
+                    min: 1.0,
+                    max: 8.0,
+                    divisions: 14,
+                    label: _effectiveDensity.toStringAsFixed(1),
+                    onChanged: _handleDensityChange,
+                  ),
+                ),
+                Text('${_effectiveDensity.toStringAsFixed(1)}x'),
+              ],
+            ),
+          ],
+          
           // Clear selection button
           if (_effectiveTool != null)
             SizedBox(
