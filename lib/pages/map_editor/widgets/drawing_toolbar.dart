@@ -285,6 +285,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               _buildColorButton(Colors.purple),
               _buildColorButton(Colors.brown),
               _buildColorButton(Colors.grey),
+              // 添加新颜色
+              _buildColorButton(Colors.yellow),
+              _buildColorButton(Colors.cyan),
+              _buildColorButton(Colors.pink),
+              _buildColorButton(const Color(0xFF1565C0)), // 自定义颜色
             ],
           ),
 

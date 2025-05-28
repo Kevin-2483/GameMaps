@@ -1196,18 +1196,38 @@ class _LayerPainter extends CustomPainter {
     
     canvas.drawLine(end, arrowPoint1, paint);
     canvas.drawLine(end, arrowPoint2, paint);
-  }
-
-  void _drawDiagonalPattern(Canvas canvas, Offset start, Offset end, Paint paint) {
+  }  void _drawDiagonalPattern(Canvas canvas, Offset start, Offset end, Paint paint) {
     final rect = Rect.fromPoints(start, end);
     const spacing = 10.0;
     
-    for (double x = rect.left; x <= rect.right; x += spacing) {
-      final lineStart = Offset(x, rect.top);
-      final lineEnd = Offset(
-        math.min(x + rect.height, rect.right), 
-        rect.bottom
-      );
+    final width = rect.width;
+    final height = rect.height;
+    
+    // 计算需要的线条数量：覆盖从左上到右下的所有45度平行线
+    final int totalLines = ((width + height) / spacing).ceil();
+    
+    for (int i = 0; i < totalLines; i++) {
+      final double offset = i * spacing;
+      
+      Offset lineStart;
+      Offset lineEnd;
+      
+      if (offset <= width) {
+        // 起点在顶边界上（从左上角往右推进）
+        lineStart = Offset(rect.left + offset, rect.top);
+      } else {
+        // 起点在右边界上（从右上角往下推进）
+        lineStart = Offset(rect.right, rect.top + (offset - width));
+      }
+      
+      if (offset <= height) {
+        // 终点在左边界上（从左上角往下推进）
+        lineEnd = Offset(rect.left, rect.top + offset);
+      } else {
+        // 终点在底边界上（从左下角往右推进）
+        lineEnd = Offset(rect.left + (offset - height), rect.bottom);
+      }
+      
       canvas.drawLine(lineStart, lineEnd, paint);
     }
   }
