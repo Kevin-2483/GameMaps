@@ -7,19 +7,22 @@ import 'app_config.dart';
 class ConfigManager {
   static ConfigManager? _instance;
   static ConfigManager get instance => _instance ??= ConfigManager._();
-  
+
   ConfigManager._();
 
   AppConfig? _config;
-  
+
   AppConfig get config => _config ?? AppConfig.defaultConfig;
 
   // 从 assets 加载配置
-  Future<void> loadFromAssets({String path = 'assets/config/app_config.json'}) async {
+  Future<void> loadFromAssets({
+    String path = 'assets/config/app_config.json',
+  }) async {
     try {
       final String configString = await rootBundle.loadString(path);
       final Map<String, dynamic> configJson = json.decode(configString);
-      _config = AppConfig.fromJson(configJson);    } catch (e) {
+      _config = AppConfig.fromJson(configJson);
+    } catch (e) {
       // Use debugPrint instead of print in production
       debugPrint('Failed to load config from assets: $e');
       _config = AppConfig.defaultConfig;
@@ -36,7 +39,8 @@ class ConfigManager {
         _config = AppConfig.fromJson(configJson);
       } else {
         _config = AppConfig.defaultConfig;
-      }    } catch (e) {
+      }
+    } catch (e) {
       debugPrint('Failed to load config from preferences: $e');
       _config = AppConfig.defaultConfig;
     }
@@ -47,7 +51,8 @@ class ConfigManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String configString = json.encode(_config?.toJson());
-      await prefs.setString('app_config', configString);    } catch (e) {
+      await prefs.setString('app_config', configString);
+    } catch (e) {
       debugPrint('Failed to save config to preferences: $e');
     }
   }
@@ -57,6 +62,7 @@ class ConfigManager {
     _config = newConfig;
     saveToPreferences();
   }
+
   // 检查平台是否存在配置
   bool isPlatformConfigured(String platform) {
     return config.platform.containsKey(platform);
@@ -82,7 +88,7 @@ class ConfigManager {
   // 获取当前平台名称
   String getCurrentPlatform() {
     if (kIsWeb) return 'Web';
-    
+
     switch (defaultTargetPlatform) {
       case TargetPlatform.windows:
         return 'Windows';

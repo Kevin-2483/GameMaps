@@ -8,12 +8,10 @@ class MapLocalization {
   final String mapKey; // 地图的唯一标识
   final Map<String, String> translations; // 语言代码 -> 翻译文本
 
-  const MapLocalization({
-    required this.mapKey,
-    required this.translations,
-  });
+  const MapLocalization({required this.mapKey, required this.translations});
 
-  factory MapLocalization.fromJson(Map<String, dynamic> json) => _$MapLocalizationFromJson(json);
+  factory MapLocalization.fromJson(Map<String, dynamic> json) =>
+      _$MapLocalizationFromJson(json);
   Map<String, dynamic> toJson() => _$MapLocalizationToJson(this);
 
   /// 获取指定语言的翻译，如果没有则返回null
@@ -42,7 +40,7 @@ class MapLocalizationDatabase {
     // 处理特殊的JSON格式
     final mapsData = json['maps'] as Map<String, dynamic>;
     final Map<String, MapLocalization> parsedMaps = {};
-    
+
     mapsData.forEach((mapKey, translations) {
       if (translations is List) {
         // 处理 [{"zh_cn": "地图A"}, {"en": "Map A"}] 格式
@@ -70,7 +68,7 @@ class MapLocalizationDatabase {
     return MapLocalizationDatabase(
       version: json['version'] as int,
       maps: parsedMaps,
-      updatedAt: json['updatedAt'] != null 
+      updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : DateTime.now(),
     );

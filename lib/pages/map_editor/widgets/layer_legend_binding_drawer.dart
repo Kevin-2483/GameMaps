@@ -19,7 +19,8 @@ class LayerLegendBindingDrawer extends StatefulWidget {
   });
 
   @override
-  State<LayerLegendBindingDrawer> createState() => _LayerLegendBindingDrawerState();
+  State<LayerLegendBindingDrawer> createState() =>
+      _LayerLegendBindingDrawerState();
 }
 
 class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
@@ -30,6 +31,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
     super.initState();
     _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
   }
+
   @override
   Widget build(BuildContext context) {
     // 分离已绑定和未绑定的图例组
@@ -123,7 +125,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ...boundGroups.map((group) => _buildLegendGroupTile(group, true)),
+                  ...boundGroups.map(
+                    (group) => _buildLegendGroupTile(group, true),
+                  ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
@@ -151,7 +155,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     ),
                   )
                 else
-                  ...unboundGroups.map((group) => _buildLegendGroupTile(group, false)),
+                  ...unboundGroups.map(
+                    (group) => _buildLegendGroupTile(group, false),
+                  ),
               ],
             ),
           ),
@@ -160,9 +166,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Row(
               children: [
@@ -172,7 +176,8 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     icon: const Icon(Icons.save),
                     label: const Text('应用更改'),
                   ),
-                ),                const SizedBox(width: 8),
+                ),
+                const SizedBox(width: 8),
                 OutlinedButton(
                   onPressed: widget.onClose,
                   child: const Text('取消'),
@@ -190,13 +195,17 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isBound 
-              ? Theme.of(context).colorScheme.primary.withAlpha((0.5 * 255).toInt())
+          color: isBound
+              ? Theme.of(
+                  context,
+                ).colorScheme.primary.withAlpha((0.5 * 255).toInt())
               : Colors.grey.shade300,
         ),
         borderRadius: BorderRadius.circular(8),
-        color: isBound 
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.1 * 255).toInt())
+        color: isBound
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withAlpha((0.1 * 255).toInt())
             : null,
       ),
       child: ListTile(
@@ -253,6 +262,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
       }
     });
   }
+
   void _applyChanges() {
     final updatedLayer = widget.layer.copyWith(
       legendGroupIds: _selectedLegendGroupIds.toList(),

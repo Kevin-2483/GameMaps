@@ -28,7 +28,8 @@ class _MapAtlasContent extends StatefulWidget {
   State<_MapAtlasContent> createState() => _MapAtlasContentState();
 }
 
-class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalizationMixin {
+class _MapAtlasContentState extends State<_MapAtlasContent>
+    with MapLocalizationMixin {
   final MapDatabaseService _databaseService = MapDatabaseService();
   List<MapItemSummary> _maps = [];
   bool _isLoading = true;
@@ -38,16 +39,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
   void initState() {
     super.initState();
     _loadMaps();
-  }  Future<void> _loadMaps() async {
+  }
+
+  Future<void> _loadMaps() async {
     setState(() => _isLoading = true);
     try {
       final maps = await _databaseService.getAllMapsSummary();
-      
+
       // 加载本地化标题
       if (mounted) {
         final titles = maps.map((map) => map.title).toList();
         final localizedTitles = await getLocalizedMapTitles(titles, context);
-        
+
         setState(() {
           _maps = maps;
           _localizedTitles = localizedTitles;
@@ -62,10 +65,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
       }
     }
   }
+
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showSuccessSnackBar(String message) {
@@ -83,12 +87,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
     if (result != null) {
       final file = File(result.files.single.path!);
       final imageBytes = await file.readAsBytes();
-      
+
       // 压缩图片
-      final compressedImage = _compressImage(imageBytes);      if (mounted) {
+      final compressedImage = _compressImage(imageBytes);
+      if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         final mapInfo = await _showAddMapDialog(l10n);
-        if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {          try {
+        if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {
+          try {
             final mapItem = MapItem(
               title: mapInfo['title'],
               imageData: compressedImage,
@@ -96,7 +102,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             );
-            
+
             await _databaseService.insertMap(mapItem);
             await _loadMaps();
             _showSuccessSnackBar(l10n.mapAddedSuccessfully);
@@ -120,10 +126,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
       debugPrint('图片压缩失败: $e');
     }
     return imageBytes;
-  }  Future<Map<String, dynamic>?> _showAddMapDialog(AppLocalizations l10n) async {
+  }
+
+  Future<Map<String, dynamic>?> _showAddMapDialog(AppLocalizations l10n) async {
     final TextEditingController titleController = TextEditingController();
-    final TextEditingController versionController = TextEditingController(text: '1');
-    
+    final TextEditingController versionController = TextEditingController(
+      text: '1',
+    );
+
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
@@ -161,10 +171,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
                 final title = titleController.text.trim();
                 final version = int.tryParse(versionController.text) ?? 1;
                 if (title.isNotEmpty) {
-                  Navigator.of(context).pop({
-                    'title': title,
-                    'version': version,
-                  });
+                  Navigator.of(
+                    context,
+                  ).pop({'title': title, 'version': version});
                 }
               },
               child: const Text('确定'),
@@ -173,7 +182,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
         );
       },
     );
-  }  Future<void> _deleteMap(MapItemSummary map) async {
+  }
+
+  Future<void> _deleteMap(MapItemSummary map) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -204,13 +215,17 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
         _showErrorSnackBar(l10n.deleteMapFailed(e.toString()));
       }
     }
-  }  Future<void> _exportDatabase() async {
+  }
+
+  Future<void> _exportDatabase() async {
     final l10n = AppLocalizations.of(context)!;
     try {
       // 显示版本选择对话框
       final exportVersion = await _showExportVersionDialog(l10n);
       if (exportVersion != null) {
-        final path = await _databaseService.exportDatabase(customVersion: exportVersion);
+        final path = await _databaseService.exportDatabase(
+          customVersion: exportVersion,
+        );
         if (path != null) {
           _showSuccessSnackBar(l10n.exportSuccessful(path));
         }
@@ -225,7 +240,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
     final TextEditingController versionController = TextEditingController(
       text: currentVersion.toString(),
     );
-    
+
     return showDialog<int>(
       context: context,
       builder: (context) {
@@ -284,6 +299,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
       _showErrorSnackBar(l10n.importFailed(e.toString()));
     }
   }
+
   Future<void> _updateExternalResources() async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -295,10 +311,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
     } catch (e) {
       _showErrorSnackBar(l10n.updateFailed(e.toString()));
     }
-  }  Future<void> _uploadLocalizationFile() async {
+  }
+
+  Future<void> _uploadLocalizationFile() async {
     try {
       final success = await localizationService.importLocalizationFile();
-      
+
       if (success) {
         await _loadMaps(); // 重新加载以应用新的本地化
         _showSuccessSnackBar('本地化文件上传成功');
@@ -308,7 +326,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
     } catch (e) {
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
-  }  void _openMapEditor(int mapId) {
+  }
+
+  void _openMapEditor(int mapId) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConfigAwareWidget(
@@ -335,9 +355,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-      return Scaffold(
+    return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.mapAtlas),        actions: [
+        title: Text(l10n.mapAtlas),
+        actions: [
           // 更新外部资源按钮（非调试模式）
           IconButton(
             onPressed: _updateExternalResources,
@@ -396,40 +417,43 @@ class _MapAtlasContentState extends State<_MapAtlasContent> with MapLocalization
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _maps.isEmpty              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.map, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.mapAtlasEmpty,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text('点击右上角菜单添加地图'),
-                    ],
+          : _maps.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.map, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.mapAtlasEmpty,
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: _calculateCrossAxisCount(context),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 2.5, // 长方形卡片比例
-                    ),
-                    itemCount: _maps.length,                    itemBuilder: (context, index) {
-                      final map = _maps[index];                      return _MapCard(
-                        map: map,
-                        localizedTitle: _localizedTitles[map.title] ?? map.title,
-                        onDelete: () => _deleteMap(map),
-                        onTap: () => _openMapEditor(map.id),
-                      );
-                    },
-                  ),
+                  const SizedBox(height: 8),
+                  const Text('点击右上角菜单添加地图'),
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _calculateCrossAxisCount(context),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.5, // 长方形卡片比例
                 ),
+                itemCount: _maps.length,
+                itemBuilder: (context, index) {
+                  final map = _maps[index];
+                  return _MapCard(
+                    map: map,
+                    localizedTitle: _localizedTitles[map.title] ?? map.title,
+                    onDelete: () => _deleteMap(map),
+                    onTap: () => _openMapEditor(map.id),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -462,10 +486,7 @@ class _MapCard extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: 1,
                 child: map.imageData != null
-                    ? Image.memory(
-                        map.imageData!,
-                        fit: BoxFit.cover,
-                      )
+                    ? Image.memory(map.imageData!, fit: BoxFit.cover)
                     : Container(
                         color: Colors.grey[300],
                         child: const Icon(
@@ -490,20 +511,19 @@ class _MapCard extends StatelessWidget {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [                            Text(
+                          children: [
+                            Text(
                               localizedTitle,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'v${map.version}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                           ],
                         ),

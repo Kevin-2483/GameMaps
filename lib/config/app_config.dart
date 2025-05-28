@@ -6,14 +6,11 @@ part 'app_config.g.dart';
 class AppConfig {
   // 平台配置 - 每个平台包含页面和功能数组
   final Map<String, PlatformConfig> platform;
-  
+
   // 构建配置
   final BuildConfig build;
 
-  const AppConfig({
-    required this.platform,
-    required this.build,
-  });
+  const AppConfig({required this.platform, required this.build});
 
   factory AppConfig.fromJson(Map<String, dynamic> json) =>
       _$AppConfigFromJson(json);
@@ -39,10 +36,7 @@ class PlatformConfig {
   final List<String> pages;
   final List<String> features;
 
-  const PlatformConfig({
-    required this.pages,
-    required this.features,
-  });
+  const PlatformConfig({required this.pages, required this.features});
 
   factory PlatformConfig.fromJson(Map<String, dynamic> json) =>
       _$PlatformConfigFromJson(json);

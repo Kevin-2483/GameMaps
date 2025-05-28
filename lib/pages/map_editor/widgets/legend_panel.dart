@@ -21,7 +21,7 @@ class LegendPanel extends StatelessWidget {
     required this.onLegendGroupAdded,
     this.onLegendGroupTapped,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,16 +35,16 @@ class LegendPanel extends StatelessWidget {
                 ? const Center(
                     child: Text(
                       '暂无图例组',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   )
                 : ListView.builder(
                     itemCount: legendGroups.length,
                     itemBuilder: (context, index) {
-                      return _buildLegendGroupCard(context, legendGroups[index]);
+                      return _buildLegendGroupCard(
+                        context,
+                        legendGroups[index],
+                      );
                     },
                   ),
           ),
@@ -134,9 +134,14 @@ class LegendPanel extends StatelessWidget {
     );
   }
 
-  void _showEditLegendGroupDialog(BuildContext context, LegendGroup legendGroup) {
-    final TextEditingController nameController = TextEditingController(text: legendGroup.name);
-    
+  void _showEditLegendGroupDialog(
+    BuildContext context,
+    LegendGroup legendGroup,
+  ) {
+    final TextEditingController nameController = TextEditingController(
+      text: legendGroup.name,
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

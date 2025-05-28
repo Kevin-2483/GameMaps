@@ -58,8 +58,14 @@ class SystemInfoWidget extends StatelessWidget {
             _buildInfoRow('Profile Mode', kProfileMode ? 'Yes' : 'No'),
             _buildInfoRow('Release Mode', kReleaseMode ? 'Yes' : 'No'),
             if (!kIsWeb) _buildInfoRow('OS', Platform.operatingSystem),
-            _buildInfoRow('App Version', ConfigManager.instance.config.build.version),
-            _buildInfoRow('Build Number', ConfigManager.instance.config.build.buildNumber),
+            _buildInfoRow(
+              'App Version',
+              ConfigManager.instance.config.build.version,
+            ),
+            _buildInfoRow(
+              'Build Number',
+              ConfigManager.instance.config.build.buildNumber,
+            ),
           ],
         ),
       ),

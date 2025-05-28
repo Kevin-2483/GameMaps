@@ -17,7 +17,7 @@ class HomePage extends BasePage {
 
 class _HomePageContent extends StatefulWidget {
   const _HomePageContent();
-  
+
   @override
   State<_HomePageContent> createState() => _HomePageContentState();
 }
@@ -37,7 +37,7 @@ class _HomePageContentState extends State<_HomePageContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -52,14 +52,15 @@ class _HomePageContentState extends State<_HomePageContent> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),              Text(
+              const SizedBox(height: 8),
+              Text(
                 l10n.comprehensiveFramework,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Quick actions
               Row(
                 children: [
@@ -67,7 +68,8 @@ class _HomePageContentState extends State<_HomePageContent> {
                     child: Card(
                       child: InkWell(
                         onTap: () => context.go('/settings'),
-                        borderRadius: BorderRadius.circular(12),                        child: Padding(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Column(
                             children: [
@@ -89,12 +91,12 @@ class _HomePageContentState extends State<_HomePageContent> {
                           showAboutDialog(
                             context: context,
                             applicationName: l10n.appTitle,
-                            applicationVersion: '1.0.0',                            children: [
-                              Text(l10n.aboutDialogContent),
-                            ],
+                            applicationVersion: '1.0.0',
+                            children: [Text(l10n.aboutDialogContent)],
                           );
                         },
-                        borderRadius: BorderRadius.circular(12),                        child: Padding(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Column(
                             children: [
@@ -109,41 +111,36 @@ class _HomePageContentState extends State<_HomePageContent> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-                // Platform component
+              // Platform component
               Text(
                 l10n.platformIntegration,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Expanded(
-                flex: 2,
-                child: PlatformAwareComponent(),
-              ),
-              
+              const Expanded(flex: 2, child: PlatformAwareComponent()),
+
               const SizedBox(height: 16),
-                // Features section
+              // Features section
               Text(
                 l10n.features,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              Expanded(
-                flex: 1,
-                child: _buildFeaturesSection(),
-              ),
+              Expanded(flex: 1, child: _buildFeaturesSection()),
             ],
           ),
         ),
       ),
     );
   }
+
   Widget _buildFeaturesSection() {
     final l10n = AppLocalizations.of(context)!;
     final registry = FeatureRegistry();
     final enabledFeatures = registry.getEnabledFeatures();
-    
+
     if (enabledFeatures.isEmpty) {
       return Card(
         child: Padding(
@@ -166,7 +163,7 @@ class _HomePageContentState extends State<_HomePageContent> {
         ),
       );
     }
-    
+
     return ListView.builder(
       itemCount: enabledFeatures.length,
       itemBuilder: (context, index) {

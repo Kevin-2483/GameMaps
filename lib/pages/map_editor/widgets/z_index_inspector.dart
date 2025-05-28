@@ -24,7 +24,9 @@ class ZIndexInspector extends StatelessWidget {
           '当前图层没有绘制元素',
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha((0.6 * 255).toInt()),
+            color: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.color?.withAlpha((0.6 * 255).toInt()),
           ),
           textAlign: TextAlign.center,
         ),
@@ -45,7 +47,9 @@ class ZIndexInspector extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha((0.7 * 255).toInt()),
+              color: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withAlpha((0.7 * 255).toInt()),
             ),
           ),
         ),
@@ -53,26 +57,31 @@ class ZIndexInspector extends StatelessWidget {
         ...sortedElements.map((element) => _buildElementItem(context, element)),
       ],
     );
-  }  Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
+  }
+
+  Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
     final isSelected = selectedElementId == element.id;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected 
-              ? Theme.of(context).primaryColor 
+          color: isSelected
+              ? Theme.of(context).primaryColor
               : Theme.of(context).dividerColor,
           width: isSelected ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(4),
-        color: isSelected 
+        color: isSelected
             ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
             : Theme.of(context).cardColor,
       ),
       child: ListTile(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 8.0,
+          vertical: 0,
+        ),
         onTap: () {
           // 点击选中/取消选中元素
           if (onElementSelected != null) {
@@ -133,17 +142,14 @@ class ZIndexInspector extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: Icon(
-            Icons.delete, 
+            Icons.delete,
             size: 16,
             color: Theme.of(context).iconTheme.color,
           ),
           onPressed: () => _showDeleteConfirmDialog(context, element),
           tooltip: '删除元素',
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: 24,
-            minHeight: 24,
-          ),
+          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
         ),
       ),
     );
@@ -213,7 +219,10 @@ class ZIndexInspector extends StatelessWidget {
   }
 
   /// 显示删除确认对话框
-  void _showDeleteConfirmDialog(BuildContext context, MapDrawingElement element) {
+  void _showDeleteConfirmDialog(
+    BuildContext context,
+    MapDrawingElement element,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -234,9 +243,7 @@ class ZIndexInspector extends StatelessWidget {
               Navigator.of(context).pop();
               onElementDeleted(element.id);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('删除'),
           ),
         ],

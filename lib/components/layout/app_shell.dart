@@ -7,12 +7,10 @@ import '../navigation/tray_navigation.dart';
 class AppShell extends StatelessWidget {
   final Widget child;
 
-  const AppShell({
-    super.key,
-    required this.child,
-  });
+  const AppShell({super.key, required this.child});
 
-  @override  Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     // 如果编译时禁用了托盘导航，直接返回子组件
     if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation')) {
       return child;
@@ -23,24 +21,20 @@ class AppShell extends StatelessWidget {
         builder: (context, constraints) {
           // 根据屏幕比例决定导航位置
           final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-          
+
           if (isWideScreen) {
             // 宽屏：导航栏在左侧
             return Row(
               children: [
                 const TrayNavigation(),
-                Expanded(
-                  child: AnimatedPageContent(child: child),
-                ),
+                Expanded(child: AnimatedPageContent(child: child)),
               ],
             );
           } else {
             // 窄屏：导航栏在底部
             return Column(
               children: [
-                Expanded(
-                  child: AnimatedPageContent(child: child),
-                ),
+                Expanded(child: AnimatedPageContent(child: child)),
                 const TrayNavigation(),
               ],
             );
@@ -56,10 +50,7 @@ class AppShell extends StatelessWidget {
 class AnimatedPageContent extends StatelessWidget {
   final Widget child;
 
-  const AnimatedPageContent({
-    super.key,
-    required this.child,
-  });
+  const AnimatedPageContent({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

@@ -46,7 +46,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);      if (mounted) {
+      setState(() => _isLoading = false);
+      if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         _showErrorSnackBar(l10n.loadLegendsFailed(e.toString()));
       }
@@ -54,9 +55,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showSuccessSnackBar(String message) {
@@ -74,7 +75,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     if (result != null) {
       final file = File(result.files.single.path!);
       final imageBytes = await file.readAsBytes();
-      
+
       // 压缩图片
       final compressedImage = _compressImage(imageBytes);
 
@@ -92,7 +93,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             );
-              await _databaseService.insertLegend(legendItem);
+            await _databaseService.insertLegend(legendItem);
             await _loadLegends();
             _showSuccessSnackBar(l10n.legendAddedSuccessfully);
           } catch (e) {
@@ -116,12 +117,18 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     }
     return imageBytes;
   }
-  Future<Map<String, dynamic>?> _showAddLegendDialog(AppLocalizations l10n, Uint8List imageData) async {
+
+  Future<Map<String, dynamic>?> _showAddLegendDialog(
+    AppLocalizations l10n,
+    Uint8List imageData,
+  ) async {
     final TextEditingController titleController = TextEditingController();
-    final TextEditingController versionController = TextEditingController(text: '1');
+    final TextEditingController versionController = TextEditingController(
+      text: '1',
+    );
     double centerX = 0.5;
     double centerY = 0.5;
-    
+
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
@@ -134,7 +141,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [                      TextField(
+                    children: [
+                      TextField(
                         controller: titleController,
                         decoration: InputDecoration(
                           labelText: l10n.legendTitle,
@@ -154,7 +162,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                         textInputAction: TextInputAction.done,
                       ),
                       const SizedBox(height: 16),
-                      Text(l10n.selectCenterPoint, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        l10n.selectCenterPoint,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       CenterPointSelector(
                         imageData: imageData,
@@ -196,6 +207,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       },
     );
   }
+
   Future<void> _deleteLegend(LegendItem legend) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -234,9 +246,14 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     try {
       // 显示版本选择对话框
       final exportVersion = await _showExportVersionDialog(l10n);
-      if (exportVersion != null) {        final filePath = await _databaseService.exportDatabase(customVersion: exportVersion);
+      if (exportVersion != null) {
+        final filePath = await _databaseService.exportDatabase(
+          customVersion: exportVersion,
+        );
         if (filePath != null) {
-          _showSuccessSnackBar(l10n.legendDatabaseExportedSuccessfully(filePath));
+          _showSuccessSnackBar(
+            l10n.legendDatabaseExportedSuccessfully(filePath),
+          );
         }
       }
     } catch (e) {
@@ -245,8 +262,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   }
 
   Future<int?> _showExportVersionDialog(AppLocalizations l10n) async {
-    final TextEditingController versionController = TextEditingController(text: '1');
-    
+    final TextEditingController versionController = TextEditingController(
+      text: '1',
+    );
+
     return showDialog<int>(
       context: context,
       builder: (context) {
@@ -278,6 +297,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       },
     );
   }
+
   Future<void> _importDatabase() async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -312,6 +332,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     const cardWidth = 300.0; // 每个卡片的最小宽度
     return (screenWidth / cardWidth).floor().clamp(1, 6);
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -322,7 +343,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
-            action: PopupMenuButton<String>(              onSelected: (value) {
+            action: PopupMenuButton<String>(
+              onSelected: (value) {
                 switch (value) {
                   case 'add':
                     _addLegend();
@@ -338,7 +360,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                     break;
                 }
               },
-              itemBuilder: (context) => [                const PopupMenuItem(
+              itemBuilder: (context) => [
+                const PopupMenuItem(
                   value: 'add',
                   child: ListTile(
                     leading: Icon(Icons.add),
@@ -351,7 +374,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                     leading: const Icon(Icons.file_upload),
                     title: Text(l10n.importLegendDatabase),
                   ),
-                ),                PopupMenuItem(
+                ),
+                PopupMenuItem(
                   value: 'export',
                   child: ListTile(
                     leading: const Icon(Icons.file_download),
@@ -371,44 +395,45 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())              : _legends.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.legend_toggle, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.legendManagerEmpty,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(l10n.addLegend),
-                    ],
+          ? const Center(child: CircularProgressIndicator())
+          : _legends.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.legend_toggle, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.legendManagerEmpty,
+                    style: const TextStyle(fontSize: 18),
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: _calculateCrossAxisCount(context),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 2.5, // 长方形卡片比例
-                    ),
-                    itemCount: _legends.length,
-                    itemBuilder: (context, index) {
-                      final legend = _legends[index];
-                      return _LegendCard(
-                        legend: legend,
-                        onDelete: () => _deleteLegend(legend),
-                        onTap: () {
-                          // 暂时不实现点击事件
-                        },
-                      );
-                    },
-                  ),
+                  const SizedBox(height: 8),
+                  Text(l10n.addLegend),
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _calculateCrossAxisCount(context),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.5, // 长方形卡片比例
                 ),
+                itemCount: _legends.length,
+                itemBuilder: (context, index) {
+                  final legend = _legends[index];
+                  return _LegendCard(
+                    legend: legend,
+                    onDelete: () => _deleteLegend(legend),
+                    onTap: () {
+                      // 暂时不实现点击事件
+                    },
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -443,10 +468,7 @@ class _LegendCard extends StatelessWidget {
                     // 图片
                     Positioned.fill(
                       child: legend.imageData != null
-                          ? Image.memory(
-                              legend.imageData!,
-                              fit: BoxFit.cover,
-                            )
+                          ? Image.memory(legend.imageData!, fit: BoxFit.cover)
                           : Container(
                               color: Colors.grey[300],
                               child: const Icon(
@@ -485,25 +507,22 @@ class _LegendCard extends StatelessWidget {
                         children: [
                           Text(
                             legend.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'v${legend.version}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             '中心点: (${(legend.centerX * 100).round()}%, ${(legend.centerY * 100).round()}%)',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                         ],
                       ),

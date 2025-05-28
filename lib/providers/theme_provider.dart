@@ -5,9 +5,9 @@ enum AppThemeMode { light, dark, system }
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
-  
+
   AppThemeMode _themeMode = AppThemeMode.system;
-  
+
   AppThemeMode get themeMode => _themeMode;
 
   // 转换为 Flutter 的 ThemeMode
@@ -29,10 +29,7 @@ class ThemeProvider extends ChangeNotifier {
       seedColor: Colors.blue,
       brightness: Brightness.light,
     ),
-    appBarTheme: const AppBarTheme(
-      centerTitle: true,
-      elevation: 0,
-    ),
+    appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: const CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -41,9 +38,7 @@ class ThemeProvider extends ChangeNotifier {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
   );
@@ -55,10 +50,7 @@ class ThemeProvider extends ChangeNotifier {
       seedColor: Colors.blue,
       brightness: Brightness.dark,
     ),
-    appBarTheme: const AppBarTheme(
-      centerTitle: true,
-      elevation: 0,
-    ),
+    appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: const CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -67,9 +59,7 @@ class ThemeProvider extends ChangeNotifier {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
   );
@@ -86,11 +76,11 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setThemeMode(AppThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_themeKey, mode.index);
   }
-  
+
   // 切换主题模式（在亮色和深色之间切换）
   Future<void> toggleTheme() async {
     switch (_themeMode) {

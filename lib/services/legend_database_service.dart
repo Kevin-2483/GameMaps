@@ -18,6 +18,7 @@ class LegendDatabaseService {
     _database ??= await _initDatabase();
     return _database!;
   }
+
   Future<Database> _initDatabase() async {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, _databaseName);
@@ -35,9 +36,9 @@ class LegendDatabaseService {
   Future<void> _onOpen(Database db) async {
     // 检查元数据表是否存在，如果不存在则创建
     final result = await db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='$_metaTableName'"
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='$_metaTableName'",
     );
-    
+
     if (result.isEmpty) {
       debugPrint('元数据表不存在，正在创建...');
       await db.execute('''
@@ -46,7 +47,7 @@ class LegendDatabaseService {
           value TEXT NOT NULL
         )
       ''');
-      
+
       // 设置初始数据库版本
       await db.insert(_metaTableName, {
         'key': 'db_version',
@@ -55,6 +56,7 @@ class LegendDatabaseService {
       debugPrint('元数据表创建完成');
     }
   }
+
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName (
@@ -87,6 +89,7 @@ class LegendDatabaseService {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // 未来版本升级逻辑
   }
+
   /// 获取数据库版本
   Future<int> getDatabaseVersion() async {
     final db = await database;
@@ -95,7 +98,7 @@ class LegendDatabaseService {
       where: 'key = ?',
       whereArgs: ['db_version'],
     );
-    
+
     if (result.isNotEmpty) {
       return int.parse(result.first['value'] as String);
     }
@@ -105,17 +108,16 @@ class LegendDatabaseService {
   /// 设置数据库版本
   Future<void> setDatabaseVersion(int version) async {
     final db = await database;
-    await db.insert(
-      _metaTableName,
-      {'key': 'db_version', 'value': version.toString()},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_metaTableName, {
+      'key': 'db_version',
+      'value': version.toString(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 添加图例 (检查标题重复)
   Future<int> insertLegend(LegendItem legend) async {
     final db = await database;
-    
+
     // 检查是否已存在相同标题的图例
     final existing = await getLegendByTitle(legend.title);
     if (existing != null) {
@@ -128,7 +130,7 @@ class LegendDatabaseService {
         return existing.id!;
       }
     }
-    
+
     // 不存在重复标题，直接插入
     return await db.insert(_tableName, legend.toDatabase());
   }
@@ -154,7 +156,7 @@ class LegendDatabaseService {
       where: 'id = ?',
       whereArgs: [id],
     );
-    
+
     if (legends.isNotEmpty) {
       return LegendItem.fromDatabase(legends.first);
     }
@@ -175,11 +177,7 @@ class LegendDatabaseService {
   /// 删除图例
   Future<void> deleteLegend(int id) async {
     final db = await database;
-    await db.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
   }
 
   /// 根据标题查找图例
@@ -190,7 +188,7 @@ class LegendDatabaseService {
       where: 'title = ?',
       whereArgs: [title],
     );
-    
+
     if (legends.isNotEmpty) {
       return LegendItem.fromDatabase(legends.first);
     }
@@ -209,7 +207,7 @@ class LegendDatabaseService {
       // 获取所有图例，确保包含图像数据
       final legends = await getAllLegends();
       final dbVersion = customVersion ?? await getDatabaseVersion();
-      
+
       final legendDatabase = LegendDatabase(
         version: dbVersion,
         legends: legends,
@@ -218,11 +216,12 @@ class LegendDatabaseService {
 
       // 转换为JSON字符串
       final jsonString = jsonEncode(legendDatabase.toJson());
-      
+
       // 选择保存文件位置
       String? filePath = await FilePicker.platform.saveFile(
         dialogTitle: '导出图例数据库',
-        fileName: 'legends_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
+        fileName:
+            'legends_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
@@ -251,18 +250,18 @@ class LegendDatabaseService {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final jsonString = await file.readAsString();
-        
+
         final Map<String, dynamic> jsonData = jsonDecode(jsonString);
         final legendDatabase = LegendDatabase.fromJson(jsonData);
-        
+
         // 清空现有数据
         await clearAllLegends();
-        
+
         // 导入新数据
         for (final legend in legendDatabase.legends) {
           await forceInsertLegend(legend);
         }
-        
+
         return true;
       }
       return false;
@@ -284,29 +283,33 @@ class LegendDatabaseService {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final jsonString = await file.readAsString();
-        
+
         final Map<String, dynamic> jsonData = jsonDecode(jsonString);
         final legendDatabase = LegendDatabase.fromJson(jsonData);
-        
+
         final currentDbVersion = await getDatabaseVersion();
-        
+
         // 检查数据库版本，如果外部版本更高，则替换所有数据
         if (legendDatabase.version > currentDbVersion) {
           // 清空现有数据
           await clearAllLegends();
-          
+
           // 导入所有新数据
           for (final legend in legendDatabase.legends) {
             await forceInsertLegend(legend.copyWith(id: null));
           }
-          
+
           // 更新数据库版本
           await setDatabaseVersion(legendDatabase.version);
-          
-          debugPrint('图例外部资源更新成功: 版本 $currentDbVersion -> ${legendDatabase.version}，导入 ${legendDatabase.legends.length} 个图例');
+
+          debugPrint(
+            '图例外部资源更新成功: 版本 $currentDbVersion -> ${legendDatabase.version}，导入 ${legendDatabase.legends.length} 个图例',
+          );
           return true;
         } else {
-          debugPrint('图例外部资源版本不高于当前版本，跳过更新: 外部版本 ${legendDatabase.version} <= 当前版本 $currentDbVersion');
+          debugPrint(
+            '图例外部资源版本不高于当前版本，跳过更新: 外部版本 ${legendDatabase.version} <= 当前版本 $currentDbVersion',
+          );
           return false;
         }
       }

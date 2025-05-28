@@ -15,7 +15,8 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 如果编译时禁用了托盘导航，直接返回子组件
-    if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') || !showTrayNavigation) {
+    if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
+        !showTrayNavigation) {
       return child;
     }
 
@@ -24,7 +25,7 @@ class MainLayout extends StatelessWidget {
         builder: (context, constraints) {
           // 根据屏幕比例决定导航位置
           final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-          
+
           if (isWideScreen) {
             // 宽屏：导航栏在左侧
             return Row(

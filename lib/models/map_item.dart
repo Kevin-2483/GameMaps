@@ -49,13 +49,16 @@ class MapItem {
   /// 检查是否有图像数据
   bool get hasImageData => imageData != null && imageData!.isNotEmpty;
 
-  factory MapItem.fromJson(Map<String, dynamic> json) => _$MapItemFromJson(json);
-  Map<String, dynamic> toJson() => _$MapItemToJson(this);  /// 从数据库记录创建 MapItem
+  factory MapItem.fromJson(Map<String, dynamic> json) =>
+      _$MapItemFromJson(json);
+  Map<String, dynamic> toJson() => _$MapItemToJson(this);
+
+  /// 从数据库记录创建 MapItem
   factory MapItem.fromDatabase(Map<String, dynamic> map) {
     // 解析图层和图例组数据
     List<MapLayer> layers = [];
     List<LegendGroup> legendGroups = [];
-    
+
     if (map['layers'] != null) {
       try {
         final layersJson = json.decode(map['layers'] as String);
@@ -69,7 +72,7 @@ class MapItem {
         // 如果解析失败，继续使用空列表
       }
     }
-    
+
     if (map['legend_groups'] != null) {
       try {
         final legendGroupsJson = json.decode(map['legend_groups'] as String);
@@ -83,7 +86,7 @@ class MapItem {
         // 如果解析失败，继续使用空列表
       }
     }
-    
+
     return MapItem(
       id: map['id'] as int?,
       title: map['title'] as String,
@@ -94,7 +97,9 @@ class MapItem {
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
-  }  /// 转换为数据库记录
+  }
+
+  /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
       if (id != null) 'id': id,
@@ -102,11 +107,15 @@ class MapItem {
       'image_data': imageData,
       'version': version,
       'layers': json.encode(layers.map((e) => e.toJson()).toList()),
-      'legend_groups': json.encode(legendGroups.map((e) => e.toJson()).toList()),
+      'legend_groups': json.encode(
+        legendGroups.map((e) => e.toJson()).toList(),
+      ),
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
-  }  /// 创建副本
+  }
+
+  /// 创建副本
   MapItem copyWith({
     int? id,
     String? title,
@@ -143,6 +152,7 @@ class MapDatabase {
     required this.exportedAt,
   });
 
-  factory MapDatabase.fromJson(Map<String, dynamic> json) => _$MapDatabaseFromJson(json);
+  factory MapDatabase.fromJson(Map<String, dynamic> json) =>
+      _$MapDatabaseFromJson(json);
   Map<String, dynamic> toJson() => _$MapDatabaseToJson(this);
 }

@@ -28,21 +28,24 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
     for (final entry in _config.platform.entries) {
       final platform = entry.key;
       final platformConfig = entry.value;
-      
+
       _platformPageStates[platform] = {};
       _platformFeatureStates[platform] = {};
-      
+
       // 初始化页面状态
       for (final page in _getAllPages()) {
         _platformPageStates[platform]![page] = platformConfig.hasPage(page);
       }
-      
+
       // 初始化功能状态
       for (final feature in _getAllFeatures()) {
-        _platformFeatureStates[platform]![feature] = platformConfig.hasFeature(feature);
+        _platformFeatureStates[platform]![feature] = platformConfig.hasFeature(
+          feature,
+        );
       }
     }
   }
+
   List<String> _getAllPages() {
     return ['HomePage', 'SettingsPage', 'MapAtlasPage', 'TrayNavigation'];
   }
@@ -53,47 +56,47 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
 
   void _updateConfig() {
     final newPlatformConfigs = <String, PlatformConfig>{};
-    
+
     for (final platform in _config.platform.keys) {
-      final pages = _platformPageStates[platform]!
-          .entries
+      final pages = _platformPageStates[platform]!.entries
           .where((entry) => entry.value)
           .map((entry) => entry.key)
           .toList();
-          
-      final features = _platformFeatureStates[platform]!
-          .entries
+
+      final features = _platformFeatureStates[platform]!.entries
           .where((entry) => entry.value)
           .map((entry) => entry.key)
           .toList();
-          
+
       newPlatformConfigs[platform] = PlatformConfig(
         pages: pages,
         features: features,
       );
     }
-    
+
     final newConfig = AppConfig(
       platform: newPlatformConfigs,
       build: _config.build,
     );
-      ConfigManager.instance.updateConfig(newConfig);
+    ConfigManager.instance.updateConfig(newConfig);
     setState(() {
       _config = newConfig;
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)!.configUpdated)),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.configEditor),
-        actions: [          ConfigAwareAppBarAction(
+        actions: [
+          ConfigAwareAppBarAction(
             featureId: 'DebugMode',
             action: IconButton(
               icon: const Icon(Icons.info),
@@ -130,9 +133,10 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
       ),
     );
   }
+
   Widget _buildPlatformTab(String platform) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -141,13 +145,14 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [                Text(
+              children: [
+                Text(
                   l10n.pageConfiguration,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                ..._getAllPages().map((page) => 
-                  CheckboxListTile(
+                ..._getAllPages().map(
+                  (page) => CheckboxListTile(
                     title: Text(page),
                     value: _platformPageStates[platform]![page],
                     onChanged: (value) {
@@ -167,18 +172,20 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [                Text(
+              children: [
+                Text(
                   l10n.featureConfiguration,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                ..._getAllFeatures().map((feature) => 
-                  CheckboxListTile(
+                ..._getAllFeatures().map(
+                  (feature) => CheckboxListTile(
                     title: Text(feature),
                     value: _platformFeatureStates[platform]![feature],
                     onChanged: (value) {
                       setState(() {
-                        _platformFeatureStates[platform]![feature] = value ?? false;
+                        _platformFeatureStates[platform]![feature] =
+                            value ?? false;
                       });
                     },
                   ),
@@ -194,14 +201,27 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [                  Text(
+                children: [
+                  Text(
                     l10n.debugInfo,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(l10n.currentPlatform(ConfigManager.instance.getCurrentPlatform())),
-                  Text(l10n.availablePages(ConfigUtils.instance.availablePages.join(', '))),
-                  Text(l10n.availableFeatures(ConfigUtils.instance.availableFeatures.join(', '))),
+                  Text(
+                    l10n.currentPlatform(
+                      ConfigManager.instance.getCurrentPlatform(),
+                    ),
+                  ),
+                  Text(
+                    l10n.availablePages(
+                      ConfigUtils.instance.availablePages.join(', '),
+                    ),
+                  ),
+                  Text(
+                    l10n.availableFeatures(
+                      ConfigUtils.instance.availableFeatures.join(', '),
+                    ),
+                  ),
                 ],
               ),
             ),

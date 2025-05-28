@@ -46,8 +46,9 @@ class MapItemSummary {
   bool get hasImageData => imageData != null && imageData!.isNotEmpty;
 
   /// 从 JSON 创建实例
-  factory MapItemSummary.fromJson(Map<String, dynamic> json) => _$MapItemSummaryFromJson(json);
-  
+  factory MapItemSummary.fromJson(Map<String, dynamic> json) =>
+      _$MapItemSummaryFromJson(json);
+
   /// 转换为 JSON
   Map<String, dynamic> toJson() => _$MapItemSummaryToJson(this);
 

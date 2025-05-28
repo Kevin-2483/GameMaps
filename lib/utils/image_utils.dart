@@ -7,10 +7,17 @@ import 'package:flutter/material.dart';
 /// 图片处理工具类
 class ImageUtils {
   /// 支持的图片格式
-  static const List<String> supportedExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif'];
-  
+  static const List<String> supportedExtensions = [
+    'jpg',
+    'jpeg',
+    'png',
+    'bmp',
+    'gif',
+  ];
+
   /// 最大文件大小 (10MB)
   static const int maxFileSize = 10 * 1024 * 1024;
+
   /// 选择并上传图片文件
   static Future<String?> pickAndEncodeImage() async {
     try {
@@ -23,7 +30,7 @@ class ImageUtils {
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
-        
+
         // 优先使用bytes，如果没有则尝试读取路径
         Uint8List? fileBytes;
         if (file.bytes != null) {
@@ -39,24 +46,24 @@ class ImageUtils {
         } else {
           throw Exception('无法获取文件数据');
         }
-        
+
         final fileName = file.name;
-        
+
         // 检查文件大小
         if (fileBytes.length > maxFileSize) {
           throw Exception('文件大小超过限制 (最大10MB)');
         }
-        
+
         // 检查文件格式
         final extension = fileName.split('.').last.toLowerCase();
         if (!supportedExtensions.contains(extension)) {
           throw Exception('不支持的文件格式，支持: ${supportedExtensions.join(', ')}');
         }
-        
+
         // 转换为Base64
         return base64Encode(fileBytes);
       }
-      
+
       // 用户取消选择，返回null而不是抛出异常
       return null;
     } catch (e) {
@@ -74,7 +81,7 @@ class ImageUtils {
     if (base64String == null || base64String.isEmpty) {
       return null;
     }
-    
+
     try {
       return base64Decode(base64String);
     } catch (e) {
@@ -106,13 +113,7 @@ class ImageUtils {
               size: 32,
             ),
             SizedBox(height: 4),
-            Text(
-              '透明图层',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
+            Text('透明图层', style: TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
       ),

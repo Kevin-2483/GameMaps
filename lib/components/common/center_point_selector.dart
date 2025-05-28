@@ -56,17 +56,17 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
               children: [
                 // 图片
                 Positioned.fill(
-                  child: Image.memory(
-                    widget.imageData,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.memory(widget.imageData, fit: BoxFit.contain),
                 ),
                 // 中心点指示器
                 Positioned.fill(
                   child: GestureDetector(
                     onTapDown: (details) {
-                      final RenderBox box = context.findRenderObject() as RenderBox;
-                      final localPosition = box.globalToLocal(details.globalPosition);
+                      final RenderBox box =
+                          context.findRenderObject() as RenderBox;
+                      final localPosition = box.globalToLocal(
+                        details.globalPosition,
+                      );
                       final x = localPosition.dx / box.size.width;
                       final y = localPosition.dy / box.size.height;
                       _updateCenter(x, y);

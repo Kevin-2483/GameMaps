@@ -5,48 +5,55 @@ import '../../../models/map_layer.dart';
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
-  final Color selectedColor;  final double selectedStrokeWidth;
-  final double selectedDensity;  final double selectedCurvature; // 弧度值
+  final Color selectedColor;
+  final double selectedStrokeWidth;
+  final double selectedDensity;
+  final double selectedCurvature; // 弧度值
   final TriangleCutType selectedTriangleCut; // 三角形切割类型
   final bool isEditMode;
   final Function(DrawingElementType?) onToolSelected;
   final Function(Color) onColorSelected;
   final Function(double) onStrokeWidthChanged;
-  final Function(double) onDensityChanged;  final Function(double) onCurvatureChanged; // 弧度变化回调
+  final Function(double) onDensityChanged;
+  final Function(double) onCurvatureChanged; // 弧度变化回调
   final Function(TriangleCutType) onTriangleCutChanged; // 三角形切割变化回调
   // 预览回调，用于实时更新画布而不修改实际数据
   final Function(DrawingElementType?)? onToolPreview;
   final Function(Color)? onColorPreview;
   final Function(double)? onStrokeWidthPreview;
-  final Function(double)? onDensityPreview;  final Function(double)? onCurvaturePreview; // 弧度预览回调
+  final Function(double)? onDensityPreview;
+  final Function(double)? onCurvaturePreview; // 弧度预览回调
   final Function(TriangleCutType)? onTriangleCutPreview; // 三角形切割预览回调
   // 撤销/重做功能
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
   final bool canUndo;
-  final bool canRedo;  // Z层级检视器相关
+  final bool canRedo; // Z层级检视器相关
   final MapLayer? selectedLayer;
   final Function(String elementId)? onElementDeleted;
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
-    const DrawingToolbarOptimized({
+  const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
     required this.selectedStrokeWidth,
-    required this.selectedDensity,    required this.selectedCurvature,
+    required this.selectedDensity,
+    required this.selectedCurvature,
     required this.selectedTriangleCut,
     required this.isEditMode,
     required this.onToolSelected,
     required this.onColorSelected,
     required this.onStrokeWidthChanged,
-    required this.onDensityChanged,    required this.onCurvatureChanged,
+    required this.onDensityChanged,
+    required this.onCurvatureChanged,
     required this.onTriangleCutChanged,
     this.onToolPreview,
     this.onColorPreview,
     this.onStrokeWidthPreview,
-    this.onDensityPreview,    this.onCurvaturePreview,
+    this.onDensityPreview,
+    this.onCurvaturePreview,
     this.onTriangleCutPreview,
     this.onUndo,
     this.onRedo,
@@ -64,11 +71,13 @@ class DrawingToolbarOptimized extends StatefulWidget {
       _DrawingToolbarOptimizedState();
 }
 
-class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  // 临时状态，用于预览
+class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
+  // 临时状态，用于预览
   DrawingElementType? _tempSelectedTool;
   Color? _tempSelectedColor;
   double? _tempSelectedStrokeWidth;
-  double? _tempSelectedDensity;  double? _tempSelectedCurvature; // 临时弧度值
+  double? _tempSelectedDensity;
+  double? _tempSelectedCurvature; // 临时弧度值
   TriangleCutType? _tempSelectedTriangleCut; // 临时三角形切割值
   // 定时器，用于延迟提交更改
   Timer? _toolTimer;
@@ -83,7 +92,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
     _toolTimer?.cancel();
     _colorTimer?.cancel();
     _strokeWidthTimer?.cancel();
-    _densityTimer?.cancel();    _curvatureTimer?.cancel();
+    _densityTimer?.cancel();
+    _curvatureTimer?.cancel();
     _triangleCutTimer?.cancel();
     super.dispose();
   }
@@ -93,14 +103,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
     super.didUpdateWidget(oldWidget);
     // didUpdateWidget - 保留方法但移除画布交互逻辑
   }
+
   // 获取有效的工具选择（临时值或实际值）
   DrawingElementType? get _effectiveTool =>
       _tempSelectedTool ?? widget.selectedTool;
   Color get _effectiveColor => _tempSelectedColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth =>
       _tempSelectedStrokeWidth ?? widget.selectedStrokeWidth;
-  double get _effectiveDensity => 
-      _tempSelectedDensity ?? widget.selectedDensity;  double get _effectiveCurvature => 
+  double get _effectiveDensity =>
+      _tempSelectedDensity ?? widget.selectedDensity;
+  double get _effectiveCurvature =>
       _tempSelectedCurvature ?? widget.selectedCurvature;
   TriangleCutType get _effectiveTriangleCut =>
       _tempSelectedTriangleCut ?? widget.selectedTriangleCut;
@@ -148,6 +160,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
       }
     });
   }
+
   void _handleStrokeWidthChange(double width) {
     setState(() {
       _tempSelectedStrokeWidth = width;
@@ -191,6 +204,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
       }
     });
   }
+
   void _handleCurvatureChange(double curvature) {
     setState(() {
       _tempSelectedCurvature = curvature;
@@ -237,36 +251,41 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
 
   // 判断是否应该显示密度控制（仅对图案工具显示）
   bool _shouldShowDensityControl() {
-    return _effectiveTool != null && [
-      DrawingElementType.diagonalLines,
-      DrawingElementType.crossLines,
-      DrawingElementType.dotGrid,
-      DrawingElementType.dashedLine,
-    ].contains(_effectiveTool);
+    return _effectiveTool != null &&
+        [
+          DrawingElementType.diagonalLines,
+          DrawingElementType.crossLines,
+          DrawingElementType.dotGrid,
+          DrawingElementType.dashedLine,
+        ].contains(_effectiveTool);
   }
-    // 判断是否应该显示弧度控制（仅对矩形工具显示）
+
+  // 判断是否应该显示弧度控制（仅对矩形工具显示）
   bool _shouldShowCurvatureControl() {
-    return _effectiveTool != null && [
-      DrawingElementType.rectangle,
-      DrawingElementType.hollowRectangle,
-      DrawingElementType.diagonalLines,
-      DrawingElementType.crossLines,
-      DrawingElementType.dotGrid,
-      DrawingElementType.eraser,
-    ].contains(_effectiveTool);
-  }  
+    return _effectiveTool != null &&
+        [
+          DrawingElementType.rectangle,
+          DrawingElementType.hollowRectangle,
+          DrawingElementType.diagonalLines,
+          DrawingElementType.crossLines,
+          DrawingElementType.dotGrid,
+          DrawingElementType.eraser,
+        ].contains(_effectiveTool);
+  }
+
   // 判断是否应该显示三角形切割控制（仅对矩形选区工具显示）
   bool _shouldShowTriangleCutControl() {
-    return _effectiveTool != null && [
-      DrawingElementType.rectangle,
-      DrawingElementType.hollowRectangle,
-      DrawingElementType.diagonalLines,
-      DrawingElementType.crossLines,
-      DrawingElementType.dotGrid,
-      DrawingElementType.eraser,
-    ].contains(_effectiveTool);
+    return _effectiveTool != null &&
+        [
+          DrawingElementType.rectangle,
+          DrawingElementType.hollowRectangle,
+          DrawingElementType.diagonalLines,
+          DrawingElementType.crossLines,
+          DrawingElementType.dotGrid,
+          DrawingElementType.eraser,
+        ].contains(_effectiveTool);
   }
-  
+
   // 获取三角形切割类型的标签
   String _getTriangleCutLabel(TriangleCutType triangleCut) {
     switch (triangleCut) {
@@ -282,7 +301,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
         return '左下三角';
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
@@ -449,8 +468,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
               ),
               Text('${_effectiveStrokeWidth.round()}px'),
             ],
-          ),          const SizedBox(height: 8),
-          
+          ),
+          const SizedBox(height: 8),
+
           // Pattern density (only show for pattern tools)
           if (_shouldShowDensityControl()) ...[
             const SizedBox(height: 8),
@@ -475,7 +495,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
               ],
             ),
           ],
-          
+
           // Curvature control (for rectangular selections)
           if (_shouldShowCurvatureControl()) ...[
             const SizedBox(height: 8),
@@ -498,8 +518,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
                 ),
                 Text('${(_effectiveCurvature * 100).round()}%'),
               ],
-            ),          ],
-          
+            ),
+          ],
+
           // Triangle cut control (for rectangular selections)
           if (_shouldShowTriangleCutControl()) ...[
             const SizedBox(height: 8),
@@ -528,15 +549,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {  //
                 ),
                 Text(
                   _getTriangleCutLabel(_effectiveTriangleCut),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ],
-          
+
           // Clear selection button
           if (_effectiveTool != null)
             SizedBox(

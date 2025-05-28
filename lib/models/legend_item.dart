@@ -48,9 +48,10 @@ class LegendItem {
   /// 检查是否有图像数据
   bool get hasImageData => imageData != null && imageData!.isNotEmpty;
 
-  factory LegendItem.fromJson(Map<String, dynamic> json) => _$LegendItemFromJson(json);
+  factory LegendItem.fromJson(Map<String, dynamic> json) =>
+      _$LegendItemFromJson(json);
   Map<String, dynamic> toJson() => _$LegendItemToJson(this);
-  
+
   /// 从数据库记录创建 LegendItem
   factory LegendItem.fromDatabase(Map<String, dynamic> map) {
     return LegendItem(
@@ -64,7 +65,7 @@ class LegendItem {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
   }
-  
+
   /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
@@ -78,7 +79,7 @@ class LegendItem {
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
-  
+
   /// 创建副本
   LegendItem copyWith({
     int? id,
@@ -116,6 +117,7 @@ class LegendDatabase {
     required this.exportedAt,
   });
 
-  factory LegendDatabase.fromJson(Map<String, dynamic> json) => _$LegendDatabaseFromJson(json);
+  factory LegendDatabase.fromJson(Map<String, dynamic> json) =>
+      _$LegendDatabaseFromJson(json);
   Map<String, dynamic> toJson() => _$LegendDatabaseToJson(this);
 }

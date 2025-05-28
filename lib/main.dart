@@ -11,16 +11,16 @@ import 'config/config_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // 初始化数据库工厂（用于桌面平台）
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
+
   // 初始化配置管理器
   await ConfigManager.instance.loadFromAssets();
-  
+
   runApp(const R6BoxApp());
 }
 
@@ -31,28 +31,24 @@ class R6BoxApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => ThemeProvider()..initTheme(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => LocaleProvider()..initLocale(),
-        ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..initTheme()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()..initLocale()),
       ],
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, child) {
           final router = AppRouter.createRouter();
-          
+
           return MaterialApp.router(
             title: 'R6Box',
             debugShowCheckedModeBanner: false,
-            
+
             // 路由配置
             routerConfig: router,
-              // 主题配置
+            // 主题配置
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.flutterThemeMode,
-              // 国际化配置
+            // 国际化配置
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,

@@ -20,14 +20,14 @@ class HomePageModule extends PageModule {
 
   @override
   IconData get icon => Icons.home;
-  
+
   @override
   bool get isEnabled {
     // 编译时配置检查 - 检查是否在构建时启用页面列表中
     if (!BuildTimeConfig.isPageEnabled(moduleId)) {
       return false;
     }
-    
+
     // 运行时配置检查 - 检查当前平台是否启用该页面
     return ConfigManager.instance.isCurrentPlatformPageEnabled(moduleId);
   }

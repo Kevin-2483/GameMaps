@@ -24,16 +24,19 @@ class MapDatabaseService {
     _database ??= await _initDatabase();
     return _database!;
   }
+
   /// 初始化数据库
   Future<Database> _initDatabase() async {
     final String path = join(await getDatabasesPath(), _databaseName);
-      return await openDatabase(
+    return await openDatabase(
       path,
       version: 1,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
-  }  /// 创建数据库表
+  }
+
+  /// 创建数据库表
   Future<void> _onCreate(Database db, int version) async {
     // 创建地图表（只存储图片数据，不存储路径）
     await db.execute('''
@@ -63,6 +66,7 @@ class MapDatabaseService {
       'value': _currentDbVersion.toString(),
     });
   }
+
   /// 数据库升级
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // 暂时不需要升级逻辑
@@ -76,7 +80,7 @@ class MapDatabaseService {
       where: 'key = ?',
       whereArgs: ['db_version'],
     );
-    
+
     if (result.isNotEmpty) {
       return int.parse(result.first['value'] as String);
     }
@@ -86,16 +90,16 @@ class MapDatabaseService {
   /// 设置数据库版本
   Future<void> setDatabaseVersion(int version) async {
     final db = await database;
-    await db.insert(
-      _metaTableName,
-      {'key': 'db_version', 'value': version.toString()},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_metaTableName, {
+      'key': 'db_version',
+      'value': version.toString(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
   /// 添加地图 (检查标题重复)
   Future<int> insertMap(MapItem map) async {
     final db = await database;
-    
+
     // 检查是否已存在相同标题的地图
     final existing = await getMapByTitle(map.title);
     if (existing != null) {
@@ -108,7 +112,7 @@ class MapDatabaseService {
         return existing.id!;
       }
     }
-    
+
     // 不存在重复标题，直接插入
     return await db.insert(_tableName, map.toDatabase());
   }
@@ -133,7 +137,14 @@ class MapDatabaseService {
     // 只查询基本字段，不包含 layers 和 legend_groups 等重量级数据
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
-      columns: ['id', 'title', 'image_data', 'version', 'created_at', 'updated_at'],
+      columns: [
+        'id',
+        'title',
+        'image_data',
+        'version',
+        'created_at',
+        'updated_at',
+      ],
     );
     return maps.map((map) => MapItemSummary.fromDatabase(map)).toList();
   }
@@ -146,60 +157,64 @@ class MapDatabaseService {
       where: 'id = ?',
       whereArgs: [id],
     );
-    
+
     if (maps.isNotEmpty) {
       return MapItem.fromDatabase(maps.first);
     }
     return null;
   }
+
   /// 更新地图
   Future<void> updateMap(MapItem map) async {
     try {
       print('MapDatabaseService.updateMap 开始执行');
       print('- 地图ID: ${map.id}');
       print('- 地图标题: ${map.title}');
-      
+
       final db = await database;
       print('数据库连接成功');
-      
+
       final databaseData = map.toDatabase();
       print('数据序列化完成，字段: ${databaseData.keys.toList()}');
-      
+
       // 检查图层数据序列化
       if (map.layers.isNotEmpty) {
         try {
-          final layersJson = json.encode(map.layers.map((e) => e.toJson()).toList());
+          final layersJson = json.encode(
+            map.layers.map((e) => e.toJson()).toList(),
+          );
           print('图层数据序列化成功，长度: ${layersJson.length}');
         } catch (e) {
           print('图层数据序列化失败: $e');
           throw Exception('图层数据序列化失败: $e');
         }
       }
-      
+
       // 检查图例组数据序列化
       if (map.legendGroups.isNotEmpty) {
         try {
-          final legendGroupsJson = json.encode(map.legendGroups.map((e) => e.toJson()).toList());
+          final legendGroupsJson = json.encode(
+            map.legendGroups.map((e) => e.toJson()).toList(),
+          );
           print('图例组数据序列化成功，长度: ${legendGroupsJson.length}');
         } catch (e) {
           print('图例组数据序列化失败: $e');
           throw Exception('图例组数据序列化失败: $e');
         }
       }
-      
+
       final updateResult = await db.update(
         _tableName,
         databaseData,
         where: 'id = ?',
         whereArgs: [map.id],
       );
-      
+
       print('数据库更新完成，影响行数: $updateResult');
-      
+
       if (updateResult == 0) {
         throw Exception('没有找到要更新的地图记录，ID: ${map.id}');
       }
-      
     } catch (e, stackTrace) {
       print('MapDatabaseService.updateMap 错误:');
       print('错误: $e');
@@ -211,11 +226,7 @@ class MapDatabaseService {
   /// 删除地图
   Future<void> deleteMap(int id) async {
     final db = await database;
-    await db.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
   }
 
   /// 根据标题查找地图
@@ -226,7 +237,7 @@ class MapDatabaseService {
       where: 'title = ?',
       whereArgs: [title],
     );
-    
+
     if (maps.isNotEmpty) {
       return MapItem.fromDatabase(maps.first);
     }
@@ -237,13 +248,15 @@ class MapDatabaseService {
   Future<void> clearAllMaps() async {
     final db = await database;
     await db.delete(_tableName);
-  }  /// 导出数据库到文件 (包含完整图像数据)
+  }
+
+  /// 导出数据库到文件 (包含完整图像数据)
   Future<String?> exportDatabase({int? customVersion}) async {
     try {
       // 获取所有地图，确保包含图像数据
       final maps = await getAllMaps();
       final dbVersion = customVersion ?? await getDatabaseVersion();
-      
+
       final mapDatabase = MapDatabase(
         version: dbVersion,
         maps: maps,
@@ -253,7 +266,8 @@ class MapDatabaseService {
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: '保存地图数据库',
-        fileName: 'maps_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.db',
+        fileName:
+            'maps_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.db',
         type: FileType.custom,
         allowedExtensions: ['db'],
       );
@@ -262,8 +276,10 @@ class MapDatabaseService {
         final file = File(outputFile);
         final jsonData = jsonEncode(mapDatabase.toJson());
         await file.writeAsString(jsonData);
-        
-        debugPrint('数据库导出成功: $outputFile (版本: $dbVersion, 地图数量: ${maps.length})');
+
+        debugPrint(
+          '数据库导出成功: $outputFile (版本: $dbVersion, 地图数量: ${maps.length})',
+        );
         return outputFile;
       }
     } catch (e) {
@@ -271,6 +287,7 @@ class MapDatabaseService {
     }
     return null;
   }
+
   /// 导入数据库文件 (调试模式)
   Future<bool> importDatabaseDebug() async {
     try {
@@ -287,22 +304,28 @@ class MapDatabaseService {
         // 调试模式：合并数据，标题唯一，高版本覆盖
         for (final importedMap in mapDatabase.maps) {
           final existingMap = await getMapByTitle(importedMap.title);
-          
+
           if (existingMap != null) {
             // 如果导入的版本更高，则覆盖
             if (importedMap.version > existingMap.version) {
               await updateMap(importedMap.copyWith(id: existingMap.id));
-              debugPrint('更新地图: ${importedMap.title} (版本 ${existingMap.version} -> ${importedMap.version})');
+              debugPrint(
+                '更新地图: ${importedMap.title} (版本 ${existingMap.version} -> ${importedMap.version})',
+              );
             } else {
-              debugPrint('跳过地图: ${importedMap.title} (当前版本 ${existingMap.version} >= 导入版本 ${importedMap.version})');
+              debugPrint(
+                '跳过地图: ${importedMap.title} (当前版本 ${existingMap.version} >= 导入版本 ${importedMap.version})',
+              );
             }
           } else {
             // 不存在则直接添加
             await forceInsertMap(importedMap.copyWith(id: null));
-            debugPrint('添加新地图: ${importedMap.title} (版本 ${importedMap.version})');
+            debugPrint(
+              '添加新地图: ${importedMap.title} (版本 ${importedMap.version})',
+            );
           }
         }
-        
+
         return true;
       }
     } catch (e) {
@@ -310,6 +333,7 @@ class MapDatabaseService {
     }
     return false;
   }
+
   /// 更新外部资源 (生产模式)
   Future<bool> updateExternalResources() async {
     try {
@@ -324,24 +348,28 @@ class MapDatabaseService {
         final mapDatabase = MapDatabase.fromJson(jsonDecode(jsonData));
 
         final currentDbVersion = await getDatabaseVersion();
-        
+
         // 检查数据库版本，如果外部版本更高，则替换所有数据
         if (mapDatabase.version > currentDbVersion) {
           // 清空现有数据
           await clearAllMaps();
-          
+
           // 导入所有新数据
           for (final importedMap in mapDatabase.maps) {
             await forceInsertMap(importedMap.copyWith(id: null));
           }
-          
+
           // 更新数据库版本
           await setDatabaseVersion(mapDatabase.version);
-          
-          debugPrint('外部资源更新成功: 版本 $currentDbVersion -> ${mapDatabase.version}，导入 ${mapDatabase.maps.length} 个地图');
+
+          debugPrint(
+            '外部资源更新成功: 版本 $currentDbVersion -> ${mapDatabase.version}，导入 ${mapDatabase.maps.length} 个地图',
+          );
           return true;
         } else {
-          debugPrint('外部资源版本不高于当前版本，跳过更新: 外部版本 ${mapDatabase.version} <= 当前版本 $currentDbVersion');
+          debugPrint(
+            '外部资源版本不高于当前版本，跳过更新: 外部版本 ${mapDatabase.version} <= 当前版本 $currentDbVersion',
+          );
           return false;
         }
       }

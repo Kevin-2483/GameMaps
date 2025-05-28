@@ -24,10 +24,12 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   });
 
   @override
-  State<LegendGroupManagementDrawer> createState() => _LegendGroupManagementDrawerState();
+  State<LegendGroupManagementDrawer> createState() =>
+      _LegendGroupManagementDrawerState();
 }
 
-class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawer> {
+class _LegendGroupManagementDrawerState
+    extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
   bool _isSmartHidingEnabled = false; // 智能隐藏开关状态
@@ -39,7 +41,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmartHiding();
     });
-  }@override
+  }
+
+  @override
   void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.allLayers != widget.allLayers) {
@@ -49,6 +53,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       });
     }
   }
+
   /// 外部调用：当图层状态发生变化时，检查智能隐藏逻辑
   void checkSmartHidingOnLayerChange() {
     // 延迟执行检查，确保不会在build期间调用
@@ -141,7 +146,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                         '管理图例组中的图例',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
                         ),
                       ),
                     ),
@@ -150,7 +157,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
               ],
             ),
           ),
-          const Divider(height: 1),          // 图例组设置
+          const Divider(height: 1), // 图例组设置
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -161,14 +168,18 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                   children: [
                     IconButton(
                       icon: Icon(
-                        _currentGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+                        _currentGroup.isVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         size: 18,
                       ),
                       onPressed: widget.isPreviewMode
                           ? null
-                          : () => _updateGroup(_currentGroup.copyWith(
+                          : () => _updateGroup(
+                              _currentGroup.copyWith(
                                 isVisible: !_currentGroup.isVisible,
-                              )),
+                              ),
+                            ),
                     ),
                     const SizedBox(width: 8),
                     const Text('透明度:', style: TextStyle(fontSize: 12)),
@@ -181,22 +192,30 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                         label: '${(_currentGroup.opacity * 100).round()}%',
                         onChanged: widget.isPreviewMode
                             ? null
-                            : (value) => _updateGroup(_currentGroup.copyWith(opacity: value)),
+                            : (value) => _updateGroup(
+                                _currentGroup.copyWith(opacity: value),
+                              ),
                       ),
                     ),
                   ],
                 ),
-                
+
                 // 智能隐藏设置
-                if (widget.allLayers != null && widget.allLayers!.isNotEmpty) ...[
+                if (widget.allLayers != null &&
+                    widget.allLayers!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withAlpha((0.3 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
                       ),
                     ),
                     child: Column(
@@ -222,8 +241,11 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                             ),
                             Switch(
                               value: _isSmartHidingEnabled,
-                              onChanged: widget.isPreviewMode ? null : _toggleSmartHiding,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              onChanged: widget.isPreviewMode
+                                  ? null
+                                  : _toggleSmartHiding,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                           ],
                         ),
@@ -232,7 +254,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           _buildSmartHidingDescription(),
                           style: TextStyle(
                             fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -268,7 +292,10 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           icon: const Icon(Icons.add, size: 16),
                           label: const Text('添加图例'),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                     ],
@@ -280,7 +307,11 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.legend_toggle_outlined, size: 48, color: Colors.grey),
+                              Icon(
+                                Icons.legend_toggle_outlined,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 '此图例组暂无图例',
@@ -293,7 +324,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: _currentGroup.legendItems.length,
                           itemBuilder: (context, index) {
-                            return _buildLegendItemTile(_currentGroup.legendItems[index]);
+                            return _buildLegendItemTile(
+                              _currentGroup.legendItems[index],
+                            );
                           },
                         ),
                 ),
@@ -322,7 +355,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: _isLegendItemSelected(item)
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : null,
         borderRadius: BorderRadius.circular(12),
         border: _isLegendItemSelected(item)
@@ -364,7 +399,11 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                                 fit: BoxFit.contain,
                               ),
                             )
-                          : const Icon(Icons.image, size: 24, color: Colors.grey),
+                          : const Icon(
+                              Icons.image,
+                              size: 24,
+                              color: Colors.grey,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     // 标题和信息
@@ -396,13 +435,17 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                     // 可见性切换
                     IconButton(
                       icon: Icon(
-                        item.isVisible ? Icons.visibility : Icons.visibility_off,
+                        item.isVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         size: 18,
                         color: item.isVisible ? null : Colors.grey,
                       ),
-                      onPressed: widget.isPreviewMode ? null : () => _updateLegendItem(
-                        item.copyWith(isVisible: !item.isVisible),
-                      ),
+                      onPressed: widget.isPreviewMode
+                          ? null
+                          : () => _updateLegendItem(
+                              item.copyWith(isVisible: !item.isVisible),
+                            ),
                       tooltip: item.isVisible ? '隐藏' : '显示',
                     ),
                     // 更多操作
@@ -442,9 +485,8 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                     max: 3.0,
                     divisions: 29,
                     displayValue: '${item.size.toStringAsFixed(1)}x',
-                    onChanged: (value) => _updateLegendItem(
-                      item.copyWith(size: value),
-                    ),
+                    onChanged: (value) =>
+                        _updateLegendItem(item.copyWith(size: value)),
                   ),
 
                   const SizedBox(height: 8),
@@ -457,9 +499,8 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                     max: 360.0,
                     divisions: 72,
                     displayValue: '${item.rotation.toStringAsFixed(0)}°',
-                    onChanged: (value) => _updateLegendItem(
-                      item.copyWith(rotation: value),
-                    ),
+                    onChanged: (value) =>
+                        _updateLegendItem(item.copyWith(rotation: value)),
                   ),
 
                   const SizedBox(height: 8),
@@ -472,9 +513,8 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                     max: 1.0,
                     divisions: 10,
                     displayValue: '${(item.opacity * 100).round()}%',
-                    onChanged: (value) => _updateLegendItem(
-                      item.copyWith(opacity: value),
-                    ),
+                    onChanged: (value) =>
+                        _updateLegendItem(item.copyWith(opacity: value)),
                   ),
                 ],
               ],
@@ -522,43 +562,55 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
         ),
       ],
     );
-  }  void _updateGroup(LegendGroup updatedGroup) {
+  }
+
+  void _updateGroup(LegendGroup updatedGroup) {
     setState(() {
       _currentGroup = updatedGroup.copyWith(updatedAt: DateTime.now());
     });
     widget.onLegendGroupUpdated(_currentGroup);
-    
+
     // 延迟执行检查，避免在setState期间再次调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmartHiding();
     });
-  }  /// 应用智能隐藏逻辑
+  }
+
+  /// 应用智能隐藏逻辑
   void _applySmartHidingLogic() {
     if (!_isSmartHidingEnabled) return; // 只有启用智能隐藏才应用逻辑
     if (!mounted) return; // 确保组件仍然挂载
-    
+
     final shouldHide = _shouldSmartHideGroup();
     final shouldShow = _shouldSmartShowGroup();
-    
+
     // 双向智能控制：
     // 1. 当所有绑定图层都隐藏时，自动隐藏图例组
     if (shouldHide && _currentGroup.isVisible) {
       setState(() {
-        _currentGroup = _currentGroup.copyWith(isVisible: false, updatedAt: DateTime.now());
+        _currentGroup = _currentGroup.copyWith(
+          isVisible: false,
+          updatedAt: DateTime.now(),
+        );
       });
       widget.onLegendGroupUpdated(_currentGroup);
-    } 
+    }
     // 2. 当有绑定图层重新显示时，自动显示图例组
     else if (shouldShow && !_currentGroup.isVisible) {
       setState(() {
-        _currentGroup = _currentGroup.copyWith(isVisible: true, updatedAt: DateTime.now());
+        _currentGroup = _currentGroup.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
       });
       widget.onLegendGroupUpdated(_currentGroup);
     }
   }
 
   void _showEditNameDialog() {
-    final TextEditingController nameController = TextEditingController(text: _currentGroup.name);
+    final TextEditingController nameController = TextEditingController(
+      text: _currentGroup.name,
+    );
 
     showDialog(
       context: context,
@@ -580,7 +632,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                _updateGroup(_currentGroup.copyWith(name: nameController.text.trim()));
+                _updateGroup(
+                  _currentGroup.copyWith(name: nameController.text.trim()),
+                );
                 Navigator.of(context).pop();
               }
             },
@@ -590,19 +644,22 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       ),
     );
   }
+
   void _showAddLegendDialog() {
     if (widget.availableLegends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('暂无可用图例，请先在图例管理页面添加图例')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('暂无可用图例，请先在图例管理页面添加图例')));
       return;
-    }    legend_db.LegendItem? selectedLegend;
+    }
+    legend_db.LegendItem? selectedLegend;
     // 设置更合理的默认位置 - 避免总是在中心，使用较为随机的初始位置
     final baseX = 0.2; // 左侧起始位置
     final baseY = 0.2; // 顶部起始位置
     final offsetX = (_currentGroup.legendItems.length * 0.1) % 0.6; // 水平偏移
-    final offsetY = ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
-    
+    final offsetY =
+        ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
+
     double positionX = (baseX + offsetX).clamp(0.1, 0.9);
     double positionY = (baseY + offsetY).clamp(0.1, 0.9);
     double size = 1.0;
@@ -644,7 +701,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: positionX.toString()),
+                        controller: TextEditingController(
+                          text: positionX.toString(),
+                        ),
                         onChanged: (value) {
                           positionX = double.tryParse(value) ?? positionX;
                         },
@@ -658,7 +717,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: positionY.toString()),
+                        controller: TextEditingController(
+                          text: positionY.toString(),
+                        ),
                         onChanged: (value) {
                           positionY = double.tryParse(value) ?? positionY;
                         },
@@ -676,7 +737,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: size.toString()),
+                        controller: TextEditingController(
+                          text: size.toString(),
+                        ),
                         onChanged: (value) {
                           size = double.tryParse(value) ?? size;
                         },
@@ -690,7 +753,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: rotation.toString()),
+                        controller: TextEditingController(
+                          text: rotation.toString(),
+                        ),
                         onChanged: (value) {
                           rotation = double.tryParse(value) ?? rotation;
                         },
@@ -732,6 +797,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       ),
     );
   }
+
   void _deleteLegendItem(LegendItem item) {
     showDialog(
       context: context,
@@ -748,7 +814,9 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
               final updatedItems = _currentGroup.legendItems
                   .where((i) => i.id != item.id)
                   .toList();
-              final updatedGroup = _currentGroup.copyWith(legendItems: updatedItems);
+              final updatedGroup = _currentGroup.copyWith(
+                legendItems: updatedItems,
+              );
               _updateGroup(updatedGroup);
               Navigator.of(context).pop();
             },
@@ -761,7 +829,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
   }
 
   // 智能隐藏相关方法
-    /// 检查智能隐藏状态
+  /// 检查智能隐藏状态
   void _checkSmartHiding() {
     // 智能隐藏开关状态不会自动改变，只能由用户手动控制
     // 这里只是检查如果启用了智能隐藏，是否需要应用智能隐藏逻辑
@@ -769,6 +837,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       _applySmartHidingLogic();
     }
   }
+
   /// 判断是否应该智能隐藏该图例组
   /// 条件：当所有绑定到该图例组的图层都隐藏时，返回true
   bool _shouldSmartHideGroup() {
@@ -817,17 +886,19 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
     return widget.allLayers!.where((layer) {
       return layer.legendGroupIds.contains(_currentGroup.id);
     }).toList();
-  }  /// 切换智能隐藏开关
+  }
+
+  /// 切换智能隐藏开关
   void _toggleSmartHiding(bool enabled) {
     setState(() {
       _isSmartHidingEnabled = enabled;
     });
-    
+
     // 如果启用智能隐藏，立即应用双向逻辑
     if (enabled) {
       final shouldHide = _shouldSmartHideGroup();
       final shouldShow = _shouldSmartShowGroup();
-      
+
       if (shouldHide && _currentGroup.isVisible) {
         _updateGroup(_currentGroup.copyWith(isVisible: false));
       } else if (shouldShow && !_currentGroup.isVisible) {
@@ -835,15 +906,19 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       }
     }
     // 如果禁用智能隐藏，不改变当前显示状态，让用户手动控制
-  }/// 构建智能隐藏的描述文本
+  }
+
+  /// 构建智能隐藏的描述文本
   String _buildSmartHidingDescription() {
     final boundLayers = _getBoundLayers();
-    
+
     if (boundLayers.isEmpty) {
       return '当前图例组未绑定任何图层';
     }
 
-    final hiddenLayersCount = boundLayers.where((layer) => !layer.isVisible).length;
+    final hiddenLayersCount = boundLayers
+        .where((layer) => !layer.isVisible)
+        .length;
     final totalLayersCount = boundLayers.length;
 
     if (_isSmartHidingEnabled) {

@@ -7,7 +7,7 @@ class WebComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -18,17 +18,15 @@ class WebComponent extends StatelessWidget {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 16),
-          Text(
-            l10n.webPlatform,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(l10n.webPlatform, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
             l10n.webSpecificFeatures,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),          Card(
+          const SizedBox(height: 24),
+          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(

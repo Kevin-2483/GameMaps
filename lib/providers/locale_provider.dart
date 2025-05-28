@@ -3,9 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleProvider extends ChangeNotifier {
   static const String _localeKey = 'locale';
-  
+
   Locale? _locale;
-  
+
   Locale? get locale => _locale;
 
   // 支持的语言列表
@@ -18,7 +18,7 @@ class LocaleProvider extends ChangeNotifier {
   Future<void> initLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final localeCode = prefs.getString(_localeKey);
-    
+
     if (localeCode != null) {
       _locale = Locale(localeCode);
     } else {
@@ -32,7 +32,7 @@ class LocaleProvider extends ChangeNotifier {
   Future<void> setLocale(Locale? locale) async {
     _locale = locale;
     notifyListeners();
-    
+
     final prefs = await SharedPreferences.getInstance();
     if (locale != null) {
       await prefs.setString(_localeKey, locale.languageCode);

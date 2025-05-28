@@ -29,8 +29,10 @@ class MapLayer {
     required this.updatedAt,
   });
 
-  factory MapLayer.fromJson(Map<String, dynamic> json) => _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
+  factory MapLayer.fromJson(Map<String, dynamic> json) =>
+      _$MapLayerFromJson(json);
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
+  MapLayer copyWith({
     String? id,
     String? name,
     int? order,
@@ -60,25 +62,25 @@ class MapLayer {
 
 /// 绘制元素类型
 enum DrawingElementType {
-  line,        // 实线
-  dashedLine,  // 虚线
-  arrow,       // 箭头
-  rectangle,   // 实心矩形
+  line, // 实线
+  dashedLine, // 虚线
+  arrow, // 箭头
+  rectangle, // 实心矩形
   hollowRectangle, // 空心矩形
-  diagonalLines,   // 单斜线区域
-  crossLines,      // 交叉线区域
-  dotGrid,         // 十字点阵区域
-  eraser,          // 橡皮擦
-  freeDrawing,     // 像素笔（自由绘制）
-  text,            // 文本框
+  diagonalLines, // 单斜线区域
+  crossLines, // 交叉线区域
+  dotGrid, // 十字点阵区域
+  eraser, // 橡皮擦
+  freeDrawing, // 像素笔（自由绘制）
+  text, // 文本框
 }
 
 /// 三角形切割类型
 enum TriangleCutType {
-  none,       // 无切割（完整矩形）
-  topLeft,    // 左上三角
-  topRight,   // 右上三角
-  bottomRight,// 右下三角
+  none, // 无切割（完整矩形）
+  topLeft, // 左上三角
+  topRight, // 右上三角
+  bottomRight, // 右下三角
   bottomLeft, // 左下三角
 }
 
@@ -91,14 +93,16 @@ class MapDrawingElement {
   final List<Offset> points; // 坐标点列表 (相对坐标 0.0-1.0)
   @ColorConverter()
   final Color color;
-  final double strokeWidth;  final double density; // 图案密度系数，用于计算图案间距 (strokeWidth * density)
+  final double strokeWidth;
+  final double density; // 图案密度系数，用于计算图案间距 (strokeWidth * density)
   final double rotation; // 旋转角度
   final double curvature; // 弧度值，0.0=矩形，~0.5=椭圆，~1.0=凹角形状
   final TriangleCutType triangleCut; // 三角形切割类型
   final int zIndex; // 绘制顺序，数值越大越在上层
   final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
-  final DateTime createdAt;    const MapDrawingElement({
+  final DateTime createdAt;
+  const MapDrawingElement({
     required this.id,
     required this.type,
     required this.points,
@@ -114,8 +118,10 @@ class MapDrawingElement {
     required this.createdAt,
   });
 
-  factory MapDrawingElement.fromJson(Map<String, dynamic> json) => _$MapDrawingElementFromJson(json);
-  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);  MapDrawingElement copyWith({
+  factory MapDrawingElement.fromJson(Map<String, dynamic> json) =>
+      _$MapDrawingElementFromJson(json);
+  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
+  MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
     List<Offset>? points,
@@ -129,7 +135,8 @@ class MapDrawingElement {
     String? text,
     double? fontSize,
     DateTime? createdAt,
-  }) {    return MapDrawingElement(
+  }) {
+    return MapDrawingElement(
       id: id ?? this.id,
       type: type ?? this.type,
       points: points ?? this.points,
@@ -168,7 +175,8 @@ class LegendGroup {
     required this.updatedAt,
   });
 
-  factory LegendGroup.fromJson(Map<String, dynamic> json) => _$LegendGroupFromJson(json);
+  factory LegendGroup.fromJson(Map<String, dynamic> json) =>
+      _$LegendGroupFromJson(json);
   Map<String, dynamic> toJson() => _$LegendGroupToJson(this);
 
   LegendGroup copyWith({
@@ -215,7 +223,8 @@ class LegendItem {
     required this.createdAt,
   });
 
-  factory LegendItem.fromJson(Map<String, dynamic> json) => _$LegendItemFromJson(json);
+  factory LegendItem.fromJson(Map<String, dynamic> json) =>
+      _$LegendItemFromJson(json);
   Map<String, dynamic> toJson() => _$LegendItemToJson(this);
   LegendItem copyWith({
     String? id,
@@ -254,15 +263,13 @@ class OffsetConverter implements JsonConverter<Offset, Map<String, dynamic>> {
 
   @override
   Map<String, dynamic> toJson(Offset object) {
-    return {
-      'dx': object.dx,
-      'dy': object.dy,
-    };
+    return {'dx': object.dx, 'dy': object.dy};
   }
 }
 
 /// JSON转换器用于处理 Offset 列表
-class OffsetListConverter implements JsonConverter<List<Offset>, List<dynamic>> {
+class OffsetListConverter
+    implements JsonConverter<List<Offset>, List<dynamic>> {
   const OffsetListConverter();
 
   @override
@@ -272,7 +279,9 @@ class OffsetListConverter implements JsonConverter<List<Offset>, List<dynamic>> 
         return const OffsetConverter().fromJson(item);
       } else if (item is Map) {
         // 处理 Map<dynamic, dynamic> 的情况
-        return const OffsetConverter().fromJson(Map<String, dynamic>.from(item));
+        return const OffsetConverter().fromJson(
+          Map<String, dynamic>.from(item),
+        );
       } else {
         throw FormatException('Invalid offset data: $item');
       }
@@ -281,7 +290,9 @@ class OffsetListConverter implements JsonConverter<List<Offset>, List<dynamic>> 
 
   @override
   List<Map<String, dynamic>> toJson(List<Offset> object) {
-    return object.map((offset) => const OffsetConverter().toJson(offset)).toList();
+    return object
+        .map((offset) => const OffsetConverter().toJson(offset))
+        .toList();
   }
 }
 

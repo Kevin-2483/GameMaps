@@ -4,19 +4,29 @@ import 'dart:io';
 /// 配置文件验证器
 class ConfigValidator {
   static const List<String> _validPlatforms = [
-    'Windows', 'MacOS', 'Linux', 'Android', 'iOS', 'Web'
+    'Windows',
+    'MacOS',
+    'Linux',
+    'Android',
+    'iOS',
+    'Web',
   ];
   static const List<String> _validPages = [
-    'HomePage', 'SettingsPage', 'MapAtlasPage', 'LegendManagerPage'
+    'HomePage',
+    'SettingsPage',
+    'MapAtlasPage',
+    'LegendManagerPage',
   ];
 
   static const List<String> _validFeatures = [
-   'DebugMode', 'ExperimentalFeatures', 'TrayNavigation'
+    'DebugMode',
+    'ExperimentalFeatures',
+    'TrayNavigation',
   ];
 
   static Future<ValidationResult> validateConfigFile(String filePath) async {
     final result = ValidationResult();
-    
+
     try {
       // 检查文件是否存在
       final file = File(filePath);
@@ -28,7 +38,7 @@ class ConfigValidator {
       // 读取和解析 JSON
       final content = await file.readAsString();
       late Map<String, dynamic> config;
-      
+
       try {
         config = json.decode(content) as Map<String, dynamic>;
       } catch (e) {
@@ -57,7 +67,6 @@ class ConfigValidator {
 
       // 验证完整性
       _validateConsistency(config, result);
-
     } catch (e) {
       result.addError('验证过程中发生错误: $e');
     }
@@ -65,7 +74,10 @@ class ConfigValidator {
     return result;
   }
 
-  static void _validatePlatformConfig(dynamic platformConfig, ValidationResult result) {
+  static void _validatePlatformConfig(
+    dynamic platformConfig,
+    ValidationResult result,
+  ) {
     if (platformConfig is! Map<String, dynamic>) {
       result.addError('platform 必须是一个对象');
       return;
@@ -100,24 +112,36 @@ class ConfigValidator {
       if (!platform.containsKey('pages')) {
         result.addError('平台 $platformName 缺少 "pages" 字段');
       } else {
-        _validateStringArray(platform['pages'], 'pages', platformName, _validPages, result);
+        _validateStringArray(
+          platform['pages'],
+          'pages',
+          platformName,
+          _validPages,
+          result,
+        );
       }
 
       // 验证 features 字段
       if (!platform.containsKey('features')) {
         result.addError('平台 $platformName 缺少 "features" 字段');
       } else {
-        _validateStringArray(platform['features'], 'features', platformName, _validFeatures, result);
+        _validateStringArray(
+          platform['features'],
+          'features',
+          platformName,
+          _validFeatures,
+          result,
+        );
       }
     }
   }
 
   static void _validateStringArray(
-    dynamic array, 
-    String fieldName, 
-    String platformName, 
-    List<String> validValues, 
-    ValidationResult result
+    dynamic array,
+    String fieldName,
+    String platformName,
+    List<String> validValues,
+    ValidationResult result,
   ) {
     if (array is! List) {
       result.addError('平台 $platformName 的 $fieldName 必须是一个数组');
@@ -143,7 +167,10 @@ class ConfigValidator {
     }
   }
 
-  static void _validateBuildConfig(dynamic buildConfig, ValidationResult result) {
+  static void _validateBuildConfig(
+    dynamic buildConfig,
+    ValidationResult result,
+  ) {
     if (buildConfig is! Map<String, dynamic>) {
       result.addError('build 必须是一个对象');
       return;
@@ -171,23 +198,26 @@ class ConfigValidator {
     }
   }
 
-  static void _validateConsistency(Map<String, dynamic> config, ValidationResult result) {
+  static void _validateConsistency(
+    Map<String, dynamic> config,
+    ValidationResult result,
+  ) {
     // 检查是否所有平台都有基本页面
     if (config.containsKey('platform')) {
       final platforms = config['platform'] as Map<String, dynamic>;
-      
+
       for (final entry in platforms.entries) {
         final platformName = entry.key;
         final platformData = entry.value as Map<String, dynamic>;
-        
+
         if (platformData.containsKey('pages')) {
           final pages = platformData['pages'] as List;
-          
+
           // 检查是否有主页
           if (!pages.contains('HomePage')) {
             result.addWarning('平台 $platformName 没有配置主页 (HomePage)');
           }
-          
+
           // 检查是否有设置页
           if (!pages.contains('SettingsPage')) {
             result.addInfo('平台 $platformName 没有配置设置页 (SettingsPage)');
@@ -242,7 +272,7 @@ class ValidationResult {
   @override
   String toString() {
     final buffer = StringBuffer();
-    
+
     if (errors.isNotEmpty) {
       buffer.writeln('错误 (${errors.length}):');
       for (final error in errors) {

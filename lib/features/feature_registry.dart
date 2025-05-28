@@ -42,4 +42,3 @@ class FeatureRegistry {
     return _features[name]?.isEnabled ?? false;
   }
 }
-

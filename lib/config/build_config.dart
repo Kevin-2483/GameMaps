@@ -10,21 +10,31 @@ class BuildTimeConfig {
   );
 
   /// 默认平台检测
-  static const String _defaultPlatform = kIsWeb 
-    ? 'Web' 
-    : 'Unknown';  /// 从环境变量获取启用的页面列表
+  static const String _defaultPlatform = kIsWeb ? 'Web' : 'Unknown';
+
+  /// 从环境变量获取启用的页面列表
   static const List<String> enabledPages = [
-    if (bool.fromEnvironment('ENABLE_HOME_PAGE', defaultValue: true)) 'HomePage',
-    if (bool.fromEnvironment('ENABLE_SETTINGS_PAGE', defaultValue: true)) 'SettingsPage',
-    if (bool.fromEnvironment('ENABLE_MAP_ATLAS_PAGE', defaultValue: true)) 'MapAtlasPage',
-    if (bool.fromEnvironment('ENABLE_LEGEND_MANAGER_PAGE', defaultValue: true)) 'LegendManagerPage',
+    if (bool.fromEnvironment('ENABLE_HOME_PAGE', defaultValue: true))
+      'HomePage',
+    if (bool.fromEnvironment('ENABLE_SETTINGS_PAGE', defaultValue: true))
+      'SettingsPage',
+    if (bool.fromEnvironment('ENABLE_MAP_ATLAS_PAGE', defaultValue: true))
+      'MapAtlasPage',
+    if (bool.fromEnvironment('ENABLE_LEGEND_MANAGER_PAGE', defaultValue: true))
+      'LegendManagerPage',
   ];
 
   /// 从环境变量获取启用的功能列表
   static const List<String> enabledFeatures = [
-    if (bool.fromEnvironment('ENABLE_DEBUG_MODE', defaultValue: true)) 'DebugMode',
-    if (bool.fromEnvironment('ENABLE_TRAY_NAVIGATION', defaultValue: true)) 'TrayNavigation',
-    if (bool.fromEnvironment('ENABLE_EXPERIMENTAL_FEATURES', defaultValue: false)) 'ExperimentalFeatures',
+    if (bool.fromEnvironment('ENABLE_DEBUG_MODE', defaultValue: true))
+      'DebugMode',
+    if (bool.fromEnvironment('ENABLE_TRAY_NAVIGATION', defaultValue: true))
+      'TrayNavigation',
+    if (bool.fromEnvironment(
+      'ENABLE_EXPERIMENTAL_FEATURES',
+      defaultValue: false,
+    ))
+      'ExperimentalFeatures',
   ];
 
   /// 应用程序配置
@@ -47,10 +57,12 @@ class BuildTimeConfig {
   static bool isPageEnabled(String pageId) => enabledPages.contains(pageId);
 
   /// 检查功能是否在构建时启用
-  static bool isFeatureEnabled(String featureId) => enabledFeatures.contains(featureId);
+  static bool isFeatureEnabled(String featureId) =>
+      enabledFeatures.contains(featureId);
 
   /// 调试信息
-  static String get buildInfo => '''
+  static String get buildInfo =>
+      '''
 Build Configuration for $targetPlatform:
 - Enabled Pages: ${enabledPages.join(', ')}
 - Enabled Features: ${enabledFeatures.join(', ')}

@@ -7,7 +7,7 @@ class LinuxComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -28,7 +28,8 @@ class LinuxComponent extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),          Card(
+          const SizedBox(height: 24),
+          Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(

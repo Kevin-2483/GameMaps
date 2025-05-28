@@ -30,7 +30,7 @@ class MapAtlasPageModule extends PageModule {
     if (!BuildTimeConfig.isPageEnabled(moduleId)) {
       return false;
     }
-    
+
     // 运行时配置检查 - 检查当前平台是否启用该页面
     return ConfigManager.instance.isCurrentPlatformPageEnabled(moduleId);
   }

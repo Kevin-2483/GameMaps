@@ -8,7 +8,8 @@ import '../models/map_localization.dart';
 
 /// 地图本地化服务
 class MapLocalizationService {
-  static final MapLocalizationService _instance = MapLocalizationService._internal();
+  static final MapLocalizationService _instance =
+      MapLocalizationService._internal();
   factory MapLocalizationService() => _instance;
   MapLocalizationService._internal();
 
@@ -29,11 +30,7 @@ class MapLocalizationService {
   /// 初始化数据库
   Future<Database> _initDatabase() async {
     final String path = join(await getDatabasesPath(), _databaseName);
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createTables,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createTables);
   }
 
   /// 创建数据表
@@ -57,10 +54,7 @@ class MapLocalizationService {
     ''');
 
     // 设置初始版本
-    await db.insert(_metaTableName, {
-      'key': 'version',
-      'value': '0',
-    });
+    await db.insert(_metaTableName, {'key': 'version', 'value': '0'});
 
     await db.insert(_metaTableName, {
       'key': 'updated_at',
@@ -76,7 +70,7 @@ class MapLocalizationService {
       where: 'key = ?',
       whereArgs: ['version'],
     );
-    
+
     if (result.isNotEmpty) {
       return int.tryParse(result.first['value'] as String) ?? 0;
     }
@@ -92,7 +86,7 @@ class MapLocalizationService {
       where: 'key = ?',
       whereArgs: ['version'],
     );
-    
+
     await db.update(
       _metaTableName,
       {'value': DateTime.now().toIso8601String()},
@@ -114,13 +108,15 @@ class MapLocalizationService {
         final file = File(result.files.single.path!);
         final jsonString = await file.readAsString();
         final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
-        
+
         final localizationDb = MapLocalizationDatabase.fromJson(jsonData);
-        
+
         // 检查版本
         final currentVersion = await getCurrentVersion();
         if (localizationDb.version <= currentVersion) {
-          debugPrint('本地化文件版本 ${localizationDb.version} 不高于当前版本 $currentVersion，跳过导入');
+          debugPrint(
+            '本地化文件版本 ${localizationDb.version} 不高于当前版本 $currentVersion，跳过导入',
+          );
           return false;
         }
 
@@ -136,13 +132,15 @@ class MapLocalizationService {
   }
 
   /// 导入本地化数据库
-  Future<void> _importLocalizationDatabase(MapLocalizationDatabase localizationDb) async {
+  Future<void> _importLocalizationDatabase(
+    MapLocalizationDatabase localizationDb,
+  ) async {
     final db = await database;
-    
+
     await db.transaction((txn) async {
       // 清空现有数据
       await txn.delete(_tableName);
-      
+
       // 插入新数据
       for (final mapLoc in localizationDb.maps.values) {
         for (final entry in mapLoc.translations.entries) {
@@ -153,7 +151,7 @@ class MapLocalizationService {
           });
         }
       }
-      
+
       // 更新版本信息
       await txn.update(
         _metaTableName,
@@ -161,7 +159,7 @@ class MapLocalizationService {
         where: 'key = ?',
         whereArgs: ['version'],
       );
-      
+
       await txn.update(
         _metaTableName,
         {'value': localizationDb.updatedAt.toIso8601String()},
@@ -191,7 +189,10 @@ class MapLocalizationService {
 
   /// 获取本地化的地图标题
   /// 如果找不到翻译，返回原始标题
-  Future<String> getLocalizedMapTitle(String originalTitle, String languageCode) async {
+  Future<String> getLocalizedMapTitle(
+    String originalTitle,
+    String languageCode,
+  ) async {
     // 尝试获取翻译
     final translation = await getMapTranslation(originalTitle, languageCode);
     return translation ?? originalTitle;
@@ -204,14 +205,14 @@ class MapLocalizationService {
     }
 
     final db = await database;
-    
+
     // 获取版本信息
     final versionResult = await db.query(
       _metaTableName,
       where: 'key = ?',
       whereArgs: ['version'],
     );
-    final version = versionResult.isNotEmpty 
+    final version = versionResult.isNotEmpty
         ? int.tryParse(versionResult.first['value'] as String) ?? 0
         : 0;
 
@@ -222,26 +223,24 @@ class MapLocalizationService {
       whereArgs: ['updated_at'],
     );
     final updatedAt = updatedAtResult.isNotEmpty
-        ? DateTime.tryParse(updatedAtResult.first['value'] as String) ?? DateTime.now()
+        ? DateTime.tryParse(updatedAtResult.first['value'] as String) ??
+              DateTime.now()
         : DateTime.now();
 
     // 获取所有翻译数据
     final translations = await db.query(_tableName);
-    
+
     final Map<String, MapLocalization> maps = {};
-    
+
     for (final row in translations) {
       final mapKey = row['map_key'] as String;
       final languageCode = row['language_code'] as String;
       final translation = row['translation'] as String;
-      
+
       if (!maps.containsKey(mapKey)) {
-        maps[mapKey] = MapLocalization(
-          mapKey: mapKey,
-          translations: {},
-        );
+        maps[mapKey] = MapLocalization(mapKey: mapKey, translations: {});
       }
-      
+
       maps[mapKey] = MapLocalization(
         mapKey: mapKey,
         translations: {
@@ -302,7 +301,7 @@ class MapLocalizationService {
     try {
       final localizationDb = await getAllLocalizations();
       final jsonString = jsonEncode(localizationDb.toJson());
-      
+
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: '导出地图本地化文件',

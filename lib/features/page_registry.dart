@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
 /// 页面模块接口 - 用于注册页面到导航系统
 abstract class PageModule {
   String get name;
@@ -11,6 +10,7 @@ abstract class PageModule {
   bool get isEnabled;
   int get priority; // 用于排序，越小越靠前
   Widget buildPage(BuildContext context);
+
   /// 创建路由配置
   GoRoute createRoute() {
     return GoRoute(
@@ -36,10 +36,8 @@ class PageRegistry {
 
   /// 获取所有启用的页面
   List<PageModule> getEnabledPages() {
-    final enabledPages = _pages.values
-        .where((page) => page.isEnabled)
-        .toList();
-    
+    final enabledPages = _pages.values.where((page) => page.isEnabled).toList();
+
     // 按优先级排序
     enabledPages.sort((a, b) => a.priority.compareTo(b.priority));
     return enabledPages;
@@ -57,20 +55,22 @@ class PageRegistry {
 
   /// 生成路由配置
   List<GoRoute> generateRoutes() {
-    return getEnabledPages()
-        .map((page) => page.createRoute())
-        .toList();
+    return getEnabledPages().map((page) => page.createRoute()).toList();
   }
 
   /// 获取导航项
   List<NavigationItem> getNavigationItems() {
     final pages = getEnabledPages();
-    return pages.map((page) => NavigationItem(
-      name: page.name,
-      path: page.path,
-      displayName: page.displayName,
-      icon: page.icon,
-    )).toList();
+    return pages
+        .map(
+          (page) => NavigationItem(
+            name: page.name,
+            path: page.path,
+            displayName: page.displayName,
+            icon: page.icon,
+          ),
+        )
+        .toList();
   }
 
   /// 清空注册

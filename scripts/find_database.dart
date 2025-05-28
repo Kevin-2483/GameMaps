@@ -6,14 +6,14 @@ void main() async {
   // 初始化 sqflite FFI
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
-  
+
   try {
     // 获取数据库路径
     final databasesPath = await getDatabasesPath();
     final dbPath = join(databasesPath, 'maps.db');
-    
+
     print('数据库路径: $dbPath');
-    
+
     // 检查文件是否存在
     final dbFile = File(dbPath);
     if (await dbFile.exists()) {

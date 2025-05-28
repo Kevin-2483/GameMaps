@@ -28,7 +28,7 @@ class ConfigEditorModule extends PageModule {
     if (!BuildTimeConfig.isFeatureEnabled(featureId)) {
       return false;
     }
-    
+
     // 运行时配置检查
     return ConfigManager.instance.isCurrentPlatformFeatureEnabled(featureId);
   }

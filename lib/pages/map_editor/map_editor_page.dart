@@ -23,7 +23,10 @@ class MapEditorPage extends StatefulWidget {
     this.mapItem,
     this.mapId,
     this.isPreviewMode = false,
-  }) : assert(mapItem != null || mapId != null, 'Either mapItem or mapId must be provided');
+  }) : assert(
+         mapItem != null || mapId != null,
+         'Either mapItem or mapId must be provided',
+       );
 
   @override
   State<MapEditorPage> createState() => _MapEditorPageState();
@@ -36,7 +39,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
-  MapLayer? _selectedLayer;  DrawingElementType? _selectedDrawingTool;  Color _selectedColor = Colors.black;
+  MapLayer? _selectedLayer;
+  DrawingElementType? _selectedDrawingTool;
+  Color _selectedColor = Colors.black;
   double _selectedStrokeWidth = 2.0;
   double _selectedDensity = 3.0; // 默认密度为3.0
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
@@ -54,7 +59,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false; // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
+  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
@@ -80,7 +85,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   Future<void> _initializeMap() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // 如果已有 mapItem，直接使用；否则通过 mapId 从数据库加载
       if (widget.mapItem != null) {
@@ -107,13 +112,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
       // 保存初始状态到撤销历史
       _saveToUndoHistory();
-      
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
   // 撤销历史记录管理方法
   void _saveToUndoHistory() {
     if (_currentMap == null) return;
@@ -234,9 +239,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _showErrorSnackBar('加载图例失败: ${e.toString()}');
     }
   }
+
   void _addDefaultLayer() {
     if (_currentMap == null) return;
-    
+
     final defaultLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '图层 1',
@@ -252,6 +258,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _selectedLayer = defaultLayer;
     });
   }
+
   void _addNewLayer() {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -270,8 +277,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _selectedLayer = newLayer;
     });
   }
+
   void _deleteLayer(MapLayer layer) {
-    if (widget.isPreviewMode || _currentMap == null || _currentMap!.layers.length <= 1) return;
+    if (widget.isPreviewMode ||
+        _currentMap == null ||
+        _currentMap!.layers.length <= 1)
+      return;
 
     setState(() {
       final updatedLayers = _currentMap!.layers
@@ -284,9 +295,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
+
   void _updateLayer(MapLayer updatedLayer) {
     if (widget.isPreviewMode || _currentMap == null) return;
-    
+
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
@@ -305,6 +317,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       }
     });
   }
+
   void _reorderLayers(int oldIndex, int newIndex) {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -324,6 +337,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _currentMap = _currentMap!.copyWith(layers: layers);
     });
   }
+
   void _addLegendGroup() {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -340,6 +354,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       );
     });
   }
+
   void _deleteLegendGroup(LegendGroup group) {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -350,9 +365,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
     });
   }
+
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
-    
+
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
         (g) => g.id == updatedGroup.id,
@@ -363,7 +379,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
         _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
       }
     });
-  }// 处理透明度预览
+  } // 处理透明度预览
 
   void _handleOpacityPreview(String layerId, double opacity) {
     setState(() {
@@ -405,6 +421,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _isLegendGroupManagementDrawerOpen = true;
     });
   }
+
   // 处理图例项双击事件
   void _handleLegendItemDoubleClick(LegendItem item) {
     if (widget.isPreviewMode || _currentMap == null) return;
@@ -412,7 +429,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
     for (final legendGroup in _currentMap!.legendGroups) {
-      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+      if (legendGroup.legendItems.any(
+        (legendItem) => legendItem.id == item.id,
+      )) {
         containingGroup = legendGroup;
         break;
       }
@@ -464,10 +483,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _isZIndexInspectorOpen = false;
     });
   }
+
   // 选中图例项
   void _selectLegendItem(String legendItemId) {
     setState(() {
-      _selectedElementId = legendItemId.isEmpty ? null : legendItemId; // 空字符串表示取消选中
+      _selectedElementId = legendItemId.isEmpty
+          ? null
+          : legendItemId; // 空字符串表示取消选中
     });
   }
 
@@ -483,6 +505,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _previewColor = color;
     });
   }
+
   void _handleStrokeWidthPreview(double width) {
     setState(() {
       _previewStrokeWidth = width;
@@ -494,6 +517,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _previewDensity = density;
     });
   }
+
   void _handleCurvaturePreview(double curvature) {
     setState(() {
       _previewCurvature = curvature;
@@ -520,12 +544,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
       print('- 图层数量: ${updatedMap.layers.length}');
       print('- 图例组数量: ${updatedMap.legendGroups.length}');
       print('- 是否有图像数据: ${updatedMap.imageData != null}');
-      
+
       // 验证必要字段
       if (updatedMap.id == null) {
         throw Exception('地图ID为空，无法保存');
       }
-      
+
       if (updatedMap.title.isEmpty) {
         throw Exception('地图标题为空，无法保存');
       }
@@ -625,7 +649,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
               icon: const Icon(Icons.save),
               tooltip: '保存地图',
             ),
-          ],          IconButton(
+          ],
+          IconButton(
             onPressed: () {
               showDialog(
                 context: context,
@@ -684,7 +709,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         onClose: _closeLayerLegendBindingDrawer,
                       ),
                     ),
-                  ),                // 图例组管理抽屉覆盖层
+                  ), // 图例组管理抽屉覆盖层
                 if (_isLegendGroupManagementDrawerOpen &&
                     _currentLegendGroupForManagement != null)
                   Positioned(
@@ -693,7 +718,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     right: 16,
                     child: Material(
                       elevation: 8,
-                      borderRadius: BorderRadius.circular(12),                      child: LegendGroupManagementDrawer(
+                      borderRadius: BorderRadius.circular(12),
+                      child: LegendGroupManagementDrawer(
                         legendGroup: _currentLegendGroupForManagement!,
                         availableLegends: _availableLegends,
                         onLegendGroupUpdated: _updateLegendGroup,
@@ -835,7 +861,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
               setState(() => _isDrawingToolbarAutoClose = value),
           needsScrolling: true,
           child: _isDrawingToolbarCollapsed
-              ? null              : DrawingToolbarOptimized(
+              ? null
+              : DrawingToolbarOptimized(
                   selectedTool: _selectedDrawingTool,
                   selectedColor: _selectedColor,
                   selectedStrokeWidth: _selectedStrokeWidth,
@@ -903,8 +930,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onPressed: _addNewLayer,
                   tooltip: '添加图层',
                 ),
-              ],        child: _isLayerPanelCollapsed
-            ? null            : LayerPanel(
+              ],
+        child: _isLayerPanelCollapsed
+            ? null
+            : LayerPanel(
                 layers: _currentMap?.layers ?? [],
                 selectedLayer: _selectedLayer,
                 isPreviewMode: widget.isPreviewMode,
@@ -943,7 +972,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   onPressed: _addLegendGroup,
                   tooltip: '添加图例组',
                 ),
-              ],        child: _isLegendPanelCollapsed
+              ],
+        child: _isLegendPanelCollapsed
             ? null
             : LegendPanel(
                 legendGroups: _currentMap?.legendGroups ?? [],
@@ -1044,9 +1074,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
               height: headerHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withAlpha((0.3 * 255).toInt()),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
@@ -1193,7 +1222,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                 Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt()),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withAlpha((0.1 * 255).toInt()),
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context).dividerColor,
@@ -1249,13 +1280,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
         ),
       ],
     );
-  }  /// 构建地图画布组件
+  }
+
+  /// 构建地图画布组件
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }    return MapCanvas(
+      return const Center(child: CircularProgressIndicator());
+    }
+    return MapCanvas(
       mapItem: _currentMap!,
       selectedLayer: _selectedLayer,
       selectedDrawingTool: _selectedDrawingTool,
@@ -1283,13 +1315,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
     if (widget.isPreviewMode || _currentMap == null) return;
-    
+
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
     setState(() {
       _currentMap = _currentMap!.copyWith(layers: updatedLayers);
-      
+
       // 如果当前选中的图层也被更新了，同步更新选中图层的引用
       if (_selectedLayer != null) {
         final updatedSelectedLayer = updatedLayers.firstWhere(

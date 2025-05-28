@@ -14,12 +14,12 @@ class PlatformAwareComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final configManager = ConfigManager.instance;
     final currentPlatform = configManager.getCurrentPlatform();
-    
+
     // 检查当前平台是否在配置中启用
     if (!configManager.isPlatformConfigured(currentPlatform)) {
       return _buildDefaultComponent(context);
     }
-    
+
     // 根据当前平台返回对应组件
     switch (currentPlatform) {
       case 'Windows':

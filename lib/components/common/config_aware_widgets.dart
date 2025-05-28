@@ -19,7 +19,10 @@ class ConfigAwareWidget extends StatelessWidget {
     this.fallback,
     this.requireBuildTime = true,
     this.requireRuntime = true,
-  }) : assert(pageId != null || featureId != null, 'Either pageId or featureId must be provided');
+  }) : assert(
+         pageId != null || featureId != null,
+         'Either pageId or featureId must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,9 @@ class ConfigAwareWidget extends StatelessWidget {
         isEnabled = false;
       }
       if (requireRuntime && isEnabled) {
-        isEnabled = ConfigManager.instance.isCurrentPlatformPageEnabled(pageId!);
+        isEnabled = ConfigManager.instance.isCurrentPlatformPageEnabled(
+          pageId!,
+        );
       }
     }
 
@@ -41,7 +46,9 @@ class ConfigAwareWidget extends StatelessWidget {
         isEnabled = false;
       }
       if (requireRuntime && isEnabled) {
-        isEnabled = ConfigManager.instance.isCurrentPlatformFeatureEnabled(featureId!);
+        isEnabled = ConfigManager.instance.isCurrentPlatformFeatureEnabled(
+          featureId!,
+        );
       }
     }
 
@@ -64,7 +71,10 @@ class ConfigAwareAppBarAction extends StatelessWidget {
     this.pageId,
     this.featureId,
     required this.action,
-  }) : assert(pageId != null || featureId != null, 'Either pageId or featureId must be provided');
+  }) : assert(
+         pageId != null || featureId != null,
+         'Either pageId or featureId must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +105,10 @@ class ConfigAwareListTile extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
-  }) : assert(pageId != null || featureId != null, 'Either pageId or featureId must be provided');
+  }) : assert(
+         pageId != null || featureId != null,
+         'Either pageId or featureId must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +130,7 @@ class ConfigAwareListTile extends StatelessWidget {
 mixin ConfigAwareMixin on Widget {
   String? get pageId => null;
   String? get featureId => null;
-  
+
   Widget buildConfigAware(BuildContext context, Widget child) {
     return ConfigAwareWidget(
       pageId: pageId,
@@ -136,15 +149,16 @@ class ConfigUtils {
   /// 检查是否应该显示调试信息
   bool get shouldShowDebugInfo {
     return BuildTimeConfig.isFeatureEnabled('DebugMode') &&
-           ConfigManager.instance.isCurrentPlatformFeatureEnabled('DebugMode');
+        ConfigManager.instance.isCurrentPlatformFeatureEnabled('DebugMode');
   }
 
   /// 检查是否启用实验性功能
   bool get isExperimentalEnabled {
     return BuildTimeConfig.isFeatureEnabled('ExperimentalFeatures') &&
-           ConfigManager.instance.isCurrentPlatformFeatureEnabled('ExperimentalFeatures');
+        ConfigManager.instance.isCurrentPlatformFeatureEnabled(
+          'ExperimentalFeatures',
+        );
   }
-
 
   /// 获取当前平台的可用页面列表
   List<String> get availablePages {

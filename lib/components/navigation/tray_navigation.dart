@@ -20,7 +20,7 @@ class _TrayNavigationState extends State<TrayNavigation>
   @override
   Widget build(BuildContext context) {
     super.build(context); // 调用 AutomaticKeepAliveClientMixin 的 build 方法
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // 根据屏幕比例决定导航位置
@@ -28,14 +28,11 @@ class _TrayNavigationState extends State<TrayNavigation>
         final navigationItems = PageRegistry().getNavigationItems();
 
         // 直接返回导航托盘，始终显示
-        return _buildNavigationTray(
-          context,
-          navigationItems,
-          isWideScreen,
-        );
+        return _buildNavigationTray(context, navigationItems, isWideScreen);
       },
     );
   }
+
   Widget _buildNavigationTray(
     BuildContext context,
     List<NavigationItem> items,
@@ -47,14 +44,22 @@ class _TrayNavigationState extends State<TrayNavigation>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          right: isVertical ? BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-            width: 1,
-          ) : BorderSide.none,
-          top: !isVertical ? BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-            width: 1,
-          ) : BorderSide.none,
+          right: isVertical
+              ? BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                  width: 1,
+                )
+              : BorderSide.none,
+          top: !isVertical
+              ? BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                  width: 1,
+                )
+              : BorderSide.none,
         ),
       ),
       child: isVertical
@@ -68,6 +73,7 @@ class _TrayNavigationState extends State<TrayNavigation>
             ),
     );
   }
+
   List<Widget> _buildNavigationButtons(
     BuildContext context,
     List<NavigationItem> items,
@@ -90,12 +96,7 @@ class _TrayNavigationState extends State<TrayNavigation>
         }
       }
 
-      buttons.add(_buildNavigationButton(
-        context,
-        item,
-        isActive,
-        isVertical,
-      ));
+      buttons.add(_buildNavigationButton(context, item, isActive, isVertical));
 
       // 添加间距，除了最后一个
       if (i < items.length - 1) {
@@ -109,6 +110,7 @@ class _TrayNavigationState extends State<TrayNavigation>
 
     return buttons;
   }
+
   Widget _buildNavigationButton(
     BuildContext context,
     NavigationItem item,
@@ -160,6 +162,7 @@ class _TrayNavigationState extends State<TrayNavigation>
       ),
     );
   }
+
   Widget _buildThemeToggleButton(BuildContext context, bool isVertical) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
@@ -197,7 +200,8 @@ class _TrayNavigationState extends State<TrayNavigation>
               ),
             ),
           ),
-        );      },
+        );
+      },
     );
   }
 }

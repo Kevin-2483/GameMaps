@@ -16,15 +16,17 @@ void main() {
     testWidgets('App should build without errors', (WidgetTester tester) async {
       await tester.pumpWidget(const R6BoxApp());
       await tester.pumpAndSettle();
-      
+
       // Verify that the app builds successfully
       expect(find.byType(MaterialApp), findsOneWidget);
     });
 
-    testWidgets('Home page should display correctly', (WidgetTester tester) async {
+    testWidgets('Home page should display correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const R6BoxApp());
       await tester.pumpAndSettle();
-      
+
       // Verify that we have basic navigation elements
       expect(find.byType(AppBar), findsOneWidget);
       expect(find.byType(Scaffold), findsOneWidget);
@@ -32,7 +34,7 @@ void main() {
 
     testWidgets('Theme provider should work', (WidgetTester tester) async {
       final themeProvider = ThemeProvider();
-      
+
       await tester.pumpWidget(
         ChangeNotifierProvider.value(
           value: themeProvider,
@@ -41,27 +43,25 @@ void main() {
               return MaterialApp(
                 theme: provider.lightTheme,
                 darkTheme: provider.darkTheme,
-                themeMode: provider.themeMode == AppThemeMode.dark 
-                    ? ThemeMode.dark 
-                    : provider.themeMode == AppThemeMode.light 
-                        ? ThemeMode.light 
-                        : ThemeMode.system,
-                home: const Scaffold(
-                  body: Text('Test'),
-                ),
+                themeMode: provider.themeMode == AppThemeMode.dark
+                    ? ThemeMode.dark
+                    : provider.themeMode == AppThemeMode.light
+                    ? ThemeMode.light
+                    : ThemeMode.system,
+                home: const Scaffold(body: Text('Test')),
               );
             },
           ),
         ),
       );
-      
+
       await tester.pumpAndSettle();
       expect(find.text('Test'), findsOneWidget);
     });
 
     testWidgets('Locale provider should work', (WidgetTester tester) async {
       final localeProvider = LocaleProvider();
-      
+
       await tester.pumpWidget(
         ChangeNotifierProvider.value(
           value: localeProvider,
@@ -69,20 +69,19 @@ void main() {
             builder: (context, provider, child) {
               return MaterialApp(
                 locale: provider.locale,
-                home: const Scaffold(
-                  body: Text('Test'),
-                ),
+                home: const Scaffold(body: Text('Test')),
               );
             },
           ),
         ),
       );
-      
+
       await tester.pumpAndSettle();
       expect(find.text('Test'), findsOneWidget);
-    });    test('Config manager should load configuration', () async {
+    });
+    test('Config manager should load configuration', () async {
       await ConfigManager.instance.loadFromAssets();
-      
+
       expect(ConfigManager.instance.config, isNotNull);
       expect(ConfigManager.instance.config.build.appName, isNotEmpty);
       expect(ConfigManager.instance.config.build.version, isNotEmpty);
