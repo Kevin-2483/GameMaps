@@ -6,8 +6,8 @@ import '../../../models/legend_item.dart' as legend_db;
 import '../../../utils/image_utils.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
-const double kCanvasWidth = 1200.0;
-const double kCanvasHeight = 800.0;
+const double kCanvasWidth = 1600.0;
+const double kCanvasHeight = 1600.0;
 
 /// 绘制预览数据
 class DrawingPreviewData {
@@ -213,6 +213,33 @@ void _drawCurvedRectangle(
 
   // 调用核心函数来创建路径
   final Path path = _createEraserShapePath(rect, curvature);
+
+  // 绘制生成的路径
+  canvas.drawPath(path, paint);
+}
+
+void _drawCurvedTrianglePath(
+  Canvas canvas,
+  Rect rect,
+  Paint paint,
+  double curvature,
+  TriangleCutType triangleCut,
+) {
+  // 基本的提前返回条件可以保留，或者让 _createEraserShapePath 处理
+  // 例如，如果曲率直接是0，_createEraserShapePath 会返回一个矩形路径
+  // if (curvature <= 0.0) { // _createEraserShapePath 内部会处理这种情况
+  //   canvas.drawRect(rect, paint);
+  //   return;
+  // }
+  //
+  // // 如果矩形太小，_createEraserShapePath 也会处理并返回矩形路径
+  // if (rect.width / 2 < 2 || rect.height / 2 < 2) {
+  //   canvas.drawRect(rect, paint);
+  //   return;
+  // }
+
+  // 调用核心函数来创建路径
+  final Path path = _getFinalEraserPath(rect, curvature, triangleCut);
 
   // 绘制生成的路径
   canvas.drawPath(path, paint);
@@ -1295,7 +1322,11 @@ class _LayerPainter extends CustomPainter {
 
         // 检查橡皮擦是否与当前元素重叠 (这个函数对于性能很重要)
         // 确保 _doesEraserAffectElement 内部也使用了考虑 triangleCut 的碰撞检测逻辑
-        final doesEraserAffectElement = _doesEraserAffectElement(element, eraser, size);
+        final doesEraserAffectElement = _doesEraserAffectElement(
+          element,
+          eraser,
+          size,
+        );
         print(doesEraserAffectElement);
         if (doesEraserAffectElement) {
           // *** 修改在这里：调用 _getFinalEraserPath 并传入 triangleCut ***
@@ -1396,19 +1427,18 @@ class _LayerPainter extends CustomPainter {
         );
         final Rect elementRect = Rect.fromPoints(elementStart, elementEnd);
 
-        // 如果橡皮擦是完整的基础矩形（无曲率也无切割），则使用最简单的矩形重叠判断
-        if (eraserCurvature <= 0.0 &&
-            eraserTriangleCut == TriangleCutType.none) {
-          return eraserRect.overlaps(elementRect);
-        }
+        // // 如果橡皮擦是完整的基础矩形（无曲率也无切割），则使用最简单的矩形重叠判断
+        // if (eraserCurvature <= 0.0) {
+          
+        // }
 
-        // 否则，使用更新后的、能处理复杂橡皮擦形状的重叠判断函数
-        return _isRectOverlappingEraserShape(
-          elementRect,
-          eraserRect,
-          eraserCurvature,
-          eraserTriangleCut,
-        );
+        // // 否则，使用更新后的、能处理复杂橡皮擦形状的重叠判断函数
+        // return _isRectOverlappingEraserShape(
+        //   elementRect,
+        //   eraserRect,
+        //   eraserCurvature,
+        // );
+        return eraserRect.overlaps(elementRect);
     }
   }
 
@@ -1522,74 +1552,42 @@ class _LayerPainter extends CustomPainter {
   }
 
   /// 检查矩形是否与橡皮擦形状重叠
+  /// 检查矩形是否与橡皮擦形状重叠
   bool _isRectOverlappingEraserShape(
     Rect elementRect,
     Rect eraserRect,
     double curvature,
-    TriangleCutType triangleCut,
   ) {
-    // 1. 快速包围盒检测 (优化)
-    // eraserRect 是橡皮擦的最大范围。如果元素矩形与此都不重叠，则肯定不与切割后的橡皮擦重叠。
-    if (!elementRect.overlaps(eraserRect)) {
-      return false;
-    }
-
-    // 2. 检查 elementRect 的关键点是否在最终的橡皮擦形状内
-    final elementTestPoints = [
+    // 检查矩形的角点和中点是否有任何一个在椭圆内  <--- 注意这里的注释
+    final testPoints = [
       elementRect.topLeft,
       elementRect.topRight,
       elementRect.bottomLeft,
       elementRect.bottomRight,
       elementRect.center,
-      // 可以根据需要添加更多测试点，如边的中点
+      Offset(elementRect.center.dx, elementRect.top), // 上中
+      Offset(elementRect.center.dx, elementRect.bottom), // 下中
+      Offset(elementRect.left, elementRect.center.dy), // 左中
+      Offset(elementRect.right, elementRect.center.dy), // 右中
     ];
-    for (final point in elementTestPoints) {
-      if (_isPointInFinalEraserShape(
-        point,
-        eraserRect,
-        curvature,
-        triangleCut,
-      )) {
-        return true; // 元素的一个关键点在橡皮擦内，判定为重叠
-      }
-    }
 
-    // 3. 检查橡皮擦包围盒的关键点（如果这些点确实属于最终橡皮擦形状）是否在 elementRect 内
-    // 这有助于捕捉橡皮擦“侵入”elementRect 的情况，即使elementRect的关键点不在橡皮擦内。
-    final eraserBoundingBoxPoints = [
-      eraserRect.topLeft,
-      eraserRect.topRight,
-      eraserRect.bottomLeft,
-      eraserRect.bottomRight,
-      // eraserRect.center, // 通常中心点被包含的情况，角点测试也能覆盖
-    ];
-    for (final point in eraserBoundingBoxPoints) {
-      // 必须同时满足：该点在 elementRect 内，且该点也属于最终的橡皮擦有效区域
-      if (elementRect.contains(point) &&
-          _isPointInFinalEraserShape(
-            point,
-            eraserRect,
-            curvature,
-            triangleCut,
-          )) {
+    for (final point in testPoints) {
+      // 关键调用：这里使用了 _isPointInEraserShape
+      if (_isPointInEraserShape(point, eraserRect, curvature)) {
         return true;
       }
     }
 
-    // 4. 更复杂的检测（可选，且成本较高）：
-    //    - 如果 elementRect 完全被最终橡皮擦形状包含（例如，elementRect.center 在内，且 elementRect 较小）。
-    //    - 真实的多边形交集测试。这通常需要专门的几何库。
-    //    对于大多数应用，上述两组点测试是计算成本和准确性之间的一个合理折衷。
-    //    如果以上检查都没有返回true，我们可能假设它们不以我们关心的方式重叠。
+    // 如果没有点在椭圆内，还需要检查椭圆是否完全在矩形内 <--- 注意这里的注释
+    // 这个检查的是 eraserRect (橡皮擦的包围盒) 是否在 elementRect 内部
+    if (eraserRect.left >= elementRect.left &&
+        eraserRect.right <= elementRect.right &&
+        eraserRect.top >= elementRect.top &&
+        eraserRect.bottom <= elementRect.bottom) {
+      return true;
+    }
 
-    // 如果希望更精确，但又不想引入复杂库，可以考虑：
-    // a. 将 elementRect 也转为 Path。
-    // b. 计算 finalEraserPath = _getFinalEraserPath(eraserRect, curvature, triangleCut);
-    // c. 计算 intersectionPath = Path.combine(PathOperation.intersect, finalEraserPath, elementRectPath);
-    // d. return !intersectionPath.getBounds().isEmpty; (相交路径的包围盒非空则认为重叠)
-    //    这种方法的性能开销会比较大，尤其是在频繁调用时。
-
-    return false; // 如果上述检测都未发现重叠
+    return false;
   }
 
   void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
@@ -2154,11 +2152,31 @@ class _CurrentDrawingPainter extends CustomPainter {
         ..color = Colors.red.withAlpha((0.3 * 255).toInt())
         ..style = PaintingStyle.fill;
 
-      // 根据曲率参数绘制不同形状：0.0 = 矩形，1.0 = 椭圆
-      if (curvature > 0.0) {
-        _drawCurvedRectangle(canvas, rect, paint, curvature);
-      } else {
-        canvas.drawRect(rect, paint);
+      switch ((curvature > 0.0, triangleCut != TriangleCutType.none)) {
+        case (true, true):
+          _drawCurvedTrianglePath(
+            canvas,
+            rect,
+            paint,
+            curvature,
+            triangleCut,
+          );
+          break;
+        case (true, false):
+          _drawCurvedRectangle(canvas, rect, paint, curvature);
+          break;
+        case (false, true):
+          _drawCurvedTrianglePath(
+            canvas,
+            rect,
+            paint,
+            curvature,
+            triangleCut,
+          );
+          break;
+        case (false, false):
+            canvas.drawRect(rect, paint);
+          break;
       }
 
       // 绘制边框
@@ -2167,10 +2185,31 @@ class _CurrentDrawingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
 
-      if (curvature > 0.0) {
-        _drawCurvedRectangle(canvas, rect, borderPaint, curvature);
-      } else {
-        canvas.drawRect(rect, borderPaint);
+      switch ((curvature > 0.0, triangleCut != TriangleCutType.none)) {
+        case (true, true):
+          _drawCurvedTrianglePath(
+            canvas,
+            rect,
+            borderPaint,
+            curvature,
+            triangleCut,
+          );
+          break;
+        case (true, false):
+          _drawCurvedRectangle(canvas, rect, borderPaint, curvature);
+          break;
+        case (false, true):
+          _drawCurvedTrianglePath(
+            canvas,
+            rect,
+            borderPaint,
+            curvature,
+            triangleCut,
+          );
+          break;
+        case (false, false):
+            canvas.drawRect(rect, borderPaint);
+          break;
       }
       return;
     }
