@@ -10,6 +10,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final bool isPreviewMode;
   final VoidCallback onClose; // 关闭回调
   final Function(String)? onLegendItemSelected; // 图例项选中回调
+  final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -19,6 +20,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.isPreviewMode = false,
     required this.onClose,
     this.onLegendItemSelected,
+    this.allLayers,
   });
 
   @override
@@ -28,11 +30,31 @@ class LegendGroupManagementDrawer extends StatefulWidget {
 class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
-
+  bool _isSmartHidingEnabled = false; // 智能隐藏开关状态
   @override
   void initState() {
     super.initState();
     _currentGroup = widget.legendGroup;
+    // 延迟执行检查，避免在初始化期间调用setState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSmartHiding();
+    });
+  }@override
+  void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.allLayers != widget.allLayers) {
+      // 延迟执行检查，避免在build期间调用setState
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkSmartHiding();
+      });
+    }
+  }
+  /// 外部调用：当图层状态发生变化时，检查智能隐藏逻辑
+  void checkSmartHidingOnLayerChange() {
+    // 延迟执行检查，确保不会在build期间调用
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSmartHiding();
+    });
   }
 
   // 检查图例项是否被选中
@@ -128,9 +150,7 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
               ],
             ),
           ),
-          const Divider(height: 1),
-
-          // 图例组设置
+          const Divider(height: 1),          // 图例组设置
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -166,6 +186,59 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
                     ),
                   ],
                 ),
+                
+                // 智能隐藏设置
+                if (widget.allLayers != null && widget.allLayers!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '智能隐藏',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            Switch(
+                              value: _isSmartHidingEnabled,
+                              onChanged: widget.isPreviewMode ? null : _toggleSmartHiding,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _buildSmartHidingDescription(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -449,13 +522,39 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
         ),
       ],
     );
-  }
-
-  void _updateGroup(LegendGroup updatedGroup) {
+  }  void _updateGroup(LegendGroup updatedGroup) {
     setState(() {
       _currentGroup = updatedGroup.copyWith(updatedAt: DateTime.now());
     });
     widget.onLegendGroupUpdated(_currentGroup);
+    
+    // 延迟执行检查，避免在setState期间再次调用setState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSmartHiding();
+    });
+  }  /// 应用智能隐藏逻辑
+  void _applySmartHidingLogic() {
+    if (!_isSmartHidingEnabled) return; // 只有启用智能隐藏才应用逻辑
+    if (!mounted) return; // 确保组件仍然挂载
+    
+    final shouldHide = _shouldSmartHideGroup();
+    final shouldShow = _shouldSmartShowGroup();
+    
+    // 双向智能控制：
+    // 1. 当所有绑定图层都隐藏时，自动隐藏图例组
+    if (shouldHide && _currentGroup.isVisible) {
+      setState(() {
+        _currentGroup = _currentGroup.copyWith(isVisible: false, updatedAt: DateTime.now());
+      });
+      widget.onLegendGroupUpdated(_currentGroup);
+    } 
+    // 2. 当有绑定图层重新显示时，自动显示图例组
+    else if (shouldShow && !_currentGroup.isVisible) {
+      setState(() {
+        _currentGroup = _currentGroup.copyWith(isVisible: true, updatedAt: DateTime.now());
+      });
+      widget.onLegendGroupUpdated(_currentGroup);
+    }
   }
 
   void _showEditNameDialog() {
@@ -633,7 +732,6 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
       ),
     );
   }
-
   void _deleteLegendItem(LegendItem item) {
     showDialog(
       context: context,
@@ -660,5 +758,103 @@ class _LegendGroupManagementDrawerState extends State<LegendGroupManagementDrawe
         ],
       ),
     );
+  }
+
+  // 智能隐藏相关方法
+    /// 检查智能隐藏状态
+  void _checkSmartHiding() {
+    // 智能隐藏开关状态不会自动改变，只能由用户手动控制
+    // 这里只是检查如果启用了智能隐藏，是否需要应用智能隐藏逻辑
+    if (_isSmartHidingEnabled) {
+      _applySmartHidingLogic();
+    }
+  }
+  /// 判断是否应该智能隐藏该图例组
+  /// 条件：当所有绑定到该图例组的图层都隐藏时，返回true
+  bool _shouldSmartHideGroup() {
+    if (widget.allLayers == null || widget.allLayers!.isEmpty) {
+      return false;
+    }
+
+    // 找到所有绑定了当前图例组的图层
+    final boundLayers = widget.allLayers!.where((layer) {
+      return layer.legendGroupIds.contains(_currentGroup.id);
+    }).toList();
+
+    // 如果没有图层绑定到这个图例组，不智能隐藏
+    if (boundLayers.isEmpty) {
+      return false;
+    }
+
+    // 检查所有绑定的图层是否都隐藏了
+    return boundLayers.every((layer) => !layer.isVisible);
+  }
+
+  /// 判断是否应该智能显示该图例组
+  /// 条件：当有任意绑定到该图例组的图层显示时，返回true
+  bool _shouldSmartShowGroup() {
+    if (widget.allLayers == null || widget.allLayers!.isEmpty) {
+      return false;
+    }
+
+    // 找到所有绑定了当前图例组的图层
+    final boundLayers = widget.allLayers!.where((layer) {
+      return layer.legendGroupIds.contains(_currentGroup.id);
+    }).toList();
+
+    // 如果没有图层绑定到这个图例组，不智能显示
+    if (boundLayers.isEmpty) {
+      return false;
+    }
+
+    // 检查是否有任意绑定的图层是可见的
+    return boundLayers.any((layer) => layer.isVisible);
+  }
+
+  /// 获取绑定了当前图例组的图层列表
+  List<MapLayer> _getBoundLayers() {
+    if (widget.allLayers == null) return [];
+    return widget.allLayers!.where((layer) {
+      return layer.legendGroupIds.contains(_currentGroup.id);
+    }).toList();
+  }  /// 切换智能隐藏开关
+  void _toggleSmartHiding(bool enabled) {
+    setState(() {
+      _isSmartHidingEnabled = enabled;
+    });
+    
+    // 如果启用智能隐藏，立即应用双向逻辑
+    if (enabled) {
+      final shouldHide = _shouldSmartHideGroup();
+      final shouldShow = _shouldSmartShowGroup();
+      
+      if (shouldHide && _currentGroup.isVisible) {
+        _updateGroup(_currentGroup.copyWith(isVisible: false));
+      } else if (shouldShow && !_currentGroup.isVisible) {
+        _updateGroup(_currentGroup.copyWith(isVisible: true));
+      }
+    }
+    // 如果禁用智能隐藏，不改变当前显示状态，让用户手动控制
+  }/// 构建智能隐藏的描述文本
+  String _buildSmartHidingDescription() {
+    final boundLayers = _getBoundLayers();
+    
+    if (boundLayers.isEmpty) {
+      return '当前图例组未绑定任何图层';
+    }
+
+    final hiddenLayersCount = boundLayers.where((layer) => !layer.isVisible).length;
+    final totalLayersCount = boundLayers.length;
+
+    if (_isSmartHidingEnabled) {
+      if (hiddenLayersCount == totalLayersCount) {
+        return '已启用：绑定的 $totalLayersCount 个图层均已隐藏，图例组已自动隐藏';
+      } else {
+        final visibleLayersCount = totalLayersCount - hiddenLayersCount;
+        return '已启用：绑定的 $totalLayersCount 个图层中有 $visibleLayersCount 个可见，图例组已自动显示';
+      }
+    } else {
+      return '启用后，根据绑定图层的可见性自动控制图例组显示/隐藏（共 $totalLayersCount 个图层）';
+    }
   }
 }

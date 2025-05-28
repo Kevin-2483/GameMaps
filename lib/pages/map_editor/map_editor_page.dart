@@ -670,14 +670,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     right: 16,
                     child: Material(
                       elevation: 8,
-                      borderRadius: BorderRadius.circular(12),
-                      child: LegendGroupManagementDrawer(
+                      borderRadius: BorderRadius.circular(12),                      child: LegendGroupManagementDrawer(
                         legendGroup: _currentLegendGroupForManagement!,
                         availableLegends: _availableLegends,
                         onLegendGroupUpdated: _updateLegendGroup,
                         isPreviewMode: widget.isPreviewMode,
                         onClose: _closeLegendGroupManagementDrawer,
                         onLegendItemSelected: _selectLegendItem,
+                        allLayers: _currentMap?.layers, // 传递所有图层用于智能隐藏功能
                       ),
                     ),
                   ),
