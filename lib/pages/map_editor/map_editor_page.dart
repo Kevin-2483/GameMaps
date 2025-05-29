@@ -98,11 +98,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
   LegendGroup? _currentLegendGroupForManagement;
-
   // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
-  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量  @override
+  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量
+  
+  // 数据变更跟踪
+  bool _hasUnsavedChanges = false;@override
   void initState() {
     super.initState();
     _initializeMap();
@@ -141,10 +143,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       setState(() => _isLoading = false);
     }
   }
-
   // 撤销历史记录管理方法
   void _saveToUndoHistory() {
     if (_currentMap == null) return;
+    
+    // 只有在非初始化状态时才标记为有未保存更改
+    if (_undoHistory.isNotEmpty) {
+      _hasUnsavedChanges = true;
+    }
+    
     // 保存当前状态到撤销历史
     _undoHistory.add(_currentMap!.copyWith());
 
@@ -156,7 +163,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _undoHistory.removeAt(0);
     }
   }
-
   void _undo() {
     if (_undoHistory.isEmpty || _currentMap == null) return;
 
@@ -170,6 +176,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
 
       _currentMap = _undoHistory.removeLast();
+      
+      // 撤销操作也算作修改，除非回到初始状态
+      _hasUnsavedChanges = _undoHistory.isNotEmpty;
 
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
@@ -199,6 +208,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
 
       _currentMap = _redoHistory.removeLast();
+      _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
 
       // 更新选中图层，确保引用正确
       if (_selectedLayer != null) {
@@ -279,9 +289,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
       _selectedLayer = defaultLayer;
     });
-  }
-  void _addNewLayer() {
+  }  void _addNewLayer() {
     if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
 
     final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -297,12 +309,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
       _selectedLayer = newLayer;
     });
-  }
-  void _deleteLayer(MapLayer layer) {
+  }  void _deleteLayer(MapLayer layer) {
     if (widget.isPreviewMode ||
         _currentMap == null ||
         _currentMap!.layers.length <= 1)
       return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
 
     setState(() {
       final updatedLayers = _currentMap!.layers
@@ -337,9 +351,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
-
   void _reorderLayers(int oldIndex, int newIndex) {
     if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
 
     setState(() {
       final layers = List<MapLayer>.from(_currentMap!.layers);
@@ -357,9 +373,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _currentMap = _currentMap!.copyWith(layers: layers);
     });
   }
-
   void _addLegendGroup() {
     if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
 
     final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -374,9 +392,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
     });
   }
-
   void _deleteLegendGroup(LegendGroup group) {
     if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
 
     setState(() {
       final updatedGroups = _currentMap!.legendGroups
@@ -389,6 +409,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
+    // 保存当前状态到撤销历史（只在非预览模式下）
+    if (!widget.isPreviewMode) {
+      _saveToUndoHistory();
+    }
+
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
         (g) => g.id == updatedGroup.id,
@@ -399,7 +424,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
       }
     });
-  } // 处理透明度预览
+  }// 处理透明度预览
 
   void _handleOpacityPreview(String layerId, double opacity) {
     setState(() {
@@ -576,11 +601,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
       // 尝试序列化数据以检查是否有格式问题
       final databaseData = updatedMap.toDatabase();
-      print('数据库数据准备完成，字段数量: ${databaseData.keys.length}');
-
-      await _mapDatabaseService.updateMap(updatedMap);
+      print('数据库数据准备完成，字段数量: ${databaseData.keys.length}');      await _mapDatabaseService.updateMap(updatedMap);
       print('地图保存成功完成');
       _showSuccessSnackBar('地图保存成功');
+      
+      // 清除未保存更改标记
+      _hasUnsavedChanges = false;
     } catch (e, stackTrace) {
       print('保存失败详细错误:');
       print('错误: $e');
@@ -602,7 +628,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
     }
   }
-
   void _showSuccessSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -613,6 +638,43 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       );
     }
+  }
+
+  // 退出确认对话框
+  Future<bool> _showExitConfirmDialog() async {
+    if (!_hasUnsavedChanges || widget.isPreviewMode) {
+      return true; // 如果没有未保存更改或在预览模式，直接允许退出
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('未保存的更改'),
+        content: const Text('您有未保存的更改，确定要退出吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('不保存退出'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop(false); // 先关闭对话框
+              await _saveMap(); // 保存地图
+              if (mounted && !_hasUnsavedChanges) {
+                Navigator.of(context).pop(); // 保存成功后退出
+              }
+            },
+            child: const Text('保存并退出'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
   }
 
   // 处理工具栏自动关闭逻辑
@@ -652,14 +714,23 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
 
-    return Scaffold(
+    return PopScope(
+      canPop: false, // 阻止默认的返回行为
+      onPopInvoked: (didPop) async {
+        if (!didPop) {
+          final shouldExit = await _showExitConfirmDialog();
+          if (shouldExit && context.mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor),
         actions: [
@@ -839,8 +910,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     ),
                   ),
               ],
-            ),
-      floatingActionButton: isNarrowScreen
+            ),      floatingActionButton: isNarrowScreen
           ? AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               child: FloatingActionButton.extended(
@@ -862,6 +932,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ), // 关闭 PopScope 的 child 参数
     );
   }
 
