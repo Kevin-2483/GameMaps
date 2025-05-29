@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/build_config.dart';
+import '../../config/config_manager.dart';
 import '../navigation/tray_navigation.dart';
 
 /// 主布局组件 - 包含托盘导航的通用布局
@@ -11,11 +12,11 @@ class MainLayout extends StatelessWidget {
     super.key,
     required this.child,
     this.showTrayNavigation = true,
-  });
-  @override
+  });  @override
   Widget build(BuildContext context) {
-    // 如果编译时禁用了托盘导航，直接返回子组件
+    // 检查编译时和运行时是否都启用了托盘导航
     if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
+        !ConfigManager.instance.isCurrentPlatformFeatureEnabled('TrayNavigation') ||
         !showTrayNavigation) {
       return child;
     }

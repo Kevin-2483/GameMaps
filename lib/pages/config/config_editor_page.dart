@@ -45,13 +45,12 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
       }
     }
   }
-
   List<String> _getAllPages() {
-    return ['HomePage', 'SettingsPage', 'MapAtlasPage', 'TrayNavigation'];
+    return ['HomePage', 'SettingsPage', 'MapAtlasPage'];
   }
 
   List<String> _getAllFeatures() {
-    return ['DebugMode', 'ExperimentalFeatures'];
+    return ['DebugMode', 'ExperimentalFeatures', 'TrayNavigation'];
   }
 
   void _updateConfig() {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/build_config.dart';
+import '../../config/config_manager.dart';
 import '../navigation/tray_navigation.dart';
 
 /// 应用程序外壳 - 包含托盘导航和页面内容区域
@@ -8,11 +9,11 @@ class AppShell extends StatelessWidget {
   final Widget child;
 
   const AppShell({super.key, required this.child});
-
   @override
   Widget build(BuildContext context) {
-    // 如果编译时禁用了托盘导航，直接返回子组件
-    if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation')) {
+    // 检查编译时和运行时是否都启用了托盘导航
+    if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
+        !ConfigManager.instance.isCurrentPlatformFeatureEnabled('TrayNavigation')) {
       return child;
     }
 
