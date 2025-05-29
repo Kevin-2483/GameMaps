@@ -91,11 +91,22 @@ class _PageConfigDetector extends StatefulWidget {
   State<_PageConfigDetector> createState() => _PageConfigDetectorState();
 }
 
-class _PageConfigDetectorState extends State<_PageConfigDetector> {
+class _PageConfigDetectorState extends State<_PageConfigDetector> with RouteAware {
   @override
   void initState() {
     super.initState();
     // 在下一帧检查页面配置
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _checkPageConfiguration();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 在依赖变化时重新检查配置（包括路由变化）
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _checkPageConfiguration();

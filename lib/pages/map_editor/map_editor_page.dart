@@ -5,6 +5,7 @@ import '../../services/map_database_service.dart';
 import '../../services/legend_database_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart' as legend_db;
+import '../../components/layout/main_layout.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
@@ -13,7 +14,7 @@ import 'widgets/layer_legend_binding_drawer.dart';
 import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
 
-class MapEditorPage extends StatefulWidget {
+class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
   final int? mapId; // 地图ID，用于按需加载
   final bool isPreviewMode;
@@ -29,10 +30,34 @@ class MapEditorPage extends StatefulWidget {
        );
 
   @override
-  State<MapEditorPage> createState() => _MapEditorPageState();
+  bool get showTrayNavigation => false; // 禁用 TrayNavigation
+
+  @override
+  Widget buildContent(BuildContext context) {
+    return _MapEditorContent(
+      mapItem: mapItem,
+      mapId: mapId,
+      isPreviewMode: isPreviewMode,
+    );
+  }
 }
 
-class _MapEditorPageState extends State<MapEditorPage> {
+class _MapEditorContent extends StatefulWidget {
+  final MapItem? mapItem;
+  final int? mapId;
+  final bool isPreviewMode;
+
+  const _MapEditorContent({
+    this.mapItem,
+    this.mapId,
+    this.isPreviewMode = false,
+  });
+
+  @override
+  State<_MapEditorContent> createState() => _MapEditorContentState();
+}
+
+class _MapEditorContentState extends State<_MapEditorContent> {
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = MapDatabaseService();
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
@@ -84,9 +109,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   Future<void> _initializeMap() async {
-    setState(() => _isLoading = true);
-
-    try {
+    setState(() => _isLoading = true);    try {
       // 如果已有 mapItem，直接使用；否则通过 mapId 从数据库加载
       if (widget.mapItem != null) {
         _currentMap = widget.mapItem!;
@@ -194,7 +217,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   bool get _canUndo => _undoHistory.isNotEmpty;
   bool get _canRedo => _redoHistory.isNotEmpty;
-
   // 删除指定图层中的绘制元素
   void _deleteElement(String elementId) {
     if (widget.isPreviewMode || _selectedLayer == null) return;
@@ -258,7 +280,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _selectedLayer = defaultLayer;
     });
   }
-
   void _addNewLayer() {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -277,7 +298,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _selectedLayer = newLayer;
     });
   }
-
   void _deleteLayer(MapLayer layer) {
     if (widget.isPreviewMode ||
         _currentMap == null ||

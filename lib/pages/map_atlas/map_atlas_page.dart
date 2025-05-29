@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
 import '../../components/layout/main_layout.dart';
+import '../../components/layout/page_configuration.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
@@ -327,9 +328,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
   }
-
-  void _openMapEditor(int mapId) {
-    Navigator.of(context).push(
+  void _openMapEditor(int mapId) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConfigAwareWidget(
           featureId: 'DebugMode',
@@ -344,6 +344,17 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         ),
       ),
     );
+    
+    // 地图编辑器关闭后，强制重新检查页面配置
+    if (mounted) {
+      // 使用延迟确保页面已完全恢复
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // 发送页面配置通知以重新显示TrayNavigation
+          PageConfigurationNotification(showTrayNavigation: true).dispatch(context);
+        }
+      });
+    }
   }
 
   int _calculateCrossAxisCount(BuildContext context) {
