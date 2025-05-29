@@ -1553,42 +1553,42 @@ class _LayerPainter extends CustomPainter {
 
   /// 检查矩形是否与橡皮擦形状重叠
   /// 检查矩形是否与橡皮擦形状重叠
-  bool _isRectOverlappingEraserShape(
-    Rect elementRect,
-    Rect eraserRect,
-    double curvature,
-  ) {
-    // 检查矩形的角点和中点是否有任何一个在椭圆内  <--- 注意这里的注释
-    final testPoints = [
-      elementRect.topLeft,
-      elementRect.topRight,
-      elementRect.bottomLeft,
-      elementRect.bottomRight,
-      elementRect.center,
-      Offset(elementRect.center.dx, elementRect.top), // 上中
-      Offset(elementRect.center.dx, elementRect.bottom), // 下中
-      Offset(elementRect.left, elementRect.center.dy), // 左中
-      Offset(elementRect.right, elementRect.center.dy), // 右中
-    ];
+  // bool _isRectOverlappingEraserShape(
+  //   Rect elementRect,
+  //   Rect eraserRect,
+  //   double curvature,
+  // ) {
+  //   // 检查矩形的角点和中点是否有任何一个在椭圆内  <--- 注意这里的注释
+  //   final testPoints = [
+  //     elementRect.topLeft,
+  //     elementRect.topRight,
+  //     elementRect.bottomLeft,
+  //     elementRect.bottomRight,
+  //     elementRect.center,
+  //     Offset(elementRect.center.dx, elementRect.top), // 上中
+  //     Offset(elementRect.center.dx, elementRect.bottom), // 下中
+  //     Offset(elementRect.left, elementRect.center.dy), // 左中
+  //     Offset(elementRect.right, elementRect.center.dy), // 右中
+  //   ];
 
-    for (final point in testPoints) {
-      // 关键调用：这里使用了 _isPointInEraserShape
-      if (_isPointInEraserShape(point, eraserRect, curvature)) {
-        return true;
-      }
-    }
+  //   for (final point in testPoints) {
+  //     // 关键调用：这里使用了 _isPointInEraserShape
+  //     if (_isPointInEraserShape(point, eraserRect, curvature)) {
+  //       return true;
+  //     }
+  //   }
 
-    // 如果没有点在椭圆内，还需要检查椭圆是否完全在矩形内 <--- 注意这里的注释
-    // 这个检查的是 eraserRect (橡皮擦的包围盒) 是否在 elementRect 内部
-    if (eraserRect.left >= elementRect.left &&
-        eraserRect.right <= elementRect.right &&
-        eraserRect.top >= elementRect.top &&
-        eraserRect.bottom <= elementRect.bottom) {
-      return true;
-    }
+  //   // 如果没有点在椭圆内，还需要检查椭圆是否完全在矩形内 <--- 注意这里的注释
+  //   // 这个检查的是 eraserRect (橡皮擦的包围盒) 是否在 elementRect 内部
+  //   if (eraserRect.left >= elementRect.left &&
+  //       eraserRect.right <= elementRect.right &&
+  //       eraserRect.top >= elementRect.top &&
+  //       eraserRect.bottom <= elementRect.bottom) {
+  //     return true;
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
     final paint = Paint()

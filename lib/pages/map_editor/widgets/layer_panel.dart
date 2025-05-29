@@ -367,10 +367,10 @@ class _LayerPanelState extends State<LayerPanel> {
         ),
       ),
     );
-  }
-
-  /// 构建图层名称编辑器
+  }  /// 构建图层名称编辑器
   Widget _buildLayerNameEditor(MapLayer layer) {
+    final TextEditingController controller = TextEditingController(text: layer.name);
+    
     return Container(
       height: 32,
       decoration: BoxDecoration(
@@ -378,9 +378,8 @@ class _LayerPanelState extends State<LayerPanel> {
         borderRadius: BorderRadius.circular(4),
         color: Colors.grey.shade50,
       ),
-      child: TextFormField(
-        key: ValueKey('layer_name_${layer.id}'),
-        initialValue: layer.name,
+      child: TextField(
+        controller: controller,
         style: const TextStyle(fontSize: 14),
         textAlign: TextAlign.left,
         textAlignVertical: TextAlignVertical.center,
@@ -393,17 +392,30 @@ class _LayerPanelState extends State<LayerPanel> {
         ),
         enabled: !widget.isPreviewMode,
         textInputAction: TextInputAction.done,
-        onFieldSubmitted: (newName) {
-          if (newName.trim().isNotEmpty && newName.trim() != layer.name) {
-            final updatedLayer = layer.copyWith(
-              name: newName.trim(),
-              updatedAt: DateTime.now(),
-            );
-            widget.onLayerUpdated(updatedLayer);
-          }
+        onSubmitted: (newName) => _saveLayerName(layer, newName),
+        onTapOutside: (event) {
+          // 当用户点击输入框外部时保存名称
+          _saveLayerName(layer, controller.text);
+          // 失去焦点
+          FocusScope.of(context).unfocus();
+        },
+        onEditingComplete: () {
+          // 当用户完成编辑时保存名称
+          _saveLayerName(layer, controller.text);
         },
       ),
     );
+  }
+
+  /// 保存图层名称
+  void _saveLayerName(MapLayer layer, String newName) {
+    if (newName.trim().isNotEmpty && newName.trim() != layer.name) {
+      final updatedLayer = layer.copyWith(
+        name: newName.trim(),
+        updatedAt: DateTime.now(),
+      );
+      widget.onLayerUpdated(updatedLayer);
+    }
   }
 
   /// 处理图片上传
