@@ -44,9 +44,8 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
         );
       }
     }
-  }
-  List<String> _getAllPages() {
-    return ['HomePage', 'SettingsPage', 'MapAtlasPage'];
+  }  List<String> _getAllPages() {
+    return ['HomePage', 'SettingsPage', 'MapAtlasPage', 'FullscreenTestPage'];
   }
 
   List<String> _getAllFeatures() {

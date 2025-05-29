@@ -1,26 +1,26 @@
 {  "platform": {
     "Windows": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "MacOS": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Linux": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Android": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "iOS": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },
     "Web": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage"],
+      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     }
   },

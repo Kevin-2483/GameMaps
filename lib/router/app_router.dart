@@ -6,8 +6,8 @@ import '../features/page-modules/home_page_module.dart';
 import '../features/page-modules/settings_page_module.dart';
 import '../features/page-modules/map_atlas_page_module.dart';
 import '../features/page-modules/legend_manager_page_module.dart';
-import '../components/layout/app_shell.dart';
 import '../features/page-modules/config_editor_module.dart';
+import '../features/page-modules/fullscreen_test_page_module.dart';
 
 class AppRouter {
   static GoRouter createRouter() {
@@ -16,16 +16,9 @@ class AppRouter {
 
     // 从PageRegistry生成路由
     final pageRegistry = PageRegistry();
-    final routes = pageRegistry.generateRoutes();
-
-    return GoRouter(
+    final routes = pageRegistry.generateRoutes();    return GoRouter(
       initialLocation: '/',
-      routes: [
-        ShellRoute(
-          builder: (context, state, child) => AppShell(child: child),
-          routes: routes,
-        ),
-      ],
+      routes: routes,
       errorBuilder: (context, state) {
         final l10n = AppLocalizations.of(context);
         return Scaffold(
@@ -52,7 +45,6 @@ class AppRouter {
       },
     );
   }
-
   /// 初始化页面模块
   static void _initializePages() {
     final registry = PageRegistry();
@@ -62,5 +54,6 @@ class AppRouter {
     registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
     registry.register(ConfigEditorModule());
+    registry.register(FullscreenTestPageModule());
   }
 }

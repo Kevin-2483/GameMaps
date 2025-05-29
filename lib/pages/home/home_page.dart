@@ -59,9 +59,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Quick actions
+              const SizedBox(height: 24),              // Quick actions
               Row(
                 children: [
                   Expanded(
@@ -76,6 +74,25 @@ class _HomePageContentState extends State<_HomePageContent> {
                               Icon(Icons.settings, size: 32),
                               SizedBox(height: 8),
                               Text(l10n.settings),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Card(
+                      child: InkWell(
+                        onTap: () => context.go('/fullscreen-test'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Icon(Icons.fullscreen, size: 32),
+                              SizedBox(height: 8),
+                              Text('全屏测试'),
                             ],
                           ),
                         ),

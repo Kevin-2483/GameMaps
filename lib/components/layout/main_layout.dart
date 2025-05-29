@@ -58,9 +58,48 @@ abstract class BasePage extends StatelessWidget {
   /// 页面内容构建方法，子类必须实现
   Widget buildContent(BuildContext context);
 
+  /// 控制此页面是否显示 TrayNavigation
+  /// 默认值为 true，子类可以重写此方法来自定义行为
+  bool get showTrayNavigation => true;
+
   @override
   Widget build(BuildContext context) {
-    return buildContent(context);
+    final content = buildContent(context);
+
+    // 检查是否应该显示 TrayNavigation
+    if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
+        !ConfigManager.instance.isCurrentPlatformFeatureEnabled('TrayNavigation') ||
+        !showTrayNavigation) {
+      return content;
+    }
+
+    // 显示带有 TrayNavigation 的布局
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // 根据屏幕比例决定导航位置
+          final isWideScreen = constraints.maxWidth > constraints.maxHeight;
+
+          if (isWideScreen) {
+            // 宽屏：导航栏在左侧
+            return Row(
+              children: [
+                const TrayNavigation(),
+                Expanded(child: content),
+              ],
+            );
+          } else {
+            // 窄屏：导航栏在底部
+            return Column(
+              children: [
+                Expanded(child: content),
+                const TrayNavigation(),
+              ],
+            );
+          }
+        },
+      ),
+    );
   }
 }
 

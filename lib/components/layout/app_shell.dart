@@ -9,6 +9,7 @@ class AppShell extends StatelessWidget {
   final Widget child;
 
   const AppShell({super.key, required this.child});
+
   @override
   Widget build(BuildContext context) {
     // 检查编译时和运行时是否都启用了托盘导航
