@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/legend_item.dart' as legend_db;
-import '../../../utils/image_utils.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -449,12 +448,12 @@ class _MapCanvasState extends State<MapCanvas> {
     return Positioned.fill(
       child: Opacity(
         opacity: layer.isVisible ? effectiveOpacity : 0.0,
-        child: ImageUtils.buildImageFromBase64(
+        child: Image.memory(
           layer.imageData!,
           width: kCanvasWidth,
           height: kCanvasHeight,
           fit: BoxFit.contain,
-          opacity: 1.0, // 透明度已经通过Opacity widget控制
+          // opacity: 1.0, // 透明度已经通过Opacity widget控制
         ),
       ),
     );

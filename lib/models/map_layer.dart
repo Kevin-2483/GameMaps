@@ -1,5 +1,7 @@
 import 'dart:ui';
+import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
+import 'map_item.dart'; // 导入Uint8ListConverter
 
 part 'map_layer.g.dart';
 
@@ -11,7 +13,8 @@ class MapLayer {
   final int order; // 图层顺序，数字越大越在上层
   final bool isVisible;
   final double opacity; // 透明度 0.0-1.0
-  final String? imageData; // Base64编码的图片数据，null表示透明图层
+  @Uint8ListConverter()
+  final Uint8List? imageData; // 图片二进制数据，null表示透明图层
   final List<MapDrawingElement> elements; // 绘制元素
   final List<String> legendGroupIds; // 关联的图例组ID列表
   final DateTime createdAt;
@@ -31,14 +34,13 @@ class MapLayer {
 
   factory MapLayer.fromJson(Map<String, dynamic> json) =>
       _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
-  MapLayer copyWith({
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
     String? id,
     String? name,
     int? order,
     bool? isVisible,
     double? opacity,
-    String? imageData,
+    Uint8List? imageData,
     List<MapDrawingElement>? elements,
     List<String>? legendGroupIds,
     DateTime? createdAt,

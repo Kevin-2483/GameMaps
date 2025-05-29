@@ -17,9 +17,8 @@ class ImageUtils {
 
   /// 最大文件大小 (10MB)
   static const int maxFileSize = 10 * 1024 * 1024;
-
   /// 选择并上传图片文件
-  static Future<String?> pickAndEncodeImage() async {
+  static Future<Uint8List?> pickAndEncodeImage() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -60,8 +59,8 @@ class ImageUtils {
           throw Exception('不支持的文件格式，支持: ${supportedExtensions.join(', ')}');
         }
 
-        // 转换为Base64
-        return base64Encode(fileBytes);
+        // 直接返回Uint8List
+        return fileBytes;
       }
 
       // 用户取消选择，返回null而不是抛出异常
@@ -119,17 +118,15 @@ class ImageUtils {
       ),
     );
   }
-
-  /// 从Base64数据创建图片Widget
-  static Widget buildImageFromBase64(
-    String base64Data, {
+  /// 从图片数据创建图片Widget
+  static Widget buildImageFromBytes(
+    Uint8List? imageBytes, {
     double? width,
     double? height,
     BoxFit fit = BoxFit.contain,
     double opacity = 1.0,
   }) {
-    final imageBytes = decodeBase64Image(base64Data);
-    if (imageBytes == null) {
+    if (imageBytes == null || imageBytes.isEmpty) {
       return buildTransparentPlaceholder(width: width, height: height);
     }
 
@@ -147,10 +144,27 @@ class ImageUtils {
     );
   }
 
-  /// 获取图片的尺寸信息
-  static Future<Size?> getImageSize(String base64Data) async {
+  /// 从Base64数据创建图片Widget (保留向后兼容)
+  static Widget buildImageFromBase64(
+    String base64Data, {
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.contain,
+    double opacity = 1.0,
+  }) {
     final imageBytes = decodeBase64Image(base64Data);
-    if (imageBytes == null) return null;
+    return buildImageFromBytes(
+      imageBytes,
+      width: width,
+      height: height,
+      fit: fit,
+      opacity: opacity,
+    );
+  }
+
+  /// 获取图片的尺寸信息
+  static Future<Size?> getImageSize(Uint8List? imageBytes) async {
+    if (imageBytes == null || imageBytes.isEmpty) return null;
 
     try {
       final image = await decodeImageFromList(imageBytes);
@@ -159,5 +173,11 @@ class ImageUtils {
       debugPrint('获取图片尺寸失败: $e');
       return null;
     }
+  }
+
+  /// 获取图片的尺寸信息 (Base64版本，保留向后兼容)
+  static Future<Size?> getImageSizeFromBase64(String base64Data) async {
+    final imageBytes = decodeBase64Image(base64Data);
+    return getImageSize(imageBytes);
   }
 }
