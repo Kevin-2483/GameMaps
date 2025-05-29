@@ -8,6 +8,7 @@ import '../features/page-modules/map_atlas_page_module.dart';
 import '../features/page-modules/legend_manager_page_module.dart';
 import '../features/page-modules/config_editor_module.dart';
 import '../features/page-modules/fullscreen_test_page_module.dart';
+import '../components/layout/app_shell.dart';
 
 class AppRouter {
   static GoRouter createRouter() {
@@ -18,7 +19,12 @@ class AppRouter {
     final pageRegistry = PageRegistry();
     final routes = pageRegistry.generateRoutes();    return GoRouter(
       initialLocation: '/',
-      routes: routes,
+      routes: [
+        ShellRoute(
+          builder: (context, state, child) => AppShell(child: child),
+          routes: routes,
+        ),
+      ],
       errorBuilder: (context, state) {
         final l10n = AppLocalizations.of(context);
         return Scaffold(

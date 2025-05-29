@@ -23,9 +23,15 @@ class PageConfigurationProvider extends InheritedWidget {
     final provider = context.dependOnInheritedWidgetOfExactType<PageConfigurationProvider>();
     return provider?.configuration;
   }
-
   @override
   bool updateShouldNotify(PageConfigurationProvider oldWidget) {
-    return configuration != oldWidget.configuration;
+    return configuration.showTrayNavigation != oldWidget.configuration.showTrayNavigation;
   }
+}
+
+/// 自定义通知 - 用于从页面向上传递配置信息
+class PageConfigurationNotification extends Notification {
+  final bool showTrayNavigation;
+
+  const PageConfigurationNotification({required this.showTrayNavigation});
 }
