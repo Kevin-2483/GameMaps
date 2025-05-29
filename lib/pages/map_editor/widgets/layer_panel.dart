@@ -74,10 +74,10 @@ class _LayerPanelState extends State<LayerPanel> {
                       '暂无图层',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
-                  )
-                : ReorderableListView.builder(
+                  )                : ReorderableListView.builder(
                     itemCount: widget.layers.length,
                     onReorder: widget.onLayersReordered,
+                    buildDefaultDragHandles: false, // 禁用默认拖动手柄
                     itemBuilder: (context, index) {
                       final layer = widget.layers[index];
                       return _buildLayerTile(context, layer, index);
@@ -253,8 +253,9 @@ class _LayerPanelState extends State<LayerPanel> {
         Row(
           children: [
             const Text('不透明度:', style: TextStyle(fontSize: 11)),
-            const SizedBox(width: 8),
-            Expanded(
+            const SizedBox(width: 3), // 你可以根据需要调小这个值
+            Flexible(
+              // 用 Flexible 而不是 Expanded 更好控制空间分配
               child: Slider(
                 value: currentOpacity,
                 min: 0.0,
@@ -268,6 +269,7 @@ class _LayerPanelState extends State<LayerPanel> {
                     : (opacity) => _handleOpacityChangeEnd(layer, opacity),
               ),
             ),
+            const SizedBox(width: 3), // 添加一点间距让数值不会贴太紧
             Text(
               '${(currentOpacity * 100).round()}%',
               style: const TextStyle(fontSize: 11),
@@ -312,65 +314,99 @@ class _LayerPanelState extends State<LayerPanel> {
       });
     });
   }
-
   /// 构建图例组绑定 chip
   Widget _buildLegendGroupsChip(MapLayer layer) {
     final boundGroupsCount = layer.legendGroupIds.length;
+    final layerIndex = widget.layers.indexOf(layer);
 
-    return InkWell(
-      onTap: widget.isPreviewMode
-          ? null
-          : () => widget.onShowLayerLegendBinding?.call(
-              layer,
-              widget.allLegendGroups,
-            ),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: boundGroupsCount > 0
-              ? Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: boundGroupsCount > 0
-                ? Theme.of(
-                    context,
-                  ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                : Colors.grey.shade300,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.legend_toggle,
-              size: 12,
-              color: boundGroupsCount > 0
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.grey,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
-              style: TextStyle(
-                fontSize: 10,
+    return Row(
+      children: [
+        // 图例组绑定chip
+        Expanded(
+          child: InkWell(
+            onTap: widget.isPreviewMode
+                ? null
+                : () => widget.onShowLayerLegendBinding?.call(
+                    layer,
+                    widget.allLegendGroups,
+                  ),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
                 color: boundGroupsCount > 0
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade600,
-                fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: boundGroupsCount > 0
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
+                      : Colors.grey.shade300,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.legend_toggle,
+                    size: 12,
+                    color: boundGroupsCount > 0
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: boundGroupsCount > 0
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey.shade600,
+                      fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        
+        // 拖动手柄
+        if (!widget.isPreviewMode) ...[
+          const SizedBox(width: 8),
+          ReorderableDragStartListener(
+            index: layerIndex,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                ),
+              ),
+              child: Icon(
+                Icons.drag_handle,
+                size: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
-  }  /// 构建图层名称编辑器
+  }
+
+  /// 构建图层名称编辑器
   Widget _buildLayerNameEditor(MapLayer layer) {
-    final TextEditingController controller = TextEditingController(text: layer.name);
-    
+    final TextEditingController controller = TextEditingController(
+      text: layer.name,
+    );
+
     return Container(
       height: 32,
       decoration: BoxDecoration(
