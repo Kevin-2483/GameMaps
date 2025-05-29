@@ -41,11 +41,21 @@ class _LegendGroupManagementDrawerState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmartHiding();
     });
-  }
-
-  @override
+  }  @override
   void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
+    
+    // 如果传入的图例组发生变化，更新当前组
+    if (oldWidget.legendGroup.id != widget.legendGroup.id) {
+      _currentGroup = widget.legendGroup;
+      // 清除选中的图例项，因为切换到了新的图例组
+      _selectedLegendItemId = null;
+      // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkSmartHiding();
+      });
+    }
+    
     if (oldWidget.allLayers != widget.allLayers) {
       // 延迟执行检查，避免在build期间调用setState
       WidgetsBinding.instance.addPostFrameCallback((_) {
