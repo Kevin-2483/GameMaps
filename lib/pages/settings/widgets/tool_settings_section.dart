@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../components/color_picker_dialog.dart';
 
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -289,10 +290,17 @@ class ToolSettingsSection extends StatelessWidget {
     final newColors = List<int>.from(preferences.tools.recentColors);
     newColors.removeAt(index);
     provider.updateTools(recentColors: newColors);
-  }
-
-  void _addNewColor(BuildContext context, UserPreferencesProvider provider) {
-    // 添加新颜色的实现
+  }  void _addNewColor(BuildContext context, UserPreferencesProvider provider) {
+    ColorPicker.showColorPicker(
+      context: context,
+      initialColor: Colors.blue,
+      title: '添加最近使用颜色',
+      enableAlpha: true,
+    ).then((selectedColor) {
+      if (selectedColor != null) {
+        provider.addRecentColor(selectedColor.value);
+      }
+    });
   }
 
   void _clearRecentColors(BuildContext context, UserPreferencesProvider provider) {
@@ -481,49 +489,17 @@ class ToolSettingsSection extends StatelessWidget {
     final newColors = List<int>.from(preferences.tools.customColors);
     newColors.removeAt(index);
     provider.updateTools(customColors: newColors);
-  }
-
-  void _addNewCustomColor(BuildContext context, UserPreferencesProvider provider) {
-    showDialog(
+  }  void _addNewCustomColor(BuildContext context, UserPreferencesProvider provider) {
+    ColorPicker.showColorPicker(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('选择自定义颜色'),
-        content: SizedBox(
-          width: 300,
-          height: 200,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: _predefinedColors.length,
-            itemBuilder: (context, index) {
-              final color = _predefinedColors[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  provider.addCustomColor(color.value);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-        ],
-      ),
-    );
+      initialColor: Colors.purple,
+      title: '添加自定义颜色',
+      enableAlpha: true,
+    ).then((selectedColor) {
+      if (selectedColor != null) {
+        provider.addCustomColor(selectedColor.value);
+      }
+    });
   }
 
   void _clearCustomColors(BuildContext context, UserPreferencesProvider provider) {
@@ -544,47 +520,7 @@ class ToolSettingsSection extends StatelessWidget {
             },
             child: Text('清空'),
           ),
-        ],
-      ),
+        ],      ),
     );
   }
-
-  static const List<Color> _predefinedColors = [
-    Colors.red,
-    Colors.pink,
-    Colors.purple,
-    Colors.deepPurple,
-    Colors.indigo,
-    Colors.blue,
-    Colors.lightBlue,
-    Colors.cyan,
-    Colors.teal,
-    Colors.green,
-    Colors.lightGreen,
-    Colors.lime,
-    Colors.yellow,
-    Colors.amber,
-    Colors.orange,
-    Colors.deepOrange,
-    Colors.brown,
-    Colors.grey,
-    Colors.blueGrey,
-    Colors.black,
-    Color(0xFF8E24AA),
-    Color(0xFF5E35B1),
-    Color(0xFF3949AB),
-    Color(0xFF1E88E5),
-    Color(0xFF039BE5),
-    Color(0xFF00ACC1),
-    Color(0xFF00897B),
-    Color(0xFF43A047),
-    Color(0xFF7CB342),
-    Color(0xFFC0CA33),
-    Color(0xFFFFB300),
-    Color(0xFFFF8F00),
-    Color(0xFFFF5722),
-    Color(0xFF6D4C41),
-    Color(0xFF546E7A),
-    Color(0xFF37474F),
-  ];
 }

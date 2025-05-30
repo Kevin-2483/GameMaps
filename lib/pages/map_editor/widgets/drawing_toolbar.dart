@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../components/color_picker_dialog.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -455,9 +456,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             '颜色',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 8),
-
-          Wrap(
+          const SizedBox(height: 8),          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -473,6 +472,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               _buildColorButton(Colors.cyan),
               _buildColorButton(Colors.pink),
               _buildColorButton(const Color(0xFF1565C0)),
+              // 更多颜色按钮
+              _buildMoreColorsButton(),
             ],
           ),
 
@@ -482,27 +483,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               final customColors = userPrefs.tools.customColors;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        '自定义颜色',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      IconButton(
-                        onPressed: () => _showColorPicker(context, userPrefs),
-                        icon: const Icon(Icons.add),
-                        iconSize: 20,
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                          minWidth: 28,
-                          minHeight: 28,
-                        ),
-                        tooltip: '添加自定义颜色',
-                      ),
-                    ],
+                children: [                  const SizedBox(height: 16),
+                  const Text(
+                    '自定义颜色',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 8),
                   if (customColors.isNotEmpty)
@@ -513,8 +497,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                         final color = Color(colorValue);
                         return _buildCustomColorButton(color, userPrefs);
                       }).toList(),
-                    )
-                  else
+                    )                  else
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -523,7 +506,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '点击 + 添加自定义颜色',
+                        '点击调色盘按钮添加自定义颜色',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -796,90 +779,70 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ),
           ),
         ),
-      ],
-    );
-  }
-  void _showColorPicker(BuildContext context, UserPreferencesProvider userPrefs) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('选择自定义颜色'),
-        content: SizedBox(
-          width: 300,
-          height: 200,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: _predefinedColors.length,
-            itemBuilder: (context, index) {
-              final color = _predefinedColors[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  userPrefs.addCustomColor(color.value);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                ),
-              );
-            },
+      ],    );  }
+
+  Widget _buildMoreColorsButton() {
+    return InkWell(
+      onTap: () => _showAdvancedColorPicker(),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.grey.shade400,
+            width: 2,
+            style: BorderStyle.solid,
           ),
+          color: Colors.transparent,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-        ],
+        child: Icon(
+          Icons.palette,
+          size: 16,
+          color: Colors.grey.shade600,
+        ),
       ),
     );
+  }  void _showAdvancedColorPicker() {
+    showDialog(
+      context: context,
+      builder: (context) => ColorPickerDialog(
+        initialColor: _effectiveColor,
+        title: '高级颜色选择器',
+        enableAlpha: true,
+      ),
+    ).then((selectedColor) {
+      if (selectedColor != null) {
+        // 显示选择对话框
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('选择操作'),
+            content: const Text('请选择要执行的操作：'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _handleColorSelection(selectedColor);
+                },
+                child: const Text('直接使用'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  final userPrefs = context.read<UserPreferencesProvider>();
+                  userPrefs.addCustomColor(selectedColor.value);
+                  _handleColorSelection(selectedColor);
+                },
+                child: const Text('添加到自定义'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
   }
-
-  static const List<Color> _predefinedColors = [
-    Colors.red,
-    Colors.pink,
-    Colors.purple,
-    Colors.deepPurple,
-    Colors.indigo,
-    Colors.blue,
-    Colors.lightBlue,
-    Colors.cyan,
-    Colors.teal,
-    Colors.green,
-    Colors.lightGreen,
-    Colors.lime,
-    Colors.yellow,
-    Colors.amber,
-    Colors.orange,
-    Colors.deepOrange,
-    Colors.brown,
-    Colors.grey,
-    Colors.blueGrey,
-    Colors.black,
-    Color(0xFF8E24AA),
-    Color(0xFF5E35B1),
-    Color(0xFF3949AB),
-    Color(0xFF1E88E5),
-    Color(0xFF039BE5),
-    Color(0xFF00ACC1),
-    Color(0xFF00897B),
-    Color(0xFF43A047),
-    Color(0xFF7CB342),
-    Color(0xFFC0CA33),
-    Color(0xFFFFB300),
-    Color(0xFFFF8F00),
-    Color(0xFFFF5722),
-    Color(0xFF6D4C41),
-    Color(0xFF546E7A),
-    Color(0xFF37474F),
-  ];
 
   void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {
     userPrefs.removeCustomColor(color.value);
