@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../providers/user_preferences_provider.dart';
 import '../../services/map_database_service.dart';
 import '../../services/legend_database_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -101,11 +103,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isZIndexInspectorOpen = false;
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
-  LegendGroup? _currentLegendGroupForManagement;
-  // 撤销/重做历史记录管理
+  LegendGroup? _currentLegendGroupForManagement;  // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
-  static const int _maxUndoHistory = 20; // 最大撤销历史记录数量
+  // 动态获取撤销历史记录数量限制
+  int get _maxUndoHistory {
+    final provider = context.read<UserPreferencesProvider>();
+    return provider.mapEditor.undoHistoryLimit;
+  }
   
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;@override
@@ -1378,35 +1383,42 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       ],
     );
-  }
-
-  /// 构建地图画布组件
+  }  /// 构建地图画布组件
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return MapCanvas(
-      mapItem: _currentMap!,
-      selectedLayer: _selectedLayer,
-      selectedDrawingTool: _selectedDrawingTool,
-      selectedColor: _selectedColor,
-      selectedStrokeWidth: _selectedStrokeWidth,
-      selectedDensity: _selectedDensity,
-      selectedCurvature: _selectedCurvature,
-      availableLegends: _availableLegends,
-      isPreviewMode: widget.isPreviewMode,
-      onLayerUpdated: _updateLayer,
-      onLegendGroupUpdated: _updateLegendGroup,
-      onLegendItemSelected: _selectLegendItem,
-      onLegendItemDoubleClicked: _handleLegendItemDoubleClick,
-      previewOpacityValues: _previewOpacityValues,
-      previewDrawingTool: _previewDrawingTool,
-      previewColor: _previewColor,
-      previewStrokeWidth: _previewStrokeWidth,
-      previewDensity: _previewDensity,
-      previewCurvature: _previewCurvature,
-      previewTriangleCut: _previewTriangleCut,
-      selectedElementId: _selectedElementId,
+    
+    return Consumer<UserPreferencesProvider>(
+      builder: (context, userPrefsProvider, child) {
+        final mapEditorPrefs = userPrefsProvider.mapEditor;
+        
+        return MapCanvas(
+          mapItem: _currentMap!,
+          selectedLayer: _selectedLayer,
+          selectedDrawingTool: _selectedDrawingTool,
+          selectedColor: _selectedColor,
+          selectedStrokeWidth: _selectedStrokeWidth,
+          selectedDensity: _selectedDensity,
+          selectedCurvature: _selectedCurvature,
+          availableLegends: _availableLegends,
+          isPreviewMode: widget.isPreviewMode,
+          onLayerUpdated: _updateLayer,
+          onLegendGroupUpdated: _updateLegendGroup,
+          onLegendItemSelected: _selectLegendItem,
+          onLegendItemDoubleClicked: _handleLegendItemDoubleClick,
+          previewOpacityValues: _previewOpacityValues,
+          previewDrawingTool: _previewDrawingTool,
+          previewColor: _previewColor,
+          previewStrokeWidth: _previewStrokeWidth,
+          previewDensity: _previewDensity,
+          previewCurvature: _previewCurvature,
+          previewTriangleCut: _previewTriangleCut,
+          selectedElementId: _selectedElementId,
+          backgroundPattern: mapEditorPrefs.backgroundPattern,
+          zoomSensitivity: mapEditorPrefs.zoomSensitivity,
+        );
+      },
     );
   }
 

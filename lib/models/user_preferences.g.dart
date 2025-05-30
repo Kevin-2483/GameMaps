@@ -63,35 +63,28 @@ Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
 MapEditorPreferences _$MapEditorPreferencesFromJson(
   Map<String, dynamic> json,
 ) => MapEditorPreferences(
-  defaultDrawingTool: json['defaultDrawingTool'] as String?,
-  defaultColor: (json['defaultColor'] as num).toInt(),
-  defaultStrokeWidth: (json['defaultStrokeWidth'] as num).toDouble(),
-  defaultDensity: (json['defaultDensity'] as num).toDouble(),
-  defaultCurvature: (json['defaultCurvature'] as num).toDouble(),
-  autoSave: json['autoSave'] as bool? ?? true,
-  autoSaveInterval: (json['autoSaveInterval'] as num?)?.toInt() ?? 5,
   undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
-  showGrid: json['showGrid'] as bool? ?? false,
-  gridSize: (json['gridSize'] as num?)?.toDouble() ?? 20.0,
-  snapToGrid: json['snapToGrid'] as bool? ?? false,
   zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
+  backgroundPattern:
+      $enumDecodeNullable(
+        _$BackgroundPatternEnumMap,
+        json['backgroundPattern'],
+      ) ??
+      BackgroundPattern.checkerboard,
 );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
   MapEditorPreferences instance,
 ) => <String, dynamic>{
-  'defaultDrawingTool': instance.defaultDrawingTool,
-  'defaultColor': instance.defaultColor,
-  'defaultStrokeWidth': instance.defaultStrokeWidth,
-  'defaultDensity': instance.defaultDensity,
-  'defaultCurvature': instance.defaultCurvature,
-  'autoSave': instance.autoSave,
-  'autoSaveInterval': instance.autoSaveInterval,
   'undoHistoryLimit': instance.undoHistoryLimit,
-  'showGrid': instance.showGrid,
-  'gridSize': instance.gridSize,
-  'snapToGrid': instance.snapToGrid,
   'zoomSensitivity': instance.zoomSensitivity,
+  'backgroundPattern': _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
+};
+
+const _$BackgroundPatternEnumMap = {
+  BackgroundPattern.blank: 'blank',
+  BackgroundPattern.grid: 'grid',
+  BackgroundPattern.checkerboard: 'checkerboard',
 };
 
 LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>

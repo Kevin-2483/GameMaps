@@ -166,103 +166,46 @@ class ThemePreferences {
   Map<String, dynamic> toJson() => _$ThemePreferencesToJson(this);
 }
 
+/// 背景图案类型
+enum BackgroundPattern {
+  blank,       // 空白
+  grid,        // 网格
+  checkerboard // 棋盘格
+}
+
 /// 地图编辑器偏好设置
 @JsonSerializable()
 class MapEditorPreferences {
-  /// 默认绘制工具
-  final String? defaultDrawingTool;
-
-  /// 默认颜色
-  final int defaultColor;
-
-  /// 默认线条宽度
-  final double defaultStrokeWidth;
-
-  /// 默认密度
-  final double defaultDensity;
-
-  /// 默认弧度
-  final double defaultCurvature;
-
-  /// 是否自动保存
-  final bool autoSave;
-
-  /// 自动保存间隔（分钟）
-  final int autoSaveInterval;
-
   /// 撤销历史记录数量
   final int undoHistoryLimit;
 
-  /// 是否显示网格
-  final bool showGrid;
-
-  /// 网格大小
-  final double gridSize;
-
-  /// 是否吸附到网格
-  final bool snapToGrid;
-
   /// 缩放敏感度
-  final double zoomSensitivity;
+  final double zoomSensitivity;  /// 背景图案类型
+  final BackgroundPattern backgroundPattern;
 
   const MapEditorPreferences({
-    this.defaultDrawingTool,
-    required this.defaultColor,
-    required this.defaultStrokeWidth,
-    required this.defaultDensity,
-    required this.defaultCurvature,
-    this.autoSave = true,
-    this.autoSaveInterval = 5,
     this.undoHistoryLimit = 20,
-    this.showGrid = false,
-    this.gridSize = 20.0,
-    this.snapToGrid = false,
     this.zoomSensitivity = 1.0,
+    this.backgroundPattern = BackgroundPattern.checkerboard,
   });
 
   factory MapEditorPreferences.createDefault() {
     return const MapEditorPreferences(
-      defaultColor: 0xFF000000, // 黑色
-      defaultStrokeWidth: 2.0,
-      defaultDensity: 3.0,
-      defaultCurvature: 0.0,
-      autoSave: true,
-      autoSaveInterval: 5,
       undoHistoryLimit: 20,
-      showGrid: false,
-      gridSize: 20.0,
-      snapToGrid: false,
       zoomSensitivity: 1.0,
+      backgroundPattern: BackgroundPattern.checkerboard,
     );
   }
 
   MapEditorPreferences copyWith({
-    String? defaultDrawingTool,
-    int? defaultColor,
-    double? defaultStrokeWidth,
-    double? defaultDensity,
-    double? defaultCurvature,
-    bool? autoSave,
-    int? autoSaveInterval,
     int? undoHistoryLimit,
-    bool? showGrid,
-    double? gridSize,
-    bool? snapToGrid,
     double? zoomSensitivity,
+    BackgroundPattern? backgroundPattern,
   }) {
     return MapEditorPreferences(
-      defaultDrawingTool: defaultDrawingTool ?? this.defaultDrawingTool,
-      defaultColor: defaultColor ?? this.defaultColor,
-      defaultStrokeWidth: defaultStrokeWidth ?? this.defaultStrokeWidth,
-      defaultDensity: defaultDensity ?? this.defaultDensity,
-      defaultCurvature: defaultCurvature ?? this.defaultCurvature,
-      autoSave: autoSave ?? this.autoSave,
-      autoSaveInterval: autoSaveInterval ?? this.autoSaveInterval,
       undoHistoryLimit: undoHistoryLimit ?? this.undoHistoryLimit,
-      showGrid: showGrid ?? this.showGrid,
-      gridSize: gridSize ?? this.gridSize,
-      snapToGrid: snapToGrid ?? this.snapToGrid,
       zoomSensitivity: zoomSensitivity ?? this.zoomSensitivity,
+      backgroundPattern: backgroundPattern ?? this.backgroundPattern,
     );
   }
 

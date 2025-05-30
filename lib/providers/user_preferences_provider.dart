@@ -116,39 +116,19 @@ class UserPreferencesProvider extends ChangeNotifier {
     } catch (e) {
       _setError('更新主题设置失败: ${e.toString()}');
     }
-  }
-
-  /// 更新地图编辑器设置
+  }  /// 更新地图编辑器设置
   Future<void> updateMapEditor({
-    String? defaultDrawingTool,
-    int? defaultColor,
-    double? defaultStrokeWidth,
-    double? defaultDensity,
-    double? defaultCurvature,
-    bool? autoSave,
-    int? autoSaveInterval,
     int? undoHistoryLimit,
-    bool? showGrid,
-    double? gridSize,
-    bool? snapToGrid,
     double? zoomSensitivity,
+    BackgroundPattern? backgroundPattern,
   }) async {
     if (_currentPreferences == null) return;
 
     try {
       final updatedMapEditor = mapEditor.copyWith(
-        defaultDrawingTool: defaultDrawingTool,
-        defaultColor: defaultColor,
-        defaultStrokeWidth: defaultStrokeWidth,
-        defaultDensity: defaultDensity,
-        defaultCurvature: defaultCurvature,
-        autoSave: autoSave,
-        autoSaveInterval: autoSaveInterval,
         undoHistoryLimit: undoHistoryLimit,
-        showGrid: showGrid,
-        gridSize: gridSize,
-        snapToGrid: snapToGrid,
         zoomSensitivity: zoomSensitivity,
+        backgroundPattern: backgroundPattern,
       );
 
       await _service.updateMapEditor(updatedMapEditor);
@@ -407,15 +387,9 @@ class UserPreferencesProvider extends ChangeNotifier {
         return ThemeMode.system;
     }
   }
-
   /// 获取主色调
   Color getPrimaryColor() {
     return Color(theme.primaryColor);
-  }
-
-  /// 获取默认绘制颜色
-  Color getDefaultDrawingColor() {
-    return Color(mapEditor.defaultColor);
   }
 
   @override

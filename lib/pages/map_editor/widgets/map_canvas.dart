@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
+import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 
 // 画布固定尺寸常量，确保坐标转换的一致性
@@ -281,6 +282,12 @@ class MapCanvas extends StatefulWidget {
 
   // 选中元素高亮
   final String? selectedElementId;
+    // 背景图案设置
+  final BackgroundPattern backgroundPattern;
+  
+  // 缩放敏感度
+  final double zoomSensitivity;
+  
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -304,6 +311,8 @@ class MapCanvas extends StatefulWidget {
     this.previewCurvature,
     this.previewTriangleCut,
     this.selectedElementId,
+    this.backgroundPattern = BackgroundPattern.checkerboard,
+    this.zoomSensitivity = 1.0,
   });
 
   @override
@@ -350,12 +359,12 @@ class _MapCanvasState extends State<MapCanvas> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: InteractiveViewer(
+        borderRadius: BorderRadius.circular(8),        child: InteractiveViewer(
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
           maxScale: 5.0,
+          scaleFactor: 200.0 * widget.zoomSensitivity, // 应用缩放敏感度
           constrained: false, // 关键：不约束子组件大小
           child: SizedBox(
             width: kCanvasWidth,
@@ -368,13 +377,12 @@ class _MapCanvasState extends State<MapCanvas> {
                   height: kCanvasHeight,
                   decoration: const BoxDecoration(color: Colors.white),
                   child: Stack(
-                    children: [
-                      // 透明背景指示器（棋盘格图案）
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _TransparentBackgroundPainter(),
-                        ),
+                    children: [                    // 背景图案（根据用户偏好设置）
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _BackgroundPatternPainter(widget.backgroundPattern),
                       ),
+                    ),
 
                       // 按层级顺序渲染所有元素
                       ..._buildLayeredElements(),
@@ -2315,10 +2323,46 @@ class _CurrentDrawingPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-/// 透明背景画笔，绘制棋盘格图案
-class _TransparentBackgroundPainter extends CustomPainter {
+/// 背景图案画笔，支持多种背景模式
+class _BackgroundPatternPainter extends CustomPainter {
+  final BackgroundPattern pattern;
+  
+  _BackgroundPatternPainter(this.pattern);
+
   @override
   void paint(Canvas canvas, Size size) {
+    switch (pattern) {
+      case BackgroundPattern.blank:
+        // 空白背景，不绘制任何图案
+        break;
+      case BackgroundPattern.grid:
+        _drawGrid(canvas, size);
+        break;
+      case BackgroundPattern.checkerboard:
+        _drawCheckerboard(canvas, size);
+        break;
+    }
+  }
+
+  void _drawGrid(Canvas canvas, Size size) {
+    const double gridSize = 20.0;
+    final Paint gridPaint = Paint()
+      ..color = Colors.grey.shade300
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    // 绘制垂直线
+    for (double x = 0; x <= size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+
+    // 绘制水平线
+    for (double y = 0; y <= size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+  }
+
+  void _drawCheckerboard(Canvas canvas, Size size) {
     const double squareSize = 20.0;
     final Paint lightPaint = Paint()..color = Colors.grey.shade100;
     final Paint darkPaint = Paint()..color = Colors.grey.shade200;
@@ -2339,5 +2383,7 @@ class _TransparentBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BackgroundPatternPainter oldDelegate) {
+    return oldDelegate.pattern != pattern;
+  }
 }
