@@ -12,7 +12,8 @@ import 'map_localization_service.dart';
 /// 合并数据库导出服务
 /// 用于将地图、图例和本地化数据导出为单个JSON文件，供Web平台使用
 class CombinedDatabaseExporter {
-  static final CombinedDatabaseExporter _instance = CombinedDatabaseExporter._internal();
+  static final CombinedDatabaseExporter _instance =
+      CombinedDatabaseExporter._internal();
   factory CombinedDatabaseExporter() => _instance;
   CombinedDatabaseExporter._internal();
 
@@ -21,10 +22,10 @@ class CombinedDatabaseExporter {
   final MapLocalizationService _localizationService = MapLocalizationService();
 
   /// 导出所有数据库数据为单个JSON文件
-  /// 
+  ///
   /// [customVersion] 自定义导出版本号
   /// [includeLocalizations] 是否包含本地化数据
-  /// 
+  ///
   /// 返回导出文件路径，失败时返回null
   Future<String?> exportAllDatabases({
     int? customVersion,
@@ -34,7 +35,8 @@ class CombinedDatabaseExporter {
       // 获取所有数据
       final maps = await _mapService.getAllMaps();
       final legends = await _legendService.getAllLegends();
-      final mapVersion = customVersion ?? await _mapService.getDatabaseVersion();
+      final mapVersion =
+          customVersion ?? await _mapService.getDatabaseVersion();
       final legendVersion = await _legendService.getDatabaseVersion();
 
       // 构建导出数据结构
@@ -60,7 +62,8 @@ class CombinedDatabaseExporter {
       // 可选包含本地化数据
       if (includeLocalizations) {
         try {
-          final localizationDb = await _localizationService.getAllLocalizations();
+          final localizationDb = await _localizationService
+              .getAllLocalizations();
           exportData['localizations'] = {
             'version': localizationDb.version,
             'data': localizationDb.toJson(),
@@ -75,14 +78,17 @@ class CombinedDatabaseExporter {
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: '导出R6Box数据库 (Web平台专用)',
-        fileName: 'r6box_database_web_v${mapVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
+        fileName:
+            'r6box_database_web_v${mapVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
 
       if (outputFile != null) {
         final file = File(outputFile);
-        final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
+        final jsonString = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(exportData);
         await file.writeAsString(jsonString);
 
         debugPrint('''
@@ -146,7 +152,9 @@ class CombinedDatabaseExporter {
   }
 
   /// 获取导出文件信息
-  static Future<Map<String, dynamic>?> getExportFileInfo(String filePath) async {
+  static Future<Map<String, dynamic>?> getExportFileInfo(
+    String filePath,
+  ) async {
     try {
       final file = File(filePath);
       if (!await file.exists()) return null;

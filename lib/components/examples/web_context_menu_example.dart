@@ -12,9 +12,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
     return WebContextMenuHandler(
       preventWebContextMenu: true,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Web兼容右键菜单示例'),
-        ),
+        appBar: AppBar(title: const Text('Web兼容右键菜单示例')),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -30,15 +28,15 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                 '通过我们的处理方案，可以禁用浏览器默认菜单，使用Flutter自定义菜单。',
               ),
               const SizedBox(height: 24),
-              
+
               // 示例1：简单的右键菜单
               _buildContextMenuExample1(context),
               const SizedBox(height: 16),
-              
+
               // 示例2：复杂的右键菜单
               _buildContextMenuExample2(context),
               const SizedBox(height: 16),
-              
+
               // 示例3：列表项右键菜单
               _buildContextMenuExample3(context),
             ],
@@ -55,10 +53,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '示例1：简单右键菜单',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('示例1：简单右键菜单', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ContextMenuWrapper(
               menuBuilder: (context) => [
@@ -86,9 +81,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
-                  child: Text('右键点击这里试试'),
-                ),
+                child: const Center(child: Text('右键点击这里试试')),
               ),
             ),
           ],
@@ -104,10 +97,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '示例2：图片编辑菜单',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('示例2：图片编辑菜单', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ContextMenuWrapper(
               menuBuilder: (context) => [
@@ -176,10 +166,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '示例3：列表项菜单',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('示例3：列表项菜单', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ...List.generate(3, (index) {
               return ContextMenuWrapper(
@@ -198,7 +185,8 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ContextMenuItem(
                     label: '复制链接',
                     icon: Icons.link,
-                    onTap: () => _showSnackBar(context, '已复制项目 ${index + 1} 链接'),
+                    onTap: () =>
+                        _showSnackBar(context, '已复制项目 ${index + 1} 链接'),
                   ),
                   ContextMenuItem(
                     label: '分享',
@@ -213,9 +201,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ),
                 ],
                 child: ListTile(
-                  leading: CircleAvatar(
-                    child: Text('${index + 1}'),
-                  ),
+                  leading: CircleAvatar(child: Text('${index + 1}')),
                   title: Text('列表项 ${index + 1}'),
                   subtitle: Text('右键点击查看选项'),
                   trailing: const Icon(Icons.more_vert),
@@ -230,10 +216,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
 
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
 }

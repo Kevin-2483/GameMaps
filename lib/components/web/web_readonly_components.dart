@@ -77,10 +77,7 @@ class WebFeatureRestriction extends StatelessWidget {
       onTap: () => WebReadOnlyDialog.show(context, operationName),
       child: Opacity(
         opacity: 0.6,
-        child: IgnorePointer(
-          ignoring: true,
-          child: child,
-        ),
+        child: IgnorePointer(ignoring: true, child: child),
       ),
     );
   }

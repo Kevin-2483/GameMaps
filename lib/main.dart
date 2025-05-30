@@ -54,11 +54,11 @@ class R6BoxApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()..initLocale()),
         ChangeNotifierProvider(
-            create: (_) => UserPreferencesProvider()..initialize()),
+          create: (_) => UserPreferencesProvider()..initialize(),
+        ),
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, UserPreferencesProvider>(
-        builder: (context, themeProvider, localeProvider, userPrefsProvider,
-            child) {
+        builder: (context, themeProvider, localeProvider, userPrefsProvider, child) {
           // When user preferences are loaded, establish connection with ThemeProvider
           if (userPrefsProvider.isInitialized) {
             // It's generally good practice to ensure this connection setup
@@ -75,7 +75,7 @@ class R6BoxApp extends StatelessWidget {
               fontScale: theme.fontScale,
               highContrast: theme.highContrast,
             );
-          }          // Use the pre-created router instance
+          } // Use the pre-created router instance
           return WebContextMenuHandler(
             child: MaterialApp.router(
               title: 'R6Box',
@@ -83,7 +83,6 @@ class R6BoxApp extends StatelessWidget {
 
               // Router configuration
               routerConfig: _router, // Use the stable router instance
-
               // Theme configuration
               theme: themeProvider.lightTheme,
               darkTheme: themeProvider.darkTheme,

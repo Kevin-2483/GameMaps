@@ -13,7 +13,7 @@ class DatabaseExporter {
     databaseFactory = databaseFactoryFfi;
 
     final databasesPath = await getDatabasesPath();
-    
+
     // 数据库文件路径
     final mapsDbPath = join(databasesPath, 'maps.db');
     final legendsDbPath = join(databasesPath, 'legends.db');
@@ -34,14 +34,16 @@ class DatabaseExporter {
 
     // 导出本地化数据
     if (await File(localizationDbPath).exists()) {
-      exportData['localizations'] = await _exportLocalizationData(localizationDbPath);
+      exportData['localizations'] = await _exportLocalizationData(
+        localizationDbPath,
+      );
     }
 
     // 生成导出文件
     final exportJson = jsonEncode(exportData);
     final outputFile = File('web_database_export.json');
     await outputFile.writeAsString(exportJson);
-    
+
     print('数据库导出完成！');
     print('输出文件: ${outputFile.absolute.path}');
     print('地图数量: ${(exportData['maps'] as List?)?.length ?? 0}');
@@ -49,7 +51,9 @@ class DatabaseExporter {
     print('本地化条目数量: ${(exportData['localizations'] as List?)?.length ?? 0}');
   }
 
-  static Future<List<Map<String, dynamic>>> _exportMapsData(String dbPath) async {
+  static Future<List<Map<String, dynamic>>> _exportMapsData(
+    String dbPath,
+  ) async {
     final db = await openDatabase(dbPath);
     final List<Map<String, dynamic>> maps = await db.query('maps');
     await db.close();
@@ -65,7 +69,9 @@ class DatabaseExporter {
     }).toList();
   }
 
-  static Future<List<Map<String, dynamic>>> _exportLegendsData(String dbPath) async {
+  static Future<List<Map<String, dynamic>>> _exportLegendsData(
+    String dbPath,
+  ) async {
     final db = await openDatabase(dbPath);
     final List<Map<String, dynamic>> legends = await db.query('legends');
     await db.close();
@@ -81,9 +87,13 @@ class DatabaseExporter {
     }).toList();
   }
 
-  static Future<List<Map<String, dynamic>>> _exportLocalizationData(String dbPath) async {
+  static Future<List<Map<String, dynamic>>> _exportLocalizationData(
+    String dbPath,
+  ) async {
     final db = await openDatabase(dbPath);
-    final List<Map<String, dynamic>> localizations = await db.query('map_localizations');
+    final List<Map<String, dynamic>> localizations = await db.query(
+      'map_localizations',
+    );
     await db.close();
     return localizations;
   }

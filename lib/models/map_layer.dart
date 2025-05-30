@@ -34,7 +34,8 @@ class MapLayer {
 
   factory MapLayer.fromJson(Map<String, dynamic> json) =>
       _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
+  MapLayer copyWith({
     String? id,
     String? name,
     int? order,

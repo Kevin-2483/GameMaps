@@ -6,10 +6,7 @@ import '../../../providers/user_preferences_provider.dart';
 class UserManagementSection extends StatelessWidget {
   final UserPreferences preferences;
 
-  const UserManagementSection({
-    super.key,
-    required this.preferences,
-  });
+  const UserManagementSection({super.key, required this.preferences});
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
@@ -22,12 +19,12 @@ class UserManagementSection extends StatelessWidget {
           children: [
             Text(
               '用户管理',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // 当前用户信息
             Container(
               padding: EdgeInsets.all(16),
@@ -63,33 +60,41 @@ class UserManagementSection extends StatelessWidget {
                       children: [
                         Text(
                           preferences.displayName,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         if (preferences.userId != null) ...[
                           const SizedBox(height: 4),
                           Text(
                             'ID: ${preferences.userId}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                         const SizedBox(height: 4),
                         Text(
                           '创建时间: ${_formatDate(preferences.createdAt)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                         if (preferences.lastLoginAt != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             '最后登录: ${_formatDate(preferences.lastLoginAt!)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                       ],
@@ -103,18 +108,18 @@ class UserManagementSection extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 用户配置文件管理
             Text(
               '配置文件管理',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             // 创建新配置文件
             ListTile(
               leading: Icon(Icons.person_add, color: Colors.green),
@@ -122,7 +127,7 @@ class UserManagementSection extends StatelessWidget {
               subtitle: Text('为不同用户或用途创建独立配置'),
               onTap: () => _createNewProfile(context, provider),
             ),
-            
+
             // 切换配置文件
             ListTile(
               leading: Icon(Icons.switch_account, color: Colors.blue),
@@ -130,7 +135,7 @@ class UserManagementSection extends StatelessWidget {
               subtitle: Text('在多个用户配置之间切换'),
               onTap: () => _switchProfile(context, provider),
             ),
-            
+
             // 删除当前配置文件
             if (preferences.userId != null)
               ListTile(
@@ -139,18 +144,18 @@ class UserManagementSection extends StatelessWidget {
                 subtitle: Text('永久删除当前用户配置文件'),
                 onTap: () => _deleteCurrentProfile(context, provider),
               ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 账户设置
             Text(
               '账户设置',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             // 更改显示名称
             ListTile(
               leading: Icon(Icons.badge),
@@ -159,7 +164,7 @@ class UserManagementSection extends StatelessWidget {
               trailing: Icon(Icons.edit),
               onTap: () => _changeDisplayName(context, provider),
             ),
-            
+
             // 更改头像
             ListTile(
               leading: Icon(Icons.photo),
@@ -168,7 +173,7 @@ class UserManagementSection extends StatelessWidget {
               trailing: Icon(Icons.edit),
               onTap: () => _changeAvatar(context, provider),
             ),
-            
+
             // 语言设置
             ListTile(
               leading: Icon(Icons.language),
@@ -185,7 +190,7 @@ class UserManagementSection extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
-           '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   String _getLanguageDisplayName(String locale) {
@@ -203,11 +208,15 @@ class UserManagementSection extends StatelessWidget {
     // 编辑用户信息的实现
     showDialog(
       context: context,
-      builder: (context) => _UserInfoEditDialog(preferences: preferences, provider: provider),
+      builder: (context) =>
+          _UserInfoEditDialog(preferences: preferences, provider: provider),
     );
   }
 
-  void _createNewProfile(BuildContext context, UserPreferencesProvider provider) {
+  void _createNewProfile(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => _CreateProfileDialog(provider: provider),
@@ -221,7 +230,10 @@ class UserManagementSection extends StatelessWidget {
     );
   }
 
-  void _deleteCurrentProfile(BuildContext context, UserPreferencesProvider provider) {
+  void _deleteCurrentProfile(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -254,7 +266,10 @@ class UserManagementSection extends StatelessWidget {
     );
   }
 
-  void _changeDisplayName(BuildContext context, UserPreferencesProvider provider) {
+  void _changeDisplayName(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     // 更改显示名称的实现
   }
 
@@ -288,8 +303,12 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.preferences.displayName);
-    _avatarController = TextEditingController(text: widget.preferences.avatarPath ?? '');
+    _nameController = TextEditingController(
+      text: widget.preferences.displayName,
+    );
+    _avatarController = TextEditingController(
+      text: widget.preferences.avatarPath ?? '',
+    );
   }
 
   @override
@@ -332,14 +351,13 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
           onPressed: () async {
             await widget.provider.updateUserInfo(
               displayName: _nameController.text.trim(),
-              avatarPath: _avatarController.text.trim().isEmpty ? null : _avatarController.text.trim(),
+              avatarPath: _avatarController.text.trim().isEmpty
+                  ? null
+                  : _avatarController.text.trim(),
             );
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('用户信息已更新'),
-                backgroundColor: Colors.green,
-              ),
+              SnackBar(content: Text('用户信息已更新'), backgroundColor: Colors.green),
             );
           },
           child: Text('保存'),

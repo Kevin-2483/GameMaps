@@ -6,10 +6,7 @@ import '../../../providers/user_preferences_provider.dart';
 class MapEditorSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
 
-  const MapEditorSettingsSection({
-    super.key,
-    required this.preferences,
-  });
+  const MapEditorSettingsSection({super.key, required this.preferences});
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
@@ -23,11 +20,12 @@ class MapEditorSettingsSection extends StatelessWidget {
           children: [
             Text(
               '地图编辑器设置',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),            const SizedBox(height: 16),
-            
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
             // 撤销历史记录数量
             ListTile(
               title: Text('撤销历史记录数量'),
@@ -37,13 +35,12 @@ class MapEditorSettingsSection extends StatelessWidget {
                 max: 100.0,
                 divisions: 19,
                 label: '${mapEditor.undoHistoryLimit} 步',
-                onChanged: (value) => provider.updateMapEditor(
-                  undoHistoryLimit: value.round(),
-                ),
+                onChanged: (value) =>
+                    provider.updateMapEditor(undoHistoryLimit: value.round()),
               ),
             ),
-              const SizedBox(height: 8),
-            
+            const SizedBox(height: 8),
+
             // 背景图案设置
             ListTile(
               title: Text('背景图案'),
@@ -51,7 +48,10 @@ class MapEditorSettingsSection extends StatelessWidget {
                 value: mapEditor.backgroundPattern,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
                 items: BackgroundPattern.values.map((pattern) {
                   String displayText;
@@ -78,9 +78,9 @@ class MapEditorSettingsSection extends StatelessWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 缩放敏感度
             ListTile(
               title: Text('缩放敏感度'),
@@ -90,13 +90,13 @@ class MapEditorSettingsSection extends StatelessWidget {
                 max: 3.0,
                 divisions: 10,
                 label: '${mapEditor.zoomSensitivity.toStringAsFixed(1)}x',
-                onChanged: (value) => provider.updateMapEditor(
-                  zoomSensitivity: value,
-                ),
+                onChanged: (value) =>
+                    provider.updateMapEditor(zoomSensitivity: value),
               ),
             ),
           ],
-        ),      ),
+        ),
+      ),
     );
   }
 }

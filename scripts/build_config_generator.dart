@@ -42,7 +42,9 @@ class BuildConfigGenerator {
       final buildParams = <String>[];
 
       // 添加平台参数
-      buildParams.add('--dart-define=TARGET_PLATFORM=$targetPlatform');      // 添加页面配置
+      buildParams.add(
+        '--dart-define=TARGET_PLATFORM=$targetPlatform',
+      ); // 添加页面配置
       buildParams.add(
         '--dart-define=ENABLE_HOME_PAGE=${pages.contains('HomePage')}',
       );

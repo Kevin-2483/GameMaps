@@ -59,7 +59,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 24),              // Quick actions
+              const SizedBox(height: 24), // Quick actions
               Row(
                 children: [
                   Expanded(

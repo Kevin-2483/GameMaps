@@ -37,42 +37,42 @@ class ThemeProvider extends ChangeNotifier {
     required bool highContrast,
   }) {
     if (_isUpdatingFromUserPrefs) return; // 防止循环更新
-    
+
     _isUpdatingFromUserPrefs = true;
-    
+
     final newThemeMode = _getThemeModeFromString(themeMode);
     final newPrimaryColor = Color(primaryColor);
-    
+
     // 只有当值实际发生变化时才更新
     bool hasChanges = false;
-    
+
     if (_themeMode != newThemeMode) {
       _themeMode = newThemeMode;
       hasChanges = true;
     }
-    
+
     if (_primaryColor != newPrimaryColor) {
       _primaryColor = newPrimaryColor;
       hasChanges = true;
     }
-    
+
     if (_useMaterialYou != useMaterialYou) {
       _useMaterialYou = useMaterialYou;
       hasChanges = true;
     }
-    
+
     if (_fontScale != fontScale) {
       _fontScale = fontScale;
       hasChanges = true;
     }
-    
+
     if (_highContrast != highContrast) {
       _highContrast = highContrast;
       hasChanges = true;
     }
-    
+
     _isUpdatingFromUserPrefs = false;
-    
+
     // 只有当有变化时才通知监听器
     if (hasChanges) {
       Future.microtask(() => notifyListeners());
@@ -88,7 +88,8 @@ class ThemeProvider extends ChangeNotifier {
       default:
         return AppThemeMode.system;
     }
-  }  // 亮色主题
+  } // 亮色主题
+
   ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     colorScheme: _useMaterialYou
@@ -97,7 +98,10 @@ class ThemeProvider extends ChangeNotifier {
             brightness: Brightness.light,
           )
         : ColorScheme.fromSwatch(
-            primarySwatch: MaterialColor(_primaryColor.value, _generateMaterialColor(_primaryColor)),
+            primarySwatch: MaterialColor(
+              _primaryColor.value,
+              _generateMaterialColor(_primaryColor),
+            ),
             brightness: Brightness.light,
           ),
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
@@ -124,7 +128,10 @@ class ThemeProvider extends ChangeNotifier {
             brightness: Brightness.dark,
           )
         : ColorScheme.fromSwatch(
-            primarySwatch: MaterialColor(_primaryColor.value, _generateMaterialColor(_primaryColor)),
+            primarySwatch: MaterialColor(
+              _primaryColor.value,
+              _generateMaterialColor(_primaryColor),
+            ),
             brightness: Brightness.dark,
           ),
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
@@ -147,21 +154,51 @@ class ThemeProvider extends ChangeNotifier {
   TextTheme _buildTextTheme(Brightness brightness) {
     final baseTheme = ThemeData(brightness: brightness).textTheme;
     return baseTheme.copyWith(
-      displayLarge: baseTheme.displayLarge?.copyWith(fontSize: (baseTheme.displayLarge?.fontSize ?? 57) * _fontScale),
-      displayMedium: baseTheme.displayMedium?.copyWith(fontSize: (baseTheme.displayMedium?.fontSize ?? 45) * _fontScale),
-      displaySmall: baseTheme.displaySmall?.copyWith(fontSize: (baseTheme.displaySmall?.fontSize ?? 36) * _fontScale),
-      headlineLarge: baseTheme.headlineLarge?.copyWith(fontSize: (baseTheme.headlineLarge?.fontSize ?? 32) * _fontScale),
-      headlineMedium: baseTheme.headlineMedium?.copyWith(fontSize: (baseTheme.headlineMedium?.fontSize ?? 28) * _fontScale),
-      headlineSmall: baseTheme.headlineSmall?.copyWith(fontSize: (baseTheme.headlineSmall?.fontSize ?? 24) * _fontScale),
-      titleLarge: baseTheme.titleLarge?.copyWith(fontSize: (baseTheme.titleLarge?.fontSize ?? 22) * _fontScale),
-      titleMedium: baseTheme.titleMedium?.copyWith(fontSize: (baseTheme.titleMedium?.fontSize ?? 16) * _fontScale),
-      titleSmall: baseTheme.titleSmall?.copyWith(fontSize: (baseTheme.titleSmall?.fontSize ?? 14) * _fontScale),
-      bodyLarge: baseTheme.bodyLarge?.copyWith(fontSize: (baseTheme.bodyLarge?.fontSize ?? 16) * _fontScale),
-      bodyMedium: baseTheme.bodyMedium?.copyWith(fontSize: (baseTheme.bodyMedium?.fontSize ?? 14) * _fontScale),
-      bodySmall: baseTheme.bodySmall?.copyWith(fontSize: (baseTheme.bodySmall?.fontSize ?? 12) * _fontScale),
-      labelLarge: baseTheme.labelLarge?.copyWith(fontSize: (baseTheme.labelLarge?.fontSize ?? 14) * _fontScale),
-      labelMedium: baseTheme.labelMedium?.copyWith(fontSize: (baseTheme.labelMedium?.fontSize ?? 12) * _fontScale),
-      labelSmall: baseTheme.labelSmall?.copyWith(fontSize: (baseTheme.labelSmall?.fontSize ?? 11) * _fontScale),
+      displayLarge: baseTheme.displayLarge?.copyWith(
+        fontSize: (baseTheme.displayLarge?.fontSize ?? 57) * _fontScale,
+      ),
+      displayMedium: baseTheme.displayMedium?.copyWith(
+        fontSize: (baseTheme.displayMedium?.fontSize ?? 45) * _fontScale,
+      ),
+      displaySmall: baseTheme.displaySmall?.copyWith(
+        fontSize: (baseTheme.displaySmall?.fontSize ?? 36) * _fontScale,
+      ),
+      headlineLarge: baseTheme.headlineLarge?.copyWith(
+        fontSize: (baseTheme.headlineLarge?.fontSize ?? 32) * _fontScale,
+      ),
+      headlineMedium: baseTheme.headlineMedium?.copyWith(
+        fontSize: (baseTheme.headlineMedium?.fontSize ?? 28) * _fontScale,
+      ),
+      headlineSmall: baseTheme.headlineSmall?.copyWith(
+        fontSize: (baseTheme.headlineSmall?.fontSize ?? 24) * _fontScale,
+      ),
+      titleLarge: baseTheme.titleLarge?.copyWith(
+        fontSize: (baseTheme.titleLarge?.fontSize ?? 22) * _fontScale,
+      ),
+      titleMedium: baseTheme.titleMedium?.copyWith(
+        fontSize: (baseTheme.titleMedium?.fontSize ?? 16) * _fontScale,
+      ),
+      titleSmall: baseTheme.titleSmall?.copyWith(
+        fontSize: (baseTheme.titleSmall?.fontSize ?? 14) * _fontScale,
+      ),
+      bodyLarge: baseTheme.bodyLarge?.copyWith(
+        fontSize: (baseTheme.bodyLarge?.fontSize ?? 16) * _fontScale,
+      ),
+      bodyMedium: baseTheme.bodyMedium?.copyWith(
+        fontSize: (baseTheme.bodyMedium?.fontSize ?? 14) * _fontScale,
+      ),
+      bodySmall: baseTheme.bodySmall?.copyWith(
+        fontSize: (baseTheme.bodySmall?.fontSize ?? 12) * _fontScale,
+      ),
+      labelLarge: baseTheme.labelLarge?.copyWith(
+        fontSize: (baseTheme.labelLarge?.fontSize ?? 14) * _fontScale,
+      ),
+      labelMedium: baseTheme.labelMedium?.copyWith(
+        fontSize: (baseTheme.labelMedium?.fontSize ?? 12) * _fontScale,
+      ),
+      labelSmall: baseTheme.labelSmall?.copyWith(
+        fontSize: (baseTheme.labelSmall?.fontSize ?? 11) * _fontScale,
+      ),
     );
   }
 

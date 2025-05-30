@@ -53,10 +53,7 @@ class UserPreferences {
   });
 
   /// 创建默认用户偏好设置
-  factory UserPreferences.createDefault({
-    String? userId,
-    String? displayName,
-  }) {
+  factory UserPreferences.createDefault({String? userId, String? displayName}) {
     final now = DateTime.now();
     return UserPreferences(
       userId: userId,
@@ -168,9 +165,9 @@ class ThemePreferences {
 
 /// 背景图案类型
 enum BackgroundPattern {
-  blank,       // 空白
-  grid,        // 网格
-  checkerboard // 棋盘格
+  blank, // 空白
+  grid, // 网格
+  checkerboard, // 棋盘格
 }
 
 /// 地图编辑器偏好设置
@@ -180,7 +177,9 @@ class MapEditorPreferences {
   final int undoHistoryLimit;
 
   /// 缩放敏感度
-  final double zoomSensitivity;  /// 背景图案类型
+  final double zoomSensitivity;
+
+  /// 背景图案类型
   final BackgroundPattern backgroundPattern;
 
   const MapEditorPreferences({
@@ -235,6 +234,7 @@ class LayoutPreferences {
 
   /// 动画持续时间
   final int animationDuration;
+
   /// 是否启用动画
   final bool enableAnimations;
 
@@ -253,16 +253,8 @@ class LayoutPreferences {
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
-      panelCollapsedStates: {
-        'drawing': false,
-        'layer': false,
-        'legend': false,
-      },
-      panelAutoCloseStates: {
-        'drawing': true,
-        'layer': true,
-        'legend': true,
-      },
+      panelCollapsedStates: {'drawing': false, 'layer': false, 'legend': false},
+      panelAutoCloseStates: {'drawing': true, 'layer': true, 'legend': true},
       sidebarWidth: 300.0,
       compactMode: false,
       showTooltips: true,
@@ -289,7 +281,8 @@ class LayoutPreferences {
       showTooltips: showTooltips ?? this.showTooltips,
       animationDuration: animationDuration ?? this.animationDuration,
       enableAnimations: enableAnimations ?? this.enableAnimations,
-      autoRestorePanelStates: autoRestorePanelStates ?? this.autoRestorePanelStates,
+      autoRestorePanelStates:
+          autoRestorePanelStates ?? this.autoRestorePanelStates,
     );
   }
 
@@ -351,14 +344,7 @@ class ToolPreferences {
         'paste': 'Ctrl+V',
         'delete': 'Delete',
       },
-      toolbarLayout: [
-        'pen',
-        'brush',
-        'line',
-        'rectangle',
-        'circle',
-        'text',
-      ],
+      toolbarLayout: ['pen', 'brush', 'line', 'rectangle', 'circle', 'text'],
       showAdvancedTools: false,
     );
   }

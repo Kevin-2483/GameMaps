@@ -19,7 +19,8 @@ class AppRouter {
 
     // 从PageRegistry生成路由
     final pageRegistry = PageRegistry();
-    final routes = pageRegistry.generateRoutes();    return GoRouter(
+    final routes = pageRegistry.generateRoutes();
+    return GoRouter(
       initialLocation: '/',
       routes: [
         ShellRoute(
@@ -52,7 +53,9 @@ class AppRouter {
         );
       },
     );
-  }  /// 初始化页面模块
+  }
+
+  /// 初始化页面模块
   static void _initializePages() {
     final registry = PageRegistry();
     // 注册核心页面模块
@@ -63,7 +66,7 @@ class AppRouter {
     registry.register(LegendManagerPageModule());
     registry.register(ConfigEditorModule());
     registry.register(FullscreenTestPageModule());
-    
+
     // 注册演示页面模块
     WebContextMenuDemoPageModule.register();
   }

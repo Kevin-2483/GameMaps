@@ -13,11 +13,14 @@ class MainLayout extends StatelessWidget {
     super.key,
     required this.child,
     this.showTrayNavigation = true,
-  });  @override
+  });
+  @override
   Widget build(BuildContext context) {
     // 检查编译时和运行时是否都启用了托盘导航
     if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
-        !ConfigManager.instance.isCurrentPlatformFeatureEnabled('TrayNavigation') ||
+        !ConfigManager.instance.isCurrentPlatformFeatureEnabled(
+          'TrayNavigation',
+        ) ||
         !showTrayNavigation) {
       return child;
     }
@@ -66,9 +69,7 @@ abstract class BasePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // 使用 PageConfigurationProvider 包装页面内容
     return PageConfigurationProvider(
-      configuration: PageConfiguration(
-        showTrayNavigation: showTrayNavigation,
-      ),
+      configuration: PageConfiguration(showTrayNavigation: showTrayNavigation),
       child: _PageNotifier(
         showTrayNavigation: showTrayNavigation,
         child: buildContent(context),
@@ -82,10 +83,7 @@ class _PageNotifier extends StatefulWidget {
   final bool showTrayNavigation;
   final Widget child;
 
-  const _PageNotifier({
-    required this.showTrayNavigation,
-    required this.child,
-  });
+  const _PageNotifier({required this.showTrayNavigation, required this.child});
 
   @override
   State<_PageNotifier> createState() => _PageNotifierState();
@@ -109,8 +107,9 @@ class _PageNotifierState extends State<_PageNotifier> {
   void _sendNotification() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        PageConfigurationNotification(showTrayNavigation: widget.showTrayNavigation)
-            .dispatch(context);
+        PageConfigurationNotification(
+          showTrayNavigation: widget.showTrayNavigation,
+        ).dispatch(context);
       }
     });
   }

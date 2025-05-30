@@ -282,12 +282,12 @@ class MapCanvas extends StatefulWidget {
 
   // 选中元素高亮
   final String? selectedElementId;
-    // 背景图案设置
+  // 背景图案设置
   final BackgroundPattern backgroundPattern;
-  
+
   // 缩放敏感度
   final double zoomSensitivity;
-  
+
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -359,7 +359,8 @@ class _MapCanvasState extends State<MapCanvas> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),        child: InteractiveViewer(
+        borderRadius: BorderRadius.circular(8),
+        child: InteractiveViewer(
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
@@ -377,12 +378,15 @@ class _MapCanvasState extends State<MapCanvas> {
                   height: kCanvasHeight,
                   decoration: const BoxDecoration(color: Colors.white),
                   child: Stack(
-                    children: [                    // 背景图案（根据用户偏好设置）
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: _BackgroundPatternPainter(widget.backgroundPattern),
+                    children: [
+                      // 背景图案（根据用户偏好设置）
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _BackgroundPatternPainter(
+                            widget.backgroundPattern,
+                          ),
+                        ),
                       ),
-                    ),
 
                       // 按层级顺序渲染所有元素
                       ..._buildLayeredElements(),
@@ -1436,7 +1440,7 @@ class _LayerPainter extends CustomPainter {
 
         // // 如果橡皮擦是完整的基础矩形（无曲率也无切割），则使用最简单的矩形重叠判断
         // if (eraserCurvature <= 0.0) {
-          
+
         // }
 
         // // 否则，使用更新后的、能处理复杂橡皮擦形状的重叠判断函数
@@ -2161,28 +2165,16 @@ class _CurrentDrawingPainter extends CustomPainter {
 
       switch ((curvature > 0.0, triangleCut != TriangleCutType.none)) {
         case (true, true):
-          _drawCurvedTrianglePath(
-            canvas,
-            rect,
-            paint,
-            curvature,
-            triangleCut,
-          );
+          _drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
           break;
         case (true, false):
           _drawCurvedRectangle(canvas, rect, paint, curvature);
           break;
         case (false, true):
-          _drawCurvedTrianglePath(
-            canvas,
-            rect,
-            paint,
-            curvature,
-            triangleCut,
-          );
+          _drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
           break;
         case (false, false):
-            canvas.drawRect(rect, paint);
+          canvas.drawRect(rect, paint);
           break;
       }
 
@@ -2215,7 +2207,7 @@ class _CurrentDrawingPainter extends CustomPainter {
           );
           break;
         case (false, false):
-            canvas.drawRect(rect, borderPaint);
+          canvas.drawRect(rect, borderPaint);
           break;
       }
       return;
@@ -2326,7 +2318,7 @@ class _CurrentDrawingPainter extends CustomPainter {
 /// 背景图案画笔，支持多种背景模式
 class _BackgroundPatternPainter extends CustomPainter {
   final BackgroundPattern pattern;
-  
+
   _BackgroundPatternPainter(this.pattern);
 
   @override

@@ -18,10 +18,12 @@ class _WebContextMenuDemoContent extends StatefulWidget {
   const _WebContextMenuDemoContent();
 
   @override
-  State<_WebContextMenuDemoContent> createState() => _WebContextMenuDemoContentState();
+  State<_WebContextMenuDemoContent> createState() =>
+      _WebContextMenuDemoContentState();
 }
 
-class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> {
+class _WebContextMenuDemoContentState
+    extends State<_WebContextMenuDemoContent> {
   int _selectedItemIndex = -1;
   final List<String> _items = List.generate(10, (index) => '项目 ${index + 1}');
 
@@ -79,15 +81,11 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
                 child: Row(
                   children: [
                     // 左侧：简单右键菜单演示
-                    Expanded(
-                      child: _buildSimpleDemo(),
-                    ),
+                    Expanded(child: _buildSimpleDemo()),
                     const SizedBox(width: 16),
-                    
+
                     // 右侧：列表右键菜单演示
-                    Expanded(
-                      child: _buildListDemo(),
-                    ),
+                    Expanded(child: _buildListDemo()),
                   ],
                 ),
               ),
@@ -105,12 +103,9 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '简单右键菜单',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('简单右键菜单', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
-            
+
             // 可右键的区域
             Expanded(
               child: ContextMenuWrapper(
@@ -146,10 +141,14 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.5),
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -159,17 +158,11 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
                       children: [
                         Icon(Icons.mouse, size: 48),
                         SizedBox(height: 8),
-                        Text(
-                          '右键点击这里',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                        Text('右键点击这里', style: TextStyle(fontSize: 16)),
                         SizedBox(height: 4),
                         Text(
                           '试试看右键菜单功能',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -190,12 +183,9 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '列表项右键菜单',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('列表项右键菜单', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
-            
+
             // 列表
             Expanded(
               child: ListView.builder(
@@ -203,7 +193,7 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
                 itemBuilder: (context, index) {
                   final item = _items[index];
                   final isSelected = _selectedItemIndex == index;
-                  
+
                   return ContextMenuWrapper(
                     menuBuilder: (context) => [
                       ContextMenuItem(
@@ -243,9 +233,11 @@ class _WebContextMenuDemoContentState extends State<_WebContextMenuDemoContent> 
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         selected: isSelected,
-                        selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                        selectedTileColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withOpacity(0.3),
                         leading: CircleAvatar(
-                          backgroundColor: isSelected 
+                          backgroundColor: isSelected
                               ? Theme.of(context).colorScheme.primary
                               : Colors.grey,
                           child: Text(

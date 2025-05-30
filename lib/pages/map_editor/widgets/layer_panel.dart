@@ -75,7 +75,8 @@ class _LayerPanelState extends State<LayerPanel> {
                       '暂无图层',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
-                  )                : ReorderableListView.builder(
+                  )
+                : ReorderableListView.builder(
                     itemCount: widget.layers.length,
                     onReorder: widget.onLayersReordered,
                     buildDefaultDragHandles: false, // 禁用默认拖动手柄
@@ -315,6 +316,7 @@ class _LayerPanelState extends State<LayerPanel> {
       });
     });
   }
+
   /// 构建图例组绑定 chip
   Widget _buildLegendGroupsChip(MapLayer layer) {
     final boundGroupsCount = layer.legendGroupIds.length;
@@ -336,9 +338,9 @@ class _LayerPanelState extends State<LayerPanel> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: boundGroupsCount > 0
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+                    ? Theme.of(context).colorScheme.primaryContainer.withAlpha(
+                        (0.3 * 255).toInt(),
+                      )
                     : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
@@ -361,7 +363,9 @@ class _LayerPanelState extends State<LayerPanel> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
+                    boundGroupsCount > 0
+                        ? '已绑定 $boundGroupsCount 个图例组'
+                        : '点击绑定图例组',
                     style: TextStyle(
                       fontSize: 10,
                       color: boundGroupsCount > 0
@@ -375,7 +379,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           ),
         ),
-        
+
         // 拖动手柄
         if (!widget.isPreviewMode) ...[
           const SizedBox(width: 8),
@@ -386,9 +390,7 @@ class _LayerPanelState extends State<LayerPanel> {
               decoration: BoxDecoration(
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                ),
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: Icon(
                 Icons.drag_handle,

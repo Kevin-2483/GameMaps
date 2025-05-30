@@ -17,6 +17,7 @@ class ImageUtils {
 
   /// 最大文件大小 (10MB)
   static const int maxFileSize = 10 * 1024 * 1024;
+
   /// 选择并上传图片文件
   static Future<Uint8List?> pickAndEncodeImage() async {
     try {
@@ -118,6 +119,7 @@ class ImageUtils {
       ),
     );
   }
+
   /// 从图片数据创建图片Widget
   static Widget buildImageFromBytes(
     Uint8List? imageBytes, {

@@ -141,6 +141,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       }
     });
   }
+
   void _handleColorSelection(Color color) {
     setState(() {
       _tempSelectedColor = color;
@@ -420,7 +421,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     ),
                   ),
               ],
-            ),          const SizedBox(height: 16),
+            ),
+          const SizedBox(height: 16),
 
           // Recent colors section
           Consumer<UserPreferencesProvider>(
@@ -432,7 +434,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   children: [
                     const Text(
                       '最近使用',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -456,7 +461,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             '颜色',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 8),          Wrap(
+          const SizedBox(height: 8),
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -482,7 +488,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               final customColors = userPrefs.tools.customColors;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [                  const SizedBox(height: 16),
+                children: [
+                  const SizedBox(height: 16),
                   const Text(
                     '自定义颜色',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -496,7 +503,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                         final color = Color(colorValue);
                         return _buildCustomColorButton(color, userPrefs);
                       }).toList(),
-                    )                  else
+                    )
+                  else
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -697,6 +705,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       ),
     );
   }
+
   Widget _buildColorButton(Color color) {
     final isSelected = _effectiveColor == color;
 
@@ -727,7 +736,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     );
   }
 
-  Widget _buildCustomColorButton(Color color, UserPreferencesProvider userPrefs) {
+  Widget _buildCustomColorButton(
+    Color color,
+    UserPreferencesProvider userPrefs,
+  ) {
     final isSelected = _effectiveColor == color;
 
     return Stack(
@@ -770,15 +782,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 1),
               ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 10,
-              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 10),
             ),
           ),
         ),
-      ],    );  }
+      ],
+    );
+  }
 
   Widget _buildMoreColorsButton() {
     return InkWell(
@@ -796,14 +806,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           ),
           color: Colors.transparent,
         ),
-        child: Icon(
-          Icons.palette,
-          size: 16,
-          color: Colors.grey.shade600,
-        ),
+        child: Icon(Icons.palette, size: 16, color: Colors.grey.shade600),
       ),
     );
-  }  void _showAdvancedColorPicker() {
+  }
+
+  void _showAdvancedColorPicker() {
     showDialog(
       context: context,
       builder: (context) => ColorPickerDialog(

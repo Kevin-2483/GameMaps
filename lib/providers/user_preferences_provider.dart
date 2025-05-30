@@ -7,7 +7,7 @@ import 'theme_provider.dart';
 /// 用户偏好设置状态管理Provider
 class UserPreferencesProvider extends ChangeNotifier {
   final UserPreferencesService _service = UserPreferencesService();
-  
+
   UserPreferences? _currentPreferences;
   bool _isLoading = false;
   String? _error;
@@ -26,19 +26,19 @@ class UserPreferencesProvider extends ChangeNotifier {
   bool get isInitialized => _currentPreferences != null;
 
   /// 主题偏好设置
-  ThemePreferences get theme => 
+  ThemePreferences get theme =>
       _currentPreferences?.theme ?? ThemePreferences.createDefault();
 
   /// 地图编辑器偏好设置
-  MapEditorPreferences get mapEditor => 
+  MapEditorPreferences get mapEditor =>
       _currentPreferences?.mapEditor ?? MapEditorPreferences.createDefault();
 
   /// 界面布局偏好设置
-  LayoutPreferences get layout => 
+  LayoutPreferences get layout =>
       _currentPreferences?.layout ?? LayoutPreferences.createDefault();
 
   /// 工具偏好设置
-  ToolPreferences get tools => 
+  ToolPreferences get tools =>
       _currentPreferences?.tools ?? ToolPreferences.createDefault();
 
   /// 语言设置
@@ -60,7 +60,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     try {
       await _service.initialize();
       _currentPreferences = await _service.getCurrentPreferences();
-      
+
       if (kDebugMode) {
         print('用户偏好设置初始化完成: ${_currentPreferences?.displayName}');
       }
@@ -73,6 +73,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
   /// 更新主题设置
   Future<void> updateTheme({
     String? themeMode,
@@ -95,12 +96,12 @@ class UserPreferencesProvider extends ChangeNotifier {
       // 先更新数据，但不立即通知监听器
       await _service.updateTheme(updatedTheme);
       _currentPreferences = await _service.getCurrentPreferences();
-      
+
       // 使用微任务机制，避免在构建过程中触发更新
       Future.microtask(() {
         if (_currentPreferences != null) {
           notifyListeners();
-          
+
           // 更新 ThemeProvider，但也使用微任务
           Future.microtask(() {
             _themeProvider?.updateFromUserPreferences(
@@ -116,7 +117,9 @@ class UserPreferencesProvider extends ChangeNotifier {
     } catch (e) {
       _setError('更新主题设置失败: ${e.toString()}');
     }
-  }  /// 更新地图编辑器设置
+  }
+
+  /// 更新地图编辑器设置
   Future<void> updateMapEditor({
     int? undoHistoryLimit,
     double? zoomSensitivity,
@@ -138,6 +141,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新地图编辑器设置失败: ${e.toString()}');
     }
   }
+
   /// 更新界面布局设置
   Future<void> updateLayout({
     Map<String, bool>? panelCollapsedStates,
@@ -170,6 +174,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新界面布局设置失败: ${e.toString()}');
     }
   }
+
   /// 更新工具设置
   Future<void> updateTools({
     List<int>? recentColors,
@@ -219,6 +224,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新用户信息失败: ${e.toString()}');
     }
   }
+
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     try {
@@ -246,9 +252,11 @@ class UserPreferencesProvider extends ChangeNotifier {
     if (_currentPreferences == null) return;
 
     try {
-      final customColors = List<int>.from(_currentPreferences!.tools.customColors);
+      final customColors = List<int>.from(
+        _currentPreferences!.tools.customColors,
+      );
       customColors.remove(color);
-      
+
       await updateTools(customColors: customColors);
     } catch (e) {
       _setError('移除自定义颜色失败: ${e.toString()}');
@@ -413,6 +421,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         return ThemeMode.system;
     }
   }
+
   /// 获取主色调
   Color getPrimaryColor() {
     return Color(theme.primaryColor);

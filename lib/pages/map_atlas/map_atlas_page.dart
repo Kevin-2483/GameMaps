@@ -310,18 +310,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   Future<void> _exportForWeb() async {
     try {
       final exporter = CombinedDatabaseExporter();
-      
+
       // 显示版本选择对话框
       final l10n = AppLocalizations.of(context)!;
       final exportVersion = await _showExportVersionDialog(l10n);
-      
+
       if (exportVersion != null) {
         // 执行导出
         final filePath = await exporter.exportAllDatabases(
           customVersion: exportVersion,
           includeLocalizations: true,
         );
-        
+
         if (filePath != null) {
           // 显示成功对话框
           await _showWebExportSuccessDialog(filePath);
@@ -360,7 +360,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   ),
                   child: Text(
                     filePath,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -389,7 +392,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     children: [
                       Text(
                         '提示：',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                       ),
                       SizedBox(height: 4),
                       Text(
@@ -439,7 +445,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     } catch (e) {
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
-  }  void _openMapEditor(int mapId) async {
+  }
+
+  void _openMapEditor(int mapId) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConfigAwareWidget(
@@ -455,14 +463,16 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         ),
       ),
     );
-    
+
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
       // 使用延迟确保页面已完全恢复
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           // 发送页面配置通知以重新显示TrayNavigation
-          PageConfigurationNotification(showTrayNavigation: true).dispatch(context);
+          PageConfigurationNotification(
+            showTrayNavigation: true,
+          ).dispatch(context);
         }
       });
     }
@@ -495,7 +505,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ),
           // 调试模式功能
           ConfigAwareAppBarAction(
-            featureId: 'DebugMode',            action: PopupMenuButton<String>(              onSelected: (value) {
+            featureId: 'DebugMode',
+            action: PopupMenuButton<String>(
+              onSelected: (value) {
                 if (kIsWeb) {
                   // Web平台显示只读模式提示
                   String operationName;
@@ -518,7 +530,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   WebReadOnlyDialog.show(context, operationName);
                   return;
                 }
-                  switch (value) {
+                switch (value) {
                   case 'add':
                     _addMap();
                     break;
@@ -547,7 +559,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     leading: const Icon(Icons.file_upload),
                     title: Text(l10n.importDatabase),
                   ),
-                ),                PopupMenuItem(
+                ),
+                PopupMenuItem(
                   value: 'export',
                   child: ListTile(
                     leading: const Icon(Icons.file_download),
@@ -595,7 +608,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 ),
                 itemCount: _maps.length,
                 itemBuilder: (context, index) {
-                  final map = _maps[index];                  return _MapCard(
+                  final map = _maps[index];
+                  return _MapCard(
                     map: map,
                     localizedTitle: _localizedTitles[map.title] ?? map.title,
                     onDelete: () {

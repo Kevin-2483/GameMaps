@@ -10,33 +10,33 @@ import '../models/map_layer.dart';
 /// 为Web版本提供示例地图数据
 class WebDatabasePreloader {
   static const String _sampleMapTitle = 'R6 地图示例';
-  
+
   /// 初始化Web平台示例数据
   static Future<void> initializeSampleData() async {
     if (!kIsWeb) return;
-    
+
     try {
       final mapService = MapDatabaseService();
-      
+
       // 检查是否已有示例数据
       final existingMaps = await mapService.getAllMapsSummary();
       if (existingMaps.isNotEmpty) {
         print('Web平台已有地图数据，跳过示例数据初始化');
         return;
       }
-      
+
       // 创建示例地图数据
       final sampleMap = _createSampleMap();
-      
+
       // 插入示例数据（这里我们直接调用底层数据库方法）
       await _insertSampleMapDirectly(sampleMap);
-      
+
       print('Web平台示例数据初始化完成');
     } catch (e) {
       print('Web平台示例数据初始化失败: $e');
     }
   }
-  
+
   /// 创建示例地图
   static MapItem _createSampleMap() {
     // 创建默认图层
@@ -50,7 +50,7 @@ class WebDatabasePreloader {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     return MapItem(
       title: _sampleMapTitle,
       imageData: _getSampleImageData(), // 简单的占位图片
@@ -61,20 +61,22 @@ class WebDatabasePreloader {
       updatedAt: DateTime.now(),
     );
   }
-    /// 获取示例图片数据（简单的Base64编码图片）
+
+  /// 获取示例图片数据（简单的Base64编码图片）
   static Uint8List _getSampleImageData() {
     // 这是一个1x1像素的透明PNG图片的Base64编码
     // 在实际应用中，可以提供更有意义的示例图片
-    const base64String = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+    const base64String =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
     return base64Decode(base64String);
   }
-  
+
   /// 直接插入示例地图（绕过Web只读限制）
   static Future<void> _insertSampleMapDirectly(MapItem mapItem) async {
     try {
       final database = await MapDatabaseService().database;
       final data = mapItem.toDatabase();
-      
+
       await database.insert(
         'maps',
         data,
@@ -84,11 +86,11 @@ class WebDatabasePreloader {
       print('直接插入示例地图失败: $e');
     }
   }
-  
+
   /// 清理示例数据（仅用于开发调试）
   static Future<void> clearSampleData() async {
     if (!kIsWeb) return;
-    
+
     try {
       final database = await MapDatabaseService().database;
       await database.delete(

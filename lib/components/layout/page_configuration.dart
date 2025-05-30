@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 class PageConfiguration {
   final bool showTrayNavigation;
 
-  const PageConfiguration({
-    this.showTrayNavigation = true,
-  });
+  const PageConfiguration({this.showTrayNavigation = true});
 }
 
 /// InheritedWidget 用于在 Widget 树中传递页面配置
@@ -20,12 +18,15 @@ class PageConfigurationProvider extends InheritedWidget {
   });
 
   static PageConfiguration? of(BuildContext context) {
-    final provider = context.dependOnInheritedWidgetOfExactType<PageConfigurationProvider>();
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<PageConfigurationProvider>();
     return provider?.configuration;
   }
+
   @override
   bool updateShouldNotify(PageConfigurationProvider oldWidget) {
-    return configuration.showTrayNavigation != oldWidget.configuration.showTrayNavigation;
+    return configuration.showTrayNavigation !=
+        oldWidget.configuration.showTrayNavigation;
   }
 }
 

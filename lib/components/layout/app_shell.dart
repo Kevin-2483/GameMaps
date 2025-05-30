@@ -22,7 +22,9 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     // 检查编译时和运行时是否都启用了托盘导航
     if (!BuildTimeConfig.isFeatureEnabled('TrayNavigation') ||
-        !ConfigManager.instance.isCurrentPlatformFeatureEnabled('TrayNavigation') ||
+        !ConfigManager.instance.isCurrentPlatformFeatureEnabled(
+          'TrayNavigation',
+        ) ||
         !_showTrayNavigation) {
       return _PageConfigDetector(
         onConfigChanged: _updateTrayNavigationVisibility,
@@ -91,7 +93,8 @@ class _PageConfigDetector extends StatefulWidget {
   State<_PageConfigDetector> createState() => _PageConfigDetectorState();
 }
 
-class _PageConfigDetectorState extends State<_PageConfigDetector> with RouteAware {
+class _PageConfigDetectorState extends State<_PageConfigDetector>
+    with RouteAware {
   @override
   void initState() {
     super.initState();

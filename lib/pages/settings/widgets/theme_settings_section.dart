@@ -8,10 +8,7 @@ import '../../../providers/theme_provider.dart';
 class ThemeSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
 
-  const ThemeSettingsSection({
-    super.key,
-    required this.preferences,
-  });
+  const ThemeSettingsSection({super.key, required this.preferences});
 
   // 将字符串主题模式转换为 AppThemeMode 枚举
   AppThemeMode _getThemeModeFromString(String themeMode) {
@@ -41,7 +38,9 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.read<UserPreferencesProvider>();
-    final currentThemeMode = _getThemeModeFromString(preferences.theme.themeMode);
+    final currentThemeMode = _getThemeModeFromString(
+      preferences.theme.themeMode,
+    );
 
     return Card(
       child: Padding(
@@ -51,17 +50,14 @@ class ThemeSettingsSection extends StatelessWidget {
           children: [
             Text(
               l10n.theme,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // 主题模式选择
-            Text(
-              l10n.theme,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text(l10n.theme, style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             SegmentedButton<AppThemeMode>(
               segments: [
@@ -87,35 +83,39 @@ class ThemeSettingsSection extends StatelessWidget {
                 provider.updateTheme(themeMode: selectedMode);
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 主色调选择
-            Text(
-              '主色调',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text('主色调', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: [
-                Colors.blue,
-                Colors.green,
-                Colors.purple,
-                Colors.red,
-                Colors.orange,
-                Colors.teal,
-                Colors.indigo,
-                Colors.pink,
-              ].map((color) => _ColorButton(
-                color: color,
-                isSelected: preferences.theme.primaryColor == color.value,
-                onTap: () => provider.updateTheme(primaryColor: color.value),
-              )).toList(),
+              children:
+                  [
+                        Colors.blue,
+                        Colors.green,
+                        Colors.purple,
+                        Colors.red,
+                        Colors.orange,
+                        Colors.teal,
+                        Colors.indigo,
+                        Colors.pink,
+                      ]
+                      .map(
+                        (color) => _ColorButton(
+                          color: color,
+                          isSelected:
+                              preferences.theme.primaryColor == color.value,
+                          onTap: () =>
+                              provider.updateTheme(primaryColor: color.value),
+                        ),
+                      )
+                      .toList(),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Material You 设置
             SwitchListTile(
               title: Text('Material You'),
@@ -123,14 +123,11 @@ class ThemeSettingsSection extends StatelessWidget {
               value: preferences.theme.useMaterialYou,
               onChanged: (value) => provider.updateTheme(useMaterialYou: value),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 字体大小设置
-            Text(
-              '字体大小',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text('字体大小', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Slider(
               value: preferences.theme.fontScale,
@@ -140,9 +137,9 @@ class ThemeSettingsSection extends StatelessWidget {
               label: '${(preferences.theme.fontScale * 100).round()}%',
               onChanged: (value) => provider.updateTheme(fontScale: value),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 高对比度设置
             SwitchListTile(
               title: Text('高对比度'),
@@ -183,17 +180,10 @@ class _ColorButton extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                   width: 3,
                 )
-              : Border.all(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
-                ),
+              : Border.all(color: Theme.of(context).dividerColor, width: 1),
         ),
         child: isSelected
-            ? const Icon(
-                Icons.check,
-                color: Colors.white,
-                size: 20,
-              )
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
             : null,
       ),
     );

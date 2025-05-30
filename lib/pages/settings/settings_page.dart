@@ -61,7 +61,9 @@ class _SettingsPageContent extends StatelessWidget {
               style: Theme.of(
                 context,
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),            const SizedBox(height: 24),            _buildUserPreferencesSection(context, l10n),
+            ),
+            const SizedBox(height: 24),
+            _buildUserPreferencesSection(context, l10n),
             const SizedBox(height: 16),
             _buildLanguageSection(context, l10n),
             const SizedBox(height: 16),
@@ -69,9 +71,13 @@ class _SettingsPageContent extends StatelessWidget {
           ],
         ),
       ),
-    );  }
+    );
+  }
 
-  Widget _buildUserPreferencesSection(BuildContext context, AppLocalizations l10n) {
+  Widget _buildUserPreferencesSection(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,6 +101,7 @@ class _SettingsPageContent extends StatelessWidget {
       ),
     );
   }
+
   static Widget _buildLanguageSection(
     BuildContext context,
     AppLocalizations l10n,

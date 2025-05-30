@@ -6,10 +6,7 @@ import '../../../providers/user_preferences_provider.dart';
 class LayoutSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
 
-  const LayoutSettingsSection({
-    super.key,
-    required this.preferences,
-  });
+  const LayoutSettingsSection({super.key, required this.preferences});
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
@@ -23,21 +20,21 @@ class LayoutSettingsSection extends StatelessWidget {
           children: [
             Text(
               '界面布局设置',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // 面板折叠状态设置
             Text(
               '面板折叠状态',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             ...layout.panelCollapsedStates.entries.map(
               (entry) => SwitchListTile(
                 title: Text(_getPanelDisplayName(entry.key)),
@@ -51,18 +48,18 @@ class LayoutSettingsSection extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 面板自动关闭设置
             Text(
               '面板自动关闭',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             ...layout.panelAutoCloseStates.entries.map(
               (entry) => SwitchListTile(
                 title: Text(_getPanelDisplayName(entry.key)),
@@ -74,19 +71,21 @@ class LayoutSettingsSection extends StatelessWidget {
                     entry.key: value,
                   },
                 ),
-              ),            ),
-            
+              ),
+            ),
+
             const SizedBox(height: 16),
-              // 面板状态恢复设置
+            // 面板状态恢复设置
             SwitchListTile(
               title: Text('保存面板状态变更'),
               subtitle: Text('用户操作面板时自动保存状态到首选项'),
               value: layout.autoRestorePanelStates,
-              onChanged: (value) => provider.updateLayout(autoRestorePanelStates: value),
+              onChanged: (value) =>
+                  provider.updateLayout(autoRestorePanelStates: value),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 侧边栏宽度
             ListTile(
               title: Text('侧边栏宽度'),
@@ -96,14 +95,13 @@ class LayoutSettingsSection extends StatelessWidget {
                 max: 500.0,
                 divisions: 30,
                 label: '${layout.sidebarWidth.round()}px',
-                onChanged: (value) => provider.updateLayout(
-                  sidebarWidth: value,
-                ),
+                onChanged: (value) =>
+                    provider.updateLayout(sidebarWidth: value),
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 紧凑模式
             SwitchListTile(
               title: Text('紧凑模式'),
@@ -111,9 +109,9 @@ class LayoutSettingsSection extends StatelessWidget {
               value: layout.compactMode,
               onChanged: (value) => provider.updateLayout(compactMode: value),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 显示工具提示
             SwitchListTile(
               title: Text('显示工具提示'),
@@ -121,17 +119,18 @@ class LayoutSettingsSection extends StatelessWidget {
               value: layout.showTooltips,
               onChanged: (value) => provider.updateLayout(showTooltips: value),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 动画设置
             SwitchListTile(
               title: Text('启用动画'),
               subtitle: Text('界面切换和过渡动画'),
               value: layout.enableAnimations,
-              onChanged: (value) => provider.updateLayout(enableAnimations: value),
+              onChanged: (value) =>
+                  provider.updateLayout(enableAnimations: value),
             ),
-            
+
             if (layout.enableAnimations) ...[
               const SizedBox(height: 8),
               ListTile(
@@ -142,15 +141,14 @@ class LayoutSettingsSection extends StatelessWidget {
                   max: 1000.0,
                   divisions: 18,
                   label: '${layout.animationDuration}ms',
-                  onChanged: (value) => provider.updateLayout(
-                    animationDuration: value.round(),
-                  ),
+                  onChanged: (value) =>
+                      provider.updateLayout(animationDuration: value.round()),
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 16),
-            
+
             // 重置布局按钮
             Row(
               children: [
@@ -186,7 +184,10 @@ class LayoutSettingsSection extends StatelessWidget {
     }
   }
 
-  void _resetLayoutSettings(BuildContext context, UserPreferencesProvider provider) {
+  void _resetLayoutSettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -197,7 +198,8 @@ class LayoutSettingsSection extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
             child: Text('取消'),
           ),
-          ElevatedButton(            onPressed: () {
+          ElevatedButton(
+            onPressed: () {
               final defaultLayout = LayoutPreferences.createDefault();
               provider.updateLayout(
                 panelCollapsedStates: defaultLayout.panelCollapsedStates,

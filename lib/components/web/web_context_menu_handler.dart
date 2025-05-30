@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 class WebContextMenuHandler extends StatefulWidget {
   final Widget child;
   final bool preventWebContextMenu;
-  
+
   const WebContextMenuHandler({
     super.key,
     required this.child,
@@ -70,11 +70,11 @@ class ContextMenuItem {
   });
 
   const ContextMenuItem.divider()
-      : label = '',
-        icon = null,
-        onTap = null,
-        enabled = true,
-        isDivider = true;
+    : label = '',
+      icon = null,
+      onTap = null,
+      enabled = true,
+      isDivider = true;
 }
 
 /// 显示自定义上下文菜单的工具类
@@ -99,8 +99,9 @@ class WebContextMenu {
     Offset position,
     List<ContextMenuItem> items,
   ) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -111,21 +112,23 @@ class WebContextMenu {
       ),
       items: items
           .where((item) => item.enabled)
-          .map<PopupMenuEntry<String>>((item) => item.isDivider
-              ? const PopupMenuDivider()
-              : PopupMenuItem<String>(
-                  value: item.label,
-                  enabled: item.enabled,
-                  child: Row(
-                    children: [
-                      if (item.icon != null) ...[
-                        Icon(item.icon, size: 16),
-                        const SizedBox(width: 8),
+          .map<PopupMenuEntry<String>>(
+            (item) => item.isDivider
+                ? const PopupMenuDivider()
+                : PopupMenuItem<String>(
+                    value: item.label,
+                    enabled: item.enabled,
+                    child: Row(
+                      children: [
+                        if (item.icon != null) ...[
+                          Icon(item.icon, size: 16),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(item.label),
                       ],
-                      Text(item.label),
-                    ],
+                    ),
                   ),
-                ))
+          )
           .toList(),
       elevation: 8,
     ).then((selectedItem) {
@@ -149,23 +152,26 @@ class WebContextMenu {
         position.dy,
         position.dx + 1,
         position.dy + 1,
-      ),      items: items
+      ),
+      items: items
           .where((item) => item.enabled)
-          .map<PopupMenuEntry<String>>((item) => item.isDivider
-              ? const PopupMenuDivider()
-              : PopupMenuItem<String>(
-                  value: item.label,
-                  enabled: item.enabled,
-                  child: Row(
-                    children: [
-                      if (item.icon != null) ...[
-                        Icon(item.icon, size: 16),
-                        const SizedBox(width: 8),
+          .map<PopupMenuEntry<String>>(
+            (item) => item.isDivider
+                ? const PopupMenuDivider()
+                : PopupMenuItem<String>(
+                    value: item.label,
+                    enabled: item.enabled,
+                    child: Row(
+                      children: [
+                        if (item.icon != null) ...[
+                          Icon(item.icon, size: 16),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(item.label),
                       ],
-                      Text(item.label),
-                    ],
+                    ),
                   ),
-                ))
+          )
           .toList(),
     ).then((selectedItem) {
       if (selectedItem != null) {

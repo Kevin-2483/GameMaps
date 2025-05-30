@@ -27,10 +27,12 @@ class _UserPreferencesPageContent extends StatefulWidget {
   const _UserPreferencesPageContent();
 
   @override
-  State<_UserPreferencesPageContent> createState() => _UserPreferencesPageContentState();
+  State<_UserPreferencesPageContent> createState() =>
+      _UserPreferencesPageContentState();
 }
 
-class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent> {
+class _UserPreferencesPageContentState
+    extends State<_UserPreferencesPageContent> {
   @override
   void initState() {
     super.initState();
@@ -44,12 +46,13 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
   }
 
   Future<void> _exportSettings() async {
-    try {      final provider = context.read<UserPreferencesProvider>();
+    try {
+      final provider = context.read<UserPreferencesProvider>();
       final jsonData = await provider.exportSettings();
-      
+
       // 复制到剪贴板作为备选方案
       await Clipboard.setData(ClipboardData(text: jsonData));
-        if (mounted) {
+      if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -83,7 +86,7 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
         final jsonData = String.fromCharCodes(result.files.single.bytes!);
         final provider = context.read<UserPreferencesProvider>();
         await provider.importSettings(jsonData);
-        
+
         if (mounted) {
           final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +112,7 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
 
   Future<void> _resetSettings() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -136,7 +139,7 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
       try {
         final provider = context.read<UserPreferencesProvider>();
         await provider.resetToDefaults();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -156,7 +159,9 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
         }
       }
     }
-  }  @override
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -217,7 +222,10 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
                       children: [
                         const Icon(Icons.restore, color: Colors.red),
                         const SizedBox(width: 8),
-                        Text(l10n.resetSettings, style: const TextStyle(color: Colors.red)),
+                        Text(
+                          l10n.resetSettings,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ],
                     ),
                   ),
@@ -259,23 +267,33 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
                 padding: const EdgeInsets.all(16.0),
                 children: [
                   // 主题设置
-                  ThemeSettingsSection(preferences: provider.currentPreferences!),
+                  ThemeSettingsSection(
+                    preferences: provider.currentPreferences!,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   // 地图编辑器设置
-                  MapEditorSettingsSection(preferences: provider.currentPreferences!),
+                  MapEditorSettingsSection(
+                    preferences: provider.currentPreferences!,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   // 界面布局设置
-                  LayoutSettingsSection(preferences: provider.currentPreferences!),
+                  LayoutSettingsSection(
+                    preferences: provider.currentPreferences!,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   // 工具设置
-                  ToolSettingsSection(preferences: provider.currentPreferences!),
+                  ToolSettingsSection(
+                    preferences: provider.currentPreferences!,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   // 用户管理
-                  UserManagementSection(preferences: provider.currentPreferences!),
+                  UserManagementSection(
+                    preferences: provider.currentPreferences!,
+                  ),
                 ],
               );
             },

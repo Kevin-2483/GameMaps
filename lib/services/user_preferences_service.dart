@@ -7,7 +7,8 @@ import '../models/user_preferences.dart';
 /// 用户偏好设置服务
 /// 支持Web和桌面端的跨平台存储
 class UserPreferencesService {
-  static final UserPreferencesService _instance = UserPreferencesService._internal();
+  static final UserPreferencesService _instance =
+      UserPreferencesService._internal();
   factory UserPreferencesService() => _instance;
   UserPreferencesService._internal();
 
@@ -40,7 +41,7 @@ class UserPreferencesService {
 
     // 尝试从存储中加载
     await _loadCurrentUser();
-    
+
     // 如果仍然为空，创建默认设置
     if (_currentPreferences == null) {
       _currentPreferences = UserPreferences.createDefault();
@@ -53,11 +54,9 @@ class UserPreferencesService {
   /// 保存用户偏好设置
   Future<void> savePreferences(UserPreferences preferences) async {
     final prefs = await _preferences;
-    
+
     // 更新时间戳
-    final updatedPreferences = preferences.copyWith(
-      updatedAt: DateTime.now(),
-    );
+    final updatedPreferences = preferences.copyWith(updatedAt: DateTime.now());
 
     // 保存到内存
     _currentPreferences = updatedPreferences;
@@ -84,7 +83,7 @@ class UserPreferencesService {
       _currentPreferences = _userProfiles[userId];
       final prefs = await _preferences;
       await prefs.setString(_currentUserKey, userId);
-      
+
       // 更新最后登录时间
       _currentPreferences = _currentPreferences!.copyWith(
         lastLoginAt: DateTime.now(),
@@ -106,10 +105,10 @@ class UserPreferencesService {
 
     _userProfiles[userId] = preferences;
     await _saveUserProfiles();
-    
+
     // 切换到新用户
     await switchUser(userId);
-    
+
     return preferences;
   }
 
@@ -134,9 +133,11 @@ class UserPreferencesService {
 
   /// 获取所有用户配置文件
   List<UserPreferences> getAllUsers() {
-    return _userProfiles.values.toList()
-      ..sort((a, b) => (b.lastLoginAt ?? b.createdAt)
-          .compareTo(a.lastLoginAt ?? a.createdAt));
+    return _userProfiles.values.toList()..sort(
+      (a, b) => (b.lastLoginAt ?? b.createdAt).compareTo(
+        a.lastLoginAt ?? a.createdAt,
+      ),
+    );
   }
 
   /// 更新主题设置
@@ -170,17 +171,20 @@ class UserPreferencesService {
     String? locale,
   }) async {
     final current = await getCurrentPreferences();
-    await savePreferences(current.copyWith(
-      displayName: displayName,
-      avatarPath: avatarPath,
-      locale: locale,
-    ));
+    await savePreferences(
+      current.copyWith(
+        displayName: displayName,
+        avatarPath: avatarPath,
+        locale: locale,
+      ),
+    );
   }
+
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     final current = await getCurrentPreferences();
     final recentColors = List<int>.from(current.tools.recentColors);
-    
+
     // 移除已存在的颜色
     recentColors.remove(color);
     // 添加到开头
@@ -198,12 +202,12 @@ class UserPreferencesService {
   Future<void> addCustomColor(int color) async {
     final current = await getCurrentPreferences();
     final customColors = List<int>.from(current.tools.customColors);
-    
+
     // 如果颜色已存在，不重复添加
     if (customColors.contains(color)) {
       return;
     }
-    
+
     // 添加到末尾
     customColors.add(color);
     // 限制数量为10个
@@ -262,7 +266,7 @@ class UserPreferencesService {
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
       final preferencesData = data['preferences'] as Map<String, dynamic>;
       final preferences = UserPreferences.fromJson(preferencesData);
-      
+
       // 保持当前用户ID但应用导入的设置
       final current = await getCurrentPreferences();
       final importedPreferences = preferences.copyWith(
@@ -270,7 +274,7 @@ class UserPreferencesService {
         createdAt: current.createdAt,
         updatedAt: DateTime.now(),
       );
-      
+
       await savePreferences(importedPreferences);
     } catch (e) {
       if (kDebugMode) {
@@ -286,11 +290,8 @@ class UserPreferencesService {
     final defaultPreferences = UserPreferences.createDefault(
       userId: current.userId,
       displayName: current.displayName,
-    ).copyWith(
-      avatarPath: current.avatarPath,
-      createdAt: current.createdAt,
-    );
-    
+    ).copyWith(avatarPath: current.avatarPath, createdAt: current.createdAt);
+
     await savePreferences(defaultPreferences);
   }
 
@@ -298,12 +299,12 @@ class UserPreferencesService {
   Future<void> _loadUserProfiles() async {
     final prefs = await _preferences;
     final profilesJson = prefs.getString(_userProfilesKey);
-    
+
     if (profilesJson != null) {
       try {
         final profilesData = jsonDecode(profilesJson) as Map<String, dynamic>;
         _userProfiles.clear();
-        
+
         for (final entry in profilesData.entries) {
           final preferences = UserPreferences.fromJson(
             entry.value as Map<String, dynamic>,
@@ -322,18 +323,18 @@ class UserPreferencesService {
   Future<void> _saveUserProfiles() async {
     final prefs = await _preferences;
     final profilesData = <String, dynamic>{};
-    
+
     for (final entry in _userProfiles.entries) {
       profilesData[entry.key] = entry.value.toJson();
     }
-    
+
     await prefs.setString(_userProfilesKey, jsonEncode(profilesData));
   }
 
   /// 加载当前用户
   Future<void> _loadCurrentUser() async {
     final prefs = await _preferences;
-    
+
     // 尝试从用户ID加载
     final currentUserId = prefs.getString(_currentUserKey);
     if (currentUserId != null && _userProfiles.containsKey(currentUserId)) {
@@ -361,7 +362,7 @@ class UserPreferencesService {
     await prefs.remove(_preferencesKey);
     await prefs.remove(_userProfilesKey);
     await prefs.remove(_currentUserKey);
-    
+
     _currentPreferences = null;
     _userProfiles.clear();
   }
@@ -371,7 +372,7 @@ class UserPreferencesService {
     final prefs = await _preferences;
     final keys = prefs.getKeys();
     int totalSize = 0;
-    
+
     for (final key in keys) {
       final value = prefs.get(key);
       if (value is String) {

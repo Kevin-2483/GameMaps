@@ -11,7 +11,7 @@ import '../services/legend_database_service.dart';
 /// 用于将从客户端导出的JSON数据导入到Web平台数据库
 class WebDatabaseImporter {
   static const String _assetPath = 'assets/data/exported_database.json';
-  
+
   /// 从assets中导入预设的数据库数据
   static Future<void> importFromAssets() async {
     if (!kIsWeb) {
@@ -23,7 +23,7 @@ class WebDatabaseImporter {
       // 检查是否存在导出的数据文件
       final jsonString = await rootBundle.loadString(_assetPath);
       final data = json.decode(jsonString) as Map<String, dynamic>;
-      
+
       await _importData(data);
       print('WebDatabaseImporter: 数据导入完成');
     } catch (e) {
@@ -64,7 +64,9 @@ class WebDatabaseImporter {
         for (final legendData in legendsList) {
           try {
             // 将JSON数据转换为LegendItem对象
-            final legendItem = LegendItem.fromJson(legendData as Map<String, dynamic>);
+            final legendItem = LegendItem.fromJson(
+              legendData as Map<String, dynamic>,
+            );
             // 直接调用强制插入方法，绕过重复检查
             await legendService.forceInsertLegend(legendItem);
             print('WebDatabaseImporter: 成功导入图例: ${legendItem.title}');
@@ -79,9 +81,9 @@ class WebDatabaseImporter {
   /// 创建示例数据（当没有导出数据时使用）
   static Future<void> _createSampleData() async {
     print('WebDatabaseImporter: 创建示例数据');
-    
+
     final mapService = MapDatabaseService();
-    
+
     // 创建示例地图
     final sampleMap = MapItem(
       title: '示例地图',
@@ -104,7 +106,8 @@ class WebDatabaseImporter {
   /// 创建示例图片数据
   static Uint8List _createSampleImageData() {
     // 创建一个简单的1x1像素的透明PNG图片
-    const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA8cMiPwAAAABJRU5ErkJggg==';
+    const base64Data =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA8cMiPwAAAABJRU5ErkJggg==';
     return base64Decode(base64Data);
   }
 }

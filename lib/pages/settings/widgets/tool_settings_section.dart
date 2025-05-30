@@ -7,10 +7,7 @@ import '../../../components/color_picker_dialog.dart';
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
 
-  const ToolSettingsSection({
-    super.key,
-    required this.preferences,
-  });
+  const ToolSettingsSection({super.key, required this.preferences});
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
@@ -24,18 +21,18 @@ class ToolSettingsSection extends StatelessWidget {
           children: [
             Text(
               '工具设置',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // 最近使用的颜色
             Text(
               '最近使用的颜色',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Container(
@@ -61,7 +58,8 @@ class ToolSettingsSection extends StatelessWidget {
                         ),
                         child: Center(
                           child: IconButton(
-                            onPressed: () => _removeRecentColor(provider, index),
+                            onPressed: () =>
+                                _removeRecentColor(provider, index),
                             icon: Icon(
                               Icons.close,
                               color: Colors.white,
@@ -75,7 +73,7 @@ class ToolSettingsSection extends StatelessWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 8),
             Row(
               children: [
@@ -89,17 +87,18 @@ class ToolSettingsSection extends StatelessWidget {
                   onPressed: () => _clearRecentColors(context, provider),
                   icon: Icon(Icons.clear_all),
                   label: Text('清空'),
-                ),            ],
+                ),
+              ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 自定义颜色
             Text(
               '自定义颜色',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Container(
@@ -112,7 +111,8 @@ class ToolSettingsSection extends StatelessWidget {
                   return Container(
                     margin: EdgeInsets.only(right: 8),
                     child: GestureDetector(
-                      onTap: () => _showCustomColorOptions(context, provider, index),
+                      onTap: () =>
+                          _showCustomColorOptions(context, provider, index),
                       child: Container(
                         width: 50,
                         height: 50,
@@ -125,7 +125,8 @@ class ToolSettingsSection extends StatelessWidget {
                         ),
                         child: Center(
                           child: IconButton(
-                            onPressed: () => _removeCustomColor(provider, index),
+                            onPressed: () =>
+                                _removeCustomColor(provider, index),
                             icon: Icon(
                               Icons.close,
                               color: Colors.white,
@@ -139,7 +140,7 @@ class ToolSettingsSection extends StatelessWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 8),
             Row(
               children: [
@@ -156,47 +157,45 @@ class ToolSettingsSection extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 常用线条宽度
             Text(
               '常用线条宽度',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: tools.favoriteStrokeWidths.asMap().entries.map(
-                (entry) {
-                  final index = entry.key;
-                  final width = entry.value;
-                  return Chip(
-                    label: Text('${width.round()}px'),
-                    deleteIcon: Icon(Icons.close, size: 16),
-                    onDeleted: () => _removeFavoriteStrokeWidth(provider, index),
-                  );
-                },
-              ).toList(),
+              children: tools.favoriteStrokeWidths.asMap().entries.map((entry) {
+                final index = entry.key;
+                final width = entry.value;
+                return Chip(
+                  label: Text('${width.round()}px'),
+                  deleteIcon: Icon(Icons.close, size: 16),
+                  onDeleted: () => _removeFavoriteStrokeWidth(provider, index),
+                );
+              }).toList(),
             ),
-            
+
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () => _addStrokeWidth(context, provider),
               icon: Icon(Icons.add),
               label: Text('添加线条宽度'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 工具栏布局
             Text(
               '工具栏布局',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Container(
@@ -229,41 +228,43 @@ class ToolSettingsSection extends StatelessWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 显示高级工具
             SwitchListTile(
               title: Text('显示高级工具'),
               subtitle: Text('在工具栏中显示专业级工具'),
               value: tools.showAdvancedTools,
-              onChanged: (value) => provider.updateTools(showAdvancedTools: value),
+              onChanged: (value) =>
+                  provider.updateTools(showAdvancedTools: value),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 快捷键设置
             Text(
               '快捷键设置',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             ...tools.shortcuts.entries.map(
               (entry) => ListTile(
                 title: Text(_getShortcutDisplayName(entry.key)),
                 subtitle: Text(entry.value),
                 trailing: IconButton(
-                  onPressed: () => _editShortcut(context, provider, entry.key, entry.value),
+                  onPressed: () =>
+                      _editShortcut(context, provider, entry.key, entry.value),
                   icon: Icon(Icons.edit),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 重置工具设置
             Row(
               children: [
@@ -282,7 +283,11 @@ class ToolSettingsSection extends StatelessWidget {
     );
   }
 
-  void _showColorOptions(BuildContext context, UserPreferencesProvider provider, int index) {
+  void _showColorOptions(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    int index,
+  ) {
     // 显示颜色选项对话框的实现
   }
 
@@ -290,7 +295,9 @@ class ToolSettingsSection extends StatelessWidget {
     final newColors = List<int>.from(preferences.tools.recentColors);
     newColors.removeAt(index);
     provider.updateTools(recentColors: newColors);
-  }  void _addNewColor(BuildContext context, UserPreferencesProvider provider) {
+  }
+
+  void _addNewColor(BuildContext context, UserPreferencesProvider provider) {
     ColorPicker.showColorPicker(
       context: context,
       initialColor: Colors.blue,
@@ -303,7 +310,10 @@ class ToolSettingsSection extends StatelessWidget {
     });
   }
 
-  void _clearRecentColors(BuildContext context, UserPreferencesProvider provider) {
+  void _clearRecentColors(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -361,7 +371,9 @@ class ToolSettingsSection extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final newWidths = List<double>.from(preferences.tools.favoriteStrokeWidths);
+                final newWidths = List<double>.from(
+                  preferences.tools.favoriteStrokeWidths,
+                );
                 if (!newWidths.contains(newWidth)) {
                   newWidths.add(newWidth);
                   newWidths.sort();
@@ -438,11 +450,19 @@ class ToolSettingsSection extends StatelessWidget {
     }
   }
 
-  void _editShortcut(BuildContext context, UserPreferencesProvider provider, String action, String currentShortcut) {
+  void _editShortcut(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    String action,
+    String currentShortcut,
+  ) {
     // 编辑快捷键的实现
   }
 
-  void _resetToolSettings(BuildContext context, UserPreferencesProvider provider) {
+  void _resetToolSettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -454,7 +474,8 @@ class ToolSettingsSection extends StatelessWidget {
             child: Text('取消'),
           ),
           ElevatedButton(
-            onPressed: () {              final defaultTools = ToolPreferences.createDefault();
+            onPressed: () {
+              final defaultTools = ToolPreferences.createDefault();
               provider.updateTools(
                 recentColors: defaultTools.recentColors,
                 customColors: defaultTools.customColors,
@@ -477,11 +498,16 @@ class ToolSettingsSection extends StatelessWidget {
             ),
             child: Text('重置'),
           ),
-        ],      ),
+        ],
+      ),
     );
   }
 
-  void _showCustomColorOptions(BuildContext context, UserPreferencesProvider provider, int index) {
+  void _showCustomColorOptions(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    int index,
+  ) {
     // 显示自定义颜色选项对话框的实现
   }
 
@@ -489,7 +515,12 @@ class ToolSettingsSection extends StatelessWidget {
     final newColors = List<int>.from(preferences.tools.customColors);
     newColors.removeAt(index);
     provider.updateTools(customColors: newColors);
-  }  void _addNewCustomColor(BuildContext context, UserPreferencesProvider provider) {
+  }
+
+  void _addNewCustomColor(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     ColorPicker.showColorPicker(
       context: context,
       initialColor: Colors.purple,
@@ -502,7 +533,10 @@ class ToolSettingsSection extends StatelessWidget {
     });
   }
 
-  void _clearCustomColors(BuildContext context, UserPreferencesProvider provider) {
+  void _clearCustomColors(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -520,7 +554,8 @@ class ToolSettingsSection extends StatelessWidget {
             },
             child: Text('清空'),
           ),
-        ],      ),
+        ],
+      ),
     );
   }
 }
