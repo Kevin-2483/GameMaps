@@ -18,6 +18,9 @@ class UserPreferencesPage extends BasePage {
   Widget buildContent(BuildContext context) {
     return const _UserPreferencesPageContent();
   }
+
+  @override
+  bool get showTrayNavigation => true; // 确保显示导航栏
 }
 
 class _UserPreferencesPageContent extends StatefulWidget {
@@ -153,118 +156,132 @@ class _UserPreferencesPageContentState extends State<_UserPreferencesPageContent
         }
       }
     }
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.userPreferences),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'export':
-                  _exportSettings();
-                  break;
-                case 'import':
-                  _importSettings();
-                  break;
-                case 'reset':
-                  _resetSettings();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    const Icon(Icons.download),
-                    const SizedBox(width: 8),
-                    Text(l10n.exportSettings),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'import',
-                child: Row(
-                  children: [
-                    const Icon(Icons.upload),
-                    const SizedBox(width: 8),
-                    Text(l10n.importSettings),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'reset',
-                child: Row(
-                  children: [
-                    const Icon(Icons.restore, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Text(l10n.resetSettings, style: const TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Consumer<UserPreferencesProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    '加载用户偏好设置失败: ${provider.error}',
-                    textAlign: TextAlign.center,
+    return Column(
+      children: [
+        // 标题和操作栏
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.userPreferences,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => provider.initialize(),
-                    child: const Text('重试'),
+                ),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'export':
+                      _exportSettings();
+                      break;
+                    case 'import':
+                      _importSettings();
+                      break;
+                    case 'reset':
+                      _resetSettings();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.download),
+                        const SizedBox(width: 8),
+                        Text(l10n.exportSettings),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'import',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.upload),
+                        const SizedBox(width: 8),
+                        Text(l10n.importSettings),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'reset',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.restore, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.resetSettings, style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            );
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              // 主题设置
-              ThemeSettingsSection(preferences: provider.currentPreferences!),
-              const SizedBox(height: 16),
-              
-              // 地图编辑器设置
-              MapEditorSettingsSection(preferences: provider.currentPreferences!),
-              const SizedBox(height: 16),
-              
-              // 界面布局设置
-              LayoutSettingsSection(preferences: provider.currentPreferences!),
-              const SizedBox(height: 16),
-              
-              // 工具设置
-              ToolSettingsSection(preferences: provider.currentPreferences!),
-              const SizedBox(height: 16),
-              
-              // 用户管理
-              UserManagementSection(preferences: provider.currentPreferences!),
             ],
-          );
-        },
-      ),
+          ),
+        ),
+        // 内容区域
+        Expanded(
+          child: Consumer<UserPreferencesProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (provider.error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        '加载用户偏好设置失败: ${provider.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => provider.initialize(),
+                        child: const Text('重试'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // 主题设置
+                  ThemeSettingsSection(preferences: provider.currentPreferences!),
+                  const SizedBox(height: 16),
+                  
+                  // 地图编辑器设置
+                  MapEditorSettingsSection(preferences: provider.currentPreferences!),
+                  const SizedBox(height: 16),
+                  
+                  // 界面布局设置
+                  LayoutSettingsSection(preferences: provider.currentPreferences!),
+                  const SizedBox(height: 16),
+                  
+                  // 工具设置
+                  ToolSettingsSection(preferences: provider.currentPreferences!),
+                  const SizedBox(height: 16),
+                  
+                  // 用户管理
+                  UserManagementSection(preferences: provider.currentPreferences!),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

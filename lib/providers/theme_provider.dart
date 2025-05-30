@@ -8,6 +8,7 @@ class ThemeProvider extends ChangeNotifier {
   bool _useMaterialYou = true;
   double _fontScale = 1.0;
   bool _highContrast = false;
+  bool _isUpdatingFromUserPrefs = false; // 防止循环更新
 
   AppThemeMode get themeMode => _themeMode;
   Color get primaryColor => _primaryColor;
@@ -35,12 +36,47 @@ class ThemeProvider extends ChangeNotifier {
     required double fontScale,
     required bool highContrast,
   }) {
-    _themeMode = _getThemeModeFromString(themeMode);
-    _primaryColor = Color(primaryColor);
-    _useMaterialYou = useMaterialYou;
-    _fontScale = fontScale;
-    _highContrast = highContrast;
-    notifyListeners();
+    if (_isUpdatingFromUserPrefs) return; // 防止循环更新
+    
+    _isUpdatingFromUserPrefs = true;
+    
+    final newThemeMode = _getThemeModeFromString(themeMode);
+    final newPrimaryColor = Color(primaryColor);
+    
+    // 只有当值实际发生变化时才更新
+    bool hasChanges = false;
+    
+    if (_themeMode != newThemeMode) {
+      _themeMode = newThemeMode;
+      hasChanges = true;
+    }
+    
+    if (_primaryColor != newPrimaryColor) {
+      _primaryColor = newPrimaryColor;
+      hasChanges = true;
+    }
+    
+    if (_useMaterialYou != useMaterialYou) {
+      _useMaterialYou = useMaterialYou;
+      hasChanges = true;
+    }
+    
+    if (_fontScale != fontScale) {
+      _fontScale = fontScale;
+      hasChanges = true;
+    }
+    
+    if (_highContrast != highContrast) {
+      _highContrast = highContrast;
+      hasChanges = true;
+    }
+    
+    _isUpdatingFromUserPrefs = false;
+    
+    // 只有当有变化时才通知监听器
+    if (hasChanges) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   AppThemeMode _getThemeModeFromString(String themeMode) {

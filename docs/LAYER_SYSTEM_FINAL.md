@@ -51,7 +51,7 @@
 ### 数据模型更新
 ```dart
 class MapLayer {
-  final String? imageData; // Base64编码的图片数据
+  final Uint8List? imageData; // Uint8List编码的图片数据
   final String name;       // 可编辑的图层名称
   // ...existing fields...
 }
@@ -74,7 +74,7 @@ class MapLayer {
 1. 点击图层右侧的图片按钮（相机图标）
 2. 选择"上传图片"或"更换图片"
 3. 从文件选择器中选择图片
-4. 图片会自动转换为Base64格式存储
+4. 图片会自动转换为Uint8List格式存储
 
 ### 透明度调节
 - 使用图层面板下方的滑块调节每个图层的不透明度
@@ -108,7 +108,7 @@ class MapLayer {
 
 ## 性能优化
 
-- 图片数据采用Base64编码直接存储，减少文件I/O操作
+- 图片数据采用Uint8List编码直接存储，减少文件I/O操作
 - 只渲染可见图层，提升渲染性能
 - 透明背景使用轻量级CustomPainter实现
 - 图层名称编辑器使用TextFormField，支持高效的文本编辑
@@ -117,7 +117,7 @@ class MapLayer {
 
 - ✅ 透明背景实现（棋盘格图案）
 - ✅ 图层图片上传和管理
-- ✅ 图片数据Base64存储
+- ✅ 图片数据Uint8List存储
 - ✅ 图层面板两排布局
 - ✅ 移除缩略图和状态信息
 - ✅ 图层名称可编辑功能

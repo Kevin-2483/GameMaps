@@ -73,7 +73,6 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
-
   /// 更新主题设置
   Future<void> updateTheme({
     String? themeMode,
@@ -93,16 +92,27 @@ class UserPreferencesProvider extends ChangeNotifier {
         highContrast: highContrast,
       );
 
+      // 先更新数据，但不立即通知监听器
       await _service.updateTheme(updatedTheme);
       _currentPreferences = await _service.getCurrentPreferences();
-      notifyListeners();      // 同步更新 ThemeProvider
-      _themeProvider?.updateFromUserPreferences(
-        themeMode: updatedTheme.themeMode,
-        primaryColor: updatedTheme.primaryColor,
-        useMaterialYou: updatedTheme.useMaterialYou,
-        fontScale: updatedTheme.fontScale,
-        highContrast: updatedTheme.highContrast,
-      );
+      
+      // 使用微任务机制，避免在构建过程中触发更新
+      Future.microtask(() {
+        if (_currentPreferences != null) {
+          notifyListeners();
+          
+          // 更新 ThemeProvider，但也使用微任务
+          Future.microtask(() {
+            _themeProvider?.updateFromUserPreferences(
+              themeMode: updatedTheme.themeMode,
+              primaryColor: updatedTheme.primaryColor,
+              useMaterialYou: updatedTheme.useMaterialYou,
+              fontScale: updatedTheme.fontScale,
+              highContrast: updatedTheme.highContrast,
+            );
+          });
+        }
+      });
     } catch (e) {
       _setError('更新主题设置失败: ${e.toString()}');
     }
