@@ -364,7 +364,7 @@ class _MapCanvasState extends State<MapCanvas> {
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
           maxScale: 5.0,
-          scaleFactor: 200.0 * widget.zoomSensitivity, // 应用缩放敏感度
+          scaleFactor: 200.0 / widget.zoomSensitivity, // 应用缩放敏感度（除法确保高数值=高敏感度）
           constrained: false, // 关键：不约束子组件大小
           child: SizedBox(
             width: kCanvasWidth,
