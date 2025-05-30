@@ -48,10 +48,10 @@ dependencies:
   # Configuration management
   yaml: ^3.1.2
     # Storage
-  shared_preferences: ^2.3.2
-    # Database
+  shared_preferences: ^2.3.2    # Database
   sqflite: ^2.3.3+1
   sqflite_common_ffi: ^2.3.3
+  sqflite_common_ffi_web: ^0.4.3+1
   
   # File picker
   file_picker: ^8.1.2

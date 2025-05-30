@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
 import '../../components/layout/main_layout.dart';
 import '../../components/layout/page_configuration.dart';
+import '../../components/web/web_readonly_components.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
@@ -15,10 +17,12 @@ import '../map_editor/map_editor_page.dart';
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
-
   @override
   Widget buildContent(BuildContext context) {
-    return const _MapAtlasContent();
+    return WebReadOnlyBanner(
+      showBanner: kIsWeb,
+      child: const _MapAtlasContent(),
+    );
   }
 }
 
@@ -327,15 +331,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     } catch (e) {
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
-  }
-  void _openMapEditor(int mapId) async {
+  }  void _openMapEditor(int mapId) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConfigAwareWidget(
           featureId: 'DebugMode',
           child: MapEditorPage(
             mapId: mapId,
-            isPreviewMode: false, // 调试模式下可编辑
+            isPreviewMode: kIsWeb ? true : false, // Web平台强制预览模式
           ),
           fallback: MapEditorPage(
             mapId: mapId,
@@ -384,9 +387,28 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ),
           // 调试模式功能
           ConfigAwareAppBarAction(
-            featureId: 'DebugMode',
-            action: PopupMenuButton<String>(
+            featureId: 'DebugMode',            action: PopupMenuButton<String>(
               onSelected: (value) {
+                if (kIsWeb) {
+                  // Web平台显示只读模式提示
+                  String operationName;
+                  switch (value) {
+                    case 'add':
+                      operationName = '添加地图';
+                      break;
+                    case 'import':
+                      operationName = '导入数据库';
+                      break;
+                    case 'export':
+                      operationName = '导出数据库';
+                      break;
+                    default:
+                      operationName = '操作';
+                  }
+                  WebReadOnlyDialog.show(context, operationName);
+                  return;
+                }
+                
                 switch (value) {
                   case 'add':
                     _addMap();
@@ -455,11 +477,16 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 ),
                 itemCount: _maps.length,
                 itemBuilder: (context, index) {
-                  final map = _maps[index];
-                  return _MapCard(
+                  final map = _maps[index];                  return _MapCard(
                     map: map,
                     localizedTitle: _localizedTitles[map.title] ?? map.title,
-                    onDelete: () => _deleteMap(map),
+                    onDelete: () {
+                      if (kIsWeb) {
+                        WebReadOnlyDialog.show(context, '删除地图');
+                      } else {
+                        _deleteMap(map);
+                      }
+                    },
                     onTap: () => _openMapEditor(map.id),
                   );
                 },

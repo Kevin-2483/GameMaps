@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../services/map_database_service.dart';
@@ -6,6 +7,7 @@ import '../../services/legend_database_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart' as legend_db;
 import '../../components/layout/main_layout.dart';
+import '../../components/web/web_readonly_components.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
@@ -31,13 +33,15 @@ class MapEditorPage extends BasePage {
 
   @override
   bool get showTrayNavigation => false; // 禁用 TrayNavigation
-
   @override
   Widget buildContent(BuildContext context) {
-    return _MapEditorContent(
-      mapItem: mapItem,
-      mapId: mapId,
-      isPreviewMode: isPreviewMode,
+    return WebReadOnlyBanner(
+      showBanner: kIsWeb,
+      child: _MapEditorContent(
+        mapItem: mapItem,
+        mapId: mapId,
+        isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
+      ),
     );
   }
 }
@@ -733,12 +737,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       child: Scaffold(
       appBar: AppBar(
         title: Text(widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor),
-        actions: [
-          if (!widget.isPreviewMode) ...[
-            IconButton(
-              onPressed: _isLoading ? null : _saveMap,
-              icon: const Icon(Icons.save),
-              tooltip: '保存地图',
+        actions: [          if (!widget.isPreviewMode) ...[
+            WebFeatureRestriction(
+              operationName: '保存地图',
+              enabled: !kIsWeb,
+              child: IconButton(
+                onPressed: _isLoading || kIsWeb ? null : _saveMap,
+                icon: const Icon(Icons.save),
+                tooltip: kIsWeb ? 'Web版本为只读模式' : '保存地图',
+              ),
             ),
           ],
           IconButton(

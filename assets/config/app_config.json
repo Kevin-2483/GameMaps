@@ -18,10 +18,9 @@
     "iOS": {
       "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
-    },
-    "Web": {
-      "pages": ["HomePage", "SettingsPage", "MapAtlasPage", "LegendManagerPage", "FullscreenTestPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+    },    "Web": {
+      "pages": ["HomePage", "MapAtlasPage"],
+      "features": [ "WebReadOnlyMode", "TrayNavigation" ]
     }
   },
   "build": {
