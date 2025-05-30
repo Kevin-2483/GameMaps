@@ -170,10 +170,10 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新界面布局设置失败: ${e.toString()}');
     }
   }
-
   /// 更新工具设置
   Future<void> updateTools({
     List<int>? recentColors,
+    List<int>? customColors,
     List<double>? favoriteStrokeWidths,
     Map<String, String>? shortcuts,
     List<String>? toolbarLayout,
@@ -184,6 +184,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     try {
       final updatedTools = tools.copyWith(
         recentColors: recentColors,
+        customColors: customColors,
         favoriteStrokeWidths: favoriteStrokeWidths,
         shortcuts: shortcuts,
         toolbarLayout: toolbarLayout,
@@ -218,7 +219,6 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新用户信息失败: ${e.toString()}');
     }
   }
-
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     try {
@@ -227,6 +227,31 @@ class UserPreferencesProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('添加最近使用颜色失败: ${e.toString()}');
+    }
+  }
+
+  /// 添加自定义颜色
+  Future<void> addCustomColor(int color) async {
+    try {
+      await _service.addCustomColor(color);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('添加自定义颜色失败: ${e.toString()}');
+    }
+  }
+
+  /// 移除自定义颜色
+  Future<void> removeCustomColor(int color) async {
+    if (_currentPreferences == null) return;
+
+    try {
+      final customColors = List<int>.from(_currentPreferences!.tools.customColors);
+      customColors.remove(color);
+      
+      await updateTools(customColors: customColors);
+    } catch (e) {
+      _setError('移除自定义颜色失败: ${e.toString()}');
     }
   }
 

@@ -88,6 +88,70 @@ class ToolSettingsSection extends StatelessWidget {
                   onPressed: () => _clearRecentColors(context, provider),
                   icon: Icon(Icons.clear_all),
                   label: Text('清空'),
+                ),            ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // 自定义颜色
+            Text(
+              '自定义颜色',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 60,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: tools.customColors.length,
+                itemBuilder: (context, index) {
+                  final color = Color(tools.customColors[index]);
+                  return Container(
+                    margin: EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => _showCustomColorOptions(context, provider, index),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                          ),
+                        ),
+                        child: Center(
+                          child: IconButton(
+                            onPressed: () => _removeCustomColor(provider, index),
+                            icon: Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _addNewCustomColor(context, provider),
+                  icon: Icon(Icons.add),
+                  label: Text('添加自定义颜色'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _clearCustomColors(context, provider),
+                  icon: Icon(Icons.clear_all),
+                  label: Text('清空'),
                 ),
               ],
             ),
@@ -382,10 +446,10 @@ class ToolSettingsSection extends StatelessWidget {
             child: Text('取消'),
           ),
           ElevatedButton(
-            onPressed: () {
-              final defaultTools = ToolPreferences.createDefault();
+            onPressed: () {              final defaultTools = ToolPreferences.createDefault();
               provider.updateTools(
                 recentColors: defaultTools.recentColors,
+                customColors: defaultTools.customColors,
                 favoriteStrokeWidths: defaultTools.favoriteStrokeWidths,
                 shortcuts: defaultTools.shortcuts,
                 toolbarLayout: defaultTools.toolbarLayout,
@@ -405,8 +469,122 @@ class ToolSettingsSection extends StatelessWidget {
             ),
             child: Text('重置'),
           ),
+        ],      ),
+    );
+  }
+
+  void _showCustomColorOptions(BuildContext context, UserPreferencesProvider provider, int index) {
+    // 显示自定义颜色选项对话框的实现
+  }
+
+  void _removeCustomColor(UserPreferencesProvider provider, int index) {
+    final newColors = List<int>.from(preferences.tools.customColors);
+    newColors.removeAt(index);
+    provider.updateTools(customColors: newColors);
+  }
+
+  void _addNewCustomColor(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('选择自定义颜色'),
+        content: SizedBox(
+          width: 300,
+          height: 200,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: _predefinedColors.length,
+            itemBuilder: (context, index) {
+              final color = _predefinedColors[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  provider.addCustomColor(color.value);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
         ],
       ),
     );
   }
+
+  void _clearCustomColors(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('清空自定义颜色'),
+        content: Text('确定要清空所有自定义颜色吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.updateTools(customColors: []);
+              Navigator.of(context).pop();
+            },
+            child: Text('清空'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const List<Color> _predefinedColors = [
+    Colors.red,
+    Colors.pink,
+    Colors.purple,
+    Colors.deepPurple,
+    Colors.indigo,
+    Colors.blue,
+    Colors.lightBlue,
+    Colors.cyan,
+    Colors.teal,
+    Colors.green,
+    Colors.lightGreen,
+    Colors.lime,
+    Colors.yellow,
+    Colors.amber,
+    Colors.orange,
+    Colors.deepOrange,
+    Colors.brown,
+    Colors.grey,
+    Colors.blueGrey,
+    Colors.black,
+    Color(0xFF8E24AA),
+    Color(0xFF5E35B1),
+    Color(0xFF3949AB),
+    Color(0xFF1E88E5),
+    Color(0xFF039BE5),
+    Color(0xFF00ACC1),
+    Color(0xFF00897B),
+    Color(0xFF43A047),
+    Color(0xFF7CB342),
+    Color(0xFFC0CA33),
+    Color(0xFFFFB300),
+    Color(0xFFFF8F00),
+    Color(0xFFFF5722),
+    Color(0xFF6D4C41),
+    Color(0xFF546E7A),
+    Color(0xFF37474F),
+  ];
 }

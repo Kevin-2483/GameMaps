@@ -120,6 +120,9 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
       recentColors: (json['recentColors'] as List<dynamic>)
           .map((e) => (e as num).toInt())
           .toList(),
+      customColors: (json['customColors'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
       favoriteStrokeWidths: (json['favoriteStrokeWidths'] as List<dynamic>)
           .map((e) => (e as num).toDouble())
           .toList(),
@@ -133,6 +136,7 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
     <String, dynamic>{
       'recentColors': instance.recentColors,
+      'customColors': instance.customColors,
       'favoriteStrokeWidths': instance.favoriteStrokeWidths,
       'shortcuts': instance.shortcuts,
       'toolbarLayout': instance.toolbarLayout,

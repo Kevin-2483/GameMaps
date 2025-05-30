@@ -305,6 +305,9 @@ class ToolPreferences {
   /// 最近使用的颜色
   final List<int> recentColors;
 
+  /// 自定义颜色
+  final List<int> customColors;
+
   /// 常用线条宽度
   final List<double> favoriteStrokeWidths;
 
@@ -319,12 +322,12 @@ class ToolPreferences {
 
   const ToolPreferences({
     required this.recentColors,
+    required this.customColors,
     required this.favoriteStrokeWidths,
     required this.shortcuts,
     required this.toolbarLayout,
     this.showAdvancedTools = false,
   });
-
   factory ToolPreferences.createDefault() {
     return const ToolPreferences(
       recentColors: [
@@ -333,6 +336,11 @@ class ToolPreferences {
         0xFF00FF00, // 绿色
         0xFF0000FF, // 蓝色
         0xFFFFFF00, // 黄色
+      ],
+      customColors: [
+        0xFF9C27B0, // 紫色
+        0xFFFF9800, // 橙色
+        0xFF795548, // 棕色
       ],
       favoriteStrokeWidths: [1.0, 2.0, 3.0, 5.0, 8.0],
       shortcuts: {
@@ -354,9 +362,9 @@ class ToolPreferences {
       showAdvancedTools: false,
     );
   }
-
   ToolPreferences copyWith({
     List<int>? recentColors,
+    List<int>? customColors,
     List<double>? favoriteStrokeWidths,
     Map<String, String>? shortcuts,
     List<String>? toolbarLayout,
@@ -364,6 +372,7 @@ class ToolPreferences {
   }) {
     return ToolPreferences(
       recentColors: recentColors ?? this.recentColors,
+      customColors: customColors ?? this.customColors,
       favoriteStrokeWidths: favoriteStrokeWidths ?? this.favoriteStrokeWidths,
       shortcuts: shortcuts ?? this.shortcuts,
       toolbarLayout: toolbarLayout ?? this.toolbarLayout,

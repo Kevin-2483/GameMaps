@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path/path.dart' as path;
 import '../models/user_preferences.dart';
 
 /// 用户偏好设置服务
@@ -177,7 +176,6 @@ class UserPreferencesService {
       locale: locale,
     ));
   }
-
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     final current = await getCurrentPreferences();
@@ -187,12 +185,33 @@ class UserPreferencesService {
     recentColors.remove(color);
     // 添加到开头
     recentColors.insert(0, color);
-    // 限制数量
-    if (recentColors.length > 10) {
-      recentColors.removeRange(10, recentColors.length);
+    // 限制数量为5个
+    if (recentColors.length > 5) {
+      recentColors.removeRange(5, recentColors.length);
     }
 
     final updatedTools = current.tools.copyWith(recentColors: recentColors);
+    await updateTools(updatedTools);
+  }
+
+  /// 添加自定义颜色
+  Future<void> addCustomColor(int color) async {
+    final current = await getCurrentPreferences();
+    final customColors = List<int>.from(current.tools.customColors);
+    
+    // 如果颜色已存在，不重复添加
+    if (customColors.contains(color)) {
+      return;
+    }
+    
+    // 添加到末尾
+    customColors.add(color);
+    // 限制数量为10个
+    if (customColors.length > 10) {
+      customColors.removeAt(0); // 移除最老的颜色
+    }
+
+    final updatedTools = current.tools.copyWith(customColors: customColors);
     await updateTools(updatedTools);
   }
 

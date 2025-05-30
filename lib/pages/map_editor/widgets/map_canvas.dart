@@ -1334,7 +1334,7 @@ class _LayerPainter extends CustomPainter {
           eraser,
           size,
         );
-        print(doesEraserAffectElement);
+        // print(doesEraserAffectElement);
         if (doesEraserAffectElement) {
           // *** 修改在这里：调用 _getFinalEraserPath 并传入 triangleCut ***
           final Path singleEraserPath = _getFinalEraserPath(
@@ -1385,7 +1385,7 @@ class _LayerPainter extends CustomPainter {
     final Rect eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
     final double eraserCurvature = eraser.curvature;
     final TriangleCutType eraserTriangleCut = eraser.triangleCut; // 获取橡皮擦的切割类型
-    print(eraserTriangleCut);
+    // print(eraserTriangleCut);
 
     // 根据元素类型进行判断
     switch (element.type) {
