@@ -113,10 +113,40 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
   
   // 数据变更跟踪
-  bool _hasUnsavedChanges = false;@override
+  bool _hasUnsavedChanges = false;  @override
   void initState() {
     super.initState();
     _initializeMap();
+    _initializeLayoutFromPreferences();
+  }
+
+  /// 从用户首选项初始化界面布局
+  void _initializeLayoutFromPreferences() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final prefsProvider = context.read<UserPreferencesProvider>();
+        if (prefsProvider.isInitialized) {
+          _updateLayoutFromPreferences(prefsProvider);
+        }
+      }
+    });
+  }
+
+  /// 根据用户首选项更新界面布局
+  void _updateLayoutFromPreferences(UserPreferencesProvider prefsProvider) {
+    final layout = prefsProvider.layout;
+    
+    setState(() {
+      // 更新面板折叠状态
+      _isDrawingToolbarCollapsed = layout.panelCollapsedStates['drawing'] ?? false;
+      _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
+      _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;
+      
+      // 更新面板自动关闭状态
+      _isDrawingToolbarAutoClose = layout.panelAutoCloseStates['drawing'] ?? true;
+      _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
+      _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
+    });
   }
 
   Future<void> _initializeMap() async {
@@ -685,7 +715,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return result ?? false;
   }
-
   // 处理工具栏自动关闭逻辑
   void _handlePanelToggle(String panelType) {
     setState(() {
@@ -722,14 +751,71 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
       }
     });
+    
+    // 保存面板状态到用户首选项
+    _savePanelStateToPreferences(panelType);
   }
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
 
-    return PopScope(
+  /// 保存面板状态到用户首选项
+  void _savePanelStateToPreferences(String panelType) {
+    if (mounted) {
+      final prefsProvider = context.read<UserPreferencesProvider>();
+      bool isCollapsed;
+      
+      switch (panelType) {
+        case 'drawing':
+          isCollapsed = _isDrawingToolbarCollapsed;
+          break;
+        case 'layer':
+          isCollapsed = _isLayerPanelCollapsed;
+          break;
+        case 'legend':
+          isCollapsed = _isLegendPanelCollapsed;
+          break;
+        default:
+          return;
+      }
+      
+      prefsProvider.updatePanelState(
+        panelType: panelType,
+        isCollapsed: isCollapsed,
+      );
+    }
+  }
+
+  /// 处理面板自动关闭切换
+  void _handleAutoCloseToggle(String panelType, bool value) {
+    setState(() {
+      switch (panelType) {
+        case 'drawing':
+          _isDrawingToolbarAutoClose = value;
+          break;
+        case 'layer':
+          _isLayerPanelAutoClose = value;
+          break;
+        case 'legend':
+          _isLegendPanelAutoClose = value;
+          break;
+      }
+    });
+    
+    // 保存到用户首选项
+    if (mounted) {
+      final prefsProvider = context.read<UserPreferencesProvider>();
+      prefsProvider.updatePanelState(
+        panelType: panelType,
+        autoClose: value,
+      );
+    }
+  }  @override
+  Widget build(BuildContext context) {
+    return Consumer<UserPreferencesProvider>(
+      builder: (context, userPrefsProvider, child) {
+        final l10n = AppLocalizations.of(context)!;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
+
+        return PopScope(
       canPop: false, // 阻止默认的返回行为
       onPopInvoked: (didPop) async {
         if (!didPop) {
@@ -787,11 +873,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
-              children: [
-                // 主要内容
+              children: [                // 主要内容
                 isNarrowScreen
-                    ? _buildNarrowScreenLayout()
-                    : _buildWideScreenLayout(),
+                    ? _buildNarrowScreenLayout(userPrefsProvider)
+                    : _buildWideScreenLayout(userPrefsProvider),
 
                 // 图层图例绑定抽屉覆盖层
                 if (_isLayerLegendBindingDrawerOpen &&
@@ -941,15 +1026,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 label: Text(_isFloatingToolbarVisible ? '关闭工具栏' : '工具栏'),
                 tooltip: _isFloatingToolbarVisible ? '关闭工具栏' : '打开工具栏',
               ),
-            )
-          : null,
+            )          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ), // 关闭 PopScope 的 child 参数
+        );
+      },
     );
-  }
-
-  List<Widget> _buildToolPanels() {
+  }  List<Widget> _buildToolPanels(UserPreferencesProvider userPrefsProvider) {
     final List<Widget> panels = [];
+    final layout = userPrefsProvider.layout;
 
     // 绘制工具栏（仅编辑模式）
     if (!widget.isPreviewMode) {
@@ -960,9 +1045,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           isCollapsed: _isDrawingToolbarCollapsed,
           onToggleCollapsed: () => _handlePanelToggle('drawing'),
           autoCloseEnabled: _isDrawingToolbarAutoClose,
-          onAutoCloseToggled: (value) =>
-              setState(() => _isDrawingToolbarAutoClose = value),
+          onAutoCloseToggled: (value) => _handleAutoCloseToggle('drawing', value),
           needsScrolling: true,
+          compactMode: layout.compactMode,
+          showTooltips: layout.showTooltips,
+          animationDuration: layout.animationDuration,
+          enableAnimations: layout.enableAnimations,
           child: _isDrawingToolbarCollapsed
               ? null
               : DrawingToolbarOptimized(
@@ -1011,8 +1099,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 ),
         ),
       );
-    }
-    // 图层面板
+    }    // 图层面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图层',
@@ -1020,18 +1107,21 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         isCollapsed: _isLayerPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('layer'),
         autoCloseEnabled: _isLayerPanelAutoClose,
-        onAutoCloseToggled: (value) =>
-            setState(() => _isLayerPanelAutoClose = value),
+        onAutoCloseToggled: (value) => _handleAutoCloseToggle('layer', value),
         collapsedSubtitle: _selectedLayer != null
             ? '当前: ${_selectedLayer!.name}'
             : '未选择图层',
+        compactMode: layout.compactMode,
+        showTooltips: layout.showTooltips,
+        animationDuration: layout.animationDuration,
+        enableAnimations: layout.enableAnimations,
         actions: widget.isPreviewMode
             ? null
             : [
                 IconButton(
                   icon: const Icon(Icons.add, size: 18),
                   onPressed: _addNewLayer,
-                  tooltip: '添加图层',
+                  tooltip: layout.showTooltips ? '添加图层' : null,
                 ),
               ],
         child: _isLayerPanelCollapsed
@@ -1055,9 +1145,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 onLayersBatchUpdated: _updateLayersBatch,
               ),
       ),
-    );
-
-    // 图例面板
+    );    // 图例面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图例管理',
@@ -1065,15 +1153,18 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         isCollapsed: _isLegendPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('legend'),
         autoCloseEnabled: _isLegendPanelAutoClose,
-        onAutoCloseToggled: (value) =>
-            setState(() => _isLegendPanelAutoClose = value),
+        onAutoCloseToggled: (value) => _handleAutoCloseToggle('legend', value),
+        compactMode: layout.compactMode,
+        showTooltips: layout.showTooltips,
+        animationDuration: layout.animationDuration,
+        enableAnimations: layout.enableAnimations,
         actions: widget.isPreviewMode
             ? null
             : [
                 IconButton(
                   icon: const Icon(Icons.add, size: 18),
                   onPressed: _addLegendGroup,
-                  tooltip: '添加图例组',
+                  tooltip: layout.showTooltips ? '添加图例组' : null,
                 ),
               ],
         child: _isLegendPanelCollapsed
@@ -1092,7 +1183,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return panels;
   }
-
   Widget _buildCollapsiblePanel({
     required String title,
     required IconData icon,
@@ -1104,11 +1194,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     bool autoCloseEnabled = true,
     ValueChanged<bool>? onAutoCloseToggled,
     String? collapsedSubtitle, // 折叠状态下显示的附加信息
-  }) {
+    bool compactMode = false,
+    bool showTooltips = true,
+    int animationDuration = 300,
+    bool enableAnimations = true,  }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 800;
-    const double headerHeight = 48.0;
-    final double minContentHeight = isNarrowScreen ? 600.0 : 700.0; // 窄屏时减小高度
+    final double headerHeight = compactMode ? 40.0 : 48.0;
+    final double minContentHeight = compactMode 
+        ? (isNarrowScreen ? 500.0 : 600.0)
+        : (isNarrowScreen ? 600.0 : 700.0);
+    
     if (isCollapsed) {
       return Container(
         height: headerHeight,
@@ -1248,20 +1344,21 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       ),
     );
   }
-
   /// 宽屏布局（传统横向布局）
-  Widget _buildWideScreenLayout() {
+  Widget _buildWideScreenLayout(UserPreferencesProvider userPrefsProvider) {
+    final layout = userPrefsProvider.layout;
+    final sidebarWidth = layout.sidebarWidth;
+    
     return Row(
       children: [
         // 左侧工具面板
         SizedBox(
-          width: 300,
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
+          width: sidebarWidth,
+          child: SingleChildScrollView(            child: ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
               ),
-              child: Column(children: _buildToolPanels()),
+              child: Column(children: _buildToolPanels(userPrefsProvider)),
             ),
           ),
         ),
@@ -1273,9 +1370,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       ],
     );
   }
-
   /// 窄屏布局（悬浮工具栏）
-  Widget _buildNarrowScreenLayout() {
+  Widget _buildNarrowScreenLayout(UserPreferencesProvider userPrefsProvider) {
     return Stack(
       children: [
         // 地图画布占满全屏
@@ -1369,12 +1465,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       const SizedBox(width: 4),
                     ],
                   ),
-                ),
-
-                // 工具面板内容
+                ),                // 工具面板内容
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Column(children: _buildToolPanels()),
+                    child: Column(children: _buildToolPanels(userPrefsProvider)),
                   ),
                 ),
               ],
