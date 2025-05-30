@@ -10,7 +10,7 @@ import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'router/app_router.dart';
 import 'config/config_manager.dart';
-import 'services/web_database_preloader.dart';
+import 'services/web_database_importer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,10 +27,9 @@ void main() async {
   // 移动平台（Android/iOS）使用默认的 sqflite
   // 初始化配置管理器
   await ConfigManager.instance.loadFromAssets();
-
-  // Web平台初始化示例数据
+  // Web平台从assets导入数据
   if (kIsWeb) {
-    await WebDatabasePreloader.initializeSampleData();
+    await WebDatabaseImporter.importFromAssets();
   }
 
   runApp(const R6BoxApp());
