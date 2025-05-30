@@ -28,9 +28,14 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
   <title>r6box</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- SQLite Web Worker configuration -->
+  <script>
+    // Configure SQLite Web Worker
+    window.sqfliteWorkerUri = 'sqflite_sw.js';
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

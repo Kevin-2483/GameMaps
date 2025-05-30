@@ -92,10 +92,10 @@ flutter:
   
   # Generate application localization files
   generate: true
-
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/config/
+    - assets/data/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

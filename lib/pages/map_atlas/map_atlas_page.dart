@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
 import '../../services/map_database_service.dart';
+import '../../services/combined_database_exporter.dart';
 import '../../mixins/map_localization_mixin.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../map_editor/map_editor_page.dart';
@@ -305,6 +306,113 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     }
   }
 
+  /// 导出Web平台数据库
+  Future<void> _exportForWeb() async {
+    try {
+      final exporter = CombinedDatabaseExporter();
+      
+      // 显示版本选择对话框
+      final l10n = AppLocalizations.of(context)!;
+      final exportVersion = await _showExportVersionDialog(l10n);
+      
+      if (exportVersion != null) {
+        // 执行导出
+        final filePath = await exporter.exportAllDatabases(
+          customVersion: exportVersion,
+          includeLocalizations: true,
+        );
+        
+        if (filePath != null) {
+          // 显示成功对话框
+          await _showWebExportSuccessDialog(filePath);
+        }
+      }
+    } catch (e) {
+      _showErrorSnackBar('Web数据库导出失败: ${e.toString()}');
+    }
+  }
+
+  /// 显示Web导出成功对话框
+  Future<void> _showWebExportSuccessDialog(String filePath) async {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 8),
+              Text('导出成功'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('数据库已成功导出至：'),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    filePath,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '使用说明：',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('1. 将导出的JSON文件重命名为 "exported_database.json"'),
+                const SizedBox(height: 4),
+                const Text('2. 复制文件到Web项目的 assets/data/ 目录'),
+                const SizedBox(height: 4),
+                const Text('3. 确保在 pubspec.yaml 中注册该资源文件'),
+                const SizedBox(height: 4),
+                const Text('4. 重新构建Web应用以应用新数据'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '提示：',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Web平台会自动加载这个数据文件，用户无需手动导入。',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _updateExternalResources() async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -387,8 +495,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ),
           // 调试模式功能
           ConfigAwareAppBarAction(
-            featureId: 'DebugMode',            action: PopupMenuButton<String>(
-              onSelected: (value) {
+            featureId: 'DebugMode',            action: PopupMenuButton<String>(              onSelected: (value) {
                 if (kIsWeb) {
                   // Web平台显示只读模式提示
                   String operationName;
@@ -402,14 +509,16 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     case 'export':
                       operationName = '导出数据库';
                       break;
+                    case 'export_web':
+                      operationName = '导出Web数据库';
+                      break;
                     default:
                       operationName = '操作';
                   }
                   WebReadOnlyDialog.show(context, operationName);
                   return;
                 }
-                
-                switch (value) {
+                  switch (value) {
                   case 'add':
                     _addMap();
                     break;
@@ -418,6 +527,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     break;
                   case 'export':
                     _exportDatabase();
+                    break;
+                  case 'export_web':
+                    _exportForWeb();
                     break;
                 }
               },
@@ -435,12 +547,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     leading: const Icon(Icons.file_upload),
                     title: Text(l10n.importDatabase),
                   ),
-                ),
-                PopupMenuItem(
+                ),                PopupMenuItem(
                   value: 'export',
                   child: ListTile(
                     leading: const Icon(Icons.file_download),
                     title: Text(l10n.exportDatabase),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'export_web',
+                  child: ListTile(
+                    leading: const Icon(Icons.web),
+                    title: const Text('导出Web数据库'),
                   ),
                 ),
               ],
