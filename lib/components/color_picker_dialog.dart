@@ -50,14 +50,11 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
             SizedBox(
               width: 280,
               height: 280,
-              child: ColorWheel(
-                hsv: _currentHsv,
-                onChanged: _updateColor,
-              ),
+              child: ColorWheel(hsv: _currentHsv, onChanged: _updateColor),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 亮度滑条
             _buildSlider(
               '亮度',
@@ -66,9 +63,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               Colors.black,
               _currentHsv.withValue(1.0).toColor(),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // 饱和度滑条
             _buildSlider(
               '饱和度',
@@ -77,7 +74,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               Colors.white,
               _currentHsv.withSaturation(1.0).toColor(),
             ),
-            
+
             // 透明度滑条（如果启用）
             if (widget.enableAlpha) ...[
               const SizedBox(height: 12),
@@ -89,38 +86,60 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 _currentColor.withOpacity(1.0),
               ),
             ],
-            
+
             const SizedBox(height: 20),
-            
             // 当前颜色预览
-            Container(
-              width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                color: _currentColor,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  '#${_currentColor.value.toRadixString(16).padLeft(8, '0').toUpperCase()}',
-                  style: TextStyle(
-                    color: _currentColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-                    fontWeight: FontWeight.w600,
+            GestureDetector(
+              onTap: () => _showManualColorInput(),
+              child: Container(
+                width: double.infinity,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: _currentColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '#${_currentColor.value.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+                        style: TextStyle(
+                          color: _currentColor.computeLuminance() > 0.5
+                              ? Colors.black
+                              : Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '点击输入颜色值',
+                        style: TextStyle(
+                          color:
+                              (_currentColor.computeLuminance() > 0.5
+                                      ? Colors.black
+                                      : Colors.white)
+                                  .withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // RGB值显示
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -167,9 +186,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           height: 20,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            gradient: LinearGradient(
-              colors: [startColor, endColor],
-            ),
+            gradient: LinearGradient(colors: [startColor, endColor]),
           ),
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -206,6 +223,142 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       ],
     );
   }
+
+  /// 显示手动输入颜色值的对话框
+  void _showManualColorInput() {
+    final TextEditingController controller = TextEditingController(
+      text: _currentColor.value.toRadixString(16).padLeft(8, '0').toUpperCase(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('输入颜色值'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('支持以下格式：'),
+            const SizedBox(height: 8),
+            const Text(
+              '• ARGB: FFFF0000 (红色，不透明)',
+              style: TextStyle(fontSize: 12),
+            ),
+            const Text('• RGB: FF0000 (红色)', style: TextStyle(fontSize: 12)),
+            const Text('• 带#号: #FF0000', style: TextStyle(fontSize: 12)),
+            const Text(
+              '• CSS颜色名: red, blue, green等',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: '颜色值',
+                hintText: '例如: FF0000, #FF0000, red',
+                border: OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.characters,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final color = _parseColorFromString(controller.text.trim());
+              if (color != null) {
+                _updateColor(HSVColor.fromColor(color));
+                Navigator.of(context).pop();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('无效的颜色格式，请检查输入'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 解析字符串颜色值
+  Color? _parseColorFromString(String input) {
+    if (input.isEmpty) return null;
+
+    // 移除空格和特殊字符
+    String cleanInput = input.replaceAll(RegExp(r'[^\w#]'), '');
+
+    // 处理CSS颜色名
+    final cssColors = {
+      'red': 0xFFFF0000,
+      'green': 0xFF00FF00,
+      'blue': 0xFF0000FF,
+      'white': 0xFFFFFFFF,
+      'black': 0xFF000000,
+      'yellow': 0xFFFFFF00,
+      'cyan': 0xFF00FFFF,
+      'magenta': 0xFFFF00FF,
+      'orange': 0xFFFFA500,
+      'purple': 0xFF800080,
+      'pink': 0xFFFFC0CB,
+      'brown': 0xFFA52A2A,
+      'gray': 0xFF808080,
+      'grey': 0xFF808080,
+      'lime': 0xFF00FF00,
+      'navy': 0xFF000080,
+      'maroon': 0xFF800000,
+      'olive': 0xFF808000,
+      'silver': 0xFFC0C0C0,
+      'teal': 0xFF008080,
+    };
+
+    String lowerInput = cleanInput.toLowerCase();
+    if (cssColors.containsKey(lowerInput)) {
+      return Color(cssColors[lowerInput]!);
+    }
+
+    // 移除 # 号
+    if (cleanInput.startsWith('#')) {
+      cleanInput = cleanInput.substring(1);
+    }
+
+    // 验证是否为有效的十六进制
+    if (!RegExp(r'^[0-9A-Fa-f]+$').hasMatch(cleanInput)) {
+      return null;
+    }
+
+    try {
+      int colorValue;
+
+      if (cleanInput.length == 3) {
+        // RGB缩写格式 (例如: F0A -> FF00AA)
+        final r = cleanInput[0] + cleanInput[0];
+        final g = cleanInput[1] + cleanInput[1];
+        final b = cleanInput[2] + cleanInput[2];
+        colorValue = int.parse('FF$r$g$b', radix: 16);
+      } else if (cleanInput.length == 6) {
+        // RGB格式 (例如: FF0000)
+        colorValue = int.parse('FF$cleanInput', radix: 16);
+      } else if (cleanInput.length == 8) {
+        // ARGB格式 (例如: FFFF0000)
+        colorValue = int.parse(cleanInput, radix: 16);
+      } else {
+        return null;
+      }
+
+      return Color(colorValue);
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 /// 颜色轮盘组件
@@ -213,11 +366,7 @@ class ColorWheel extends StatefulWidget {
   final HSVColor hsv;
   final ValueChanged<HSVColor> onChanged;
 
-  const ColorWheel({
-    super.key,
-    required this.hsv,
-    required this.onChanged,
-  });
+  const ColorWheel({super.key, required this.hsv, required this.onChanged});
 
   @override
   State<ColorWheel> createState() => _ColorWheelState();
