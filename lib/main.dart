@@ -16,19 +16,21 @@ import 'services/web_database_importer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 初始化数据库工厂（根据平台）
+  // Initialize database factory (based on platform)
   if (kIsWeb) {
-    // Web 平台使用 ffi_web
+    // Web platform uses ffi_web
     databaseFactory = databaseFactoryFfiWeb;
   } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    // 桌面平台使用原生 ffi
+    // Desktop platforms use native ffi
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  // 移动平台（Android/iOS）使用默认的 sqflite
-  // 初始化配置管理器
+  // Mobile platforms (Android/iOS) use default sqflite
+
+  // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
-  // Web平台从assets导入数据
+
+  // Import data from assets for Web platform
   if (kIsWeb) {
     await WebDatabaseImporter.importFromAssets();
   }
@@ -39,19 +41,31 @@ void main() async {
 class R6BoxApp extends StatelessWidget {
   const R6BoxApp({super.key});
 
+  // Create the router instance once and make it static or store it
+  // so it doesn't get recreated on widget rebuilds.
+  // Assuming AppRouter.createRouter() returns a GoRouter instance or similar.
+  static final _router = AppRouter.createRouter();
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()..initLocale()),
-        ChangeNotifierProvider(create: (_) => UserPreferencesProvider()..initialize()),
-      ],      child: Consumer3<ThemeProvider, LocaleProvider, UserPreferencesProvider>(
-        builder: (context, themeProvider, localeProvider, userPrefsProvider, child) {
-          // 当用户偏好设置加载完成后，建立与主题提供者的连接
+        ChangeNotifierProvider(
+            create: (_) => UserPreferencesProvider()..initialize()),
+      ],
+      child: Consumer3<ThemeProvider, LocaleProvider, UserPreferencesProvider>(
+        builder: (context, themeProvider, localeProvider, userPrefsProvider,
+            child) {
+          // When user preferences are loaded, establish connection with ThemeProvider
           if (userPrefsProvider.isInitialized) {
+            // It's generally good practice to ensure this connection setup
+            // and the subsequent update don't cause unnecessary rebuild cycles.
+            // The _isUpdatingFromUserPrefs flag in ThemeProvider helps,
+            // and calling setThemeProvider ideally should be idempotent or guarded.
             userPrefsProvider.setThemeProvider(themeProvider);
-            
+
             final theme = userPrefsProvider.theme;
             themeProvider.updateFromUserPreferences(
               themeMode: theme.themeMode,
@@ -62,19 +76,20 @@ class R6BoxApp extends StatelessWidget {
             );
           }
 
-          final router = AppRouter.createRouter();
-
+          // Use the pre-created router instance
           return MaterialApp.router(
             title: 'R6Box',
             debugShowCheckedModeBanner: false,
 
-            // 路由配置
-            routerConfig: router,
-            // 主题配置
+            // Router configuration
+            routerConfig: _router, // Use the stable router instance
+
+            // Theme configuration
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.flutterThemeMode,
-            // 国际化配置
+
+            // Internationalization configuration
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
