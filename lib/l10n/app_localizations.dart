@@ -650,7 +650,7 @@ abstract class AppLocalizations {
   /// **'Export failed: {error}'**
   String exportFailed(String error);
 
-  /// Import error message
+  /// Import failed error message
   ///
   /// In en, this message translates to:
   /// **'Import failed: {error}'**
@@ -1075,6 +1075,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
+
+  /// User preferences page title
+  ///
+  /// In en, this message translates to:
+  /// **'User Preferences'**
+  String get userPreferences;
+
+  /// General settings section
+  ///
+  /// In en, this message translates to:
+  /// **'General Settings'**
+  String get generalSettings;
+
+  /// Theme settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Settings'**
+  String get themeSettings;
+
+  /// Map editor settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Map Editor Settings'**
+  String get mapEditorSettings;
+
+  /// Layout settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Layout Settings'**
+  String get layoutSettings;
+
+  /// Tool settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Tool Settings'**
+  String get toolSettings;
+
+  /// User management section
+  ///
+  /// In en, this message translates to:
+  /// **'User Management'**
+  String get userManagement;
+
+  /// Primary color setting
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Color'**
+  String get primaryColor;
+
+  /// Accent color setting
+  ///
+  /// In en, this message translates to:
+  /// **'Accent Color'**
+  String get accentColor;
+
+  /// Default drawing tool setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default Drawing Tool'**
+  String get defaultDrawingTool;
+
+  /// Default color setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default Color'**
+  String get defaultColor;
+
+  /// Default stroke width setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default Stroke Width'**
+  String get defaultStrokeWidth;
+
+  /// Auto save setting
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Save'**
+  String get autoSave;
+
+  /// Auto save interval setting
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Save Interval (minutes)'**
+  String get autoSaveInterval;
+
+  /// Show grid setting
+  ///
+  /// In en, this message translates to:
+  /// **'Show Grid'**
+  String get showGrid;
+
+  /// Grid size setting
+  ///
+  /// In en, this message translates to:
+  /// **'Grid Size'**
+  String get gridSize;
+
+  /// Snap to grid setting
+  ///
+  /// In en, this message translates to:
+  /// **'Snap to Grid'**
+  String get snapToGrid;
+
+  /// Compact mode setting
+  ///
+  /// In en, this message translates to:
+  /// **'Compact Mode'**
+  String get compactMode;
+
+  /// Show tooltips setting
+  ///
+  /// In en, this message translates to:
+  /// **'Show Tooltips'**
+  String get showTooltips;
+
+  /// Enable animations setting
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Animations'**
+  String get enableAnimations;
+
+  /// Animation duration setting
+  ///
+  /// In en, this message translates to:
+  /// **'Animation Duration (ms)'**
+  String get animationDuration;
+
+  /// Recent colors setting
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Colors'**
+  String get recentColors;
+
+  /// Favorite stroke widths setting
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite Stroke Widths'**
+  String get favoriteStrokeWidths;
+
+  /// Show advanced tools setting
+  ///
+  /// In en, this message translates to:
+  /// **'Show Advanced Tools'**
+  String get showAdvancedTools;
+
+  /// Current user setting
+  ///
+  /// In en, this message translates to:
+  /// **'Current User'**
+  String get currentUser;
+
+  /// User profiles setting
+  ///
+  /// In en, this message translates to:
+  /// **'User Profiles'**
+  String get userProfiles;
+
+  /// Create profile button
+  ///
+  /// In en, this message translates to:
+  /// **'Create Profile'**
+  String get createProfile;
+
+  /// Edit profile button
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// Delete profile button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Profile'**
+  String get deleteProfile;
+
+  /// Profile name field
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Name'**
+  String get profileName;
+
+  /// Switch profile button
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Profile'**
+  String get switchProfile;
+
+  /// Export settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Export Settings'**
+  String get exportSettings;
+
+  /// Import settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Import Settings'**
+  String get importSettings;
+
+  /// Reset settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Defaults'**
+  String get resetSettings;
+
+  /// Confirm reset settings dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset all settings to defaults? This cannot be undone.'**
+  String get confirmResetSettings;
+
+  /// Settings exported success message
+  ///
+  /// In en, this message translates to:
+  /// **'Settings exported successfully'**
+  String get settingsExported;
+
+  /// Settings imported success message
+  ///
+  /// In en, this message translates to:
+  /// **'Settings imported successfully'**
+  String get settingsImported;
+
+  /// Settings reset success message
+  ///
+  /// In en, this message translates to:
+  /// **'Settings reset to defaults'**
+  String get settingsReset;
+
+  /// Profile created success message
+  ///
+  /// In en, this message translates to:
+  /// **'Profile created: {name}'**
+  String profileCreated(String name);
+
+  /// Profile deleted success message
+  ///
+  /// In en, this message translates to:
+  /// **'Profile deleted: {name}'**
+  String profileDeleted(String name);
+
+  /// Confirm delete profile dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete profile \'{name}\'? This cannot be undone.'**
+  String confirmDeleteProfile(String name);
 }
 
 class _AppLocalizationsDelegate

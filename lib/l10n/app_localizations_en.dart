@@ -557,4 +557,134 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get delete => 'Delete';
+
+  @override
+  String get userPreferences => 'User Preferences';
+
+  @override
+  String get generalSettings => 'General Settings';
+
+  @override
+  String get themeSettings => 'Theme Settings';
+
+  @override
+  String get mapEditorSettings => 'Map Editor Settings';
+
+  @override
+  String get layoutSettings => 'Layout Settings';
+
+  @override
+  String get toolSettings => 'Tool Settings';
+
+  @override
+  String get userManagement => 'User Management';
+
+  @override
+  String get primaryColor => 'Primary Color';
+
+  @override
+  String get accentColor => 'Accent Color';
+
+  @override
+  String get defaultDrawingTool => 'Default Drawing Tool';
+
+  @override
+  String get defaultColor => 'Default Color';
+
+  @override
+  String get defaultStrokeWidth => 'Default Stroke Width';
+
+  @override
+  String get autoSave => 'Auto Save';
+
+  @override
+  String get autoSaveInterval => 'Auto Save Interval (minutes)';
+
+  @override
+  String get showGrid => 'Show Grid';
+
+  @override
+  String get gridSize => 'Grid Size';
+
+  @override
+  String get snapToGrid => 'Snap to Grid';
+
+  @override
+  String get compactMode => 'Compact Mode';
+
+  @override
+  String get showTooltips => 'Show Tooltips';
+
+  @override
+  String get enableAnimations => 'Enable Animations';
+
+  @override
+  String get animationDuration => 'Animation Duration (ms)';
+
+  @override
+  String get recentColors => 'Recent Colors';
+
+  @override
+  String get favoriteStrokeWidths => 'Favorite Stroke Widths';
+
+  @override
+  String get showAdvancedTools => 'Show Advanced Tools';
+
+  @override
+  String get currentUser => 'Current User';
+
+  @override
+  String get userProfiles => 'User Profiles';
+
+  @override
+  String get createProfile => 'Create Profile';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get deleteProfile => 'Delete Profile';
+
+  @override
+  String get profileName => 'Profile Name';
+
+  @override
+  String get switchProfile => 'Switch Profile';
+
+  @override
+  String get exportSettings => 'Export Settings';
+
+  @override
+  String get importSettings => 'Import Settings';
+
+  @override
+  String get resetSettings => 'Reset to Defaults';
+
+  @override
+  String get confirmResetSettings =>
+      'Are you sure you want to reset all settings to defaults? This cannot be undone.';
+
+  @override
+  String get settingsExported => 'Settings exported successfully';
+
+  @override
+  String get settingsImported => 'Settings imported successfully';
+
+  @override
+  String get settingsReset => 'Settings reset to defaults';
+
+  @override
+  String profileCreated(String name) {
+    return 'Profile created: $name';
+  }
+
+  @override
+  String profileDeleted(String name) {
+    return 'Profile deleted: $name';
+  }
+
+  @override
+  String confirmDeleteProfile(String name) {
+    return 'Are you sure you want to delete profile \'$name\'? This cannot be undone.';
+  }
 }

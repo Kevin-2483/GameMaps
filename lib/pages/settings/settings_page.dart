@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/locale_provider.dart';
@@ -61,13 +62,38 @@ class _SettingsPageContent extends StatelessWidget {
               style: Theme.of(
                 context,
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
+            ),            const SizedBox(height: 24),
+            _buildUserPreferencesSection(context, l10n),
+            const SizedBox(height: 16),
             _buildThemeSection(context, l10n),
             const SizedBox(height: 16),
             _buildLanguageSection(context, l10n),
             const SizedBox(height: 16),
             _buildResourceSection(context, l10n),
+          ],
+        ),
+      ),
+    );  }
+
+  Widget _buildUserPreferencesSection(BuildContext context, AppLocalizations l10n) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.userPreferences,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: Text(l10n.userPreferences),
+              subtitle: Text('管理主题、地图编辑器、界面布局等个人设置'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () => context.go('/user-preferences'),
+            ),
           ],
         ),
       ),

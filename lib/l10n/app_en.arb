@@ -764,9 +764,196 @@
   "cancel": "Cancel",
   "@cancel": {
     "description": "Cancel button"
-  },
-  "delete": "Delete",
+  },  "delete": "Delete",
   "@delete": {
     "description": "Delete button"
+  },
+  "userPreferences": "User Preferences",
+  "@userPreferences": {
+    "description": "User preferences page title"
+  },
+  "generalSettings": "General Settings",
+  "@generalSettings": {
+    "description": "General settings section"
+  },
+  "themeSettings": "Theme Settings",
+  "@themeSettings": {
+    "description": "Theme settings section"
+  },
+  "mapEditorSettings": "Map Editor Settings",
+  "@mapEditorSettings": {
+    "description": "Map editor settings section"
+  },
+  "layoutSettings": "Layout Settings",
+  "@layoutSettings": {
+    "description": "Layout settings section"
+  },
+  "toolSettings": "Tool Settings",
+  "@toolSettings": {
+    "description": "Tool settings section"
+  },
+  "userManagement": "User Management",
+  "@userManagement": {
+    "description": "User management section"
+  },
+  "primaryColor": "Primary Color",
+  "@primaryColor": {
+    "description": "Primary color setting"
+  },
+  "accentColor": "Accent Color",
+  "@accentColor": {
+    "description": "Accent color setting"
+  },
+  "defaultDrawingTool": "Default Drawing Tool",
+  "@defaultDrawingTool": {
+    "description": "Default drawing tool setting"
+  },
+  "defaultColor": "Default Color",
+  "@defaultColor": {
+    "description": "Default color setting"
+  },
+  "defaultStrokeWidth": "Default Stroke Width",
+  "@defaultStrokeWidth": {
+    "description": "Default stroke width setting"
+  },
+  "autoSave": "Auto Save",
+  "@autoSave": {
+    "description": "Auto save setting"
+  },
+  "autoSaveInterval": "Auto Save Interval (minutes)",
+  "@autoSaveInterval": {
+    "description": "Auto save interval setting"
+  },
+  "showGrid": "Show Grid",
+  "@showGrid": {
+    "description": "Show grid setting"
+  },
+  "gridSize": "Grid Size",
+  "@gridSize": {
+    "description": "Grid size setting"
+  },
+  "snapToGrid": "Snap to Grid",
+  "@snapToGrid": {
+    "description": "Snap to grid setting"
+  },
+  "compactMode": "Compact Mode",
+  "@compactMode": {
+    "description": "Compact mode setting"
+  },
+  "showTooltips": "Show Tooltips",
+  "@showTooltips": {
+    "description": "Show tooltips setting"
+  },
+  "enableAnimations": "Enable Animations",
+  "@enableAnimations": {
+    "description": "Enable animations setting"
+  },
+  "animationDuration": "Animation Duration (ms)",
+  "@animationDuration": {
+    "description": "Animation duration setting"
+  },
+  "recentColors": "Recent Colors",
+  "@recentColors": {
+    "description": "Recent colors setting"
+  },
+  "favoriteStrokeWidths": "Favorite Stroke Widths",
+  "@favoriteStrokeWidths": {
+    "description": "Favorite stroke widths setting"
+  },
+  "showAdvancedTools": "Show Advanced Tools",
+  "@showAdvancedTools": {
+    "description": "Show advanced tools setting"
+  },
+  "currentUser": "Current User",
+  "@currentUser": {
+    "description": "Current user setting"
+  },
+  "userProfiles": "User Profiles",
+  "@userProfiles": {
+    "description": "User profiles setting"
+  },
+  "createProfile": "Create Profile",
+  "@createProfile": {
+    "description": "Create profile button"
+  },
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile button"
+  },
+  "deleteProfile": "Delete Profile",
+  "@deleteProfile": {
+    "description": "Delete profile button"
+  },
+  "profileName": "Profile Name",
+  "@profileName": {
+    "description": "Profile name field"
+  },
+  "switchProfile": "Switch Profile",
+  "@switchProfile": {
+    "description": "Switch profile button"
+  },
+  "exportSettings": "Export Settings",
+  "@exportSettings": {
+    "description": "Export settings button"
+  },
+  "importSettings": "Import Settings",
+  "@importSettings": {
+    "description": "Import settings button"
+  },
+  "resetSettings": "Reset to Defaults",
+  "@resetSettings": {
+    "description": "Reset settings button"
+  },
+  "confirmResetSettings": "Are you sure you want to reset all settings to defaults? This cannot be undone.",
+  "@confirmResetSettings": {
+    "description": "Confirm reset settings dialog"
+  },
+  "settingsExported": "Settings exported successfully",
+  "@settingsExported": {
+    "description": "Settings exported success message"
+  },
+  "settingsImported": "Settings imported successfully",
+  "@settingsImported": {
+    "description": "Settings imported success message"
+  },
+  "settingsReset": "Settings reset to defaults",
+  "@settingsReset": {
+    "description": "Settings reset success message"
+  },
+  "importFailed": "Import failed: {error}",
+  "@importFailed": {
+    "description": "Import failed error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCreated": "Profile created: {name}",
+  "@profileCreated": {
+    "description": "Profile created success message",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeleted": "Profile deleted: {name}",
+  "@profileDeleted": {
+    "description": "Profile deleted success message",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDeleteProfile": "Are you sure you want to delete profile '{name}'? This cannot be undone.",
+  "@confirmDeleteProfile": {
+    "description": "Confirm delete profile dialog",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

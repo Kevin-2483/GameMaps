@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
+import 'providers/user_preferences_provider.dart';
 import 'router/app_router.dart';
 import 'config/config_manager.dart';
 import 'services/web_database_importer.dart';
@@ -39,11 +40,11 @@ class R6BoxApp extends StatelessWidget {
   const R6BoxApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
+  Widget build(BuildContext context) {    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()..initTheme()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()..initLocale()),
+        ChangeNotifierProvider(create: (_) => UserPreferencesProvider()),
       ],
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, child) {

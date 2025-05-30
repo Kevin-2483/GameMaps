@@ -42,13 +42,15 @@ class BuildConfigGenerator {
       final buildParams = <String>[];
 
       // 添加平台参数
-      buildParams.add('--dart-define=TARGET_PLATFORM=$targetPlatform');
-      // 添加页面配置
+      buildParams.add('--dart-define=TARGET_PLATFORM=$targetPlatform');      // 添加页面配置
       buildParams.add(
         '--dart-define=ENABLE_HOME_PAGE=${pages.contains('HomePage')}',
       );
       buildParams.add(
         '--dart-define=ENABLE_SETTINGS_PAGE=${pages.contains('SettingsPage')}',
+      );
+      buildParams.add(
+        '--dart-define=ENABLE_USER_PREFERENCES_PAGE=${pages.contains('UserPreferencesPage')}',
       );
       buildParams.add(
         '--dart-define=ENABLE_MAP_ATLAS_PAGE=${pages.contains('MapAtlasPage')}',

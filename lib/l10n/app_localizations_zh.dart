@@ -540,4 +540,133 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get delete => '删除';
+
+  @override
+  String get userPreferences => '用户偏好设置';
+
+  @override
+  String get generalSettings => '常规设置';
+
+  @override
+  String get themeSettings => '主题设置';
+
+  @override
+  String get mapEditorSettings => '地图编辑器设置';
+
+  @override
+  String get layoutSettings => '界面布局设置';
+
+  @override
+  String get toolSettings => '工具设置';
+
+  @override
+  String get userManagement => '用户管理';
+
+  @override
+  String get primaryColor => '主色调';
+
+  @override
+  String get accentColor => '强调色';
+
+  @override
+  String get defaultDrawingTool => '默认绘图工具';
+
+  @override
+  String get defaultColor => '默认颜色';
+
+  @override
+  String get defaultStrokeWidth => '默认线条宽度';
+
+  @override
+  String get autoSave => '自动保存';
+
+  @override
+  String get autoSaveInterval => '自动保存间隔（分钟）';
+
+  @override
+  String get showGrid => '显示网格';
+
+  @override
+  String get gridSize => '网格大小';
+
+  @override
+  String get snapToGrid => '吸附到网格';
+
+  @override
+  String get compactMode => '紧凑模式';
+
+  @override
+  String get showTooltips => '显示工具提示';
+
+  @override
+  String get enableAnimations => '启用动画';
+
+  @override
+  String get animationDuration => '动画持续时间（毫秒）';
+
+  @override
+  String get recentColors => '最近使用的颜色';
+
+  @override
+  String get favoriteStrokeWidths => '常用线条宽度';
+
+  @override
+  String get showAdvancedTools => '显示高级工具';
+
+  @override
+  String get currentUser => '当前用户';
+
+  @override
+  String get userProfiles => '用户配置文件';
+
+  @override
+  String get createProfile => '创建配置文件';
+
+  @override
+  String get editProfile => '编辑配置文件';
+
+  @override
+  String get deleteProfile => '删除配置文件';
+
+  @override
+  String get profileName => '配置文件名称';
+
+  @override
+  String get switchProfile => '切换配置文件';
+
+  @override
+  String get exportSettings => '导出设置';
+
+  @override
+  String get importSettings => '导入设置';
+
+  @override
+  String get resetSettings => '重置为默认值';
+
+  @override
+  String get confirmResetSettings => '确定要将所有设置重置为默认值吗？此操作不可撤销。';
+
+  @override
+  String get settingsExported => '设置导出成功';
+
+  @override
+  String get settingsImported => '设置导入成功';
+
+  @override
+  String get settingsReset => '设置已重置为默认值';
+
+  @override
+  String profileCreated(String name) {
+    return '配置文件已创建：$name';
+  }
+
+  @override
+  String profileDeleted(String name) {
+    return '配置文件已删除：$name';
+  }
+
+  @override
+  String confirmDeleteProfile(String name) {
+    return '确定要删除配置文件 \'$name\' 吗？此操作不可撤销。';
+  }
 }

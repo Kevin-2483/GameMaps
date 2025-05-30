@@ -10,13 +10,14 @@ class BuildTimeConfig {
   );
 
   /// 默认平台检测
-  static const String _defaultPlatform = kIsWeb ? 'Web' : 'Unknown';
-  /// 从环境变量获取启用的页面列表
+  static const String _defaultPlatform = kIsWeb ? 'Web' : 'Unknown';  /// 从环境变量获取启用的页面列表
   static const List<String> enabledPages = [
     if (bool.fromEnvironment('ENABLE_HOME_PAGE', defaultValue: true))
       'HomePage',
     if (bool.fromEnvironment('ENABLE_SETTINGS_PAGE', defaultValue: true))
       'SettingsPage',
+    if (bool.fromEnvironment('ENABLE_USER_PREFERENCES_PAGE', defaultValue: true))
+      'UserPreferencesPage',
     if (bool.fromEnvironment('ENABLE_MAP_ATLAS_PAGE', defaultValue: true))
       'MapAtlasPage',
     if (bool.fromEnvironment('ENABLE_LEGEND_MANAGER_PAGE', defaultValue: true))
