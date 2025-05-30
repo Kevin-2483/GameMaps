@@ -100,6 +100,7 @@ LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
       showTooltips: json['showTooltips'] as bool? ?? true,
       animationDuration: (json['animationDuration'] as num?)?.toInt() ?? 300,
       enableAnimations: json['enableAnimations'] as bool? ?? true,
+      autoRestorePanelStates: json['autoRestorePanelStates'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
@@ -111,6 +112,7 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'showTooltips': instance.showTooltips,
       'animationDuration': instance.animationDuration,
       'enableAnimations': instance.enableAnimations,
+      'autoRestorePanelStates': instance.autoRestorePanelStates,
     };
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>

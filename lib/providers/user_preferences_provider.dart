@@ -138,7 +138,6 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新地图编辑器设置失败: ${e.toString()}');
     }
   }
-
   /// 更新界面布局设置
   Future<void> updateLayout({
     Map<String, bool>? panelCollapsedStates,
@@ -148,6 +147,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     bool? showTooltips,
     int? animationDuration,
     bool? enableAnimations,
+    bool? autoRestorePanelStates,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -160,6 +160,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         showTooltips: showTooltips,
         animationDuration: animationDuration,
         enableAnimations: enableAnimations,
+        autoRestorePanelStates: autoRestorePanelStates,
       );
 
       await _service.updateLayout(updatedLayout);

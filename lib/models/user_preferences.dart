@@ -235,9 +235,11 @@ class LayoutPreferences {
 
   /// 动画持续时间
   final int animationDuration;
-
   /// 是否启用动画
   final bool enableAnimations;
+
+  /// 是否自动恢复面板状态
+  final bool autoRestorePanelStates;
 
   const LayoutPreferences({
     required this.panelCollapsedStates,
@@ -247,8 +249,8 @@ class LayoutPreferences {
     this.showTooltips = true,
     this.animationDuration = 300,
     this.enableAnimations = true,
+    this.autoRestorePanelStates = true,
   });
-
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
       panelCollapsedStates: {
@@ -266,9 +268,9 @@ class LayoutPreferences {
       showTooltips: true,
       animationDuration: 300,
       enableAnimations: true,
+      autoRestorePanelStates: true,
     );
   }
-
   LayoutPreferences copyWith({
     Map<String, bool>? panelCollapsedStates,
     Map<String, bool>? panelAutoCloseStates,
@@ -277,6 +279,7 @@ class LayoutPreferences {
     bool? showTooltips,
     int? animationDuration,
     bool? enableAnimations,
+    bool? autoRestorePanelStates,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -286,6 +289,7 @@ class LayoutPreferences {
       showTooltips: showTooltips ?? this.showTooltips,
       animationDuration: animationDuration ?? this.animationDuration,
       enableAnimations: enableAnimations ?? this.enableAnimations,
+      autoRestorePanelStates: autoRestorePanelStates ?? this.autoRestorePanelStates,
     );
   }
 

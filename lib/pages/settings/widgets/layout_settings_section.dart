@@ -74,7 +74,15 @@ class LayoutSettingsSection extends StatelessWidget {
                     entry.key: value,
                   },
                 ),
-              ),
+              ),            ),
+            
+            const SizedBox(height: 16),
+              // 面板状态恢复设置
+            SwitchListTile(
+              title: Text('保存面板状态变更'),
+              subtitle: Text('用户操作面板时自动保存状态到首选项'),
+              value: layout.autoRestorePanelStates,
+              onChanged: (value) => provider.updateLayout(autoRestorePanelStates: value),
             ),
             
             const SizedBox(height: 16),
@@ -189,8 +197,7 @@ class LayoutSettingsSection extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
             child: Text('取消'),
           ),
-          ElevatedButton(
-            onPressed: () {
+          ElevatedButton(            onPressed: () {
               final defaultLayout = LayoutPreferences.createDefault();
               provider.updateLayout(
                 panelCollapsedStates: defaultLayout.panelCollapsedStates,
@@ -200,6 +207,7 @@ class LayoutSettingsSection extends StatelessWidget {
                 showTooltips: defaultLayout.showTooltips,
                 animationDuration: defaultLayout.animationDuration,
                 enableAnimations: defaultLayout.enableAnimations,
+                autoRestorePanelStates: defaultLayout.autoRestorePanelStates,
               );
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(

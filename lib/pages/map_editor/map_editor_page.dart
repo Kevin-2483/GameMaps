@@ -118,14 +118,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     super.initState();
     _initializeMap();
     _initializeLayoutFromPreferences();
-  }
-
-  /// 从用户首选项初始化界面布局
+  }  /// 从用户首选项初始化界面布局
   void _initializeLayoutFromPreferences() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final prefsProvider = context.read<UserPreferencesProvider>();
         if (prefsProvider.isInitialized) {
+          // 总是从首选项初始化面板状态，autoRestorePanelStates 只控制是否保存用户操作
           _updateLayoutFromPreferences(prefsProvider);
         }
       }
@@ -714,18 +713,22 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     return result ?? false;
-  }
-  // 处理工具栏自动关闭逻辑
+  }  // 处理工具栏自动关闭逻辑
   void _handlePanelToggle(String panelType) {
+    // 记录哪些面板状态发生了变化
+    Set<String> changedPanels = {panelType};
+    
     setState(() {
       switch (panelType) {
         case 'drawing':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
+            changedPanels.add('layer');
           }
           if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
+            changedPanels.add('legend');
           }
           _isDrawingToolbarCollapsed = !_isDrawingToolbarCollapsed;
           break;
@@ -733,9 +736,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
+            changedPanels.add('drawing');
           }
           if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
+            changedPanels.add('legend');
           }
           _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
           break;
@@ -743,23 +748,32 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
+            changedPanels.add('drawing');
           }
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
+            changedPanels.add('layer');
           }
           _isLegendPanelCollapsed = !_isLegendPanelCollapsed;
           break;
       }
     });
     
-    // 保存面板状态到用户首选项
-    _savePanelStateToPreferences(panelType);
+    // 保存所有发生变化的面板状态到用户首选项
+    for (String changedPanel in changedPanels) {
+      _savePanelStateToPreferences(changedPanel);
+    }
   }
-
   /// 保存面板状态到用户首选项
   void _savePanelStateToPreferences(String panelType) {
     if (mounted) {
       final prefsProvider = context.read<UserPreferencesProvider>();
+      
+      // 只有在启用自动恢复面板状态时才保存
+      if (!prefsProvider.layout.autoRestorePanelStates) {
+        return;
+      }
+      
       bool isCollapsed;
       
       switch (panelType) {
