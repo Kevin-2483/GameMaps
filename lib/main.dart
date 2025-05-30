@@ -40,14 +40,28 @@ class R6BoxApp extends StatelessWidget {
   const R6BoxApp({super.key});
 
   @override
-  Widget build(BuildContext context) {    return MultiProvider(
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()..initTheme()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()..initLocale()),
-        ChangeNotifierProvider(create: (_) => UserPreferencesProvider()),
-      ],
-      child: Consumer2<ThemeProvider, LocaleProvider>(
-        builder: (context, themeProvider, localeProvider, child) {
+        ChangeNotifierProvider(create: (_) => UserPreferencesProvider()..initialize()),
+      ],      child: Consumer3<ThemeProvider, LocaleProvider, UserPreferencesProvider>(
+        builder: (context, themeProvider, localeProvider, userPrefsProvider, child) {
+          // 当用户偏好设置加载完成后，建立与主题提供者的连接
+          if (userPrefsProvider.isInitialized) {
+            userPrefsProvider.setThemeProvider(themeProvider);
+            
+            final theme = userPrefsProvider.theme;
+            themeProvider.updateFromUserPreferences(
+              themeMode: theme.themeMode,
+              primaryColor: theme.primaryColor,
+              useMaterialYou: theme.useMaterialYou,
+              fontScale: theme.fontScale,
+              highContrast: theme.highContrast,
+            );
+          }
+
           final router = AppRouter.createRouter();
 
           return MaterialApp.router(

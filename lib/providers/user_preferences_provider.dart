@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_preferences.dart';
 import '../services/user_preferences_service.dart';
+import 'theme_provider.dart';
 
 /// 用户偏好设置状态管理Provider
 class UserPreferencesProvider extends ChangeNotifier {
@@ -10,6 +11,7 @@ class UserPreferencesProvider extends ChangeNotifier {
   UserPreferences? _currentPreferences;
   bool _isLoading = false;
   String? _error;
+  ThemeProvider? _themeProvider;
 
   /// 当前用户偏好设置
   UserPreferences? get currentPreferences => _currentPreferences;
@@ -93,7 +95,14 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       await _service.updateTheme(updatedTheme);
       _currentPreferences = await _service.getCurrentPreferences();
-      notifyListeners();
+      notifyListeners();      // 同步更新 ThemeProvider
+      _themeProvider?.updateFromUserPreferences(
+        themeMode: updatedTheme.themeMode,
+        primaryColor: updatedTheme.primaryColor,
+        useMaterialYou: updatedTheme.useMaterialYou,
+        fontScale: updatedTheme.fontScale,
+        highContrast: updatedTheme.highContrast,
+      );
     } catch (e) {
       _setError('更新主题设置失败: ${e.toString()}');
     }
@@ -360,6 +369,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _error = error;
       notifyListeners();
     }
+  }
+
+  /// 设置 ThemeProvider 引用以同步主题更新
+  void setThemeProvider(ThemeProvider themeProvider) {
+    _themeProvider = themeProvider;
   }
 
   /// 获取面板折叠状态
