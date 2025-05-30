@@ -9,6 +9,7 @@ import '../features/page-modules/map_atlas_page_module.dart';
 import '../features/page-modules/legend_manager_page_module.dart';
 import '../features/page-modules/config_editor_module.dart';
 import '../features/page-modules/fullscreen_test_page_module.dart';
+import '../features/page-modules/web_context_menu_demo_page_module.dart';
 import '../components/layout/app_shell.dart';
 
 class AppRouter {
@@ -62,5 +63,8 @@ class AppRouter {
     registry.register(LegendManagerPageModule());
     registry.register(ConfigEditorModule());
     registry.register(FullscreenTestPageModule());
+    
+    // 注册演示页面模块
+    WebContextMenuDemoPageModule.register();
   }
 }

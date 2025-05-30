@@ -12,6 +12,7 @@ import 'providers/user_preferences_provider.dart';
 import 'router/app_router.dart';
 import 'config/config_manager.dart';
 import 'services/web_database_importer.dart';
+import 'components/web/web_context_menu_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,30 +75,30 @@ class R6BoxApp extends StatelessWidget {
               fontScale: theme.fontScale,
               highContrast: theme.highContrast,
             );
-          }
+          }          // Use the pre-created router instance
+          return WebContextMenuHandler(
+            child: MaterialApp.router(
+              title: 'R6Box',
+              debugShowCheckedModeBanner: false,
 
-          // Use the pre-created router instance
-          return MaterialApp.router(
-            title: 'R6Box',
-            debugShowCheckedModeBanner: false,
+              // Router configuration
+              routerConfig: _router, // Use the stable router instance
 
-            // Router configuration
-            routerConfig: _router, // Use the stable router instance
+              // Theme configuration
+              theme: themeProvider.lightTheme,
+              darkTheme: themeProvider.darkTheme,
+              themeMode: themeProvider.flutterThemeMode,
 
-            // Theme configuration
-            theme: themeProvider.lightTheme,
-            darkTheme: themeProvider.darkTheme,
-            themeMode: themeProvider.flutterThemeMode,
-
-            // Internationalization configuration
-            locale: localeProvider.locale,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: LocaleProvider.supportedLocales,
+              // Internationalization configuration
+              locale: localeProvider.locale,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: LocaleProvider.supportedLocales,
+            ),
           );
         },
       ),

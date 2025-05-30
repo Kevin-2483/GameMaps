@@ -21,7 +21,7 @@ class WebReadOnlyBanner extends StatelessWidget {
     return Banner(
       message: '只读模式',
       location: BannerLocation.topEnd,
-      color: Colors.orange.withOpacity(0.8),
+      color: Colors.orange.withValues(alpha: 0.8),
       child: child,
     );
   }

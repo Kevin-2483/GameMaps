@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
+import '../../../components/web/web_context_menu_handler.dart';
 import 'dart:async';
 
 class LayerPanel extends StatefulWidget {
