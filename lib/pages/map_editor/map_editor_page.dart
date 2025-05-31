@@ -406,24 +406,189 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _reorderLayers(int oldIndex, int newIndex) {
     if (widget.isPreviewMode || _currentMap == null) return;
 
+    print('=== _reorderLayers 开始 ===');
+    print('oldIndex: $oldIndex, newIndex: $newIndex');
+    print('当前图层数量: ${_currentMap!.layers.length}');
+    print('重排序前图层名称: ${_currentMap!.layers.map((l) => l.name).toList()}');
+
+    // 验证索引范围
+    if (oldIndex < 0 ||
+        oldIndex >= _currentMap!.layers.length ||
+        newIndex < 0 ||
+        newIndex >= _currentMap!.layers.length ||
+        oldIndex == newIndex) {
+      print('索引无效，跳过重排序');
+      return;
+    }
+
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
 
     setState(() {
       final layers = List<MapLayer>.from(_currentMap!.layers);
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
+
+      // 记录移动前的链接状态，用于组内重排序时保持组的完整性
+      final movedLayer = layers[oldIndex];
+      final isGroupInternalMove = _isGroupInternalMove(
+        layers,
+        oldIndex,
+        newIndex,
+      );
+
+      print('是否为组内移动: $isGroupInternalMove');
+
+      // 执行重排序 - 不需要调整newIndex，直接使用
       final item = layers.removeAt(oldIndex);
       layers.insert(newIndex, item);
+
+      print('重排序后图层名称: ${layers.map((l) => l.name).toList()}');
 
       // 重新分配order
       for (int i = 0; i < layers.length; i++) {
         layers[i] = layers[i].copyWith(order: i);
       }
 
+      // 如果是组内移动，需要特殊处理链接状态
+      if (isGroupInternalMove) {
+        _preserveGroupLinkingForInternalMove(layers, movedLayer, newIndex);
+      }
+
       _currentMap = _currentMap!.copyWith(layers: layers);
+
+      print('更新后的_currentMap图层数量: ${_currentMap!.layers.length}');
+      print('=== _reorderLayers 结束 ===');
+
+      // 更新选中图层的引用
+      if (_selectedLayer != null) {
+        final selectedLayerId = _selectedLayer!.id;
+        _selectedLayer = layers.firstWhere(
+          (layer) => layer.id == selectedLayerId,
+          orElse: () => _selectedLayer!,
+        );
+      }
     });
+  }
+
+  /// 为组内移动保持组的链接完整性
+  void _preserveGroupLinkingForInternalMove(
+    List<MapLayer> layers,
+    MapLayer movedLayer,
+    int newIndex,
+  ) {
+    print('保持组内链接完整性');
+
+    // 重新找到移动后的组边界
+    int groupStart = _findGroupStart(layers, newIndex);
+    int groupEnd = _findGroupEnd(layers, newIndex);
+
+    print('组边界: start=$groupStart, end=$groupEnd, newIndex=$newIndex');
+
+    // 确保组内所有图层（除了最后一个）都保持链接状态
+    for (int i = groupStart; i < groupEnd; i++) {
+      if (!layers[i].isLinkedToNext) {
+        print('修复图层 ${layers[i].name} 的链接状态');
+        layers[i] = layers[i].copyWith(
+          isLinkedToNext: true,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+
+    // 确保组的最后一个图层不链接到组外
+    if (groupEnd < layers.length - 1 && layers[groupEnd].isLinkedToNext) {
+      // 检查下一个图层是否应该在同一组中
+      bool shouldLinkToNext = false;
+      if (groupEnd + 1 < layers.length) {
+        // 这里可以添加更复杂的逻辑来判断是否应该保持链接
+        // 暂时保持简单：组内移动不改变与组外图层的链接关系
+        shouldLinkToNext = layers[groupEnd].isLinkedToNext;
+      }
+
+      if (!shouldLinkToNext) {
+        print('断开组最后图层 ${layers[groupEnd].name} 的链接');
+        layers[groupEnd] = layers[groupEnd].copyWith(
+          isLinkedToNext: false,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+  }
+
+  /// 检查是否为组内移动
+  bool _isGroupInternalMove(List<MapLayer> layers, int oldIndex, int newIndex) {
+    // 找到oldIndex所在的组
+    int groupStart = _findGroupStart(layers, oldIndex);
+    int groupEnd = _findGroupEnd(layers, oldIndex);
+
+    // 检查newIndex是否在同一个组内
+    return newIndex >= groupStart && newIndex <= groupEnd;
+  }
+
+  /// 自动更新链接状态 - 暂时简化逻辑
+  void _updateAutoLinkStatus(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // 暂时不进行任何自动链接处理，让用户手动控制
+    // 这样可以避免意外的自动连接
+
+    print('自动链接逻辑已暂时禁用');
+
+    // TODO: 后续根据需求重新实现精确的自动链接逻辑
+  }
+
+  /// 处理跨组移动或独立图层移动
+  void _handleCrossGroupMovement(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    final movedLayer = layers[newIndex];
+
+    // 检查移动后的位置是否需要链接
+    bool shouldLink = false;
+    bool shouldUnlink = false;
+
+    // 如果移动到了非最后位置
+    if (newIndex < layers.length - 1) {
+      // 检查前一个图层（如果存在）
+      if (newIndex > 0) {
+        final prevLayer = layers[newIndex - 1];
+        if (prevLayer.isLinkedToNext) {
+          shouldLink = true;
+        }
+      }
+
+      // 检查下一个图层是否在链接组中
+      final nextLayer = layers[newIndex + 1];
+      if (newIndex > 0) {
+        final prevLayer = layers[newIndex - 1];
+        if (prevLayer.isLinkedToNext || nextLayer.isLinkedToNext) {
+          shouldLink = true;
+        }
+      } else if (nextLayer.isLinkedToNext) {
+        shouldLink = true;
+      }
+    } else {
+      // 移动到最后位置，应该取消链接
+      shouldUnlink = true;
+    }
+
+    // 应用链接状态变更
+    if (shouldLink &&
+        !movedLayer.isLinkedToNext &&
+        newIndex < layers.length - 1) {
+      layers[newIndex] = movedLayer.copyWith(
+        isLinkedToNext: true,
+        updatedAt: DateTime.now(),
+      );
+    } else if (shouldUnlink && movedLayer.isLinkedToNext) {
+      layers[newIndex] = movedLayer.copyWith(
+        isLinkedToNext: false,
+        updatedAt: DateTime.now(),
+      );
+    }
   }
 
   void _addLegendGroup() {
@@ -444,6 +609,152 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         legendGroups: [..._currentMap!.legendGroups, newGroup],
       );
     });
+  }
+
+  /// 处理组内移动的特殊逻辑
+  void _handleInGroupMovement(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    final movedLayer = layers[newIndex];
+
+    // 获取组的边界
+    int groupStart = _findGroupStart(layers, newIndex);
+    int groupEnd = _findGroupEnd(layers, newIndex);
+
+    // 如果组只有两个图层，需要特殊处理
+    if (groupEnd - groupStart + 1 == 2) {
+      // 确保除了最后一个图层外，其他都保持链接状态
+      if (newIndex == groupEnd) {
+        // 移动到组内最后位置，关闭链接
+        if (movedLayer.isLinkedToNext) {
+          layers[newIndex] = movedLayer.copyWith(
+            isLinkedToNext: false,
+            updatedAt: DateTime.now(),
+          );
+        }
+      } else {
+        // 移动到组内非最后位置，开启链接
+        if (!movedLayer.isLinkedToNext) {
+          layers[newIndex] = movedLayer.copyWith(
+            isLinkedToNext: true,
+            updatedAt: DateTime.now(),
+          );
+        }
+      }
+    } else {
+      // 多于两个图层的组
+      if (newIndex == groupEnd) {
+        // 移动到组内最后位置，自动关闭链接
+        if (movedLayer.isLinkedToNext) {
+          layers[newIndex] = movedLayer.copyWith(
+            isLinkedToNext: false,
+            updatedAt: DateTime.now(),
+          );
+        }
+      } else {
+        // 移动到组内非最后位置，自动开启链接
+        if (!movedLayer.isLinkedToNext) {
+          layers[newIndex] = movedLayer.copyWith(
+            isLinkedToNext: true,
+            updatedAt: DateTime.now(),
+          );
+        }
+      }
+    }
+  }
+
+  /// 检查移动是否在同一个组内
+  bool _isMovementWithinGroup(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // 重新计算组边界，因为移动后位置可能已经改变
+    // 使用移动前的图层状态来判断原始组边界
+
+    // 找到移动前旧位置所在的组
+    int oldGroupStart = _findGroupStartBeforeMove(layers, oldIndex, newIndex);
+    int oldGroupEnd = _findGroupEndBeforeMove(layers, oldIndex, newIndex);
+
+    // 检查新位置是否在原组的范围内（考虑移动后的索引调整）
+    if (newIndex < oldIndex) {
+      // 向前移动
+      return newIndex >= oldGroupStart && newIndex <= oldGroupEnd;
+    } else {
+      // 向后移动
+      return newIndex >= oldGroupStart && newIndex <= oldGroupEnd;
+    }
+  }
+
+  /// 查找移动前的组开始位置
+  int _findGroupStartBeforeMove(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // 临时恢复移动前的状态来查找组边界
+    final tempLayers = List<MapLayer>.from(layers);
+    final movedLayer = tempLayers.removeAt(newIndex);
+    tempLayers.insert(oldIndex, movedLayer);
+
+    return _findGroupStart(tempLayers, oldIndex);
+  }
+
+  /// 查找移动前的组结束位置
+  int _findGroupEndBeforeMove(
+    List<MapLayer> layers,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // 临时恢复移动前的状态来查找组边界
+    final tempLayers = List<MapLayer>.from(layers);
+    final movedLayer = tempLayers.removeAt(newIndex);
+    tempLayers.insert(oldIndex, movedLayer);
+
+    return _findGroupEnd(tempLayers, oldIndex);
+  }
+
+  /// 查找组的开始位置
+  int _findGroupStart(List<MapLayer> layers, int index) {
+    int start = index;
+
+    // 向前查找组的开始
+    while (start > 0) {
+      if (layers[start - 1].isLinkedToNext) {
+        start--;
+      } else {
+        break;
+      }
+    }
+
+    return start;
+  }
+
+  /// 查找组的结束位置
+  int _findGroupEnd(List<MapLayer> layers, int index) {
+    int end = index;
+
+    // 向后查找组的结束
+    while (end < layers.length - 1) {
+      if (layers[end].isLinkedToNext) {
+        end++;
+      } else {
+        break;
+      }
+    }
+
+    return end;
+  }
+
+  /// 检查指定位置是否是组内最后一个
+  bool _isLastInGroup(List<MapLayer> layers, int index) {
+    // 如果是列表中的最后一个，肯定是组内最后一个
+    if (index == layers.length - 1) return true;
+
+    // 如果下一个图层没有被链接，说明当前是组内最后一个
+    return !layers[index + 1].isLinkedToNext;
   }
 
   void _deleteLegendGroup(LegendGroup group) {
@@ -484,7 +795,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     setState(() {
       _previewOpacityValues[layerId] = opacity;
     });
-  }  // 显示图层图例绑定抽屉
+  } // 显示图层图例绑定抽屉
+
   void _showLayerLegendBindingDrawer(
     MapLayer layer,
     List<LegendGroup> allLegendGroups,
@@ -503,8 +815,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _allLegendGroupsForBinding = allLegendGroups;
       _isLayerLegendBindingDrawerOpen = true;
     });
-  }// 显示图例组管理抽屉
-  void _showLegendGroupManagementDrawer(LegendGroup legendGroup, {String? selectedLegendItemId}) {
+  } // 显示图例组管理抽屉
+
+  void _showLegendGroupManagementDrawer(
+    LegendGroup legendGroup, {
+    String? selectedLegendItemId,
+  }) {
     if (widget.isPreviewMode) return;
 
     setState(() {
@@ -519,7 +835,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _initialSelectedLegendItemId = selectedLegendItemId;
       _isLegendGroupManagementDrawerOpen = true;
     });
-  }  // 处理图例项双击事件
+  } // 处理图例项双击事件
+
   void _handleLegendItemDoubleClick(LegendItem item) {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -539,7 +856,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 如果找到了包含该图例项的图例组，打开管理抽屉并选中该图例项
     if (containingGroup != null) {
-      _showLegendGroupManagementDrawer(containingGroup, selectedLegendItemId: item.id);
+      _showLegendGroupManagementDrawer(
+        containingGroup,
+        selectedLegendItemId: item.id,
+      );
     }
   }
 
@@ -551,6 +871,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _allLegendGroupsForBinding = null;
     });
   }
+
   // 关闭图例组管理抽屉
   void _closeLegendGroupManagementDrawer() {
     setState(() {
@@ -559,6 +880,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _initialSelectedLegendItemId = null;
     });
   }
+
   // 显示Z层级检视器
   void _showZIndexInspector() {
     if (widget.isPreviewMode || _selectedLayer == null) return;
@@ -583,6 +905,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isZIndexInspectorOpen = false;
     });
   }
+
   // 选中图例项
   void _selectLegendItem(String legendItemId) {
     setState(() {
@@ -596,13 +919,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _clearIncompatibleLegendSelection() {
     // 如果没有选中的图例项，直接返回
     if (_selectedElementId == null || _selectedElementId!.isEmpty) return;
-    
+
     // 如果没有当前地图或图例组，直接返回
     if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
-    
+
     // 查找包含当前选中图例项的图例组
     LegendGroup? containingGroup;
-    
+
     for (final legendGroup in _currentMap!.legendGroups) {
       for (final legendItem in legendGroup.legendItems) {
         if (legendItem.id == _selectedElementId) {
@@ -612,36 +935,38 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
       if (containingGroup != null) break;
     }
-    
+
     // 如果找不到对应的图例组，清除选择
     if (containingGroup == null) {
       _selectedElementId = null;
       return;
     }
-    
+
     // 检查图例组是否可见
     if (!containingGroup.isVisible) {
       _selectedElementId = null;
       return;
     }
-    
+
     // 检查当前选中的图层是否与该图例组有绑定关系
     if (_selectedLayer == null) {
       _selectedElementId = null;
       return;
     }
-    
+
     // 查找绑定了该图例组的图层
     final boundLayers = _currentMap!.layers.where((layer) {
       return layer.legendGroupIds.contains(containingGroup!.id);
     }).toList();
-    
+
     // 如果图例组没有绑定任何图层，保持当前选择
     if (boundLayers.isEmpty) return;
-    
+
     // 检查当前选中的图层是否在绑定的图层列表中
-    final isLayerBound = boundLayers.any((layer) => layer.id == _selectedLayer!.id);
-    
+    final isLayerBound = boundLayers.any(
+      (layer) => layer.id == _selectedLayer!.id,
+    );
+
     // 如果当前图层没有绑定该图例组，清除图例选择
     if (!isLayerBound) {
       _selectedElementId = null;
@@ -1007,7 +1332,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                           right: 16,
                           child: Material(
                             elevation: 8,
-                            borderRadius: BorderRadius.circular(12),                            child: LegendGroupManagementDrawer(
+                            borderRadius: BorderRadius.circular(12),
+                            child: LegendGroupManagementDrawer(
                               legendGroup: _currentLegendGroupForManagement!,
                               availableLegends: _availableLegends,
                               onLegendGroupUpdated: _updateLegendGroup,
@@ -1016,8 +1342,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               onLegendItemSelected: _selectLegendItem,
                               allLayers: _currentMap?.layers, // 传递所有图层用于智能隐藏功能
                               selectedLayer: _selectedLayer, // 传递当前选中的图层
-                              initialSelectedLegendItemId: _initialSelectedLegendItemId, // 传递初始选中的图例项ID
-                              selectedElementId: _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
+                              initialSelectedLegendItemId:
+                                  _initialSelectedLegendItemId, // 传递初始选中的图例项ID
+                              selectedElementId:
+                                  _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                             ),
                           ),
                         ),
@@ -1241,7 +1569,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             : LayerPanel(
                 layers: _currentMap?.layers ?? [],
                 selectedLayer: _selectedLayer,
-                isPreviewMode: widget.isPreviewMode,                onLayerSelected: (layer) {
+                isPreviewMode: widget.isPreviewMode,
+                onLayerSelected: (layer) {
                   setState(() {
                     _selectedLayer = layer;
                     // 检查并清除不兼容的图例选择
@@ -1609,7 +1938,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
-        final mapEditorPrefs = userPrefsProvider.mapEditor;        return MapCanvas(
+        final mapEditorPrefs = userPrefsProvider.mapEditor;
+        return MapCanvas(
           mapItem: _currentMap!,
           selectedLayer: _selectedLayer,
           selectedDrawingTool: _selectedDrawingTool,
@@ -1656,7 +1986,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         final updatedSelectedLayer = updatedLayers.firstWhere(
           (layer) => layer.id == _selectedLayer!.id,
           orElse: () => _selectedLayer!,
-        );      _selectedLayer = updatedSelectedLayer;
+        );
+        _selectedLayer = updatedSelectedLayer;
       }
     });
   }

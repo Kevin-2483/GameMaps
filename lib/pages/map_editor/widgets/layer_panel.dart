@@ -60,6 +60,25 @@ class _LayerPanelState extends State<LayerPanel> {
     super.dispose();
   }
 
+  /// 将图层分组为链接组
+  List<List<MapLayer>> _groupLinkedLayers() {
+    final groups = <List<MapLayer>>[];
+    List<MapLayer> currentGroup = [];
+
+    for (int i = 0; i < widget.layers.length; i++) {
+      final layer = widget.layers[i];
+      currentGroup.add(layer);
+
+      // 如果当前图层不链接到下一个，或者是最后一个图层，结束当前组
+      if (!layer.isLinkedToNext || i == widget.layers.length - 1) {
+        groups.add(List.from(currentGroup));
+        currentGroup.clear();
+      }
+    }
+
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -76,37 +95,156 @@ class _LayerPanelState extends State<LayerPanel> {
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   )
-                : ReorderableListView.builder(
-                    itemCount: widget.layers.length,
-                    onReorder: widget.onLayersReordered,
-                    buildDefaultDragHandles: false, // 禁用默认拖动手柄
-                    itemBuilder: (context, index) {
-                      final layer = widget.layers[index];
-                      return _buildLayerTile(context, layer, index);
-                    },
-                  ),
+                : _buildGroupedLayerList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLayerTile(BuildContext context, MapLayer layer, int index) {
-    final isSelected = widget.selectedLayer?.id == layer.id;
+  /// 构建分组的图层列表
+  Widget _buildGroupedLayerList() {
+    final groups = _groupLinkedLayers();
+
+    return ReorderableListView.builder(
+      itemCount: groups.length,
+      onReorder: _handleGroupReorder,
+      buildDefaultDragHandles: false,
+      itemBuilder: (context, groupIndex) {
+        final group = groups[groupIndex];
+        return _buildLayerGroup(context, group, groupIndex);
+      },
+    );
+  }
+
+  /// 构建图层组卡片
+  Widget _buildLayerGroup(
+    BuildContext context,
+    List<MapLayer> group,
+    int groupIndex,
+  ) {
+    final isMultiLayer = group.length > 1;
 
     return Container(
-      key: ValueKey(layer.id),
+      key: ValueKey('group_${group.first.id}'),
       margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          // 多图层组的拖动手柄
+          if (isMultiLayer && !widget.isPreviewMode)
+            _buildGroupDragHandle(groupIndex),
+
+          // 图层列表 - 使用 ReorderableListView 处理组内拖动
+          if (isMultiLayer)
+            _buildInGroupReorderableList(group)
+          else
+            // 单独图层也显示拖动手柄
+            _buildSingleLayerTile(context, group.first, groupIndex),
+        ],
+      ),
+    );
+  }
+
+  /// 构建单独图层瓦片（带拖动手柄）
+  Widget _buildSingleLayerTile(
+    BuildContext context,
+    MapLayer layer,
+    int groupIndex,
+  ) {
+    return ReorderableDragStartListener(
+      index: groupIndex,
+      child: _buildLayerTile(context, layer, [layer], 0, false),
+    );
+  }
+
+  /// 构建组内可重排序列表
+  Widget _buildInGroupReorderableList(List<MapLayer> group) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: group.length * 80.0, // 限制高度避免无限扩展
+      ),
+      child: ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: group.length,
+        onReorder: (oldIndex, newIndex) {
+          print('组内重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
+          _handleInGroupReorder(group, oldIndex, newIndex);
+        },
+        buildDefaultDragHandles: false,
+        itemBuilder: (context, index) {
+          final layer = group[index];
+          final isLastInGroup = index == group.length - 1;
+
+          return Container(
+            key: ValueKey('layer_${layer.id}'),
+            child: Column(
+              children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: _buildLayerTile(context, layer, group, index, true),
+                ),
+                // 组内分割线（除了最后一个图层）
+                if (!isLastInGroup)
+                  Divider(height: 1, color: Colors.grey.shade300),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// 构建组拖动手柄
+  Widget _buildGroupDragHandle(int groupIndex) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: ReorderableDragStartListener(
+        index: groupIndex,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
+            const SizedBox(width: 4),
+            Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLayerTile(
+    BuildContext context,
+    MapLayer layer,
+    List<MapLayer> group,
+    int layerIndexInGroup,
+    bool isMultiLayer,
+  ) {
+    final isSelected = widget.selectedLayer?.id == layer.id;
+    final globalLayerIndex = widget.layers.indexOf(layer);
+    final isLastLayer = globalLayerIndex == widget.layers.length - 1;
+
+    return Container(
       decoration: BoxDecoration(
         color: isSelected
             ? Theme.of(
                 context,
               ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : null,
-        borderRadius: BorderRadius.circular(8),
-        border: isSelected
-            ? Border.all(color: Theme.of(context).colorScheme.primary)
-            : Border.all(color: Colors.grey.shade300),
+        borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
       ),
       child: GestureDetector(
         onSecondaryTapDown: widget.isPreviewMode
@@ -116,13 +254,13 @@ class _LayerPanelState extends State<LayerPanel> {
               },
         child: InkWell(
           onTap: () => widget.onLayerSelected(layer),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 第一排：可见性按钮 + 图层名称输入框 + 操作按钮
+                // 第一排：可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
                 Row(
                   children: [
                     // 可见性按钮
@@ -150,6 +288,10 @@ class _LayerPanelState extends State<LayerPanel> {
 
                     // 图层名称输入框
                     Expanded(child: _buildLayerNameEditor(layer)),
+
+                    // 链接按钮
+                    if (!widget.isPreviewMode)
+                      _buildLinkButton(layer, isLastLayer),
 
                     // 操作按钮
                     if (!widget.isPreviewMode) ...[
@@ -234,7 +376,12 @@ class _LayerPanelState extends State<LayerPanel> {
 
                 // 第二排：透明度滑块
                 const SizedBox(height: 8),
-                _buildOpacitySlider(layer),
+                _buildOpacitySlider(
+                  layer,
+                  group,
+                  layerIndexInGroup,
+                  isMultiLayer,
+                ),
               ],
             ),
           ),
@@ -243,8 +390,40 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
+  /// 构建链接按钮
+  Widget _buildLinkButton(MapLayer layer, bool isLastLayer) {
+    return IconButton(
+      icon: Icon(
+        layer.isLinkedToNext ? Icons.link : Icons.link_off,
+        size: 16,
+        color: isLastLayer
+            ? Colors.grey.shade400
+            : (layer.isLinkedToNext ? Colors.blue : Colors.grey.shade600),
+      ),
+      onPressed: isLastLayer
+          ? null
+          : () {
+              final updatedLayer = layer.copyWith(
+                isLinkedToNext: !layer.isLinkedToNext,
+                updatedAt: DateTime.now(),
+              );
+              widget.onLayerUpdated(updatedLayer);
+            },
+      constraints: const BoxConstraints(),
+      padding: EdgeInsets.zero,
+      tooltip: isLastLayer
+          ? '最后一个图层无法链接'
+          : (layer.isLinkedToNext ? '取消链接' : '链接到下一个图层'),
+    );
+  }
+
   /// 构建优化的透明度滑块和图例组绑定
-  Widget _buildOpacitySlider(MapLayer layer) {
+  Widget _buildOpacitySlider(
+    MapLayer layer,
+    List<MapLayer> group,
+    int layerIndexInGroup,
+    bool isMultiLayer,
+  ) {
     // 获取当前显示的透明度值（临时值或实际值）
     final currentOpacity = _tempOpacityValues[layer.id] ?? layer.opacity;
 
@@ -255,9 +434,8 @@ class _LayerPanelState extends State<LayerPanel> {
         Row(
           children: [
             const Text('不透明度:', style: TextStyle(fontSize: 11)),
-            const SizedBox(width: 3), // 你可以根据需要调小这个值
+            const SizedBox(width: 3),
             Flexible(
-              // 用 Flexible 而不是 Expanded 更好控制空间分配
               child: Slider(
                 value: currentOpacity,
                 min: 0.0,
@@ -271,7 +449,7 @@ class _LayerPanelState extends State<LayerPanel> {
                     : (opacity) => _handleOpacityChangeEnd(layer, opacity),
               ),
             ),
-            const SizedBox(width: 3), // 添加一点间距让数值不会贴太紧
+            const SizedBox(width: 3),
             Text(
               '${(currentOpacity * 100).round()}%',
               style: const TextStyle(fontSize: 11),
@@ -284,6 +462,74 @@ class _LayerPanelState extends State<LayerPanel> {
         _buildLegendGroupsChip(layer),
       ],
     );
+  }
+
+/// 处理组内重排序
+void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
+  print('=== 组内重排序 ===');
+  print('组内oldIndex: $oldIndex, newIndex: $newIndex');
+  print('组大小: ${group.length}');
+  print('组内图层: ${group.map((l) => l.name).toList()}');
+
+  if (oldIndex == newIndex) {
+    print('索引相同，跳过');
+    return;
+  }
+
+  // 直接使用简单的全局索引计算，避免复杂的逻辑
+  final oldGlobalIndex = widget.layers.indexOf(group[oldIndex]);
+  final newGlobalIndex = widget.layers.indexOf(group[newIndex]);
+
+  print('全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex');
+
+  if (oldGlobalIndex == -1 || newGlobalIndex == -1) {
+    print('找不到图层的全局索引');
+    return;
+  }
+
+  // 调用全局重排序，但不使用调整后的索引
+  widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
+}
+
+  /// 处理组重排序
+  void _handleGroupReorder(int oldIndex, int newIndex) {
+    print('=== 组重排序 ===');
+    print('组oldIndex: $oldIndex, newIndex: $newIndex');
+
+    if (oldIndex == newIndex) {
+      print('索引相同，跳过');
+      return;
+    }
+
+    final groups = _groupLinkedLayers();
+
+    if (oldIndex >= groups.length || newIndex > groups.length) {
+      print('组索引超出范围');
+      return;
+    }
+
+    // 计算移动组的第一个图层的全局索引
+    int oldGlobalIndex = 0;
+    for (int i = 0; i < oldIndex; i++) {
+      oldGlobalIndex += groups[i].length;
+    }
+
+    // 计算目标位置的全局索引
+    int targetIndex = newIndex;
+    if (newIndex > oldIndex) {
+      targetIndex = newIndex - 1;
+    }
+
+    int newGlobalIndex = 0;
+    for (int i = 0; i < targetIndex; i++) {
+      newGlobalIndex += groups[i].length;
+    }
+
+    print(
+      '组全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
+    );
+
+    widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
   }
 
   /// 处理透明度变化（拖动时）
@@ -317,90 +563,59 @@ class _LayerPanelState extends State<LayerPanel> {
     });
   }
 
-  /// 构建图例组绑定 chip
+  /// 构建图例组绑定 chip（移除重复的拖动手柄）
   Widget _buildLegendGroupsChip(MapLayer layer) {
     final boundGroupsCount = layer.legendGroupIds.length;
-    final layerIndex = widget.layers.indexOf(layer);
 
-    return Row(
-      children: [
-        // 图例组绑定chip
-        Expanded(
-          child: InkWell(
-            onTap: widget.isPreviewMode
-                ? null
-                : () => widget.onShowLayerLegendBinding?.call(
-                    layer,
-                    widget.allLegendGroups,
-                  ),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: boundGroupsCount > 0
-                    ? Theme.of(context).colorScheme.primaryContainer.withAlpha(
-                        (0.3 * 255).toInt(),
-                      )
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: boundGroupsCount > 0
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                      : Colors.grey.shade300,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.legend_toggle,
-                    size: 12,
-                    color: boundGroupsCount > 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    boundGroupsCount > 0
-                        ? '已绑定 $boundGroupsCount 个图例组'
-                        : '点击绑定图例组',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: boundGroupsCount > 0
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.shade600,
-                      fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
-                    ),
-                  ),
-                ],
-              ),
+    return InkWell(
+      onTap: widget.isPreviewMode
+          ? null
+          : () => widget.onShowLayerLegendBinding?.call(
+              layer,
+              widget.allLegendGroups,
             ),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: boundGroupsCount > 0
+              ? Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: boundGroupsCount > 0
+                ? Theme.of(
+                    context,
+                  ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
+                : Colors.grey.shade300,
           ),
         ),
-
-        // 拖动手柄
-        if (!widget.isPreviewMode) ...[
-          const SizedBox(width: 8),
-          ReorderableDragStartListener(
-            index: layerIndex,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Icon(
-                Icons.drag_handle,
-                size: 14,
-                color: Colors.grey.shade600,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.legend_toggle,
+              size: 12,
+              color: boundGroupsCount > 0
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
+              style: TextStyle(
+                fontSize: 10,
+                color: boundGroupsCount > 0
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey.shade600,
+                fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
               ),
             ),
-          ),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 

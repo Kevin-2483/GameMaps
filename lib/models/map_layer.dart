@@ -19,6 +19,7 @@ class MapLayer {
   final List<String> legendGroupIds; // 关联的图例组ID列表
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isLinkedToNext; // 新增：是否链接到下一个图层
   const MapLayer({
     required this.id,
     required this.name,
@@ -30,6 +31,7 @@ class MapLayer {
     this.legendGroupIds = const [],
     required this.createdAt,
     required this.updatedAt,
+    this.isLinkedToNext = false, // 默认不链接
   });
 
   factory MapLayer.fromJson(Map<String, dynamic> json) =>
@@ -47,6 +49,7 @@ class MapLayer {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearImageData = false, // 新增参数用于明确清除图片数据
+    bool? isLinkedToNext, // 新增参数用于链接到下一个图层
   }) {
     return MapLayer(
       id: id ?? this.id,
@@ -59,6 +62,7 @@ class MapLayer {
       legendGroupIds: legendGroupIds ?? this.legendGroupIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isLinkedToNext: isLinkedToNext ?? this.isLinkedToNext,
     );
   }
 }
