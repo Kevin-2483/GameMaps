@@ -58,122 +58,14 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+
     return AlertDialog(
       title: Text(widget.title),
       contentPadding: const EdgeInsets.all(16),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 颜色轮盘
-            SizedBox(
-              width: 280,
-              height: 280,
-              child: ColorWheel(hsv: _currentHsv, onChanged: _updateColor),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 亮度滑条
-            _buildSlider(
-              '亮度',
-              _currentHsv.value,
-              (value) => _updateColor(_currentHsv.withValue(value)),
-              Colors.black,
-              _currentHsv.withValue(1.0).toColor(),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 饱和度滑条
-            _buildSlider(
-              '饱和度',
-              _currentHsv.saturation,
-              (value) => _updateColor(_currentHsv.withSaturation(value)),
-              Colors.white,
-              _currentHsv.withSaturation(1.0).toColor(),
-            ),
-
-            // 透明度滑条（如果启用）
-            if (widget.enableAlpha) ...[
-              const SizedBox(height: 12),
-              _buildSlider(
-                '透明度',
-                _currentHsv.alpha,
-                (value) => _updateColor(_currentHsv.withAlpha(value)),
-                Colors.transparent,
-                _currentColor.withOpacity(1.0),
-              ),
-            ],
-
-            const SizedBox(height: 20),
-            // 当前颜色预览
-            GestureDetector(
-              onTap: () => _showManualColorInput(),
-              child: Container(
-                width: double.infinity,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: _currentColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '#${_currentColor.value.toRadixString(16).padLeft(8, '0').toUpperCase()}',
-                        style: TextStyle(
-                          color: _currentColor.computeLuminance() > 0.5
-                              ? Colors.black
-                              : Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '点击输入颜色值',
-                        style: TextStyle(
-                          color:
-                              (_currentColor.computeLuminance() > 0.5
-                                      ? Colors.black
-                                      : Colors.white)
-                                  .withOpacity(0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // RGB值显示
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildColorValue('R', _currentColor.red),
-                _buildColorValue('G', _currentColor.green),
-                _buildColorValue('B', _currentColor.blue),
-                if (widget.enableAlpha)
-                  _buildColorValue('A', _currentColor.alpha),
-              ],
-            ),
-          ],
-        ),      ),
-      actions: widget.showCustomActions 
+      content: isLandscape ? _buildLandscapeLayout() : _buildPortraitLayout(),
+      actions: widget.showCustomActions
           ? [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(
@@ -407,6 +299,212 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     } catch (e) {
       return null;
     }
+  }
+
+  /// 横向布局（两列显示）
+  Widget _buildLandscapeLayout() {
+    return SizedBox(
+      width: 580,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 左列：颜色轮盘
+          SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 280,
+                  height: 280,
+                  child: ColorWheel(hsv: _currentHsv, onChanged: _updateColor),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(width: 20),
+          
+          // 右列：滑条和预览
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 亮度滑条
+                _buildSlider(
+                  '亮度',
+                  _currentHsv.value,
+                  (value) => _updateColor(_currentHsv.withValue(value)),
+                  Colors.black,
+                  _currentHsv.withValue(1.0).toColor(),
+                ),
+
+                const SizedBox(height: 12),
+
+                // 饱和度滑条
+                _buildSlider(
+                  '饱和度',
+                  _currentHsv.saturation,
+                  (value) => _updateColor(_currentHsv.withSaturation(value)),
+                  Colors.white,
+                  _currentHsv.withSaturation(1.0).toColor(),
+                ),
+
+                // 透明度滑条（如果启用）
+                if (widget.enableAlpha) ...[
+                  const SizedBox(height: 12),
+                  _buildSlider(
+                    '透明度',
+                    _currentHsv.alpha,
+                    (value) => _updateColor(_currentHsv.withAlpha(value)),
+                    Colors.transparent,
+                    _currentColor.withOpacity(1.0),
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+                
+                // 当前颜色预览
+                _buildColorPreview(),
+
+                const SizedBox(height: 16),
+
+                // RGB值显示
+                _buildColorValuesRow(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 竖向布局（单列显示）
+  Widget _buildPortraitLayout() {
+    return SizedBox(
+      width: 320,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 颜色轮盘
+          SizedBox(
+            width: 280,
+            height: 280,
+            child: ColorWheel(hsv: _currentHsv, onChanged: _updateColor),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 亮度滑条
+          _buildSlider(
+            '亮度',
+            _currentHsv.value,
+            (value) => _updateColor(_currentHsv.withValue(value)),
+            Colors.black,
+            _currentHsv.withValue(1.0).toColor(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 饱和度滑条
+          _buildSlider(
+            '饱和度',
+            _currentHsv.saturation,
+            (value) => _updateColor(_currentHsv.withSaturation(value)),
+            Colors.white,
+            _currentHsv.withSaturation(1.0).toColor(),
+          ),
+
+          // 透明度滑条（如果启用）
+          if (widget.enableAlpha) ...[
+            const SizedBox(height: 12),
+            _buildSlider(
+              '透明度',
+              _currentHsv.alpha,
+              (value) => _updateColor(_currentHsv.withAlpha(value)),
+              Colors.transparent,
+              _currentColor.withOpacity(1.0),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+          
+          // 当前颜色预览
+          _buildColorPreview(),
+
+          const SizedBox(height: 16),
+
+          // RGB值显示
+          _buildColorValuesRow(),
+        ],
+      ),
+    );
+  }
+
+  /// 颜色预览组件
+  Widget _buildColorPreview() {
+    return GestureDetector(
+      onTap: () => _showManualColorInput(),
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        decoration: BoxDecoration(
+          color: _currentColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '#${_currentColor.value.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+                style: TextStyle(
+                  color: _currentColor.computeLuminance() > 0.5
+                      ? Colors.black
+                      : Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '点击输入颜色值',
+                style: TextStyle(
+                  color:
+                      (_currentColor.computeLuminance() > 0.5
+                              ? Colors.black
+                              : Colors.white)
+                          .withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// RGB值显示行
+  Widget _buildColorValuesRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildColorValue('R', _currentColor.red),
+        _buildColorValue('G', _currentColor.green),
+        _buildColorValue('B', _currentColor.blue),
+        if (widget.enableAlpha)
+          _buildColorValue('A', _currentColor.alpha),
+      ],
+    );
   }
 }
 
