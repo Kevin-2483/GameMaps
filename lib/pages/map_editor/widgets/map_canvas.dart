@@ -1375,7 +1375,7 @@ class _MapCanvasState extends State<MapCanvas> {
   }
 
   /// 获取调整大小控制柄的矩形区域
-  List<Rect> _getResizeHandles(MapDrawingElement element) {
+  List<Rect> getResizeHandles(MapDrawingElement element) {
     if (element.points.length < 2) return [];
 
     final size = const Size(kCanvasWidth, kCanvasHeight);
@@ -1460,7 +1460,7 @@ class _MapCanvasState extends State<MapCanvas> {
     Offset canvasPosition,
     MapDrawingElement element,
   ) {
-    final handles = _getResizeHandles(element);
+    final handles = getResizeHandles(element);
 
     for (int i = 0; i < handles.length; i++) {
       if (handles[i].contains(canvasPosition)) {
@@ -1677,6 +1677,7 @@ class _LayerPainter extends CustomPainter {
           (e) => e.id == selectedElementId,
         );
         _drawRainbowHighlight(canvas, selectedElement, size);
+        _drawResizeHandles(canvas, selectedElement, size);
       } catch (e) {
         // 如果找不到元素，忽略绘制
       }
@@ -1842,6 +1843,44 @@ class _LayerPainter extends CustomPainter {
         break;
     }
   }
+  
+void _drawResizeHandles(
+  Canvas canvas,
+  MapDrawingElement element,
+  Size size,
+) {
+  // 获取所有调整手柄的位置
+  final utils = _MapCanvasState();
+  final handles = utils.getResizeHandles(element);
+
+  if (handles.isEmpty) return;
+
+  // 外边框画笔（白色边框）
+  final borderPaint = Paint()
+    ..color = Colors.white
+    ..style = PaintingStyle.fill;
+
+  // 内部填充画笔（蓝色）
+  final fillPaint = Paint()
+    ..color = Colors.blue
+    ..style = PaintingStyle.fill;
+
+  // 圆形半径（你可以根据实际调整这个数值）
+  const double radius = 2.0;
+  const double borderRadius = radius + 0.5;
+
+  // 绘制每个控制柄为圆形
+  for (final handle in handles) {
+    final center = handle.center;
+
+    // 白色边框圆（稍大）
+    canvas.drawCircle(center, borderRadius, borderPaint);
+
+    // 蓝色填充圆（略小）
+    canvas.drawCircle(center, radius, fillPaint);
+  }
+}
+
 
   void _drawElementWithEraserMask(
     Canvas canvas,
