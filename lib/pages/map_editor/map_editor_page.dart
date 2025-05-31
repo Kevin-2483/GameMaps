@@ -96,14 +96,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   double? _previewStrokeWidth;
   double? _previewDensity;
   double? _previewCurvature; // 弧度预览状态
-  TriangleCutType? _previewTriangleCut; // 三角形切割预览状态
-  // 覆盖层状态
+  TriangleCutType? _previewTriangleCut; // 三角形切割预览状态  // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
   bool _isZIndexInspectorOpen = false;
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
-  LegendGroup? _currentLegendGroupForManagement; // 撤销/重做历史记录管理
+  LegendGroup? _currentLegendGroupForManagement;
+  String? _initialSelectedLegendItemId; // 初始选中的图例项ID
+  // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
   // 动态获取撤销历史记录数量限制
@@ -483,8 +484,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     setState(() {
       _previewOpacityValues[layerId] = opacity;
     });
-  } // 显示图层图例绑定抽屉
-
+  }  // 显示图层图例绑定抽屉
   void _showLayerLegendBindingDrawer(
     MapLayer layer,
     List<LegendGroup> allLegendGroups,
@@ -496,15 +496,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isLegendGroupManagementDrawerOpen = false;
       _isZIndexInspectorOpen = false;
       _currentLegendGroupForManagement = null;
+      _initialSelectedLegendItemId = null;
 
       // 打开图层图例绑定抽屉
       _currentLayerForBinding = layer;
       _allLegendGroupsForBinding = allLegendGroups;
       _isLayerLegendBindingDrawerOpen = true;
     });
-  } // 显示图例组管理抽屉
-
-  void _showLegendGroupManagementDrawer(LegendGroup legendGroup) {
+  }// 显示图例组管理抽屉
+  void _showLegendGroupManagementDrawer(LegendGroup legendGroup, {String? selectedLegendItemId}) {
     if (widget.isPreviewMode) return;
 
     setState(() {
@@ -516,10 +516,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
       // 打开图例组管理抽屉
       _currentLegendGroupForManagement = legendGroup;
+      _initialSelectedLegendItemId = selectedLegendItemId;
       _isLegendGroupManagementDrawerOpen = true;
     });
   }
-
   // 处理图例项双击事件
   void _handleLegendItemDoubleClick(LegendItem item) {
     if (widget.isPreviewMode || _currentMap == null) return;
@@ -535,9 +535,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     }
 
-    // 如果找到了包含该图例项的图例组，打开管理抽屉
+    // 如果找到了包含该图例项的图例组，打开管理抽屉并选中该图例项
     if (containingGroup != null) {
-      _showLegendGroupManagementDrawer(containingGroup);
+      _showLegendGroupManagementDrawer(containingGroup, selectedLegendItemId: item.id);
     }
   }
 
@@ -549,15 +549,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _allLegendGroupsForBinding = null;
     });
   }
-
   // 关闭图例组管理抽屉
   void _closeLegendGroupManagementDrawer() {
     setState(() {
       _isLegendGroupManagementDrawerOpen = false;
       _currentLegendGroupForManagement = null;
+      _initialSelectedLegendItemId = null;
     });
   }
-
   // 显示Z层级检视器
   void _showZIndexInspector() {
     if (widget.isPreviewMode || _selectedLayer == null) return;
@@ -569,6 +568,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _currentLayerForBinding = null;
       _allLegendGroupsForBinding = null;
       _currentLegendGroupForManagement = null;
+      _initialSelectedLegendItemId = null;
 
       // 打开Z层级检视器
       _isZIndexInspectorOpen = true;
@@ -1014,6 +1014,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               onLegendItemSelected: _selectLegendItem,
                               allLayers: _currentMap?.layers, // 传递所有图层用于智能隐藏功能
                               selectedLayer: _selectedLayer, // 传递当前选中的图层
+                              initialSelectedLegendItemId: _initialSelectedLegendItemId, // 传递初始选中的图例项ID
                             ),
                           ),
                         ),

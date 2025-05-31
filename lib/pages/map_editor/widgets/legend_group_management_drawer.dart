@@ -12,6 +12,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(String)? onLegendItemSelected; // 图例项选中回调
   final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
   final MapLayer? selectedLayer; // 当前选中的图层
+  final String? initialSelectedLegendItemId; // 初始选中的图例项ID
   const LegendGroupManagementDrawer({
     super.key,
     required this.legendGroup,
@@ -22,6 +23,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onLegendItemSelected,
     this.allLayers,
     this.selectedLayer,
+    this.initialSelectedLegendItemId,
   });
 
   @override
@@ -33,11 +35,12 @@ class _LegendGroupManagementDrawerState
     extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
-  bool _isSmartHidingEnabled = false; // 智能隐藏开关状态
-  @override
+  bool _isSmartHidingEnabled = false; // 智能隐藏开关状态  @override
   void initState() {
     super.initState();
     _currentGroup = widget.legendGroup;
+    // 设置初始选中的图例项
+    _selectedLegendItemId = widget.initialSelectedLegendItemId;
     // 延迟执行检查，避免在初始化期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmartHiding();
@@ -141,7 +144,6 @@ class _LegendGroupManagementDrawerState
       return false; // 没有选中任何图层
     }
     
-    // 检查当前选中的图层是否绑定了此图例组
     return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
   }
 
