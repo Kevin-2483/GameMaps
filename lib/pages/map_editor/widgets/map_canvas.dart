@@ -645,52 +645,45 @@ class _MapCanvasState extends State<MapCanvas> {
   Rect? _originalElementBounds; // 元素原始边界
 
   // 元素交互手势处理方法
-
   /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final hitElementId = _getHitElement(canvasPosition);
     
-    if (hitElementId != null) {
-      // 选中元素
-      widget.onElementSelected?.call(hitElementId);
-    } else {
+    // 只有当点击了当前选中的元素时才保持选中状态
+    // 如果点击了其他地方或其他元素，则取消选择
+    if (hitElementId != widget.selectedElementId) {
       // 取消选择
       widget.onElementSelected?.call(null);
     }
+    // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
   }
-
   /// 处理元素交互的拖拽开始事件
   void _onElementInteractionPanStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final hitElementId = _getHitElement(canvasPosition);
     
-    if (hitElementId != null) {
-      // 首先检查是否点击了调整大小控制柄
-      if (widget.selectedElementId == hitElementId) {
-        final element = widget.selectedLayer?.elements.firstWhere(
-          (e) => e.id == hitElementId,
-          orElse: () => throw StateError('Element not found'),
-        );
-        
-        if (element != null) {
-          final resizeHandle = _getHitResizeHandle(canvasPosition, element);
-          if (resizeHandle != null) {
-            // 开始调整大小
-            _onResizeStart(hitElementId, resizeHandle, details);
-            return;
-          }
+    // 只有当点击的元素是当前选中的元素时，才允许拖拽或调整大小
+    if (hitElementId != null && hitElementId == widget.selectedElementId) {
+      final element = widget.selectedLayer?.elements.firstWhere(
+        (e) => e.id == hitElementId,
+        orElse: () => throw StateError('Element not found'),
+      );
+      
+      if (element != null) {
+        // 首先检查是否点击了调整大小控制柄
+        final resizeHandle = _getHitResizeHandle(canvasPosition, element);
+        if (resizeHandle != null) {
+          // 开始调整大小
+          _onResizeStart(hitElementId, resizeHandle, details);
+          return;
         }
-      }
-      
-      // 如果没有点击调整大小控制柄，则开始拖拽元素
-      _onElementDragStart(hitElementId, details);
-      
-      // 确保元素被选中
-      if (widget.selectedElementId != hitElementId) {
-        widget.onElementSelected?.call(hitElementId);
+        
+        // 如果没有点击调整大小控制柄，则开始拖拽元素
+        _onElementDragStart(hitElementId, details);
       }
     }
+    // 如果点击的不是选中的元素，不做任何操作
   }
 
   /// 处理元素交互的拖拽更新事件
