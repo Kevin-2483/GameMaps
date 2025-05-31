@@ -49,99 +49,7 @@ class DrawingPreviewData {
   });
 }
 
-// --- 核心的路径生成函数 (之前已经创建) ---
-/// 根据给定的矩形和曲率创建橡皮擦的形状路径。
-///
-/// [rect]: 橡皮擦的基础矩形边界。
-/// [curvature]: 橡皮擦的曲率 (0.0 为矩形, 0.0-1.0 之间为超椭圆到椭圆的过渡)。
-Path _createEraserShapePath(Rect rect, double curvature) {
-  final path = Path();
-  // 限制曲率在0.0到1.0之间
-  final clampedCurvature = curvature.clamp(0.0, 1.0);
 
-  // 如果曲率是0或负数，或者矩形太小，则为矩形
-  if (clampedCurvature <= 0.0 || rect.width < 1 || rect.height < 1) {
-    path.addRect(rect);
-    return path;
-  }
-
-  final centerX = rect.center.dx;
-  final centerY = rect.center.dy;
-  final a = rect.width / 2; // 半宽
-  final b = rect.height / 2; // 半高
-
-  // 如果半宽或半高小于等于0，则无法形成有效形状，也按矩形处理（或返回空路径）
-  // 这里我们确保a, b是正数，因为后续计算需要
-  if (a <= 0 || b <= 0) {
-    path.addRect(rect); // 或者可以考虑返回一个空的 path
-    return path;
-  }
-
-  double n; // 超椭圆的指数
-  bool useStandardEllipse = false;
-
-  // 根据曲率确定超椭圆指数 n 或是否使用标准椭圆
-  if (clampedCurvature <= 0.3) {
-    final t = clampedCurvature / 0.3;
-    n = 8.0 - (t * 4.0);
-  } else if (clampedCurvature <= 0.7) {
-    final t = (clampedCurvature - 0.3) / 0.4;
-    n = 4.0 - (t * 1.8);
-  } else {
-    useStandardEllipse = true;
-    n = 2.0;
-  }
-
-  if (useStandardEllipse || (n - 2.0).abs() < 0.001) {
-    path.addOval(rect);
-  } else {
-    const int numPoints = 100;
-    bool isFirstPoint = true;
-
-    for (int i = 0; i <= numPoints; i++) {
-      final angleT = (i / numPoints) * 2 * math.pi;
-      final cosT = math.cos(angleT);
-      final sinT = math.sin(angleT);
-
-      double x, y;
-      final signCos = cosT.sign;
-      final signSin = sinT.sign;
-
-      // 确保基数非负数，因为 n 可能不是整数
-      // math.pow(negative, non-integer) -> NaN
-      // math.pow(0, non-positive_exponent) -> Infinity or NaN
-      // 我们使用 abs() 来避免负基数
-      final absCosT = cosT.abs();
-      final absSinT = sinT.abs();
-
-      // 防止对0取非正指数的幂，或者2.0/n为负数的情况
-      // 如果 absCosT 或 absSinT 为0，且 2.0/n 为负，则会出错
-      // 在这种情况下，超椭圆的坐标应该在轴上
-      if (absCosT < 1e-9 && (2.0 / n) < 0) {
-        // cosT 约等于 0
-        x = centerX; // 点在y轴上
-      } else {
-        x = centerX + a * signCos * math.pow(absCosT, 2.0 / n);
-      }
-
-      if (absSinT < 1e-9 && (2.0 / n) < 0) {
-        // sinT 约等于 0
-        y = centerY; // 点在x轴上
-      } else {
-        y = centerY + b * signSin * math.pow(absSinT, 2.0 / n);
-      }
-
-      if (isFirstPoint) {
-        path.moveTo(x, y);
-        isFirstPoint = false;
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-  }
-  return path;
-}
 
 /// 创建三角形裁剪路径
 Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
@@ -188,12 +96,86 @@ Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
   return path;
 }
 
+  /// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
+  Path _createSuperellipsePath(Rect rect, double curvature) {
+    if (curvature <= 0.0) {
+      return Path()..addRect(rect);
+    }
+
+    // 限制弧度值在合理范围内 (0.0 到 1.0)
+    final clampedCurvature = curvature.clamp(0.0, 1.0);
+
+    final centerX = rect.center.dx;
+    final centerY = rect.center.dy;
+    final a = rect.width / 2;
+    final b = rect.height / 2;
+
+    if (a < 2 || b < 2) {
+      return Path()..addRect(rect);
+    }
+
+    // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
+    double n;
+    bool useStandardEllipse = false;
+
+    if (clampedCurvature <= 0.3) {
+      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
+      final t = clampedCurvature / 0.3;
+      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
+    } else if (clampedCurvature <= 0.7) {
+      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
+      final t = (clampedCurvature - 0.3) / 0.4;
+      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
+    } else {
+      // 椭圆阶段：使用标准椭圆方程
+      useStandardEllipse = true;
+      n = 2.0; // 标准椭圆
+    }
+
+    final path = Path();
+    const int numPoints = 100;
+
+    bool isFirstPoint = true;
+
+    for (int i = 0; i <= numPoints; i++) {
+      final t = (i / numPoints) * 2 * math.pi;
+
+      double x, y;
+
+      if (useStandardEllipse) {
+        // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
+        x = centerX + a * math.cos(t);
+        y = centerY + b * math.sin(t);
+      } else {
+        // 使用超椭圆方程
+        final cosT = math.cos(t);
+        final sinT = math.sin(t);
+
+        final signCos = cosT >= 0 ? 1.0 : -1.0;
+        final signSin = sinT >= 0 ? 1.0 : -1.0;
+
+        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+      }
+
+      if (isFirstPoint) {
+        path.moveTo(x, y);
+        isFirstPoint = false;
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    path.close();
+    return path;
+  }
+
 Path _getFinalEraserPath(
   Rect rect,
   double curvature,
   TriangleCutType triangleCut,
 ) {
-  Path curvedPath = _createEraserShapePath(rect, curvature); // 这是你处理曲率生成路径的函数
+  Path curvedPath = _createSuperellipsePath(rect, curvature); // 这是你处理曲率生成路径的函数
 
   if (triangleCut == TriangleCutType.none) {
     return curvedPath;
@@ -227,7 +209,7 @@ void _drawCurvedRectangle(
   // }
 
   // 调用核心函数来创建路径
-  final Path path = _createEraserShapePath(rect, curvature);
+  final Path path = _createSuperellipsePath(rect, curvature);
 
   // 绘制生成的路径
   canvas.drawPath(path, paint);
@@ -1415,7 +1397,7 @@ void _onElementInteractionPanStart(DragStartDetails details) {
     widget.onLayerUpdated(updatedLayer);
   }
   /// 获取调整大小控制柄的矩形区域
-  List<Rect> getResizeHandles(MapDrawingElement element, {double? handleSize}) {
+  static List<Rect> getResizeHandles(MapDrawingElement element, {double? handleSize}) {
     if (element.points.length < 2) return [];
 
     final size = const Size(kCanvasWidth, kCanvasHeight);
@@ -1498,7 +1480,7 @@ void _onElementInteractionPanStart(DragStartDetails details) {
     MapDrawingElement element, {
     double? handleSize,
   }) {
-    final handles = getResizeHandles(element, handleSize: handleSize);
+    final handles = _MapCanvasState.getResizeHandles(element, handleSize: handleSize);
 
     for (int i = 0; i < handles.length; i++) {
       if (handles[i].contains(canvasPosition)) {
@@ -1890,8 +1872,7 @@ void _drawResizeHandles(
   double? handleSize,
 }) {
   // 获取所有调整手柄的位置
-  final utils = _MapCanvasState();
-  final handles = utils.getResizeHandles(element, handleSize: handleSize);
+  final handles = _MapCanvasState.getResizeHandles(element, handleSize: handleSize);
 
   if (handles.isEmpty) return;
 
@@ -2683,80 +2664,6 @@ void _drawResizeHandles(
 
     // 恢复画布状态
     canvas.restore();
-  }
-
-  /// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
-  Path _createSuperellipsePath(Rect rect, double curvature) {
-    if (curvature <= 0.0) {
-      return Path()..addRect(rect);
-    }
-
-    // 限制弧度值在合理范围内 (0.0 到 1.0)
-    final clampedCurvature = curvature.clamp(0.0, 1.0);
-
-    final centerX = rect.center.dx;
-    final centerY = rect.center.dy;
-    final a = rect.width / 2;
-    final b = rect.height / 2;
-
-    if (a < 2 || b < 2) {
-      return Path()..addRect(rect);
-    }
-
-    // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
-    double n;
-    bool useStandardEllipse = false;
-
-    if (clampedCurvature <= 0.3) {
-      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
-      final t = clampedCurvature / 0.3;
-      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
-    } else if (clampedCurvature <= 0.7) {
-      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
-      final t = (clampedCurvature - 0.3) / 0.4;
-      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
-    } else {
-      // 椭圆阶段：使用标准椭圆方程
-      useStandardEllipse = true;
-      n = 2.0; // 标准椭圆
-    }
-
-    final path = Path();
-    const int numPoints = 100;
-
-    bool isFirstPoint = true;
-
-    for (int i = 0; i <= numPoints; i++) {
-      final t = (i / numPoints) * 2 * math.pi;
-
-      double x, y;
-
-      if (useStandardEllipse) {
-        // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
-        x = centerX + a * math.cos(t);
-        y = centerY + b * math.sin(t);
-      } else {
-        // 使用超椭圆方程
-        final cosT = math.cos(t);
-        final sinT = math.sin(t);
-
-        final signCos = cosT >= 0 ? 1.0 : -1.0;
-        final signSin = sinT >= 0 ? 1.0 : -1.0;
-
-        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
-        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
-      }
-
-      if (isFirstPoint) {
-        path.moveTo(x, y);
-        isFirstPoint = false;
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    path.close();
-    return path;
   }
 
   @override
