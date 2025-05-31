@@ -844,10 +844,73 @@ class _MapCanvasState extends State<MapCanvas> {
     }
   }
 
+  /// 检测点击位置是否命中某个图例项
+  LegendItem? _getHitLegendItem(Offset canvasPosition) {
+    // 按照渲染顺序（从上到下）检查所有可见的图例组
+    for (final legendGroup in widget.mapItem.legendGroups.reversed) {
+      if (!legendGroup.isVisible) continue;
+
+      // 检查图例组中的每个图例项（按照渲染顺序）
+      for (final item in legendGroup.legendItems.reversed) {
+        if (!item.isVisible) continue;
+
+        // 获取对应的图例数据
+        final legend = widget.availableLegends.firstWhere(
+          (l) => l.id.toString() == item.legendId,
+          orElse: () => legend_db.LegendItem(
+            title: '未知图例',
+            centerX: 0.0,
+            centerY: 0.0,
+            version: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        if (!legend.hasImageData) continue;
+
+        // 转换相对坐标到画布坐标
+        final canvasItemPosition = Offset(
+          item.position.dx * kCanvasWidth,
+          item.position.dy * kCanvasHeight,
+        );
+
+        // 计算图例的实际显示区域
+        final imageSize = 60.0 * item.size;
+        final centerOffset = Offset(
+          imageSize * legend.centerX,
+          imageSize * legend.centerY,
+        );
+
+        final itemRect = Rect.fromCenter(
+          center: canvasItemPosition,
+          width: imageSize,
+          height: imageSize,
+        );
+
+        // 检查点击位置是否在图例项的显示区域内
+        if (itemRect.contains(canvasPosition)) {
+          return item;
+        }
+      }
+    }
+    return null;
+  }
+
   void _onElementInteractionPanStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(
-      details.localPosition,
-    ); // --- 步骤 1: 优先处理已选中的元素 ---
+    final canvasPosition = _getCanvasPosition(details.localPosition);
+
+    // --- 新增：优先检测图例交互 ---
+    final hitLegendItem = _getHitLegendItem(canvasPosition);
+    if (hitLegendItem != null) {
+      // 如果点击了图例，启动图例拖拽，不继续处理元素交互
+      _onLegendDragStart(hitLegendItem, details);
+      return;
+    }
+
+    final hitElementId = _getHitElement(canvasPosition);
+
+    // --- 步骤 1: 优先处理已选中的元素 ---
     if (widget.selectedElementId != null) {
       final selectedElement = widget.selectedLayer?.elements
           .where((e) => e.id == widget.selectedElementId)
@@ -886,17 +949,16 @@ class _MapCanvasState extends State<MapCanvas> {
     // --- 步骤 2: 如果没有与预选中的元素发生交互 (或最初就没有元素被选中) ---
     // --- 则进行常规的命中检测，找出视觉上最顶层的元素 ---
     // --- 这时调用你提供的 _getHitElement 函数是合适的 ---
-    final hitElementIdFromTop = _getHitElement(canvasPosition);
 
-    if (hitElementIdFromTop != null) {
+    if (hitElementId != null) {
       // 如果命中了某个元素 (根据 zIndex)
-      if (hitElementIdFromTop != widget.selectedElementId) {
+      if (hitElementId != widget.selectedElementId) {
         // 并且这个元素不是当前已经选中的元素 (如果是，上面的逻辑应该已经处理了)
         // 这种情况通常是用户点击了一个新的、未选中的元素。
         // 你可以在这里处理选中新元素的操作。
         // 例如: widget.onSelectElement(hitElementIdFromTop);
         print(
-          "Hit a new element by z-order: $hitElementIdFromTop. Consider selecting it.",
+          "Hit a new element by z-order: $hitElementId. Consider selecting it.",
         );
         // 根据你的设计，也可以在这里直接开始拖动新选中的元素：
         // widget.onSelectElement(hitElementIdFromTop);
@@ -917,7 +979,10 @@ class _MapCanvasState extends State<MapCanvas> {
 
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
-    if (_resizingElementId != null) {
+    if (_draggingLegendItem != null) {
+      // 正在拖拽图例
+      _onLegendDragUpdate(_draggingLegendItem!, details);
+    } else if (_resizingElementId != null) {
       // 正在调整大小
       _onResizeUpdate(_resizingElementId!, details);
     } else if (_draggingElementId != null) {
@@ -928,7 +993,11 @@ class _MapCanvasState extends State<MapCanvas> {
 
   /// 处理元素交互的拖拽结束事件
   void _onElementInteractionPanEnd(DragEndDetails details) {
-    if (_resizingElementId != null) {
+    if (_draggingLegendItem != null) {
+      // 结束拖拽图例
+      final item = _draggingLegendItem!;
+      _onLegendDragEnd(item, details);
+    } else if (_resizingElementId != null) {
       // 结束调整大小
       final elementId = _resizingElementId!;
       _onResizeEnd(elementId, details);
