@@ -234,7 +234,20 @@ class UserPreferencesProvider extends ChangeNotifier {
     } catch (e) {
       _setError('添加最近使用颜色失败: ${e.toString()}');
     }
-  }  /// 添加自定义颜色
+  }
+
+  /// 添加常用线条宽度
+  Future<void> addFavoriteStrokeWidth(double strokeWidth) async {
+    try {
+      await _service.addFavoriteStrokeWidth(strokeWidth);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('添加常用线条宽度失败: ${e.toString()}');
+    }
+  }
+
+  /// 添加自定义颜色
   Future<void> addCustomColor(int color) async {
     try {
       if (kDebugMode) {

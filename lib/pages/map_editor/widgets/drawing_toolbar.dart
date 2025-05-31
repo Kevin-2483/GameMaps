@@ -166,9 +166,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         });
       }
     });
-  }
-
-  void _handleStrokeWidthChange(double width) {
+  }  void _handleStrokeWidthChange(double width) {
     setState(() {
       _tempSelectedStrokeWidth = width;
     });
@@ -182,6 +180,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // 设置新的定时器，延迟提交更改
     _strokeWidthTimer = Timer(const Duration(milliseconds: 200), () {
       widget.onStrokeWidthChanged(width);
+      
       if (mounted) {
         setState(() {
           _tempSelectedStrokeWidth = null;
@@ -524,27 +523,69 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ],
               );
             },
-          ),
+          ),          const SizedBox(height: 16),
 
-          const SizedBox(height: 16),
-
-          // Stroke width
-          const Text(
-            '线条粗细',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          // Favorite stroke widths section
+          Consumer<UserPreferencesProvider>(
+            builder: (context, userPrefs, child) {
+              final favoriteStrokeWidths = userPrefs.tools.favoriteStrokeWidths;
+              if (favoriteStrokeWidths.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '常用线条宽度',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: favoriteStrokeWidths.map((width) {
+                        return _buildStrokeWidthButton(width);
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),          // Stroke width
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '线条粗细',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              IconButton(
+                onPressed: () => _showStrokeWidthManager(context),
+                icon: const Icon(Icons.settings, size: 18),
+                tooltip: '管理常用线条宽度',
+                constraints: const BoxConstraints(
+                  minWidth: 24,
+                  minHeight: 24,
+                ),
+                padding: EdgeInsets.zero,
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-
           Row(
             children: [
               Expanded(
                 child: Slider(
                   value: _effectiveStrokeWidth,
                   min: 1.0,
-                  max: 10.0,
-                  divisions: 9,
-                  label: _effectiveStrokeWidth.round().toString(),
-                  onChanged: _handleStrokeWidthChange,
+                  max: 50.0,
+                  divisions: 49,
+                  label: _effectiveStrokeWidth.round().toString(),                  onChanged: (value) {
+                    _handleStrokeWidthChange(value);
+                  },
                 ),
               ),
               Text('${_effectiveStrokeWidth.round()}px'),
@@ -858,9 +899,223 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         _handleColorSelection(selectedColor);
       }
     }
+  }  void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {
+    userPrefs.removeCustomColor(color.value);
   }
 
-  void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {
-    userPrefs.removeCustomColor(color.value);
+  void _showStrokeWidthManager(BuildContext context) {
+    final userPrefs = context.read<UserPreferencesProvider>();
+    final currentWidths = userPrefs.tools.favoriteStrokeWidths;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('管理常用线条宽度'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '当前数量: ${currentWidths.length}/5',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (currentWidths.isNotEmpty) ...[
+                const Text(
+                  '已添加的线条宽度:',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: currentWidths.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final width = entry.value;
+                    return Chip(
+                      label: Text('${width.round()}px'),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () {
+                        _removeFavoriteStrokeWidth(userPrefs, index);
+                        Navigator.of(context).pop();
+                        _showStrokeWidthManager(context); // 重新打开对话框以更新显示
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '还没有添加常用线条宽度',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (currentWidths.length < 5)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _showAddStrokeWidthDialog(context, userPrefs);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('添加新的线条宽度'),
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    border: Border.all(color: Colors.orange.shade200),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '已达到最大数量限制 (5个)',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.orange.shade700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _removeFavoriteStrokeWidth(UserPreferencesProvider provider, int index) {
+    final newWidths = List<double>.from(provider.tools.favoriteStrokeWidths);
+    newWidths.removeAt(index);
+    provider.updateTools(favoriteStrokeWidths: newWidths);
+  }
+
+  void _showAddStrokeWidthDialog(BuildContext context, UserPreferencesProvider provider) {
+    double newWidth = 1.0;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('添加线条宽度'),
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('宽度: ${newWidth.round()}px'),
+              const SizedBox(height: 16),
+              Slider(
+                value: newWidth,
+                min: 1.0,
+                max: 50.0,
+                divisions: 49,
+                onChanged: (value) => setState(() => newWidth = value),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final currentWidths = provider.tools.favoriteStrokeWidths;
+              if (!currentWidths.contains(newWidth)) {
+                if (currentWidths.length >= 5) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('最多只能添加5个常用线条宽度'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                final newWidths = List<double>.from(currentWidths);
+                newWidths.add(newWidth);
+                newWidths.sort();
+                provider.updateTools(favoriteStrokeWidths: newWidths);
+                Navigator.of(context).pop();
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('已添加线条宽度 ${newWidth.round()}px'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('该线条宽度已存在'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            child: const Text('添加'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStrokeWidthButton(double width) {
+    final isSelected = _effectiveStrokeWidth == width;
+
+    return InkWell(
+      onTap: () => _handleStrokeWidthChange(width),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          color: isSelected
+              ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+              : Colors.transparent,
+        ),
+        child: Text(
+          '${width.round()}px',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
   }
 }

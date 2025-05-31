@@ -158,14 +158,24 @@ class ToolSettingsSection extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16),
-
-            // 常用线条宽度
-            Text(
-              '常用线条宽度',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            const SizedBox(height: 16),            // 常用线条宽度
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '常用线条宽度',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${tools.favoriteStrokeWidths.length}/5',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -341,8 +351,20 @@ class ToolSettingsSection extends StatelessWidget {
     newWidths.removeAt(index);
     provider.updateTools(favoriteStrokeWidths: newWidths);
   }
-
   void _addStrokeWidth(BuildContext context, UserPreferencesProvider provider) {
+    final currentWidths = preferences.tools.favoriteStrokeWidths;
+    
+    // 检查是否已达到最大数量限制
+    if (currentWidths.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('最多只能添加5个常用线条宽度'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     showDialog(
       context: context,
       builder: (context) {
@@ -354,6 +376,15 @@ class ToolSettingsSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('宽度: ${newWidth.round()}px'),
+                const SizedBox(height: 8),
+                Text(
+                  '当前数量: ${currentWidths.length}/5',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Slider(
                   value: newWidth,
                   min: 1.0,
@@ -371,15 +402,36 @@ class ToolSettingsSection extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final newWidths = List<double>.from(
-                  preferences.tools.favoriteStrokeWidths,
-                );
+                final newWidths = List<double>.from(currentWidths);
                 if (!newWidths.contains(newWidth)) {
+                  if (newWidths.length >= 5) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('最多只能添加5个常用线条宽度'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
                   newWidths.add(newWidth);
                   newWidths.sort();
                   provider.updateTools(favoriteStrokeWidths: newWidths);
+                  Navigator.of(context).pop();
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('已添加线条宽度 ${newWidth.round()}px'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('该线条宽度已存在'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
                 }
-                Navigator.of(context).pop();
               },
               child: Text('添加'),
             ),

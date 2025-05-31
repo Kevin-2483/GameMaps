@@ -179,7 +179,6 @@ class UserPreferencesService {
       ),
     );
   }
-
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     final current = await getCurrentPreferences();
@@ -197,21 +196,22 @@ class UserPreferencesService {
     final updatedTools = current.tools.copyWith(recentColors: recentColors);
     await updateTools(updatedTools);
   }
+
   /// 添加自定义颜色
   Future<void> addCustomColor(int color) async {
     final current = await getCurrentPreferences();
     final customColors = List<int>.from(current.tools.customColors);
 
-    // 如果颜色已存在，抛出异常通知用户
+    // 检查颜色是否已存在
     if (customColors.contains(color)) {
-      throw Exception('该颜色已存在于自定义颜色中');
+      throw Exception('该颜色已存在');
     }
 
-    // 添加到末尾
-    customColors.add(color);
+    // 添加新颜色到开头
+    customColors.insert(0, color);
     // 限制数量为10个
     if (customColors.length > 10) {
-      customColors.removeAt(0); // 移除最老的颜色
+      customColors.removeRange(10, customColors.length);
     }
 
     final updatedTools = current.tools.copyWith(customColors: customColors);
@@ -219,6 +219,28 @@ class UserPreferencesService {
     
     if (kDebugMode) {
       print('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
+    }
+  }
+  
+  /// 添加常用线条宽度
+  Future<void> addFavoriteStrokeWidth(double strokeWidth) async {
+    final current = await getCurrentPreferences();
+    final favoriteStrokeWidths = List<double>.from(current.tools.favoriteStrokeWidths);
+
+    // 移除已存在的宽度
+    favoriteStrokeWidths.remove(strokeWidth);
+    // 添加到开头
+    favoriteStrokeWidths.insert(0, strokeWidth);
+    // 限制数量为5个
+    if (favoriteStrokeWidths.length > 5) {
+      favoriteStrokeWidths.removeRange(5, favoriteStrokeWidths.length);
+    }
+
+    final updatedTools = current.tools.copyWith(favoriteStrokeWidths: favoriteStrokeWidths);
+    await updateTools(updatedTools);
+    
+    if (kDebugMode) {
+      print('常用线条宽度已添加: ${strokeWidth}px');
     }
   }
 
