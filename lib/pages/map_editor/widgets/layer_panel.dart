@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
-import '../../../components/web/web_context_menu_handler.dart';
 import 'dart:async';
 
 class LayerPanel extends StatefulWidget {
@@ -18,7 +17,7 @@ class LayerPanel extends StatefulWidget {
   // 新增：实时透明度预览回调
   final Function(String layerId, double opacity)?
   onOpacityPreview; // 新增：图例组相关数据和回调
-  final List<LegendGroup> allLegendGroups;
+  final List<LegendGroup>? allLegendGroups; // 改为可空类型
   final Function(MapLayer, List<LegendGroup>)?
   onShowLayerLegendBinding; // 显示图层图例绑定抽屉
   // 新增：批量更新图层回调
@@ -37,7 +36,7 @@ class LayerPanel extends StatefulWidget {
     this.onError,
     this.onSuccess,
     this.onOpacityPreview,
-    required this.allLegendGroups,
+    this.allLegendGroups, // 改为可选参数
     this.onShowLayerLegendBinding,
     this.onLayersBatchUpdated,
   });
@@ -69,8 +68,11 @@ class _LayerPanelState extends State<LayerPanel> {
       final layer = widget.layers[i];
       currentGroup.add(layer);
 
+      // 安全访问 isLinkedToNext 属性
+      final isLinked = layer.isLinkedToNext ?? false;
+
       // 如果当前图层不链接到下一个，或者是最后一个图层，结束当前组
-      if (!layer.isLinkedToNext || i == widget.layers.length - 1) {
+      if (!isLinked || i == widget.layers.length - 1) {
         groups.add(List.from(currentGroup));
         currentGroup.clear();
       }
@@ -106,12 +108,28 @@ class _LayerPanelState extends State<LayerPanel> {
   Widget _buildGroupedLayerList() {
     final groups = _groupLinkedLayers();
 
+    if (groups.isEmpty) {
+      return const Center(
+        child: Text('暂无图层', style: TextStyle(color: Colors.grey, fontSize: 14)),
+      );
+    }
+
     return ReorderableListView.builder(
       itemCount: groups.length,
-      onReorder: _handleGroupReorder,
+      onReorder: (oldIndex, newIndex) {
+        print('组重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
+        _handleGroupReorder(oldIndex, newIndex);
+      },
       buildDefaultDragHandles: false,
+      padding: const EdgeInsets.all(8),
       itemBuilder: (context, groupIndex) {
+        if (groupIndex >= groups.length) {
+          return Container(key: ValueKey('empty_$groupIndex'));
+        }
         final group = groups[groupIndex];
+        if (group.isEmpty) {
+          return Container(key: ValueKey('empty_group_$groupIndex'));
+        }
         return _buildLayerGroup(context, group, groupIndex);
       },
     );
@@ -133,12 +151,13 @@ class _LayerPanelState extends State<LayerPanel> {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // 重要：让列收缩到内容大小
         children: [
           // 多图层组的拖动手柄
           if (isMultiLayer && !widget.isPreviewMode)
             _buildGroupDragHandle(groupIndex),
 
-          // 图层列表 - 使用 ReorderableListView 处理组内拖动
+          // 图层列表
           if (isMultiLayer)
             _buildInGroupReorderableList(group)
           else
@@ -163,11 +182,16 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 构建组内可重排序列表
   Widget _buildInGroupReorderableList(List<MapLayer> group) {
+    if (group.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // 为了防止重建时的key冲突，使用组的第一个图层ID作为前缀
+    final groupKey = 'group_${group.first.id}';
+
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: group.length * 80.0, // 限制高度避免无限扩展
-      ),
       child: ReorderableListView.builder(
+        key: ValueKey('${groupKey}_reorderable'),
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: group.length,
@@ -177,18 +201,22 @@ class _LayerPanelState extends State<LayerPanel> {
         },
         buildDefaultDragHandles: false,
         itemBuilder: (context, index) {
+          if (index >= group.length) {
+            return Container(key: ValueKey('${groupKey}_empty_$index'));
+          }
+
           final layer = group[index];
           final isLastInGroup = index == group.length - 1;
 
           return Container(
-            key: ValueKey('layer_${layer.id}'),
+            key: ValueKey('${groupKey}_layer_${layer.id}'),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 ReorderableDragStartListener(
                   index: index,
                   child: _buildLayerTile(context, layer, group, index, true),
                 ),
-                // 组内分割线（除了最后一个图层）
                 if (!isLastInGroup)
                   Divider(height: 1, color: Colors.grey.shade300),
               ],
@@ -238,6 +266,7 @@ class _LayerPanelState extends State<LayerPanel> {
     final isLastLayer = globalLayerIndex == widget.layers.length - 1;
 
     return Container(
+      // 移除固定高度，让内容自适应
       decoration: BoxDecoration(
         color: isSelected
             ? Theme.of(
@@ -258,6 +287,7 @@ class _LayerPanelState extends State<LayerPanel> {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
+              mainAxisSize: MainAxisSize.min, // 让列收缩到内容大小
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 第一排：可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
@@ -295,78 +325,20 @@ class _LayerPanelState extends State<LayerPanel> {
 
                     // 操作按钮
                     if (!widget.isPreviewMode) ...[
-                      // 图片管理按钮
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.image, size: 16),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'upload',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  layer.imageData != null
-                                      ? Icons.edit
-                                      : Icons.upload,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(layer.imageData != null ? '更换图片' : '上传图片'),
-                              ],
-                            ),
-                          ),
-                          if (layer.imageData != null)
-                            const PopupMenuItem(
-                              value: 'remove',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_outline, size: 16),
-                                  SizedBox(width: 8),
-                                  Text('移除图片'),
-                                ],
-                              ),
-                            ),
-                        ],
-                        onSelected: (value) async {
-                          switch (value) {
-                            case 'upload':
-                              await _handleImageUpload(layer);
-                              break;
-                            case 'remove':
-                              _removeLayerImage(layer);
-                              break;
-                          }
-                        },
+                      // 图片管理按钮 - 使用 GestureDetector 替代 PopupMenuButton
+                      GestureDetector(
+                        onTap: () => _showImageMenu(context, layer),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(Icons.image, size: 16),
+                        ),
                       ),
 
                       // 删除按钮
                       if (widget.layers.length > 1)
                         IconButton(
                           icon: const Icon(Icons.delete, size: 16),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('删除图层'),
-                                content: Text(
-                                  '确定要删除图层 "${layer.name}" 吗？此操作不可撤销。',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: const Text('取消'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      widget.onLayerDeleted(layer);
-                                    },
-                                    child: const Text('删除'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onPressed: () => _showDeleteDialog(context, layer),
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
                         ),
@@ -390,30 +362,90 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
+  /// 显示图片菜单
+  void _showImageMenu(BuildContext context, MapLayer layer) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  layer.imageData != null ? Icons.edit : Icons.upload,
+                  size: 20,
+                ),
+                title: Text(layer.imageData != null ? '更换图片' : '上传图片'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleImageUpload(layer);
+                },
+              ),
+              if (layer.imageData != null)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, size: 20),
+                  title: const Text('移除图片'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeLayerImage(layer);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 显示删除确认对话框
+  void _showDeleteDialog(BuildContext context, MapLayer layer) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除图层'),
+        content: Text('确定要删除图层 "${layer.name}" 吗？此操作不可撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              widget.onLayerDeleted(layer);
+            },
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 构建链接按钮
   Widget _buildLinkButton(MapLayer layer, bool isLastLayer) {
+    final isLinked = layer.isLinkedToNext ?? false; // 安全访问
+
     return IconButton(
       icon: Icon(
-        layer.isLinkedToNext ? Icons.link : Icons.link_off,
+        isLinked ? Icons.link : Icons.link_off,
         size: 16,
         color: isLastLayer
             ? Colors.grey.shade400
-            : (layer.isLinkedToNext ? Colors.blue : Colors.grey.shade600),
+            : (isLinked ? Colors.blue : Colors.grey.shade600),
       ),
       onPressed: isLastLayer
           ? null
           : () {
               final updatedLayer = layer.copyWith(
-                isLinkedToNext: !layer.isLinkedToNext,
+                isLinkedToNext: !isLinked,
                 updatedAt: DateTime.now(),
               );
               widget.onLayerUpdated(updatedLayer);
             },
       constraints: const BoxConstraints(),
       padding: EdgeInsets.zero,
-      tooltip: isLastLayer
-          ? '最后一个图层无法链接'
-          : (layer.isLinkedToNext ? '取消链接' : '链接到下一个图层'),
+      tooltip: isLastLayer ? '最后一个图层无法链接' : (isLinked ? '取消链接' : '链接到下一个图层'),
     );
   }
 
@@ -427,69 +459,85 @@ class _LayerPanelState extends State<LayerPanel> {
     // 获取当前显示的透明度值（临时值或实际值）
     final currentOpacity = _tempOpacityValues[layer.id] ?? layer.opacity;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 透明度滑块
-        Row(
-          children: [
-            const Text('不透明度:', style: TextStyle(fontSize: 11)),
-            const SizedBox(width: 3),
-            Flexible(
-              child: Slider(
-                value: currentOpacity,
-                min: 0.0,
-                max: 1.0,
-                divisions: 20,
-                onChanged: widget.isPreviewMode
-                    ? null
-                    : (opacity) => _handleOpacityChange(layer, opacity),
-                onChangeEnd: widget.isPreviewMode
-                    ? null
-                    : (opacity) => _handleOpacityChangeEnd(layer, opacity),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4), // 添加一些垂直间距
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // 让列收缩到内容大小
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 透明度滑块
+          Row(
+            children: [
+              const Text('不透明度:', style: TextStyle(fontSize: 11)),
+              const SizedBox(width: 3),
+              Flexible(
+                child: Slider(
+                  value: currentOpacity,
+                  min: 0.0,
+                  max: 1.0,
+                  divisions: 20,
+                  onChanged: widget.isPreviewMode
+                      ? null
+                      : (opacity) => _handleOpacityChange(layer, opacity),
+                  onChangeEnd: widget.isPreviewMode
+                      ? null
+                      : (opacity) => _handleOpacityChangeEnd(layer, opacity),
+                ),
               ),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              '${(currentOpacity * 100).round()}%',
-              style: const TextStyle(fontSize: 11),
-            ),
-          ],
-        ),
+              const SizedBox(width: 3),
+              Text(
+                '${(currentOpacity * 100).round()}%',
+                style: const TextStyle(fontSize: 11),
+              ),
+            ],
+          ),
 
-        // 图例组绑定 chip
-        const SizedBox(height: 4),
-        _buildLegendGroupsChip(layer),
-      ],
+          // 图例组绑定 chip
+          const SizedBox(height: 4),
+          _buildLegendGroupsChip(layer),
+        ],
+      ),
     );
   }
 
-/// 处理组内重排序
-void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
-  print('=== 组内重排序 ===');
-  print('组内oldIndex: $oldIndex, newIndex: $newIndex');
-  print('组大小: ${group.length}');
-  print('组内图层: ${group.map((l) => l.name).toList()}');
+  /// 处理组内重排序
+  void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
+    print('=== 组内重排序 ===');
+    print('组内oldIndex: $oldIndex, newIndex: $newIndex');
+    print('组大小: ${group.length}');
+    print('组内图层: ${group.map((l) => l.name).toList()}');
 
-  if (oldIndex == newIndex) {
-    print('索引相同，跳过');
-    return;
+    if (oldIndex == newIndex ||
+        oldIndex >= group.length ||
+        newIndex >= group.length) {
+      print('索引无效，跳过');
+      return;
+    }
+
+    // 安全地获取图层
+    final oldLayer = group.elementAtOrNull(oldIndex);
+    final newLayer = group.elementAtOrNull(newIndex);
+
+    if (oldLayer == null || newLayer == null) {
+      print('图层为空，跳过');
+      return;
+    }
+
+    // 计算全局索引
+    final oldGlobalIndex = widget.layers.indexOf(oldLayer);
+    final newGlobalIndex = widget.layers.indexOf(newLayer);
+
+    print(
+      '全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
+    );
+
+    if (oldGlobalIndex == -1 || newGlobalIndex == -1) {
+      print('找不到图层的全局索引');
+      return;
+    }
+
+    widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
   }
-
-  // 直接使用简单的全局索引计算，避免复杂的逻辑
-  final oldGlobalIndex = widget.layers.indexOf(group[oldIndex]);
-  final newGlobalIndex = widget.layers.indexOf(group[newIndex]);
-
-  print('全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex');
-
-  if (oldGlobalIndex == -1 || newGlobalIndex == -1) {
-    print('找不到图层的全局索引');
-    return;
-  }
-
-  // 调用全局重排序，但不使用调整后的索引
-  widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
-}
 
   /// 处理组重排序
   void _handleGroupReorder(int oldIndex, int newIndex) {
@@ -503,15 +551,28 @@ void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
 
     final groups = _groupLinkedLayers();
 
-    if (oldIndex >= groups.length || newIndex > groups.length) {
+    if (oldIndex >= groups.length ||
+        newIndex > groups.length ||
+        oldIndex < 0 ||
+        newIndex < 0) {
       print('组索引超出范围');
+      return;
+    }
+
+    // 安全地获取组
+    final oldGroup = groups.elementAtOrNull(oldIndex);
+    if (oldGroup == null || oldGroup.isEmpty) {
+      print('源组为空');
       return;
     }
 
     // 计算移动组的第一个图层的全局索引
     int oldGlobalIndex = 0;
     for (int i = 0; i < oldIndex; i++) {
-      oldGlobalIndex += groups[i].length;
+      final group = groups.elementAtOrNull(i);
+      if (group != null) {
+        oldGlobalIndex += group.length;
+      }
     }
 
     // 计算目标位置的全局索引
@@ -522,7 +583,10 @@ void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
 
     int newGlobalIndex = 0;
     for (int i = 0; i < targetIndex; i++) {
-      newGlobalIndex += groups[i].length;
+      final group = groups.elementAtOrNull(i);
+      if (group != null) {
+        newGlobalIndex += group.length;
+      }
     }
 
     print(
@@ -563,16 +627,18 @@ void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
     });
   }
 
-  /// 构建图例组绑定 chip（移除重复的拖动手柄）
+  /// 构建图例组绑定 chip
   Widget _buildLegendGroupsChip(MapLayer layer) {
-    final boundGroupsCount = layer.legendGroupIds.length;
+    // 安全获取绑定的图例组数量
+    final boundGroupsCount = layer.legendGroupIds?.length ?? 0;
+    final hasAllLegendGroups = widget.allLegendGroups != null;
 
     return InkWell(
-      onTap: widget.isPreviewMode
+      onTap: widget.isPreviewMode || !hasAllLegendGroups
           ? null
           : () => widget.onShowLayerLegendBinding?.call(
               layer,
-              widget.allLegendGroups,
+              widget.allLegendGroups!,
             ),
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -604,7 +670,9 @@ void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
             ),
             const SizedBox(width: 4),
             Text(
-              boundGroupsCount > 0 ? '已绑定 $boundGroupsCount 个图例组' : '点击绑定图例组',
+              boundGroupsCount > 0
+                  ? '已绑定 $boundGroupsCount 个图例组'
+                  : (hasAllLegendGroups ? '点击绑定图例组' : '图例组不可用'),
               style: TextStyle(
                 fontSize: 10,
                 color: boundGroupsCount > 0
@@ -798,5 +866,15 @@ void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
     }
 
     widget.onSuccess?.call('已显示所有图层');
+  }
+}
+
+// 扩展方法放在类的外面，文件的底部
+extension ListExtension<T> on List<T> {
+  T? elementAtOrNull(int index) {
+    if (index >= 0 && index < length) {
+      return this[index];
+    }
+    return null;
   }
 }
