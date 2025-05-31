@@ -519,10 +519,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _initialSelectedLegendItemId = selectedLegendItemId;
       _isLegendGroupManagementDrawerOpen = true;
     });
-  }
-  // 处理图例项双击事件
+  }  // 处理图例项双击事件
   void _handleLegendItemDoubleClick(LegendItem item) {
     if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 首先选中该图例项，这样边框会立即显示
+    _selectLegendItem(item.id);
 
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
@@ -1015,6 +1017,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               allLayers: _currentMap?.layers, // 传递所有图层用于智能隐藏功能
                               selectedLayer: _selectedLayer, // 传递当前选中的图层
                               initialSelectedLegendItemId: _initialSelectedLegendItemId, // 传递初始选中的图例项ID
+                              selectedElementId: _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                             ),
                           ),
                         ),

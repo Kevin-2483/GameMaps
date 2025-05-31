@@ -13,6 +13,8 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
   final MapLayer? selectedLayer; // 当前选中的图层
   final String? initialSelectedLegendItemId; // 初始选中的图例项ID
+  final String? selectedElementId; // 外部传入的选中元素ID，用于同步状态
+
   const LegendGroupManagementDrawer({
     super.key,
     required this.legendGroup,
@@ -24,6 +26,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.allLayers,
     this.selectedLayer,
     this.initialSelectedLegendItemId,
+    this.selectedElementId,
   });
 
   @override
@@ -66,15 +69,35 @@ class _LegendGroupManagementDrawerState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         clearIncompatibleLegendSelection();
       });
-    }
-
-    if (oldWidget.allLayers != widget.allLayers) {
+    }    if (oldWidget.allLayers != widget.allLayers) {
       // 延迟执行检查，避免在build期间调用setState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkSmartHiding();
         // 同时检查图例选择的兼容性
         clearIncompatibleLegendSelection();
       });
+    }
+
+    // 如果外部选中元素ID发生变化，同步内部状态
+    if (oldWidget.selectedElementId != widget.selectedElementId) {
+      // 如果外部清除了选择（selectedElementId为null），同时清除内部选择
+      if (widget.selectedElementId == null && _selectedLegendItemId != null) {
+        setState(() {
+          _selectedLegendItemId = null;
+        });
+      }
+      // 如果外部选择了新元素，且该元素是图例项，同步选择
+      else if (widget.selectedElementId != null) {
+        // 检查选中的元素是否是当前图例组中的图例项
+        final isLegendItemInCurrentGroup = _currentGroup.legendItems
+            .any((item) => item.id == widget.selectedElementId);
+        
+        if (isLegendItemInCurrentGroup) {
+          setState(() {
+            _selectedLegendItemId = widget.selectedElementId;
+          });
+        }
+      }
     }
   }
   /// 外部调用：当图层状态发生变化时，检查智能隐藏逻辑
