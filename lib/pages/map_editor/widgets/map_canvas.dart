@@ -993,15 +993,99 @@ class _MapCanvasState extends State<MapCanvas> {
     // 保存更改到撤销历史
     // 这里可以通过回调通知主页面保存状态
   }
-
   void _onLegendTap(LegendItem item) {
+    // 在选中前检查是否满足条件
+    if (!_canSelectLegendItem(item)) {
+      _showLegendSelectionNotAllowedMessage(item);
+      return;
+    }
+    
     // 选中图例项，高亮显示
     widget.onLegendItemSelected?.call(item.id);
   }
 
   void _onLegendDoubleTap(LegendItem item) {
+    // 在双击前检查是否满足条件
+    if (!_canSelectLegendItem(item)) {
+      _showLegendSelectionNotAllowedMessage(item);
+      return;
+    }
+    
     // 双击图例项，触发双击回调
     widget.onLegendItemDoubleClicked?.call(item);
+  }
+
+  /// 检查是否可以选择图例项
+  /// 条件：
+  /// 1. 图例组必须可见
+  /// 2. 至少有一个绑定的图层被选中
+  bool _canSelectLegendItem(LegendItem item) {
+    // 查找包含此图例项的图例组
+    LegendGroup? containingGroup;
+    for (final legendGroup in widget.mapItem.legendGroups) {
+      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+        containingGroup = legendGroup;
+        break;
+      }
+    }
+    
+    if (containingGroup == null) {
+      return false; // 找不到图例组
+    }
+    
+    // 检查图例组是否可见
+    if (!containingGroup.isVisible) {
+      return false;
+    }
+    
+    // 检查是否有绑定的图层被选中
+    final boundLayers = widget.mapItem.layers.where((layer) {
+      return layer.legendGroupIds.contains(containingGroup!.id);
+    }).toList();
+    
+    if (boundLayers.isEmpty) {
+      return true; // 如果没有绑定图层，允许选择
+    }
+    
+    // 检查绑定的图层中是否有被选中的
+    if (widget.selectedLayer == null) {
+      return false; // 没有选中任何图层
+    }
+    
+    // 检查当前选中的图层是否绑定了此图例组
+    return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
+  }
+
+  /// 显示图例选择受限的消息
+  void _showLegendSelectionNotAllowedMessage(LegendItem item) {
+    // 查找包含此图例项的图例组
+    LegendGroup? containingGroup;
+    for (final legendGroup in widget.mapItem.legendGroups) {
+      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+        containingGroup = legendGroup;
+        break;
+      }
+    }
+    
+    if (containingGroup == null) return;
+    
+    String message;
+    if (!containingGroup.isVisible) {
+      message = '无法选择图例：图例组"${containingGroup.name}"当前不可见';
+    } else {
+      message = '无法选择图例：请先选择一个绑定了图例组"${containingGroup.name}"的图层';
+    }
+    
+    // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _updateLegendItemPosition(LegendItem item, Offset newPosition) {

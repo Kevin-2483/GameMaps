@@ -947,8 +947,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                           right: 16,
                           child: Material(
                             elevation: 8,
-                            borderRadius: BorderRadius.circular(12),
-                            child: LegendGroupManagementDrawer(
+                            borderRadius: BorderRadius.circular(12),                            child: LegendGroupManagementDrawer(
                               legendGroup: _currentLegendGroupForManagement!,
                               availableLegends: _availableLegends,
                               onLegendGroupUpdated: _updateLegendGroup,
@@ -956,6 +955,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               onClose: _closeLegendGroupManagementDrawer,
                               onLegendItemSelected: _selectLegendItem,
                               allLayers: _currentMap?.layers, // 传递所有图层用于智能隐藏功能
+                              selectedLayer: _selectedLayer, // 传递当前选中的图层
                             ),
                           ),
                         ),

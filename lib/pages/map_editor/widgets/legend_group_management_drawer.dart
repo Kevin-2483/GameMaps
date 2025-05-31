@@ -11,7 +11,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final VoidCallback onClose; // 关闭回调
   final Function(String)? onLegendItemSelected; // 图例项选中回调
   final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
-
+  final MapLayer? selectedLayer; // 当前选中的图层
   const LegendGroupManagementDrawer({
     super.key,
     required this.legendGroup,
@@ -21,6 +21,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     required this.onClose,
     this.onLegendItemSelected,
     this.allLayers,
+    this.selectedLayer,
   });
 
   @override
@@ -78,14 +79,73 @@ class _LegendGroupManagementDrawerState
   bool _isLegendItemSelected(LegendItem item) {
     return _selectedLegendItemId == item.id;
   }
-
   // 选中图例项
   void _selectLegendItem(LegendItem item) {
+    // 在选中前检查是否满足条件
+    if (!_canSelectLegendItem()) {
+      _showSelectionNotAllowedDialog();
+      return;
+    }
+    
     setState(() {
       _selectedLegendItemId = _selectedLegendItemId == item.id ? null : item.id;
     });
     // 通知父组件选中状态变化，用于高亮显示地图上的图例项
     widget.onLegendItemSelected?.call(_selectedLegendItemId ?? '');
+  }
+  /// 检查是否可以选择图例项
+  /// 条件：
+  /// 1. 图例组必须可见
+  /// 2. 至少有一个绑定的图层被选中
+  bool _canSelectLegendItem() {
+    // 检查图例组是否可见
+    if (!_currentGroup.isVisible) {
+      return false;
+    }
+    
+    // 如果没有提供图层信息，允许选择（兼容性）
+    if (widget.allLayers == null || widget.allLayers!.isEmpty) {
+      return true;
+    }
+    
+    // 检查是否有绑定的图层被选中
+    final boundLayers = _getBoundLayers();
+    if (boundLayers.isEmpty) {
+      return true; // 如果没有绑定图层，允许选择
+    }
+    
+    // 检查绑定的图层中是否有被选中的
+    if (widget.selectedLayer == null) {
+      return false; // 没有选中任何图层
+    }
+    
+    // 检查当前选中的图层是否绑定了此图例组
+    return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
+  }
+
+  /// 显示不允许选择的提示对话框
+  void _showSelectionNotAllowedDialog() {
+    String message = '';
+    
+    if (!_currentGroup.isVisible) {
+      message = '无法选择图例：图例组当前不可见，请先显示图例组';
+    } else {
+      message = '无法选择图例：请先选择一个绑定了此图例组的图层';
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('选择受限'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
   }
 
   // 更新图例项
