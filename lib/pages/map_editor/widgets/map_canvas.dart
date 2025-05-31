@@ -660,7 +660,7 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
-    
+
     /// 后续功能
     Future<Uint8List?> captureCanvasAreaToArgbUint8List(Rect area) async {
       // Ensure the context is mounted before proceeding
@@ -1814,7 +1814,7 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 确保最小尺寸
-    const minSize = 3.0;
+    const minSize = 0.0;
     if (right - left < minSize) {
       if (handle == ResizeHandle.centerLeft ||
           handle == ResizeHandle.topLeft ||
@@ -2103,12 +2103,12 @@ class _LayerPainter extends CustomPainter {
 
     // 外边框画笔（白色边框）
     final borderPaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white.withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     // 内部填充画笔（蓝色）
     final fillPaint = Paint()
-      ..color = Colors.blue
+      ..color = Colors.blue.withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     // 使用动态大小计算圆形半径
