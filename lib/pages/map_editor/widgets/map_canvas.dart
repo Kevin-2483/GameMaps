@@ -882,10 +882,19 @@ class _MapCanvasState extends State<MapCanvas> {
           imageSize * legend.centerY,
         );
 
-        final itemRect = Rect.fromCenter(
-          center: canvasItemPosition,
-          width: imageSize,
-          height: imageSize,
+        // 修复：计算图例的实际显示矩形
+        // 图例的左上角位置 = 图例中心位置 - 中心偏移
+        final topLeft = Offset(
+          canvasItemPosition.dx - centerOffset.dx,
+          canvasItemPosition.dy - centerOffset.dy,
+        );
+
+        // 创建完整的图例显示区域矩形
+        final itemRect = Rect.fromLTWH(
+          topLeft.dx,
+          topLeft.dy,
+          imageSize,
+          imageSize,
         );
 
         // 检查点击位置是否在图例项的显示区域内
