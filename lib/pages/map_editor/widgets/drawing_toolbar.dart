@@ -810,71 +810,54 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       ),
     );
   }
-
-  void _showAdvancedColorPicker() {
-    showDialog(
+  void _showAdvancedColorPicker() async {
+    final result = await ColorPicker.showColorPickerWithActions(
       context: context,
-      builder: (context) => ColorPickerDialog(
-        initialColor: _effectiveColor,
-        title: '高级颜色选择器',
-        enableAlpha: true,
-      ),
-    ).then((selectedColor) {
-      if (selectedColor != null) {
-        // 显示选择对话框
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('选择操作'),
-            content: const Text('请选择要执行的操作：'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _handleColorSelection(selectedColor);
-                },
-                child: const Text('直接使用'),
-              ),              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  final userPrefs = context.read<UserPreferencesProvider>();
-                  try {
-                    await userPrefs.addCustomColor(selectedColor.value);
-                    _handleColorSelection(selectedColor);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('颜色已添加到自定义'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      String errorMessage = '添加颜色失败';
-                      if (e.toString().contains('该颜色已存在')) {
-                        errorMessage = '该颜色已存在于自定义颜色中';
-                      } else {
-                        errorMessage = '添加颜色失败: $e';
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(errorMessage),
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
-                    }
-                    // 即使添加失败，也选择该颜色
-                    _handleColorSelection(selectedColor);
-                  }
-                },
-                child: const Text('添加到自定义'),
+      initialColor: _effectiveColor,
+      title: '高级颜色选择器',
+      enableAlpha: true,
+    );
+
+    if (result != null && result.action != ColorPickerAction.cancel) {
+      final selectedColor = result.color;
+      
+      if (result.action == ColorPickerAction.addToCustom) {
+        // 添加到自定义颜色
+        final userPrefs = context.read<UserPreferencesProvider>();
+        try {
+          await userPrefs.addCustomColor(selectedColor.value);
+          _handleColorSelection(selectedColor);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('颜色已添加到自定义'),
+                backgroundColor: Colors.green,
               ),
-            ],
-          ),
-        );
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            String errorMessage = '添加颜色失败';
+            if (e.toString().contains('该颜色已存在')) {
+              errorMessage = '该颜色已存在于自定义颜色中';
+            } else {
+              errorMessage = '添加颜色失败: $e';
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          // 即使添加失败，也选择该颜色
+          _handleColorSelection(selectedColor);
+        }
+      } else if (result.action == ColorPickerAction.directUse) {
+        // 直接使用颜色
+        _handleColorSelection(selectedColor);
       }
-    });
+    }
   }
 
   void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {

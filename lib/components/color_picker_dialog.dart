@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+/// 颜色选择操作类型
+enum ColorPickerAction {
+  directUse,
+  addToCustom,
+  cancel,
+}
+
+/// 颜色选择结果
+class ColorPickerResult {
+  final Color color;
+  final ColorPickerAction action;
+
+  const ColorPickerResult({
+    required this.color,
+    required this.action,
+  });
+}
+
 /// 高级颜色选择器对话框，支持RGB轮盘和透明度滑条
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;
   final String title;
   final bool enableAlpha;
+  final bool showCustomActions;
 
   const ColorPickerDialog({
     super.key,
     required this.initialColor,
     this.title = '选择颜色',
     this.enableAlpha = false,
+    this.showCustomActions = false,
   });
 
   @override
@@ -152,18 +172,47 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               ],
             ),
           ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(_currentColor),
-          child: const Text('确定'),
-        ),
-      ],
+        ),      ),
+      actions: widget.showCustomActions 
+          ? [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(
+                  ColorPickerResult(
+                    color: _currentColor,
+                    action: ColorPickerAction.cancel,
+                  ),
+                ),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(
+                  ColorPickerResult(
+                    color: _currentColor,
+                    action: ColorPickerAction.directUse,
+                  ),
+                ),
+                child: const Text('直接使用'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(
+                  ColorPickerResult(
+                    color: _currentColor,
+                    action: ColorPickerAction.addToCustom,
+                  ),
+                ),
+                child: const Text('添加到自定义'),
+              ),
+            ]
+          : [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(_currentColor),
+                child: const Text('确定'),
+              ),
+            ],
     );
   }
 
@@ -490,6 +539,24 @@ class ColorPicker {
         initialColor: initialColor,
         title: title,
         enableAlpha: enableAlpha,
+      ),
+    );
+  }
+
+  /// 显示带自定义操作的颜色选择器对话框
+  static Future<ColorPickerResult?> showColorPickerWithActions({
+    required BuildContext context,
+    required Color initialColor,
+    String title = '选择颜色',
+    bool enableAlpha = false,
+  }) async {
+    return await showDialog<ColorPickerResult>(
+      context: context,
+      builder: (context) => ColorPickerDialog(
+        initialColor: initialColor,
+        title: title,
+        enableAlpha: enableAlpha,
+        showCustomActions: true,
       ),
     );
   }
