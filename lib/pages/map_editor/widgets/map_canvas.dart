@@ -660,193 +660,194 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
+  }
 
-    /// 后续功能
-    Future<Uint8List?> captureCanvasAreaToArgbUint8List(Rect area) async {
-      // Ensure the context is mounted before proceeding
-      if (!_canvasGlobalKey.currentContext!.mounted) {
-        // print("Error: RepaintBoundary context not mounted.");
+  /// 后续功能
+  Future<Uint8List?> captureCanvasAreaToArgbUint8List(Rect area) async {
+    // Ensure the context is mounted before proceeding
+    if (!_canvasGlobalKey.currentContext!.mounted) {
+      // print("Error: RepaintBoundary context not mounted.");
+      return null;
+    }
+    try {
+      RenderRepaintBoundary? boundary =
+          _canvasGlobalKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) {
+        // print("Error: RepaintBoundary not found.");
         return null;
       }
+
+      // Capture the image at its native resolution (kCanvasWidth x kCanvasHeight)
+      // pixelRatio: 1.0 ensures the image dimensions match kCanvasWidth/kCanvasHeight.
+      final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+
       try {
-        RenderRepaintBoundary? boundary =
-            _canvasGlobalKey.currentContext?.findRenderObject()
-                as RenderRepaintBoundary?;
-        if (boundary == null) {
-          // print("Error: RepaintBoundary not found.");
+        // Get pixel data in RGBA format
+        final ByteData? byteData = await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        if (byteData == null) {
+          // print("Error: Failed to get ByteData from image.");
           return null;
         }
 
-        // Capture the image at its native resolution (kCanvasWidth x kCanvasHeight)
-        // pixelRatio: 1.0 ensures the image dimensions match kCanvasWidth/kCanvasHeight.
-        final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+        final Uint8List sourcePixelsRgba = byteData.buffer.asUint8List();
+        final int sourceImageWidth =
+            image.width; // Should be kCanvasWidth.round()
+        final int sourceImageHeight =
+            image.height; // Should be kCanvasHeight.round()
 
-        try {
-          // Get pixel data in RGBA format
-          final ByteData? byteData = await image.toByteData(
-            format: ui.ImageByteFormat.rawRgba,
-          );
-          if (byteData == null) {
-            // print("Error: Failed to get ByteData from image.");
-            return null;
-          }
+        // Define canvas bounds as a Rect
+        final Rect canvasBounds = Rect.fromLTWH(
+          0,
+          0,
+          sourceImageWidth.toDouble(),
+          sourceImageHeight.toDouble(),
+        );
 
-          final Uint8List sourcePixelsRgba = byteData.buffer.asUint8List();
-          final int sourceImageWidth =
-              image.width; // Should be kCanvasWidth.round()
-          final int sourceImageHeight =
-              image.height; // Should be kCanvasHeight.round()
+        // Find the intersection of the requested area and the canvas bounds
+        // This gives the actual area to crop, fully within the canvas.
+        final Rect intersectionArea = area.intersect(canvasBounds);
 
-          // Define canvas bounds as a Rect
-          final Rect canvasBounds = Rect.fromLTWH(
+        if (intersectionArea.isEmpty) {
+          return Uint8List(
             0,
-            0,
-            sourceImageWidth.toDouble(),
-            sourceImageHeight.toDouble(),
-          );
+          ); // Return empty list if no overlap or area is invalid
+        }
 
-          // Find the intersection of the requested area and the canvas bounds
-          // This gives the actual area to crop, fully within the canvas.
-          final Rect intersectionArea = area.intersect(canvasBounds);
+        // Convert intersectionArea to integer coordinates for pixel access
+        final int cropX = intersectionArea.left.round();
+        final int cropY = intersectionArea.top.round();
+        final int cropWidth = intersectionArea.width.round();
+        final int cropHeight = intersectionArea.height.round();
 
-          if (intersectionArea.isEmpty) {
-            return Uint8List(
-              0,
-            ); // Return empty list if no overlap or area is invalid
-          }
+        // Ensure calculated width/height are not negative or zero after rounding and intersection
+        if (cropWidth <= 0 || cropHeight <= 0) {
+          return Uint8List(0);
+        }
 
-          // Convert intersectionArea to integer coordinates for pixel access
-          final int cropX = intersectionArea.left.round();
-          final int cropY = intersectionArea.top.round();
-          final int cropWidth = intersectionArea.width.round();
-          final int cropHeight = intersectionArea.height.round();
+        final Uint8List destPixelsArgb = Uint8List(
+          cropWidth * cropHeight * 4,
+        ); // 4 bytes per ARGB pixel
 
-          // Ensure calculated width/height are not negative or zero after rounding and intersection
-          if (cropWidth <= 0 || cropHeight <= 0) {
-            return Uint8List(0);
-          }
+        for (int y = 0; y < cropHeight; ++y) {
+          for (int x = 0; x < cropWidth; ++x) {
+            // Source pixel coordinates in the full image
+            final int currentSourceX = cropX + x;
+            final int currentSourceY = cropY + y;
 
-          final Uint8List destPixelsArgb = Uint8List(
-            cropWidth * cropHeight * 4,
-          ); // 4 bytes per ARGB pixel
+            // Index in the source RGBA buffer
+            final int sourceIndex =
+                (currentSourceY * sourceImageWidth + currentSourceX) * 4;
 
-          for (int y = 0; y < cropHeight; ++y) {
-            for (int x = 0; x < cropWidth; ++x) {
-              // Source pixel coordinates in the full image
-              final int currentSourceX = cropX + x;
-              final int currentSourceY = cropY + y;
+            // Safety check, though intersection should make this unnecessary if logic is sound
+            if (sourceIndex + 3 < sourcePixelsRgba.length) {
+              final int r = sourcePixelsRgba[sourceIndex];
+              final int g = sourcePixelsRgba[sourceIndex + 1];
+              final int b = sourcePixelsRgba[sourceIndex + 2];
+              final int a = sourcePixelsRgba[sourceIndex + 3];
 
-              // Index in the source RGBA buffer
-              final int sourceIndex =
-                  (currentSourceY * sourceImageWidth + currentSourceX) * 4;
-
-              // Safety check, though intersection should make this unnecessary if logic is sound
-              if (sourceIndex + 3 < sourcePixelsRgba.length) {
-                final int r = sourcePixelsRgba[sourceIndex];
-                final int g = sourcePixelsRgba[sourceIndex + 1];
-                final int b = sourcePixelsRgba[sourceIndex + 2];
-                final int a = sourcePixelsRgba[sourceIndex + 3];
-
-                // Index in the destination ARGB buffer
-                final int destIndex = (y * cropWidth + x) * 4;
-                destPixelsArgb[destIndex] = a; // Alpha
-                destPixelsArgb[destIndex + 1] = r; // Red
-                destPixelsArgb[destIndex + 2] = g; // Green
-                destPixelsArgb[destIndex + 3] = b; // Blue
-              } else {
-                // Fallback for any unexpected out-of-bounds access
-                final int destIndex = (y * cropWidth + x) * 4;
-                destPixelsArgb[destIndex] = 0; // Transparent black
-                destPixelsArgb[destIndex + 1] = 0;
-                destPixelsArgb[destIndex + 2] = 0;
-                destPixelsArgb[destIndex + 3] = 0;
-              }
+              // Index in the destination ARGB buffer
+              final int destIndex = (y * cropWidth + x) * 4;
+              destPixelsArgb[destIndex] = a; // Alpha
+              destPixelsArgb[destIndex + 1] = r; // Red
+              destPixelsArgb[destIndex + 2] = g; // Green
+              destPixelsArgb[destIndex + 3] = b; // Blue
+            } else {
+              // Fallback for any unexpected out-of-bounds access
+              final int destIndex = (y * cropWidth + x) * 4;
+              destPixelsArgb[destIndex] = 0; // Transparent black
+              destPixelsArgb[destIndex + 1] = 0;
+              destPixelsArgb[destIndex + 2] = 0;
+              destPixelsArgb[destIndex + 3] = 0;
             }
           }
-          return destPixelsArgb;
-        } finally {
-          image
-              .dispose(); // IMPORTANT: Dispose the ui.Image to free up native resources
         }
-      } catch (e) {
-        // print("Exception in captureCanvasAreaToArgbUint8List: $e");
-        return null;
+        return destPixelsArgb;
+      } finally {
+        image
+            .dispose(); // IMPORTANT: Dispose the ui.Image to free up native resources
       }
+    } catch (e) {
+      // print("Exception in captureCanvasAreaToArgbUint8List: $e");
+      return null;
+    }
+  }
+
+  /// Gets the color of a single pixel at the specified [point] on the canvas.
+  ///
+  /// The [point] is an Offset in canvas coordinates (0,0 to kCanvasWidth, kCanvasHeight).
+  /// Returns a [Color] object (ARGB), or null/transparent if the point is outside
+  /// bounds or an error occurs.
+  /// 后续功能
+  Future<Color?> getPixelColorAtCanvasPoint(Offset point) async {
+    if (!_canvasGlobalKey.currentContext!.mounted) {
+      // print("Error: RepaintBoundary context not mounted.");
+      return null;
     }
 
-    /// Gets the color of a single pixel at the specified [point] on the canvas.
-    ///
-    /// The [point] is an Offset in canvas coordinates (0,0 to kCanvasWidth, kCanvasHeight).
-    /// Returns a [Color] object (ARGB), or null/transparent if the point is outside
-    /// bounds or an error occurs.
-    /// 后续功能
-    Future<Color?> getPixelColorAtCanvasPoint(Offset point) async {
-      if (!_canvasGlobalKey.currentContext!.mounted) {
-        // print("Error: RepaintBoundary context not mounted.");
-        return null;
-      }
+    final int x = point.dx.round();
+    final int y = point.dy.round();
 
-      final int x = point.dx.round();
-      final int y = point.dy.round();
+    // Check if point is outside the logical canvas dimensions
+    final int canvasIntWidth = kCanvasWidth.round();
+    final int canvasIntHeight = kCanvasHeight.round();
 
-      // Check if point is outside the logical canvas dimensions
-      final int canvasIntWidth = kCanvasWidth.round();
-      final int canvasIntHeight = kCanvasHeight.round();
+    if (x < 0 || x >= canvasIntWidth || y < 0 || y >= canvasIntHeight) {
+      // print("Point ($x, $y) is outside canvas bounds ($canvasIntWidth, $canvasIntHeight). Returning transparent.");
+      return Colors.transparent; // Or null, depending on desired behavior
+    }
 
-      if (x < 0 || x >= canvasIntWidth || y < 0 || y >= canvasIntHeight) {
-        // print("Point ($x, $y) is outside canvas bounds ($canvasIntWidth, $canvasIntHeight). Returning transparent.");
-        return Colors.transparent; // Or null, depending on desired behavior
-      }
+    try {
+      RenderRepaintBoundary? boundary =
+          _canvasGlobalKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+
+      final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
 
       try {
-        RenderRepaintBoundary? boundary =
-            _canvasGlobalKey.currentContext?.findRenderObject()
-                as RenderRepaintBoundary?;
-        if (boundary == null) return null;
+        final ByteData? byteData = await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        if (byteData == null) return null;
 
-        final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+        final Uint8List pixelsRgba = byteData.buffer.asUint8List();
+        final int imageWidth = image.width; // Should be canvasIntWidth
 
-        try {
-          final ByteData? byteData = await image.toByteData(
-            format: ui.ImageByteFormat.rawRgba,
-          );
-          if (byteData == null) return null;
-
-          final Uint8List pixelsRgba = byteData.buffer.asUint8List();
-          final int imageWidth = image.width; // Should be canvasIntWidth
-
-          // Defensive check, in case image dimensions differ unexpectedly
-          if (x < 0 || x >= image.width || y < 0 || y >= image.height) {
-            // print("Point ($x, $y) is outside actual image dimensions (${image.width}, ${image.height}). Returning transparent.");
-            return Colors.transparent;
-          }
-
-          final int index =
-              (y * imageWidth + x) * 4; // 4 bytes per pixel (RGBA)
-
-          if (index + 3 < pixelsRgba.length) {
-            final int r = pixelsRgba[index];
-            final int g = pixelsRgba[index + 1];
-            final int b = pixelsRgba[index + 2];
-            final int a = pixelsRgba[index + 3];
-            return Color.fromARGB(a, r, g, b);
-          } else {
-            // Should not happen if point validation is correct
-            // print("Calculated index is out of bounds for pixel data. Returning transparent.");
-            return Colors.transparent; // Or null
-          }
-        } finally {
-          image.dispose(); // IMPORTANT: Dispose the ui.Image
+        // Defensive check, in case image dimensions differ unexpectedly
+        if (x < 0 || x >= image.width || y < 0 || y >= image.height) {
+          // print("Point ($x, $y) is outside actual image dimensions (${image.width}, ${image.height}). Returning transparent.");
+          return Colors.transparent;
         }
-      } catch (e) {
-        // print("Exception in getPixelColorAtCanvasPoint: $e");
-        return null;
+
+        final int index = (y * imageWidth + x) * 4; // 4 bytes per pixel (RGBA)
+
+        if (index + 3 < pixelsRgba.length) {
+          final int r = pixelsRgba[index];
+          final int g = pixelsRgba[index + 1];
+          final int b = pixelsRgba[index + 2];
+          final int a = pixelsRgba[index + 3];
+          return Color.fromARGB(a, r, g, b);
+        } else {
+          // Should not happen if point validation is correct
+          // print("Calculated index is out of bounds for pixel data. Returning transparent.");
+          return Colors.transparent; // Or null
+        }
+      } finally {
+        image.dispose(); // IMPORTANT: Dispose the ui.Image
       }
+    } catch (e) {
+      // print("Exception in getPixelColorAtCanvasPoint: $e");
+      return null;
     }
   }
 
   void _onElementInteractionPanStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);    // --- 步骤 1: 优先处理已选中的元素 ---
+    final canvasPosition = _getCanvasPosition(
+      details.localPosition,
+    ); // --- 步骤 1: 优先处理已选中的元素 ---
     if (widget.selectedElementId != null) {
       final selectedElement = widget.selectedLayer?.elements
           .where((e) => e.id == widget.selectedElementId)
@@ -990,13 +991,14 @@ class _MapCanvasState extends State<MapCanvas> {
     // 保存更改到撤销历史
     // 这里可以通过回调通知主页面保存状态
   }
+
   void _onLegendTap(LegendItem item) {
     // 在选中前检查是否满足条件
     if (!_canSelectLegendItem(item)) {
       _showLegendSelectionNotAllowedMessage(item);
       return;
     }
-    
+
     // 选中图例项，高亮显示
     widget.onLegendItemSelected?.call(item.id);
   }
@@ -1007,7 +1009,7 @@ class _MapCanvasState extends State<MapCanvas> {
       _showLegendSelectionNotAllowedMessage(item);
       return;
     }
-    
+
     // 双击图例项，触发双击回调
     widget.onLegendItemDoubleClicked?.call(item);
   }
@@ -1020,35 +1022,37 @@ class _MapCanvasState extends State<MapCanvas> {
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
     for (final legendGroup in widget.mapItem.legendGroups) {
-      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+      if (legendGroup.legendItems.any(
+        (legendItem) => legendItem.id == item.id,
+      )) {
         containingGroup = legendGroup;
         break;
       }
     }
-    
+
     if (containingGroup == null) {
       return false; // 找不到图例组
     }
-    
+
     // 检查图例组是否可见
     if (!containingGroup.isVisible) {
       return false;
     }
-    
+
     // 检查是否有绑定的图层被选中
     final boundLayers = widget.mapItem.layers.where((layer) {
       return layer.legendGroupIds.contains(containingGroup!.id);
     }).toList();
-    
+
     if (boundLayers.isEmpty) {
       return true; // 如果没有绑定图层，允许选择
     }
-    
+
     // 检查绑定的图层中是否有被选中的
     if (widget.selectedLayer == null) {
       return false; // 没有选中任何图层
     }
-    
+
     // 检查当前选中的图层是否绑定了此图例组
     return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
   }
@@ -1058,21 +1062,23 @@ class _MapCanvasState extends State<MapCanvas> {
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
     for (final legendGroup in widget.mapItem.legendGroups) {
-      if (legendGroup.legendItems.any((legendItem) => legendItem.id == item.id)) {
+      if (legendGroup.legendItems.any(
+        (legendItem) => legendItem.id == item.id,
+      )) {
         containingGroup = legendGroup;
         break;
       }
     }
-    
+
     if (containingGroup == null) return;
-    
+
     String message;
     if (!containingGroup.isVisible) {
       message = '无法选择图例：图例组"${containingGroup.name}"当前不可见';
     } else {
       message = '无法选择图例：请先选择一个绑定了图例组"${containingGroup.name}"的图层';
     }
-    
+
     // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1568,7 +1574,7 @@ class _MapCanvasState extends State<MapCanvas> {
 
   /// 处理绘画元素的拖拽开始
   void _onElementDragStart(String elementId, DragStartDetails details) {
-    _draggingElementId = elementId;    // 计算拖拽开始时的偏移量
+    _draggingElementId = elementId; // 计算拖拽开始时的偏移量
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final element = widget.selectedLayer!.elements
         .where((e) => e.id == elementId)
@@ -1793,7 +1799,8 @@ class _MapCanvasState extends State<MapCanvas> {
   ) {
     _resizingElementId = elementId;
     _activeResizeHandle = handle;
-    _resizeStartPosition = _getCanvasPosition(details.localPosition);    final element = widget.selectedLayer!.elements
+    _resizeStartPosition = _getCanvasPosition(details.localPosition);
+    final element = widget.selectedLayer!.elements
         .where((e) => e.id == elementId)
         .first;
     if (element.points.length >= 2) {
@@ -1983,7 +1990,7 @@ class _LayerPainter extends CustomPainter {
 
       // 使用裁剪来实现选择性遮挡
       _drawElementWithEraserMask(canvas, element, eraserElements, size);
-    }    // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
+    } // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
     if (selectedElementId != null) {
       final selectedElement = sortedElements
           .where((e) => e.id == selectedElementId)
