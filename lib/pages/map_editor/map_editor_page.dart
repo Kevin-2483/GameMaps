@@ -581,7 +581,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isZIndexInspectorOpen = false;
     });
   }
-
   // 选中图例项
   void _selectLegendItem(String legendItemId) {
     setState(() {
@@ -589,6 +588,65 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           ? null
           : legendItemId; // 空字符串表示取消选中
     });
+  }
+
+  // 检查并清除不兼容的图例选择
+  void _clearIncompatibleLegendSelection() {
+    // 如果没有选中的图例项，直接返回
+    if (_selectedElementId == null || _selectedElementId!.isEmpty) return;
+    
+    // 如果没有当前地图或图例组，直接返回
+    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
+    
+    // 查找包含当前选中图例项的图例组
+    LegendGroup? containingGroup;
+    
+    for (final legendGroup in _currentMap!.legendGroups) {
+      for (final legendItem in legendGroup.legendItems) {
+        if (legendItem.id == _selectedElementId) {
+          containingGroup = legendGroup;
+          break;
+        }
+      }
+      if (containingGroup != null) break;
+    }
+    
+    // 如果找不到对应的图例组，清除选择
+    if (containingGroup == null) {
+      _selectedElementId = null;
+      return;
+    }
+    
+    // 检查图例组是否可见
+    if (!containingGroup.isVisible) {
+      _selectedElementId = null;
+      return;
+    }
+    
+    // 检查当前选中的图层是否与该图例组有绑定关系
+    if (_selectedLayer == null) {
+      _selectedElementId = null;
+      return;
+    }
+    
+    // 查找绑定了该图例组的图层
+    final boundLayers = _currentMap!.layers.where((layer) {
+      return layer.legendGroupIds.contains(containingGroup!.id);
+    }).toList();
+    
+    // 如果图例组没有绑定任何图层，保持当前选择
+    if (boundLayers.isEmpty) return;
+    
+    // 检查当前选中的图层是否在绑定的图层列表中
+    final isLayerBound = boundLayers.any((layer) => layer.id == _selectedLayer!.id);
+    
+    // 如果当前图层没有绑定该图例组，清除图例选择
+    if (!isLayerBound) {
+      _selectedElementId = null;
+      // 同时通知图例组管理抽屉清除选择（如果它是打开的）
+      // 这个通知通过_selectLegendItem方法实现，传入空字符串表示清除选择
+      _selectLegendItem('');
+    }
   }
 
   // 处理绘制工具预览
@@ -1179,9 +1237,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             : LayerPanel(
                 layers: _currentMap?.layers ?? [],
                 selectedLayer: _selectedLayer,
-                isPreviewMode: widget.isPreviewMode,
-                onLayerSelected: (layer) {
-                  setState(() => _selectedLayer = layer);
+                isPreviewMode: widget.isPreviewMode,                onLayerSelected: (layer) {
+                  setState(() {
+                    _selectedLayer = layer;
+                    // 检查并清除不兼容的图例选择
+                    _clearIncompatibleLegendSelection();
+                  });
                 },
                 onLayerUpdated: _updateLayer,
                 onLayerDeleted: _deleteLayer,
@@ -1591,8 +1652,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         final updatedSelectedLayer = updatedLayers.firstWhere(
           (layer) => layer.id == _selectedLayer!.id,
           orElse: () => _selectedLayer!,
-        );
-        _selectedLayer = updatedSelectedLayer;
+        );      _selectedLayer = updatedSelectedLayer;
       }
     });
   }

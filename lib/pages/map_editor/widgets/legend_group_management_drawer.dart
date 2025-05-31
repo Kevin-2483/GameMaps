@@ -43,7 +43,6 @@ class _LegendGroupManagementDrawerState
       _checkSmartHiding();
     });
   }
-
   @override
   void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -59,20 +58,43 @@ class _LegendGroupManagementDrawerState
       });
     }
 
+    // 如果选中的图层发生变化，检查并清除不兼容的图例选择
+    if (oldWidget.selectedLayer?.id != widget.selectedLayer?.id) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        clearIncompatibleLegendSelection();
+      });
+    }
+
     if (oldWidget.allLayers != widget.allLayers) {
       // 延迟执行检查，避免在build期间调用setState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkSmartHiding();
+        // 同时检查图例选择的兼容性
+        clearIncompatibleLegendSelection();
       });
     }
   }
-
   /// 外部调用：当图层状态发生变化时，检查智能隐藏逻辑
   void checkSmartHidingOnLayerChange() {
     // 延迟执行检查，确保不会在build期间调用
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSmartHiding();
     });
+  }
+
+  /// 外部调用：清除不兼容的图例选择
+  void clearIncompatibleLegendSelection() {
+    // 如果没有选中的图例项，直接返回
+    if (_selectedLegendItemId == null) return;
+    
+    // 检查当前选择是否仍然有效
+    if (!_canSelectLegendItem()) {
+      setState(() {
+        _selectedLegendItemId = null;
+      });
+      // 通知父组件选中状态变化
+      widget.onLegendItemSelected?.call('');
+    }
   }
 
   // 检查图例项是否被选中
