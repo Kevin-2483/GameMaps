@@ -834,13 +834,39 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   _handleColorSelection(selectedColor);
                 },
                 child: const Text('直接使用'),
-              ),
-              ElevatedButton(
-                onPressed: () {
+              ),              ElevatedButton(
+                onPressed: () async {
                   Navigator.of(context).pop();
                   final userPrefs = context.read<UserPreferencesProvider>();
-                  userPrefs.addCustomColor(selectedColor.value);
-                  _handleColorSelection(selectedColor);
+                  try {
+                    await userPrefs.addCustomColor(selectedColor.value);
+                    _handleColorSelection(selectedColor);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('颜色已添加到自定义'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      String errorMessage = '添加颜色失败';
+                      if (e.toString().contains('该颜色已存在')) {
+                        errorMessage = '该颜色已存在于自定义颜色中';
+                      } else {
+                        errorMessage = '添加颜色失败: $e';
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMessage),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                    // 即使添加失败，也选择该颜色
+                    _handleColorSelection(selectedColor);
+                  }
                 },
                 child: const Text('添加到自定义'),
               ),

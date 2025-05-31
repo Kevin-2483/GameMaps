@@ -197,15 +197,14 @@ class UserPreferencesService {
     final updatedTools = current.tools.copyWith(recentColors: recentColors);
     await updateTools(updatedTools);
   }
-
   /// 添加自定义颜色
   Future<void> addCustomColor(int color) async {
     final current = await getCurrentPreferences();
     final customColors = List<int>.from(current.tools.customColors);
 
-    // 如果颜色已存在，不重复添加
+    // 如果颜色已存在，抛出异常通知用户
     if (customColors.contains(color)) {
-      return;
+      throw Exception('该颜色已存在于自定义颜色中');
     }
 
     // 添加到末尾
@@ -217,6 +216,10 @@ class UserPreferencesService {
 
     final updatedTools = current.tools.copyWith(customColors: customColors);
     await updateTools(updatedTools);
+    
+    if (kDebugMode) {
+      print('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
+    }
   }
 
   /// 更新面板状态

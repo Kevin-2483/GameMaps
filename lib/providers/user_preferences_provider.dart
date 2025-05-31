@@ -234,16 +234,24 @@ class UserPreferencesProvider extends ChangeNotifier {
     } catch (e) {
       _setError('添加最近使用颜色失败: ${e.toString()}');
     }
-  }
-
-  /// 添加自定义颜色
+  }  /// 添加自定义颜色
   Future<void> addCustomColor(int color) async {
     try {
+      if (kDebugMode) {
+        print('开始添加自定义颜色: ${color.toRadixString(16).padLeft(8, '0')}');
+      }
       await _service.addCustomColor(color);
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
+      if (kDebugMode) {
+        print('自定义颜色添加成功，当前自定义颜色数量: ${_currentPreferences!.tools.customColors.length}');
+      }
     } catch (e) {
       _setError('添加自定义颜色失败: ${e.toString()}');
+      if (kDebugMode) {
+        print('添加自定义颜色失败: $e');
+      }
+      rethrow; // 重新抛出错误，让调用方能够处理
     }
   }
 
