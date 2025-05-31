@@ -1,6 +1,25 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_preferences.g.dart';
+
+/// Uint8List 转换器，用于 JSON 序列化
+class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
+  const Uint8ListConverter();
+
+  @override
+  Uint8List? fromJson(String? json) {
+    if (json == null || json.isEmpty) return null;
+    return base64Decode(json);
+  }
+
+  @override
+  String? toJson(Uint8List? object) {
+    if (object == null || object.isEmpty) return null;
+    return base64Encode(object);
+  }
+}
 
 /// 用户偏好设置数据模型
 @JsonSerializable()
@@ -10,9 +29,12 @@ class UserPreferences {
 
   /// 用户显示名称
   final String displayName;
-
   /// 用户头像URL或路径
   final String? avatarPath;
+
+  /// 用户头像二进制数据
+  @Uint8ListConverter()
+  final Uint8List? avatarData;
 
   /// 主题设置
   final ThemePreferences theme;
@@ -37,11 +59,11 @@ class UserPreferences {
 
   /// 最后登录时间
   final DateTime? lastLoginAt;
-
   const UserPreferences({
     this.userId,
     required this.displayName,
     this.avatarPath,
+    this.avatarData,
     required this.theme,
     required this.mapEditor,
     required this.layout,
@@ -67,12 +89,12 @@ class UserPreferences {
       lastLoginAt: now,
     );
   }
-
   /// 更新用户偏好设置
   UserPreferences copyWith({
     String? userId,
     String? displayName,
     String? avatarPath,
+    Uint8List? avatarData,
     ThemePreferences? theme,
     MapEditorPreferences? mapEditor,
     LayoutPreferences? layout,
@@ -86,6 +108,7 @@ class UserPreferences {
       userId: userId ?? this.userId,
       displayName: displayName ?? this.displayName,
       avatarPath: avatarPath ?? this.avatarPath,
+      avatarData: avatarData ?? this.avatarData,
       theme: theme ?? this.theme,
       mapEditor: mapEditor ?? this.mapEditor,
       layout: layout ?? this.layout,

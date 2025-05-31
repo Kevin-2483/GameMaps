@@ -11,6 +11,9 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String?,
       displayName: json['displayName'] as String,
       avatarPath: json['avatarPath'] as String?,
+      avatarData: const Uint8ListConverter().fromJson(
+        json['avatarData'] as String?,
+      ),
       theme: ThemePreferences.fromJson(json['theme'] as Map<String, dynamic>),
       mapEditor: MapEditorPreferences.fromJson(
         json['mapEditor'] as Map<String, dynamic>,
@@ -32,6 +35,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'userId': instance.userId,
       'displayName': instance.displayName,
       'avatarPath': instance.avatarPath,
+      'avatarData': const Uint8ListConverter().toJson(instance.avatarData),
       'theme': instance.theme,
       'mapEditor': instance.mapEditor,
       'layout': instance.layout,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 
@@ -33,14 +34,11 @@ class UserManagementSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                children: [
-                  CircleAvatar(
+                children: [                  CircleAvatar(
                     radius: 30,
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    backgroundImage: preferences.avatarPath != null
-                        ? NetworkImage(preferences.avatarPath!)
-                        : null,
-                    child: preferences.avatarPath == null
+                    backgroundImage: _getAvatarImage(),
+                    child: _getAvatarImage() == null
                         ? Text(
                             preferences.displayName.isNotEmpty
                                 ? preferences.displayName[0].toUpperCase()
@@ -100,11 +98,6 @@ class UserManagementSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _editUserInfo(context, provider),
-                    icon: Icon(Icons.edit),
-                    tooltip: '编辑用户信息',
-                  ),
                 ],
               ),
             ),
@@ -163,13 +156,11 @@ class UserManagementSection extends StatelessWidget {
               subtitle: Text(preferences.displayName),
               trailing: Icon(Icons.edit),
               onTap: () => _changeDisplayName(context, provider),
-            ),
-
-            // 更改头像
+            ),            // 更改头像
             ListTile(
               leading: Icon(Icons.photo),
               title: Text('头像'),
-              subtitle: Text(preferences.avatarPath ?? '未设置'),
+              subtitle: Text(_getAvatarDisplayText()),
               trailing: Icon(Icons.edit),
               onTap: () => _changeAvatar(context, provider),
             ),
@@ -192,7 +183,6 @@ class UserManagementSection extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
-
   String _getLanguageDisplayName(String locale) {
     switch (locale) {
       case 'zh_CN':
@@ -204,13 +194,24 @@ class UserManagementSection extends StatelessWidget {
     }
   }
 
-  void _editUserInfo(BuildContext context, UserPreferencesProvider provider) {
-    // 编辑用户信息的实现
-    showDialog(
-      context: context,
-      builder: (context) =>
-          _UserInfoEditDialog(preferences: preferences, provider: provider),
-    );
+  /// 获取头像图片提供者
+  ImageProvider? _getAvatarImage() {
+    if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
+      return MemoryImage(preferences.avatarData!);
+    } else if (preferences.avatarPath != null && preferences.avatarPath!.isNotEmpty) {
+      return NetworkImage(preferences.avatarPath!);
+    }
+    return null;
+  }
+
+  /// 获取头像显示文本
+  String _getAvatarDisplayText() {
+    if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
+      return '本地图片 (${(preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
+    } else if (preferences.avatarPath != null && preferences.avatarPath!.isNotEmpty) {
+      return preferences.avatarPath!;
+    }
+    return '未设置';
   }
 
   void _createNewProfile(
@@ -264,21 +265,205 @@ class UserManagementSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _changeDisplayName(
+  }  void _changeDisplayName(
     BuildContext context,
     UserPreferencesProvider provider,
   ) {
-    // 更改显示名称的实现
+    showDialog(
+      context: context,
+      builder: (context) => _DisplayNameDialog(
+        currentName: preferences.displayName,
+        provider: provider,
+      ),
+    );
   }
-
   void _changeAvatar(BuildContext context, UserPreferencesProvider provider) {
-    // 更改头像的实现
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('更改头像'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.link),
+              title: Text('使用网络图片URL'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showUrlInputDialog(context, provider);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.upload_file),
+              title: Text('上传本地图片'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _uploadLocalImage(context, provider);
+              },
+            ),
+            if (preferences.avatarPath != null || preferences.avatarData != null)
+              ListTile(
+                leading: Icon(Icons.clear, color: Colors.red),
+                title: Text('移除头像'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _removeAvatar(context, provider);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  void _showUrlInputDialog(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => _AvatarUrlDialog(
+        currentUrl: preferences.avatarPath ?? '',
+        provider: provider,
+      ),
+    );
   }
 
+  void _uploadLocalImage(BuildContext context, UserPreferencesProvider provider) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        final imageData = result.files.single.bytes!;
+        
+        // 检查文件大小（限制为5MB）
+        if (imageData.length > 5 * 1024 * 1024) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('图片文件过大，请选择小于5MB的图片'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        await provider.updateUserInfo(
+          avatarData: imageData,
+          avatarPath: null, // 清除URL路径
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('头像已上传'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('上传失败: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _removeAvatar(BuildContext context, UserPreferencesProvider provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('移除头像'),
+        content: Text('确定要移除当前头像吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('移除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await provider.updateUserInfo(
+          avatarPath: null,
+          avatarData: null,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('头像已移除'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('移除失败: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
   void _changeLanguage(BuildContext context, UserPreferencesProvider provider) {
-    // 更改语言的实现
+    final List<Map<String, String>> languages = [
+      {'code': 'zh_CN', 'name': '简体中文'},
+      {'code': 'en_US', 'name': 'English'},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('选择语言'),        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: languages.map((language) {
+            return RadioListTile<String>(
+              title: Text(language['name']!),
+              value: language['code']!,
+              groupValue: preferences.locale,
+              onChanged: (value) async {
+                if (value != null && value != preferences.locale) {
+                  try {
+                    await provider.updateUserInfo(locale: value);
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('语言已更新为 ${language['name']}'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('更新失败: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('取消'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -464,6 +649,215 @@ class _SwitchProfileDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text('取消'),
+        ),
+      ],
+    );
+  }
+}
+
+// 显示名称编辑对话框
+class _DisplayNameDialog extends StatefulWidget {
+  final String currentName;
+  final UserPreferencesProvider provider;
+
+  const _DisplayNameDialog({
+    required this.currentName,
+    required this.provider,
+  });
+
+  @override
+  State<_DisplayNameDialog> createState() => _DisplayNameDialogState();
+}
+
+class _DisplayNameDialogState extends State<_DisplayNameDialog> {
+  late TextEditingController _nameController;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  String? _validateName(String name) {
+    if (name.trim().isEmpty) {
+      return '显示名称不能为空';
+    }
+    if (name.trim().length < 2) {
+      return '显示名称至少需要2个字符';
+    }
+    if (name.trim().length > 50) {
+      return '显示名称不能超过50个字符';
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('修改显示名称'),
+      content: TextField(
+        controller: _nameController,
+        decoration: InputDecoration(
+          labelText: '显示名称',
+          border: OutlineInputBorder(),
+          hintText: '请输入您的显示名称',
+          errorText: _errorText,
+        ),
+        autofocus: true,
+        onChanged: (value) {
+          setState(() {
+            _errorText = _validateName(value);
+          });
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('取消'),
+        ),
+        ElevatedButton(
+          onPressed: _errorText == null
+              ? () async {
+                  final newName = _nameController.text.trim();
+                  if (newName != widget.currentName) {
+                    try {
+                      await widget.provider.updateUserInfo(displayName: newName);
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('显示名称已更新为 "$newName"'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('更新失败: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } else {
+                    Navigator.of(context).pop();
+                  }
+                }              : null,
+          child: Text('保存'),
+        ),
+      ],
+    );
+  }
+}
+
+// 头像URL编辑对话框
+class _AvatarUrlDialog extends StatefulWidget {
+  final String currentUrl;
+  final UserPreferencesProvider provider;
+
+  const _AvatarUrlDialog({
+    required this.currentUrl,
+    required this.provider,
+  });
+
+  @override
+  State<_AvatarUrlDialog> createState() => _AvatarUrlDialogState();
+}
+
+class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
+  late TextEditingController _urlController;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: widget.currentUrl);
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  String? _validateUrl(String url) {
+    if (url.trim().isEmpty) {
+      return null; // 允许空URL
+    }
+    
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+      return '请输入有效的URL';
+    }
+    
+    final validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+    final hasValidExtension = validExtensions.any((ext) => 
+      url.toLowerCase().contains(ext));
+    
+    if (!hasValidExtension) {
+      return '请输入图片URL（支持 jpg, png, gif 等格式）';
+    }
+    
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('输入头像URL'),
+      content: TextField(
+        controller: _urlController,
+        decoration: InputDecoration(
+          labelText: '图片URL',
+          border: OutlineInputBorder(),
+          hintText: 'https://example.com/avatar.jpg',
+          errorText: _errorText,
+          helperText: '支持 jpg, png, gif 等格式的图片',
+        ),
+        autofocus: true,
+        onChanged: (value) {
+          setState(() {
+            _errorText = _validateUrl(value);
+          });
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('取消'),
+        ),
+        ElevatedButton(
+          onPressed: _errorText == null
+              ? () async {
+                  final url = _urlController.text.trim();
+                  try {
+                    await widget.provider.updateUserInfo(
+                      avatarPath: url.isEmpty ? null : url,
+                      avatarData: null, // 清除二进制数据
+                    );
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(url.isEmpty ? '头像URL已清除' : '头像已更新'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('更新失败: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              : null,
+          child: Text('保存'),
         ),
       ],
     );

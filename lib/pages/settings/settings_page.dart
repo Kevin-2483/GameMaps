@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
-import '../../providers/locale_provider.dart';
 import '../../components/layout/main_layout.dart';
 import '../../services/map_database_service.dart';
 
@@ -62,10 +60,7 @@ class _SettingsPageContent extends StatelessWidget {
                 context,
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
-            _buildUserPreferencesSection(context, l10n),
-            const SizedBox(height: 16),
-            _buildLanguageSection(context, l10n),
+            const SizedBox(height: 24),            _buildUserPreferencesSection(context, l10n),
             const SizedBox(height: 16),
             _buildResourceSection(context, l10n),
           ],
@@ -99,52 +94,7 @@ class _SettingsPageContent extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  static Widget _buildLanguageSection(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.language, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Consumer<LocaleProvider>(
-              builder: (context, localeProvider, child) {
-                return Column(
-                  children: [
-                    RadioListTile<Locale?>(
-                      title: Text(l10n.systemLanguage),
-                      value: null,
-                      groupValue: localeProvider.locale,
-                      onChanged: (value) {
-                        localeProvider.setLocale(value);
-                      },
-                    ),
-                    ...LocaleProvider.supportedLocales.map(
-                      (locale) => RadioListTile<Locale?>(
-                        title: Text(localeProvider.getLanguageName(locale)),
-                        value: locale,
-                        groupValue: localeProvider.locale,
-                        onChanged: (value) {
-                          localeProvider.setLocale(value);
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    );  }
 
   Widget _buildResourceSection(BuildContext context, AppLocalizations l10n) {
     return Card(

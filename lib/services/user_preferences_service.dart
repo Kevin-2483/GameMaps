@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_preferences.dart';
@@ -163,11 +164,11 @@ class UserPreferencesService {
     final current = await getCurrentPreferences();
     await savePreferences(current.copyWith(tools: tools));
   }
-
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,
     String? avatarPath,
+    Uint8List? avatarData,
     String? locale,
   }) async {
     final current = await getCurrentPreferences();
@@ -175,6 +176,7 @@ class UserPreferencesService {
       current.copyWith(
         displayName: displayName,
         avatarPath: avatarPath,
+        avatarData: avatarData,
         locale: locale,
       ),
     );

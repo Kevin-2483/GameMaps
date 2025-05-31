@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_preferences.dart';
@@ -203,11 +204,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新工具设置失败: ${e.toString()}');
     }
   }
-
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,
     String? avatarPath,
+    Uint8List? avatarData,
     String? locale,
   }) async {
     if (_currentPreferences == null) return;
@@ -216,6 +217,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       await _service.updateUserInfo(
         displayName: displayName,
         avatarPath: avatarPath,
+        avatarData: avatarData,
         locale: locale,
       );
       _currentPreferences = await _service.getCurrentPreferences();
