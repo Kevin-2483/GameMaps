@@ -1544,9 +1544,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
-        final mapEditorPrefs = userPrefsProvider.mapEditor;
-
-        return MapCanvas(
+        final mapEditorPrefs = userPrefsProvider.mapEditor;        return MapCanvas(
           mapItem: _currentMap!,
           selectedLayer: _selectedLayer,
           selectedDrawingTool: _selectedDrawingTool,
@@ -1568,6 +1566,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           previewCurvature: _previewCurvature,
           previewTriangleCut: _previewTriangleCut,
           selectedElementId: _selectedElementId,
+          onElementSelected: (elementId) {
+            setState(() => _selectedElementId = elementId);
+          },
           backgroundPattern: mapEditorPrefs.backgroundPattern,
           zoomSensitivity: mapEditorPrefs.zoomSensitivity,
         );
