@@ -846,14 +846,11 @@ class _MapCanvasState extends State<MapCanvas> {
   }
 
   void _onElementInteractionPanStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
-
-    // --- 步骤 1: 优先处理已选中的元素 ---
+    final canvasPosition = _getCanvasPosition(details.localPosition);    // --- 步骤 1: 优先处理已选中的元素 ---
     if (widget.selectedElementId != null) {
-      final selectedElement = widget.selectedLayer?.elements.firstWhere(
-        (e) => e.id == widget.selectedElementId,
-        // orElse: () => null, // 最好处理找不到的情况，尽管不太可能发生
-      );
+      final selectedElement = widget.selectedLayer?.elements
+          .where((e) => e.id == widget.selectedElementId)
+          .firstOrNull;
 
       if (selectedElement != null) {
         // 获取用户偏好设置中的控制柄大小
@@ -1571,13 +1568,11 @@ class _MapCanvasState extends State<MapCanvas> {
 
   /// 处理绘画元素的拖拽开始
   void _onElementDragStart(String elementId, DragStartDetails details) {
-    _draggingElementId = elementId;
-
-    // 计算拖拽开始时的偏移量
+    _draggingElementId = elementId;    // 计算拖拽开始时的偏移量
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    final element = widget.selectedLayer!.elements.firstWhere(
-      (e) => e.id == elementId,
-    );
+    final element = widget.selectedLayer!.elements
+        .where((e) => e.id == elementId)
+        .first;
 
     // 计算元素中心位置
     Offset elementCenter;
@@ -1798,11 +1793,9 @@ class _MapCanvasState extends State<MapCanvas> {
   ) {
     _resizingElementId = elementId;
     _activeResizeHandle = handle;
-    _resizeStartPosition = _getCanvasPosition(details.localPosition);
-
-    final element = widget.selectedLayer!.elements.firstWhere(
-      (e) => e.id == elementId,
-    );
+    _resizeStartPosition = _getCanvasPosition(details.localPosition);    final element = widget.selectedLayer!.elements
+        .where((e) => e.id == elementId)
+        .first;
     if (element.points.length >= 2) {
       final size = const Size(kCanvasWidth, kCanvasHeight);
       final start = Offset(
@@ -1990,14 +1983,12 @@ class _LayerPainter extends CustomPainter {
 
       // 使用裁剪来实现选择性遮挡
       _drawElementWithEraserMask(canvas, element, eraserElements, size);
-    }
-    // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
+    }    // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
     if (selectedElementId != null) {
-      MapDrawingElement? selectedElement;
-      try {
-        selectedElement = sortedElements.firstWhere(
-          (e) => e.id == selectedElementId,
-        );
+      final selectedElement = sortedElements
+          .where((e) => e.id == selectedElementId)
+          .firstOrNull;
+      if (selectedElement != null) {
         _drawRainbowHighlight(canvas, selectedElement, size);
         _drawResizeHandles(
           canvas,
@@ -2005,8 +1996,6 @@ class _LayerPainter extends CustomPainter {
           size,
           handleSize: handleSize,
         );
-      } catch (e) {
-        // 如果找不到元素，忽略绘制
       }
     }
   }
