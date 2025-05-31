@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
-
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -48,8 +50,6 @@ class DrawingPreviewData {
     this.freeDrawingPath,
   });
 }
-
-
 
 /// 创建三角形裁剪路径
 Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
@@ -96,79 +96,79 @@ Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
   return path;
 }
 
-  /// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
-  Path _createSuperellipsePath(Rect rect, double curvature) {
-    if (curvature <= 0.0) {
-      return Path()..addRect(rect);
-    }
-
-    // 限制弧度值在合理范围内 (0.0 到 1.0)
-    final clampedCurvature = curvature.clamp(0.0, 1.0);
-
-    final centerX = rect.center.dx;
-    final centerY = rect.center.dy;
-    final a = rect.width / 2;
-    final b = rect.height / 2;
-
-    if (a < 2 || b < 2) {
-      return Path()..addRect(rect);
-    }
-
-    // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
-    double n;
-    bool useStandardEllipse = false;
-
-    if (clampedCurvature <= 0.3) {
-      // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
-      final t = clampedCurvature / 0.3;
-      n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
-    } else if (clampedCurvature <= 0.7) {
-      // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
-      final t = (clampedCurvature - 0.3) / 0.4;
-      n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
-    } else {
-      // 椭圆阶段：使用标准椭圆方程
-      useStandardEllipse = true;
-      n = 2.0; // 标准椭圆
-    }
-
-    final path = Path();
-    const int numPoints = 100;
-
-    bool isFirstPoint = true;
-
-    for (int i = 0; i <= numPoints; i++) {
-      final t = (i / numPoints) * 2 * math.pi;
-
-      double x, y;
-
-      if (useStandardEllipse) {
-        // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
-        x = centerX + a * math.cos(t);
-        y = centerY + b * math.sin(t);
-      } else {
-        // 使用超椭圆方程
-        final cosT = math.cos(t);
-        final sinT = math.sin(t);
-
-        final signCos = cosT >= 0 ? 1.0 : -1.0;
-        final signSin = sinT >= 0 ? 1.0 : -1.0;
-
-        x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
-        y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
-      }
-
-      if (isFirstPoint) {
-        path.moveTo(x, y);
-        isFirstPoint = false;
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    path.close();
-    return path;
+/// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
+Path _createSuperellipsePath(Rect rect, double curvature) {
+  if (curvature <= 0.0) {
+    return Path()..addRect(rect);
   }
+
+  // 限制弧度值在合理范围内 (0.0 到 1.0)
+  final clampedCurvature = curvature.clamp(0.0, 1.0);
+
+  final centerX = rect.center.dx;
+  final centerY = rect.center.dy;
+  final a = rect.width / 2;
+  final b = rect.height / 2;
+
+  if (a < 2 || b < 2) {
+    return Path()..addRect(rect);
+  }
+
+  // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
+  double n;
+  bool useStandardEllipse = false;
+
+  if (clampedCurvature <= 0.3) {
+    // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
+    final t = clampedCurvature / 0.3;
+    n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
+  } else if (clampedCurvature <= 0.7) {
+    // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
+    final t = (clampedCurvature - 0.3) / 0.4;
+    n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
+  } else {
+    // 椭圆阶段：使用标准椭圆方程
+    useStandardEllipse = true;
+    n = 2.0; // 标准椭圆
+  }
+
+  final path = Path();
+  const int numPoints = 100;
+
+  bool isFirstPoint = true;
+
+  for (int i = 0; i <= numPoints; i++) {
+    final t = (i / numPoints) * 2 * math.pi;
+
+    double x, y;
+
+    if (useStandardEllipse) {
+      // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
+      x = centerX + a * math.cos(t);
+      y = centerY + b * math.sin(t);
+    } else {
+      // 使用超椭圆方程
+      final cosT = math.cos(t);
+      final sinT = math.sin(t);
+
+      final signCos = cosT >= 0 ? 1.0 : -1.0;
+      final signSin = sinT >= 0 ? 1.0 : -1.0;
+
+      x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
+      y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
+    }
+
+    if (isFirstPoint) {
+      path.moveTo(x, y);
+      isFirstPoint = false;
+    } else {
+      path.lineTo(x, y);
+    }
+  }
+
+  path.close();
+  return path;
+}
 
 Path _getFinalEraserPath(
   Rect rect,
@@ -266,7 +266,8 @@ class MapCanvas extends StatefulWidget {
   final List<legend_db.LegendItem> availableLegends;
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
-  final Function(LegendGroup) onLegendGroupUpdated;  final Function(String)? onLegendItemSelected; // 图例项选中回调
+  final Function(LegendGroup) onLegendGroupUpdated;
+  final Function(String)? onLegendItemSelected; // 图例项选中回调
   final Function(LegendItem)? onLegendItemDoubleClicked; // 图例项双击回调
   final Map<String, double> previewOpacityValues; // 绘制工具预览状态
   final DrawingElementType? previewDrawingTool;
@@ -330,6 +331,10 @@ class _MapCanvasState extends State<MapCanvas> {
   // 绘制预览的 ValueNotifier，避免整个 widget 重绘
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier =
       ValueNotifier(null); // 获取有效的绘制工具状态（预览值或实际值）
+
+  // Add this GlobalKey
+  final GlobalKey _canvasGlobalKey = GlobalKey();
+
   DrawingElementType? get _effectiveDrawingTool =>
       widget.previewDrawingTool ?? widget.selectedDrawingTool;
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
@@ -363,99 +368,104 @@ class _MapCanvasState extends State<MapCanvas> {
           boundaryMargin: const EdgeInsets.all(20),
           minScale: 0.1,
           maxScale: 5.0,
-          scaleFactor: 200.0 / widget.zoomSensitivity, // 应用缩放敏感度（除法确保高数值=高敏感度）
-          constrained: false, // 关键：不约束子组件大小
-          child: SizedBox(
-            width: kCanvasWidth,
-            height: kCanvasHeight,
-            child: Stack(
-              children: [
-                // 画布容器
-                Container(
-                  width: kCanvasWidth,
-                  height: kCanvasHeight,
-                  decoration: const BoxDecoration(color: Colors.white),
-                  child: Stack(
-                    children: [
-                      // 背景图案（根据用户偏好设置）
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _BackgroundPatternPainter(
-                            widget.backgroundPattern,
+          scaleFactor: 200.0 / widget.zoomSensitivity,
+          constrained: false,
+          child: RepaintBoundary(
+            // Wrap with RepaintBoundary
+            key: _canvasGlobalKey, // Assign the key
+            child: SizedBox(
+              width: kCanvasWidth,
+              height: kCanvasHeight,
+              child: Stack(
+                children: [
+                  // 画布容器
+                  Container(
+                    width: kCanvasWidth,
+                    height: kCanvasHeight,
+                    decoration: const BoxDecoration(color: Colors.white),
+                    child: Stack(
+                      children: [
+                        // 背景图案（根据用户偏好设置）
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _BackgroundPatternPainter(
+                              widget.backgroundPattern,
+                            ),
                           ),
                         ),
-                      ),
-
-                      // 按层级顺序渲染所有元素
-                      ..._buildLayeredElements(),
-                      // Current drawing preview
-                      ValueListenableBuilder<DrawingPreviewData?>(
-                        valueListenable: _drawingPreviewNotifier,
-                        builder: (context, previewData, child) {
-                          if (previewData == null)
-                            return const SizedBox.shrink();
-                          return CustomPaint(
-                            size: const Size(kCanvasWidth, kCanvasHeight),
-                            painter: _CurrentDrawingPainter(
-                              start: previewData.start,
-                              end: previewData.end,
-                              elementType: previewData.elementType,
-                              color: previewData.color,
-                              strokeWidth: previewData.strokeWidth,
-                              density: previewData.density,
-                              curvature: previewData.curvature,
-                              triangleCut: previewData.triangleCut,
-                              freeDrawingPath: previewData.freeDrawingPath,
-                              selectedElementId: widget.selectedElementId,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),                // Touch handler for drawing - 覆盖整个画布区域
-                if (!widget.isPreviewMode && _effectiveDrawingTool != null)
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    width: kCanvasWidth,
-                    height: kCanvasHeight,
-                    child: _effectiveDrawingTool == DrawingElementType.text
-                        ? GestureDetector(
-                            // 文本工具使用点击手势
-                            onTapDown: (details) {
-                              _currentDrawingStart = _getCanvasPosition(
-                                details.localPosition,
-                              );
-                              _showTextInputDialog();
-                            },
-                            behavior: HitTestBehavior.translucent,
-                          )
-                        : GestureDetector(
-                            // 其他工具使用拖拽手势
-                            onPanStart: _onDrawingStart,
-                            onPanUpdate: _onDrawingUpdate,
-                            onPanEnd: _onDrawingEnd,
-                            behavior: HitTestBehavior.translucent,
-                          ),
-                  ),
-
-                // Touch handler for element interaction - 当没有绘制工具选中时
-                if (!widget.isPreviewMode && _effectiveDrawingTool == null)
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    width: kCanvasWidth,
-                    height: kCanvasHeight,
-                    child: GestureDetector(
-                      onTapDown: _onElementInteractionTapDown,
-                      onPanStart: _onElementInteractionPanStart,
-                      onPanUpdate: _onElementInteractionPanUpdate,
-                      onPanEnd: _onElementInteractionPanEnd,
-                      behavior: HitTestBehavior.translucent,
+                        // 按层级顺序渲染所有元素
+                        ..._buildLayeredElements(),
+                        // Current drawing preview
+                        ValueListenableBuilder<DrawingPreviewData?>(
+                          valueListenable: _drawingPreviewNotifier,
+                          builder: (context, previewData, child) {
+                            if (previewData == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return CustomPaint(
+                              size: const Size(kCanvasWidth, kCanvasHeight),
+                              painter: _CurrentDrawingPainter(
+                                start: previewData.start,
+                                end: previewData.end,
+                                elementType: previewData.elementType,
+                                color: previewData.color,
+                                strokeWidth: previewData.strokeWidth,
+                                density: previewData.density,
+                                curvature: previewData.curvature,
+                                triangleCut: previewData.triangleCut,
+                                freeDrawingPath: previewData.freeDrawingPath,
+                                selectedElementId: widget.selectedElementId,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-              ],
+                  // Touch handler for drawing - 覆盖整个画布区域
+                  if (!widget.isPreviewMode && _effectiveDrawingTool != null)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: kCanvasWidth,
+                      height: kCanvasHeight,
+                      child: _effectiveDrawingTool == DrawingElementType.text
+                          ? GestureDetector(
+                              // 文本工具使用点击手势
+                              onTapDown: (details) {
+                                _currentDrawingStart = _getCanvasPosition(
+                                  details.localPosition,
+                                );
+                                _showTextInputDialog();
+                              },
+                              behavior: HitTestBehavior.translucent,
+                            )
+                          : GestureDetector(
+                              // 其他工具使用拖拽手势
+                              onPanStart: _onDrawingStart,
+                              onPanUpdate: _onDrawingUpdate,
+                              onPanEnd: _onDrawingEnd,
+                              behavior: HitTestBehavior.translucent,
+                            ),
+                    ),
+
+                  // Touch handler for element interaction - 当没有绘制工具选中时
+                  if (!widget.isPreviewMode && _effectiveDrawingTool == null)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: kCanvasWidth,
+                      height: kCanvasHeight,
+                      child: GestureDetector(
+                        onTapDown: _onElementInteractionTapDown,
+                        onPanStart: _onElementInteractionPanStart,
+                        onPanUpdate: _onElementInteractionPanUpdate,
+                        onPanEnd: _onElementInteractionPanEnd,
+                        behavior: HitTestBehavior.translucent,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -483,13 +493,17 @@ class _MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
+
   Widget _buildLayerWidget(MapLayer layer) {
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity =
         widget.previewOpacityValues[layer.id] ?? layer.opacity;
 
     // 获取用户偏好设置中的 handleSize
-    final userPreferences = Provider.of<UserPreferencesProvider>(context, listen: false);
+    final userPreferences = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
     final handleSize = userPreferences.tools.handleSize;
 
     return Positioned.fill(
@@ -637,77 +651,271 @@ class _MapCanvasState extends State<MapCanvas> {
   void _onElementInteractionTapDown(TapDownDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final hitElementId = _getHitElement(canvasPosition);
-    
+
     // 只有当点击了当前选中的元素时才保持选中状态
     // 如果点击了其他地方或其他元素，则取消选择
     if (hitElementId != widget.selectedElementId) {
       // 取消选择
       widget.onElementSelected?.call(null);
     }
+
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
-  }
-void _onElementInteractionPanStart(DragStartDetails details) {
-  final canvasPosition = _getCanvasPosition(details.localPosition);
+    
+    /// 后续功能
+    Future<Uint8List?> captureCanvasAreaToArgbUint8List(Rect area) async {
+      // Ensure the context is mounted before proceeding
+      if (!_canvasGlobalKey.currentContext!.mounted) {
+        // print("Error: RepaintBoundary context not mounted.");
+        return null;
+      }
+      try {
+        RenderRepaintBoundary? boundary =
+            _canvasGlobalKey.currentContext?.findRenderObject()
+                as RenderRepaintBoundary?;
+        if (boundary == null) {
+          // print("Error: RepaintBoundary not found.");
+          return null;
+        }
 
-  // --- 步骤 1: 优先处理已选中的元素 ---
-  if (widget.selectedElementId != null) {
-    final selectedElement = widget.selectedLayer?.elements.firstWhere(
-      (e) => e.id == widget.selectedElementId,
-      // orElse: () => null, // 最好处理找不到的情况，尽管不太可能发生
-    );
+        // Capture the image at its native resolution (kCanvasWidth x kCanvasHeight)
+        // pixelRatio: 1.0 ensures the image dimensions match kCanvasWidth/kCanvasHeight.
+        final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
 
-    if (selectedElement != null) {
-      // 获取用户偏好设置中的控制柄大小
-      final userPrefsProvider = Provider.of<UserPreferencesProvider>(context, listen: false);
-      final handleSize = userPrefsProvider.tools.handleSize;
-      
-      // 1a. 检查是否点击了选中元素的【调整大小控制柄】
-      final resizeHandle = _getHitResizeHandle(canvasPosition, selectedElement, handleSize: handleSize);
-      if (resizeHandle != null) {
-        _onResizeStart(widget.selectedElementId!, resizeHandle, details);
-        return; // 开始调整大小，操作结束
+        try {
+          // Get pixel data in RGBA format
+          final ByteData? byteData = await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          );
+          if (byteData == null) {
+            // print("Error: Failed to get ByteData from image.");
+            return null;
+          }
+
+          final Uint8List sourcePixelsRgba = byteData.buffer.asUint8List();
+          final int sourceImageWidth =
+              image.width; // Should be kCanvasWidth.round()
+          final int sourceImageHeight =
+              image.height; // Should be kCanvasHeight.round()
+
+          // Define canvas bounds as a Rect
+          final Rect canvasBounds = Rect.fromLTWH(
+            0,
+            0,
+            sourceImageWidth.toDouble(),
+            sourceImageHeight.toDouble(),
+          );
+
+          // Find the intersection of the requested area and the canvas bounds
+          // This gives the actual area to crop, fully within the canvas.
+          final Rect intersectionArea = area.intersect(canvasBounds);
+
+          if (intersectionArea.isEmpty) {
+            return Uint8List(
+              0,
+            ); // Return empty list if no overlap or area is invalid
+          }
+
+          // Convert intersectionArea to integer coordinates for pixel access
+          final int cropX = intersectionArea.left.round();
+          final int cropY = intersectionArea.top.round();
+          final int cropWidth = intersectionArea.width.round();
+          final int cropHeight = intersectionArea.height.round();
+
+          // Ensure calculated width/height are not negative or zero after rounding and intersection
+          if (cropWidth <= 0 || cropHeight <= 0) {
+            return Uint8List(0);
+          }
+
+          final Uint8List destPixelsArgb = Uint8List(
+            cropWidth * cropHeight * 4,
+          ); // 4 bytes per ARGB pixel
+
+          for (int y = 0; y < cropHeight; ++y) {
+            for (int x = 0; x < cropWidth; ++x) {
+              // Source pixel coordinates in the full image
+              final int currentSourceX = cropX + x;
+              final int currentSourceY = cropY + y;
+
+              // Index in the source RGBA buffer
+              final int sourceIndex =
+                  (currentSourceY * sourceImageWidth + currentSourceX) * 4;
+
+              // Safety check, though intersection should make this unnecessary if logic is sound
+              if (sourceIndex + 3 < sourcePixelsRgba.length) {
+                final int r = sourcePixelsRgba[sourceIndex];
+                final int g = sourcePixelsRgba[sourceIndex + 1];
+                final int b = sourcePixelsRgba[sourceIndex + 2];
+                final int a = sourcePixelsRgba[sourceIndex + 3];
+
+                // Index in the destination ARGB buffer
+                final int destIndex = (y * cropWidth + x) * 4;
+                destPixelsArgb[destIndex] = a; // Alpha
+                destPixelsArgb[destIndex + 1] = r; // Red
+                destPixelsArgb[destIndex + 2] = g; // Green
+                destPixelsArgb[destIndex + 3] = b; // Blue
+              } else {
+                // Fallback for any unexpected out-of-bounds access
+                final int destIndex = (y * cropWidth + x) * 4;
+                destPixelsArgb[destIndex] = 0; // Transparent black
+                destPixelsArgb[destIndex + 1] = 0;
+                destPixelsArgb[destIndex + 2] = 0;
+                destPixelsArgb[destIndex + 3] = 0;
+              }
+            }
+          }
+          return destPixelsArgb;
+        } finally {
+          image
+              .dispose(); // IMPORTANT: Dispose the ui.Image to free up native resources
+        }
+      } catch (e) {
+        // print("Exception in captureCanvasAreaToArgbUint8List: $e");
+        return null;
+      }
+    }
+
+    /// Gets the color of a single pixel at the specified [point] on the canvas.
+    ///
+    /// The [point] is an Offset in canvas coordinates (0,0 to kCanvasWidth, kCanvasHeight).
+    /// Returns a [Color] object (ARGB), or null/transparent if the point is outside
+    /// bounds or an error occurs.
+    /// 后续功能
+    Future<Color?> getPixelColorAtCanvasPoint(Offset point) async {
+      if (!_canvasGlobalKey.currentContext!.mounted) {
+        // print("Error: RepaintBoundary context not mounted.");
+        return null;
       }
 
-      // 1b. 如果不是控制柄，检查是否点击了选中元素的【主体区域】
-      //     这里直接使用 _isPointInElement，它不考虑 zIndex，只判断点是否在该元素的几何形状内。
-      if (_isPointInElement(canvasPosition, selectedElement)) {
+      final int x = point.dx.round();
+      final int y = point.dy.round();
+
+      // Check if point is outside the logical canvas dimensions
+      final int canvasIntWidth = kCanvasWidth.round();
+      final int canvasIntHeight = kCanvasHeight.round();
+
+      if (x < 0 || x >= canvasIntWidth || y < 0 || y >= canvasIntHeight) {
+        // print("Point ($x, $y) is outside canvas bounds ($canvasIntWidth, $canvasIntHeight). Returning transparent.");
+        return Colors.transparent; // Or null, depending on desired behavior
+      }
+
+      try {
+        RenderRepaintBoundary? boundary =
+            _canvasGlobalKey.currentContext?.findRenderObject()
+                as RenderRepaintBoundary?;
+        if (boundary == null) return null;
+
+        final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+
+        try {
+          final ByteData? byteData = await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          );
+          if (byteData == null) return null;
+
+          final Uint8List pixelsRgba = byteData.buffer.asUint8List();
+          final int imageWidth = image.width; // Should be canvasIntWidth
+
+          // Defensive check, in case image dimensions differ unexpectedly
+          if (x < 0 || x >= image.width || y < 0 || y >= image.height) {
+            // print("Point ($x, $y) is outside actual image dimensions (${image.width}, ${image.height}). Returning transparent.");
+            return Colors.transparent;
+          }
+
+          final int index =
+              (y * imageWidth + x) * 4; // 4 bytes per pixel (RGBA)
+
+          if (index + 3 < pixelsRgba.length) {
+            final int r = pixelsRgba[index];
+            final int g = pixelsRgba[index + 1];
+            final int b = pixelsRgba[index + 2];
+            final int a = pixelsRgba[index + 3];
+            return Color.fromARGB(a, r, g, b);
+          } else {
+            // Should not happen if point validation is correct
+            // print("Calculated index is out of bounds for pixel data. Returning transparent.");
+            return Colors.transparent; // Or null
+          }
+        } finally {
+          image.dispose(); // IMPORTANT: Dispose the ui.Image
+        }
+      } catch (e) {
+        // print("Exception in getPixelColorAtCanvasPoint: $e");
+        return null;
+      }
+    }
+  }
+
+  void _onElementInteractionPanStart(DragStartDetails details) {
+    final canvasPosition = _getCanvasPosition(details.localPosition);
+
+    // --- 步骤 1: 优先处理已选中的元素 ---
+    if (widget.selectedElementId != null) {
+      final selectedElement = widget.selectedLayer?.elements.firstWhere(
+        (e) => e.id == widget.selectedElementId,
+        // orElse: () => null, // 最好处理找不到的情况，尽管不太可能发生
+      );
+
+      if (selectedElement != null) {
+        // 获取用户偏好设置中的控制柄大小
+        final userPrefsProvider = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
+        final handleSize = userPrefsProvider.tools.handleSize;
+
+        // 1a. 检查是否点击了选中元素的【调整大小控制柄】
+        final resizeHandle = _getHitResizeHandle(
+          canvasPosition,
+          selectedElement,
+          handleSize: handleSize,
+        );
+        if (resizeHandle != null) {
+          _onResizeStart(widget.selectedElementId!, resizeHandle, details);
+          return; // 开始调整大小，操作结束
+        }
+
+        // 1b. 如果不是控制柄，检查是否点击了选中元素的【主体区域】
+        //     这里直接使用 _isPointInElement，它不考虑 zIndex，只判断点是否在该元素的几何形状内。
+        if (_isPointInElement(canvasPosition, selectedElement)) {
+          _onElementDragStart(widget.selectedElementId!, details);
+          return; // 开始拖动选中的元素，操作结束
+        }
+        // 如果点击的不是选中元素的控制柄，也不是其主体区域，则继续往下走，
+        // 看看是否点击了其他元素或者空白区域。
+      }
+    }
+
+    // --- 步骤 2: 如果没有与预选中的元素发生交互 (或最初就没有元素被选中) ---
+    // --- 则进行常规的命中检测，找出视觉上最顶层的元素 ---
+    // --- 这时调用你提供的 _getHitElement 函数是合适的 ---
+    final hitElementIdFromTop = _getHitElement(canvasPosition);
+
+    if (hitElementIdFromTop != null) {
+      // 如果命中了某个元素 (根据 zIndex)
+      if (hitElementIdFromTop != widget.selectedElementId) {
+        // 并且这个元素不是当前已经选中的元素 (如果是，上面的逻辑应该已经处理了)
+        // 这种情况通常是用户点击了一个新的、未选中的元素。
+        // 你可以在这里处理选中新元素的操作。
+        // 例如: widget.onSelectElement(hitElementIdFromTop);
+        print(
+          "Hit a new element by z-order: $hitElementIdFromTop. Consider selecting it.",
+        );
+        // 根据你的设计，也可以在这里直接开始拖动新选中的元素：
+        // widget.onSelectElement(hitElementIdFromTop);
+        // _onElementDragStart(hitElementIdFromTop, details);
+      } else {
+        // 这个分支理论上不应该经常被走到，因为如果 hitElementIdFromTop 是 selectedElementId，
+        // 并且不是控制柄，那么上面的 _isPointInElement(canvasPosition, selectedElement) 应该返回 true 并已处理。
+        // 但如果因为某种原因（例如 _isPointInElement 的判断逻辑和元素实际绘制区域有细微差别）走到了这里，
+        // 那么意味着用户确实点击了已选中的元素（且它是最顶层），可以开始拖动。
         _onElementDragStart(widget.selectedElementId!, details);
-        return; // 开始拖动选中的元素，操作结束
+        return;
       }
-      // 如果点击的不是选中元素的控制柄，也不是其主体区域，则继续往下走，
-      // 看看是否点击了其他元素或者空白区域。
-    }
-  }
-
-  // --- 步骤 2: 如果没有与预选中的元素发生交互 (或最初就没有元素被选中) ---
-  // --- 则进行常规的命中检测，找出视觉上最顶层的元素 ---
-  // --- 这时调用你提供的 _getHitElement 函数是合适的 ---
-  final hitElementIdFromTop = _getHitElement(canvasPosition);
-
-  if (hitElementIdFromTop != null) {
-    // 如果命中了某个元素 (根据 zIndex)
-    if (hitElementIdFromTop != widget.selectedElementId) {
-      // 并且这个元素不是当前已经选中的元素 (如果是，上面的逻辑应该已经处理了)
-      // 这种情况通常是用户点击了一个新的、未选中的元素。
-      // 你可以在这里处理选中新元素的操作。
-      // 例如: widget.onSelectElement(hitElementIdFromTop);
-      print("Hit a new element by z-order: $hitElementIdFromTop. Consider selecting it.");
-      // 根据你的设计，也可以在这里直接开始拖动新选中的元素：
-      // widget.onSelectElement(hitElementIdFromTop);
-      // _onElementDragStart(hitElementIdFromTop, details);
     } else {
-      // 这个分支理论上不应该经常被走到，因为如果 hitElementIdFromTop 是 selectedElementId，
-      // 并且不是控制柄，那么上面的 _isPointInElement(canvasPosition, selectedElement) 应该返回 true 并已处理。
-      // 但如果因为某种原因（例如 _isPointInElement 的判断逻辑和元素实际绘制区域有细微差别）走到了这里，
-      // 那么意味着用户确实点击了已选中的元素（且它是最顶层），可以开始拖动。
-      _onElementDragStart(widget.selectedElementId!, details);
-      return;
+      // 点击了空白区域
+      // 例如: widget.onDeselectElement();
     }
-  } else {
-    // 点击了空白区域
-    // 例如: widget.onDeselectElement();
   }
-}
 
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
@@ -732,7 +940,7 @@ void _onElementInteractionPanStart(DragStartDetails details) {
       _onElementDragEnd(elementId, details);
     }
   }
-  
+
   void _onLegendDragStart(LegendItem item, DragStartDetails details) {
     _draggingLegendItem = item;
 
@@ -1396,8 +1604,12 @@ void _onElementInteractionPanStart(DragStartDetails details) {
 
     widget.onLayerUpdated(updatedLayer);
   }
+
   /// 获取调整大小控制柄的矩形区域
-  static List<Rect> getResizeHandles(MapDrawingElement element, {double? handleSize}) {
+  static List<Rect> getResizeHandles(
+    MapDrawingElement element, {
+    double? handleSize,
+  }) {
     if (element.points.length < 2) return [];
 
     final size = const Size(kCanvasWidth, kCanvasHeight);
@@ -1412,7 +1624,7 @@ void _onElementInteractionPanStart(DragStartDetails details) {
     final rect = Rect.fromPoints(start, end);
 
     final effectiveHandleSize = handleSize ?? 8.0;
-    final handles = <Rect>[];    // 四个角的控制柄
+    final handles = <Rect>[]; // 四个角的控制柄
     handles.add(
       Rect.fromCenter(
         center: rect.topLeft,
@@ -1474,13 +1686,17 @@ void _onElementInteractionPanStart(DragStartDetails details) {
 
     return handles;
   }
+
   /// 检测点击位置命中哪个调整大小控制柄
   ResizeHandle? _getHitResizeHandle(
     Offset canvasPosition,
     MapDrawingElement element, {
     double? handleSize,
   }) {
-    final handles = _MapCanvasState.getResizeHandles(element, handleSize: handleSize);
+    final handles = _MapCanvasState.getResizeHandles(
+      element,
+      handleSize: handleSize,
+    );
 
     for (int i = 0; i < handles.length; i++) {
       if (handles[i].contains(canvasPosition)) {
@@ -1697,8 +1913,14 @@ class _LayerPainter extends CustomPainter {
       try {
         selectedElement = sortedElements.firstWhere(
           (e) => e.id == selectedElementId,
-        );        _drawRainbowHighlight(canvas, selectedElement, size);
-        _drawResizeHandles(canvas, selectedElement, size, handleSize: handleSize);
+        );
+        _drawRainbowHighlight(canvas, selectedElement, size);
+        _drawResizeHandles(
+          canvas,
+          selectedElement,
+          size,
+          handleSize: handleSize,
+        );
       } catch (e) {
         // 如果找不到元素，忽略绘制
       }
@@ -1864,45 +2086,47 @@ class _LayerPainter extends CustomPainter {
         break;
     }
   }
-  
-void _drawResizeHandles(
-  Canvas canvas,
-  MapDrawingElement element,
-  Size size, {
-  double? handleSize,
-}) {
-  // 获取所有调整手柄的位置
-  final handles = _MapCanvasState.getResizeHandles(element, handleSize: handleSize);
 
-  if (handles.isEmpty) return;
+  void _drawResizeHandles(
+    Canvas canvas,
+    MapDrawingElement element,
+    Size size, {
+    double? handleSize,
+  }) {
+    // 获取所有调整手柄的位置
+    final handles = _MapCanvasState.getResizeHandles(
+      element,
+      handleSize: handleSize,
+    );
 
-  // 外边框画笔（白色边框）
-  final borderPaint = Paint()
-    ..color = Colors.white
-    ..style = PaintingStyle.fill;
+    if (handles.isEmpty) return;
 
-  // 内部填充画笔（蓝色）
-  final fillPaint = Paint()
-    ..color = Colors.blue
-    ..style = PaintingStyle.fill;
+    // 外边框画笔（白色边框）
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
 
-  // 使用动态大小计算圆形半径
-  final effectiveHandleSize = handleSize ?? 8.0;
-  final radius = effectiveHandleSize / 4.0; // 控制柄内圆半径为控制柄大小的1/4
-  final borderRadius = radius + 0.5;
+    // 内部填充画笔（蓝色）
+    final fillPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
 
-  // 绘制每个控制柄为圆形
-  for (final handle in handles) {
-    final center = handle.center;
+    // 使用动态大小计算圆形半径
+    final effectiveHandleSize = handleSize ?? 8.0;
+    final radius = effectiveHandleSize / 4.0; // 控制柄内圆半径为控制柄大小的1/4
+    final borderRadius = radius + 0.5;
 
-    // 白色边框圆（稍大）
-    canvas.drawCircle(center, borderRadius, borderPaint);
+    // 绘制每个控制柄为圆形
+    for (final handle in handles) {
+      final center = handle.center;
 
-    // 蓝色填充圆（略小）
-    canvas.drawCircle(center, radius, fillPaint);
+      // 白色边框圆（稍大）
+      canvas.drawCircle(center, borderRadius, borderPaint);
+
+      // 蓝色填充圆（略小）
+      canvas.drawCircle(center, radius, fillPaint);
+    }
   }
-}
-
 
   void _drawElementWithEraserMask(
     Canvas canvas,
