@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
+import '../../../providers/user_preferences_provider.dart';
 
 
 // 画布固定尺寸常量，确保坐标转换的一致性
@@ -499,11 +501,14 @@ class _MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
-
   Widget _buildLayerWidget(MapLayer layer) {
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity =
         widget.previewOpacityValues[layer.id] ?? layer.opacity;
+
+    // 获取用户偏好设置中的 handleSize
+    final userPreferences = Provider.of<UserPreferencesProvider>(context, listen: false);
+    final handleSize = userPreferences.tools.handleSize;
 
     return Positioned.fill(
       child: Opacity(
@@ -514,6 +519,7 @@ class _MapCanvasState extends State<MapCanvas> {
             layer: layer,
             isEditMode: !widget.isPreviewMode,
             selectedElementId: widget.selectedElementId,
+            handleSize: handleSize,
           ),
         ),
       ),
@@ -658,33 +664,68 @@ class _MapCanvasState extends State<MapCanvas> {
     }
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
   }
-  /// 处理元素交互的拖拽开始事件
-  void _onElementInteractionPanStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
-    final hitElementId = _getHitElement(canvasPosition);
-    
-    // 只有当点击的元素是当前选中的元素时，才允许拖拽或调整大小
-    if (hitElementId != null && hitElementId == widget.selectedElementId) {
-      final element = widget.selectedLayer?.elements.firstWhere(
-        (e) => e.id == hitElementId,
-        orElse: () => throw StateError('Element not found'),
-      );
+void _onElementInteractionPanStart(DragStartDetails details) {
+  final canvasPosition = _getCanvasPosition(details.localPosition);
+
+  // --- 步骤 1: 优先处理已选中的元素 ---
+  if (widget.selectedElementId != null) {
+    final selectedElement = widget.selectedLayer?.elements.firstWhere(
+      (e) => e.id == widget.selectedElementId,
+      // orElse: () => null, // 最好处理找不到的情况，尽管不太可能发生
+    );
+
+    if (selectedElement != null) {
+      // 获取用户偏好设置中的控制柄大小
+      final userPrefsProvider = Provider.of<UserPreferencesProvider>(context, listen: false);
+      final handleSize = userPrefsProvider.tools.handleSize;
       
-      if (element != null) {
-        // 首先检查是否点击了调整大小控制柄
-        final resizeHandle = _getHitResizeHandle(canvasPosition, element);
-        if (resizeHandle != null) {
-          // 开始调整大小
-          _onResizeStart(hitElementId, resizeHandle, details);
-          return;
-        }
-        
-        // 如果没有点击调整大小控制柄，则开始拖拽元素
-        _onElementDragStart(hitElementId, details);
+      // 1a. 检查是否点击了选中元素的【调整大小控制柄】
+      final resizeHandle = _getHitResizeHandle(canvasPosition, selectedElement, handleSize: handleSize);
+      if (resizeHandle != null) {
+        _onResizeStart(widget.selectedElementId!, resizeHandle, details);
+        return; // 开始调整大小，操作结束
       }
+
+      // 1b. 如果不是控制柄，检查是否点击了选中元素的【主体区域】
+      //     这里直接使用 _isPointInElement，它不考虑 zIndex，只判断点是否在该元素的几何形状内。
+      if (_isPointInElement(canvasPosition, selectedElement)) {
+        _onElementDragStart(widget.selectedElementId!, details);
+        return; // 开始拖动选中的元素，操作结束
+      }
+      // 如果点击的不是选中元素的控制柄，也不是其主体区域，则继续往下走，
+      // 看看是否点击了其他元素或者空白区域。
     }
-    // 如果点击的不是选中的元素，不做任何操作
   }
+
+  // --- 步骤 2: 如果没有与预选中的元素发生交互 (或最初就没有元素被选中) ---
+  // --- 则进行常规的命中检测，找出视觉上最顶层的元素 ---
+  // --- 这时调用你提供的 _getHitElement 函数是合适的 ---
+  final hitElementIdFromTop = _getHitElement(canvasPosition);
+
+  if (hitElementIdFromTop != null) {
+    // 如果命中了某个元素 (根据 zIndex)
+    if (hitElementIdFromTop != widget.selectedElementId) {
+      // 并且这个元素不是当前已经选中的元素 (如果是，上面的逻辑应该已经处理了)
+      // 这种情况通常是用户点击了一个新的、未选中的元素。
+      // 你可以在这里处理选中新元素的操作。
+      // 例如: widget.onSelectElement(hitElementIdFromTop);
+      print("Hit a new element by z-order: $hitElementIdFromTop. Consider selecting it.");
+      // 根据你的设计，也可以在这里直接开始拖动新选中的元素：
+      // widget.onSelectElement(hitElementIdFromTop);
+      // _onElementDragStart(hitElementIdFromTop, details);
+    } else {
+      // 这个分支理论上不应该经常被走到，因为如果 hitElementIdFromTop 是 selectedElementId，
+      // 并且不是控制柄，那么上面的 _isPointInElement(canvasPosition, selectedElement) 应该返回 true 并已处理。
+      // 但如果因为某种原因（例如 _isPointInElement 的判断逻辑和元素实际绘制区域有细微差别）走到了这里，
+      // 那么意味着用户确实点击了已选中的元素（且它是最顶层），可以开始拖动。
+      _onElementDragStart(widget.selectedElementId!, details);
+      return;
+    }
+  } else {
+    // 点击了空白区域
+    // 例如: widget.onDeselectElement();
+  }
+}
 
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
@@ -1373,9 +1414,8 @@ class _MapCanvasState extends State<MapCanvas> {
 
     widget.onLayerUpdated(updatedLayer);
   }
-
   /// 获取调整大小控制柄的矩形区域
-  List<Rect> getResizeHandles(MapDrawingElement element) {
+  List<Rect> getResizeHandles(MapDrawingElement element, {double? handleSize}) {
     if (element.points.length < 2) return [];
 
     final size = const Size(kCanvasWidth, kCanvasHeight);
@@ -1389,36 +1429,34 @@ class _MapCanvasState extends State<MapCanvas> {
     );
     final rect = Rect.fromPoints(start, end);
 
-    const handleSize = 8.0;
-    final handles = <Rect>[];
-
-    // 四个角的控制柄
+    final effectiveHandleSize = handleSize ?? 8.0;
+    final handles = <Rect>[];    // 四个角的控制柄
     handles.add(
       Rect.fromCenter(
         center: rect.topLeft,
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: rect.topRight,
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: rect.bottomLeft,
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: rect.bottomRight,
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
 
@@ -1426,41 +1464,41 @@ class _MapCanvasState extends State<MapCanvas> {
     handles.add(
       Rect.fromCenter(
         center: Offset(rect.center.dx, rect.top),
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: Offset(rect.center.dx, rect.bottom),
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: Offset(rect.left, rect.center.dy),
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
     handles.add(
       Rect.fromCenter(
         center: Offset(rect.right, rect.center.dy),
-        width: handleSize,
-        height: handleSize,
+        width: effectiveHandleSize,
+        height: effectiveHandleSize,
       ),
     );
 
     return handles;
   }
-
   /// 检测点击位置命中哪个调整大小控制柄
   ResizeHandle? _getHitResizeHandle(
     Offset canvasPosition,
-    MapDrawingElement element,
-  ) {
-    final handles = getResizeHandles(element);
+    MapDrawingElement element, {
+    double? handleSize,
+  }) {
+    final handles = getResizeHandles(element, handleSize: handleSize);
 
     for (int i = 0; i < handles.length; i++) {
       if (handles[i].contains(canvasPosition)) {
@@ -1578,7 +1616,7 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 确保最小尺寸
-    const minSize = 10.0;
+    const minSize = 3.0;
     if (right - left < minSize) {
       if (handle == ResizeHandle.centerLeft ||
           handle == ResizeHandle.topLeft ||
@@ -1642,11 +1680,13 @@ class _LayerPainter extends CustomPainter {
   final MapLayer layer;
   final bool isEditMode;
   final String? selectedElementId;
+  final double? handleSize;
 
   _LayerPainter({
     required this.layer,
     required this.isEditMode,
     this.selectedElementId,
+    this.handleSize,
   });
 
   @override
@@ -1675,9 +1715,8 @@ class _LayerPainter extends CustomPainter {
       try {
         selectedElement = sortedElements.firstWhere(
           (e) => e.id == selectedElementId,
-        );
-        _drawRainbowHighlight(canvas, selectedElement, size);
-        _drawResizeHandles(canvas, selectedElement, size);
+        );        _drawRainbowHighlight(canvas, selectedElement, size);
+        _drawResizeHandles(canvas, selectedElement, size, handleSize: handleSize);
       } catch (e) {
         // 如果找不到元素，忽略绘制
       }
@@ -1847,11 +1886,12 @@ class _LayerPainter extends CustomPainter {
 void _drawResizeHandles(
   Canvas canvas,
   MapDrawingElement element,
-  Size size,
-) {
+  Size size, {
+  double? handleSize,
+}) {
   // 获取所有调整手柄的位置
   final utils = _MapCanvasState();
-  final handles = utils.getResizeHandles(element);
+  final handles = utils.getResizeHandles(element, handleSize: handleSize);
 
   if (handles.isEmpty) return;
 
@@ -1865,9 +1905,10 @@ void _drawResizeHandles(
     ..color = Colors.blue
     ..style = PaintingStyle.fill;
 
-  // 圆形半径（你可以根据实际调整这个数值）
-  const double radius = 2.0;
-  const double borderRadius = radius + 0.5;
+  // 使用动态大小计算圆形半径
+  final effectiveHandleSize = handleSize ?? 8.0;
+  final radius = effectiveHandleSize / 4.0; // 控制柄内圆半径为控制柄大小的1/4
+  final borderRadius = radius + 0.5;
 
   // 绘制每个控制柄为圆形
   for (final handle in handles) {

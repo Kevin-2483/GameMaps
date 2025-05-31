@@ -336,6 +336,9 @@ class ToolPreferences {
   /// 是否显示高级工具
   final bool showAdvancedTools;
 
+  /// 拖动控制柄大小
+  final double handleSize;
+
   const ToolPreferences({
     required this.recentColors,
     required this.customColors,
@@ -343,8 +346,8 @@ class ToolPreferences {
     required this.shortcuts,
     required this.toolbarLayout,
     this.showAdvancedTools = false,
-  });
-  factory ToolPreferences.createDefault() {
+    this.handleSize = 8.0,
+  });  factory ToolPreferences.createDefault() {
     return const ToolPreferences(
       recentColors: [
         0xFF000000, // 黑色
@@ -369,15 +372,16 @@ class ToolPreferences {
       },
       toolbarLayout: ['line', 'dashedLine', 'arrow', 'rectangle', 'hollowRectangle', 'diagonalLines', 'crossLines', 'dotGrid', 'freeDrawing', 'text', 'eraser'],
       showAdvancedTools: false,
+      handleSize: 8.0,
     );
-  }
-  ToolPreferences copyWith({
+  }  ToolPreferences copyWith({
     List<int>? recentColors,
     List<int>? customColors,
     List<double>? favoriteStrokeWidths,
     Map<String, String>? shortcuts,
     List<String>? toolbarLayout,
     bool? showAdvancedTools,
+    double? handleSize,
   }) {
     return ToolPreferences(
       recentColors: recentColors ?? this.recentColors,
@@ -386,6 +390,7 @@ class ToolPreferences {
       shortcuts: shortcuts ?? this.shortcuts,
       toolbarLayout: toolbarLayout ?? this.toolbarLayout,
       showAdvancedTools: showAdvancedTools ?? this.showAdvancedTools,
+      handleSize: handleSize ?? this.handleSize,
     );
   }
 

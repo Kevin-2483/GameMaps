@@ -135,6 +135,7 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .map((e) => e as String)
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
+      handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
     );
 
 Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
@@ -145,4 +146,5 @@ Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
       'shortcuts': instance.shortcuts,
       'toolbarLayout': instance.toolbarLayout,
       'showAdvancedTools': instance.showAdvancedTools,
+      'handleSize': instance.handleSize,
     };

@@ -252,6 +252,48 @@ class ToolSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // 拖动控制柄大小
+            Text(
+              '拖动控制柄大小',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              title: Text('控制柄大小'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('调整绘制元素控制柄的大小'),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text('4px'),
+                      Expanded(
+                        child: Slider(
+                          value: tools.handleSize.clamp(4.0, 32.0),
+                          min: 4.0,
+                          max: 32.0,
+                          divisions: 28,
+                          label: '${tools.handleSize.round()}px',
+                          onChanged: (value) =>
+                              provider.updateTools(handleSize: value),
+                        ),
+                      ),
+                      Text('32px'),
+                    ],
+                  ),
+                  Text(
+                    '当前: ${tools.handleSize.round()}px',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // 快捷键设置
             Text(
               '快捷键设置',
