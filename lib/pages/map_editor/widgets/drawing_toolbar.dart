@@ -308,6 +308,94 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     }
   }
 
+  // Helper methods for dynamic tool generation
+  DrawingElementType? _getDrawingElementType(String toolName) {
+    switch (toolName) {
+      case 'line':
+        return DrawingElementType.line;
+      case 'dashedLine':
+        return DrawingElementType.dashedLine;
+      case 'arrow':
+        return DrawingElementType.arrow;
+      case 'rectangle':
+        return DrawingElementType.rectangle;
+      case 'hollowRectangle':
+        return DrawingElementType.hollowRectangle;
+      case 'diagonalLines':
+        return DrawingElementType.diagonalLines;
+      case 'crossLines':
+        return DrawingElementType.crossLines;
+      case 'dotGrid':
+        return DrawingElementType.dotGrid;
+      case 'freeDrawing':
+        return DrawingElementType.freeDrawing;
+      case 'text':
+        return DrawingElementType.text;
+      case 'eraser':
+        return DrawingElementType.eraser;
+      default:
+        return null;
+    }
+  }
+
+  IconData _getToolIcon(String toolName) {
+    switch (toolName) {
+      case 'line':
+        return Icons.remove;
+      case 'dashedLine':
+        return Icons.more_horiz;
+      case 'arrow':
+        return Icons.arrow_forward;
+      case 'rectangle':
+        return Icons.rectangle;
+      case 'hollowRectangle':
+        return Icons.rectangle_outlined;
+      case 'diagonalLines':
+        return Icons.line_style;
+      case 'crossLines':
+        return Icons.grid_3x3;
+      case 'dotGrid':
+        return Icons.grid_on;
+      case 'freeDrawing':
+        return Icons.gesture;
+      case 'text':
+        return Icons.text_fields;
+      case 'eraser':
+        return Icons.cleaning_services;
+      default:
+        return Icons.build;
+    }
+  }
+
+  String _getToolTooltip(String toolName) {
+    switch (toolName) {
+      case 'line':
+        return '实线';
+      case 'dashedLine':
+        return '虚线';
+      case 'arrow':
+        return '箭头';
+      case 'rectangle':
+        return '实心矩形';
+      case 'hollowRectangle':
+        return '空心矩形';
+      case 'diagonalLines':
+        return '单斜线';
+      case 'crossLines':
+        return '交叉线';
+      case 'dotGrid':
+        return '点阵';
+      case 'freeDrawing':
+        return '像素笔';
+      case 'text':
+        return '文本框';
+      case 'eraser':
+        return '橡皮擦';
+      default:
+        return '工具';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
@@ -316,84 +404,30 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drawing tools
+        children: [          // Drawing tools
           const Text(
             '工具',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildToolButton(
-                context,
-                icon: Icons.remove,
-                tooltip: '实线',
-                tool: DrawingElementType.line,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.more_horiz,
-                tooltip: '虚线',
-                tool: DrawingElementType.dashedLine,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.arrow_forward,
-                tooltip: '箭头',
-                tool: DrawingElementType.arrow,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.rectangle,
-                tooltip: '实心矩形',
-                tool: DrawingElementType.rectangle,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.rectangle_outlined,
-                tooltip: '空心矩形',
-                tool: DrawingElementType.hollowRectangle,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.line_style,
-                tooltip: '单斜线',
-                tool: DrawingElementType.diagonalLines,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.grid_3x3,
-                tooltip: '交叉线',
-                tool: DrawingElementType.crossLines,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.grid_on,
-                tooltip: '点阵',
-                tool: DrawingElementType.dotGrid,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.gesture,
-                tooltip: '像素笔',
-                tool: DrawingElementType.freeDrawing,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.text_fields,
-                tooltip: '文本框',
-                tool: DrawingElementType.text,
-              ),
-              _buildToolButton(
-                context,
-                icon: Icons.cleaning_services,
-                tooltip: '橡皮擦',
-                tool: DrawingElementType.eraser,
-              ),
-            ],
+          Consumer<UserPreferencesProvider>(
+            builder: (context, userPrefs, child) {
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: userPrefs.tools.toolbarLayout.map((toolName) {
+                  final toolType = _getDrawingElementType(toolName);
+                  if (toolType == null) return const SizedBox.shrink();
+                  
+                  return _buildToolButton(
+                    context,
+                    icon: _getToolIcon(toolName),
+                    tooltip: _getToolTooltip(toolName),
+                    tool: toolType,
+                  );
+                }).toList(),
+              );
+            },
           ),
           const SizedBox(height: 16),
 

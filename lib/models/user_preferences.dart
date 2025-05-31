@@ -344,7 +344,7 @@ class ToolPreferences {
         'paste': 'Ctrl+V',
         'delete': 'Delete',
       },
-      toolbarLayout: ['pen', 'brush', 'line', 'rectangle', 'circle', 'text'],
+      toolbarLayout: ['line', 'dashedLine', 'arrow', 'rectangle', 'hollowRectangle', 'diagonalLines', 'crossLines', 'dotGrid', 'freeDrawing', 'text', 'eraser'],
       showAdvancedTools: false,
     );
   }

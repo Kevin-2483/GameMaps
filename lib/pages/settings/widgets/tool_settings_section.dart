@@ -440,7 +440,6 @@ class ToolSettingsSection extends StatelessWidget {
       },
     );
   }
-
   IconData _getToolIcon(String tool) {
     switch (tool) {
       case 'pen':
@@ -449,8 +448,22 @@ class ToolSettingsSection extends StatelessWidget {
         return Icons.brush;
       case 'line':
         return Icons.remove;
+      case 'dashedLine':
+        return Icons.more_horiz;
+      case 'arrow':
+        return Icons.arrow_forward;
       case 'rectangle':
-        return Icons.crop_square;
+        return Icons.rectangle;
+      case 'hollowRectangle':
+        return Icons.rectangle_outlined;
+      case 'diagonalLines':
+        return Icons.line_style;
+      case 'crossLines':
+        return Icons.grid_3x3;
+      case 'dotGrid':
+        return Icons.grid_on;
+      case 'freeDrawing':
+        return Icons.gesture;
       case 'circle':
         return Icons.circle_outlined;
       case 'text':
@@ -461,7 +474,6 @@ class ToolSettingsSection extends StatelessWidget {
         return Icons.build;
     }
   }
-
   String _getToolDisplayName(String tool) {
     switch (tool) {
       case 'pen':
@@ -470,8 +482,22 @@ class ToolSettingsSection extends StatelessWidget {
         return '画笔';
       case 'line':
         return '直线';
+      case 'dashedLine':
+        return '虚线';
+      case 'arrow':
+        return '箭头';
       case 'rectangle':
-        return '矩形';
+        return '实心矩形';
+      case 'hollowRectangle':
+        return '空心矩形';
+      case 'diagonalLines':
+        return '单斜线';
+      case 'crossLines':
+        return '交叉线';
+      case 'dotGrid':
+        return '点阵';
+      case 'freeDrawing':
+        return '像素笔';
       case 'circle':
         return '圆形';
       case 'text':
