@@ -29,6 +29,7 @@ class UserPreferences {
 
   /// 用户显示名称
   final String displayName;
+
   /// 用户头像URL或路径
   final String? avatarPath;
 
@@ -89,6 +90,7 @@ class UserPreferences {
       lastLoginAt: now,
     );
   }
+
   /// 更新用户偏好设置
   UserPreferences copyWith({
     String? userId,
@@ -347,7 +349,8 @@ class ToolPreferences {
     required this.toolbarLayout,
     this.showAdvancedTools = false,
     this.handleSize = 8.0,
-  });  factory ToolPreferences.createDefault() {
+  });
+  factory ToolPreferences.createDefault() {
     return const ToolPreferences(
       recentColors: [
         0xFF000000, // 黑色
@@ -370,11 +373,25 @@ class ToolPreferences {
         'paste': 'Ctrl+V',
         'delete': 'Delete',
       },
-      toolbarLayout: ['line', 'dashedLine', 'arrow', 'rectangle', 'hollowRectangle', 'diagonalLines', 'crossLines', 'dotGrid', 'freeDrawing', 'text', 'eraser', 'imageArea'],
+      toolbarLayout: [
+        'line',
+        'dashedLine',
+        'arrow',
+        'rectangle',
+        'hollowRectangle',
+        'diagonalLines',
+        'crossLines',
+        'dotGrid',
+        'freeDrawing',
+        'text',
+        'eraser',
+        'imageArea',
+      ],
       showAdvancedTools: false,
       handleSize: 8.0,
     );
-  }  ToolPreferences copyWith({
+  }
+  ToolPreferences copyWith({
     List<int>? recentColors,
     List<int>? customColors,
     List<double>? favoriteStrokeWidths,

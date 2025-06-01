@@ -788,8 +788,6 @@ class _LayerPanelState extends State<LayerPanel> {
     }
   }
 
-  
-
   /// 显示图片菜单
   void _showImageMenu(BuildContext context, MapLayer layer) {
     showModalBottomSheet<void>(

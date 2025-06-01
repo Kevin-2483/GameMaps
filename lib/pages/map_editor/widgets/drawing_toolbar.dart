@@ -7,7 +7,7 @@ import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
 
-  /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
+/// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
   final Color selectedColor;
@@ -39,14 +39,14 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
-  
+
   // 图片缓冲区相关回调
   final Uint8List? imageBufferData; // 当前缓冲区中的图片数据
   final BoxFit imageBufferFit; // 缓冲区图片的适应方式
   final Function(Uint8List imageData)? onImageBufferUpdated; // 缓冲区更新回调
   final Function(BoxFit fit)? onImageBufferFitChanged; // 图片适应方式改变回调
   final VoidCallback? onImageBufferCleared; // 清除缓冲区回调
-    const DrawingToolbarOptimized({
+  const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
@@ -698,7 +698,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 Text('${(_effectiveCurvature * 100).round()}%'),
               ],
             ),
-          ],          // Triangle cut control (for rectangular selections)
+          ], // Triangle cut control (for rectangular selections)
           if (_shouldShowTriangleCutControl()) ...[
             const SizedBox(height: 8),
             const Text(
@@ -1165,7 +1165,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           color: isSelected
               ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
               : Colors.transparent,
-        ),        child: Text(
+        ),
+        child: Text(
           '${width.round()}px',
           style: TextStyle(
             fontSize: 12,
@@ -1179,7 +1180,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     );
   }
 
-  /// 构建图片选区工具的专用控制面板  
+  /// 构建图片选区工具的专用控制面板
   Widget _buildImageAreaControls() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1215,7 +1216,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ],
               ),
               const SizedBox(height: 12),
-                // 缓冲区内容
+              // 缓冲区内容
               if (widget.imageBufferData != null)
                 // 显示已上传的图片
                 _buildImageBuffer()
@@ -1225,9 +1226,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: 12),
-          // 图片适应方式选择
+        // 图片适应方式选择
         if (widget.imageBufferData != null) ...[
           const Text(
             '图片适应方式',
@@ -1236,9 +1237,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           const SizedBox(height: 8),
           _buildBoxFitSelector(),
         ],
-        
+
         const SizedBox(height: 8),
-        
+
         // 使用说明
         Container(
           width: double.infinity,
@@ -1253,7 +1254,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '使用说明',
@@ -1308,7 +1313,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   /// 构建单个BoxFit按钮
   Widget _buildBoxFitButton(BoxFit fit) {
     final isSelected = _getSelectedImageFit() == fit;
-    
+
     return InkWell(
       onTap: () => _handleImageFitChange(fit),
       borderRadius: BorderRadius.circular(8),
@@ -1366,11 +1371,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     return BoxFit.contain;
   }
 
-  /// 处理图片适应方式改变  
+  /// 处理图片适应方式改变
   void _handleImageFitChange(BoxFit fit) {
     // 调用回调函数更新缓冲区图片适应方式
     widget.onImageBufferFitChanged?.call(fit);
-    
+
     // 显示更改提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -1424,7 +1429,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           ),
         ),
         const SizedBox(height: 12),
-        
+
         // 操作按钮
         Row(
           children: [
@@ -1442,7 +1447,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // 清空缓冲区按钮
             Expanded(
               child: OutlinedButton.icon(
@@ -1500,16 +1505,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               const SizedBox(height: 4),
               Text(
                 '支持 JPG、PNG、GIF 格式',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        
+
         // 上传按钮
         SizedBox(
           width: double.infinity,
@@ -1531,6 +1533,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       ],
     );
   }
+
   /// 处理图片上传
   Future<void> _handleImageUpload() async {
     try {
@@ -1539,12 +1542,14 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       if (imageData != null) {
         // 更新缓冲区
         widget.onImageBufferUpdated?.call(imageData);
-        
+
         // 显示成功消息
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('图片已上传到缓冲区 (${(imageData.length / 1024).toStringAsFixed(1)}KB)'),
+              content: Text(
+                '图片已上传到缓冲区 (${(imageData.length / 1024).toStringAsFixed(1)}KB)',
+              ),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),
@@ -1557,7 +1562,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('上传失败: $errorMessage'),
-            backgroundColor: Colors.red,            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }

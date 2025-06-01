@@ -34,7 +34,8 @@ class UserManagementSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                children: [                  CircleAvatar(
+                children: [
+                  CircleAvatar(
                     radius: 30,
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     backgroundImage: _getAvatarImage(),
@@ -156,7 +157,7 @@ class UserManagementSection extends StatelessWidget {
               subtitle: Text(preferences.displayName),
               trailing: Icon(Icons.edit),
               onTap: () => _changeDisplayName(context, provider),
-            ),            // 更改头像
+            ), // 更改头像
             ListTile(
               leading: Icon(Icons.photo),
               title: Text('头像'),
@@ -183,6 +184,7 @@ class UserManagementSection extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
+
   String _getLanguageDisplayName(String locale) {
     switch (locale) {
       case 'zh_CN':
@@ -198,7 +200,8 @@ class UserManagementSection extends StatelessWidget {
   ImageProvider? _getAvatarImage() {
     if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
       return MemoryImage(preferences.avatarData!);
-    } else if (preferences.avatarPath != null && preferences.avatarPath!.isNotEmpty) {
+    } else if (preferences.avatarPath != null &&
+        preferences.avatarPath!.isNotEmpty) {
       return NetworkImage(preferences.avatarPath!);
     }
     return null;
@@ -208,7 +211,8 @@ class UserManagementSection extends StatelessWidget {
   String _getAvatarDisplayText() {
     if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
       return '本地图片 (${(preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
-    } else if (preferences.avatarPath != null && preferences.avatarPath!.isNotEmpty) {
+    } else if (preferences.avatarPath != null &&
+        preferences.avatarPath!.isNotEmpty) {
       return preferences.avatarPath!;
     }
     return '未设置';
@@ -265,7 +269,9 @@ class UserManagementSection extends StatelessWidget {
         ],
       ),
     );
-  }  void _changeDisplayName(
+  }
+
+  void _changeDisplayName(
     BuildContext context,
     UserPreferencesProvider provider,
   ) {
@@ -277,6 +283,7 @@ class UserManagementSection extends StatelessWidget {
       ),
     );
   }
+
   void _changeAvatar(BuildContext context, UserPreferencesProvider provider) {
     showDialog(
       context: context,
@@ -301,7 +308,8 @@ class UserManagementSection extends StatelessWidget {
                 _uploadLocalImage(context, provider);
               },
             ),
-            if (preferences.avatarPath != null || preferences.avatarData != null)
+            if (preferences.avatarPath != null ||
+                preferences.avatarData != null)
               ListTile(
                 leading: Icon(Icons.clear, color: Colors.red),
                 title: Text('移除头像'),
@@ -315,7 +323,11 @@ class UserManagementSection extends StatelessWidget {
       ),
     );
   }
-  void _showUrlInputDialog(BuildContext context, UserPreferencesProvider provider) {
+
+  void _showUrlInputDialog(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => _AvatarUrlDialog(
@@ -325,7 +337,10 @@ class UserManagementSection extends StatelessWidget {
     );
   }
 
-  void _uploadLocalImage(BuildContext context, UserPreferencesProvider provider) async {
+  void _uploadLocalImage(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -335,7 +350,7 @@ class UserManagementSection extends StatelessWidget {
 
       if (result != null && result.files.single.bytes != null) {
         final imageData = result.files.single.bytes!;
-        
+
         // 检查文件大小（限制为5MB）
         if (imageData.length > 5 * 1024 * 1024) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -351,12 +366,9 @@ class UserManagementSection extends StatelessWidget {
           avatarData: imageData,
           avatarPath: null, // 清除URL路径
         );
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('头像已上传'),
-            backgroundColor: Colors.green,
-          ),
+          SnackBar(content: Text('头像已上传'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -369,7 +381,10 @@ class UserManagementSection extends StatelessWidget {
     }
   }
 
-  void _removeAvatar(BuildContext context, UserPreferencesProvider provider) async {
+  void _removeAvatar(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -394,15 +409,9 @@ class UserManagementSection extends StatelessWidget {
 
     if (confirmed == true) {
       try {
-        await provider.updateUserInfo(
-          avatarPath: null,
-          avatarData: null,
-        );
+        await provider.updateUserInfo(avatarPath: null, avatarData: null);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('头像已移除'),
-            backgroundColor: Colors.green,
-          ),
+          SnackBar(content: Text('头像已移除'), backgroundColor: Colors.green),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -414,6 +423,7 @@ class UserManagementSection extends StatelessWidget {
       }
     }
   }
+
   void _changeLanguage(BuildContext context, UserPreferencesProvider provider) {
     final List<Map<String, String>> languages = [
       {'code': 'zh_CN', 'name': '简体中文'},
@@ -423,7 +433,8 @@ class UserManagementSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('选择语言'),        content: Column(
+        title: Text('选择语言'),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: languages.map((language) {
             return RadioListTile<String>(
@@ -660,10 +671,7 @@ class _DisplayNameDialog extends StatefulWidget {
   final String currentName;
   final UserPreferencesProvider provider;
 
-  const _DisplayNameDialog({
-    required this.currentName,
-    required this.provider,
-  });
+  const _DisplayNameDialog({required this.currentName, required this.provider});
 
   @override
   State<_DisplayNameDialog> createState() => _DisplayNameDialogState();
@@ -728,7 +736,9 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
                   final newName = _nameController.text.trim();
                   if (newName != widget.currentName) {
                     try {
-                      await widget.provider.updateUserInfo(displayName: newName);
+                      await widget.provider.updateUserInfo(
+                        displayName: newName,
+                      );
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -747,7 +757,8 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
                   } else {
                     Navigator.of(context).pop();
                   }
-                }              : null,
+                }
+              : null,
           child: Text('保存'),
         ),
       ],
@@ -760,10 +771,7 @@ class _AvatarUrlDialog extends StatefulWidget {
   final String currentUrl;
   final UserPreferencesProvider provider;
 
-  const _AvatarUrlDialog({
-    required this.currentUrl,
-    required this.provider,
-  });
+  const _AvatarUrlDialog({required this.currentUrl, required this.provider});
 
   @override
   State<_AvatarUrlDialog> createState() => _AvatarUrlDialogState();
@@ -789,20 +797,21 @@ class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
     if (url.trim().isEmpty) {
       return null; // 允许空URL
     }
-    
+
     final uri = Uri.tryParse(url.trim());
     if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
       return '请输入有效的URL';
     }
-    
+
     final validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-    final hasValidExtension = validExtensions.any((ext) => 
-      url.toLowerCase().contains(ext));
-    
+    final hasValidExtension = validExtensions.any(
+      (ext) => url.toLowerCase().contains(ext),
+    );
+
     if (!hasValidExtension) {
       return '请输入图片URL（支持 jpg, png, gif 等格式）';
     }
-    
+
     return null;
   }
 

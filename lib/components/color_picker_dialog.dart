@@ -2,21 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// 颜色选择操作类型
-enum ColorPickerAction {
-  directUse,
-  addToCustom,
-  cancel,
-}
+enum ColorPickerAction { directUse, addToCustom, cancel }
 
 /// 颜色选择结果
 class ColorPickerResult {
   final Color color;
   final ColorPickerAction action;
 
-  const ColorPickerResult({
-    required this.color,
-    required this.action,
-  });
+  const ColorPickerResult({required this.color, required this.action});
 }
 
 /// 高级颜色选择器对话框，支持RGB轮盘和透明度滑条
@@ -322,9 +315,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               ],
             ),
           ),
-          
+
           const SizedBox(width: 20),
-          
+
           // 右列：滑条和预览
           Expanded(
             child: Column(
@@ -363,7 +356,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 ],
 
                 const SizedBox(height: 20),
-                
+
                 // 当前颜色预览
                 _buildColorPreview(),
 
@@ -428,7 +421,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           ],
 
           const SizedBox(height: 20),
-          
+
           // 当前颜色预览
           _buildColorPreview(),
 
@@ -501,8 +494,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
         _buildColorValue('R', _currentColor.red),
         _buildColorValue('G', _currentColor.green),
         _buildColorValue('B', _currentColor.blue),
-        if (widget.enableAlpha)
-          _buildColorValue('A', _currentColor.alpha),
+        if (widget.enableAlpha) _buildColorValue('A', _currentColor.alpha),
       ],
     );
   }

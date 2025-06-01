@@ -17,7 +17,6 @@ import 'components/web/web_context_menu_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-
   // Initialize database factory (based on platform)
   if (kIsWeb) {
     // Web platform uses ffi_web

@@ -175,6 +175,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新界面布局设置失败: ${e.toString()}');
     }
   }
+
   /// 更新工具设置
   Future<void> updateTools({
     List<int>? recentColors,
@@ -205,6 +206,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新工具设置失败: ${e.toString()}');
     }
   }
+
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,
@@ -260,7 +262,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
       if (kDebugMode) {
-        print('自定义颜色添加成功，当前自定义颜色数量: ${_currentPreferences!.tools.customColors.length}');
+        print(
+          '自定义颜色添加成功，当前自定义颜色数量: ${_currentPreferences!.tools.customColors.length}',
+        );
       }
     } catch (e) {
       _setError('添加自定义颜色失败: ${e.toString()}');

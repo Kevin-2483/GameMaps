@@ -64,10 +64,7 @@ class MapDrawingElementExample {
       throw ArgumentError('元素类型必须是 imageArea');
     }
 
-    return element.copyWith(
-      imageData: newImageData,
-      imageFit: newImageFit,
-    );
+    return element.copyWith(imageData: newImageData, imageFit: newImageFit);
   }
 
   /// 清除图片选区的图片数据

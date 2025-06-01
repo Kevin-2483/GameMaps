@@ -158,7 +158,7 @@ class ToolSettingsSection extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16),            // 常用线条宽度
+            const SizedBox(height: 16), // 常用线条宽度
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -170,10 +170,7 @@ class ToolSettingsSection extends StatelessWidget {
                 ),
                 Text(
                   '${tools.favoriteStrokeWidths.length}/5',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -393,9 +390,10 @@ class ToolSettingsSection extends StatelessWidget {
     newWidths.removeAt(index);
     provider.updateTools(favoriteStrokeWidths: newWidths);
   }
+
   void _addStrokeWidth(BuildContext context, UserPreferencesProvider provider) {
     final currentWidths = preferences.tools.favoriteStrokeWidths;
-    
+
     // 检查是否已达到最大数量限制
     if (currentWidths.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -406,7 +404,7 @@ class ToolSettingsSection extends StatelessWidget {
       );
       return;
     }
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -421,10 +419,7 @@ class ToolSettingsSection extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   '当前数量: ${currentWidths.length}/5',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
                 Slider(
@@ -459,7 +454,7 @@ class ToolSettingsSection extends StatelessWidget {
                   newWidths.sort();
                   provider.updateTools(favoriteStrokeWidths: newWidths);
                   Navigator.of(context).pop();
-                  
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('已添加线条宽度 ${newWidth.round()}px'),
@@ -482,6 +477,7 @@ class ToolSettingsSection extends StatelessWidget {
       },
     );
   }
+
   IconData _getToolIcon(String tool) {
     switch (tool) {
       case 'pen':
@@ -518,6 +514,7 @@ class ToolSettingsSection extends StatelessWidget {
         return Icons.build;
     }
   }
+
   String _getToolDisplayName(String tool) {
     switch (tool) {
       case 'pen':

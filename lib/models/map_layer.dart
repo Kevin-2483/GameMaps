@@ -108,7 +108,7 @@ class MapDrawingElement {
   final double curvature; // 弧度值，0.0=矩形，~0.5=椭圆，~1.0=凹角形状
   final TriangleCutType triangleCut; // 三角形切割类型
   final int zIndex; // 绘制顺序，数值越大越在上层
- final String? text; // 文本内容（用于文本框）
+  final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
   @Uint8ListConverter()
   final Uint8List? imageData; // 图片二进制数据（用于图片选区）

@@ -177,7 +177,8 @@ class ZIndexInspector extends StatelessWidget {
       case DrawingElementType.freeDrawing:
         return Icons.gesture;
       case DrawingElementType.text:
-        return Icons.text_fields;      case DrawingElementType.eraser:
+        return Icons.text_fields;
+      case DrawingElementType.eraser:
         return Icons.cleaning_services;
       case DrawingElementType.imageArea:
         return Icons.photo_size_select_actual;
@@ -206,7 +207,8 @@ class ZIndexInspector extends StatelessWidget {
       case DrawingElementType.freeDrawing:
         return '像素笔';
       case DrawingElementType.text:
-        return '文本';      case DrawingElementType.eraser:
+        return '文本';
+      case DrawingElementType.eraser:
         return '橡皮擦';
       case DrawingElementType.imageArea:
         return '图片选区';

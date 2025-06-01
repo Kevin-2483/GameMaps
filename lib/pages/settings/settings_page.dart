@@ -60,7 +60,8 @@ class _SettingsPageContent extends StatelessWidget {
                 context,
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),            _buildUserPreferencesSection(context, l10n),
+            const SizedBox(height: 24),
+            _buildUserPreferencesSection(context, l10n),
             const SizedBox(height: 16),
             _buildResourceSection(context, l10n),
           ],
@@ -94,7 +95,8 @@ class _SettingsPageContent extends StatelessWidget {
           ],
         ),
       ),
-    );  }
+    );
+  }
 
   Widget _buildResourceSection(BuildContext context, AppLocalizations l10n) {
     return Card(

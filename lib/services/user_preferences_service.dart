@@ -164,6 +164,7 @@ class UserPreferencesService {
     final current = await getCurrentPreferences();
     await savePreferences(current.copyWith(tools: tools));
   }
+
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,
@@ -181,6 +182,7 @@ class UserPreferencesService {
       ),
     );
   }
+
   /// 添加最近使用的颜色
   Future<void> addRecentColor(int color) async {
     final current = await getCurrentPreferences();
@@ -218,16 +220,18 @@ class UserPreferencesService {
 
     final updatedTools = current.tools.copyWith(customColors: customColors);
     await updateTools(updatedTools);
-    
+
     if (kDebugMode) {
       print('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
     }
   }
-  
+
   /// 添加常用线条宽度
   Future<void> addFavoriteStrokeWidth(double strokeWidth) async {
     final current = await getCurrentPreferences();
-    final favoriteStrokeWidths = List<double>.from(current.tools.favoriteStrokeWidths);
+    final favoriteStrokeWidths = List<double>.from(
+      current.tools.favoriteStrokeWidths,
+    );
 
     // 移除已存在的宽度
     favoriteStrokeWidths.remove(strokeWidth);
@@ -238,9 +242,11 @@ class UserPreferencesService {
       favoriteStrokeWidths.removeRange(5, favoriteStrokeWidths.length);
     }
 
-    final updatedTools = current.tools.copyWith(favoriteStrokeWidths: favoriteStrokeWidths);
+    final updatedTools = current.tools.copyWith(
+      favoriteStrokeWidths: favoriteStrokeWidths,
+    );
     await updateTools(updatedTools);
-    
+
     if (kDebugMode) {
       print('常用线条宽度已添加: ${strokeWidth}px');
     }

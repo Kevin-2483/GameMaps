@@ -363,6 +363,7 @@ class _MapCanvasState extends State<MapCanvas> {
       _preloadAllLayerImages();
     }
   }
+
   /// 预加载图层中的图片元素
   Future<void> _preloadLayerImages() async {
     if (widget.selectedLayer == null) return;
@@ -1465,7 +1466,8 @@ class _MapCanvasState extends State<MapCanvas> {
       _handleEraserAction(normalizedStart, normalizedEnd);
     } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _handleFreeDrawingEnd();
-    } else {      // 计算新元素的 z 值（比当前最大 z 值大 1）
+    } else {
+      // 计算新元素的 z 值（比当前最大 z 值大 1）
       final maxZIndex = widget.selectedLayer!.elements.isEmpty
           ? 0
           : widget.selectedLayer!.elements

@@ -49,6 +49,7 @@ class _LegendGroupManagementDrawerState
       _checkSmartHiding();
     });
   }
+
   @override
   void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -69,7 +70,8 @@ class _LegendGroupManagementDrawerState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         clearIncompatibleLegendSelection();
       });
-    }    if (oldWidget.allLayers != widget.allLayers) {
+    }
+    if (oldWidget.allLayers != widget.allLayers) {
       // 延迟执行检查，避免在build期间调用setState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkSmartHiding();
@@ -89,9 +91,10 @@ class _LegendGroupManagementDrawerState
       // 如果外部选择了新元素，且该元素是图例项，同步选择
       else if (widget.selectedElementId != null) {
         // 检查选中的元素是否是当前图例组中的图例项
-        final isLegendItemInCurrentGroup = _currentGroup.legendItems
-            .any((item) => item.id == widget.selectedElementId);
-        
+        final isLegendItemInCurrentGroup = _currentGroup.legendItems.any(
+          (item) => item.id == widget.selectedElementId,
+        );
+
         if (isLegendItemInCurrentGroup) {
           setState(() {
             _selectedLegendItemId = widget.selectedElementId;
@@ -100,6 +103,7 @@ class _LegendGroupManagementDrawerState
       }
     }
   }
+
   /// 外部调用：当图层状态发生变化时，检查智能隐藏逻辑
   void checkSmartHidingOnLayerChange() {
     // 延迟执行检查，确保不会在build期间调用
@@ -112,7 +116,7 @@ class _LegendGroupManagementDrawerState
   void clearIncompatibleLegendSelection() {
     // 如果没有选中的图例项，直接返回
     if (_selectedLegendItemId == null) return;
-    
+
     // 检查当前选择是否仍然有效
     if (!_canSelectLegendItem()) {
       setState(() {
@@ -127,6 +131,7 @@ class _LegendGroupManagementDrawerState
   bool _isLegendItemSelected(LegendItem item) {
     return _selectedLegendItemId == item.id;
   }
+
   // 选中图例项
   void _selectLegendItem(LegendItem item) {
     // 在选中前检查是否满足条件
@@ -134,13 +139,14 @@ class _LegendGroupManagementDrawerState
       _showSelectionNotAllowedDialog();
       return;
     }
-    
+
     setState(() {
       _selectedLegendItemId = _selectedLegendItemId == item.id ? null : item.id;
     });
     // 通知父组件选中状态变化，用于高亮显示地图上的图例项
     widget.onLegendItemSelected?.call(_selectedLegendItemId ?? '');
   }
+
   /// 检查是否可以选择图例项
   /// 条件：
   /// 1. 图例组必须可见
@@ -150,36 +156,36 @@ class _LegendGroupManagementDrawerState
     if (!_currentGroup.isVisible) {
       return false;
     }
-    
+
     // 如果没有提供图层信息，允许选择（兼容性）
     if (widget.allLayers == null || widget.allLayers!.isEmpty) {
       return true;
     }
-    
+
     // 检查是否有绑定的图层被选中
     final boundLayers = _getBoundLayers();
     if (boundLayers.isEmpty) {
       return true; // 如果没有绑定图层，允许选择
     }
-    
+
     // 检查绑定的图层中是否有被选中的
     if (widget.selectedLayer == null) {
       return false; // 没有选中任何图层
     }
-    
+
     return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
   }
 
   /// 显示不允许选择的提示对话框
   void _showSelectionNotAllowedDialog() {
     String message = '';
-    
+
     if (!_currentGroup.isVisible) {
       message = '无法选择图例：图例组当前不可见，请先显示图例组';
     } else {
       message = '无法选择图例：请先选择一个绑定了此图例组的图层';
     }
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

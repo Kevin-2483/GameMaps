@@ -190,7 +190,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _addDefaultLayer();
       } else {
         _selectedLayer = _currentMap!.layers.first;
-      }      // 保存初始状态到撤销历史
+      } // 保存初始状态到撤销历史
       _saveToUndoHistory();
 
       // 预加载所有图层的图片
@@ -2205,7 +2205,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
       return const Center(child: CircularProgressIndicator());
-    }    return Consumer<UserPreferencesProvider>(
+    }
+    return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 创建用于显示的地图副本，使用重新排序的图层
         return MapCanvas(
