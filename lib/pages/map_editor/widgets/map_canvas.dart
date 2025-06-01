@@ -262,30 +262,25 @@ class MapCanvas extends StatefulWidget {
   final Color selectedColor;
   final double selectedStrokeWidth;
   final double selectedDensity;
-  final double selectedCurvature; // 弧度值
+  final double selectedCurvature;
   final List<legend_db.LegendItem> availableLegends;
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
-  final Function(String)? onLegendItemSelected; // 图例项选中回调
-  final Function(LegendItem)? onLegendItemDoubleClicked; // 图例项双击回调
-  final Map<String, double> previewOpacityValues; // 绘制工具预览状态
+  final Function(String) onLegendItemSelected;
+  final Function(LegendItem) onLegendItemDoubleClicked;
+  final Map<String, double> previewOpacityValues;
   final DrawingElementType? previewDrawingTool;
   final Color? previewColor;
   final double? previewStrokeWidth;
   final double? previewDensity;
-  final double? previewCurvature; // 弧度预览状态
-  final TriangleCutType? previewTriangleCut; // 三角形切割预览状态
-
-  // 选中元素高亮
+  final double? previewCurvature;
+  final TriangleCutType? previewTriangleCut;
   final String? selectedElementId;
-  // 元素选中回调
-  final Function(String? elementId)? onElementSelected;
-  // 背景图案设置
+  final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
-
-  // 缩放敏感度
   final double zoomSensitivity;
+
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -299,9 +294,9 @@ class MapCanvas extends StatefulWidget {
     required this.isPreviewMode,
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
-    this.onLegendItemSelected,
-    this.onLegendItemDoubleClicked,
-    this.previewOpacityValues = const {},
+    required this.onLegendItemSelected,
+    required this.onLegendItemDoubleClicked,
+    required this.previewOpacityValues,
     this.previewDrawingTool,
     this.previewColor,
     this.previewStrokeWidth,
@@ -309,9 +304,9 @@ class MapCanvas extends StatefulWidget {
     this.previewCurvature,
     this.previewTriangleCut,
     this.selectedElementId,
-    this.onElementSelected,
-    this.backgroundPattern = BackgroundPattern.checkerboard,
-    this.zoomSensitivity = 1.0,
+    required this.onElementSelected,
+    required this.backgroundPattern,
+    required this.zoomSensitivity,
   });
 
   @override
@@ -1507,78 +1502,81 @@ class _MapCanvasState extends State<MapCanvas> {
     widget.onLayerUpdated(updatedLayer);
   }
 
-  /// 构建按层级排序的所有元素
-  List<Widget> _buildLayeredElements() {
-    final List<_LayeredElement> allElements = [];
+/// 构建按层级排序的所有元素
+List<Widget> _buildLayeredElements() {
+  final List<_LayeredElement> allElements = [];
 
-    // 收集所有图层及其元素
-    for (final layer in widget.mapItem.layers) {
-      if (!layer.isVisible) continue;
+  // **关键修改：使用 mapItem.layers 的顺序，而不是基于 order 字段重新排序**
+  // 收集所有图层及其元素（按照 mapItem.layers 中的顺序）
+  for (int layerIndex = 0; layerIndex < widget.mapItem.layers.length; layerIndex++) {
+    final layer = widget.mapItem.layers[layerIndex];
+    if (!layer.isVisible) continue;
 
-      final isSelectedLayer = widget.selectedLayer?.id == layer.id;
+    final isSelectedLayer = widget.selectedLayer?.id == layer.id;
 
-      // 添加图层图片（如果有）
-      if (layer.imageData != null) {
-        allElements.add(
-          _LayeredElement(
-            order: layer.order,
-            isSelected: isSelectedLayer,
-            widget: _buildLayerImageWidget(layer),
-          ),
-        );
-      }
-
-      // 添加图层绘制元素
+    // 添加图层图片（如果有）
+    if (layer.imageData != null) {
       allElements.add(
         _LayeredElement(
-          order: layer.order,
+          order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
           isSelected: isSelectedLayer,
-          widget: _buildLayerWidget(layer),
+          widget: _buildLayerImageWidget(layer),
         ),
       );
     }
 
-    // 收集所有图例组
-    for (final legendGroup in widget.mapItem.legendGroups) {
-      if (!legendGroup.isVisible) continue;
+    // 添加图层绘制元素
+    allElements.add(
+      _LayeredElement(
+        order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
+        isSelected: isSelectedLayer,
+        widget: _buildLayerWidget(layer),
+      ),
+    );
+  }
 
-      // 计算图例组的层级（基于绑定的最高图层order）
-      int legendOrder = -1;
-      bool isLegendSelected = false;
+  // 收集所有图例组
+  for (final legendGroup in widget.mapItem.legendGroups) {
+    if (!legendGroup.isVisible) continue;
 
-      for (final layer in widget.mapItem.layers) {
-        if (layer.legendGroupIds.contains(legendGroup.id)) {
-          legendOrder = math.max(legendOrder, layer.order);
-          // 如果任何绑定的图层被选中，图例也被认为是选中的
-          if (widget.selectedLayer?.id == layer.id) {
-            isLegendSelected = true;
-          }
+    // 计算图例组的层级（基于绑定的最高图层在 mapItem.layers 中的位置）
+    int legendOrder = -1;
+    bool isLegendSelected = false;
+
+    for (int layerIndex = 0; layerIndex < widget.mapItem.layers.length; layerIndex++) {
+      final layer = widget.mapItem.layers[layerIndex];
+      if (layer.legendGroupIds.contains(legendGroup.id)) {
+        legendOrder = math.max(legendOrder, layerIndex); // 使用图层在列表中的位置
+        // 如果任何绑定的图层被选中，图例也被认为是选中的
+        if (widget.selectedLayer?.id == layer.id) {
+          isLegendSelected = true;
         }
       }
-
-      // 如果图例组没有绑定到任何图层，使用默认order
-      if (legendOrder == -1) {
-        legendOrder = 0;
-      }
-
-      allElements.add(
-        _LayeredElement(
-          order: legendOrder,
-          isSelected: isLegendSelected,
-          widget: _buildLegendWidget(legendGroup),
-        ),
-      );
     }
 
-    // 按order排序，选中的元素排在最后（显示在最上层）
-    allElements.sort((a, b) {
-      if (a.isSelected && !b.isSelected) return 1;
-      if (!a.isSelected && b.isSelected) return -1;
-      return a.order.compareTo(b.order);
-    });
+    // 如果图例组没有绑定到任何图层，使用默认order
+    if (legendOrder == -1) {
+      legendOrder = 0;
+    }
 
-    return allElements.map((e) => e.widget).toList();
+    allElements.add(
+      _LayeredElement(
+        order: legendOrder,
+        isSelected: isLegendSelected,
+        widget: _buildLegendWidget(legendGroup),
+      ),
+    );
   }
+
+  // 按order排序，选中的元素排在最后（显示在最上层）
+  allElements.sort((a, b) {
+    if (a.isSelected && !b.isSelected) return 1;
+    if (!a.isSelected && b.isSelected) return -1;
+    return a.order.compareTo(b.order);
+  });
+
+  return allElements.map((e) => e.widget).toList();
+}
 
   // 绘画元素选择和操作相关方法
 

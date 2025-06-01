@@ -71,6 +71,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
   MapLayer? _selectedLayer;
+  List<MapLayer>? _selectedLayerGroup; // 修正：添加下划线前缀
+  List<MapLayer> _displayOrderLayers = [];
   DrawingElementType? _selectedDrawingTool;
   Color _selectedColor = Colors.black;
   double _selectedStrokeWidth = 2.0;
@@ -357,6 +359,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         layers: [..._currentMap!.layers, newLayer],
       );
       _selectedLayer = newLayer;
+
+      // 更新显示顺序
+      _updateDisplayOrderAfterLayerChange();
     });
   }
 
@@ -378,9 +383,127 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       if (_selectedLayer?.id == layer.id) {
         _selectedLayer = updatedLayers.isNotEmpty ? updatedLayers.first : null;
       }
+
+      // 如果删除的图层在选中的组中，更新组选择
+      if (_selectedLayerGroup != null) {
+        final updatedGroup = _selectedLayerGroup!
+            .where((l) => l.id != layer.id)
+            .toList();
+
+        if (updatedGroup.isEmpty) {
+          // 如果组内所有图层都被删除，清除组选择
+          _selectedLayerGroup = null;
+          _restoreNormalLayerOrder();
+        } else {
+          // 更新组选择
+          _selectedLayerGroup = updatedGroup;
+          _prioritizeLayerGroup(updatedGroup);
+        }
+      } else {
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      }
     });
   }
 
+  void _onLayerGroupSelected(List<MapLayer> group) {
+    setState(() {
+      _selectedLayer = null; // 清除单图层选择
+      _selectedLayerGroup = group; // 设置组选择
+    });
+
+    // 禁用绘制工具
+    _disableDrawingTools();
+
+    // 触发优先显示逻辑
+    _prioritizeLayerGroup(group);
+  }
+
+  void _onSelectionCleared() {
+    setState(() {
+      _selectedLayer = null;
+      _selectedLayerGroup = null;
+    });
+
+    // 重新启用绘制工具
+    _enableDrawingTools();
+
+    // 恢复正常绘制顺序
+    _restoreNormalLayerOrder();
+  }
+
+  void _prioritizeLayerGroup(List<MapLayer> group) {
+    print('优先显示图层组: ${group.map((l) => l.name).toList()}');
+
+    if (_currentMap == null) return;
+
+    setState(() {
+      // 将选中的图层组移到显示列表的最前面（最后绘制，显示在最上层）
+      final allLayers = List<MapLayer>.from(_currentMap!.layers);
+      final nonGroupLayers = <MapLayer>[];
+      final groupLayers = <MapLayer>[];
+
+      // 分离组内图层和其他图层
+      for (final layer in allLayers) {
+        if (group.any((groupLayer) => groupLayer.id == layer.id)) {
+          groupLayers.add(layer);
+        } else {
+          nonGroupLayers.add(layer);
+        }
+      }
+
+      // 按原有顺序排列组内图层（保持组内相对顺序）
+      groupLayers.sort((a, b) => a.order.compareTo(b.order));
+
+      // 重新组织显示顺序：非组图层在前，组图层在后（后绘制的显示在上层）
+      _displayOrderLayers = [...nonGroupLayers, ...groupLayers];
+
+      print(
+        '重新排列后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+      );
+    });
+  }
+
+  void _restoreNormalLayerOrder() {
+    print('恢复正常图层绘制顺序');
+
+    if (_currentMap == null) return;
+
+    setState(() {
+      // 按原始order顺序排列
+      _displayOrderLayers = List<MapLayer>.from(_currentMap!.layers)
+        ..sort((a, b) => a.order.compareTo(b.order));
+
+      print(
+        '恢复后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+      );
+    });
+  }
+
+  void _disableDrawingTools() {
+    // 禁用绘制工具的逻辑
+    setState(() {
+      _selectedDrawingTool = null; // 清除选中的绘制工具
+    });
+    print('绘制工具已禁用');
+  }
+
+  void _enableDrawingTools() {
+    // 重新启用绘制工具的逻辑
+    print('绘制工具已启用');
+    // 这里可以添加重新启用绘制工具的逻辑
+  }
+
+  List<MapLayer> get _layersForDisplay {
+    if (_displayOrderLayers.isEmpty && _currentMap != null) {
+      // 如果显示顺序列表为空，初始化为正常顺序
+      _displayOrderLayers = List<MapLayer>.from(_currentMap!.layers)
+        ..sort((a, b) => a.order.compareTo(b.order));
+    }
+    return _displayOrderLayers;
+  }
+
+  // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -399,6 +522,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         if (_selectedLayer?.id == updatedLayer.id) {
           _selectedLayer = updatedLayer;
         }
+
+        // 同步更新显示顺序列表
+        _updateDisplayOrderAfterLayerChange();
       }
     });
   }
@@ -465,6 +591,74 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           (layer) => layer.id == selectedLayerId,
           orElse: () => _selectedLayer!,
         );
+      }
+
+      // 如果有选中的图层组，更新组选择并重新应用优先显示
+      if (_selectedLayerGroup != null) {
+        final updatedGroup = <MapLayer>[];
+        for (final groupLayer in _selectedLayerGroup!) {
+          final updatedLayer = layers.firstWhere(
+            (layer) => layer.id == groupLayer.id,
+            orElse: () => groupLayer,
+          );
+          updatedGroup.add(updatedLayer);
+        }
+        _selectedLayerGroup = updatedGroup;
+        _prioritizeLayerGroup(updatedGroup);
+      } else {
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      }
+    });
+  }
+
+  /// 在图层变更后更新显示顺序
+  void _updateDisplayOrderAfterLayerChange() {
+    if (_currentMap == null) return;
+
+    if (_selectedLayerGroup != null) {
+      // 如果有选中的组，重新应用优先显示
+      _prioritizeLayerGroup(_selectedLayerGroup!);
+    } else {
+      // 否则恢复正常顺序
+      _restoreNormalLayerOrder();
+    }
+  }
+
+  /// 批量更新图层
+  void _updateLayersBatch(List<MapLayer> updatedLayers) {
+    if (widget.isPreviewMode || _currentMap == null) return;
+
+    // 在修改前保存当前状态
+    _saveToUndoHistory();
+
+    setState(() {
+      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+
+      // 如果当前选中的图层也被更新了，同步更新选中图层的引用
+      if (_selectedLayer != null) {
+        final updatedSelectedLayer = updatedLayers.firstWhere(
+          (layer) => layer.id == _selectedLayer!.id,
+          orElse: () => _selectedLayer!,
+        );
+        _selectedLayer = updatedSelectedLayer;
+      }
+
+      // 如果有选中的图层组，更新组选择
+      if (_selectedLayerGroup != null) {
+        final updatedGroup = <MapLayer>[];
+        for (final groupLayer in _selectedLayerGroup!) {
+          final updatedLayer = updatedLayers.firstWhere(
+            (layer) => layer.id == groupLayer.id,
+            orElse: () => groupLayer,
+          );
+          updatedGroup.add(updatedLayer);
+        }
+        _selectedLayerGroup = updatedGroup;
+        _prioritizeLayerGroup(updatedGroup);
+      } else {
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
       }
     });
   }
@@ -1568,6 +1762,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             ? null
             : LayerPanel(
                 layers: _currentMap?.layers ?? [],
+                selectedLayerGroup: _selectedLayerGroup,
+                onLayerGroupSelected: _onLayerGroupSelected,
+                onSelectionCleared: _onSelectionCleared,
                 selectedLayer: _selectedLayer,
                 isPreviewMode: widget.isPreviewMode,
                 onLayerSelected: (layer) {
@@ -1939,8 +2136,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         final mapEditorPrefs = userPrefsProvider.mapEditor;
+
+        // 创建用于显示的地图副本，使用重新排序的图层
+        final displayMap = _currentMap!.copyWith(layers: _layersForDisplay);
+
         return MapCanvas(
-          mapItem: _currentMap!,
+          mapItem: displayMap, // 使用重新排序的地图
           selectedLayer: _selectedLayer,
           selectedDrawingTool: _selectedDrawingTool,
           selectedColor: _selectedColor,
@@ -1969,26 +2170,5 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         );
       },
     );
-  }
-
-  /// 批量更新图层
-  void _updateLayersBatch(List<MapLayer> updatedLayers) {
-    if (widget.isPreviewMode || _currentMap == null) return;
-
-    // 在修改前保存当前状态
-    _saveToUndoHistory();
-
-    setState(() {
-      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
-
-      // 如果当前选中的图层也被更新了，同步更新选中图层的引用
-      if (_selectedLayer != null) {
-        final updatedSelectedLayer = updatedLayers.firstWhere(
-          (layer) => layer.id == _selectedLayer!.id,
-          orElse: () => _selectedLayer!,
-        );
-        _selectedLayer = updatedSelectedLayer;
-      }
-    });
   }
 }

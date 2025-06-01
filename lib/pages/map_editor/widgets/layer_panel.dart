@@ -6,8 +6,11 @@ import 'dart:async';
 class LayerPanel extends StatefulWidget {
   final List<MapLayer> layers;
   final MapLayer? selectedLayer;
+  final List<MapLayer>? selectedLayerGroup; // 新增：选中的图层组
   final bool isPreviewMode;
   final Function(MapLayer) onLayerSelected;
+  final Function(List<MapLayer>) onLayerGroupSelected; // 新增：图层组选择回调
+  final Function() onSelectionCleared; // 新增：清除选择回调
   final Function(MapLayer) onLayerUpdated;
   final Function(MapLayer) onLayerDeleted;
   final VoidCallback onLayerAdded;
@@ -27,8 +30,11 @@ class LayerPanel extends StatefulWidget {
     super.key,
     required this.layers,
     this.selectedLayer,
+    this.selectedLayerGroup, // 新增
     required this.isPreviewMode,
     required this.onLayerSelected,
+    required this.onLayerGroupSelected, // 新增
+    required this.onSelectionCleared, // 新增
     required this.onLayerUpdated,
     required this.onLayerDeleted,
     required this.onLayerAdded,
@@ -145,6 +151,7 @@ class _LayerPanelState extends State<LayerPanel> {
     int groupIndex,
   ) {
     final isMultiLayer = group.length > 1;
+    final isGroupSelected = _isGroupSelected(group); // 新增：检查组是否被选中
 
     // 为组生成唯一ID用于折叠状态管理
     final groupId = 'group_${group.first.id}';
@@ -155,14 +162,31 @@ class _LayerPanelState extends State<LayerPanel> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: isGroupSelected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey.shade300,
+          width: isGroupSelected ? 2 : 1, // 选中时边框加粗
+        ),
+        // 新增：选中时的背景色
+        color: isGroupSelected
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withAlpha((0.1 * 255).toInt())
+            : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 多图层组的拖动手柄和折叠头部
           if (isMultiLayer && !widget.isPreviewMode)
-            _buildGroupHeader(groupIndex, group, isCollapsed, groupId),
+            _buildGroupHeader(
+              groupIndex,
+              group,
+              isCollapsed,
+              groupId,
+              isGroupSelected,
+            ),
 
           // 图层列表（可折叠）
           if (isMultiLayer)
@@ -175,97 +199,154 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
+  /// 检查图层组是否被选中
+  bool _isGroupSelected(List<MapLayer> group) {
+    if (widget.selectedLayerGroup == null ||
+        widget.selectedLayerGroup!.isEmpty) {
+      return false;
+    }
+
+    // 检查组的大小和所有图层ID是否匹配
+    if (group.length != widget.selectedLayerGroup!.length) {
+      return false;
+    }
+
+    final groupIds = group.map((l) => l.id).toSet();
+    final selectedIds = widget.selectedLayerGroup!.map((l) => l.id).toSet();
+
+    return groupIds.difference(selectedIds).isEmpty &&
+        selectedIds.difference(groupIds).isEmpty;
+  }
+
   /// 构建组头部（包含拖动手柄、折叠按钮和组信息）
   Widget _buildGroupHeader(
     int groupIndex,
     List<MapLayer> group,
     bool isCollapsed,
     String groupId,
+    bool isGroupSelected, // 新增参数
   ) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isGroupSelected
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
+            : Colors.grey.shade50,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
-      child: ReorderableDragStartListener(
-        index: groupIndex,
-        child: InkWell(
-          onTap: () => _toggleGroupCollapse(groupId),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(8),
-            topRight: Radius.circular(8),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                // 拖动手柄
-                Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-
-                // 折叠/展开图标
-                Icon(
-                  isCollapsed
-                      ? Icons.keyboard_arrow_right
-                      : Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: Colors.grey.shade700,
-                ),
-                const SizedBox(width: 8),
-
-                // 组信息
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '图层组 (${group.length} 个图层)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        group.map((l) => l.name).join(', '),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 组可见性切换按钮 - 折叠和展开时都显示
-                IconButton(
-                  icon: Icon(
-                    _isGroupVisible(group)
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    size: 16,
-                    color: _isGroupVisible(group) ? null : Colors.grey,
-                  ),
-                  onPressed: () => _toggleGroupVisibility(group),
-                  constraints: const BoxConstraints(),
-                  padding: EdgeInsets.zero,
-                  tooltip: '',
-                ),
-              ],
+      child: Row(
+        children: [
+          // 拖动手柄区域
+          ReorderableDragStartListener(
+            index: groupIndex,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Icon(
+                Icons.drag_handle,
+                size: 16,
+                color: Colors.grey.shade600,
+              ),
             ),
           ),
-        ),
+
+          // 可点击的组信息区域（用于选择图层组）
+          Expanded(
+            child: InkWell(
+              onTap: () => _handleGroupSelection(group),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    // 折叠/展开图标
+                    GestureDetector(
+                      onTap: () => _toggleGroupCollapse(groupId),
+                      child: Icon(
+                        isCollapsed
+                            ? Icons.keyboard_arrow_right
+                            : Icons.keyboard_arrow_down,
+                        size: 20,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // 组信息
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '图层组 (${group.length} 个图层)${isGroupSelected ? ' - 已选中' : ''}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isGroupSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isGroupSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            group.map((l) => l.name).join(', '),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 组可见性切换按钮 - 折叠和展开时都显示
+          IconButton(
+            icon: Icon(
+              _isGroupVisible(group) ? Icons.visibility : Icons.visibility_off,
+              size: 16,
+              color: _isGroupVisible(group) ? null : Colors.grey,
+            ),
+            onPressed: () => _toggleGroupVisibility(group),
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
+            tooltip: '',
+          ),
+        ],
       ),
     );
+  }
+
+  /// 处理图层组选择
+  void _handleGroupSelection(List<MapLayer> group) {
+    print('选择图层组: ${group.map((l) => l.name).toList()}');
+
+    // 如果当前组已经被选中，则取消选择
+    if (_isGroupSelected(group)) {
+      widget.onSelectionCleared();
+      widget.onSuccess?.call('已取消图层组选择');
+    } else {
+      // 选择新的图层组
+      widget.onLayerGroupSelected(group);
+      widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)');
+    }
   }
 
   /// 构建可折叠的图层列表
@@ -401,17 +482,28 @@ class _LayerPanelState extends State<LayerPanel> {
     bool isMultiLayer,
   ) {
     final isSelected = widget.selectedLayer?.id == layer.id;
+    final isGroupSelected = _isGroupSelected(group); // 检查所属组是否被选中
     final globalLayerIndex = widget.layers.indexOf(layer);
     final isLastLayer = globalLayerIndex == widget.layers.length - 1;
+
+    // 当图层组被选中时，图层显示不同的样式
+    Color? backgroundColor;
+    if (isGroupSelected) {
+      // 图层组被选中时，组内图层显示组选中的背景色
+      backgroundColor = Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withAlpha((0.15 * 255).toInt());
+    } else if (isSelected) {
+      // 单独图层被选中时的背景色
+      backgroundColor = Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt());
+    }
 
     return Container(
       // 移除固定高度，让内容自适应
       decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : null,
+        color: backgroundColor,
         borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
       ),
       child: GestureDetector(
@@ -421,7 +513,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 _showLayerContextMenu(context, layer, details.globalPosition);
               },
         child: InkWell(
-          onTap: () => widget.onLayerSelected(layer),
+          onTap: () => _handleLayerSelection(layer, group), // 修改点击处理
           borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -501,6 +593,17 @@ class _LayerPanelState extends State<LayerPanel> {
         ),
       ),
     );
+  }
+
+  /// 处理图层选择（新增方法）
+  void _handleLayerSelection(MapLayer layer, List<MapLayer> group) {
+    // 如果当前有图层组被选中，先清除组选择
+    if (widget.selectedLayerGroup != null) {
+      widget.onSelectionCleared();
+    }
+
+    // 然后选择图层
+    widget.onLayerSelected(layer);
   }
 
   /// 显示图片菜单
