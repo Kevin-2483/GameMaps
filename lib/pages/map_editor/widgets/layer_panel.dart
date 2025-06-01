@@ -50,6 +50,9 @@ class _LayerPanelState extends State<LayerPanel> {
   final Map<String, double> _tempOpacityValues = {};
   final Map<String, Timer?> _opacityTimers = {};
 
+    // 新增：用于存储每个组的折叠状态
+  final Map<String, bool> _groupCollapsedStates = {};
+
   @override
   void dispose() {
     // 清理所有定时器
@@ -142,24 +145,28 @@ class _LayerPanelState extends State<LayerPanel> {
     int groupIndex,
   ) {
     final isMultiLayer = group.length > 1;
+    
+    // 为组生成唯一ID用于折叠状态管理
+    final groupId = 'group_${group.first.id}';
+    final isCollapsed = _groupCollapsedStates[groupId] ?? false;
 
     return Container(
-      key: ValueKey('group_${group.first.id}'),
+      key: ValueKey(groupId),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // 重要：让列收缩到内容大小
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 多图层组的拖动手柄
+          // 多图层组的拖动手柄和折叠头部
           if (isMultiLayer && !widget.isPreviewMode)
-            _buildGroupDragHandle(groupIndex),
+            _buildGroupHeader(groupIndex, group, isCollapsed, groupId),
 
-          // 图层列表
+          // 图层列表（可折叠）
           if (isMultiLayer)
-            _buildInGroupReorderableList(group)
+            _buildCollapsibleLayerList(group, isCollapsed)
           else
             // 单独图层也显示拖动手柄
             _buildSingleLayerTile(context, group.first, groupIndex),
@@ -167,6 +174,164 @@ class _LayerPanelState extends State<LayerPanel> {
       ),
     );
   }
+
+    /// 构建组头部（包含拖动手柄、折叠按钮和组信息）
+  Widget _buildGroupHeader(
+    int groupIndex, 
+    List<MapLayer> group, 
+    bool isCollapsed, 
+    String groupId
+  ) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: ReorderableDragStartListener(
+        index: groupIndex,
+        child: InkWell(
+          onTap: () => _toggleGroupCollapse(groupId),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                // 拖动手柄
+                Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                
+                // 折叠/展开图标
+                Icon(
+                  isCollapsed ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: Colors.grey.shade700,
+                ),
+                const SizedBox(width: 8),
+                
+                // 组信息
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '图层组 (${group.length} 个图层)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      if (!isCollapsed) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          group.map((l) => l.name).join(', '),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                
+                // 组操作按钮
+                if (!isCollapsed) ...[
+                  // 组可见性切换按钮
+                  IconButton(
+                    icon: Icon(
+                      _isGroupVisible(group) ? Icons.visibility : Icons.visibility_off,
+                      size: 16,
+                      color: _isGroupVisible(group) ? null : Colors.grey,
+                    ),
+                    onPressed: () => _toggleGroupVisibility(group),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                    tooltip: '',
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+    /// 构建可折叠的图层列表
+  Widget _buildCollapsibleLayerList(List<MapLayer> group, bool isCollapsed) {
+    return AnimatedCrossFade(
+      duration: const Duration(milliseconds: 200),
+      crossFadeState: isCollapsed ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      firstChild: _buildInGroupReorderableList(group),
+      secondChild: Container(
+        height: 0,
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(),
+      ),
+    );
+  }
+
+    /// 切换组的折叠状态
+  void _toggleGroupCollapse(String groupId) {
+    setState(() {
+      _groupCollapsedStates[groupId] = !(_groupCollapsedStates[groupId] ?? false);
+    });
+  }
+
+    /// 检查组是否可见（组内所有图层都可见才认为组可见）
+  bool _isGroupVisible(List<MapLayer> group) {
+    return group.every((layer) => layer.isVisible);
+  }
+
+    /// 切换组的可见性
+  void _toggleGroupVisibility(List<MapLayer> group) {
+    final isGroupCurrentlyVisible = _isGroupVisible(group);
+    final newVisibility = !isGroupCurrentlyVisible;
+    
+    final updatedLayers = group.map((layer) {
+      return layer.copyWith(
+        isVisible: newVisibility,
+        updatedAt: DateTime.now(),
+      );
+    }).toList();
+
+    // 使用批量更新
+    if (widget.onLayersBatchUpdated != null) {
+      // 创建完整的图层列表副本
+      final allLayers = List<MapLayer>.from(widget.layers);
+      
+      // 更新对应的图层
+      for (final updatedLayer in updatedLayers) {
+        final index = allLayers.indexWhere((l) => l.id == updatedLayer.id);
+        if (index != -1) {
+          allLayers[index] = updatedLayer;
+        }
+      }
+      
+      widget.onLayersBatchUpdated!(allLayers);
+    } else {
+      // 逐个更新
+      for (final updatedLayer in updatedLayers) {
+        widget.onLayerUpdated(updatedLayer);
+      }
+    }
+
+    widget.onSuccess?.call(newVisibility ? '已显示组内所有图层' : '已隐藏组内所有图层');
+  }
+
+
 
   /// 构建单独图层瓦片（带拖动手柄）
   Widget _buildSingleLayerTile(
@@ -223,33 +388,6 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  /// 构建组拖动手柄
-  Widget _buildGroupDragHandle(int groupIndex) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
-        ),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-      ),
-      child: ReorderableDragStartListener(
-        index: groupIndex,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
-            const SizedBox(width: 4),
-            Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
-          ],
-        ),
       ),
     );
   }
