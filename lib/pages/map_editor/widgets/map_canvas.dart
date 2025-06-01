@@ -327,16 +327,23 @@ class _MapCanvasState extends State<MapCanvas> {
   Offset? _currentDrawingStart;
   Offset? _currentDrawingEnd;
   bool _isDrawing = false;
-
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
   final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片
+
+  @override
+  void initState() {
+    super.initState();
+    // 在组件初始化时预加载所有图层的图片
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadAllLayerImages();
+    });
+  }
 
   // 监听图片缓冲区变化
   Uint8List? _lastImageBufferData;
   ui.Image? _imageBufferCachedImage;
   Future<ui.Image?>? _imageBufferDecodingFuture;
-
   @override
   void didUpdateWidget(MapCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -350,8 +357,12 @@ class _MapCanvasState extends State<MapCanvas> {
     if (oldWidget.selectedLayer != widget.selectedLayer) {
       _preloadLayerImages();
     }
-  }
 
+    // 检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
+    if (oldWidget.mapItem != widget.mapItem) {
+      _preloadAllLayerImages();
+    }
+  }
   /// 预加载图层中的图片元素
   Future<void> _preloadLayerImages() async {
     if (widget.selectedLayer == null) return;
@@ -360,6 +371,19 @@ class _MapCanvasState extends State<MapCanvas> {
       if (element.type == DrawingElementType.imageArea &&
           element.imageData != null) {
         await _getOrDecodeElementImage(element);
+      }
+    }
+  }
+
+  /// 预加载所有图层的图片元素
+  /// 在地图初始化时调用，确保所有图片立即显示
+  Future<void> _preloadAllLayerImages() async {
+    for (final layer in widget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null) {
+          await _getOrDecodeElementImage(element);
+        }
       }
     }
   }
@@ -3254,62 +3278,6 @@ class _LayerPainter extends CustomPainter {
     }
 
     canvas.drawPath(path, paint);
-  }
-
-  void _drawImageAreaError(Canvas canvas, Rect rect, String message) {
-    // 绘制错误背景
-    final bgPaint = Paint()
-      ..color = Colors.red.shade50
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(rect, bgPaint);
-
-    // 绘制错误边框
-    final borderPaint = Paint()
-      ..color = Colors.red.shade300
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    canvas.drawRect(rect, borderPaint);
-
-    // 绘制错误图标
-    final iconSize = math.min(rect.width, rect.height) * 0.2;
-    final iconPaint = Paint()
-      ..color = Colors.red.shade400
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    // 绘制X图标
-    final iconCenter = rect.center - Offset(0, iconSize * 0.3);
-    canvas.drawLine(
-      iconCenter - Offset(iconSize * 0.2, iconSize * 0.2),
-      iconCenter + Offset(iconSize * 0.2, iconSize * 0.2),
-      iconPaint,
-    );
-    canvas.drawLine(
-      iconCenter - Offset(iconSize * 0.2, -iconSize * 0.2),
-      iconCenter + Offset(iconSize * 0.2, -iconSize * 0.2),
-      iconPaint,
-    );
-
-    // 绘制错误文本
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: message,
-        style: TextStyle(
-          color: Colors.red.shade700,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        rect.center.dx - textPainter.width / 2,
-        rect.center.dy + iconSize * 0.5,
-      ),
-    );
   }
 
   String _getBoxFitDisplayName(BoxFit boxFit) {

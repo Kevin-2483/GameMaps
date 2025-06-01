@@ -190,15 +190,29 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _addDefaultLayer();
       } else {
         _selectedLayer = _currentMap!.layers.first;
-      }
-
-      // 保存初始状态到撤销历史
+      }      // 保存初始状态到撤销历史
       _saveToUndoHistory();
+
+      // 预加载所有图层的图片
+      _preloadAllLayerImages();
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  /// 预加载所有图层的图片
+  /// 在地图初始化完成后调用，确保所有图片区域元素立即显示而不是显示蓝色"解码中"占位符
+  void _preloadAllLayerImages() {
+    if (_currentMap == null) return;
+
+    // 延迟一帧执行，确保MapCanvas已经初始化完成
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 通过更新显示顺序来触发MapCanvas中的图片预加载
+      // 这会导致MapCanvas重新构建并预加载所有图层的图片
+      _updateDisplayOrderAfterLayerChange();
+    });
   }
 
   // 撤销历史记录管理方法
@@ -2191,14 +2205,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
       return const Center(child: CircularProgressIndicator());
-    }
-
-    return Consumer<UserPreferencesProvider>(
+    }    return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
-        final mapEditorPrefs = userPrefsProvider.mapEditor;
-
         // 创建用于显示的地图副本，使用重新排序的图层
-        final displayMap = _currentMap!.copyWith(layers: _layersForDisplay);
         return MapCanvas(
           mapItem: _currentMap!,
           selectedLayer: _selectedLayer,
