@@ -718,73 +718,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     return newIndex >= groupStart && newIndex <= groupEnd;
   }
 
-  /// 自动更新链接状态 - 暂时简化逻辑
-  void _updateAutoLinkStatus(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    // 暂时不进行任何自动链接处理，让用户手动控制
-    // 这样可以避免意外的自动连接
-
-    print('自动链接逻辑已暂时禁用');
-
-    // TODO: 后续根据需求重新实现精确的自动链接逻辑
-  }
-
-  /// 处理跨组移动或独立图层移动
-  void _handleCrossGroupMovement(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    final movedLayer = layers[newIndex];
-
-    // 检查移动后的位置是否需要链接
-    bool shouldLink = false;
-    bool shouldUnlink = false;
-
-    // 如果移动到了非最后位置
-    if (newIndex < layers.length - 1) {
-      // 检查前一个图层（如果存在）
-      if (newIndex > 0) {
-        final prevLayer = layers[newIndex - 1];
-        if (prevLayer.isLinkedToNext) {
-          shouldLink = true;
-        }
-      }
-
-      // 检查下一个图层是否在链接组中
-      final nextLayer = layers[newIndex + 1];
-      if (newIndex > 0) {
-        final prevLayer = layers[newIndex - 1];
-        if (prevLayer.isLinkedToNext || nextLayer.isLinkedToNext) {
-          shouldLink = true;
-        }
-      } else if (nextLayer.isLinkedToNext) {
-        shouldLink = true;
-      }
-    } else {
-      // 移动到最后位置，应该取消链接
-      shouldUnlink = true;
-    }
-
-    // 应用链接状态变更
-    if (shouldLink &&
-        !movedLayer.isLinkedToNext &&
-        newIndex < layers.length - 1) {
-      layers[newIndex] = movedLayer.copyWith(
-        isLinkedToNext: true,
-        updatedAt: DateTime.now(),
-      );
-    } else if (shouldUnlink && movedLayer.isLinkedToNext) {
-      layers[newIndex] = movedLayer.copyWith(
-        isLinkedToNext: false,
-        updatedAt: DateTime.now(),
-      );
-    }
-  }
-
   void _addLegendGroup() {
     if (widget.isPreviewMode || _currentMap == null) return;
 
@@ -803,111 +736,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         legendGroups: [..._currentMap!.legendGroups, newGroup],
       );
     });
-  }
-
-  /// 处理组内移动的特殊逻辑
-  void _handleInGroupMovement(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    final movedLayer = layers[newIndex];
-
-    // 获取组的边界
-    int groupStart = _findGroupStart(layers, newIndex);
-    int groupEnd = _findGroupEnd(layers, newIndex);
-
-    // 如果组只有两个图层，需要特殊处理
-    if (groupEnd - groupStart + 1 == 2) {
-      // 确保除了最后一个图层外，其他都保持链接状态
-      if (newIndex == groupEnd) {
-        // 移动到组内最后位置，关闭链接
-        if (movedLayer.isLinkedToNext) {
-          layers[newIndex] = movedLayer.copyWith(
-            isLinkedToNext: false,
-            updatedAt: DateTime.now(),
-          );
-        }
-      } else {
-        // 移动到组内非最后位置，开启链接
-        if (!movedLayer.isLinkedToNext) {
-          layers[newIndex] = movedLayer.copyWith(
-            isLinkedToNext: true,
-            updatedAt: DateTime.now(),
-          );
-        }
-      }
-    } else {
-      // 多于两个图层的组
-      if (newIndex == groupEnd) {
-        // 移动到组内最后位置，自动关闭链接
-        if (movedLayer.isLinkedToNext) {
-          layers[newIndex] = movedLayer.copyWith(
-            isLinkedToNext: false,
-            updatedAt: DateTime.now(),
-          );
-        }
-      } else {
-        // 移动到组内非最后位置，自动开启链接
-        if (!movedLayer.isLinkedToNext) {
-          layers[newIndex] = movedLayer.copyWith(
-            isLinkedToNext: true,
-            updatedAt: DateTime.now(),
-          );
-        }
-      }
-    }
-  }
-
-  /// 检查移动是否在同一个组内
-  bool _isMovementWithinGroup(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    // 重新计算组边界，因为移动后位置可能已经改变
-    // 使用移动前的图层状态来判断原始组边界
-
-    // 找到移动前旧位置所在的组
-    int oldGroupStart = _findGroupStartBeforeMove(layers, oldIndex, newIndex);
-    int oldGroupEnd = _findGroupEndBeforeMove(layers, oldIndex, newIndex);
-
-    // 检查新位置是否在原组的范围内（考虑移动后的索引调整）
-    if (newIndex < oldIndex) {
-      // 向前移动
-      return newIndex >= oldGroupStart && newIndex <= oldGroupEnd;
-    } else {
-      // 向后移动
-      return newIndex >= oldGroupStart && newIndex <= oldGroupEnd;
-    }
-  }
-
-  /// 查找移动前的组开始位置
-  int _findGroupStartBeforeMove(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    // 临时恢复移动前的状态来查找组边界
-    final tempLayers = List<MapLayer>.from(layers);
-    final movedLayer = tempLayers.removeAt(newIndex);
-    tempLayers.insert(oldIndex, movedLayer);
-
-    return _findGroupStart(tempLayers, oldIndex);
-  }
-
-  /// 查找移动前的组结束位置
-  int _findGroupEndBeforeMove(
-    List<MapLayer> layers,
-    int oldIndex,
-    int newIndex,
-  ) {
-    // 临时恢复移动前的状态来查找组边界
-    final tempLayers = List<MapLayer>.from(layers);
-    final movedLayer = tempLayers.removeAt(newIndex);
-    tempLayers.insert(oldIndex, movedLayer);
-
-    return _findGroupEnd(tempLayers, oldIndex);
   }
 
   /// 查找组的开始位置
@@ -940,15 +768,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
 
     return end;
-  }
-
-  /// 检查指定位置是否是组内最后一个
-  bool _isLastInGroup(List<MapLayer> layers, int index) {
-    // 如果是列表中的最后一个，肯定是组内最后一个
-    if (index == layers.length - 1) return true;
-
-    // 如果下一个图层没有被链接，说明当前是组内最后一个
-    return !layers[index + 1].isLinkedToNext;
   }
 
   void _deleteLegendGroup(LegendGroup group) {

@@ -651,7 +651,7 @@ class _MapCanvasState extends State<MapCanvas> {
     // 如果点击了其他地方或其他元素，则取消选择
     if (hitElementId != widget.selectedElementId) {
       // 取消选择
-      widget.onElementSelected?.call(null);
+      widget.onElementSelected.call(null);
     }
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
@@ -1073,7 +1073,7 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 选中图例项，高亮显示
-    widget.onLegendItemSelected?.call(item.id);
+    widget.onLegendItemSelected.call(item.id);
   }
 
   void _onLegendDoubleTap(LegendItem item) {
@@ -1084,7 +1084,7 @@ class _MapCanvasState extends State<MapCanvas> {
     }
 
     // 双击图例项，触发双击回调
-    widget.onLegendItemDoubleClicked?.call(item);
+    widget.onLegendItemDoubleClicked.call(item);
   }
 
   /// 检查是否可以选择图例项

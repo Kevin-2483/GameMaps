@@ -78,7 +78,7 @@ class _LayerPanelState extends State<LayerPanel> {
       currentGroup.add(layer);
 
       // 安全访问 isLinkedToNext 属性
-      final isLinked = layer.isLinkedToNext ?? false;
+      final isLinked = layer.isLinkedToNext;
 
       // 如果当前图层不链接到下一个，或者是最后一个图层，结束当前组
       if (!isLinked || i == widget.layers.length - 1) {
@@ -668,7 +668,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 构建链接按钮
   Widget _buildLinkButton(MapLayer layer, bool isLastLayer) {
-    final isLinked = layer.isLinkedToNext ?? false; // 安全访问
+    final isLinked = layer.isLinkedToNext; // 安全访问
 
     return IconButton(
       icon: Icon(
@@ -751,9 +751,9 @@ class _LayerPanelState extends State<LayerPanel> {
     if (targetIndex <= 0) return false;
 
     // 从目标位置向前检查，看是否有连接链
-    for (int i = targetIndex - 1; i >= 0; i--) {
+    for (int i = targetIndex - 1; i >= 0;) {
       final layer = group[i];
-      final isLinked = layer.isLinkedToNext ?? false;
+      final isLinked = layer.isLinkedToNext;
 
       if (isLinked) {
         // 如果找到一个有链接的元素，说明目标位置与前面的元素相连
@@ -762,21 +762,6 @@ class _LayerPanelState extends State<LayerPanel> {
         // 如果遇到一个没有链接的元素，说明链断了
         break;
       }
-    }
-
-    return false;
-  }
-
-  /// 检查指定位置后面是否有与当前元素直接相连且连接状态为否的元素
-  bool _hasUnlinkedElementAfter(List<MapLayer> group, int currentIndex) {
-    if (currentIndex >= group.length - 1) return false;
-
-    // 检查紧邻的下一个元素是否是组内最后一个（连接状态为否）
-    final nextIndex = currentIndex + 1;
-    if (nextIndex < group.length) {
-      final nextLayer = group[nextIndex];
-      final nextIsLinked = nextLayer.isLinkedToNext ?? false;
-      return !nextIsLinked; // 如果下一个元素的连接状态为否，返回true
     }
 
     return false;
@@ -796,7 +781,7 @@ class _LayerPanelState extends State<LayerPanel> {
     bool wasCompleteGroup = true;
     for (int i = 0; i < originalGroup.length - 1; i++) {
       final layer = originalGroup[i];
-      final isLinked = layer.isLinkedToNext ?? false;
+      final isLinked = layer.isLinkedToNext;
       if (!isLinked) {
         wasCompleteGroup = false;
         break;
@@ -856,7 +841,7 @@ class _LayerPanelState extends State<LayerPanel> {
     }
 
     // 检查移动的图层是否是组内最后一个（连接状态为否）
-    final isMovingLastElement = !(oldLayer.isLinkedToNext ?? false);
+    final isMovingLastElement = !(oldLayer.isLinkedToNext);
 
     print('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
     print('调整后的 newIndex: $newIndex');
@@ -898,7 +883,7 @@ class _LayerPanelState extends State<LayerPanel> {
     bool wasCompleteGroup = true;
     for (int i = 0; i < group.length - 1; i++) {
       final layer = group[i];
-      final isLinked = layer.isLinkedToNext ?? false;
+      final isLinked = layer.isLinkedToNext;
       if (!isLinked) {
         wasCompleteGroup = false;
         break;
@@ -912,7 +897,7 @@ class _LayerPanelState extends State<LayerPanel> {
       // 确保重排序后除了最后一个元素，其他都有链接
       for (int i = 0; i < reorderedGroup.length - 1; i++) {
         final layer = reorderedGroup[i];
-        final isLinked = layer.isLinkedToNext ?? false;
+        final isLinked = layer.isLinkedToNext;
         if (!isLinked) {
           final updatedLayer = layer.copyWith(
             isLinkedToNext: true,
@@ -925,7 +910,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
       // 确保最后一个元素关闭链接
       final lastLayer = reorderedGroup.last;
-      final lastIsLinked = lastLayer.isLinkedToNext ?? false;
+      final lastIsLinked = lastLayer.isLinkedToNext;
       if (lastIsLinked) {
         final updatedLastLayer = lastLayer.copyWith(
           isLinkedToNext: false,
@@ -965,7 +950,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
           // 如果新的最后一个元素不是我们刚移动的元素，且它当前是链接状态
           if (newLastLayer.id != oldLayer.id) {
-            final newLastIsLinked = newLastLayer.isLinkedToNext ?? false;
+            final newLastIsLinked = newLastLayer.isLinkedToNext;
             if (newLastIsLinked) {
               final updatedNewLastLayer = newLastLayer.copyWith(
                 isLinkedToNext: false,
@@ -983,7 +968,7 @@ class _LayerPanelState extends State<LayerPanel> {
         // 检查是否有元素移动到了组内最后一个位置
         if (adjustedNewIndex == group.length - 1) {
           // 移动的元素变成了组内最后一个，需要关闭它的链接
-          final isCurrentlyLinked = oldLayer.isLinkedToNext ?? false;
+          final isCurrentlyLinked = oldLayer.isLinkedToNext;
           if (isCurrentlyLinked) {
             final updatedMovedLayer = oldLayer.copyWith(
               isLinkedToNext: false,
@@ -1164,7 +1149,7 @@ class _LayerPanelState extends State<LayerPanel> {
   /// 构建图例组绑定 chip
   Widget _buildLegendGroupsChip(MapLayer layer) {
     // 安全获取绑定的图例组数量
-    final boundGroupsCount = layer.legendGroupIds?.length ?? 0;
+    final boundGroupsCount = layer.legendGroupIds.length;
     final hasAllLegendGroups = widget.allLegendGroups != null;
 
     return InkWell(
