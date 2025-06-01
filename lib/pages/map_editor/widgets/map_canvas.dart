@@ -590,7 +590,7 @@ class _MapCanvasState extends State<MapCanvas> {
                     ),
                   ),
                   // Touch handler for drawing - 覆盖整个画布区域
-                  if (!widget.isPreviewMode && _effectiveDrawingTool != null)
+                  if ( _effectiveDrawingTool != null)
                     Positioned(
                       left: 0,
                       top: 0,
@@ -617,7 +617,7 @@ class _MapCanvasState extends State<MapCanvas> {
                     ),
 
                   // Touch handler for element interaction - 当没有绘制工具选中时
-                  if (!widget.isPreviewMode && _effectiveDrawingTool == null)
+                  if ( _effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
                       top: 0,
@@ -680,7 +680,7 @@ class _MapCanvasState extends State<MapCanvas> {
           size: const Size(kCanvasWidth, kCanvasHeight),
           painter: _LayerPainter(
             layer: layer,
-            isEditMode: !widget.isPreviewMode,
+            isEditMode: true,
             selectedElementId: widget.selectedElementId,
             handleSize: handleSize,
             imageCache: _imageCache, // 传递元素图片缓存
@@ -740,15 +740,18 @@ class _MapCanvasState extends State<MapCanvas> {
       left: canvasPosition.dx - centerOffset.dx,
       top: canvasPosition.dy - centerOffset.dy,
       child: GestureDetector(
-        onPanStart: widget.isPreviewMode
-            ? null
-            : (details) => _onLegendDragStart(item, details),
-        onPanUpdate: widget.isPreviewMode
-            ? null
-            : (details) => _onLegendDragUpdate(item, details),
-        onPanEnd: widget.isPreviewMode
-            ? null
-            : (details) => _onLegendDragEnd(item, details),
+        onPanStart:(details) => _onLegendDragStart(item, details),
+        onPanUpdate: (details) => _onLegendDragUpdate(item, details),
+        onPanEnd: (details) => _onLegendDragEnd(item, details),
+        // onPanStart: widget.isPreviewMode
+        //     ? null
+        //     : (details) => _onLegendDragStart(item, details),
+        // onPanUpdate: widget.isPreviewMode
+        //     ? null
+        //     : (details) => _onLegendDragUpdate(item, details),
+        // onPanEnd: widget.isPreviewMode
+        //     ? null
+        //     : (details) => _onLegendDragEnd(item, details),
         onTap: () => _onLegendTap(item),
         onDoubleTap: () => _onLegendDoubleTap(item),
         child: Transform.rotate(
@@ -1363,7 +1366,7 @@ class _MapCanvasState extends State<MapCanvas> {
   }
 
   void _onDrawingStart(DragStartDetails details) {
-    if (widget.isPreviewMode || _effectiveDrawingTool == null) return;
+    if ( _effectiveDrawingTool == null) return;
 
     // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
     _currentDrawingStart = _getClampedCanvasPosition(details.localPosition);

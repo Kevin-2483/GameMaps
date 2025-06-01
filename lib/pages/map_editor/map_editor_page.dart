@@ -43,7 +43,8 @@ class MapEditorPage extends BasePage {
       child: _MapEditorContent(
         mapItem: mapItem,
         mapId: mapId,
-        isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
+        // isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
+        isPreviewMode: isPreviewMode,
       ),
     );
   }
@@ -302,7 +303,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool get _canRedo => _redoHistory.isNotEmpty;
   // 删除指定图层中的绘制元素
   void _deleteElement(String elementId) {
-    if (widget.isPreviewMode || _selectedLayer == null) return;
+    if ( _selectedLayer == null) return;
 
     // 找到要删除的元素
     final elementToDelete = _selectedLayer!.elements
@@ -365,7 +366,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _addNewLayer() {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -390,7 +391,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _deleteLayer(MapLayer layer) {
-    if (widget.isPreviewMode ||
+    if (
         _currentMap == null ||
         _currentMap!.layers.length <= 1)
       return;
@@ -614,7 +615,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 在修改前保存当前状态
     _saveToUndoHistory();
@@ -639,7 +640,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _reorderLayers(int oldIndex, int newIndex) {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     print('=== _reorderLayers 开始 ===');
     print('oldIndex: $oldIndex, newIndex: $newIndex');
@@ -736,7 +737,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 在修改前保存当前状态
     _saveToUndoHistory();
@@ -828,7 +829,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _addLegendGroup() {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -880,7 +881,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _deleteLegendGroup(LegendGroup group) {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -897,9 +898,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
-    if (!widget.isPreviewMode) {
       _saveToUndoHistory();
-    }
 
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
@@ -923,7 +922,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     MapLayer layer,
     List<LegendGroup> allLegendGroups,
   ) {
-    if (widget.isPreviewMode) return;
+
 
     setState(() {
       // 关闭其他抽屉
@@ -943,7 +942,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     LegendGroup legendGroup, {
     String? selectedLegendItemId,
   }) {
-    if (widget.isPreviewMode) return;
 
     setState(() {
       // 关闭其他抽屉
@@ -960,7 +958,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   } // 处理图例项双击事件
 
   void _handleLegendItemDoubleClick(LegendItem item) {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if ( _currentMap == null) return;
 
     // 首先选中该图例项，这样边框会立即显示
     _selectLegendItem(item.id);
@@ -1005,7 +1003,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 显示Z层级检视器
   void _showZIndexInspector() {
-    if (widget.isPreviewMode || _selectedLayer == null) return;
+    if ( _selectedLayer == null) return;
 
     setState(() {
       // 关闭其他抽屉
@@ -1156,7 +1154,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   Future<void> _saveMap() async {
-    if (widget.isPreviewMode || _currentMap == null) return;
+    if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
 
     setState(() => _isLoading = true);
     try {
@@ -1224,7 +1222,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 退出确认对话框
   Future<bool> _showExitConfirmDialog() async {
-    if (!_hasUnsavedChanges || widget.isPreviewMode) {
+    if (!_hasUnsavedChanges || widget.isPreviewMode || kIsWeb) {
       return true; // 如果没有未保存更改或在预览模式，直接允许退出
     }
 
@@ -1428,7 +1426,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor,
               ),
               actions: [
-                if (!widget.isPreviewMode) ...[
+                ...[
                   WebFeatureRestriction(
                     operationName: '保存地图',
                     enabled: !kIsWeb,
@@ -1656,154 +1654,151 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final layout = userPrefsProvider.layout;
 
     // 绘制工具栏（仅编辑模式）
-    if (!widget.isPreviewMode) {
-      panels.add(
-        _buildCollapsiblePanel(
-          title: '绘制工具',
-          icon: Icons.brush,
-          isCollapsed: _isDrawingToolbarCollapsed,
-          onToggleCollapsed: () => _handlePanelToggle('drawing'),
-          autoCloseEnabled: _isDrawingToolbarAutoClose,
-          onAutoCloseToggled: (value) =>
-              _handleAutoCloseToggle('drawing', value),
-          needsScrolling: true,
-          compactMode: layout.compactMode,
-          showTooltips: layout.showTooltips,
-          animationDuration: layout.animationDuration,
-          enableAnimations: layout.enableAnimations,
-          // 修改禁用状态提示逻辑
-          collapsedSubtitle: _hasNoLayerSelected
-              ? '需要选择图层才能使用绘制工具'
-              : _selectedLayer != null
-              ? '绘制到: ${_selectedLayer!.name}'
-              : _selectedLayerGroup != null
-              ? '选中图层组 (${_selectedLayerGroup!.length} 个图层)'
-              : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
-          child: _isDrawingToolbarCollapsed
-              ? null
-              : Stack(
-                  children: [
-                    // 绘制工具栏内容
-                    DrawingToolbarOptimized(
-                      selectedTool: _selectedDrawingTool,
-                      selectedColor: _selectedColor,
-                      selectedStrokeWidth: _selectedStrokeWidth,
-                      selectedDensity: _selectedDensity,
-                      selectedCurvature: _selectedCurvature,
-                      selectedTriangleCut: _selectedTriangleCut,
-                      isEditMode: !widget.isPreviewMode,
-                      onToolSelected: (tool) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedDrawingTool = tool);
-                        }
-                      },
-                      onColorSelected: (color) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedColor = color);
-                        }
-                      },
-                      onStrokeWidthChanged: (width) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedStrokeWidth = width);
-                        }
-                      },
-                      onDensityChanged: (density) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedDensity = density);
-                        }
-                      },
-                      onCurvatureChanged: (curvature) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedCurvature = curvature);
-                        }
-                      },
-                      onTriangleCutChanged: (triangleCut) {
-                        if (!_shouldDisableDrawingTools) {
-                          setState(() => _selectedTriangleCut = triangleCut);
-                        }
-                      },
-                      onToolPreview: _handleDrawingToolPreview,
-                      onColorPreview: _handleColorPreview,
-                      onStrokeWidthPreview: _handleStrokeWidthPreview,
-                      onDensityPreview: _handleDensityPreview,
-                      onCurvaturePreview: _handleCurvaturePreview,
-                      onTriangleCutPreview: _handleTriangleCutPreview,
-                      onUndo: _undo,
-                      onRedo: _redo,
-                      canUndo: _canUndo,
-                      canRedo: _canRedo,
-                      selectedLayer: _selectedLayer,
-                      onElementDeleted: _deleteElement,
-                      selectedElementId: _selectedElementId,
-                      onElementSelected: (elementId) {
-                        setState(() => _selectedElementId = elementId);
-                      },
-                      onZIndexInspectorRequested: _showZIndexInspector,
-                      // 图片缓冲区相关参数
-                      imageBufferData: _imageBufferData,
-                      imageBufferFit: _imageBufferFit,
-                      onImageBufferUpdated: _handleImageBufferUpdated,
-                      onImageBufferFitChanged: _handleImageBufferFitChanged,
-                      onImageBufferCleared: _handleImageBufferCleared,
-                    ),
+    panels.add(
+      _buildCollapsiblePanel(
+        title: '绘制工具',
+        icon: Icons.brush,
+        isCollapsed: _isDrawingToolbarCollapsed,
+        onToggleCollapsed: () => _handlePanelToggle('drawing'),
+        autoCloseEnabled: _isDrawingToolbarAutoClose,
+        onAutoCloseToggled: (value) => _handleAutoCloseToggle('drawing', value),
+        needsScrolling: true,
+        compactMode: layout.compactMode,
+        showTooltips: layout.showTooltips,
+        animationDuration: layout.animationDuration,
+        enableAnimations: layout.enableAnimations,
+        // 修改禁用状态提示逻辑
+        collapsedSubtitle: _hasNoLayerSelected
+            ? '需要选择图层才能使用绘制工具'
+            : _selectedLayer != null
+            ? '绘制到: ${_selectedLayer!.name}'
+            : _selectedLayerGroup != null
+            ? '选中图层组 (${_selectedLayerGroup!.length} 个图层)'
+            : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
+        child: _isDrawingToolbarCollapsed
+            ? null
+            : Stack(
+                children: [
+                  // 绘制工具栏内容
+                  DrawingToolbarOptimized(
+                    selectedTool: _selectedDrawingTool,
+                    selectedColor: _selectedColor,
+                    selectedStrokeWidth: _selectedStrokeWidth,
+                    selectedDensity: _selectedDensity,
+                    selectedCurvature: _selectedCurvature,
+                    selectedTriangleCut: _selectedTriangleCut,
+                    isEditMode: true,
+                    onToolSelected: (tool) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedDrawingTool = tool);
+                      }
+                    },
+                    onColorSelected: (color) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedColor = color);
+                      }
+                    },
+                    onStrokeWidthChanged: (width) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedStrokeWidth = width);
+                      }
+                    },
+                    onDensityChanged: (density) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedDensity = density);
+                      }
+                    },
+                    onCurvatureChanged: (curvature) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedCurvature = curvature);
+                      }
+                    },
+                    onTriangleCutChanged: (triangleCut) {
+                      if (!_shouldDisableDrawingTools) {
+                        setState(() => _selectedTriangleCut = triangleCut);
+                      }
+                    },
+                    onToolPreview: _handleDrawingToolPreview,
+                    onColorPreview: _handleColorPreview,
+                    onStrokeWidthPreview: _handleStrokeWidthPreview,
+                    onDensityPreview: _handleDensityPreview,
+                    onCurvaturePreview: _handleCurvaturePreview,
+                    onTriangleCutPreview: _handleTriangleCutPreview,
+                    onUndo: _undo,
+                    onRedo: _redo,
+                    canUndo: _canUndo,
+                    canRedo: _canRedo,
+                    selectedLayer: _selectedLayer,
+                    onElementDeleted: _deleteElement,
+                    selectedElementId: _selectedElementId,
+                    onElementSelected: (elementId) {
+                      setState(() => _selectedElementId = elementId);
+                    },
+                    onZIndexInspectorRequested: _showZIndexInspector,
+                    // 图片缓冲区相关参数
+                    imageBufferData: _imageBufferData,
+                    imageBufferFit: _imageBufferFit,
+                    onImageBufferUpdated: _handleImageBufferUpdated,
+                    onImageBufferFitChanged: _handleImageBufferFitChanged,
+                    onImageBufferCleared: _handleImageBufferCleared,
+                  ),
 
-                    // 修改禁用蒙板逻辑
-                    if (_shouldDisableDrawingTools)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withAlpha((0.8 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.layers_outlined,
-                                  size: 48,
-                                  color: Colors.white,
+                  // 修改禁用蒙板逻辑
+                  if (_shouldDisableDrawingTools)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withAlpha((0.8 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.layers_outlined,
+                                size: 48,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 16),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
                                 ),
-                                const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  child: Text(
-                                    '请先选择一个图层或图层组\n才能使用绘制工具',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton.icon(
-                                  onPressed: _addNewLayer,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('添加新图层'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary,
+                                child: Text(
+                                  '请先选择一个图层或图层组\n才能使用绘制工具',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.3,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: _addNewLayer,
+                                icon: const Icon(Icons.add),
+                                label: const Text('添加新图层'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
-                ),
-        ),
-      );
-    }
+                    ),
+                ],
+              ),
+      ),
+    );
 
     // 图层面板
     panels.add(
@@ -1820,15 +1815,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
-        actions: widget.isPreviewMode
-            ? null
-            : [
-                IconButton(
-                  icon: const Icon(Icons.add, size: 18),
-                  onPressed: _addNewLayer,
-                  tooltip: layout.showTooltips ? '添加图层' : null,
-                ),
-              ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: _addNewLayer,
+            tooltip: layout.showTooltips ? '添加图层' : null,
+          ),
+        ],
         child: _isLayerPanelCollapsed
             ? null
             : LayerPanel(
@@ -1873,15 +1866,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
-        actions: widget.isPreviewMode
-            ? null
-            : [
-                IconButton(
-                  icon: const Icon(Icons.add, size: 18),
-                  onPressed: _addLegendGroup,
-                  tooltip: layout.showTooltips ? '添加图例组' : null,
-                ),
-              ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: _addLegendGroup,
+            tooltip: layout.showTooltips ? '添加图例组' : null,
+          ),
+        ],
         child: _isLegendPanelCollapsed
             ? null
             : LegendPanel(

@@ -301,7 +301,7 @@ class _LayerPanelState extends State<LayerPanel> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 多图层组的拖动手柄和折叠头部
-          if (isMultiLayer && !widget.isPreviewMode)
+          if (isMultiLayer)
             _buildGroupHeader(
               groupIndex,
               group,
@@ -669,11 +669,9 @@ class _LayerPanelState extends State<LayerPanel> {
             : null,
       ),
       child: GestureDetector(
-        onSecondaryTapDown: widget.isPreviewMode
-            ? null
-            : (details) {
-                _showLayerContextMenu(context, layer, details.globalPosition);
-              },
+        onSecondaryTapDown: (details) {
+          _showLayerContextMenu(context, layer, details.globalPosition);
+        },
         child: InkWell(
           onTap: () => _handleLayerSelection(layer, group), // 修改点击处理
           borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
@@ -709,15 +707,13 @@ class _LayerPanelState extends State<LayerPanel> {
                         size: 18,
                         color: layer.isVisible ? null : Colors.grey,
                       ),
-                      onPressed: widget.isPreviewMode
-                          ? null
-                          : () {
-                              final updatedLayer = layer.copyWith(
-                                isVisible: !layer.isVisible,
-                                updatedAt: DateTime.now(),
-                              );
-                              widget.onLayerUpdated(updatedLayer);
-                            },
+                      onPressed: () {
+                        final updatedLayer = layer.copyWith(
+                          isVisible: !layer.isVisible,
+                          updatedAt: DateTime.now(),
+                        );
+                        widget.onLayerUpdated(updatedLayer);
+                      },
                       constraints: const BoxConstraints(),
                       padding: EdgeInsets.zero,
                       tooltip: '', // 禁用 tooltip
@@ -728,11 +724,12 @@ class _LayerPanelState extends State<LayerPanel> {
                     Expanded(child: _buildLayerNameEditor(layer)),
 
                     // 链接按钮
-                    if (!widget.isPreviewMode)
-                      _buildLinkButton(layer, isLastLayer),
+                    // if (!widget.isPreviewMode)
+                    _buildLinkButton(layer, isLastLayer),
 
                     // 操作按钮
-                    if (!widget.isPreviewMode) ...[
+                    // if (!widget.isPreviewMode)
+                    ...[
                       // 图片管理按钮 - 使用 GestureDetector 替代 PopupMenuButton
                       GestureDetector(
                         onTap: () => _showImageMenu(context, layer),
@@ -904,12 +901,9 @@ class _LayerPanelState extends State<LayerPanel> {
                   min: 0.0,
                   max: 1.0,
                   divisions: 20,
-                  onChanged: widget.isPreviewMode
-                      ? null
-                      : (opacity) => _handleOpacityChange(layer, opacity),
-                  onChangeEnd: widget.isPreviewMode
-                      ? null
-                      : (opacity) => _handleOpacityChangeEnd(layer, opacity),
+                  onChanged: (opacity) => _handleOpacityChange(layer, opacity),
+                  onChangeEnd: (opacity) =>
+                      _handleOpacityChangeEnd(layer, opacity),
                 ),
               ),
               const SizedBox(width: 3),
@@ -1335,7 +1329,7 @@ class _LayerPanelState extends State<LayerPanel> {
     final hasAllLegendGroups = widget.allLegendGroups != null;
 
     return InkWell(
-      onTap: widget.isPreviewMode || !hasAllLegendGroups
+      onTap: !hasAllLegendGroups
           ? null
           : () => widget.onShowLayerLegendBinding?.call(
               layer,
@@ -1413,7 +1407,7 @@ class _LayerPanelState extends State<LayerPanel> {
           hintStyle: TextStyle(fontSize: 14),
           isDense: true,
         ),
-        enabled: !widget.isPreviewMode,
+        enabled: true, //!widget.isPreviewMode,
         textInputAction: TextInputAction.done,
         onSubmitted: (newName) => _saveLayerName(layer, newName),
         onTapOutside: (event) {

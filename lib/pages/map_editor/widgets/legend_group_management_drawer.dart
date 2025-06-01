@@ -251,7 +251,7 @@ class _LegendGroupManagementDrawerState
                         ),
                       ),
                     ),
-                    if (!widget.isPreviewMode)
+                    // if (!widget.isPreviewMode)
                       IconButton(
                         icon: const Icon(Icons.edit, size: 18),
                         onPressed: _showEditNameDialog,
@@ -298,13 +298,11 @@ class _LegendGroupManagementDrawerState
                             : Icons.visibility_off,
                         size: 18,
                       ),
-                      onPressed: widget.isPreviewMode
-                          ? null
-                          : () => _updateGroup(
-                              _currentGroup.copyWith(
-                                isVisible: !_currentGroup.isVisible,
-                              ),
-                            ),
+                      onPressed: () => _updateGroup(
+                        _currentGroup.copyWith(
+                          isVisible: !_currentGroup.isVisible,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     const Text('透明度:', style: TextStyle(fontSize: 12)),
@@ -315,11 +313,9 @@ class _LegendGroupManagementDrawerState
                         max: 1.0,
                         divisions: 10,
                         label: '${(_currentGroup.opacity * 100).round()}%',
-                        onChanged: widget.isPreviewMode
-                            ? null
-                            : (value) => _updateGroup(
-                                _currentGroup.copyWith(opacity: value),
-                              ),
+                        onChanged: (value) => _updateGroup(
+                          _currentGroup.copyWith(opacity: value),
+                        ),
                       ),
                     ),
                   ],
@@ -366,9 +362,7 @@ class _LegendGroupManagementDrawerState
                             ),
                             Switch(
                               value: _isSmartHidingEnabled,
-                              onChanged: widget.isPreviewMode
-                                  ? null
-                                  : _toggleSmartHiding,
+                              onChanged: _toggleSmartHiding,
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -411,18 +405,18 @@ class _LegendGroupManagementDrawerState
                         ),
                       ),
                       const Spacer(),
-                      if (!widget.isPreviewMode)
-                        ElevatedButton.icon(
-                          onPressed: _showAddLegendDialog,
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('添加图例'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
+                      // if (!widget.isPreviewMode)
+                      ElevatedButton.icon(
+                        onPressed: _showAddLegendDialog,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('添加图例'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -566,42 +560,46 @@ class _LegendGroupManagementDrawerState
                         size: 18,
                         color: item.isVisible ? null : Colors.grey,
                       ),
-                      onPressed: widget.isPreviewMode
-                          ? null
-                          : () => _updateLegendItem(
-                              item.copyWith(isVisible: !item.isVisible),
-                            ),
+                      onPressed: () => _updateLegendItem(
+                        item.copyWith(isVisible: !item.isVisible),
+                      ),
+                      // onPressed: widget.isPreviewMode
+                      //     ? null
+                      //     : () => _updateLegendItem(
+                      //         item.copyWith(isVisible: !item.isVisible),
+                      //       ),
                       tooltip: item.isVisible ? '隐藏' : '显示',
                     ),
                     // 更多操作
-                    if (!widget.isPreviewMode)
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, size: 16),
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 14, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('删除', style: TextStyle(color: Colors.red)),
-                              ],
-                            ),
+                    // if (!widget.isPreviewMode)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 16),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 14, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('删除', style: TextStyle(color: Colors.red)),
+                            ],
                           ),
-                        ],
-                        onSelected: (value) {
-                          if (value == 'delete') {
-                            _deleteLegendItem(item);
-                          }
-                        },
-                      ),
+                        ),
+                      ],
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _deleteLegendItem(item);
+                        }
+                      },
+                    ),
                   ],
                 ),
 
                 const SizedBox(height: 12),
 
                 // 控制滑块
-                if (!widget.isPreviewMode) ...[
+                // if (!widget.isPreviewMode)
+                ...[
                   // 大小控制
                   _buildSliderControl(
                     label: '大小',

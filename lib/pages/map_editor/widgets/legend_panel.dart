@@ -91,7 +91,7 @@ class LegendPanel extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!isPreviewMode)
+            // if (!isPreviewMode)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, size: 18),
                 itemBuilder: (context) => [
