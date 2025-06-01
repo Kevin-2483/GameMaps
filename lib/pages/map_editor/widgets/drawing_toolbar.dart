@@ -7,7 +7,7 @@ import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
 
-/// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
+  /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
   final DrawingElementType? selectedTool;
   final Color selectedColor;
@@ -39,7 +39,14 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
-  const DrawingToolbarOptimized({
+  
+  // 图片缓冲区相关回调
+  final Uint8List? imageBufferData; // 当前缓冲区中的图片数据
+  final BoxFit imageBufferFit; // 缓冲区图片的适应方式
+  final Function(Uint8List imageData)? onImageBufferUpdated; // 缓冲区更新回调
+  final Function(BoxFit fit)? onImageBufferFitChanged; // 图片适应方式改变回调
+  final VoidCallback? onImageBufferCleared; // 清除缓冲区回调
+    const DrawingToolbarOptimized({
     super.key,
     required this.selectedTool,
     required this.selectedColor,
@@ -69,6 +76,12 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.selectedElementId,
     this.onElementSelected,
     this.onZIndexInspectorRequested,
+    // 图片缓冲区相关参数
+    this.imageBufferData,
+    this.imageBufferFit = BoxFit.contain,
+    this.onImageBufferUpdated,
+    this.onImageBufferFitChanged,
+    this.onImageBufferCleared,
   });
 
   @override
@@ -1166,12 +1179,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     );
   }
 
-  /// 构建图片选区工具的专用控制面板
+  /// 构建图片选区工具的专用控制面板  
   Widget _buildImageAreaControls() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 图片上传区域
+        // 图片缓冲区
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -1182,54 +1195,47 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           ),
           child: Column(
             children: [
-              Icon(
-                Icons.cloud_upload_outlined,
-                size: 32,
-                color: Colors.blue.shade600,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '图片选区工具',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '先选择一个选区，然后上传图片',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.blue.shade600,
-                ),
+              // 缓冲区标题
+              Row(
+                children: [
+                  Icon(
+                    Icons.image_outlined,
+                    size: 20,
+                    color: Colors.blue.shade600,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '图片缓冲区',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade800,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _handleImageUpload,
-                  icon: const Icon(Icons.add_photo_alternate),
-                  label: const Text('上传图片'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
+                // 缓冲区内容
+              if (widget.imageBufferData != null)
+                // 显示已上传的图片
+                _buildImageBuffer()
+              else
+                // 显示上传提示
+                _buildImageUploadPrompt(),
             ],
           ),
         ),
         
         const SizedBox(height: 12),
-        
-        // 图片适应方式选择
-        const Text(
-          '图片适应方式',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8),
-        _buildBoxFitSelector(),
+          // 图片适应方式选择
+        if (widget.imageBufferData != null) ...[
+          const Text(
+            '图片适应方式',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          _buildBoxFitSelector(),
+        ],
         
         const SizedBox(height: 8),
         
@@ -1360,10 +1366,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     return BoxFit.contain;
   }
 
-  /// 处理图片适应方式改变
+  /// 处理图片适应方式改变  
   void _handleImageFitChange(BoxFit fit) {
-    // 这里可以添加处理图片适应方式改变的逻辑
-    // 例如更新当前正在编辑的图片选区元素
+    // 调用回调函数更新缓冲区图片适应方式
+    widget.onImageBufferFitChanged?.call(fit);
+    
+    // 显示更改提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('图片适应方式已设置为: ${_getBoxFitDisplayName(fit)}'),
@@ -1372,25 +1380,175 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     );
   }
 
+  /// 构建图片缓冲区显示组件（显示已上传的图片）
+  Widget _buildImageBuffer() {
+    return Column(
+      children: [
+        // 图片预览
+        Container(
+          width: double.infinity,
+          height: 120,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              widget.imageBufferData!,
+              fit: widget.imageBufferFit,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey.shade100,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.red.shade400,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '图片显示失败',
+                        style: TextStyle(
+                          color: Colors.red.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        
+        // 操作按钮
+        Row(
+          children: [
+            // 重新上传按钮
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _handleImageUpload,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('重新上传', style: TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  foregroundColor: Colors.blue.shade600,
+                  side: BorderSide(color: Colors.blue.shade300),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            
+            // 清空缓冲区按钮
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  widget.onImageBufferCleared?.call();
+                },
+                icon: const Icon(Icons.clear, size: 16),
+                label: const Text('清空', style: TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  foregroundColor: Colors.red.shade600,
+                  side: BorderSide(color: Colors.red.shade300),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 构建图片上传提示组件（缓冲区为空时显示）
+  Widget _buildImageUploadPrompt() {
+    return Column(
+      children: [
+        // 上传提示区域
+        Container(
+          width: double.infinity,
+          height: 120,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.grey.shade300,
+              style: BorderStyle.solid,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade50,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.cloud_upload_outlined,
+                size: 32,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '点击上传图片到缓冲区',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '支持 JPG、PNG、GIF 格式',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        
+        // 上传按钮
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _handleImageUpload,
+            icon: const Icon(Icons.add_photo_alternate, size: 18),
+            label: const Text('上传图片'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
   /// 处理图片上传
   Future<void> _handleImageUpload() async {
     try {
       // 使用ImageUtils选择和上传图片
       final imageData = await ImageUtils.pickAndEncodeImage();
       if (imageData != null) {
+        // 更新缓冲区
+        widget.onImageBufferUpdated?.call(imageData);
+        
         // 显示成功消息
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('图片已上传 (${(imageData.length / 1024).toStringAsFixed(1)}KB)'),
+              content: Text('图片已上传到缓冲区 (${(imageData.length / 1024).toStringAsFixed(1)}KB)'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),
           );
-          
-          // 这里可以添加处理上传成功的逻辑
-          // 例如：创建一个新的图片选区元素，或更新现有的元素
-          _createImageAreaWithData(imageData);
         }
       }
     } catch (e) {
@@ -1399,26 +1557,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('上传失败: $errorMessage'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,            duration: const Duration(seconds: 3),
           ),
         );
       }
-    }
-  }
-
-  /// 创建带有图片数据的图片选区元素
-  void _createImageAreaWithData(Uint8List imageData) {
-    // 这里暂时只是显示消息，实际的实现需要与画布交互
-    // 在真实的实现中，应该与MapCanvas通信，创建一个新的图片选区元素
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请在画布上拖拽创建选区，图片将自动填充'),
-          backgroundColor: Colors.blue,
-          duration: Duration(seconds: 2),
-        ),
-      );
     }
   }
 }

@@ -275,11 +275,13 @@ class MapCanvas extends StatefulWidget {
   final double? previewStrokeWidth;
   final double? previewDensity;
   final double? previewCurvature;
-  final TriangleCutType? previewTriangleCut;
-  final String? selectedElementId;
+  final TriangleCutType? previewTriangleCut;  final String? selectedElementId;
   final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
   final double zoomSensitivity;
+  // 图片缓冲区相关参数
+  final Uint8List? imageBufferData;
+  final BoxFit imageBufferFit;
 
   const MapCanvas({
     super.key,
@@ -303,10 +305,12 @@ class MapCanvas extends StatefulWidget {
     this.previewDensity,
     this.previewCurvature,
     this.previewTriangleCut,
-    this.selectedElementId,
-    required this.onElementSelected,
+    this.selectedElementId,    required this.onElementSelected,
     required this.backgroundPattern,
     required this.zoomSensitivity,
+    // 图片缓冲区相关参数
+    this.imageBufferData,
+    required this.imageBufferFit,
   });
 
   @override
@@ -1289,8 +1293,7 @@ class _MapCanvasState extends State<MapCanvas> {
     if (_effectiveDrawingTool == DrawingElementType.eraser) {
       _handleEraserAction(normalizedStart, normalizedEnd);
     } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _handleFreeDrawingEnd();
-    } else {
+      _handleFreeDrawingEnd();    } else {
       // 计算新元素的 z 值（比当前最大 z 值大 1）
       final maxZIndex = widget.selectedLayer!.elements.isEmpty
           ? 0
@@ -1298,7 +1301,22 @@ class _MapCanvasState extends State<MapCanvas> {
                 .map((e) => e.zIndex)
                 .reduce(
                   (a, b) => a > b ? a : b,
-                ); // Add the drawing element to the selected layer
+                ); 
+      
+      // 对于图片选区工具，根据缓冲区状态决定是否添加图片数据
+      Uint8List? imageData;
+      BoxFit? imageFit;
+      
+      if (_effectiveDrawingTool == DrawingElementType.imageArea) {
+        // 如果缓冲区中有图片数据，则使用缓冲区的图片
+        if (widget.imageBufferData != null) {
+          imageData = widget.imageBufferData;
+          imageFit = widget.imageBufferFit;
+        }
+        // 如果缓冲区中没有图片数据，则创建空的图片选区（imageData和imageFit保持null）
+      }
+
+      // Add the drawing element to the selected layer
       final element = MapDrawingElement(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: _effectiveDrawingTool!,
@@ -1310,6 +1328,9 @@ class _MapCanvasState extends State<MapCanvas> {
         triangleCut: _effectiveTriangleCut,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
+        // 图片相关数据（只有图片选区工具才会设置）
+        imageData: imageData,
+        imageFit: imageFit,
       );
 
       final updatedLayer = widget.selectedLayer!.copyWith(
