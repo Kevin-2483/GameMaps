@@ -1441,8 +1441,7 @@ class _MapCanvasState extends State<MapCanvas> {
       _handleEraserAction(normalizedStart, normalizedEnd);
     } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _handleFreeDrawingEnd();
-    } else {
-      // 计算新元素的 z 值（比当前最大 z 值大 1）
+    } else {      // 计算新元素的 z 值（比当前最大 z 值大 1）
       final maxZIndex = widget.selectedLayer!.elements.isEmpty
           ? 0
           : widget.selectedLayer!.elements
@@ -1461,6 +1460,13 @@ class _MapCanvasState extends State<MapCanvas> {
         triangleCut: _effectiveTriangleCut,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
+        // 对于图片选区工具，将缓冲区数据复制到元素中，使其独立于缓冲区
+        imageData: _effectiveDrawingTool == DrawingElementType.imageArea
+            ? widget.imageBufferData
+            : null,
+        imageFit: _effectiveDrawingTool == DrawingElementType.imageArea
+            ? widget.imageBufferFit
+            : null,
       );
 
       final updatedLayer = widget.selectedLayer!.copyWith(
