@@ -575,25 +575,70 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    // 计算目标位置的全局索引
-    int targetIndex = newIndex;
-    if (newIndex > oldIndex) {
-      targetIndex = newIndex - 1;
-    }
-
+    // 重新计算目标位置的全局索引
     int newGlobalIndex = 0;
-    for (int i = 0; i < targetIndex; i++) {
+    
+    // 修正：无论向前还是向后移动，都计算到目标位置的开始
+    // 然后在 _moveGroup 中根据移动方向进行调整
+    for (int i = 0; i < newIndex; i++) {
       final group = groups.elementAtOrNull(i);
       if (group != null) {
         newGlobalIndex += group.length;
       }
     }
 
+    print('移动组大小: ${oldGroup.length}');
+    print('移动组图层: ${oldGroup.map((l) => l.name).toList()}');
     print(
       '组全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
     );
 
-    widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
+    // 对于组移动，需要特殊处理：移动整个组而不是单个图层
+    _moveGroup(oldGlobalIndex, oldGroup.length, newGlobalIndex, oldIndex, newIndex);
+  }
+
+  /// 移动整个组
+  void _moveGroup(int oldStartIndex, int groupSize, int newStartIndex, int oldGroupIndex, int newGroupIndex) {
+    print('=== 移动组 ===');
+    print(
+      'oldStartIndex: $oldStartIndex, groupSize: $groupSize, newStartIndex: $newStartIndex',
+    );
+    print('oldGroupIndex: $oldGroupIndex, newGroupIndex: $newGroupIndex');
+
+    // 使用批量更新方式
+    final List<MapLayer> currentLayers = List.from(widget.layers);
+
+    // 提取要移动的组
+    final movedGroup = currentLayers.sublist(
+      oldStartIndex,
+      oldStartIndex + groupSize,
+    );
+
+    // 从原位置移除组
+    currentLayers.removeRange(oldStartIndex, oldStartIndex + groupSize);
+
+    // 重新计算插入位置
+    int adjustedNewIndex = newStartIndex;
+    
+    if (newGroupIndex > oldGroupIndex) {
+      // 向后移动：需要调整位置，因为前面移除了元素
+      adjustedNewIndex = newStartIndex - groupSize;
+    }
+    // 向前移动：位置不需要调整
+
+    // 在新位置插入组
+    currentLayers.insertAll(adjustedNewIndex, movedGroup);
+
+    print('移动后图层名称: ${currentLayers.map((l) => l.name).toList()}');
+
+    // 通知父组件更新图层顺序
+    if (widget.onLayersBatchUpdated != null) {
+      widget.onLayersBatchUpdated!(currentLayers);
+    } else {
+      // 如果没有批量更新回调，使用传统方式
+      print('使用传统重排序方式');
+      print('警告：没有批量更新接口，无法正确移动组');
+    }
   }
 
   /// 处理透明度变化（拖动时）
