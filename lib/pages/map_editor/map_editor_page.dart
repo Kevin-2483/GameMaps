@@ -85,6 +85,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
 
+  // 新增：图层组折叠状态
+  Map<String, bool> _layerGroupCollapsedStates = {};
+
   // 自动关闭开关状态
   bool _isDrawingToolbarAutoClose = true;
   bool _isLayerPanelAutoClose = true;
@@ -1553,6 +1556,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       );
     } // 图层面板
+    // 图层面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图层',
@@ -1603,9 +1607,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 allLegendGroups: _currentMap?.legendGroups ?? [],
                 onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
                 onLayersBatchUpdated: _updateLayersBatch,
+                // 新增：图层组折叠状态相关参数
+                groupCollapsedStates: _layerGroupCollapsedStates,
+                onGroupCollapsedStatesChanged: (newStates) {
+                  setState(() {
+                    _layerGroupCollapsedStates = newStates;
+                  });
+                },
               ),
       ),
-    ); // 图例面板
+    );
+    // 图例管理面板
     panels.add(
       _buildCollapsiblePanel(
         title: '图例管理',

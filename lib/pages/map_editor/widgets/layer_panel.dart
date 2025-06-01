@@ -23,8 +23,10 @@ class LayerPanel extends StatefulWidget {
   final List<LegendGroup>? allLegendGroups; // 改为可空类型
   final Function(MapLayer, List<LegendGroup>)?
   onShowLayerLegendBinding; // 显示图层图例绑定抽屉
-  // 新增：批量更新图层回调
   final Function(List<MapLayer>)? onLayersBatchUpdated;
+  // 新增：折叠状态相关参数
+  final Map<String, bool>? groupCollapsedStates; // 传入的折叠状态
+  final Function(Map<String, bool>)? onGroupCollapsedStatesChanged; // 折叠状态变化回调
 
   const LayerPanel({
     super.key,
@@ -45,6 +47,8 @@ class LayerPanel extends StatefulWidget {
     this.allLegendGroups, // 改为可选参数
     this.onShowLayerLegendBinding,
     this.onLayersBatchUpdated,
+    this.groupCollapsedStates, // 新增
+    this.onGroupCollapsedStatesChanged, // 新增
   });
 
   @override
@@ -56,8 +60,11 @@ class _LayerPanelState extends State<LayerPanel> {
   final Map<String, double> _tempOpacityValues = {};
   final Map<String, Timer?> _opacityTimers = {};
 
-  // 新增：用于存储每个组的折叠状态
-  final Map<String, bool> _groupCollapsedStates = {};
+  // 修改：使用本地状态，但从父组件同步
+  late Map<String, bool> _groupCollapsedStates;
+
+  // 添加标志位避免在构建期间调用setState
+  bool _isInitialized = false;
 
   @override
   void dispose() {
@@ -66,6 +73,117 @@ class _LayerPanelState extends State<LayerPanel> {
       timer?.cancel();
     }
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 从父组件获取折叠状态，如果没有则初始化
+    _groupCollapsedStates = Map<String, bool>.from(
+      widget.groupCollapsedStates ?? {},
+    );
+
+    // 使用 addPostFrameCallback 延迟初始化，避免在构建期间调用 setState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeGroupCollapsedStates();
+        _isInitialized = true;
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(LayerPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 同步父组件传入的折叠状态
+    if (widget.groupCollapsedStates != null &&
+        widget.groupCollapsedStates != oldWidget.groupCollapsedStates) {
+      _groupCollapsedStates = Map<String, bool>.from(
+        widget.groupCollapsedStates!,
+      );
+    }
+
+    // 当图层发生变化时，更新折叠状态映射
+    if (oldWidget.layers != widget.layers && _isInitialized) {
+      // 使用 addPostFrameCallback 避免在构建期间调用 setState
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _updateGroupCollapsedStates();
+        }
+      });
+    }
+  }
+
+  /// 初始化图层组的折叠状态，只为新组设置默认值
+  void _initializeGroupCollapsedStates() {
+    if (!mounted) return;
+
+    final groups = _groupLinkedLayers();
+    bool hasNewGroups = false;
+
+    for (int i = 0; i < groups.length; i++) {
+      final group = groups[i];
+      if (group.isNotEmpty && group.length > 1) {
+        final groupId = 'group_${group.first.id}';
+        // 只为没有状态的新组设置默认折叠状态
+        if (!_groupCollapsedStates.containsKey(groupId)) {
+          _groupCollapsedStates[groupId] = true; // 默认折叠
+          hasNewGroups = true;
+        }
+      }
+    }
+
+    // 如果有新组被添加，通知父组件
+    if (hasNewGroups) {
+      _notifyGroupCollapsedStatesChanged();
+    }
+  }
+
+  /// 更新图层组的折叠状态映射
+  void _updateGroupCollapsedStates() {
+    if (!mounted) return;
+
+    final groups = _groupLinkedLayers();
+    final newCollapsedStates = <String, bool>{};
+
+    for (int i = 0; i < groups.length; i++) {
+      final group = groups[i];
+      if (group.isNotEmpty && group.length > 1) {
+        final groupId = 'group_${group.first.id}';
+        // 保持已有的折叠状态，新组默认折叠
+        newCollapsedStates[groupId] = _groupCollapsedStates[groupId] ?? true;
+      }
+    }
+
+    // 检查是否有变化
+    final hasChanges = !_mapsEqual(_groupCollapsedStates, newCollapsedStates);
+
+    // 更新状态映射，移除不存在的组
+    _groupCollapsedStates.clear();
+    _groupCollapsedStates.addAll(newCollapsedStates);
+
+    // 如果有变化，通知父组件
+    if (hasChanges) {
+      _notifyGroupCollapsedStatesChanged();
+    }
+  }
+
+  /// 比较两个Map是否相等
+  bool _mapsEqual(Map<String, bool> map1, Map<String, bool> map2) {
+    if (map1.length != map2.length) return false;
+    for (final key in map1.keys) {
+      if (map1[key] != map2[key]) return false;
+    }
+    return true;
+  }
+
+  /// 通知父组件折叠状态发生变化
+  void _notifyGroupCollapsedStatesChanged() {
+    if (!mounted) return;
+    widget.onGroupCollapsedStatesChanged?.call(
+      Map<String, bool>.from(_groupCollapsedStates),
+    );
   }
 
   /// 将图层分组为链接组
@@ -151,11 +269,14 @@ class _LayerPanelState extends State<LayerPanel> {
     int groupIndex,
   ) {
     final isMultiLayer = group.length > 1;
-    final isGroupSelected = _isGroupSelected(group); // 新增：检查组是否被选中
+    final isGroupSelected = _isGroupSelected(group);
 
     // 为组生成唯一ID用于折叠状态管理
     final groupId = 'group_${group.first.id}';
-    final isCollapsed = _groupCollapsedStates[groupId] ?? false;
+    // 获取折叠状态，多图层组默认折叠，单图层组默认展开
+    final isCollapsed = isMultiLayer
+        ? (_groupCollapsedStates[groupId] ?? true)
+        : false;
 
     return Container(
       key: ValueKey(groupId),
@@ -166,9 +287,8 @@ class _LayerPanelState extends State<LayerPanel> {
           color: isGroupSelected
               ? Theme.of(context).colorScheme.primary
               : Colors.grey.shade300,
-          width: isGroupSelected ? 2 : 1, // 选中时边框加粗
+          width: isGroupSelected ? 2 : 1,
         ),
-        // 新增：选中时的背景色
         color: isGroupSelected
             ? Theme.of(
                 context,
@@ -367,10 +487,15 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 切换组的折叠状态
   void _toggleGroupCollapse(String groupId) {
+    if (!mounted) return;
+
     setState(() {
       _groupCollapsedStates[groupId] =
-          !(_groupCollapsedStates[groupId] ?? false);
+          !(_groupCollapsedStates[groupId] ?? true);
     });
+
+    // 通知父组件状态变化
+    _notifyGroupCollapsedStatesChanged();
   }
 
   /// 检查组是否可见（组内所有图层都可见才认为组可见）
