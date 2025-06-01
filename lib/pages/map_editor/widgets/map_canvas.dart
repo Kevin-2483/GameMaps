@@ -275,13 +275,15 @@ class MapCanvas extends StatefulWidget {
   final double? previewStrokeWidth;
   final double? previewDensity;
   final double? previewCurvature;
-  final TriangleCutType? previewTriangleCut;  final String? selectedElementId;
+  final TriangleCutType? previewTriangleCut;
+  final String? selectedElementId;
   final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
   final double zoomSensitivity;
-  // 图片缓冲区相关参数
-  final Uint8List? imageBufferData;
-  final BoxFit imageBufferFit;
+
+  // 添加图片缓冲区相关参数
+  final Uint8List? imageBufferData; // 图片缓冲区数据
+  final BoxFit imageBufferFit; // 图片适应方式
 
   const MapCanvas({
     super.key,
@@ -305,12 +307,14 @@ class MapCanvas extends StatefulWidget {
     this.previewDensity,
     this.previewCurvature,
     this.previewTriangleCut,
-    this.selectedElementId,    required this.onElementSelected,
+    this.selectedElementId,
+    required this.onElementSelected,
     required this.backgroundPattern,
     required this.zoomSensitivity,
-    // 图片缓冲区相关参数
+
+    // 添加图片缓冲区参数
     this.imageBufferData,
-    required this.imageBufferFit,
+    this.imageBufferFit = BoxFit.contain,
   });
 
   @override
@@ -323,6 +327,136 @@ class _MapCanvasState extends State<MapCanvas> {
   Offset? _currentDrawingStart;
   Offset? _currentDrawingEnd;
   bool _isDrawing = false;
+
+  // 添加图片缓存 - 支持实时解码
+  final Map<String, ui.Image> _imageCache = {};
+  final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片
+
+  // 监听图片缓冲区变化
+  Uint8List? _lastImageBufferData;
+  ui.Image? _imageBufferCachedImage;
+  Future<ui.Image?>? _imageBufferDecodingFuture;
+
+  @override
+  void didUpdateWidget(MapCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 检查图片缓冲区是否发生变化
+    if (widget.imageBufferData != oldWidget.imageBufferData) {
+      _handleImageBufferChange();
+    }
+
+    // 检查图层元素是否有新的图片需要解码
+    if (oldWidget.selectedLayer != widget.selectedLayer) {
+      _preloadLayerImages();
+    }
+  }
+
+  /// 预加载图层中的图片元素
+  Future<void> _preloadLayerImages() async {
+    if (widget.selectedLayer == null) return;
+
+    for (final element in widget.selectedLayer!.elements) {
+      if (element.type == DrawingElementType.imageArea &&
+          element.imageData != null) {
+        await _getOrDecodeElementImage(element);
+      }
+    }
+  }
+
+  /// 获取或解码元素图片
+  Future<ui.Image?> _getOrDecodeElementImage(MapDrawingElement element) async {
+    final cacheKey = element.id;
+
+    // 如果已经缓存，直接返回
+    if (_imageCache.containsKey(cacheKey)) {
+      return _imageCache[cacheKey];
+    }
+
+    // 如果正在解码，返回正在进行的Future
+    if (_imageDecodingFutures.containsKey(cacheKey)) {
+      return _imageDecodingFutures[cacheKey];
+    }
+
+    // 开始新的解码过程
+    if (element.imageData != null) {
+      final decodingFuture = _decodeElementImage(element.imageData!, cacheKey);
+      _imageDecodingFutures[cacheKey] = decodingFuture;
+      return decodingFuture;
+    }
+
+    return null;
+  }
+
+  /// 解码元素图片
+  Future<ui.Image?> _decodeElementImage(
+    Uint8List imageData,
+    String cacheKey,
+  ) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageData);
+      final frame = await codec.getNextFrame();
+
+      // 缓存解码结果
+      _imageCache[cacheKey] = frame.image;
+      _imageDecodingFutures.remove(cacheKey);
+
+      // 触发重绘
+      if (mounted) {
+        setState(() {});
+      }
+
+      return frame.image;
+    } catch (e) {
+      print('Failed to decode image for element $cacheKey: $e');
+      _imageDecodingFutures.remove(cacheKey);
+      return null;
+    }
+  }
+
+  /// 处理图片缓冲区变化
+  void _handleImageBufferChange() {
+    // 如果图片缓冲区清空了
+    if (widget.imageBufferData == null) {
+      _imageBufferCachedImage?.dispose();
+      _imageBufferCachedImage = null;
+      _imageBufferDecodingFuture = null;
+      _lastImageBufferData = null;
+      return;
+    }
+
+    // 如果图片数据没有变化，不需要重新解码
+    if (widget.imageBufferData == _lastImageBufferData) {
+      return;
+    }
+
+    _lastImageBufferData = widget.imageBufferData;
+
+    // 开始异步解码新图片
+    _imageBufferDecodingFuture = _decodeImageBuffer(widget.imageBufferData!);
+  }
+
+  /// 异步解码图片缓冲区
+  Future<ui.Image?> _decodeImageBuffer(Uint8List imageData) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageData);
+      final frame = await codec.getNextFrame();
+
+      // 释放旧的缓存图片
+      _imageBufferCachedImage?.dispose();
+      _imageBufferCachedImage = frame.image;
+
+      // 触发重绘
+      if (mounted) {
+        setState(() {});
+      }
+
+      return frame.image;
+    } catch (e) {
+      print('Failed to decode image buffer: $e');
+      return null;
+    }
+  }
 
   // 自由绘制路径支持
   List<Offset> _freeDrawingPath = [];
@@ -348,6 +482,15 @@ class _MapCanvasState extends State<MapCanvas> {
 
   @override
   void dispose() {
+    // 清理图片缓存
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
+    _imageDecodingFutures.clear();
+
+    _imageBufferCachedImage?.dispose();
+
     _transformationController.dispose();
     _drawingPreviewNotifier.dispose();
     super.dispose();
@@ -515,6 +658,10 @@ class _MapCanvasState extends State<MapCanvas> {
             isEditMode: !widget.isPreviewMode,
             selectedElementId: widget.selectedElementId,
             handleSize: handleSize,
+            imageCache: _imageCache, // 传递元素图片缓存
+            imageBufferCachedImage: _imageBufferCachedImage, // 传递缓冲区图片
+            currentImageBufferData: widget.imageBufferData,
+            imageBufferFit: widget.imageBufferFit,
           ),
         ),
       ),
@@ -1293,7 +1440,8 @@ class _MapCanvasState extends State<MapCanvas> {
     if (_effectiveDrawingTool == DrawingElementType.eraser) {
       _handleEraserAction(normalizedStart, normalizedEnd);
     } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _handleFreeDrawingEnd();    } else {
+      _handleFreeDrawingEnd();
+    } else {
       // 计算新元素的 z 值（比当前最大 z 值大 1）
       final maxZIndex = widget.selectedLayer!.elements.isEmpty
           ? 0
@@ -1301,22 +1449,7 @@ class _MapCanvasState extends State<MapCanvas> {
                 .map((e) => e.zIndex)
                 .reduce(
                   (a, b) => a > b ? a : b,
-                ); 
-      
-      // 对于图片选区工具，根据缓冲区状态决定是否添加图片数据
-      Uint8List? imageData;
-      BoxFit? imageFit;
-      
-      if (_effectiveDrawingTool == DrawingElementType.imageArea) {
-        // 如果缓冲区中有图片数据，则使用缓冲区的图片
-        if (widget.imageBufferData != null) {
-          imageData = widget.imageBufferData;
-          imageFit = widget.imageBufferFit;
-        }
-        // 如果缓冲区中没有图片数据，则创建空的图片选区（imageData和imageFit保持null）
-      }
-
-      // Add the drawing element to the selected layer
+                ); // Add the drawing element to the selected layer
       final element = MapDrawingElement(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: _effectiveDrawingTool!,
@@ -1328,9 +1461,6 @@ class _MapCanvasState extends State<MapCanvas> {
         triangleCut: _effectiveTriangleCut,
         zIndex: maxZIndex + 1,
         createdAt: DateTime.now(),
-        // 图片相关数据（只有图片选区工具才会设置）
-        imageData: imageData,
-        imageFit: imageFit,
       );
 
       final updatedLayer = widget.selectedLayer!.copyWith(
@@ -2068,12 +2198,20 @@ class _LayerPainter extends CustomPainter {
   final bool isEditMode;
   final String? selectedElementId;
   final double? handleSize;
+  final Map<String, ui.Image> imageCache; // 元素图片缓存
+  final ui.Image? imageBufferCachedImage; // 图片缓冲区缓存
+  final Uint8List? currentImageBufferData; // 当前图片缓冲区数据
+  final BoxFit imageBufferFit; // 图片缓冲区适应方式
 
   _LayerPainter({
     required this.layer,
     required this.isEditMode,
     this.selectedElementId,
     this.handleSize,
+    required this.imageCache,
+    this.imageBufferCachedImage,
+    this.currentImageBufferData,
+    this.imageBufferFit = BoxFit.contain,
   });
 
   @override
@@ -2772,212 +2910,140 @@ class _LayerPainter extends CustomPainter {
     );
     final rect = Rect.fromPoints(start, end);
 
-    // 保存画布状态
-    canvas.save();
-
-    // 应用三角形裁剪（如果需要）
+    // 检查是否需要应用裁剪
     final needsTriangleClip = element.triangleCut != TriangleCutType.none;
-    if (needsTriangleClip) {
-      final trianglePath = _createTrianglePath(rect, element.triangleCut);
-      canvas.clipPath(trianglePath);
+    final needsCurvatureClip = element.curvature > 0.0;
+
+    if (needsTriangleClip || needsCurvatureClip) {
+      canvas.save();
+
+      if (needsCurvatureClip && needsTriangleClip) {
+        final Path finalPath = _getFinalEraserPath(
+          rect,
+          element.curvature,
+          element.triangleCut,
+        );
+        canvas.clipPath(finalPath);
+      } else if (needsCurvatureClip) {
+        final Path curvedPath = _createSuperellipsePath(
+          rect,
+          element.curvature,
+        );
+        canvas.clipPath(curvedPath);
+      } else if (needsTriangleClip) {
+        final Path trianglePath = _createTrianglePath(
+          rect,
+          element.triangleCut,
+        );
+        canvas.clipPath(trianglePath);
+      }
     }
 
-    if (element.imageData != null && element.imageData!.isNotEmpty) {
-      // 有图片数据，尝试绘制图片
-      _drawImageInRect(canvas, element, rect);
+    // 绘制图片内容
+    if (element.imageData != null) {
+      // 1. 优先使用元素自己的图片数据
+      final cachedImage = imageCache[element.id];
+      if (cachedImage != null) {
+        _drawCachedImage(
+          canvas,
+          cachedImage,
+          rect,
+          element.imageFit ?? BoxFit.contain,
+        );
+      } else {
+        // 图片还在解码中，显示加载占位符
+        _drawImageLoadingPlaceholder(
+          canvas,
+          rect,
+          element.imageFit ?? BoxFit.contain,
+        );
+      }
+    } else if (currentImageBufferData != null) {
+      // 2. 如果元素没有图片数据，但图片缓冲区有数据，使用缓冲区的图片
+      if (imageBufferCachedImage != null) {
+        _drawCachedImage(canvas, imageBufferCachedImage!, rect, imageBufferFit);
+      } else {
+        // 缓冲区图片还在解码中
+        _drawImageBufferLoadingPlaceholder(canvas, rect);
+      }
     } else {
-      // 没有图片数据，绘制选区占位符
-      _drawImageAreaPlaceholder(canvas, rect);
-    }
-
-    // 恢复画布状态
-    canvas.restore();
-  }
-
-  void _drawImageInRect(Canvas canvas, MapDrawingElement element, Rect rect) {
-    try {
-      // 使用低级API来绘制图片
-      // 首先将Uint8List解码为ui.Image
-      _decodeAndDrawImage(
+      // 3. 没有任何图片数据，显示空白占位符
+      _drawImageEmptyPlaceholder(
         canvas,
-        element.imageData!,
         rect,
         element.imageFit ?? BoxFit.contain,
       );
-    } catch (e) {
-      // 绘制错误占位符
-      _drawImageAreaError(canvas, rect, '图片加载失败');
+    }
+
+    if (needsTriangleClip || needsCurvatureClip) {
+      canvas.restore();
     }
   }
 
-  /// 解码并绘制图片的异步方法（使用Future处理）
-  void _decodeAndDrawImage(
-    Canvas canvas,
-    Uint8List imageData,
-    Rect rect,
-    BoxFit fit,
-  ) {
-    // 在CustomPainter中，我们需要使用同步的方式来绘制
-    // 这里我们绘制一个加载状态的占位符，真正的图片绘制需要在widget层面处理
-    _drawImageLoadingPlaceholder(canvas, rect, imageData, fit);
+  /// 绘制缓存的图片
+  void _drawCachedImage(Canvas canvas, ui.Image image, Rect rect, BoxFit fit) {
+    final Size imageSize = Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    final FittedSizes fittedSizes = applyBoxFit(fit, imageSize, rect.size);
+
+    final Size destinationSize = fittedSizes.destination;
+    final Size sourceSize = fittedSizes.source;
+
+    // 计算居中位置
+    final Rect destinationRect = Rect.fromLTWH(
+      rect.left + (rect.width - destinationSize.width) / 2,
+      rect.top + (rect.height - destinationSize.height) / 2,
+      destinationSize.width,
+      destinationSize.height,
+    );
+
+    // 计算源矩形
+    final Rect sourceRect = Rect.fromLTWH(
+      (imageSize.width - sourceSize.width) / 2,
+      (imageSize.height - sourceSize.height) / 2,
+      sourceSize.width,
+      sourceSize.height,
+    );
+
+    // 绘制图片
+    canvas.drawImageRect(image, sourceRect, destinationRect, Paint());
   }
 
-  /// 绘制图片加载状态的占位符
-  void _drawImageLoadingPlaceholder(
-    Canvas canvas,
-    Rect rect,
-    Uint8List imageData,
-    BoxFit fit,
-  ) {
-    try {
-      // 绘制图片背景
-      final bgPaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
-      canvas.drawRect(rect, bgPaint);
-
-      // 绘制图片边框
-      final borderPaint = Paint()
-        ..color = Colors.blue.shade300
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
-      canvas.drawRect(rect, borderPaint);
-
-      // 绘制图片图标
-      final iconSize = math.min(rect.width, rect.height) * 0.2;
-      final iconCenter = rect.center - Offset(0, iconSize * 0.5);
-
-      final iconPaint = Paint()
-        ..color = Colors.blue.shade600
-        ..style = PaintingStyle.fill;
-
-      // 绘制简单的图片图标 (矩形 + 山峰)
-      final iconRect = Rect.fromCenter(
-        center: iconCenter,
-        width: iconSize,
-        height: iconSize * 0.8,
-      );
-      canvas.drawRect(iconRect, iconPaint);
-
-      // 绘制山峰图标
-      final mountainPath = Path();
-      mountainPath.moveTo(
-        iconRect.left + iconRect.width * 0.2,
-        iconRect.bottom - iconRect.height * 0.3,
-      );
-      mountainPath.lineTo(
-        iconRect.left + iconRect.width * 0.4,
-        iconRect.top + iconRect.height * 0.3,
-      );
-      mountainPath.lineTo(
-        iconRect.left + iconRect.width * 0.6,
-        iconRect.bottom - iconRect.height * 0.1,
-      );
-      mountainPath.lineTo(
-        iconRect.left + iconRect.width * 0.8,
-        iconRect.top + iconRect.height * 0.5,
-      );
-      mountainPath.lineTo(iconRect.right, iconRect.bottom);
-      mountainPath.close();
-
-      final mountainPaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
-      canvas.drawPath(mountainPath, mountainPaint);
-
-      // 绘制文本提示
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: '图片已加载 (${(imageData.length / 1024).toStringAsFixed(1)}KB)',
-          style: TextStyle(
-            color: Colors.blue.shade700,
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          rect.center.dx - textPainter.width / 2,
-          rect.center.dy + iconSize * 0.8,
-        ),
-      );
-
-      // 绘制图片适应方式提示
-      final fitText = _getBoxFitDisplayName(fit);
-      final fitTextPainter = TextPainter(
-        text: TextSpan(
-          text: '适应: $fitText',
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 8),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      fitTextPainter.layout();
-      fitTextPainter.paint(
-        canvas,
-        Offset(
-          rect.center.dx - fitTextPainter.width / 2,
-          rect.center.dy + iconSize * 0.8 + textPainter.height + 2,
-        ),
-      );
-    } catch (e) {
-      // 绘制错误占位符
-      _drawImageAreaError(canvas, rect, '图片加载失败');
-    }
-  }
-
-  void _drawImageAreaPlaceholder(Canvas canvas, Rect rect) {
-    // 绘制选区背景
-    final bgPaint = Paint()
-      ..color = Colors.grey.shade100
+  /// 绘制图片缓冲区加载占位符
+  void _drawImageBufferLoadingPlaceholder(Canvas canvas, Rect rect) {
+    // 半透明背景
+    final backgroundPaint = Paint()
+      ..color = Colors.green.withOpacity(0.1)
       ..style = PaintingStyle.fill;
-    canvas.drawRect(rect, bgPaint);
+    canvas.drawRect(rect, backgroundPaint);
 
-    // 绘制虚线边框
+    // 边框
     final borderPaint = Paint()
-      ..color = Colors.grey.shade400
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    _drawDashedRect(canvas, rect, borderPaint, 5.0);
-
-    // 绘制上传图标
-    final iconSize = math.min(rect.width, rect.height) * 0.3;
-    final iconCenter = rect.center - Offset(0, iconSize * 0.3);
-
-    final iconPaint = Paint()
-      ..color = Colors.grey.shade500
+      ..color = Colors.green.withOpacity(0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
+    canvas.drawRect(rect, borderPaint);
 
-    // 绘制上传箭头
-    final arrowPath = Path();
-    arrowPath.moveTo(iconCenter.dx, iconCenter.dy - iconSize * 0.3);
-    arrowPath.lineTo(iconCenter.dx, iconCenter.dy + iconSize * 0.3);
+    // 加载图标
+    final iconSize = math.min(rect.width, rect.height) * 0.2;
+    final center = rect.center;
 
-    // 箭头头部
-    arrowPath.moveTo(
-      iconCenter.dx - iconSize * 0.15,
-      iconCenter.dy - iconSize * 0.15,
-    );
-    arrowPath.lineTo(iconCenter.dx, iconCenter.dy - iconSize * 0.3);
-    arrowPath.lineTo(
-      iconCenter.dx + iconSize * 0.15,
-      iconCenter.dy - iconSize * 0.15,
-    );
+    final iconPaint = Paint()
+      ..color = Colors.green.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
 
-    canvas.drawPath(arrowPath, iconPaint);
+    // 简单的加载图标 (圆形)
+    canvas.drawCircle(center, iconSize / 2, iconPaint);
 
-    // 绘制文本提示
+    // 绘制提示文本
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '点击上传图片',
+        text: '缓冲区图片解码中...',
         style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 12,
+          color: Colors.green.shade700,
+          fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -2986,11 +3052,202 @@ class _LayerPainter extends CustomPainter {
     textPainter.layout();
     textPainter.paint(
       canvas,
+      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
+    );
+  }
+
+  /// 绘制图片加载状态的占位符
+  void _drawImageLoadingPlaceholder(
+    Canvas canvas,
+    Rect rect,
+    BoxFit fit, // 修正：这里应该是 BoxFit，不是 Uint8List
+  ) {
+    // 半透明背景
+    final backgroundPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, backgroundPaint);
+
+    // 边框
+    final borderPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawRect(rect, borderPaint);
+
+    // 加载图标
+    final iconSize = math.min(rect.width, rect.height) * 0.2;
+    final center = rect.center;
+
+    final iconPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+
+    // 简单的加载图标 (圆形)
+    canvas.drawCircle(center, iconSize / 2, iconPaint);
+
+    // 绘制提示文本
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '图片解码中...',
+        style: TextStyle(
+          color: Colors.blue.shade700,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
+    );
+
+    // 绘制图片适应方式提示
+    final fitText = _getBoxFitDisplayName(fit);
+    final fitTextPainter = TextPainter(
+      text: TextSpan(
+        text: '适应: $fitText',
+        style: TextStyle(color: Colors.grey.shade600, fontSize: 8),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    fitTextPainter.layout();
+    fitTextPainter.paint(
+      canvas,
       Offset(
-        rect.center.dx - textPainter.width / 2,
-        rect.center.dy + iconSize * 0.6,
+        rect.center.dx - fitTextPainter.width / 2,
+        rect.center.dy + iconSize + textPainter.height + 2,
       ),
     );
+  }
+
+  /// 绘制空白图片占位符
+  void _drawImageEmptyPlaceholder(Canvas canvas, Rect rect, BoxFit fit) {
+    // 虚线边框
+    final borderPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // 绘制虚线矩形
+    _drawDashedRect(canvas, rect, borderPaint, 5.0);
+
+    // 图片图标
+    final iconSize = math.min(rect.width, rect.height) * 0.2;
+    final center = rect.center;
+
+    final iconPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    // 简单的图片图标 (矩形加山峰)
+    final iconRect = Rect.fromCenter(
+      center: center,
+      width: iconSize,
+      height: iconSize * 0.8,
+    );
+    canvas.drawRect(iconRect, iconPaint);
+
+    // 画一个简单的山峰图标
+    final mountainPath = Path();
+    mountainPath.moveTo(
+      iconRect.left + iconRect.width * 0.2,
+      iconRect.bottom - iconRect.height * 0.3,
+    );
+    mountainPath.lineTo(
+      iconRect.left + iconRect.width * 0.5,
+      iconRect.top + iconRect.height * 0.2,
+    );
+    mountainPath.lineTo(
+      iconRect.left + iconRect.width * 0.8,
+      iconRect.bottom - iconRect.height * 0.3,
+    );
+    canvas.drawPath(mountainPath, iconPaint);
+
+    // 绘制提示文本
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '点击上传图片',
+        style: TextStyle(
+          color: Colors.grey.shade600,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
+    );
+  }
+
+  /// 绘制虚线矩形
+  void _drawDashedRect(
+    Canvas canvas,
+    Rect rect,
+    Paint paint,
+    double dashWidth,
+  ) {
+    final Path path = Path();
+
+    // 顶边
+    double currentX = rect.left;
+    bool draw = true;
+    while (currentX < rect.right) {
+      final nextX = math.min(currentX + dashWidth, rect.right);
+      if (draw) {
+        path.moveTo(currentX, rect.top);
+        path.lineTo(nextX, rect.top);
+      }
+      currentX = nextX;
+      draw = !draw;
+    }
+
+    // 右边
+    double currentY = rect.top;
+    draw = true;
+    while (currentY < rect.bottom) {
+      final nextY = math.min(currentY + dashWidth, rect.bottom);
+      if (draw) {
+        path.moveTo(rect.right, currentY);
+        path.lineTo(rect.right, nextY);
+      }
+      currentY = nextY;
+      draw = !draw;
+    }
+
+    // 底边
+    currentX = rect.right;
+    draw = true;
+    while (currentX > rect.left) {
+      final nextX = math.max(currentX - dashWidth, rect.left);
+      if (draw) {
+        path.moveTo(currentX, rect.bottom);
+        path.lineTo(nextX, rect.bottom);
+      }
+      currentX = nextX;
+      draw = !draw;
+    }
+
+    // 左边
+    currentY = rect.bottom;
+    draw = true;
+    while (currentY > rect.top) {
+      final nextY = math.max(currentY - dashWidth, rect.top);
+      if (draw) {
+        path.moveTo(rect.left, currentY);
+        path.lineTo(rect.left, nextY);
+      }
+      currentY = nextY;
+      draw = !draw;
+    }
+
+    canvas.drawPath(path, paint);
   }
 
   void _drawImageAreaError(Canvas canvas, Rect rect, String message) {
@@ -3047,25 +3304,6 @@ class _LayerPainter extends CustomPainter {
         rect.center.dy + iconSize * 0.5,
       ),
     );
-  }
-
-  void _drawDashedRect(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double dashLength,
-  ) {
-    // 绘制虚线矩形
-    _drawDashedLine(canvas, rect.topLeft, rect.topRight, paint, dashLength);
-    _drawDashedLine(canvas, rect.topRight, rect.bottomRight, paint, dashLength);
-    _drawDashedLine(
-      canvas,
-      rect.bottomRight,
-      rect.bottomLeft,
-      paint,
-      dashLength,
-    );
-    _drawDashedLine(canvas, rect.bottomLeft, rect.topLeft, paint, dashLength);
   }
 
   String _getBoxFitDisplayName(BoxFit boxFit) {
@@ -3589,6 +3827,7 @@ class _CurrentDrawingPainter extends CustomPainter {
       ),
       isEditMode: true,
       selectedElementId: selectedElementId,
+      imageCache: const {}, // 添加必需的 imageCache 参数，预览时使用空缓存
     );
     layerPainter.paint(canvas, size);
   }

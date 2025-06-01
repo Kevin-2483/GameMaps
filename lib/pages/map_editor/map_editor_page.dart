@@ -96,18 +96,18 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false; // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {};  // 绘制工具预览状态
+  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
   double? _previewDensity;
   double? _previewCurvature; // 弧度预览状态
   TriangleCutType? _previewTriangleCut; // 三角形切割预览状态
-  
+
   // 图片缓冲区状态
   Uint8List? _imageBufferData; // 缓冲区中的图片数据
   BoxFit _imageBufferFit = BoxFit.contain; // 缓冲区图片的适应方式
-  
+
   // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
@@ -432,7 +432,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     _prioritizeLayerAndGroupDisplay();
   }
 
-    void _onLayerSelectionCleared() {
+  void _onLayerSelectionCleared() {
     setState(() {
       _selectedLayer = null;
       // 保留 _selectedLayerGroup，不清除
@@ -1720,7 +1720,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       canRedo: _canRedo,
                       selectedLayer: _selectedLayer,
                       onElementDeleted: _deleteElement,
-                      selectedElementId: _selectedElementId,                      onElementSelected: (elementId) {
+                      selectedElementId: _selectedElementId,
+                      onElementSelected: (elementId) {
                         setState(() => _selectedElementId = elementId);
                       },
                       onZIndexInspectorRequested: _showZIndexInspector,
@@ -2197,8 +2198,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         final mapEditorPrefs = userPrefsProvider.mapEditor;
 
         // 创建用于显示的地图副本，使用重新排序的图层
-        final displayMap = _currentMap!.copyWith(layers: _layersForDisplay);        return MapCanvas(
-          mapItem: displayMap, // 使用重新排序的地图
+        final displayMap = _currentMap!.copyWith(layers: _layersForDisplay);
+        return MapCanvas(
+          mapItem: _currentMap!,
           selectedLayer: _selectedLayer,
           selectedDrawingTool: _selectedDrawingTool,
           selectedColor: _selectedColor,
@@ -2220,11 +2222,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           previewTriangleCut: _previewTriangleCut,
           selectedElementId: _selectedElementId,
           onElementSelected: (elementId) {
-            setState(() => _selectedElementId = elementId);
+            setState(() {
+              _selectedElementId = elementId;
+            });
           },
-          backgroundPattern: mapEditorPrefs.backgroundPattern,
-          zoomSensitivity: mapEditorPrefs.zoomSensitivity,
-          // 图片缓冲区参数
+          backgroundPattern: context
+              .read<UserPreferencesProvider>()
+              .mapEditor
+              .backgroundPattern,
+          zoomSensitivity: context
+              .read<UserPreferencesProvider>()
+              .mapEditor
+              .zoomSensitivity,
+          // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
         );
