@@ -50,7 +50,7 @@ class _LayerPanelState extends State<LayerPanel> {
   final Map<String, double> _tempOpacityValues = {};
   final Map<String, Timer?> _opacityTimers = {};
 
-    // 新增：用于存储每个组的折叠状态
+  // 新增：用于存储每个组的折叠状态
   final Map<String, bool> _groupCollapsedStates = {};
 
   @override
@@ -145,7 +145,7 @@ class _LayerPanelState extends State<LayerPanel> {
     int groupIndex,
   ) {
     final isMultiLayer = group.length > 1;
-    
+
     // 为组生成唯一ID用于折叠状态管理
     final groupId = 'group_${group.first.id}';
     final isCollapsed = _groupCollapsedStates[groupId] ?? false;
@@ -175,12 +175,12 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-    /// 构建组头部（包含拖动手柄、折叠按钮和组信息）
+  /// 构建组头部（包含拖动手柄、折叠按钮和组信息）
   Widget _buildGroupHeader(
-    int groupIndex, 
-    List<MapLayer> group, 
-    bool isCollapsed, 
-    String groupId
+    int groupIndex,
+    List<MapLayer> group,
+    bool isCollapsed,
+    String groupId,
   ) {
     return Container(
       width: double.infinity,
@@ -207,15 +207,17 @@ class _LayerPanelState extends State<LayerPanel> {
                 // 拖动手柄
                 Icon(Icons.drag_handle, size: 16, color: Colors.grey.shade600),
                 const SizedBox(width: 8),
-                
+
                 // 折叠/展开图标
                 Icon(
-                  isCollapsed ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_down,
+                  isCollapsed
+                      ? Icons.keyboard_arrow_right
+                      : Icons.keyboard_arrow_down,
                   size: 20,
                   color: Colors.grey.shade700,
                 ),
                 const SizedBox(width: 8),
-                
+
                 // 组信息
                 Expanded(
                   child: Column(
@@ -230,37 +232,34 @@ class _LayerPanelState extends State<LayerPanel> {
                           color: Colors.grey.shade800,
                         ),
                       ),
-                      if (!isCollapsed) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          group.map((l) => l.name).join(', '),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 2),
+                      Text(
+                        group.map((l) => l.name).join(', '),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-                
-                // 组操作按钮
-                if (!isCollapsed) ...[
-                  // 组可见性切换按钮
-                  IconButton(
-                    icon: Icon(
-                      _isGroupVisible(group) ? Icons.visibility : Icons.visibility_off,
-                      size: 16,
-                      color: _isGroupVisible(group) ? null : Colors.grey,
-                    ),
-                    onPressed: () => _toggleGroupVisibility(group),
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                    tooltip: '',
+
+                // 组可见性切换按钮 - 折叠和展开时都显示
+                IconButton(
+                  icon: Icon(
+                    _isGroupVisible(group)
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    size: 16,
+                    color: _isGroupVisible(group) ? null : Colors.grey,
                   ),
-                ],
+                  onPressed: () => _toggleGroupVisibility(group),
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                  tooltip: '',
+                ),
               ],
             ),
           ),
@@ -269,11 +268,13 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-    /// 构建可折叠的图层列表
+  /// 构建可折叠的图层列表
   Widget _buildCollapsibleLayerList(List<MapLayer> group, bool isCollapsed) {
     return AnimatedCrossFade(
       duration: const Duration(milliseconds: 200),
-      crossFadeState: isCollapsed ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      crossFadeState: isCollapsed
+          ? CrossFadeState.showSecond
+          : CrossFadeState.showFirst,
       firstChild: _buildInGroupReorderableList(group),
       secondChild: Container(
         height: 0,
@@ -283,23 +284,24 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-    /// 切换组的折叠状态
+  /// 切换组的折叠状态
   void _toggleGroupCollapse(String groupId) {
     setState(() {
-      _groupCollapsedStates[groupId] = !(_groupCollapsedStates[groupId] ?? false);
+      _groupCollapsedStates[groupId] =
+          !(_groupCollapsedStates[groupId] ?? false);
     });
   }
 
-    /// 检查组是否可见（组内所有图层都可见才认为组可见）
+  /// 检查组是否可见（组内所有图层都可见才认为组可见）
   bool _isGroupVisible(List<MapLayer> group) {
     return group.every((layer) => layer.isVisible);
   }
 
-    /// 切换组的可见性
+  /// 切换组的可见性
   void _toggleGroupVisibility(List<MapLayer> group) {
     final isGroupCurrentlyVisible = _isGroupVisible(group);
     final newVisibility = !isGroupCurrentlyVisible;
-    
+
     final updatedLayers = group.map((layer) {
       return layer.copyWith(
         isVisible: newVisibility,
@@ -311,7 +313,7 @@ class _LayerPanelState extends State<LayerPanel> {
     if (widget.onLayersBatchUpdated != null) {
       // 创建完整的图层列表副本
       final allLayers = List<MapLayer>.from(widget.layers);
-      
+
       // 更新对应的图层
       for (final updatedLayer in updatedLayers) {
         final index = allLayers.indexWhere((l) => l.id == updatedLayer.id);
@@ -319,7 +321,7 @@ class _LayerPanelState extends State<LayerPanel> {
           allLayers[index] = updatedLayer;
         }
       }
-      
+
       widget.onLayersBatchUpdated!(allLayers);
     } else {
       // 逐个更新
@@ -330,8 +332,6 @@ class _LayerPanelState extends State<LayerPanel> {
 
     widget.onSuccess?.call(newVisibility ? '已显示组内所有图层' : '已隐藏组内所有图层');
   }
-
-
 
   /// 构建单独图层瓦片（带拖动手柄）
   Widget _buildSingleLayerTile(
@@ -728,7 +728,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 记录原始的 newIndex，用于判断是否是拖到最后
     final originalNewIndex = newIndex;
-    
+
     // 重要修正：调整 newIndex 的边界
     if (newIndex > group.length) {
       newIndex = group.length;
@@ -754,20 +754,20 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 检查移动的图层是否是组内最后一个（连接状态为否）
     final isMovingLastElement = !(oldLayer.isLinkedToNext ?? false);
-    
+
     print('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
     print('调整后的 newIndex: $newIndex');
 
     // 计算当前图层的全局索引
     final oldGlobalIndex = widget.layers.indexOf(oldLayer);
-    
+
     // 创建重排序后的组副本来进行检测
     final reorderedGroup = List<MapLayer>.from(group);
     final movedLayer = reorderedGroup.removeAt(oldIndex);
-    
+
     // 修正：重新调整插入位置的计算
     int adjustedNewIndex;
-    
+
     // 如果原始 newIndex 大于等于组长度，说明要移动到最后
     if (originalNewIndex >= group.length) {
       adjustedNewIndex = group.length - 1; // 移动到最后位置
@@ -777,7 +777,7 @@ class _LayerPanelState extends State<LayerPanel> {
       adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
       print('正常位置调整: $adjustedNewIndex');
     }
-    
+
     reorderedGroup.insert(adjustedNewIndex, movedLayer);
 
     // 计算重排序后目标位置的全局索引
@@ -819,7 +819,7 @@ class _LayerPanelState extends State<LayerPanel> {
           print('开启图层链接以保持组完整性: ${layer.name}');
         }
       }
-      
+
       // 确保最后一个元素关闭链接
       final lastLayer = reorderedGroup.last;
       final lastIsLinked = lastLayer.isLinkedToNext ?? false;
