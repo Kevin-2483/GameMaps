@@ -284,6 +284,7 @@ class MapCanvas extends StatefulWidget {
   // 添加图片缓冲区相关参数
   final Uint8List? imageBufferData; // 图片缓冲区数据
   final BoxFit imageBufferFit; // 图片适应方式
+  final List<MapLayer>? displayOrderLayers; // 新增：优先显示顺序的图层列表
 
   const MapCanvas({
     super.key,
@@ -311,6 +312,7 @@ class MapCanvas extends StatefulWidget {
     required this.onElementSelected,
     required this.backgroundPattern,
     required this.zoomSensitivity,
+    this.displayOrderLayers,
 
     // 添加图片缓冲区参数
     this.imageBufferData,
@@ -590,7 +592,7 @@ class _MapCanvasState extends State<MapCanvas> {
                     ),
                   ),
                   // Touch handler for drawing - 覆盖整个画布区域
-                  if ( _effectiveDrawingTool != null)
+                  if (_effectiveDrawingTool != null)
                     Positioned(
                       left: 0,
                       top: 0,
@@ -617,7 +619,7 @@ class _MapCanvasState extends State<MapCanvas> {
                     ),
 
                   // Touch handler for element interaction - 当没有绘制工具选中时
-                  if ( _effectiveDrawingTool == null)
+                  if (_effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
                       top: 0,
@@ -740,7 +742,7 @@ class _MapCanvasState extends State<MapCanvas> {
       left: canvasPosition.dx - centerOffset.dx,
       top: canvasPosition.dy - centerOffset.dy,
       child: GestureDetector(
-        onPanStart:(details) => _onLegendDragStart(item, details),
+        onPanStart: (details) => _onLegendDragStart(item, details),
         onPanUpdate: (details) => _onLegendDragUpdate(item, details),
         onPanEnd: (details) => _onLegendDragEnd(item, details),
         // onPanStart: widget.isPreviewMode
@@ -1366,7 +1368,7 @@ class _MapCanvasState extends State<MapCanvas> {
   }
 
   void _onDrawingStart(DragStartDetails details) {
-    if ( _effectiveDrawingTool == null) return;
+    if (_effectiveDrawingTool == null) return;
 
     // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
     _currentDrawingStart = _getClampedCanvasPosition(details.localPosition);
@@ -1690,25 +1692,47 @@ class _MapCanvasState extends State<MapCanvas> {
 
   /// 构建按层级排序的所有元素
   List<Widget> _buildLayeredElements() {
+    print('=== 开始构建图层元素 ===');
+
     final List<_LayeredElement> allElements = [];
 
-    // **关键修改：使用 mapItem.layers 的顺序，而不是基于 order 字段重新排序**
-    // 收集所有图层及其元素（按照 mapItem.layers 中的顺序）
-    for (
-      int layerIndex = 0;
-      layerIndex < widget.mapItem.layers.length;
-      layerIndex++
-    ) {
-      final layer = widget.mapItem.layers[layerIndex];
-      if (!layer.isVisible) continue;
+    // 使用传入的显示顺序图层，如果没有则使用默认排序
+    final layersToRender = widget.displayOrderLayers ?? widget.mapItem.layers;
+    final sortedLayers = List<MapLayer>.from(layersToRender);
+
+    // 如果没有传入显示顺序，则按 order 排序
+    if (widget.displayOrderLayers == null) {
+      sortedLayers.sort((a, b) => a.order.compareTo(b.order));
+      print('使用默认图层排序（按 order 字段）');
+    } else {
+      print('使用传入的显示顺序图层列表');
+    }
+
+    // 收集所有图层及其元素（按照排序后的顺序）
+    for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
+      final layer = sortedLayers[layerIndex];
+      if (!layer.isVisible) {
+        print('跳过不可见图层: ${layer.name}');
+        continue;
+      }
 
       final isSelectedLayer = widget.selectedLayer?.id == layer.id;
+      print(
+        '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}',
+      );
+      print('是否选中: $isSelectedLayer');
+
+      // 关键修改：使用 layerIndex 作为渲染顺序，而不是 layer.order
+      final renderOrder = layerIndex;
 
       // 添加图层图片（如果有）
       if (layer.imageData != null) {
+        print(
+          '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+        );
         allElements.add(
           _LayeredElement(
-            order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
+            order: renderOrder, // 使用在显示列表中的位置索引
             isSelected: isSelectedLayer,
             widget: _buildLayerImageWidget(layer),
           ),
@@ -1716,31 +1740,38 @@ class _MapCanvasState extends State<MapCanvas> {
       }
 
       // 添加图层绘制元素
+      print(
+        '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+      );
       allElements.add(
         _LayeredElement(
-          order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
+          order: renderOrder, // 使用在显示列表中的位置索引
           isSelected: isSelectedLayer,
           widget: _buildLayerWidget(layer),
         ),
       );
     }
 
+    print('--- 处理图例组 ---');
     // 收集所有图例组
     for (final legendGroup in widget.mapItem.legendGroups) {
-      if (!legendGroup.isVisible) continue;
+      if (!legendGroup.isVisible) {
+        print('跳过不可见图例组: ${legendGroup.name}');
+        continue;
+      }
 
-      // 计算图例组的层级（基于绑定的最高图层在 mapItem.layers 中的位置）
-      int legendOrder = -1;
+      print('处理图例组: ${legendGroup.name}, 可见=${legendGroup.isVisible}');
+
+      // 计算图例组的层级（基于绑定的最高图层在显示列表中的位置）
+      int legendRenderOrder = -1;
       bool isLegendSelected = false;
+      List<String> boundLayerNames = [];
 
-      for (
-        int layerIndex = 0;
-        layerIndex < widget.mapItem.layers.length;
-        layerIndex++
-      ) {
-        final layer = widget.mapItem.layers[layerIndex];
+      for (int i = 0; i < sortedLayers.length; i++) {
+        final layer = sortedLayers[i];
         if (layer.legendGroupIds.contains(legendGroup.id)) {
-          legendOrder = math.max(legendOrder, layerIndex); // 使用图层在列表中的位置
+          boundLayerNames.add('${layer.name}(${layer.order})');
+          legendRenderOrder = math.max(legendRenderOrder, i); // 使用位置索引而不是order
           // 如果任何绑定的图层被选中，图例也被认为是选中的
           if (widget.selectedLayer?.id == layer.id) {
             isLegendSelected = true;
@@ -1748,27 +1779,68 @@ class _MapCanvasState extends State<MapCanvas> {
         }
       }
 
-      // 如果图例组没有绑定到任何图层，使用默认order
-      if (legendOrder == -1) {
-        legendOrder = 0;
+      print('绑定的图层: $boundLayerNames');
+      print('计算得到的 legendRenderOrder: $legendRenderOrder');
+      print('是否选中: $isLegendSelected');
+
+      // 如果图例组没有绑定到任何图层，使用默认位置
+      if (legendRenderOrder == -1) {
+        legendRenderOrder = 0;
+        print('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
       }
 
+      print(
+        '添加图例组元素 - renderOrder=$legendRenderOrder, selected=$isLegendSelected',
+      );
       allElements.add(
         _LayeredElement(
-          order: legendOrder,
+          order: legendRenderOrder,
           isSelected: isLegendSelected,
           widget: _buildLegendWidget(legendGroup),
         ),
       );
     }
 
-    // 按order排序，选中的元素排在最后（显示在最上层）
+    print('--- 排序前的元素列表 ---');
+    for (int i = 0; i < allElements.length; i++) {
+      final element = allElements[i];
+      final typeDescription =
+          element.widget.runtimeType.toString().contains('LayerImageWidget')
+          ? '图层图片'
+          : element.widget.runtimeType.toString().contains('LayerWidget')
+          ? '图层绘制'
+          : element.widget.runtimeType.toString().contains('LegendWidget')
+          ? '图例组'
+          : '未知类型';
+      print(
+        '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
+      );
+    }
+
+    // 按 renderOrder 排序，选中的元素排在最后（显示在最上层）
     allElements.sort((a, b) {
       if (a.isSelected && !b.isSelected) return 1;
       if (!a.isSelected && b.isSelected) return -1;
       return a.order.compareTo(b.order);
     });
 
+    print('--- 排序后的渲染顺序 (从底层到顶层) ---');
+    for (int i = 0; i < allElements.length; i++) {
+      final element = allElements[i];
+      final typeDescription =
+          element.widget.runtimeType.toString().contains('LayerImageWidget')
+          ? '图层图片'
+          : element.widget.runtimeType.toString().contains('LayerWidget')
+          ? '图层绘制'
+          : element.widget.runtimeType.toString().contains('LegendWidget')
+          ? '图例组'
+          : '未知类型';
+      print(
+        '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
+      );
+    }
+
+    print('=== 图层元素构建完成 ===');
     return allElements.map((e) => e.widget).toList();
   }
 

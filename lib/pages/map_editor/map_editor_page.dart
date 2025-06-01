@@ -2238,6 +2238,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
+          displayOrderLayers: _layersForDisplay, // 新增：传递显示顺序
         );
       },
     );
