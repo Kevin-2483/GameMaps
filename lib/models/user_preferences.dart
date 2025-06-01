@@ -370,7 +370,7 @@ class ToolPreferences {
         'paste': 'Ctrl+V',
         'delete': 'Delete',
       },
-      toolbarLayout: ['line', 'dashedLine', 'arrow', 'rectangle', 'hollowRectangle', 'diagonalLines', 'crossLines', 'dotGrid', 'freeDrawing', 'text', 'eraser'],
+      toolbarLayout: ['line', 'dashedLine', 'arrow', 'rectangle', 'hollowRectangle', 'diagonalLines', 'crossLines', 'dotGrid', 'freeDrawing', 'text', 'eraser', 'imageArea'],
       showAdvancedTools: false,
       handleSize: 8.0,
     );

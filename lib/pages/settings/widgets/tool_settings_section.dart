@@ -512,6 +512,8 @@ class ToolSettingsSection extends StatelessWidget {
         return Icons.text_fields;
       case 'eraser':
         return Icons.cleaning_services;
+      case 'imageArea':
+        return Icons.photo_size_select_actual;
       default:
         return Icons.build;
     }
@@ -546,6 +548,8 @@ class ToolSettingsSection extends StatelessWidget {
         return '文本';
       case 'eraser':
         return '橡皮擦';
+      case 'imageArea':
+        return '图片选区';
       default:
         return tool;
     }
