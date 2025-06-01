@@ -411,15 +411,89 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   void _onLayerGroupSelected(List<MapLayer> group) {
     setState(() {
-      _selectedLayer = null; // 清除单图层选择
+      // 修改：不清除单图层选择，允许同时选择
       _selectedLayerGroup = group; // 设置组选择
     });
 
-    // 禁用绘制工具
-    _disableDrawingTools();
+    // 修改：不禁用绘制工具，允许绘制到选中的单个图层上
+    // 只有在没有选中单个图层时才禁用绘制工具
+    if (_selectedLayer == null) {
+      _disableDrawingTools();
+    }
 
     // 触发优先显示逻辑
-    _prioritizeLayerGroup(group);
+    _prioritizeLayerAndGroupDisplay();
+  }
+
+    void _onLayerSelectionCleared() {
+    setState(() {
+      _selectedLayer = null;
+      // 保留 _selectedLayerGroup，不清除
+    });
+
+    // 更新显示顺序
+    _prioritizeLayerAndGroupDisplay();
+  }
+
+  // 修改：新的优先显示逻辑，支持图层和图层组的组合显示
+  void _prioritizeLayerAndGroupDisplay() {
+    print('优先显示图层和图层组的组合');
+
+    if (_currentMap == null) return;
+
+    setState(() {
+      final allLayers = List<MapLayer>.from(_currentMap!.layers);
+      final selectedLayer = _selectedLayer;
+      final selectedGroup = _selectedLayerGroup;
+
+      // 如果既没有选中图层也没有选中组，恢复正常顺序
+      if (selectedLayer == null && selectedGroup == null) {
+        _displayOrderLayers = allLayers
+          ..sort((a, b) => a.order.compareTo(b.order));
+        return;
+      }
+
+      // 分离图层：优先图层、组内图层、其他图层
+      final priorityLayers = <MapLayer>[]; // 最优先显示的图层
+      final groupLayers = <MapLayer>[]; // 组内图层（排除优先图层）
+      final otherLayers = <MapLayer>[]; // 其他图层
+
+      for (final layer in allLayers) {
+        // 检查是否是选中的单个图层
+        if (selectedLayer != null && layer.id == selectedLayer.id) {
+          priorityLayers.add(layer);
+        }
+        // 检查是否在选中的组中
+        else if (selectedGroup != null &&
+            selectedGroup.any((groupLayer) => groupLayer.id == layer.id)) {
+          groupLayers.add(layer);
+        }
+        // 其他图层
+        else {
+          otherLayers.add(layer);
+        }
+      }
+
+      // 对各部分进行排序（保持内部相对顺序）
+      priorityLayers.sort((a, b) => a.order.compareTo(b.order));
+      groupLayers.sort((a, b) => a.order.compareTo(b.order));
+      otherLayers.sort((a, b) => a.order.compareTo(b.order));
+
+      // 构建最终的显示顺序：其他图层 -> 组内图层 -> 优先图层
+      // （后绘制的显示在上层）
+      _displayOrderLayers = [...otherLayers, ...groupLayers, ...priorityLayers];
+
+      print('重新排列后的显示顺序:');
+      print(
+        '- 其他图层: ${otherLayers.map((l) => '${l.name}(${l.order})').toList()}',
+      );
+      print(
+        '- 组内图层: ${groupLayers.map((l) => '${l.name}(${l.order})').toList()}',
+      );
+      print(
+        '- 优先图层: ${priorityLayers.map((l) => '${l.name}(${l.order})').toList()}',
+      );
+    });
   }
 
   void _onSelectionCleared() {
@@ -494,7 +568,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   /// 检查绘制工具是否应该被禁用
   bool get _shouldDisableDrawingTools {
-    return _selectedLayer == null && _selectedLayerGroup != null;
+    return _selectedLayer == null;
   }
 
   /// 检查是否没有任何图层选择
@@ -630,9 +704,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _updateDisplayOrderAfterLayerChange() {
     if (_currentMap == null) return;
 
-    if (_selectedLayerGroup != null) {
-      // 如果有选中的组，重新应用优先显示
-      _prioritizeLayerGroup(_selectedLayerGroup!);
+    if (_selectedLayerGroup != null || _selectedLayer != null) {
+      // 如果有选中的组或图层，重新应用优先显示
+      _prioritizeLayerAndGroupDisplay();
     } else {
       // 否则恢复正常顺序
       _restoreNormalLayerOrder();
@@ -1255,7 +1329,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _onLayerSelected(MapLayer layer) {
     setState(() {
       _selectedLayer = layer;
-      _selectedLayerGroup = null; // 清除组选择
+      // 修改：不清除组选择，允许同时选择
+      // _selectedLayerGroup = null; // 这行代码被注释掉
+
       // 检查并清除不兼容的图例选择
       _clearIncompatibleLegendSelection();
     });
@@ -1263,8 +1339,28 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 重新启用绘制工具
     _enableDrawingTools();
 
-    // 恢复正常绘制顺序
-    _restoreNormalLayerOrder();
+    // 应用新的优先显示逻辑
+    _prioritizeLayerAndGroupDisplay();
+  }
+
+  /// 构建图层面板的副标题
+  String _buildLayerPanelSubtitle() {
+    final hasSelectedLayer = _selectedLayer != null;
+    final hasSelectedGroup = _selectedLayerGroup != null;
+
+    if (hasSelectedLayer && hasSelectedGroup) {
+      // 同时选中图层和图层组
+      return '图层: ${_selectedLayer!.name} + 图层组 (${_selectedLayerGroup!.length} 个)';
+    } else if (hasSelectedLayer) {
+      // 只选中图层
+      return '当前: ${_selectedLayer!.name}';
+    } else if (hasSelectedGroup) {
+      // 只选中图层组
+      return '图层组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}';
+    } else {
+      // 没有选择
+      return '未选择图层';
+    }
   }
 
   @override
@@ -1534,11 +1630,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           showTooltips: layout.showTooltips,
           animationDuration: layout.animationDuration,
           enableAnimations: layout.enableAnimations,
-          // 添加禁用状态提示
+          // 修改禁用状态提示逻辑
           collapsedSubtitle: _hasNoLayerSelected
               ? '需要选择图层才能使用绘制工具'
-              : _shouldDisableDrawingTools
-              ? '图层组选中时无法使用绘制工具'
+              : _selectedLayer != null
+              ? '绘制到: ${_selectedLayer!.name}'
+              : _selectedLayerGroup != null
+              ? '选中图层组 (${_selectedLayerGroup!.length} 个图层)'
               : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
           child: _isDrawingToolbarCollapsed
               ? null
@@ -1554,38 +1652,32 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       selectedTriangleCut: _selectedTriangleCut,
                       isEditMode: !widget.isPreviewMode,
                       onToolSelected: (tool) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedDrawingTool = tool);
                         }
                       },
                       onColorSelected: (color) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedColor = color);
                         }
                       },
                       onStrokeWidthChanged: (width) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedStrokeWidth = width);
                         }
                       },
                       onDensityChanged: (density) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedDensity = density);
                         }
                       },
                       onCurvatureChanged: (curvature) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedCurvature = curvature);
                         }
                       },
                       onTriangleCutChanged: (triangleCut) {
-                        if (!_hasNoLayerSelected &&
-                            !_shouldDisableDrawingTools) {
+                        if (!_shouldDisableDrawingTools) {
                           setState(() => _selectedTriangleCut = triangleCut);
                         }
                       },
@@ -1608,8 +1700,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       onZIndexInspectorRequested: _showZIndexInspector,
                     ),
 
-                    // 禁用蒙板
-                    if (_hasNoLayerSelected || _shouldDisableDrawingTools)
+                    // 修改禁用蒙板逻辑
+                    if (_shouldDisableDrawingTools)
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -1621,9 +1713,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  _hasNoLayerSelected
-                                      ? Icons.layers_outlined
-                                      : Icons.group_work_outlined,
+                                  Icons.layers_outlined,
                                   size: 48,
                                   color: Colors.white,
                                 ),
@@ -1633,9 +1723,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                     horizontal: 24,
                                   ),
                                   child: Text(
-                                    _hasNoLayerSelected
-                                        ? '请先选择一个图层\n才能使用绘制工具'
-                                        : '图层组选中时\n无法使用绘制工具\n请选择单个图层',
+                                    '请先选择一个图层或图层组\n才能使用绘制工具',
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Colors.white,
@@ -1645,22 +1733,20 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                     ),
                                   ),
                                 ),
-                                if (_hasNoLayerSelected) ...[
-                                  const SizedBox(height: 24),
-                                  ElevatedButton.icon(
-                                    onPressed: _addNewLayer,
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('添加新图层'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      foregroundColor: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimary,
-                                    ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: _addNewLayer,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('添加新图层'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary,
                                   ),
-                                ],
+                                ),
                               ],
                             ),
                           ),
@@ -1671,6 +1757,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       );
     }
+
     // 图层面板
     panels.add(
       _buildCollapsiblePanel(
@@ -1680,11 +1767,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         onToggleCollapsed: () => _handlePanelToggle('layer'),
         autoCloseEnabled: _isLayerPanelAutoClose,
         onAutoCloseToggled: (value) => _handleAutoCloseToggle('layer', value),
-        collapsedSubtitle: _selectedLayerGroup != null
-            ? '图层组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}'
-            : _selectedLayer != null
-            ? '当前: ${_selectedLayer!.name}'
-            : '未选择图层',
+        // 修改折叠状态下的副标题显示逻辑
+        collapsedSubtitle: _buildLayerPanelSubtitle(),
         compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
@@ -1718,6 +1802,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 allLegendGroups: _currentMap?.legendGroups ?? [],
                 onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
                 onLayersBatchUpdated: _updateLayersBatch,
+                onLayerSelectionCleared: _onLayerSelectionCleared,
                 // 新增：图层组折叠状态相关参数
                 groupCollapsedStates: _layerGroupCollapsedStates,
                 onGroupCollapsedStatesChanged: (newStates) {

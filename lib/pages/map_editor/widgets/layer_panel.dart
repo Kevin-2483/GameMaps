@@ -27,6 +27,7 @@ class LayerPanel extends StatefulWidget {
   // 新增：折叠状态相关参数
   final Map<String, bool>? groupCollapsedStates; // 传入的折叠状态
   final Function(Map<String, bool>)? onGroupCollapsedStatesChanged; // 折叠状态变化回调
+  final Function()? onLayerSelectionCleared; // 新增：只清除图层选择
 
   const LayerPanel({
     super.key,
@@ -49,6 +50,7 @@ class LayerPanel extends StatefulWidget {
     this.onLayersBatchUpdated,
     this.groupCollapsedStates, // 新增
     this.onGroupCollapsedStatesChanged, // 新增
+    this.onLayerSelectionCleared, // 新增
   });
 
   @override
@@ -406,8 +408,9 @@ class _LayerPanelState extends State<LayerPanel> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // 修改显示文本以反映新的选择逻辑
                           Text(
-                            '图层组 (${group.length} 个图层)${isGroupSelected ? ' - 已选中' : ''}',
+                            _buildGroupSelectionText(group, isGroupSelected),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: isGroupSelected
@@ -454,18 +457,43 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
+  /// 构建组选择状态的文本
+  String _buildGroupSelectionText(List<MapLayer> group, bool isGroupSelected) {
+    final baseText = '图层组 (${group.length} 个图层)';
+
+    if (isGroupSelected) {
+      // 检查是否还有单图层选择
+      final hasLayerSelected = widget.selectedLayer != null;
+      if (hasLayerSelected) {
+        return '$baseText - 已选中 (同时选择)';
+      } else {
+        return '$baseText - 已选中';
+      }
+    } else {
+      return baseText;
+    }
+  }
+
   /// 处理图层组选择
   void _handleGroupSelection(List<MapLayer> group) {
     print('选择图层组: ${group.map((l) => l.name).toList()}');
 
-    // 如果当前组已经被选中，则取消选择
+    // 修改：检查是否已经选中，支持同时选择
     if (_isGroupSelected(group)) {
-      widget.onSelectionCleared();
+      // 如果当前组已经被选中，则取消组选择（但保留单图层选择）
+      widget.onLayerGroupSelected([]); // 传递空列表表示取消组选择
       widget.onSuccess?.call('已取消图层组选择');
     } else {
-      // 选择新的图层组
+      // 选择新的图层组（不影响单图层选择）
       widget.onLayerGroupSelected(group);
-      widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)');
+
+      // 根据是否有单图层选择给出不同的提示
+      final hasLayerSelected = widget.selectedLayer != null;
+      if (hasLayerSelected) {
+        widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)，可同时操作图层和图层组');
+      } else {
+        widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)');
+      }
     }
   }
 
@@ -611,18 +639,23 @@ class _LayerPanelState extends State<LayerPanel> {
     final globalLayerIndex = widget.layers.indexOf(layer);
     final isLastLayer = globalLayerIndex == widget.layers.length - 1;
 
-    // 当图层组被选中时，图层显示不同的样式
+    // 修改背景色逻辑以支持同时选择
     Color? backgroundColor;
-    if (isGroupSelected) {
-      // 图层组被选中时，组内图层显示组选中的背景色
+    if (isSelected && isGroupSelected) {
+      // 图层和所属组都被选中时，使用最高优先级的背景色
       backgroundColor = Theme.of(
         context,
-      ).colorScheme.primaryContainer.withAlpha((0.15 * 255).toInt());
+      ).colorScheme.primaryContainer.withAlpha((0.4 * 255).toInt());
     } else if (isSelected) {
-      // 单独图层被选中时的背景色
+      // 只有图层被选中时的背景色
       backgroundColor = Theme.of(
         context,
       ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt());
+    } else if (isGroupSelected) {
+      // 只有图层组被选中时，组内图层显示组选中的背景色
+      backgroundColor = Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withAlpha((0.15 * 255).toInt());
     }
 
     return Container(
@@ -630,6 +663,10 @@ class _LayerPanelState extends State<LayerPanel> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
+        // 添加边框以更好地区分选择状态
+        border: isSelected
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+            : null,
       ),
       child: GestureDetector(
         onSecondaryTapDown: widget.isPreviewMode
@@ -646,9 +683,23 @@ class _LayerPanelState extends State<LayerPanel> {
               mainAxisSize: MainAxisSize.min, // 让列收缩到内容大小
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 第一排：可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
+                // 第一排：选择状态指示器 + 可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
                 Row(
                   children: [
+                    // 添加选择状态指示器
+                    if (isSelected || isGroupSelected)
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.secondary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    if (isSelected || isGroupSelected) const SizedBox(width: 8),
+
                     // 可见性按钮 - 禁用 tooltip
                     IconButton(
                       icon: Icon(
@@ -720,22 +771,24 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-  /// 处理图层选择（修改版本）
+  /// 处理图层选择（最终修改版本）
   void _handleLayerSelection(MapLayer layer, List<MapLayer> group) {
-    // 如果当前有图层组被选中，先清除组选择
-    if (widget.selectedLayerGroup != null) {
-      widget.onSelectionCleared();
-    }
-
     // 检查当前点击的图层是否已经被选中
     if (widget.selectedLayer?.id == layer.id) {
-      // 如果已经选中，则取消选择
-      widget.onSelectionCleared();
+      // 如果已经选中，则只取消图层选择（保留图层组选择）
+      if (widget.onLayerSelectionCleared != null) {
+        widget.onLayerSelectionCleared!();
+      } else {
+        // 如果没有单独的图层清除回调，则清除所有选择
+        widget.onSelectionCleared();
+      }
     } else {
-      // 如果未选中，则选择该图层
+      // 如果未选中，则选择该图层（不影响图层组选择）
       widget.onLayerSelected(layer);
     }
   }
+
+  
 
   /// 显示图片菜单
   void _showImageMenu(BuildContext context, MapLayer layer) {
