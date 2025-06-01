@@ -500,7 +500,68 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-  /// 处理组内重排序
+  /// 检查指定位置之前的元素是否与当前元素直接或间接相连
+  bool _isConnectedToPrevious(List<MapLayer> group, int targetIndex) {
+    if (targetIndex <= 0) return false;
+
+    // 从目标位置向前检查，看是否有连接链
+    for (int i = targetIndex - 1; i >= 0; i--) {
+      final layer = group[i];
+      final isLinked = layer.isLinkedToNext ?? false;
+
+      if (isLinked) {
+        // 如果找到一个有链接的元素，说明目标位置与前面的元素相连
+        return true;
+      } else {
+        // 如果遇到一个没有链接的元素，说明链断了
+        break;
+      }
+    }
+
+    return false;
+  }
+
+  /// 检查指定位置后面是否有与当前元素直接相连且连接状态为否的元素
+  bool _hasUnlinkedElementAfter(List<MapLayer> group, int currentIndex) {
+    if (currentIndex >= group.length - 1) return false;
+
+    // 检查紧邻的下一个元素是否是组内最后一个（连接状态为否）
+    final nextIndex = currentIndex + 1;
+    if (nextIndex < group.length) {
+      final nextLayer = group[nextIndex];
+      final nextIsLinked = nextLayer.isLinkedToNext ?? false;
+      return !nextIsLinked; // 如果下一个元素的连接状态为否，返回true
+    }
+
+    return false;
+  }
+
+  /// 检查在组内重排序时，元素是否应该开启链接状态
+  bool _shouldEnableLinkAfterMove(List<MapLayer> originalGroup, List<MapLayer> reorderedGroup, int newIndex, MapLayer movedLayer) {
+    // 如果移动到组内最后一个位置，不需要链接
+    if (newIndex >= reorderedGroup.length - 1) return false;
+    
+    // 检查原组是否是一个完整的连接组（除了最后一个元素）
+    bool wasCompleteGroup = true;
+    for (int i = 0; i < originalGroup.length - 1; i++) {
+      final layer = originalGroup[i];
+      final isLinked = layer.isLinkedToNext ?? false;
+      if (!isLinked) {
+        wasCompleteGroup = false;
+        break;
+      }
+    }
+    
+    // 如果原来是一个完整的组，那么重排序后也应该保持完整
+    if (wasCompleteGroup) {
+      return true;
+    }
+    
+    // 否则，检查目标位置前面是否有链接的元素
+    return _isConnectedToPrevious(reorderedGroup, newIndex);
+  }
+
+  /// 处理组内重排序（修正版）
   void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
     print('=== 组内重排序 ===');
     print('组内oldIndex: $oldIndex, newIndex: $newIndex');
@@ -516,26 +577,103 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 安全地获取图层
     final oldLayer = group.elementAtOrNull(oldIndex);
-    final newLayer = group.elementAtOrNull(newIndex);
-
-    if (oldLayer == null || newLayer == null) {
+    if (oldLayer == null) {
       print('图层为空，跳过');
       return;
     }
 
-    // 计算全局索引
+    // 检查移动的图层是否是组内最后一个（连接状态为否）
+    final isMovingLastElement = !(oldLayer.isLinkedToNext ?? false);
+    
+    print('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
+
+    // 计算当前图层的全局索引
     final oldGlobalIndex = widget.layers.indexOf(oldLayer);
-    final newGlobalIndex = widget.layers.indexOf(newLayer);
+    
+    // 创建重排序后的组副本来进行检测
+    final reorderedGroup = List<MapLayer>.from(group);
+    final movedLayer = reorderedGroup.removeAt(oldIndex);
+    reorderedGroup.insert(newIndex, movedLayer);
 
-    print(
-      '全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
-    );
+    // 计算重排序后目标位置的全局索引
+    final groupStartIndex = widget.layers.indexOf(group.first);
+    final newGlobalIndex = groupStartIndex + newIndex;
 
-    if (oldGlobalIndex == -1 || newGlobalIndex == -1) {
-      print('找不到图层的全局索引');
+    print('组在全局的起始位置: $groupStartIndex');
+    print('目标位置在组内: $newIndex');
+    print('计算出的新全局索引: $newGlobalIndex');
+
+    // 需要更新的图层列表
+    List<MapLayer> layersToUpdate = [];
+
+    // 如果移动的是组内最后一个元素（连接状态为否）
+    if (isMovingLastElement) {
+      // 使用新的检测方法判断是否应该开启链接
+      bool shouldEnableLink = _shouldEnableLinkAfterMove(group, reorderedGroup, newIndex, oldLayer);
+      
+      print('检测结果 - 应该开启链接: $shouldEnableLink');
+
+      // 如果需要开启当前移动图层的链接（不是移动到组内最后一个位置）
+      if (shouldEnableLink && newIndex < group.length - 1) {
+        final updatedMovedLayer = oldLayer.copyWith(
+          isLinkedToNext: true,
+          updatedAt: DateTime.now(),
+        );
+        layersToUpdate.add(updatedMovedLayer);
+        print('开启移动图层的链接: ${oldLayer.name}');
+      }
+
+      // 重要：当组内最后一个元素移动到其他位置时，
+      // 需要确保新的组内最后一个元素关闭链接状态
+      if (group.length > 1) {
+        // 找到重排序后新的组内最后一个元素
+        final newLastLayer = reorderedGroup[group.length - 1];
+        
+        // 如果新的最后一个元素不是我们刚移动的元素，且它当前是链接状态
+        if (newLastLayer.id != oldLayer.id) {
+          final newLastIsLinked = newLastLayer.isLinkedToNext ?? false;
+          if (newLastIsLinked) {
+            final updatedNewLastLayer = newLastLayer.copyWith(
+              isLinkedToNext: false,
+              updatedAt: DateTime.now(),
+            );
+            layersToUpdate.add(updatedNewLastLayer);
+            print('关闭新的组内最后元素的链接: ${newLastLayer.name}');
+          }
+        }
+      }
+    } else {
+      // 如果移动的不是组内最后一个元素
+      // 检查移动后是否有其他需要调整链接状态的情况
+      
+      // 检查是否有元素移动到了组内最后一个位置
+      if (newIndex == group.length - 1) {
+        // 移动的元素变成了组内最后一个，需要关闭它的链接
+        final isCurrentlyLinked = oldLayer.isLinkedToNext ?? false;
+        if (isCurrentlyLinked) {
+          final updatedMovedLayer = oldLayer.copyWith(
+            isLinkedToNext: false,
+            updatedAt: DateTime.now(),
+          );
+          layersToUpdate.add(updatedMovedLayer);
+          print('关闭移动到最后位置的图层链接: ${oldLayer.name}');
+        }
+      }
+    }
+
+    // 批量更新修改的图层
+    for (final layerToUpdate in layersToUpdate) {
+      widget.onLayerUpdated(layerToUpdate);
+    }
+
+    print('全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex');
+
+    if (oldGlobalIndex == -1 || newGlobalIndex == -1 || newGlobalIndex >= widget.layers.length) {
+      print('找不到图层的全局索引或索引超出范围');
       return;
     }
 
+    // 执行实际的重排序
     widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
   }
 
@@ -577,7 +715,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 重新计算目标位置的全局索引
     int newGlobalIndex = 0;
-    
+
     // 修正：无论向前还是向后移动，都计算到目标位置的开始
     // 然后在 _moveGroup 中根据移动方向进行调整
     for (int i = 0; i < newIndex; i++) {
@@ -594,11 +732,23 @@ class _LayerPanelState extends State<LayerPanel> {
     );
 
     // 对于组移动，需要特殊处理：移动整个组而不是单个图层
-    _moveGroup(oldGlobalIndex, oldGroup.length, newGlobalIndex, oldIndex, newIndex);
+    _moveGroup(
+      oldGlobalIndex,
+      oldGroup.length,
+      newGlobalIndex,
+      oldIndex,
+      newIndex,
+    );
   }
 
   /// 移动整个组
-  void _moveGroup(int oldStartIndex, int groupSize, int newStartIndex, int oldGroupIndex, int newGroupIndex) {
+  void _moveGroup(
+    int oldStartIndex,
+    int groupSize,
+    int newStartIndex,
+    int oldGroupIndex,
+    int newGroupIndex,
+  ) {
     print('=== 移动组 ===');
     print(
       'oldStartIndex: $oldStartIndex, groupSize: $groupSize, newStartIndex: $newStartIndex',
@@ -619,7 +769,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 重新计算插入位置
     int adjustedNewIndex = newStartIndex;
-    
+
     if (newGroupIndex > oldGroupIndex) {
       // 向后移动：需要调整位置，因为前面移除了元素
       adjustedNewIndex = newStartIndex - groupSize;
