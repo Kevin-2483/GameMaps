@@ -720,15 +720,21 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
-  /// 处理图层选择（新增方法）
+  /// 处理图层选择（修改版本）
   void _handleLayerSelection(MapLayer layer, List<MapLayer> group) {
     // 如果当前有图层组被选中，先清除组选择
     if (widget.selectedLayerGroup != null) {
       widget.onSelectionCleared();
     }
 
-    // 然后选择图层
-    widget.onLayerSelected(layer);
+    // 检查当前点击的图层是否已经被选中
+    if (widget.selectedLayer?.id == layer.id) {
+      // 如果已经选中，则取消选择
+      widget.onSelectionCleared();
+    } else {
+      // 如果未选中，则选择该图层
+      widget.onLayerSelected(layer);
+    }
   }
 
   /// 显示图片菜单

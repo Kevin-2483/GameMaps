@@ -428,8 +428,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedLayerGroup = null;
     });
 
-    // 重新启用绘制工具
-    _enableDrawingTools();
+    // 清除绘制工具（因为没有图层选择）
+    _disableDrawingTools();
 
     // 恢复正常绘制顺序
     _restoreNormalLayerOrder();
@@ -487,8 +487,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 禁用绘制工具的逻辑
     setState(() {
       _selectedDrawingTool = null; // 清除选中的绘制工具
+      _selectedElementId = null; // 清除选中的元素
     });
     print('绘制工具已禁用');
+  }
+
+  /// 检查绘制工具是否应该被禁用
+  bool get _shouldDisableDrawingTools {
+    return _selectedLayer == null && _selectedLayerGroup != null;
+  }
+
+  /// 检查是否没有任何图层选择
+  bool get _hasNoLayerSelected {
+    return _selectedLayer == null && _selectedLayerGroup == null;
   }
 
   void _enableDrawingTools() {
@@ -1240,6 +1251,22 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
   }
 
+  /// 选择单个图层时的处理
+  void _onLayerSelected(MapLayer layer) {
+    setState(() {
+      _selectedLayer = layer;
+      _selectedLayerGroup = null; // 清除组选择
+      // 检查并清除不兼容的图例选择
+      _clearIncompatibleLegendSelection();
+    });
+
+    // 重新启用绘制工具
+    _enableDrawingTools();
+
+    // 恢复正常绘制顺序
+    _restoreNormalLayerOrder();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<UserPreferencesProvider>(
@@ -1507,51 +1534,139 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           showTooltips: layout.showTooltips,
           animationDuration: layout.animationDuration,
           enableAnimations: layout.enableAnimations,
+          // 添加禁用状态提示
+          collapsedSubtitle: _hasNoLayerSelected
+              ? '需要选择图层才能使用绘制工具'
+              : _shouldDisableDrawingTools
+              ? '图层组选中时无法使用绘制工具'
+              : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
           child: _isDrawingToolbarCollapsed
               ? null
-              : DrawingToolbarOptimized(
-                  selectedTool: _selectedDrawingTool,
-                  selectedColor: _selectedColor,
-                  selectedStrokeWidth: _selectedStrokeWidth,
-                  selectedDensity: _selectedDensity,
-                  selectedCurvature: _selectedCurvature,
-                  selectedTriangleCut: _selectedTriangleCut,
-                  isEditMode: !widget.isPreviewMode,
-                  onToolSelected: (tool) {
-                    setState(() => _selectedDrawingTool = tool);
-                  },
-                  onColorSelected: (color) {
-                    setState(() => _selectedColor = color);
-                  },
-                  onStrokeWidthChanged: (width) {
-                    setState(() => _selectedStrokeWidth = width);
-                  },
-                  onDensityChanged: (density) {
-                    setState(() => _selectedDensity = density);
-                  },
-                  onCurvatureChanged: (curvature) {
-                    setState(() => _selectedCurvature = curvature);
-                  },
-                  onTriangleCutChanged: (triangleCut) {
-                    setState(() => _selectedTriangleCut = triangleCut);
-                  },
-                  onToolPreview: _handleDrawingToolPreview,
-                  onColorPreview: _handleColorPreview,
-                  onStrokeWidthPreview: _handleStrokeWidthPreview,
-                  onDensityPreview: _handleDensityPreview,
-                  onCurvaturePreview: _handleCurvaturePreview,
-                  onTriangleCutPreview: _handleTriangleCutPreview,
-                  onUndo: _undo,
-                  onRedo: _redo,
-                  canUndo: _canUndo,
-                  canRedo: _canRedo,
-                  selectedLayer: _selectedLayer,
-                  onElementDeleted: _deleteElement,
-                  selectedElementId: _selectedElementId,
-                  onElementSelected: (elementId) {
-                    setState(() => _selectedElementId = elementId);
-                  },
-                  onZIndexInspectorRequested: _showZIndexInspector,
+              : Stack(
+                  children: [
+                    // 绘制工具栏内容
+                    DrawingToolbarOptimized(
+                      selectedTool: _selectedDrawingTool,
+                      selectedColor: _selectedColor,
+                      selectedStrokeWidth: _selectedStrokeWidth,
+                      selectedDensity: _selectedDensity,
+                      selectedCurvature: _selectedCurvature,
+                      selectedTriangleCut: _selectedTriangleCut,
+                      isEditMode: !widget.isPreviewMode,
+                      onToolSelected: (tool) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedDrawingTool = tool);
+                        }
+                      },
+                      onColorSelected: (color) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedColor = color);
+                        }
+                      },
+                      onStrokeWidthChanged: (width) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedStrokeWidth = width);
+                        }
+                      },
+                      onDensityChanged: (density) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedDensity = density);
+                        }
+                      },
+                      onCurvatureChanged: (curvature) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedCurvature = curvature);
+                        }
+                      },
+                      onTriangleCutChanged: (triangleCut) {
+                        if (!_hasNoLayerSelected &&
+                            !_shouldDisableDrawingTools) {
+                          setState(() => _selectedTriangleCut = triangleCut);
+                        }
+                      },
+                      onToolPreview: _handleDrawingToolPreview,
+                      onColorPreview: _handleColorPreview,
+                      onStrokeWidthPreview: _handleStrokeWidthPreview,
+                      onDensityPreview: _handleDensityPreview,
+                      onCurvaturePreview: _handleCurvaturePreview,
+                      onTriangleCutPreview: _handleTriangleCutPreview,
+                      onUndo: _undo,
+                      onRedo: _redo,
+                      canUndo: _canUndo,
+                      canRedo: _canRedo,
+                      selectedLayer: _selectedLayer,
+                      onElementDeleted: _deleteElement,
+                      selectedElementId: _selectedElementId,
+                      onElementSelected: (elementId) {
+                        setState(() => _selectedElementId = elementId);
+                      },
+                      onZIndexInspectorRequested: _showZIndexInspector,
+                    ),
+
+                    // 禁用蒙板
+                    if (_hasNoLayerSelected || _shouldDisableDrawingTools)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withAlpha((0.8 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _hasNoLayerSelected
+                                      ? Icons.layers_outlined
+                                      : Icons.group_work_outlined,
+                                  size: 48,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: Text(
+                                    _hasNoLayerSelected
+                                        ? '请先选择一个图层\n才能使用绘制工具'
+                                        : '图层组选中时\n无法使用绘制工具\n请选择单个图层',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                                if (_hasNoLayerSelected) ...[
+                                  const SizedBox(height: 24),
+                                  ElevatedButton.icon(
+                                    onPressed: _addNewLayer,
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('添加新图层'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
         ),
       );
@@ -1592,13 +1707,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 onSelectionCleared: _onSelectionCleared,
                 selectedLayer: _selectedLayer,
                 isPreviewMode: widget.isPreviewMode,
-                onLayerSelected: (layer) {
-                  setState(() {
-                    _selectedLayer = layer;
-                    // 检查并清除不兼容的图例选择
-                    _clearIncompatibleLegendSelection();
-                  });
-                },
+                onLayerSelected: _onLayerSelected,
                 onLayerUpdated: _updateLayer,
                 onLayerDeleted: _deleteLayer,
                 onLayerAdded: _addNewLayer,
