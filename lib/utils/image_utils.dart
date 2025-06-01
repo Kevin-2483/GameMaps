@@ -1,8 +1,7 @@
-import 'dart:typed_data';
 import 'dart:convert';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 /// 图片处理工具类
 class ImageUtils {
@@ -18,60 +17,59 @@ class ImageUtils {
   /// 最大文件大小 (10MB)
   static const int maxFileSize = 10 * 1024 * 1024;
 
-  /// 选择并上传图片文件
+  /// 选择并编码图片文件
   static Future<Uint8List?> pickAndEncodeImage() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowedExtensions: supportedExtensions,
-        allowMultiple: false,
-        withData: true, // 确保获取文件数据
-      );
+      FilePickerResult? result;
+
+      if (kIsWeb) {
+        // Web平台使用 FileType.custom 并指定允许的扩展名
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+          allowMultiple: false,
+          withData: true, // Web平台需要设置为true才能获取字节数据
+        );
+      } else {
+        // 移动端和桌面端可以直接使用 FileType.image
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          allowMultiple: false,
+          withData: true,
+        );
+      }
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
 
-        // 优先使用bytes，如果没有则尝试读取路径
-        Uint8List? fileBytes;
-        if (file.bytes != null) {
-          fileBytes = file.bytes!;
-        } else if (file.path != null) {
-          // 在某些平台上可能需要从路径读取
-          try {
-            final fileObject = File(file.path!);
-            fileBytes = await fileObject.readAsBytes();
-          } catch (e) {
-            throw Exception('无法读取文件: ${e.toString()}');
-          }
-        } else {
-          throw Exception('无法获取文件数据');
+        // 检查文件大小（限制为10MB）
+        if (file.size > 10 * 1024 * 1024) {
+          throw Exception('图片文件过大，请选择小于10MB的图片');
         }
 
-        final fileName = file.name;
-
-        // 检查文件大小
-        if (fileBytes.length > maxFileSize) {
-          throw Exception('文件大小超过限制 (最大10MB)');
+        // 检查文件扩展名
+        final extension = file.extension?.toLowerCase();
+        final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (extension == null || !allowedExtensions.contains(extension)) {
+          throw Exception('不支持的图片格式，请选择 JPG、PNG、GIF 或 WebP 格式的图片');
         }
 
-        // 检查文件格式
-        final extension = fileName.split('.').last.toLowerCase();
-        if (!supportedExtensions.contains(extension)) {
-          throw Exception('不支持的文件格式，支持: ${supportedExtensions.join(', ')}');
+        // 获取文件字节数据
+        final bytes = file.bytes;
+        if (bytes == null) {
+          throw Exception('无法读取图片数据');
         }
 
-        // 直接返回Uint8List
-        return fileBytes;
+        return bytes;
       }
 
-      // 用户取消选择，返回null而不是抛出异常
-      return null;
+      return null; // 用户取消选择
     } catch (e) {
-      // 重新抛出异常，保持原有的错误信息
+      // 重新抛出异常，让调用方处理
       if (e is Exception) {
         rethrow;
       } else {
-        throw Exception('选择图片失败: ${e.toString()}');
+        throw Exception('选择图片时发生错误: $e');
       }
     }
   }
@@ -88,6 +86,75 @@ class ImageUtils {
       debugPrint('解码图片失败: $e');
       return null;
     }
+  }
+
+    /// 验证图片数据是否有效
+  static bool isValidImageData(Uint8List data) {
+    if (data.isEmpty) return false;
+    
+    // 检查常见的图片文件头
+    // PNG: 89 50 4E 47
+    if (data.length >= 4 && 
+        data[0] == 0x89 && data[1] == 0x50 && 
+        data[2] == 0x4E && data[3] == 0x47) {
+      return true;
+    }
+    
+    // JPEG: FF D8
+    if (data.length >= 2 && 
+        data[0] == 0xFF && data[1] == 0xD8) {
+      return true;
+    }
+    
+    // GIF: 47 49 46 38
+    if (data.length >= 4 && 
+        data[0] == 0x47 && data[1] == 0x49 && 
+        data[2] == 0x46 && data[3] == 0x38) {
+      return true;
+    }
+    
+    // WebP: 52 49 46 46 (RIFF) 然后在第8-11字节是 57 45 42 50 (WEBP)
+    if (data.length >= 12 && 
+        data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+      return true;
+    }
+    
+    return false;
+  }
+
+    /// 获取图片的MIME类型
+  static String? getImageMimeType(Uint8List data) {
+    if (!isValidImageData(data)) return null;
+    
+    // PNG
+    if (data.length >= 4 && 
+        data[0] == 0x89 && data[1] == 0x50 && 
+        data[2] == 0x4E && data[3] == 0x47) {
+      return 'image/png';
+    }
+    
+    // JPEG
+    if (data.length >= 2 && 
+        data[0] == 0xFF && data[1] == 0xD8) {
+      return 'image/jpeg';
+    }
+    
+    // GIF
+    if (data.length >= 4 && 
+        data[0] == 0x47 && data[1] == 0x49 && 
+        data[2] == 0x46 && data[3] == 0x38) {
+      return 'image/gif';
+    }
+    
+    // WebP
+    if (data.length >= 12 && 
+        data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+      return 'image/webp';
+    }
+    
+    return null;
   }
 
   /// 创建透明图片的占位符

@@ -1537,33 +1537,102 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   /// 处理图片上传
   Future<void> _handleImageUpload() async {
     try {
+      // 显示加载指示器
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('正在选择图片...'),
+              ],
+            ),
+            duration: Duration(seconds: 10),
+          ),
+        );
+      }
+
       // 使用ImageUtils选择和上传图片
       final imageData = await ImageUtils.pickAndEncodeImage();
+
+      // 清除加载指示器
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
       if (imageData != null) {
+        // 验证图片数据
+        if (!ImageUtils.isValidImageData(imageData)) {
+          throw Exception('无效的图片文件，请选择有效的图片');
+        }
+
         // 更新缓冲区
         widget.onImageBufferUpdated?.call(imageData);
 
         // 显示成功消息
         if (mounted) {
+          final sizeInKB = (imageData.length / 1024).toStringAsFixed(1);
+          final mimeType = ImageUtils.getImageMimeType(imageData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '图片已上传到缓冲区 (${(imageData.length / 1024).toStringAsFixed(1)}KB)',
+                '图片已上传到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
               ),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // 用户取消选择
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('已取消图片选择'),
+              duration: Duration(seconds: 1),
             ),
           );
         }
       }
     } catch (e) {
+      // 清除加载指示器
       if (mounted) {
-        final errorMessage = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (mounted) {
+        String errorMessage = e.toString();
+        // 清理错误消息格式
+        if (errorMessage.startsWith('Exception: ')) {
+          errorMessage = errorMessage.substring(11);
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('上传失败: $errorMessage'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '图片上传失败',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(errorMessage),
+              ],
+            ),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: '重试',
+              textColor: Colors.white,
+              onPressed: _handleImageUpload,
+            ),
           ),
         );
       }
