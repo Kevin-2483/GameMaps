@@ -1555,7 +1555,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 ),
         ),
       );
-    } // 图层面板
+    }
     // 图层面板
     panels.add(
       _buildCollapsiblePanel(
@@ -1565,7 +1565,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         onToggleCollapsed: () => _handlePanelToggle('layer'),
         autoCloseEnabled: _isLayerPanelAutoClose,
         onAutoCloseToggled: (value) => _handleAutoCloseToggle('layer', value),
-        collapsedSubtitle: _selectedLayer != null
+        collapsedSubtitle: _selectedLayerGroup != null
+            ? '图层组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}'
+            : _selectedLayer != null
             ? '当前: ${_selectedLayer!.name}'
             : '未选择图层',
         compactMode: layout.compactMode,
