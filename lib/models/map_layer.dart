@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'dart:typed_data';
+import 'package:flutter/painting.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'map_item.dart'; // 导入Uint8ListConverter
 
@@ -80,6 +81,7 @@ enum DrawingElementType {
   eraser, // 橡皮擦
   freeDrawing, // 像素笔（自由绘制）
   text, // 文本框
+  imageArea, // 图片选区
 }
 
 /// 三角形切割类型
@@ -106,8 +108,12 @@ class MapDrawingElement {
   final double curvature; // 弧度值，0.0=矩形，~0.5=椭圆，~1.0=凹角形状
   final TriangleCutType triangleCut; // 三角形切割类型
   final int zIndex; // 绘制顺序，数值越大越在上层
-  final String? text; // 文本内容（用于文本框）
+ final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
+  @Uint8ListConverter()
+  final Uint8List? imageData; // 图片二进制数据（用于图片选区）
+  @BoxFitConverter()
+  final BoxFit? imageFit; // 图片适应方式（用于图片选区）
   final DateTime createdAt;
   const MapDrawingElement({
     required this.id,
@@ -122,12 +128,14 @@ class MapDrawingElement {
     this.zIndex = 0,
     this.text,
     this.fontSize,
+    this.imageData, // 图片二进制数据
+    this.imageFit = BoxFit.contain, // 默认图片适应方式
     required this.createdAt,
   });
-
   factory MapDrawingElement.fromJson(Map<String, dynamic> json) =>
       _$MapDrawingElementFromJson(json);
   Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
+
   MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
@@ -141,7 +149,10 @@ class MapDrawingElement {
     int? zIndex,
     String? text,
     double? fontSize,
+    Uint8List? imageData,
+    BoxFit? imageFit,
     DateTime? createdAt,
+    bool clearImageData = false, // 用于明确清除图片数据
   }) {
     return MapDrawingElement(
       id: id ?? this.id,
@@ -156,6 +167,8 @@ class MapDrawingElement {
       zIndex: zIndex ?? this.zIndex,
       text: text ?? this.text,
       fontSize: fontSize ?? this.fontSize,
+      imageData: clearImageData ? null : (imageData ?? this.imageData),
+      imageFit: imageFit ?? this.imageFit,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -315,5 +328,54 @@ class ColorConverter implements JsonConverter<Color, int> {
   @override
   int toJson(Color object) {
     return object.toARGB32();
+  }
+}
+
+/// JSON转换器用于处理 BoxFit 类型
+class BoxFitConverter implements JsonConverter<BoxFit?, String?> {
+  const BoxFitConverter();
+
+  @override
+  BoxFit? fromJson(String? json) {
+    if (json == null) return null;
+    switch (json) {
+      case 'fill':
+        return BoxFit.fill;
+      case 'contain':
+        return BoxFit.contain;
+      case 'cover':
+        return BoxFit.cover;
+      case 'fitWidth':
+        return BoxFit.fitWidth;
+      case 'fitHeight':
+        return BoxFit.fitHeight;
+      case 'none':
+        return BoxFit.none;
+      case 'scaleDown':
+        return BoxFit.scaleDown;
+      default:
+        return BoxFit.contain;
+    }
+  }
+
+  @override
+  String? toJson(BoxFit? object) {
+    if (object == null) return null;
+    switch (object) {
+      case BoxFit.fill:
+        return 'fill';
+      case BoxFit.contain:
+        return 'contain';
+      case BoxFit.cover:
+        return 'cover';
+      case BoxFit.fitWidth:
+        return 'fitWidth';
+      case BoxFit.fitHeight:
+        return 'fitHeight';
+      case BoxFit.none:
+        return 'none';
+      case BoxFit.scaleDown:
+        return 'scaleDown';
+    }
   }
 }

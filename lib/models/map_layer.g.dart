@@ -60,6 +60,12 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
       zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
       text: json['text'] as String?,
       fontSize: (json['fontSize'] as num?)?.toDouble(),
+      imageData: const Uint8ListConverter().fromJson(
+        json['imageData'] as String?,
+      ),
+      imageFit: json['imageFit'] == null
+          ? BoxFit.contain
+          : const BoxFitConverter().fromJson(json['imageFit'] as String?),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -77,6 +83,8 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'zIndex': instance.zIndex,
       'text': instance.text,
       'fontSize': instance.fontSize,
+      'imageData': const Uint8ListConverter().toJson(instance.imageData),
+      'imageFit': const BoxFitConverter().toJson(instance.imageFit),
       'createdAt': instance.createdAt.toIso8601String(),
     };
 
@@ -92,6 +100,7 @@ const _$DrawingElementTypeEnumMap = {
   DrawingElementType.eraser: 'eraser',
   DrawingElementType.freeDrawing: 'freeDrawing',
   DrawingElementType.text: 'text',
+  DrawingElementType.imageArea: 'imageArea',
 };
 
 const _$TriangleCutTypeEnumMap = {

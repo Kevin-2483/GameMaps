@@ -1502,81 +1502,89 @@ class _MapCanvasState extends State<MapCanvas> {
     widget.onLayerUpdated(updatedLayer);
   }
 
-/// 构建按层级排序的所有元素
-List<Widget> _buildLayeredElements() {
-  final List<_LayeredElement> allElements = [];
+  /// 构建按层级排序的所有元素
+  List<Widget> _buildLayeredElements() {
+    final List<_LayeredElement> allElements = [];
 
-  // **关键修改：使用 mapItem.layers 的顺序，而不是基于 order 字段重新排序**
-  // 收集所有图层及其元素（按照 mapItem.layers 中的顺序）
-  for (int layerIndex = 0; layerIndex < widget.mapItem.layers.length; layerIndex++) {
-    final layer = widget.mapItem.layers[layerIndex];
-    if (!layer.isVisible) continue;
+    // **关键修改：使用 mapItem.layers 的顺序，而不是基于 order 字段重新排序**
+    // 收集所有图层及其元素（按照 mapItem.layers 中的顺序）
+    for (
+      int layerIndex = 0;
+      layerIndex < widget.mapItem.layers.length;
+      layerIndex++
+    ) {
+      final layer = widget.mapItem.layers[layerIndex];
+      if (!layer.isVisible) continue;
 
-    final isSelectedLayer = widget.selectedLayer?.id == layer.id;
+      final isSelectedLayer = widget.selectedLayer?.id == layer.id;
 
-    // 添加图层图片（如果有）
-    if (layer.imageData != null) {
+      // 添加图层图片（如果有）
+      if (layer.imageData != null) {
+        allElements.add(
+          _LayeredElement(
+            order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
+            isSelected: isSelectedLayer,
+            widget: _buildLayerImageWidget(layer),
+          ),
+        );
+      }
+
+      // 添加图层绘制元素
       allElements.add(
         _LayeredElement(
           order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
           isSelected: isSelectedLayer,
-          widget: _buildLayerImageWidget(layer),
+          widget: _buildLayerWidget(layer),
         ),
       );
     }
 
-    // 添加图层绘制元素
-    allElements.add(
-      _LayeredElement(
-        order: layerIndex, // 使用在 mapItem.layers 中的索引作为渲染顺序
-        isSelected: isSelectedLayer,
-        widget: _buildLayerWidget(layer),
-      ),
-    );
-  }
+    // 收集所有图例组
+    for (final legendGroup in widget.mapItem.legendGroups) {
+      if (!legendGroup.isVisible) continue;
 
-  // 收集所有图例组
-  for (final legendGroup in widget.mapItem.legendGroups) {
-    if (!legendGroup.isVisible) continue;
+      // 计算图例组的层级（基于绑定的最高图层在 mapItem.layers 中的位置）
+      int legendOrder = -1;
+      bool isLegendSelected = false;
 
-    // 计算图例组的层级（基于绑定的最高图层在 mapItem.layers 中的位置）
-    int legendOrder = -1;
-    bool isLegendSelected = false;
-
-    for (int layerIndex = 0; layerIndex < widget.mapItem.layers.length; layerIndex++) {
-      final layer = widget.mapItem.layers[layerIndex];
-      if (layer.legendGroupIds.contains(legendGroup.id)) {
-        legendOrder = math.max(legendOrder, layerIndex); // 使用图层在列表中的位置
-        // 如果任何绑定的图层被选中，图例也被认为是选中的
-        if (widget.selectedLayer?.id == layer.id) {
-          isLegendSelected = true;
+      for (
+        int layerIndex = 0;
+        layerIndex < widget.mapItem.layers.length;
+        layerIndex++
+      ) {
+        final layer = widget.mapItem.layers[layerIndex];
+        if (layer.legendGroupIds.contains(legendGroup.id)) {
+          legendOrder = math.max(legendOrder, layerIndex); // 使用图层在列表中的位置
+          // 如果任何绑定的图层被选中，图例也被认为是选中的
+          if (widget.selectedLayer?.id == layer.id) {
+            isLegendSelected = true;
+          }
         }
       }
+
+      // 如果图例组没有绑定到任何图层，使用默认order
+      if (legendOrder == -1) {
+        legendOrder = 0;
+      }
+
+      allElements.add(
+        _LayeredElement(
+          order: legendOrder,
+          isSelected: isLegendSelected,
+          widget: _buildLegendWidget(legendGroup),
+        ),
+      );
     }
 
-    // 如果图例组没有绑定到任何图层，使用默认order
-    if (legendOrder == -1) {
-      legendOrder = 0;
-    }
+    // 按order排序，选中的元素排在最后（显示在最上层）
+    allElements.sort((a, b) {
+      if (a.isSelected && !b.isSelected) return 1;
+      if (!a.isSelected && b.isSelected) return -1;
+      return a.order.compareTo(b.order);
+    });
 
-    allElements.add(
-      _LayeredElement(
-        order: legendOrder,
-        isSelected: isLegendSelected,
-        widget: _buildLegendWidget(legendGroup),
-      ),
-    );
+    return allElements.map((e) => e.widget).toList();
   }
-
-  // 按order排序，选中的元素排在最后（显示在最上层）
-  allElements.sort((a, b) {
-    if (a.isSelected && !b.isSelected) return 1;
-    if (!a.isSelected && b.isSelected) return -1;
-    return a.order.compareTo(b.order);
-  });
-
-  return allElements.map((e) => e.widget).toList();
-}
 
   // 绘画元素选择和操作相关方法
 
@@ -2645,6 +2653,10 @@ class _LayerPainter extends CustomPainter {
         _drawDashedLine(canvas, start, end, paint, element.density);
         break;
 
+      case DrawingElementType.imageArea:
+        _drawImageArea(canvas, element, size);
+        break;
+
       case DrawingElementType.arrow:
         _drawArrow(canvas, start, end, paint);
         break;
@@ -2723,6 +2735,334 @@ class _LayerPainter extends CustomPainter {
     if (needsTriangleClip) {
       // 恢复画布状态
       canvas.restore();
+    }
+  }
+
+  void _drawImageArea(Canvas canvas, MapDrawingElement element, Size size) {
+    if (element.points.length < 2) return;
+
+    final start = Offset(
+      element.points[0].dx * size.width,
+      element.points[0].dy * size.height,
+    );
+    final end = Offset(
+      element.points[1].dx * size.width,
+      element.points[1].dy * size.height,
+    );
+    final rect = Rect.fromPoints(start, end);
+
+    // 保存画布状态
+    canvas.save();
+
+    // 应用三角形裁剪（如果需要）
+    final needsTriangleClip = element.triangleCut != TriangleCutType.none;
+    if (needsTriangleClip) {
+      final trianglePath = _createTrianglePath(rect, element.triangleCut);
+      canvas.clipPath(trianglePath);
+    }
+
+    if (element.imageData != null && element.imageData!.isNotEmpty) {
+      // 有图片数据，尝试绘制图片
+      _drawImageInRect(canvas, element, rect);
+    } else {
+      // 没有图片数据，绘制选区占位符
+      _drawImageAreaPlaceholder(canvas, rect);
+    }
+
+    // 恢复画布状态
+    canvas.restore();
+  }
+
+  void _drawImageInRect(Canvas canvas, MapDrawingElement element, Rect rect) {
+    try {
+      // 使用低级API来绘制图片
+      // 首先将Uint8List解码为ui.Image
+      _decodeAndDrawImage(
+        canvas,
+        element.imageData!,
+        rect,
+        element.imageFit ?? BoxFit.contain,
+      );
+    } catch (e) {
+      // 绘制错误占位符
+      _drawImageAreaError(canvas, rect, '图片加载失败');
+    }
+  }
+
+  /// 解码并绘制图片的异步方法（使用Future处理）
+  void _decodeAndDrawImage(
+    Canvas canvas,
+    Uint8List imageData,
+    Rect rect,
+    BoxFit fit,
+  ) {
+    // 在CustomPainter中，我们需要使用同步的方式来绘制
+    // 这里我们绘制一个加载状态的占位符，真正的图片绘制需要在widget层面处理
+    _drawImageLoadingPlaceholder(canvas, rect, imageData, fit);
+  }
+
+  /// 绘制图片加载状态的占位符
+  void _drawImageLoadingPlaceholder(
+    Canvas canvas,
+    Rect rect,
+    Uint8List imageData,
+    BoxFit fit,
+  ) {
+    try {
+      // 绘制图片背景
+      final bgPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(rect, bgPaint);
+
+      // 绘制图片边框
+      final borderPaint = Paint()
+        ..color = Colors.blue.shade300
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      canvas.drawRect(rect, borderPaint);
+
+      // 绘制图片图标
+      final iconSize = math.min(rect.width, rect.height) * 0.2;
+      final iconCenter = rect.center - Offset(0, iconSize * 0.5);
+
+      final iconPaint = Paint()
+        ..color = Colors.blue.shade600
+        ..style = PaintingStyle.fill;
+
+      // 绘制简单的图片图标 (矩形 + 山峰)
+      final iconRect = Rect.fromCenter(
+        center: iconCenter,
+        width: iconSize,
+        height: iconSize * 0.8,
+      );
+      canvas.drawRect(iconRect, iconPaint);
+
+      // 绘制山峰图标
+      final mountainPath = Path();
+      mountainPath.moveTo(
+        iconRect.left + iconRect.width * 0.2,
+        iconRect.bottom - iconRect.height * 0.3,
+      );
+      mountainPath.lineTo(
+        iconRect.left + iconRect.width * 0.4,
+        iconRect.top + iconRect.height * 0.3,
+      );
+      mountainPath.lineTo(
+        iconRect.left + iconRect.width * 0.6,
+        iconRect.bottom - iconRect.height * 0.1,
+      );
+      mountainPath.lineTo(
+        iconRect.left + iconRect.width * 0.8,
+        iconRect.top + iconRect.height * 0.5,
+      );
+      mountainPath.lineTo(iconRect.right, iconRect.bottom);
+      mountainPath.close();
+
+      final mountainPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawPath(mountainPath, mountainPaint);
+
+      // 绘制文本提示
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '图片已加载 (${(imageData.length / 1024).toStringAsFixed(1)}KB)',
+          style: TextStyle(
+            color: Colors.blue.shade700,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          rect.center.dx - textPainter.width / 2,
+          rect.center.dy + iconSize * 0.8,
+        ),
+      );
+
+      // 绘制图片适应方式提示
+      final fitText = _getBoxFitDisplayName(fit);
+      final fitTextPainter = TextPainter(
+        text: TextSpan(
+          text: '适应: $fitText',
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 8),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      fitTextPainter.layout();
+      fitTextPainter.paint(
+        canvas,
+        Offset(
+          rect.center.dx - fitTextPainter.width / 2,
+          rect.center.dy + iconSize * 0.8 + textPainter.height + 2,
+        ),
+      );
+    } catch (e) {
+      // 绘制错误占位符
+      _drawImageAreaError(canvas, rect, '图片加载失败');
+    }
+  }
+
+  void _drawImageAreaPlaceholder(Canvas canvas, Rect rect) {
+    // 绘制选区背景
+    final bgPaint = Paint()
+      ..color = Colors.grey.shade100
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, bgPaint);
+
+    // 绘制虚线边框
+    final borderPaint = Paint()
+      ..color = Colors.grey.shade400
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    _drawDashedRect(canvas, rect, borderPaint, 5.0);
+
+    // 绘制上传图标
+    final iconSize = math.min(rect.width, rect.height) * 0.3;
+    final iconCenter = rect.center - Offset(0, iconSize * 0.3);
+
+    final iconPaint = Paint()
+      ..color = Colors.grey.shade500
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    // 绘制上传箭头
+    final arrowPath = Path();
+    arrowPath.moveTo(iconCenter.dx, iconCenter.dy - iconSize * 0.3);
+    arrowPath.lineTo(iconCenter.dx, iconCenter.dy + iconSize * 0.3);
+
+    // 箭头头部
+    arrowPath.moveTo(
+      iconCenter.dx - iconSize * 0.15,
+      iconCenter.dy - iconSize * 0.15,
+    );
+    arrowPath.lineTo(iconCenter.dx, iconCenter.dy - iconSize * 0.3);
+    arrowPath.lineTo(
+      iconCenter.dx + iconSize * 0.15,
+      iconCenter.dy - iconSize * 0.15,
+    );
+
+    canvas.drawPath(arrowPath, iconPaint);
+
+    // 绘制文本提示
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '点击上传图片',
+        style: TextStyle(
+          color: Colors.grey.shade600,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        rect.center.dx - textPainter.width / 2,
+        rect.center.dy + iconSize * 0.6,
+      ),
+    );
+  }
+
+  void _drawImageAreaError(Canvas canvas, Rect rect, String message) {
+    // 绘制错误背景
+    final bgPaint = Paint()
+      ..color = Colors.red.shade50
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, bgPaint);
+
+    // 绘制错误边框
+    final borderPaint = Paint()
+      ..color = Colors.red.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRect(rect, borderPaint);
+
+    // 绘制错误图标
+    final iconSize = math.min(rect.width, rect.height) * 0.2;
+    final iconPaint = Paint()
+      ..color = Colors.red.shade400
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    // 绘制X图标
+    final iconCenter = rect.center - Offset(0, iconSize * 0.3);
+    canvas.drawLine(
+      iconCenter - Offset(iconSize * 0.2, iconSize * 0.2),
+      iconCenter + Offset(iconSize * 0.2, iconSize * 0.2),
+      iconPaint,
+    );
+    canvas.drawLine(
+      iconCenter - Offset(iconSize * 0.2, -iconSize * 0.2),
+      iconCenter + Offset(iconSize * 0.2, -iconSize * 0.2),
+      iconPaint,
+    );
+
+    // 绘制错误文本
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: message,
+        style: TextStyle(
+          color: Colors.red.shade700,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        rect.center.dx - textPainter.width / 2,
+        rect.center.dy + iconSize * 0.5,
+      ),
+    );
+  }
+
+  void _drawDashedRect(
+    Canvas canvas,
+    Rect rect,
+    Paint paint,
+    double dashLength,
+  ) {
+    // 绘制虚线矩形
+    _drawDashedLine(canvas, rect.topLeft, rect.topRight, paint, dashLength);
+    _drawDashedLine(canvas, rect.topRight, rect.bottomRight, paint, dashLength);
+    _drawDashedLine(
+      canvas,
+      rect.bottomRight,
+      rect.bottomLeft,
+      paint,
+      dashLength,
+    );
+    _drawDashedLine(canvas, rect.bottomLeft, rect.topLeft, paint, dashLength);
+  }
+
+  String _getBoxFitDisplayName(BoxFit boxFit) {
+    switch (boxFit) {
+      case BoxFit.fill:
+        return '填充';
+      case BoxFit.contain:
+        return '包含';
+      case BoxFit.cover:
+        return '覆盖';
+      case BoxFit.fitWidth:
+        return '适宽';
+      case BoxFit.fitHeight:
+        return '适高';
+      case BoxFit.none:
+        return '原始';
+      case BoxFit.scaleDown:
+        return '缩小';
     }
   }
 

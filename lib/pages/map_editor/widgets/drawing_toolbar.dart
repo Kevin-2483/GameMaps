@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
+import '../../../utils/image_utils.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -166,7 +168,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         });
       }
     });
-  }  void _handleStrokeWidthChange(double width) {
+  }
+
+  void _handleStrokeWidthChange(double width) {
     setState(() {
       _tempSelectedStrokeWidth = width;
     });
@@ -180,7 +184,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // 设置新的定时器，延迟提交更改
     _strokeWidthTimer = Timer(const Duration(milliseconds: 200), () {
       widget.onStrokeWidthChanged(width);
-      
+
       if (mounted) {
         setState(() {
           _tempSelectedStrokeWidth = null;
@@ -333,6 +337,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         return DrawingElementType.text;
       case 'eraser':
         return DrawingElementType.eraser;
+      case 'imageArea':
+        return DrawingElementType.imageArea;
       default:
         return null;
     }
@@ -362,6 +368,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         return Icons.text_fields;
       case 'eraser':
         return Icons.cleaning_services;
+      case 'imageArea':
+        return Icons.photo_size_select_actual;
       default:
         return Icons.build;
     }
@@ -391,6 +399,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         return '文本框';
       case 'eraser':
         return '橡皮擦';
+      case 'imageArea':
+        return '图片选区';
       default:
         return '工具';
     }
@@ -404,7 +414,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [          // Drawing tools
+        children: [
+          // Drawing tools
           const Text(
             '工具',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -418,7 +429,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 children: userPrefs.tools.toolbarLayout.map((toolName) {
                   final toolType = _getDrawingElementType(toolName);
                   if (toolType == null) return const SizedBox.shrink();
-                  
+
                   return _buildToolButton(
                     context,
                     icon: _getToolIcon(toolName),
@@ -557,7 +568,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ],
               );
             },
-          ),          const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 16),
 
           // Favorite stroke widths section
           Consumer<UserPreferencesProvider>(
@@ -588,7 +600,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               }
               return const SizedBox.shrink();
             },
-          ),          // Stroke width
+          ), // Stroke width
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -600,10 +612,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 onPressed: () => _showStrokeWidthManager(context),
                 icon: const Icon(Icons.settings, size: 18),
                 tooltip: '管理常用线条宽度',
-                constraints: const BoxConstraints(
-                  minWidth: 24,
-                  minHeight: 24,
-                ),
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 padding: EdgeInsets.zero,
               ),
             ],
@@ -617,7 +626,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   min: 1.0,
                   max: 50.0,
                   divisions: 49,
-                  label: _effectiveStrokeWidth.round().toString(),                  onChanged: (value) {
+                  label: _effectiveStrokeWidth.round().toString(),
+                  onChanged: (value) {
                     _handleStrokeWidthChange(value);
                   },
                 ),
@@ -675,9 +685,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 Text('${(_effectiveCurvature * 100).round()}%'),
               ],
             ),
-          ],
-
-          // Triangle cut control (for rectangular selections)
+          ],          // Triangle cut control (for rectangular selections)
           if (_shouldShowTriangleCutControl()) ...[
             const SizedBox(height: 8),
             const Text(
@@ -709,6 +717,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ),
               ],
             ),
+          ],
+
+          // Image Area tool specific controls
+          if (_effectiveTool == DrawingElementType.imageArea) ...[
+            const SizedBox(height: 16),
+            _buildImageAreaControls(),
           ],
 
           // Clear selection button
@@ -885,6 +899,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       ),
     );
   }
+
   void _showAdvancedColorPicker() async {
     final result = await ColorPicker.showColorPickerWithActions(
       context: context,
@@ -895,7 +910,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
     if (result != null && result.action != ColorPickerAction.cancel) {
       final selectedColor = result.color;
-      
+
       if (result.action == ColorPickerAction.addToCustom) {
         // 添加到自定义颜色
         final userPrefs = context.read<UserPreferencesProvider>();
@@ -933,7 +948,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         _handleColorSelection(selectedColor);
       }
     }
-  }  void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {
+  }
+
+  void _removeCustomColor(Color color, UserPreferencesProvider userPrefs) {
     userPrefs.removeCustomColor(color.value);
   }
 
@@ -953,10 +970,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             children: [
               Text(
                 '当前数量: ${currentWidths.length}/5',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 16),
               if (currentWidths.isNotEmpty) ...[
@@ -994,10 +1008,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   child: Text(
                     '还没有添加常用线条宽度',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1051,7 +1062,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     provider.updateTools(favoriteStrokeWidths: newWidths);
   }
 
-  void _showAddStrokeWidthDialog(BuildContext context, UserPreferencesProvider provider) {
+  void _showAddStrokeWidthDialog(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     double newWidth = 1.0;
     showDialog(
       context: context,
@@ -1096,7 +1110,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 newWidths.sort();
                 provider.updateTools(favoriteStrokeWidths: newWidths);
                 Navigator.of(context).pop();
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('已添加线条宽度 ${newWidth.round()}px'),
@@ -1138,8 +1152,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           color: isSelected
               ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
               : Colors.transparent,
-        ),
-        child: Text(
+        ),        child: Text(
           '${width.round()}px',
           style: TextStyle(
             fontSize: 12,
@@ -1151,5 +1164,261 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         ),
       ),
     );
+  }
+
+  /// 构建图片选区工具的专用控制面板
+  Widget _buildImageAreaControls() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 图片上传区域
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.blue.shade200, width: 2),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.blue.shade50,
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.cloud_upload_outlined,
+                size: 32,
+                color: Colors.blue.shade600,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '图片选区工具',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '先选择一个选区，然后上传图片',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue.shade600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _handleImageUpload,
+                  icon: const Icon(Icons.add_photo_alternate),
+                  label: const Text('上传图片'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // 图片适应方式选择
+        const Text(
+          '图片适应方式',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        _buildBoxFitSelector(),
+        
+        const SizedBox(height: 8),
+        
+        // 使用说明
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    '使用说明',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '1. 在画布上拖拽创建选区\n'
+                '2. 点击"上传图片"选择图片文件\n'
+                '3. 图片将自动适应选区大小\n'
+                '4. 可通过Z层级检视器调整层级',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建BoxFit选择器
+  Widget _buildBoxFitSelector() {
+    final boxFitOptions = [
+      BoxFit.contain,
+      BoxFit.cover,
+      BoxFit.fill,
+      BoxFit.fitWidth,
+      BoxFit.fitHeight,
+      BoxFit.none,
+      BoxFit.scaleDown,
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: boxFitOptions.map((fit) {
+        return _buildBoxFitButton(fit);
+      }).toList(),
+    );
+  }
+
+  /// 构建单个BoxFit按钮
+  Widget _buildBoxFitButton(BoxFit fit) {
+    final isSelected = _getSelectedImageFit() == fit;
+    
+    return InkWell(
+      onTap: () => _handleImageFitChange(fit),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          color: isSelected
+              ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+              : Colors.transparent,
+        ),
+        child: Text(
+          _getBoxFitDisplayName(fit),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 获取BoxFit的显示名称
+  String _getBoxFitDisplayName(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return '包含';
+      case BoxFit.cover:
+        return '覆盖';
+      case BoxFit.fill:
+        return '填充';
+      case BoxFit.fitWidth:
+        return '适宽';
+      case BoxFit.fitHeight:
+        return '适高';
+      case BoxFit.none:
+        return '原始';
+      case BoxFit.scaleDown:
+        return '缩小';
+    }
+  }
+
+  /// 获取当前选中的图片适应方式
+  BoxFit _getSelectedImageFit() {
+    // 这里可以从当前选中的图片选区元素获取，或使用默认值
+    return BoxFit.contain;
+  }
+
+  /// 处理图片适应方式改变
+  void _handleImageFitChange(BoxFit fit) {
+    // 这里可以添加处理图片适应方式改变的逻辑
+    // 例如更新当前正在编辑的图片选区元素
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('图片适应方式已设置为: ${_getBoxFitDisplayName(fit)}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  /// 处理图片上传
+  Future<void> _handleImageUpload() async {
+    try {
+      // 使用ImageUtils选择和上传图片
+      final imageData = await ImageUtils.pickAndEncodeImage();
+      if (imageData != null) {
+        // 显示成功消息
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('图片已上传 (${(imageData.length / 1024).toStringAsFixed(1)}KB)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          
+          // 这里可以添加处理上传成功的逻辑
+          // 例如：创建一个新的图片选区元素，或更新现有的元素
+          _createImageAreaWithData(imageData);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('上传失败: $errorMessage'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// 创建带有图片数据的图片选区元素
+  void _createImageAreaWithData(Uint8List imageData) {
+    // 这里暂时只是显示消息，实际的实现需要与画布交互
+    // 在真实的实现中，应该与MapCanvas通信，创建一个新的图片选区元素
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请在画布上拖拽创建选区，图片将自动填充'),
+          backgroundColor: Colors.blue,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
