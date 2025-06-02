@@ -818,7 +818,6 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
       rethrow;
     }
   }
-
   /// 导入单个图例项
   Future<void> _importSingleLegend(ImportLegendItem legendItem) async {
     try {
@@ -830,12 +829,27 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
         if (existingLegend != null) {
           await _legendService.deleteLegend(existingLegend.id!);
         }
-      }      // 创建图例项
+      }
+
+      // 创建图例项
       final legendData = legendItem.legendData;
+      
+      // 处理图像数据
+      Uint8List? imageData;
+      if (legendData.containsKey('imageData')) {
+        final imageDataJson = legendData['imageData'];
+        if (imageDataJson is String && imageDataJson.isNotEmpty) {
+          try {
+            imageData = base64Decode(imageDataJson);
+          } catch (e) {
+            print('Warning: Failed to decode imageData for legend ${legendItem.title}: $e');
+          }
+        }
+      }
       
       final newLegend = legend_db.LegendItem(
         title: legendItem.title,
-        imageData: legendData['imageData'] as Uint8List?,
+        imageData: imageData,
         centerX: (legendData['centerX'] as num?)?.toDouble() ?? 0.5,
         centerY: (legendData['centerY'] as num?)?.toDouble() ?? 0.5,
         version: legendItem.version,
@@ -898,47 +912,90 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
       }
     });
   }
-
   /// 显示重命名对话框
   void _showRenameDialog(String originalTitle, {required bool isMap, required String itemId}) {
     final TextEditingController controller = TextEditingController(text: '${originalTitle}_copy');
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('重命名导入'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('原名称: $originalTitle'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: '新名称',
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('重命名导入'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('原名称: $originalTitle'),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: '新名称',
+                    border: OutlineInputBorder(),
+                  ),
+                  autofocus: true,
+                  onChanged: (value) {
+                    setState(() {}); // 触发重建以更新按钮状态和错误提示
+                  },
+                ),
+                const SizedBox(height: 8),
+                FutureBuilder<bool>(
+                  future: _checkNameConflict(controller.text.trim(), isMap),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    }
+                    
+                    final hasConflict = snapshot.data ?? false;
+                    if (hasConflict && controller.text.trim().isNotEmpty) {
+                      return Row(
+                        children: [
+                          const Icon(Icons.warning, color: Colors.red, size: 16),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '名称已存在，请选择其他名称',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newTitle = controller.text.trim();
-              if (newTitle.isNotEmpty && newTitle != originalTitle) {
-                _applyRename(newTitle, isMap: isMap, itemId: itemId);
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('确定'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+              FutureBuilder<bool>(
+                future: _checkNameConflict(controller.text.trim(), isMap),
+                builder: (context, snapshot) {
+                  final newTitle = controller.text.trim();
+                  final hasConflict = snapshot.data ?? false;
+                  final isValid = newTitle.isNotEmpty && 
+                                 newTitle != originalTitle && 
+                                 !hasConflict;
+                  
+                  return ElevatedButton(
+                    onPressed: isValid ? () {
+                      _applyRename(newTitle, isMap: isMap, itemId: itemId);
+                      Navigator.of(context).pop();
+                    } : null,
+                    child: const Text('确定'),
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -988,6 +1045,24 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
         }
       }
     });
+  }
+
+  /// 检查名称是否与本地已有项目冲突
+  Future<bool> _checkNameConflict(String name, bool isMap) async {
+    if (name.isEmpty) return false;
+    
+    try {
+      if (isMap) {
+        final existingMaps = await _mapService.getAllMaps();
+        return existingMaps.any((map) => map.title == name);
+      } else {
+        final existingLegends = await _legendService.getAllLegends();
+        return existingLegends.any((legend) => legend.title == name);
+      }
+    } catch (e) {
+      print('Error checking name conflict: $e');
+      return false;
+    }
   }
 }
 
