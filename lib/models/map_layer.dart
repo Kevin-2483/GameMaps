@@ -20,7 +20,7 @@ class MapLayer {
   final List<String> legendGroupIds; // 关联的图例组ID列表
   final DateTime createdAt;
   final DateTime updatedAt;
-  final bool isLinkedToNext; // 新增：是否链接到下一个图层
+  final bool isLinkedToNext; //是否链接到下一个图层
   const MapLayer({
     required this.id,
     required this.name,
@@ -49,8 +49,8 @@ class MapLayer {
     List<String>? legendGroupIds,
     DateTime? createdAt,
     DateTime? updatedAt,
-    bool clearImageData = false, // 新增参数用于明确清除图片数据
-    bool? isLinkedToNext, // 新增参数用于链接到下一个图层
+    bool clearImageData = false, //参数用于明确清除图片数据
+    bool? isLinkedToNext, //参数用于链接到下一个图层
   }) {
     return MapLayer(
       id: id ?? this.id,

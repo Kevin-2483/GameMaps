@@ -279,14 +279,13 @@ class MapCanvas extends StatefulWidget {
   final String? selectedElementId;
   final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
-  final double zoomSensitivity;
-  final VoidCallback? onSelectionCleared; // 新增：选区清除回调
+  final double zoomSensitivity;  final VoidCallback? onSelectionCleared; //：选区清除回调
+  final bool shouldDisableDrawingTools; // 是否应该禁用绘图工具
 
   // 添加图片缓冲区相关参数
   final Uint8List? imageBufferData; // 图片缓冲区数据
   final BoxFit imageBufferFit; // 图片适应方式
-  final List<MapLayer>? displayOrderLayers; // 新增：优先显示顺序的图层列表
-
+  final List<MapLayer>? displayOrderLayers; //：优先显示顺序的图层列表
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -315,6 +314,7 @@ class MapCanvas extends StatefulWidget {
     required this.zoomSensitivity,
     this.displayOrderLayers,
     this.onSelectionCleared,
+    this.shouldDisableDrawingTools = false,
 
     // 添加图片缓冲区参数
     this.imageBufferData,
@@ -368,7 +368,7 @@ class MapCanvasState extends State<MapCanvas> {
       _preloadLayerImages();
     }
 
-    // 新增：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
+    //：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
     if (oldWidget.mapItem != widget.mapItem) {
       // 清理所有图片缓存，因为地图数据已经完全改变
       _clearAllImageCache();
@@ -562,9 +562,12 @@ class MapCanvasState extends State<MapCanvas> {
 
   // Add this GlobalKey
   final GlobalKey _canvasGlobalKey = GlobalKey();
-
-  DrawingElementType? get _effectiveDrawingTool =>
-      widget.previewDrawingTool ?? widget.selectedDrawingTool;
+  DrawingElementType? get _effectiveDrawingTool {
+    if (widget.shouldDisableDrawingTools) {
+      return null;
+    }
+    return widget.previewDrawingTool ?? widget.selectedDrawingTool;
+  }
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth =>
       widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
@@ -1179,7 +1182,7 @@ class MapCanvasState extends State<MapCanvas> {
   void _onElementInteractionPanStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
 
-    // --- 新增：优先检测图例交互 ---
+    // ---：优先检测图例交互 ---
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null) {
       // 如果点击了图例，启动图例拖拽，不继续处理元素交互

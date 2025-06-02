@@ -88,7 +88,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
 
-  // 新增：图层组折叠状态
+  //：图层组折叠状态
   Map<String, bool> _layerGroupCollapsedStates = {};
 
   // 自动关闭开关状态
@@ -267,11 +267,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
       }
 
-      // 新增：更新显示顺序以触发MapCanvas重建和缓存清理
+      //：更新显示顺序以触发MapCanvas重建和缓存清理
       _updateDisplayOrderAfterLayerChange();
     });
 
-    // 新增：强制触发图片缓存清理和重新预加载
+    //：强制触发图片缓存清理和重新预加载
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
@@ -308,11 +308,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
       }
 
-      // 新增：更新显示顺序以触发MapCanvas重建和缓存清理
+      //：更新显示顺序以触发MapCanvas重建和缓存清理
       _updateDisplayOrderAfterLayerChange();
     });
 
-    // 新增：强制触发图片缓存清理和重新预加载
+    //：强制触发图片缓存清理和重新预加载
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
@@ -350,7 +350,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     _updateLayer(updatedLayer);
 
-    // 新增：如果删除的是图片元素，强制触发缓存清理
+    //：如果删除的是图片元素，强制触发缓存清理
     if (elementToDelete.type == DrawingElementType.imageArea) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -465,15 +465,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedLayerGroup = group; // 设置组选择
     });
 
-    // 修改：不禁用绘制工具，允许绘制到选中的单个图层上
-    // 只有在没有选中单个图层时才禁用绘制工具
-    if (_selectedLayer == null) {
-      _disableDrawingTools();
-    }
-
     // 触发优先显示逻辑
     _prioritizeLayerAndGroupDisplay();
-    // 新增：清除画布上的选区
+    //：清除画布上的选区
     _clearCanvasSelection();
   }
 
@@ -488,7 +482,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedLayer = null;
       // 保留 _selectedLayerGroup，不清除
     });
-
+    _disableDrawingTools();
     // 更新显示顺序
     _prioritizeLayerAndGroupDisplay();
   }
@@ -1413,7 +1407,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 应用新的优先显示逻辑
     _prioritizeLayerAndGroupDisplay();
-    // 新增：清除画布上的选区
+    //：清除画布上的选区
     _clearCanvasSelection();
   }
 
@@ -1878,7 +1872,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 onShowLayerLegendBinding: _showLayerLegendBindingDrawer,
                 onLayersBatchUpdated: _updateLayersBatch,
                 onLayerSelectionCleared: _onLayerSelectionCleared,
-                // 新增：图层组折叠状态相关参数
+                //：图层组折叠状态相关参数
                 groupCollapsedStates: _layerGroupCollapsedStates,
                 onGroupCollapsedStatesChanged: (newStates) {
                   setState(() {
@@ -2234,7 +2228,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
-        // 创建用于显示的地图副本，使用重新排序的图层
+        // 创建用于显示的地图副本，使用重新排序的图层        
         return MapCanvas(
           key: _mapCanvasKey, // 添加这一行
           mapItem: _currentMap!,
@@ -2271,10 +2265,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
               .read<UserPreferencesProvider>()
               .mapEditor
               .zoomSensitivity,
+          shouldDisableDrawingTools: _shouldDisableDrawingTools,
           // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
-          displayOrderLayers: _layersForDisplay, // 新增：传递显示顺序
+          displayOrderLayers: _layersForDisplay, //：传递显示顺序
         );
       },
     );

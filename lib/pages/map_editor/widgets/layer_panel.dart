@@ -6,38 +6,38 @@ import 'dart:async';
 class LayerPanel extends StatefulWidget {
   final List<MapLayer> layers;
   final MapLayer? selectedLayer;
-  final List<MapLayer>? selectedLayerGroup; // 新增：选中的图层组
+  final List<MapLayer>? selectedLayerGroup; //：选中的图层组
   final bool isPreviewMode;
   final Function(MapLayer) onLayerSelected;
-  final Function(List<MapLayer>) onLayerGroupSelected; // 新增：图层组选择回调
-  final Function() onSelectionCleared; // 新增：清除选择回调
+  final Function(List<MapLayer>) onLayerGroupSelected; //：图层组选择回调
+  final Function() onSelectionCleared; //：清除选择回调
   final Function(MapLayer) onLayerUpdated;
   final Function(MapLayer) onLayerDeleted;
   final VoidCallback onLayerAdded;
   final Function(int oldIndex, int newIndex) onLayersReordered;
   final Function(String)? onError;
   final Function(String)? onSuccess;
-  // 新增：实时透明度预览回调
+  //：实时透明度预览回调
   final Function(String layerId, double opacity)?
-  onOpacityPreview; // 新增：图例组相关数据和回调
+  onOpacityPreview; //：图例组相关数据和回调
   final List<LegendGroup>? allLegendGroups; // 改为可空类型
   final Function(MapLayer, List<LegendGroup>)?
   onShowLayerLegendBinding; // 显示图层图例绑定抽屉
   final Function(List<MapLayer>)? onLayersBatchUpdated;
-  // 新增：折叠状态相关参数
+  //：折叠状态相关参数
   final Map<String, bool>? groupCollapsedStates; // 传入的折叠状态
   final Function(Map<String, bool>)? onGroupCollapsedStatesChanged; // 折叠状态变化回调
-  final Function()? onLayerSelectionCleared; // 新增：只清除图层选择
+  final Function()? onLayerSelectionCleared; //：只清除图层选择
 
   const LayerPanel({
     super.key,
     required this.layers,
     this.selectedLayer,
-    this.selectedLayerGroup, // 新增
+    this.selectedLayerGroup, //
     required this.isPreviewMode,
     required this.onLayerSelected,
-    required this.onLayerGroupSelected, // 新增
-    required this.onSelectionCleared, // 新增
+    required this.onLayerGroupSelected, //
+    required this.onSelectionCleared, //
     required this.onLayerUpdated,
     required this.onLayerDeleted,
     required this.onLayerAdded,
@@ -48,9 +48,9 @@ class LayerPanel extends StatefulWidget {
     this.allLegendGroups, // 改为可选参数
     this.onShowLayerLegendBinding,
     this.onLayersBatchUpdated,
-    this.groupCollapsedStates, // 新增
-    this.onGroupCollapsedStatesChanged, // 新增
-    this.onLayerSelectionCleared, // 新增
+    this.groupCollapsedStates, //
+    this.onGroupCollapsedStatesChanged, //
+    this.onLayerSelectionCleared, //
   });
 
   @override
@@ -346,7 +346,7 @@ class _LayerPanelState extends State<LayerPanel> {
     List<MapLayer> group,
     bool isCollapsed,
     String groupId,
-    bool isGroupSelected, // 新增参数
+    bool isGroupSelected, //参数
   ) {
     return Container(
       width: double.infinity,
