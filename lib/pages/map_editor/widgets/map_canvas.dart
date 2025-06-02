@@ -2472,14 +2472,6 @@ class _SelectionPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    // 绘制选区填充
-    final fillPaint = Paint()
-      ..color = Colors.blue.withAlpha((0.1 * 255).toInt())
-      ..style = PaintingStyle.fill;
-
-    // 绘制填充
-    canvas.drawRect(selectionRect!, fillPaint);
-
     // 绘制虚线边框
     _drawDashedRect(canvas, selectionRect!, borderPaint, 5.0, 3.0);
   }
