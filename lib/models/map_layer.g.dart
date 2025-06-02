@@ -26,7 +26,7 @@ MapLayer _$MapLayerFromJson(Map<String, dynamic> json) => MapLayer(
   imageFit: const BoxFitConverter().fromJson(json['imageFit'] as String?),
   xOffset: (json['xOffset'] as num?)?.toDouble() ?? 0.0,
   yOffset: (json['yOffset'] as num?)?.toDouble() ?? 0.0,
-  imageScale: (json['imageScale'] as num?)?.toDouble() ?? 0.5,
+  imageScale: (json['imageScale'] as num?)?.toDouble() ?? 1.0,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   isLinkedToNext: json['isLinkedToNext'] as bool? ?? false,
