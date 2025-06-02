@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
+import '../models/map_item_summary.dart';
 import '../models/legend_item.dart';
-import '../models/map_localization.dart';
 import 'map_database_service.dart';
 import 'legend_database_service.dart';
 import 'map_localization_service.dart';
@@ -20,21 +20,24 @@ class CombinedDatabaseExporter {
   final MapDatabaseService _mapService = MapDatabaseService();
   final LegendDatabaseService _legendService = LegendDatabaseService();
   final MapLocalizationService _localizationService = MapLocalizationService();
-
-  /// 导出所有数据库数据为单个JSON文件
+  /// 导出数据库数据为单个JSON文件
   ///
   /// [customVersion] 自定义导出版本号
+  /// [includeMaps] 是否包含地图数据
+  /// [includeLegends] 是否包含图例数据
   /// [includeLocalizations] 是否包含本地化数据
+  /// [selectedMapIds] 要导出的特定地图ID列表（为空时导出所有地图）
+  /// [selectedLegendIds] 要导出的特定图例ID列表（为空时导出所有图例）
   ///
   /// 返回导出文件路径，失败时返回null
   Future<String?> exportAllDatabases({
     int? customVersion,
+    bool includeMaps = true,
+    bool includeLegends = true,
     bool includeLocalizations = true,
-  }) async {
-    try {
-      // 获取所有数据
-      final maps = await _mapService.getAllMaps();
-      final legends = await _legendService.getAllLegends();
+    List<int>? selectedMapIds,
+    List<int>? selectedLegendIds,
+  }) async {    try {
       final mapVersion =
           customVersion ?? await _mapService.getDatabaseVersion();
       final legendVersion = await _legendService.getDatabaseVersion();
@@ -47,17 +50,59 @@ class CombinedDatabaseExporter {
           'exportedBy': 'R6Box Desktop Client',
           'description': 'Combined database export for Web platform',
         },
-        'maps': {
+      };
+
+      int totalItems = 0;
+
+      // 获取并导出地图数据
+      if (includeMaps) {
+        List<MapItem> maps;
+        if (selectedMapIds != null && selectedMapIds.isNotEmpty) {
+          // 导出指定的地图
+          maps = [];
+          for (final id in selectedMapIds) {
+            final map = await _mapService.getMapById(id);
+            if (map != null) {
+              maps.add(map);
+            }
+          }
+        } else {
+          // 导出所有地图
+          maps = await _mapService.getAllMaps();
+        }
+
+        exportData['maps'] = {
           'version': mapVersion,
           'data': maps.map((map) => map.toJson()).toList(),
           'count': maps.length,
-        },
-        'legends': {
+        };
+        totalItems += maps.length;
+      }
+
+      // 获取并导出图例数据
+      if (includeLegends) {
+        List<LegendItem> legends;
+        if (selectedLegendIds != null && selectedLegendIds.isNotEmpty) {
+          // 导出指定的图例
+          legends = [];
+          for (final id in selectedLegendIds) {
+            final legend = await _legendService.getLegendById(id);
+            if (legend != null) {
+              legends.add(legend);
+            }
+          }
+        } else {
+          // 导出所有图例
+          legends = await _legendService.getAllLegends();
+        }
+
+        exportData['legends'] = {
           'version': legendVersion,
           'data': legends.map((legend) => legend.toJson()).toList(),
           'count': legends.length,
-        },
-      };
+        };
+        totalItems += legends.length;
+      }
 
       // 可选包含本地化数据
       if (includeLocalizations) {
@@ -95,8 +140,9 @@ class CombinedDatabaseExporter {
 合并数据库导出成功:
 - 文件路径: $outputFile
 - 导出版本: $mapVersion
-- 地图数量: ${maps.length}
-- 图例数量: ${legends.length}
+- 总项目数量: $totalItems
+- 包含地图: $includeMaps
+- 包含图例: $includeLegends
 - 包含本地化: $includeLocalizations
         ''');
 
@@ -181,6 +227,44 @@ class CombinedDatabaseExporter {
     } catch (e) {
       debugPrint('获取导出文件信息失败: $e');
       return null;
+    }
+  }
+  /// 获取所有可用的地图摘要（用于选择性导出）
+  Future<List<MapItemSummary>> getAvailableMaps() async {
+    try {
+      return await _mapService.getAllMapsSummary();
+    } catch (e) {
+      debugPrint('获取地图列表失败: $e');
+      return [];
+    }
+  }
+
+  /// 获取所有可用的图例（用于选择性导出）
+  Future<List<LegendItem>> getAvailableLegends() async {
+    try {
+      return await _legendService.getAllLegends();
+    } catch (e) {
+      debugPrint('获取图例列表失败: $e');
+      return [];
+    }
+  }
+
+  /// 获取数据库统计信息
+  Future<Map<String, int>> getDatabaseStats() async {
+    try {
+      final maps = await _mapService.getAllMapsSummary();
+      final legends = await _legendService.getAllLegends();
+      
+      return {
+        'mapsCount': maps.length,
+        'legendsCount': legends.length,
+      };
+    } catch (e) {
+      debugPrint('获取数据库统计信息失败: $e');
+      return {
+        'mapsCount': 0,
+        'legendsCount': 0,
+      };
     }
   }
 }
