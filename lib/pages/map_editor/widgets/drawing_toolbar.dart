@@ -6,6 +6,7 @@ import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
+import '../../../services/clipboard_service.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -1270,9 +1271,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                '1. 点击"上传图片"选择图片文件\n'
+              const SizedBox(height: 4),              Text(
+                '1. 点击"上传图片"选择文件或"剪贴板"粘贴图片\n'
                 '2. 在画布上拖拽创建选区\n'
                 '3. 图片将自动适应选区大小\n'
                 '4. 可通过Z层级检视器调整',
@@ -1509,26 +1509,48 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
+        ),        const SizedBox(height: 12),
 
-        // 上传按钮
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _handleImageUpload,
-            icon: const Icon(Icons.add_photo_alternate, size: 18),
-            label: const Text('上传图片'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              backgroundColor: Colors.blue.shade600,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        // 上传按钮和剪贴板按钮
+        Row(
+          children: [
+            // 上传图片按钮
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleImageUpload,
+                icon: const Icon(Icons.add_photo_alternate, size: 18),
+                label: const Text('上传图片'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Colors.blue.shade600,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            
+            // 剪贴板按钮
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _handleClipboardPaste,
+                icon: const Icon(Icons.paste, size: 18),
+                label: const Text('剪贴板'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Colors.green.shade600,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1632,6 +1654,117 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               label: '重试',
               textColor: Colors.white,
               onPressed: _handleImageUpload,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  /// 处理从剪贴板粘贴图片
+  Future<void> _handleClipboardPaste() async {
+    try {
+      // 显示加载指示器
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('正在从剪贴板读取图片...'),
+              ],
+            ),
+            duration: Duration(seconds: 10),
+          ),
+        );
+      }
+
+      // 从剪贴板读取图片
+      final imageData = await ClipboardService.readImageFromClipboard();
+
+      // 清除加载指示器
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (imageData != null) {
+        // 验证图片数据
+        if (!ImageUtils.isValidImageData(imageData)) {
+          throw Exception('剪贴板中的数据不是有效的图片文件');
+        }
+
+        // 检查图片大小（限制为10MB）
+        if (imageData.length > ImageUtils.maxFileSize) {
+          throw Exception('剪贴板中的图片过大，请选择小于10MB的图片');
+        }
+
+        // 更新缓冲区
+        widget.onImageBufferUpdated?.call(imageData);
+
+        // 显示成功消息
+        if (mounted) {
+          final sizeInKB = (imageData.length / 1024).toStringAsFixed(1);
+          final mimeType = ImageUtils.getImageMimeType(imageData);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '图片已从剪贴板读取到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // 剪贴板中没有图片
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('剪贴板中没有图片数据'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // 清除加载指示器
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+
+      if (mounted) {
+        String errorMessage = e.toString();
+        // 清理错误消息格式
+        if (errorMessage.startsWith('Exception: ')) {
+          errorMessage = errorMessage.substring(11);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '从剪贴板读取图片失败',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(errorMessage),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: '重试',
+              textColor: Colors.white,
+              onPressed: _handleClipboardPaste,
             ),
           ),
         );
