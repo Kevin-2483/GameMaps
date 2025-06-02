@@ -189,10 +189,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       // 如果没有图层，创建一个默认图层
       if (_currentMap!.layers.isEmpty) {
         _addDefaultLayer();
-      } else {
-        _selectedLayer = _currentMap!.layers.first;
-      } // 保存初始状态到撤销历史
-      _saveToUndoHistory();
+      }
+      // 保存初始状态到撤销历史
+      // _saveToUndoHistory();
 
       // 预加载所有图层的图片
       _preloadAllLayerImages();
