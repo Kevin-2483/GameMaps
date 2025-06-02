@@ -1312,7 +1312,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
   /// 构建单个BoxFit按钮
   Widget _buildBoxFitButton(BoxFit fit) {
-    final isSelected = _getSelectedImageFit() == fit;
+    final isSelected = _getSelectedImageFit() == fit; // 现在这个判断会正确工作
 
     return InkWell(
       onTap: () => _handleImageFitChange(fit),
@@ -1367,8 +1367,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
   /// 获取当前选中的图片适应方式
   BoxFit _getSelectedImageFit() {
-    // 这里可以从当前选中的图片选区元素获取，或使用默认值
-    return BoxFit.contain;
+    // 修改：返回当前实际的图片适应方式，而不是固定的默认值
+    return widget.imageBufferFit;
   }
 
   /// 处理图片适应方式改变
