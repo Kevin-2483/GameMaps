@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
+import '../../../components/background_image_settings_dialog.dart';
 import 'dart:async';
 
 class LayerPanel extends StatefulWidget {
@@ -784,6 +785,7 @@ class _LayerPanelState extends State<LayerPanel> {
       widget.onLayerSelected(layer);
     }
   }
+
   /// 显示图片菜单
   void _showImageMenu(BuildContext context, MapLayer layer) {
     showModalBottomSheet<void>(
@@ -806,11 +808,11 @@ class _LayerPanelState extends State<LayerPanel> {
               ),
               if (layer.imageData != null) ...[
                 ListTile(
-                  leading: const Icon(Icons.tune, size: 20),
-                  title: const Text('编辑大小和偏移量'),
+                  leading: const Icon(Icons.settings, size: 20),
+                  title: const Text('背景图片设置'),
                   onTap: () {
                     Navigator.pop(context);
-                    _showImageEditDialog(context, layer);
+                    _showBackgroundImageSettingsForLayer(context, layer);
                   },
                 ),
                 ListTile(
@@ -827,6 +829,47 @@ class _LayerPanelState extends State<LayerPanel> {
         );
       },
     );
+  }
+
+  /// 使用新的 BackgroundImageSettingsDialog 显示图片大小和偏移量编辑对话框
+  Future<void> _showBackgroundImageSettingsForLayer(
+    BuildContext context,
+    MapLayer layer,
+  ) async {
+    // 确保 context 可用，因为 showDialog 需要它
+    // 如果这个方法在 State 类中，可以直接使用 this.context 或 widget.context (取决于具体场景，通常是 this.context)
+
+    final BackgroundImageSettings? result =
+        await showDialog<BackgroundImageSettings>(
+          context: context, // 使用 State 对象的 context
+          barrierDismissible: false, // 建议设置为 false，让用户通过按钮明确关闭
+          builder: (BuildContext dialogContext) {
+            return BackgroundImageSettingsDialog(
+              layer: layer, // 将当前图层传递给对话框
+              // title: '编辑 "${layer.name}" 的背景图片', // 可选：可以动态设置标题
+            );
+          },
+        );
+
+    // 处理对话框返回的结果
+    if (result != null) {
+      // 用户点击了确认并且对话框返回了设置
+      // 'result' 的类型是 BackgroundImageSettings
+
+      final updatedLayer = layer.copyWith(
+        imageFit: result.imageFit,
+        xOffset: result.xOffset,
+        yOffset: result.yOffset,
+        imageScale: result.imageScale,
+        updatedAt: DateTime.now(), // 保持更新时间的逻辑
+      );
+
+      widget.onLayerUpdated(updatedLayer); // 调用父组件的回调来更新图层
+      widget.onSuccess?.call('图层 "${layer.name}" 的背景图片设置已更新'); // 调用成功回调
+    } else {
+      // 用户可能取消了对话框 (例如 BackgroundImageSettingsDialog 调用了 Navigator.pop(context) 而没有结果)
+      print('背景图片设置对话框已关闭，没有应用更改。');
+    }
   }
 
   /// 显示删除确认对话框
@@ -1566,208 +1609,8 @@ class _LayerPanelState extends State<LayerPanel> {
       for (final updatedLayer in updatedLayers) {
         widget.onLayerUpdated(updatedLayer);
       }
-    }    widget.onSuccess?.call('已显示所有图层');
-  }
-  /// 显示图片大小和偏移量编辑对话框
-  void _showImageEditDialog(BuildContext context, MapLayer layer) {
-    // 临时变量存储编辑值
-    BoxFit tempImageFit = layer.imageFit ?? BoxFit.contain;
-    double tempXOffset = layer.xOffset;
-    double tempYOffset = layer.yOffset;
-    double tempImageScale = layer.imageScale;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('编辑图片大小和偏移量'),
-          contentPadding: const EdgeInsets.all(20),
-          content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 图片适应方式选择
-                const Text(
-                  '图片适应方式',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: BoxFit.values.map((fit) {
-                      return RadioListTile<BoxFit>(
-                        title: Text(_getBoxFitDisplayName(fit)),
-                        subtitle: Text(_getBoxFitDescription(fit)),
-                        value: fit,
-                        groupValue: tempImageFit,
-                        onChanged: (BoxFit? value) {
-                          if (value != null) {
-                            setState(() {
-                              tempImageFit = value;
-                            });
-                          }
-                        },
-                        dense: true,
-                      );
-                    }).toList(),
-                  ),
-                ),
-                  const SizedBox(height: 24),
-                
-                // 缩放比例调节
-                const Text(
-                  '缩放比例',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                
-                // 缩放比例滑块
-                Text('缩放比例: ${(tempImageScale * 100).toStringAsFixed(0)}%'),
-                Slider(
-                  value: tempImageScale,
-                  min: 0.1,
-                  max: 3.0,
-                  divisions: 58, // (3.0 - 0.1) / 0.05 = 58
-                  label: '${(tempImageScale * 100).toStringAsFixed(0)}%',
-                  onChanged: (value) {
-                    setState(() {
-                      tempImageScale = value;
-                    });
-                  },
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // 偏移量调节
-                const Text(
-                  '偏移量调节',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                
-                // X轴偏移量
-                Text('X轴偏移量: ${tempXOffset.toStringAsFixed(1)}'),
-                Slider(
-                  value: tempXOffset,
-                  min: -100.0,
-                  max: 100.0,
-                  divisions: 200,
-                  label: tempXOffset.toStringAsFixed(1),
-                  onChanged: (value) {
-                    setState(() {
-                      tempXOffset = value;
-                    });
-                  },
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Y轴偏移量
-                Text('Y轴偏移量: ${tempYOffset.toStringAsFixed(1)}'),
-                Slider(
-                  value: tempYOffset,
-                  min: -100.0,
-                  max: 100.0,
-                  divisions: 200,
-                  label: tempYOffset.toStringAsFixed(1),
-                  onChanged: (value) {
-                    setState(() {
-                      tempYOffset = value;
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 20),
-                
-                // 重置按钮
-                Row(
-                  children: [                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          tempImageFit = BoxFit.contain;
-                          tempXOffset = 0.0;
-                          tempYOffset = 0.0;
-                          tempImageScale = 1.0; // 重置为默认100%缩放
-                        });
-                      },
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text('重置为默认值'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
-            ),
-            ElevatedButton(              onPressed: () {
-                // 更新图层属性
-                final updatedLayer = layer.copyWith(
-                  imageFit: tempImageFit,
-                  xOffset: tempXOffset,
-                  yOffset: tempYOffset,
-                  imageScale: tempImageScale,
-                  updatedAt: DateTime.now(),
-                );
-                widget.onLayerUpdated(updatedLayer);
-                Navigator.of(context).pop();
-                widget.onSuccess?.call('图片大小、缩放和偏移量已更新');
-              },
-              child: const Text('应用'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 获取BoxFit显示名称
-  String _getBoxFitDisplayName(BoxFit fit) {
-    switch (fit) {
-      case BoxFit.contain:
-        return '包含';
-      case BoxFit.cover:
-        return '覆盖';
-      case BoxFit.fill:
-        return '填充';
-      case BoxFit.fitWidth:
-        return '适宽';
-      case BoxFit.fitHeight:
-        return '适高';
-      case BoxFit.none:
-        return '原始尺寸';
-      case BoxFit.scaleDown:
-        return '缩小';
     }
-  }
-
-  /// 获取BoxFit描述
-  String _getBoxFitDescription(BoxFit fit) {
-    switch (fit) {
-      case BoxFit.contain:
-        return '保持比例，完全显示图片';
-      case BoxFit.cover:
-        return '保持比例，填满区域，可能裁剪';
-      case BoxFit.fill:
-        return '拉伸图片以填满区域';
-      case BoxFit.fitWidth:
-        return '适应宽度，保持比例';
-      case BoxFit.fitHeight:
-        return '适应高度，保持比例';
-      case BoxFit.none:
-        return '使用图片原始尺寸';
-      case BoxFit.scaleDown:
-        return '不超过原始尺寸的包含模式';
-    }
+    widget.onSuccess?.call('已显示所有图层');
   }
 }
 
