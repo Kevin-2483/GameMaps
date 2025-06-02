@@ -2288,8 +2288,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         );
       },
     );
-  }
-  /// 处理键盘事件
+  }  /// 处理键盘事件
   KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
     // 只处理按键按下事件
     if (event is! RawKeyDownEvent) {
@@ -2298,7 +2297,26 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 获取用户偏好设置
     final userPrefs = context.read<UserPreferencesProvider>();
-    final copyShortcut = userPrefs.tools.shortcuts['copy'] ?? 'Ctrl+C';
+    final toolPrefs = userPrefs.tools;
+    final copyShortcut = toolPrefs.shortcuts['copy'] ?? 'Ctrl+C';
+    final undoShortcut = toolPrefs.shortcuts['undo'] ?? 'Ctrl+Z';
+    final redoShortcut = toolPrefs.shortcuts['redo'] ?? 'Ctrl+Y';
+    
+    // 检查撤销快捷键
+    if (_isShortcutPressed(event, undoShortcut)) {
+      if (_canUndo) {
+        _undo();
+        return KeyEventResult.handled;
+      }
+    }
+    
+    // 检查重做快捷键
+    if (_isShortcutPressed(event, redoShortcut)) {
+      if (_canRedo) {
+        _redo();
+        return KeyEventResult.handled;
+      }
+    }
     
     // 检查复制快捷键
     if (_isShortcutPressed(event, copyShortcut)) {
@@ -2308,7 +2326,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return KeyEventResult.ignored;
   }
-
   /// 检查是否按下了指定的快捷键
   bool _isShortcutPressed(RawKeyEvent event, String shortcut) {
     final parts = shortcut.toLowerCase().split('+');
