@@ -55,9 +55,9 @@ dependencies:
   
   # File picker
   file_picker: ^8.1.2
-  
-  # Path utilities
+    # Path utilities
   path: ^1.9.0
+  path_provider: ^2.1.4
   
   # Image handling
   image: ^4.2.0

@@ -279,7 +279,8 @@ class MapCanvas extends StatefulWidget {
   final String? selectedElementId;
   final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
-  final double zoomSensitivity;  final VoidCallback? onSelectionCleared; //：选区清除回调
+  final double zoomSensitivity;
+  final VoidCallback? onSelectionCleared; //：选区清除回调
   final bool shouldDisableDrawingTools; // 是否应该禁用绘图工具
 
   // 添加图片缓冲区相关参数
@@ -326,6 +327,9 @@ class MapCanvas extends StatefulWidget {
 }
 
 class MapCanvasState extends State<MapCanvas> {
+
+  Rect? get currentSelectionRect => _selectionRect;
+  
   final TransformationController _transformationController =
       TransformationController();
   Offset? _currentDrawingStart;
@@ -568,6 +572,7 @@ class MapCanvasState extends State<MapCanvas> {
     }
     return widget.previewDrawingTool ?? widget.selectedDrawingTool;
   }
+
   Color get _effectiveColor => widget.previewColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth =>
       widget.previewStrokeWidth ?? widget.selectedStrokeWidth;
@@ -924,6 +929,12 @@ class MapCanvasState extends State<MapCanvas> {
   void _onElementInteractionTapDown(TapDownDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final hitElementId = _getHitElement(canvasPosition);
+
+    // 检查是否有选区，如果有则清除选区
+    if (_selectionRect != null) {
+      clearSelection();
+      return; // 清除选区后直接返回，不进行其他操作
+    }
 
     // 只有当点击了当前选中的元素时才保持选中状态
     // 如果点击了其他地方或其他元素，则取消选择
