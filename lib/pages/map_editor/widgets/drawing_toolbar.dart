@@ -1272,10 +1272,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               const SizedBox(height: 4),
               Text(
-                '1. 在画布上拖拽创建选区\n'
-                '2. 点击"上传图片"选择图片文件\n'
+                '1. 点击"上传图片"选择图片文件\n'
+                '2. 在画布上拖拽创建选区\n'
                 '3. 图片将自动适应选区大小\n'
-                '4. 可通过Z层级检视器调整层级',
+                '4. 可通过Z层级检视器调整',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,

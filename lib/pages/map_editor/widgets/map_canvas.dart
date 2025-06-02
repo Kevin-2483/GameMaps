@@ -346,6 +346,7 @@ class _MapCanvasState extends State<MapCanvas> {
   Uint8List? _lastImageBufferData;
   ui.Image? _imageBufferCachedImage;
   Future<ui.Image?>? _imageBufferDecodingFuture;
+
   @override
   void didUpdateWidget(MapCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -360,9 +361,69 @@ class _MapCanvasState extends State<MapCanvas> {
       _preloadLayerImages();
     }
 
-    // 检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
+    // 新增：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
     if (oldWidget.mapItem != widget.mapItem) {
+      // 清理所有图片缓存，因为地图数据已经完全改变
+      _clearAllImageCache();
       _preloadAllLayerImages();
+    } else {
+      // 检查图层元素是否发生变化（撤销/重做等操作）
+      _checkAndCleanOrphanedImageCache();
+    }
+  }
+
+  /// 清理所有图片缓存
+  void _clearAllImageCache() {
+    // 释放所有缓存的图片资源
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
+    _imageDecodingFutures.clear();
+
+    print('已清理所有图片缓存');
+  }
+
+  /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
+  void _checkAndCleanOrphanedImageCache() {
+    if (widget.mapItem.layers.isEmpty) {
+      _clearAllImageCache();
+      return;
+    }
+
+    // 收集所有当前存在的图片元素ID
+    final Set<String> currentElementIds = {};
+    for (final layer in widget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null) {
+          currentElementIds.add(element.id);
+        }
+      }
+    }
+
+    // 找出需要清理的缓存项（元素已删除）
+    final List<String> orphanedCacheKeys = [];
+    for (final cacheKey in _imageCache.keys) {
+      if (!currentElementIds.contains(cacheKey)) {
+        orphanedCacheKeys.add(cacheKey);
+      }
+    }
+
+    // 清理孤立的缓存项
+    for (final key in orphanedCacheKeys) {
+      final image = _imageCache.remove(key);
+      image?.dispose();
+      _imageDecodingFutures.remove(key);
+    }
+
+    if (orphanedCacheKeys.isNotEmpty) {
+      print('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
+
+      // 触发重绘以反映缓存清理的结果
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 

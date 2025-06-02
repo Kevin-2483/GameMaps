@@ -266,6 +266,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           _selectedLayer = _currentMap!.layers.first;
         }
       }
+
+      // 新增：更新显示顺序以触发MapCanvas重建和缓存清理
+      _updateDisplayOrderAfterLayerChange();
+    });
+
+    // 新增：强制触发图片缓存清理和重新预加载
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+        setState(() {});
+      }
     });
   }
 
@@ -296,6 +307,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           _selectedLayer = _currentMap!.layers.first;
         }
       }
+
+      // 新增：更新显示顺序以触发MapCanvas重建和缓存清理
+      _updateDisplayOrderAfterLayerChange();
+    });
+
+    // 新增：强制触发图片缓存清理和重新预加载
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+        setState(() {});
+      }
     });
   }
 
@@ -303,7 +325,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool get _canRedo => _redoHistory.isNotEmpty;
   // 删除指定图层中的绘制元素
   void _deleteElement(String elementId) {
-    if ( _selectedLayer == null) return;
+    if (_selectedLayer == null) return;
 
     // 找到要删除的元素
     final elementToDelete = _selectedLayer!.elements
@@ -327,6 +349,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     _updateLayer(updatedLayer);
+
+    // 新增：如果删除的是图片元素，强制触发缓存清理
+    if (elementToDelete.type == DrawingElementType.imageArea) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
 
     // 显示删除成功消息
     _showSuccessSnackBar('已删除绘制元素');
@@ -366,7 +397,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _addNewLayer() {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -391,10 +422,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _deleteLayer(MapLayer layer) {
-    if (
-        _currentMap == null ||
-        _currentMap!.layers.length <= 1)
-      return;
+    if (_currentMap == null || _currentMap!.layers.length <= 1) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -615,7 +643,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 在修改前保存当前状态
     _saveToUndoHistory();
@@ -640,7 +668,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _reorderLayers(int oldIndex, int newIndex) {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     print('=== _reorderLayers 开始 ===');
     print('oldIndex: $oldIndex, newIndex: $newIndex');
@@ -737,7 +765,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 在修改前保存当前状态
     _saveToUndoHistory();
@@ -829,7 +857,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _addLegendGroup() {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -881,7 +909,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _deleteLegendGroup(LegendGroup group) {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
@@ -898,7 +926,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
-      _saveToUndoHistory();
+    _saveToUndoHistory();
 
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
@@ -922,8 +950,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     MapLayer layer,
     List<LegendGroup> allLegendGroups,
   ) {
-
-
     setState(() {
       // 关闭其他抽屉
       _isLegendGroupManagementDrawerOpen = false;
@@ -942,7 +968,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     LegendGroup legendGroup, {
     String? selectedLegendItemId,
   }) {
-
     setState(() {
       // 关闭其他抽屉
       _isLayerLegendBindingDrawerOpen = false;
@@ -958,7 +983,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   } // 处理图例项双击事件
 
   void _handleLegendItemDoubleClick(LegendItem item) {
-    if ( _currentMap == null) return;
+    if (_currentMap == null) return;
 
     // 首先选中该图例项，这样边框会立即显示
     _selectLegendItem(item.id);
@@ -1003,7 +1028,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 显示Z层级检视器
   void _showZIndexInspector() {
-    if ( _selectedLayer == null) return;
+    if (_selectedLayer == null) return;
 
     setState(() {
       // 关闭其他抽屉
