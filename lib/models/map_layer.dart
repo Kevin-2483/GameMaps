@@ -22,6 +22,7 @@ class MapLayer {
   final BoxFit? imageFit; // 图层背景图片适应方式
   final double xOffset; // 图层背景图片X轴偏移量 (相对坐标 -1.0 到 1.0)
   final double yOffset; // 图层背景图片Y轴偏移量 (相对坐标 -1.0 到 1.0)
+  final double imageScale; // 图层背景图片缩放比例 (0.1 到 3.0，默认1.0表示原始大小)
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isLinkedToNext; //是否链接到下一个图层
@@ -37,6 +38,7 @@ class MapLayer {
     this.imageFit, // 默认为null，将在渲染时处理为自定义缩放
     this.xOffset = 0.0, // 默认X轴正中间偏移0
     this.yOffset = 0.0, // 默认Y轴正中间偏移0
+    this.imageScale = 1.0, // 默认缩放为100%（原始大小）
     required this.createdAt,
     required this.updatedAt,
     this.isLinkedToNext = false, // 默认不链接
@@ -57,6 +59,7 @@ class MapLayer {
     BoxFit? imageFit,
     double? xOffset,
     double? yOffset,
+    double? imageScale,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearImageData = false, //参数用于明确清除图片数据
@@ -74,6 +77,7 @@ class MapLayer {
       imageFit: imageFit ?? this.imageFit,
       xOffset: xOffset ?? this.xOffset,
       yOffset: yOffset ?? this.yOffset,
+      imageScale: imageScale ?? this.imageScale,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isLinkedToNext: isLinkedToNext ?? this.isLinkedToNext,

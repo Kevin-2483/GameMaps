@@ -1568,13 +1568,13 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }    widget.onSuccess?.call('已显示所有图层');
   }
-
   /// 显示图片大小和偏移量编辑对话框
   void _showImageEditDialog(BuildContext context, MapLayer layer) {
     // 临时变量存储编辑值
     BoxFit tempImageFit = layer.imageFit ?? BoxFit.contain;
     double tempXOffset = layer.xOffset;
     double tempYOffset = layer.yOffset;
+    double tempImageScale = layer.imageScale;
 
     showDialog(
       context: context,
@@ -1617,6 +1617,29 @@ class _LayerPanelState extends State<LayerPanel> {
                       );
                     }).toList(),
                   ),
+                ),
+                  const SizedBox(height: 24),
+                
+                // 缩放比例调节
+                const Text(
+                  '缩放比例',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                
+                // 缩放比例滑块
+                Text('缩放比例: ${(tempImageScale * 100).toStringAsFixed(0)}%'),
+                Slider(
+                  value: tempImageScale,
+                  min: 0.1,
+                  max: 3.0,
+                  divisions: 58, // (3.0 - 0.1) / 0.05 = 58
+                  label: '${(tempImageScale * 100).toStringAsFixed(0)}%',
+                  onChanged: (value) {
+                    setState(() {
+                      tempImageScale = value;
+                    });
+                  },
                 ),
                 
                 const SizedBox(height: 24),
@@ -1664,13 +1687,13 @@ class _LayerPanelState extends State<LayerPanel> {
                 
                 // 重置按钮
                 Row(
-                  children: [
-                    TextButton.icon(
+                  children: [                    TextButton.icon(
                       onPressed: () {
                         setState(() {
                           tempImageFit = BoxFit.contain;
                           tempXOffset = 0.0;
                           tempYOffset = 0.0;
+                          tempImageScale = 1.0; // 重置为默认100%缩放
                         });
                       },
                       icon: const Icon(Icons.refresh, size: 16),
@@ -1686,18 +1709,18 @@ class _LayerPanelState extends State<LayerPanel> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('取消'),
             ),
-            ElevatedButton(
-              onPressed: () {
+            ElevatedButton(              onPressed: () {
                 // 更新图层属性
                 final updatedLayer = layer.copyWith(
                   imageFit: tempImageFit,
                   xOffset: tempXOffset,
                   yOffset: tempYOffset,
+                  imageScale: tempImageScale,
                   updatedAt: DateTime.now(),
                 );
                 widget.onLayerUpdated(updatedLayer);
                 Navigator.of(context).pop();
-                widget.onSuccess?.call('图片大小和偏移量已更新');
+                widget.onSuccess?.call('图片大小、缩放和偏移量已更新');
               },
               child: const Text('应用'),
             ),

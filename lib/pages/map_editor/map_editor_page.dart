@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
@@ -1269,13 +1270,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('不保存退出'),
-          ),
-          ElevatedButton(
+          ),          ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop(false); // 先关闭对话框
               await _saveMap(); // 保存地图
               if (mounted && !_hasUnsavedChanges) {
-                Navigator.of(context).pop(); // 保存成功后退出
+                context.pop(); // 使用 go_router 的方式退出
               }
             },
             child: const Text('保存并退出'),
@@ -1448,7 +1448,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             if (!didPop) {
               final shouldExit = await _showExitConfirmDialog();
               if (shouldExit && context.mounted) {
-                Navigator.of(context).pop();
+                context.pop(); // 使用 go_router 的方式退出
               }
             }
           },

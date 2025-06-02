@@ -748,19 +748,16 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity =
-        widget.previewOpacityValues[layer.id] ?? layer.opacity;
-
-    // 确定图片适应方式
+        widget.previewOpacityValues[layer.id] ?? layer.opacity;    // 确定图片适应方式和缩放比例
     BoxFit imageFit;
-    double scale = 1.0;
+    double scale = layer.imageScale; // 使用图层设置的缩放比例
     
     if (layer.imageFit != null) {
       // 使用图层设置的适应方式
       imageFit = layer.imageFit!;
     } else {
-      // 默认使用 contain 模式，并应用 2/3 缩放
+      // 默认使用 contain 模式
       imageFit = BoxFit.contain;
-      scale = 2.0 / 3.0; // 默认 2/3 缩放
     }
 
     // 计算偏移位置
