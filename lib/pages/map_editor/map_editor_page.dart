@@ -2373,18 +2373,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         );
       }
       return;
-    }
-
-    try {
+    }    try {
       // 从画布捕获选区图像
-      final imageData = await mapCanvas.captureCanvasAreaToArgbUint8List(
+      final imageData = await mapCanvas.captureCanvasAreaToRgbaUint8List(
         selectionRect,
       );
       if (imageData == null) {
-        throw Exception('无法捕获画布区域');
-      }      // 复制到剪贴板
+        throw Exception('无法捕获画布区域');      }// 复制到剪贴板
       final success = await ClipboardService.copyCanvasSelectionToClipboard(
-        argbData: imageData,
+        rgbaData: imageData,
         width: selectionRect.width.round(),
         height: selectionRect.height.round(),
       );

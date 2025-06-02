@@ -945,9 +945,9 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
   }
-
-  /// 后续功能
-  Future<Uint8List?> captureCanvasAreaToArgbUint8List(Rect area) async {
+  /// 捕获画布区域为RGBA格式的像素数据
+  /// 注意：返回的是RGBA格式的数据，不再进行手动转换
+  Future<Uint8List?> captureCanvasAreaToRgbaUint8List(Rect area) async {
     // Ensure the context is mounted before proceeding
     if (!_canvasGlobalKey.currentContext!.mounted) {
       // print("Error: RepaintBoundary context not mounted.");
@@ -1009,11 +1009,9 @@ class MapCanvasState extends State<MapCanvas> {
         // Ensure calculated width/height are not negative or zero after rounding and intersection
         if (cropWidth <= 0 || cropHeight <= 0) {
           return Uint8List(0);
-        }
-
-        final Uint8List destPixelsArgb = Uint8List(
+        }        final Uint8List destPixelsRgba = Uint8List(
           cropWidth * cropHeight * 4,
-        ); // 4 bytes per ARGB pixel
+        ); // 4 bytes per RGBA pixel
 
         for (int y = 0; y < cropHeight; ++y) {
           for (int x = 0; x < cropWidth; ++x) {
@@ -1032,29 +1030,29 @@ class MapCanvasState extends State<MapCanvas> {
               final int b = sourcePixelsRgba[sourceIndex + 2];
               final int a = sourcePixelsRgba[sourceIndex + 3];
 
-              // Index in the destination ARGB buffer
+              // Index in the destination RGBA buffer (保持RGBA格式)
               final int destIndex = (y * cropWidth + x) * 4;
-              destPixelsArgb[destIndex] = a; // Alpha
-              destPixelsArgb[destIndex + 1] = r; // Red
-              destPixelsArgb[destIndex + 2] = g; // Green
-              destPixelsArgb[destIndex + 3] = b; // Blue
+              destPixelsRgba[destIndex] = r; // Red
+              destPixelsRgba[destIndex + 1] = g; // Green
+              destPixelsRgba[destIndex + 2] = b; // Blue
+              destPixelsRgba[destIndex + 3] = a; // Alpha
             } else {
               // Fallback for any unexpected out-of-bounds access
               final int destIndex = (y * cropWidth + x) * 4;
-              destPixelsArgb[destIndex] = 0; // Transparent black
-              destPixelsArgb[destIndex + 1] = 0;
-              destPixelsArgb[destIndex + 2] = 0;
-              destPixelsArgb[destIndex + 3] = 0;
+              destPixelsRgba[destIndex] = 0; // Transparent black
+              destPixelsRgba[destIndex + 1] = 0;
+              destPixelsRgba[destIndex + 2] = 0;
+              destPixelsRgba[destIndex + 3] = 0;
             }
           }
         }
-        return destPixelsArgb;
+        return destPixelsRgba;
       } finally {
         image
             .dispose(); // IMPORTANT: Dispose the ui.Image to free up native resources
       }
     } catch (e) {
-      // print("Exception in captureCanvasAreaToArgbUint8List: $e");
+      // print("Exception in captureCanvasAreaToRgbaUint8List: $e");
       return null;
     }
   }

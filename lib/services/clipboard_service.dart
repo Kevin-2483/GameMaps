@@ -6,31 +6,30 @@ import 'package:path/path.dart' as path;
 import 'package:super_clipboard/super_clipboard.dart';
 
 /// 剪贴板服务类，负责处理图像复制到系统剪贴板
-class ClipboardService {
-  /// 将MapCanvas捕获的选中区域复制到剪贴板
+class ClipboardService {  /// 将MapCanvas捕获的选中区域复制到剪贴板
   /// 
-  /// [argbData] - ARGB格式的图像数据 (来自captureCanvasAreaToArgbUint8List)
+  /// [rgbaData] - RGBA格式的图像数据 (来自captureCanvasAreaToRgbaUint8List)
   /// [width] - 图像宽度
   /// [height] - 图像高度
   static Future<bool> copyCanvasSelectionToClipboard({
-    required Uint8List argbData,
+    required Uint8List rgbaData,
     required int width,
-    required int height,
-  }) async {
+    required int height,  }) async {
     try {
-      if (argbData.isEmpty || width <= 0 || height <= 0) {
+      if (rgbaData.isEmpty || width <= 0 || height <= 0) {
         print('无效的图像数据');
         return false;
       }
-      
-      // 将ARGB数据转换为img.Image
+        // 将RGBA数据转换为img.Image
+      // 注意：captureCanvasAreaToRgbaUint8List()现在直接返回RGBA格式的数据
+      // 所以这里使用RGBA顺序
       final image = img.Image.fromBytes(
         width: width,
         height: height,
-        bytes: argbData.buffer,
+        bytes: rgbaData.buffer,
         format: img.Format.uint8,
         numChannels: 4,
-        order: img.ChannelOrder.argb, // 明确指定ARGB顺序
+        order: img.ChannelOrder.rgba, // 直接使用RGBA顺序
       );
       
       // 编码为PNG格式
