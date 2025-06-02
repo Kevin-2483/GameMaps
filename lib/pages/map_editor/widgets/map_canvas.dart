@@ -280,6 +280,7 @@ class MapCanvas extends StatefulWidget {
   final Function(String?) onElementSelected;
   final BackgroundPattern backgroundPattern;
   final double zoomSensitivity;
+  final VoidCallback? onSelectionCleared; // 新增：选区清除回调
 
   // 添加图片缓冲区相关参数
   final Uint8List? imageBufferData; // 图片缓冲区数据
@@ -313,6 +314,7 @@ class MapCanvas extends StatefulWidget {
     required this.backgroundPattern,
     required this.zoomSensitivity,
     this.displayOrderLayers,
+    this.onSelectionCleared,
 
     // 添加图片缓冲区参数
     this.imageBufferData,
@@ -320,10 +322,10 @@ class MapCanvas extends StatefulWidget {
   });
 
   @override
-  State<MapCanvas> createState() => _MapCanvasState();
+  State<MapCanvas> createState() => MapCanvasState();
 }
 
-class _MapCanvasState extends State<MapCanvas> {
+class MapCanvasState extends State<MapCanvas> {
   final TransformationController _transformationController =
       TransformationController();
   Offset? _currentDrawingStart;
@@ -332,6 +334,11 @@ class _MapCanvasState extends State<MapCanvas> {
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
   final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片
+  Rect? _selectionRect; // 当前选区矩形
+  final ValueNotifier<Rect?> _selectionNotifier = ValueNotifier(null);
+  // 选区拖动相关变量
+  Offset? _selectionStartPosition;
+  bool _isCreatingSelection = false;
 
   @override
   void initState() {
@@ -581,7 +588,21 @@ class _MapCanvasState extends State<MapCanvas> {
 
     _transformationController.dispose();
     _drawingPreviewNotifier.dispose();
+    _selectionNotifier.dispose();
     super.dispose();
+  }
+
+  // 添加清除选区的方法
+  void clearSelection() {
+    if (_selectionRect != null) {
+      setState(() {
+        _selectionRect = null;
+      });
+      _selectionNotifier.value = null;
+
+      // 通知外部选区已清除
+      widget.onSelectionCleared?.call();
+    }
   }
 
   @override
@@ -646,6 +667,18 @@ class _MapCanvasState extends State<MapCanvas> {
                                 freeDrawingPath: previewData.freeDrawingPath,
                                 selectedElementId: widget.selectedElementId,
                               ),
+                            );
+                          },
+                        ),
+                        // 选区层
+                        ValueListenableBuilder<Rect?>(
+                          valueListenable: _selectionNotifier,
+                          builder: (context, selectionRect, child) {
+                            if (selectionRect == null)
+                              return const SizedBox.shrink();
+                            return CustomPaint(
+                              painter: _SelectionPainter(selectionRect),
+                              size: const Size(kCanvasWidth, kCanvasHeight),
                             );
                           },
                         ),
@@ -1206,6 +1239,7 @@ class _MapCanvasState extends State<MapCanvas> {
         print(
           "Hit a new element by z-order: $hitElementId. Consider selecting it.",
         );
+        _startSelectionDrag(canvasPosition);
         // 根据你的设计，也可以在这里直接开始拖动新选中的元素：
         // widget.onSelectElement(hitElementIdFromTop);
         // _onElementDragStart(hitElementIdFromTop, details);
@@ -1220,6 +1254,7 @@ class _MapCanvasState extends State<MapCanvas> {
     } else {
       // 点击了空白区域
       // 例如: widget.onDeselectElement();
+      _startSelectionDrag(canvasPosition);
     }
   }
 
@@ -1234,6 +1269,9 @@ class _MapCanvasState extends State<MapCanvas> {
     } else if (_draggingElementId != null) {
       // 正在拖拽元素
       _onElementDragUpdate(_draggingElementId!, details);
+    } else {
+      // 更新选区
+      _updateSelectionDrag(details);
     }
   }
 
@@ -1251,6 +1289,48 @@ class _MapCanvasState extends State<MapCanvas> {
       // 结束拖拽元素
       final elementId = _draggingElementId!;
       _onElementDragEnd(elementId, details);
+    } else {
+      // 完成选区创建
+      _endSelectionDrag();
+    }
+  }
+
+  // 开始选区拖动
+  void _startSelectionDrag(Offset startPosition) {
+    _selectionStartPosition = startPosition;
+    _isCreatingSelection = true;
+
+    // 初始化选区（一个很小的矩形）
+    _selectionRect = Rect.fromPoints(startPosition, startPosition);
+    _selectionNotifier.value = _selectionRect;
+  }
+
+  // 更新选区拖动
+  void _updateSelectionDrag(DragUpdateDetails details) {
+    if (!_isCreatingSelection || _selectionStartPosition == null) return;
+
+    final currentPosition = _getCanvasPosition(details.localPosition);
+
+    setState(() {
+      _selectionRect = Rect.fromPoints(
+        _selectionStartPosition!,
+        currentPosition,
+      );
+    });
+    _selectionNotifier.value = _selectionRect;
+  }
+
+  // 结束选区拖动
+  void _endSelectionDrag() {
+    _isCreatingSelection = false;
+    _selectionStartPosition = null;
+
+    // 检查选区大小，如果太小就清除
+    if (_selectionRect != null) {
+      final minSize = 1.0; // 最小选区大小
+      if (_selectionRect!.width < minSize && _selectionRect!.height < minSize) {
+        clearSelection();
+      }
     }
   }
 
@@ -2181,7 +2261,7 @@ class _MapCanvasState extends State<MapCanvas> {
     MapDrawingElement element, {
     double? handleSize,
   }) {
-    final handles = _MapCanvasState.getResizeHandles(
+    final handles = MapCanvasState.getResizeHandles(
       element,
       handleSize: handleSize,
     );
@@ -2358,6 +2438,100 @@ class _MapCanvasState extends State<MapCanvas> {
     );
 
     widget.onLayerUpdated(updatedLayer);
+  }
+}
+
+/// 选区绘制器
+class _SelectionPainter extends CustomPainter {
+  final Rect? selectionRect;
+
+  _SelectionPainter(this.selectionRect);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (selectionRect == null) return;
+
+    // 绘制选区边框
+    final borderPaint = Paint()
+      ..color = Colors.blue.withAlpha((0.8 * 255).toInt())
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+
+    // 绘制选区填充
+    final fillPaint = Paint()
+      ..color = Colors.blue.withAlpha((0.1 * 255).toInt())
+      ..style = PaintingStyle.fill;
+
+    // 绘制填充
+    canvas.drawRect(selectionRect!, fillPaint);
+
+    // 绘制虚线边框
+    _drawDashedRect(canvas, selectionRect!, borderPaint, 5.0, 3.0);
+  }
+
+  void _drawDashedRect(
+    Canvas canvas,
+    Rect rect,
+    Paint paint,
+    double dashWidth,
+    double dashSpace,
+  ) {
+    final path = Path();
+
+    // 顶边
+    _addDashedLine(path, rect.topLeft, rect.topRight, dashWidth, dashSpace);
+    // 右边
+    _addDashedLine(path, rect.topRight, rect.bottomRight, dashWidth, dashSpace);
+    // 底边
+    _addDashedLine(
+      path,
+      rect.bottomRight,
+      rect.bottomLeft,
+      dashWidth,
+      dashSpace,
+    );
+    // 左边
+    _addDashedLine(path, rect.bottomLeft, rect.topLeft, dashWidth, dashSpace);
+
+    canvas.drawPath(path, paint);
+  }
+
+  void _addDashedLine(
+    Path path,
+    Offset start,
+    Offset end,
+    double dashWidth,
+    double dashSpace,
+  ) {
+    final distance = (end - start).distance;
+    final unitVector = (end - start) / distance;
+
+    double currentDistance = 0.0;
+    bool isDash = true;
+
+    while (currentDistance < distance) {
+      final segmentLength = isDash ? dashWidth : dashSpace;
+      final nextDistance = (currentDistance + segmentLength).clamp(
+        0.0,
+        distance,
+      );
+
+      if (isDash) {
+        final segmentStart = start + unitVector * currentDistance;
+        final segmentEnd = start + unitVector * nextDistance;
+        path.moveTo(segmentStart.dx, segmentStart.dy);
+        path.lineTo(segmentEnd.dx, segmentEnd.dy);
+      }
+
+      currentDistance = nextDistance;
+      isDash = !isDash;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SelectionPainter oldDelegate) {
+    return oldDelegate.selectionRect != selectionRect;
   }
 }
 
@@ -2585,7 +2759,7 @@ class _LayerPainter extends CustomPainter {
     double? handleSize,
   }) {
     // 获取所有调整手柄的位置
-    final handles = _MapCanvasState.getResizeHandles(
+    final handles = MapCanvasState.getResizeHandles(
       element,
       handleSize: handleSize,
     );

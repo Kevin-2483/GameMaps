@@ -66,6 +66,7 @@ class _MapEditorContent extends StatefulWidget {
 }
 
 class _MapEditorContentState extends State<_MapEditorContent> {
+  final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = MapDatabaseService();
   final LegendDatabaseService _legendDatabaseService = LegendDatabaseService();
@@ -472,6 +473,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 触发优先显示逻辑
     _prioritizeLayerAndGroupDisplay();
+    // 新增：清除画布上的选区
+    _clearCanvasSelection();
+  }
+
+  // 添加清除画布选区的方法
+  void _clearCanvasSelection() {
+    // 通过 GlobalKey 直接调用 MapCanvas 的清除选区方法
+    _mapCanvasKey.currentState?.clearSelection();
   }
 
   void _onLayerSelectionCleared() {
@@ -1404,6 +1413,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 应用新的优先显示逻辑
     _prioritizeLayerAndGroupDisplay();
+    // 新增：清除画布上的选区
+    _clearCanvasSelection();
   }
 
   /// 构建图层面板的副标题
@@ -2225,6 +2236,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       builder: (context, userPrefsProvider, child) {
         // 创建用于显示的地图副本，使用重新排序的图层
         return MapCanvas(
+          key: _mapCanvasKey, // 添加这一行
           mapItem: _currentMap!,
           selectedLayer: _selectedLayer,
           selectedDrawingTool: _selectedDrawingTool,
