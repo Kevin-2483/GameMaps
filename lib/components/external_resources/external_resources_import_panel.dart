@@ -176,9 +176,8 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
               ),
             ),
           ],
-          
-          // 详细列表预览
-          if (_preview != null && _importMapItems.isNotEmpty) ...[
+            // 详细列表预览
+          if (_preview != null && _importMaps && _importMapItems.isNotEmpty) ...[
             const SizedBox(height: 16),
             Card(
               child: Padding(
@@ -225,7 +224,7 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
             ),
           ],
           
-          if (_preview != null && _importLegendItems.isNotEmpty) ...[
+          if (_preview != null && _importLegends && _importLegendItems.isNotEmpty) ...[
             const SizedBox(height: 16),
             Card(
               child: Padding(
@@ -323,9 +322,7 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
     try {
       final file = File(filePath);
       final content = await file.readAsString();
-      final jsonData = jsonDecode(content) as Map<String, dynamic>;
-
-      // 创建详细的导入项目列表
+      final jsonData = jsonDecode(content) as Map<String, dynamic>;      // 创建详细的导入项目列表
       await _createDetailedImportItems(jsonData);
 
       setState(() {
@@ -333,6 +330,13 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
         _preview = ImportPreview.fromJson(jsonData);
         _isAnalyzing = false;
       });
+      
+      // 调试信息
+      print('分析完成:');
+      print('  地图项目数量: ${_importMapItems.length}');
+      print('  图例项目数量: ${_importLegendItems.length}');
+      print('  _importMaps: $_importMaps');
+      print('  _importLegends: $_importLegends');
     } catch (e) {
       setState(() {
         _isAnalyzing = false;
@@ -352,38 +356,59 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
       }
     }
   }
-
   Future<void> _createDetailedImportItems(Map<String, dynamic> jsonData) async {
     final List<ImportMapItem> mapItems = [];
     final List<ImportLegendItem> legendItems = [];
     
-    // 处理地图数据
-    if (jsonData.containsKey('maps') && jsonData['maps'] is List) {
-      final List maps = jsonData['maps'] as List;
-      for (final mapData in maps) {
-        if (mapData is Map<String, dynamic>) {
-          final mapItem = await _createMapItem(mapData);
-          if (mapItem != null) {
-            mapItems.add(mapItem);
+    // 处理地图数据 - 支持嵌套格式
+    if (jsonData.containsKey('maps')) {
+      final mapsData = jsonData['maps'];
+      List<dynamic>? maps;
+      
+      if (mapsData is List) {
+        // 直接的数组格式
+        maps = mapsData;
+      } else if (mapsData is Map<String, dynamic> && mapsData.containsKey('data')) {
+        // 嵌套格式：maps.data
+        maps = mapsData['data'] as List<dynamic>?;
+      }
+      
+      if (maps != null) {
+        for (final mapData in maps) {
+          if (mapData is Map<String, dynamic>) {
+            final mapItem = await _createMapItem(mapData);
+            if (mapItem != null) {
+              mapItems.add(mapItem);
+            }
           }
         }
       }
     }
     
-    // 处理图例数据
-    if (jsonData.containsKey('legends') && jsonData['legends'] is List) {
-      final List legends = jsonData['legends'] as List;
-      for (final legendData in legends) {
-        if (legendData is Map<String, dynamic>) {
-          final legendItem = await _createLegendItem(legendData);
-          if (legendItem != null) {
-            legendItems.add(legendItem);
+    // 处理图例数据 - 支持嵌套格式
+    if (jsonData.containsKey('legends')) {
+      final legendsData = jsonData['legends'];
+      List<dynamic>? legends;
+      
+      if (legendsData is List) {
+        // 直接的数组格式
+        legends = legendsData;
+      } else if (legendsData is Map<String, dynamic> && legendsData.containsKey('data')) {
+        // 嵌套格式：legends.data
+        legends = legendsData['data'] as List<dynamic>?;
+      }
+      
+      if (legends != null) {
+        for (final legendData in legends) {
+          if (legendData is Map<String, dynamic>) {
+            final legendItem = await _createLegendItem(legendData);
+            if (legendItem != null) {
+              legendItems.add(legendItem);
+            }
           }
         }
       }
-    }
-
-    setState(() {
+    }    setState(() {
       _importMapItems = mapItems;
       _importLegendItems = legendItems;
       
@@ -391,6 +416,17 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
       _selectedMapIds = Set.from(mapItems.map((item) => item.id));
       _selectedLegendIds = Set.from(legendItems.map((item) => item.id));
     });
+    
+    // 调试信息
+    print('创建详细导入项目:');
+    print('  创建的地图项目: ${mapItems.length}');
+    print('  创建的图例项目: ${legendItems.length}');
+    for (final item in mapItems) {
+      print('    地图: ${item.title} (${item.conflictStatus})');
+    }
+    for (final item in legendItems) {
+      print('    图例: ${item.title} (${item.conflictStatus})');
+    }
   }
   Future<ImportMapItem?> _createMapItem(Map<String, dynamic> mapData) async {
     try {
@@ -741,8 +777,7 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
           if (layerData is Map<String, dynamic>) {
             layers.add(MapLayer.fromJson(layerData));
           }
-        }
-      }
+        }      }
       
       // 处理图例组数据
       final List<LegendGroup> legendGroups = [];
@@ -754,8 +789,22 @@ class _ExternalResourcesImportPanelState extends State<ExternalResourcesImportPa
         }
       }
       
+      // 处理图像数据
+      Uint8List? imageData;
+      if (mapData.containsKey('imageData')) {
+        final imageDataJson = mapData['imageData'];
+        if (imageDataJson is String && imageDataJson.isNotEmpty) {
+          try {
+            imageData = base64Decode(imageDataJson);
+          } catch (e) {
+            print('Warning: Failed to decode imageData for map ${mapItem.title}: $e');
+          }
+        }
+      }
+      
       final newMap = MapItem(
         title: mapItem.title,
+        imageData: imageData,
         version: mapItem.version,
         layers: layers,
         legendGroups: legendGroups,
