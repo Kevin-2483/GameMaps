@@ -18,6 +18,10 @@ class MapLayer {
   final Uint8List? imageData; // 图片二进制数据，null表示透明图层
   final List<MapDrawingElement> elements; // 绘制元素
   final List<String> legendGroupIds; // 关联的图例组ID列表
+  @BoxFitConverter()
+  final BoxFit? imageFit; // 图层背景图片适应方式
+  final double xOffset; // 图层背景图片X轴偏移量 (相对坐标 -1.0 到 1.0)
+  final double yOffset; // 图层背景图片Y轴偏移量 (相对坐标 -1.0 到 1.0)
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isLinkedToNext; //是否链接到下一个图层
@@ -30,6 +34,9 @@ class MapLayer {
     this.imageData,
     this.elements = const [],
     this.legendGroupIds = const [],
+    this.imageFit, // 默认为null，将在渲染时处理为自定义缩放
+    this.xOffset = 0.0, // 默认X轴正中间偏移0
+    this.yOffset = 0.0, // 默认Y轴正中间偏移0
     required this.createdAt,
     required this.updatedAt,
     this.isLinkedToNext = false, // 默认不链接
@@ -47,6 +54,9 @@ class MapLayer {
     Uint8List? imageData,
     List<MapDrawingElement>? elements,
     List<String>? legendGroupIds,
+    BoxFit? imageFit,
+    double? xOffset,
+    double? yOffset,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearImageData = false, //参数用于明确清除图片数据
@@ -61,6 +71,9 @@ class MapLayer {
       imageData: clearImageData ? null : (imageData ?? this.imageData),
       elements: elements ?? this.elements,
       legendGroupIds: legendGroupIds ?? this.legendGroupIds,
+      imageFit: imageFit ?? this.imageFit,
+      xOffset: xOffset ?? this.xOffset,
+      yOffset: yOffset ?? this.yOffset,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isLinkedToNext: isLinkedToNext ?? this.isLinkedToNext,

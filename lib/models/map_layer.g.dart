@@ -23,6 +23,9 @@ MapLayer _$MapLayerFromJson(Map<String, dynamic> json) => MapLayer(
           ?.map((e) => e as String)
           .toList() ??
       const [],
+  imageFit: const BoxFitConverter().fromJson(json['imageFit'] as String?),
+  xOffset: (json['xOffset'] as num?)?.toDouble() ?? 0.0,
+  yOffset: (json['yOffset'] as num?)?.toDouble() ?? 0.0,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   isLinkedToNext: json['isLinkedToNext'] as bool? ?? false,
@@ -37,6 +40,9 @@ Map<String, dynamic> _$MapLayerToJson(MapLayer instance) => <String, dynamic>{
   'imageData': const Uint8ListConverter().toJson(instance.imageData),
   'elements': instance.elements,
   'legendGroupIds': instance.legendGroupIds,
+  'imageFit': const BoxFitConverter().toJson(instance.imageFit),
+  'xOffset': instance.xOffset,
+  'yOffset': instance.yOffset,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
   'isLinkedToNext': instance.isLinkedToNext,

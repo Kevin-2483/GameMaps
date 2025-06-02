@@ -784,7 +784,6 @@ class _LayerPanelState extends State<LayerPanel> {
       widget.onLayerSelected(layer);
     }
   }
-
   /// 显示图片菜单
   void _showImageMenu(BuildContext context, MapLayer layer) {
     showModalBottomSheet<void>(
@@ -805,7 +804,15 @@ class _LayerPanelState extends State<LayerPanel> {
                   _handleImageUpload(layer);
                 },
               ),
-              if (layer.imageData != null)
+              if (layer.imageData != null) ...[
+                ListTile(
+                  leading: const Icon(Icons.tune, size: 20),
+                  title: const Text('编辑大小和偏移量'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showImageEditDialog(context, layer);
+                  },
+                ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline, size: 20),
                   title: const Text('移除图片'),
@@ -814,6 +821,7 @@ class _LayerPanelState extends State<LayerPanel> {
                     _removeLayerImage(layer);
                   },
                 ),
+              ],
             ],
           ),
         );
@@ -1558,9 +1566,185 @@ class _LayerPanelState extends State<LayerPanel> {
       for (final updatedLayer in updatedLayers) {
         widget.onLayerUpdated(updatedLayer);
       }
-    }
+    }    widget.onSuccess?.call('已显示所有图层');
+  }
 
-    widget.onSuccess?.call('已显示所有图层');
+  /// 显示图片大小和偏移量编辑对话框
+  void _showImageEditDialog(BuildContext context, MapLayer layer) {
+    // 临时变量存储编辑值
+    BoxFit tempImageFit = layer.imageFit ?? BoxFit.contain;
+    double tempXOffset = layer.xOffset;
+    double tempYOffset = layer.yOffset;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('编辑图片大小和偏移量'),
+          contentPadding: const EdgeInsets.all(20),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 图片适应方式选择
+                const Text(
+                  '图片适应方式',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: BoxFit.values.map((fit) {
+                      return RadioListTile<BoxFit>(
+                        title: Text(_getBoxFitDisplayName(fit)),
+                        subtitle: Text(_getBoxFitDescription(fit)),
+                        value: fit,
+                        groupValue: tempImageFit,
+                        onChanged: (BoxFit? value) {
+                          if (value != null) {
+                            setState(() {
+                              tempImageFit = value;
+                            });
+                          }
+                        },
+                        dense: true,
+                      );
+                    }).toList(),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // 偏移量调节
+                const Text(
+                  '偏移量调节',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                
+                // X轴偏移量
+                Text('X轴偏移量: ${tempXOffset.toStringAsFixed(1)}'),
+                Slider(
+                  value: tempXOffset,
+                  min: -100.0,
+                  max: 100.0,
+                  divisions: 200,
+                  label: tempXOffset.toStringAsFixed(1),
+                  onChanged: (value) {
+                    setState(() {
+                      tempXOffset = value;
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Y轴偏移量
+                Text('Y轴偏移量: ${tempYOffset.toStringAsFixed(1)}'),
+                Slider(
+                  value: tempYOffset,
+                  min: -100.0,
+                  max: 100.0,
+                  divisions: 200,
+                  label: tempYOffset.toStringAsFixed(1),
+                  onChanged: (value) {
+                    setState(() {
+                      tempYOffset = value;
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 20),
+                
+                // 重置按钮
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          tempImageFit = BoxFit.contain;
+                          tempXOffset = 0.0;
+                          tempYOffset = 0.0;
+                        });
+                      },
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('重置为默认值'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 更新图层属性
+                final updatedLayer = layer.copyWith(
+                  imageFit: tempImageFit,
+                  xOffset: tempXOffset,
+                  yOffset: tempYOffset,
+                  updatedAt: DateTime.now(),
+                );
+                widget.onLayerUpdated(updatedLayer);
+                Navigator.of(context).pop();
+                widget.onSuccess?.call('图片大小和偏移量已更新');
+              },
+              child: const Text('应用'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 获取BoxFit显示名称
+  String _getBoxFitDisplayName(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return '包含';
+      case BoxFit.cover:
+        return '覆盖';
+      case BoxFit.fill:
+        return '填充';
+      case BoxFit.fitWidth:
+        return '适宽';
+      case BoxFit.fitHeight:
+        return '适高';
+      case BoxFit.none:
+        return '原始尺寸';
+      case BoxFit.scaleDown:
+        return '缩小';
+    }
+  }
+
+  /// 获取BoxFit描述
+  String _getBoxFitDescription(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return '保持比例，完全显示图片';
+      case BoxFit.cover:
+        return '保持比例，填满区域，可能裁剪';
+      case BoxFit.fill:
+        return '拉伸图片以填满区域';
+      case BoxFit.fitWidth:
+        return '适应宽度，保持比例';
+      case BoxFit.fitHeight:
+        return '适应高度，保持比例';
+      case BoxFit.none:
+        return '使用图片原始尺寸';
+      case BoxFit.scaleDown:
+        return '不超过原始尺寸的包含模式';
+    }
   }
 }
 

@@ -743,7 +743,6 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
-
   Widget _buildLayerImageWidget(MapLayer layer) {
     if (layer.imageData == null) return const SizedBox.shrink();
 
@@ -751,15 +750,41 @@ class MapCanvasState extends State<MapCanvas> {
     final effectiveOpacity =
         widget.previewOpacityValues[layer.id] ?? layer.opacity;
 
+    // 确定图片适应方式
+    BoxFit imageFit;
+    double scale = 1.0;
+    
+    if (layer.imageFit != null) {
+      // 使用图层设置的适应方式
+      imageFit = layer.imageFit!;
+    } else {
+      // 默认使用 contain 模式，并应用 2/3 缩放
+      imageFit = BoxFit.contain;
+      scale = 2.0 / 3.0; // 默认 2/3 缩放
+    }
+
+    // 计算偏移位置
+    // xOffset 和 yOffset 的范围是 -1.0 到 1.0，其中 0 表示居中
+    final double maxOffsetX = kCanvasWidth * 0.3; // 允许的最大X偏移量（画布宽度的30%）
+    final double maxOffsetY = kCanvasHeight * 0.3; // 允许的最大Y偏移量（画布高度的30%）
+    final double actualOffsetX = layer.xOffset * maxOffsetX;
+    final double actualOffsetY = layer.yOffset * maxOffsetY;
+
     return Positioned.fill(
       child: Opacity(
         opacity: layer.isVisible ? effectiveOpacity : 0.0,
-        child: Image.memory(
-          layer.imageData!,
-          width: kCanvasWidth,
-          height: kCanvasHeight,
-          fit: BoxFit.contain,
-          // opacity: 1.0, // 透明度已经通过Opacity widget控制
+        child: Transform.translate(
+          offset: Offset(actualOffsetX, actualOffsetY),
+          child: Transform.scale(
+            scale: scale,
+            child: Image.memory(
+              layer.imageData!,
+              width: kCanvasWidth,
+              height: kCanvasHeight,
+              fit: imageFit,
+              // opacity: 1.0, // 透明度已经通过Opacity widget控制
+            ),
+          ),
         ),
       ),
     );
