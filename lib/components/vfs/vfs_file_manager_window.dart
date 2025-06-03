@@ -645,10 +645,61 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               ),
               
               const SizedBox(width: 8),
-              
-              // 操作按钮
+                // 操作按钮
               Row(
                 children: [
+                  // 批量操作按钮（仅在有选中文件时显示）
+                  if (_selectedFiles.isNotEmpty) ...[
+                    Text(
+                      '已选择 ${_selectedFiles.length} 项',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        final selectedFileInfos = _currentFiles
+                            .where((file) => _selectedFiles.contains(file.path))
+                            .toList();
+                        _copyFiles(selectedFileInfos);
+                      },
+                      icon: const Icon(Icons.copy),
+                      tooltip: '复制选中项',
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        final selectedFileInfos = _currentFiles
+                            .where((file) => _selectedFiles.contains(file.path))
+                            .toList();
+                        _cutFiles(selectedFileInfos);
+                      },
+                      icon: const Icon(Icons.cut),
+                      tooltip: '剪切选中项',
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        final selectedFileInfos = _currentFiles
+                            .where((file) => _selectedFiles.contains(file.path))
+                            .toList();
+                        _deleteFiles(selectedFileInfos);
+                      },
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      tooltip: '删除选中项',
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedFiles.clear();
+                          _lastSelectedFile = null;
+                        });
+                      },
+                      icon: const Icon(Icons.clear),
+                      tooltip: '清除选择',
+                    ),
+                    const SizedBox(width: 16),
+                  ],
                   IconButton(
                     onPressed: _createNewFolder,
                     icon: const Icon(Icons.create_new_folder),
@@ -808,11 +859,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         ),
       );
     }    final filesToShow = _isSearchMode ? _searchResults : _currentFiles;
-    
-    return Column(
+      return Column(
       children: [
-        // 路径导航
-        if (!_isSearchMode) _buildPathNavigation(),
+        // 路径导航或搜索状态栏
+        if (!_isSearchMode) 
+          _buildPathNavigation()
+        else
+          _buildSearchStatusBar(),
+        
+        // 批量操作栏（当有文件时显示）
+        if (filesToShow.isNotEmpty) _buildBatchOperationBar(filesToShow),
         
         // 文件列表
         Expanded(
@@ -892,7 +948,57 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         ],
       ),
     );
-  }/// 解析路径为面包屑组件
+  }/// 构建搜索状态栏
+  Widget _buildSearchStatusBar() {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.orange[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, size: 16, color: Colors.orange[600]),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '搜索结果: "$_searchQuery"',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.orange[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _isSearchMode = false;
+                _searchQuery = '';
+                _searchResults.clear();
+              });
+            },
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+            child: Text(
+              '清除',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.orange[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 解析路径为面包屑组件
   List<Map<String, String>> _parsePath(String path) {
     final parts = <Map<String, String>>[];
     
@@ -1055,10 +1161,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           
           return ContextMenuWrapper(
             menuBuilder: (context) => _buildFileContextMenu(file),            child: ListTile(
-              selected: isSelected,
-              leading: Row(
+              selected: isSelected,              leading: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // 复选框
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (value) => _toggleFileSelection(file),
+                  ),
+                  const SizedBox(width: 8),
                   Icon(
                     file.isDirectory ? Icons.folder : _getFileIcon(file),
                     color: file.isDirectory ? Colors.amber : null,
@@ -1071,12 +1182,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               subtitle: Text(
                 '${_formatFileSize(file.size)} • ${_formatDateTime(file.modifiedAt)}',
               ),
-              trailing: _selectedFiles.isNotEmpty
-                ? Checkbox(
-                    value: isSelected,
-                    onChanged: (value) => _toggleFileSelection(file),
-                  )
-                : null,
               onTap: () {
                 if (_selectedFiles.isNotEmpty) {
                   _toggleFileSelection(file);
@@ -1096,7 +1201,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
-
   /// 构建文件网格视图
   Widget _buildFileGrid(List<VfsFileInfo> files) {
     return WebContextMenuHandler(
@@ -1141,32 +1245,47 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       : Theme.of(context).dividerColor,
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Stack(
                   children: [
-                    Icon(
-                      file.isDirectory ? Icons.folder : _getFileIcon(file),
-                      size: 48,
-                      color: file.isDirectory ? Colors.amber : null,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      file.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    if (!file.isDirectory) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatFileSize(file.size),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade600,
+                    // 主要内容
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          file.isDirectory ? Icons.folder : _getFileIcon(file),
+                          size: 48,
+                          color: file.isDirectory ? Colors.amber : null,
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          file.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        if (!file.isDirectory) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatFileSize(file.size),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // 复选框
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Checkbox(
+                        value: isSelected,
+                        onChanged: (value) => _toggleFileSelection(file),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -1569,6 +1688,97 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         Icons.lock_open,
         size: 16,
         color: Colors.green.shade600,
+      ),
+    );
+  }
+
+  /// 构建批量操作栏
+  Widget _buildBatchOperationBar(List<VfsFileInfo> files) {
+    final hasFiles = files.isNotEmpty;
+    final allSelected = hasFiles && _selectedFiles.length == files.length;
+    final someSelected = _selectedFiles.isNotEmpty;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 全选复选框
+          Checkbox(
+            value: allSelected ? true : (someSelected ? null : false),
+            tristate: true,
+            onChanged: (value) {
+              setState(() {
+                if (allSelected || someSelected) {
+                  // 清除所有选择
+                  _selectedFiles.clear();
+                  _lastSelectedFile = null;
+                } else {
+                  // 全选
+                  _selectedFiles.clear();
+                  _selectedFiles.addAll(files.map((f) => f.path));
+                  _lastSelectedFile = files.isNotEmpty ? files.last : null;
+                }
+              });
+            },
+          ),
+          const SizedBox(width: 8),
+          Text(
+            someSelected 
+              ? '已选择 ${_selectedFiles.length} / ${files.length} 项'
+              : '全选 (${files.length} 项)',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: someSelected 
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const Spacer(),
+          
+          // 批量操作按钮（仅在有选中项时显示）
+          if (someSelected) ...[
+            IconButton(
+              onPressed: () {
+                final selectedFileInfos = files
+                    .where((file) => _selectedFiles.contains(file.path))
+                    .toList();
+                _copyFiles(selectedFileInfos);
+              },
+              icon: const Icon(Icons.copy),
+              tooltip: '复制选中项',
+              iconSize: 20,
+            ),
+            IconButton(
+              onPressed: () {
+                final selectedFileInfos = files
+                    .where((file) => _selectedFiles.contains(file.path))
+                    .toList();
+                _cutFiles(selectedFileInfos);
+              },
+              icon: const Icon(Icons.cut),
+              tooltip: '剪切选中项',
+              iconSize: 20,
+            ),
+            IconButton(
+              onPressed: () {
+                final selectedFileInfos = files
+                    .where((file) => _selectedFiles.contains(file.path))
+                    .toList();
+                _deleteFiles(selectedFileInfos);
+              },
+              icon: const Icon(Icons.delete, color: Colors.red),
+              tooltip: '删除选中项',
+              iconSize: 20,
+            ),
+          ],
+        ],
       ),
     );
   }
