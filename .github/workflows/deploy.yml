@@ -49,10 +49,9 @@ jobs:
 
     - name: Enable web support
       run: flutter config --enable-web
-      
     - name: Build web
       run: |
-        flutter build web --release
+        flutter build web --release --base-href "/GameMaps/"
     - name: Add .nojekyll file
       run: touch build/web/.nojekyll
         
