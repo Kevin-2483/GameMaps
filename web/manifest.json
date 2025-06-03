@@ -1,8 +1,8 @@
 {
     "name": "r6box",
     "short_name": "r6box",
-    "start_url": "./",
-    "scope": "./",
+    "start_url": "/GameMaps/",
+    "scope": "/GameMaps/",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
