@@ -6,6 +6,7 @@ import 'dart:io';
 import 'vfs_protocol.dart';
 import 'virtual_file_system.dart';
 import 'vfs_database_initializer.dart';
+import 'vfs_permission_system.dart';
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -15,11 +16,13 @@ class VfsServiceProvider {
   VfsServiceProvider._internal();
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final VfsDatabaseInitializer _initializer = VfsDatabaseInitializer();
-  
-  /// 初始化服务
+    /// 初始化服务
   Future<void> initialize() async {
     // 首先初始化根文件系统
     await _initializer.initializeDefaultDatabase();
+    
+    // 初始化虚拟文件系统（包括权限系统）
+    await _vfs.initialize();
     
     // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
     _vfs.mount('r6box', 'fs');
@@ -373,6 +376,72 @@ class VfsServiceProvider {
 
   /// 获取虚拟文件系统实例（供高级用户使用）
   VirtualFileSystem get vfs => _vfs;
+
+  /// 获取文件权限
+  Future<VfsPermissionMask> getFilePermissions(String collection, String filePath) async {
+    final path = 'indexeddb://r6box/$collection/$filePath';
+    return await _vfs.getPermissions(path);
+  }
+
+  /// 设置文件权限
+  Future<void> setFilePermissions(
+    String collection,
+    String filePath,
+    VfsPermissionMask permissions,
+  ) async {
+    final path = 'indexeddb://r6box/$collection/$filePath';
+    await _vfs.setPermissions(path, permissions);
+  }
+
+  /// 检查文件权限
+  Future<bool> hasFilePermission(
+    String collection,
+    String filePath,
+    int permission, {
+    VfsPermissionType type = VfsPermissionType.user,
+  }) async {
+    final path = 'indexeddb://r6box/$collection/$filePath';
+    return await _vfs.hasPermission(path, permission, type: type);
+  }
+
+  /// 创建文件时应用权限继承
+  Future<void> createFileWithInheritance(
+    String collection,
+    String filePath,
+    Uint8List data, {
+    String? mimeType,
+    VfsInheritancePolicy? inheritancePolicy,
+  }) async {
+    final path = 'indexeddb://r6box/$collection/$filePath';
+    final content = VfsFileContent(
+      data: data,
+      mimeType: mimeType,
+    );
+    
+    await _vfs.createFileWithInheritance(
+      path,
+      content,
+      inheritancePolicy: inheritancePolicy,
+    );
+  }
+
+  /// 创建目录时应用权限继承
+  Future<void> createDirectoryWithInheritance(
+    String collection,
+    String dirPath, {
+    VfsInheritancePolicy? inheritancePolicy,
+  }) async {
+    final path = 'indexeddb://r6box/$collection/$dirPath';
+    await _vfs.createDirectory(path, inheritancePolicy: inheritancePolicy);
+  }
+
+  /// 列出目录内容（带权限过滤）
+  Future<List<VfsFileInfo>> listFilesWithPermissions(String collection, [String? subPath]) async {
+    final path = subPath != null 
+        ? 'indexeddb://r6box/$collection/$subPath'
+        : 'indexeddb://r6box/$collection';
+    return await _vfs.listDirectoryWithPermissions(path);
+  }
 
   /// 关闭服务
   Future<void> close() async {

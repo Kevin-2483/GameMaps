@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'vfs_storage_service.dart';
 import 'vfs_protocol.dart';
+import 'vfs_permission_system.dart';
 
 /// VFS数据库初始化服务
 /// 用于创建默认的根文件系统（空的文件系统）
@@ -11,11 +12,14 @@ class VfsDatabaseInitializer {
   VfsDatabaseInitializer._internal();
 
   final VfsStorageService _storage = VfsStorageService();
-
+  final VfsPermissionManager _permissionManager = VfsPermissionManager();
   /// 初始化默认数据库结构
   Future<void> initializeDefaultDatabase() async {
     try {
       debugPrint('开始初始化VFS根文件系统...');
+      
+      // 初始化权限系统
+      await _permissionManager.initialize();
       
       // 检查是否已经初始化过
       if (await _isAlreadyInitialized()) {
@@ -25,6 +29,9 @@ class VfsDatabaseInitializer {
 
       // 创建根文件系统
       await _createRootFileSystem();
+      
+      // 设置系统保护路径的权限
+      await _setupSystemPermissions();
       
       // 标记为已初始化
       await _markAsInitialized();
@@ -70,6 +77,29 @@ class VfsDatabaseInitializer {
     );
       await _storage.writeFile('indexeddb://r6box/fs/.initialized', content);
     debugPrint('VFS根文件系统标记为已初始化');
+  }
+
+  /// 设置系统权限
+  Future<void> _setupSystemPermissions() async {
+    // 设置根目录权限（用户可读写）
+    await _permissionManager.setPermissions(
+      'indexeddb://r6box/fs/',
+      VfsPermissionMask.defaultUser,
+    );
+    
+    // 设置挂载点权限（系统保护，用户可访问但不能删除）
+    await _permissionManager.setPermissions(
+      'indexeddb://r6box/fs/mnt/',
+      VfsPermissionMask.mountPoint,
+    );
+    
+    // 设置初始化标记文件权限（系统保护）
+    await _permissionManager.setPermissions(
+      'indexeddb://r6box/fs/.initialized',
+      VfsPermissionMask.systemProtected,
+    );
+    
+    debugPrint('系统权限设置完成');
   }
 
   /// 获取数据库统计信息

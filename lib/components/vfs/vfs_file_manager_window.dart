@@ -1,9 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../../services/virtual_file_system/virtual_file_system.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_import_export_service.dart';
@@ -11,6 +7,7 @@ import '../web/web_context_menu_handler.dart';
 import 'vfs_file_metadata_dialog.dart';
 import 'vfs_file_rename_dialog.dart';
 import 'vfs_file_search_dialog.dart';
+import 'vfs_permission_dialog.dart';
 
 /// VFS文件管理器窗口，作为全屏覆盖层显示
 class VfsFileManagerWindow extends StatefulWidget {
@@ -163,7 +160,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     
     setState(() {});
   }
-
   /// 导航到指定路径
   Future<void> _navigateToPath(String path) async {
     if (_selectedDatabase == null || _selectedCollection == null) return;
@@ -174,8 +170,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     });
 
     try {
-      final fullPath = 'indexeddb://$_selectedDatabase/$_selectedCollection/$path';
-      final files = await _vfsService.listFiles(_selectedCollection!, path.isEmpty ? null : path);
+      // 使用权限过滤的文件列表方法
+      final files = await _vfsService.listFilesWithPermissions(_selectedCollection!, path.isEmpty ? null : path);
       
       setState(() {
         _currentFiles = files;
@@ -414,10 +410,23 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
-
   /// 显示文件元数据
   Future<void> _showFileMetadata(VfsFileInfo file) async {
     await VfsFileMetadataDialog.show(context, file);
+  }
+
+  /// 管理文件权限
+  Future<void> _managePermissions(VfsFileInfo file) async {
+    try {
+      final updatedPermissions = await VfsPermissionDialog.show(context, file);
+      if (updatedPermissions != null) {
+        // 权限已更新，刷新文件列表
+        await _navigateToPath(_currentPath);
+        _showInfoSnackBar('权限已更新');
+      }
+    } catch (e) {
+      _showErrorSnackBar('权限管理失败: $e');
+    }
   }
 
   /// 创建新文件夹
@@ -906,12 +915,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           final isSelected = _selectedFiles.contains(file.path);
           
           return ContextMenuWrapper(
-            menuBuilder: (context) => _buildFileContextMenu(file),
-            child: ListTile(
+            menuBuilder: (context) => _buildFileContextMenu(file),            child: ListTile(
               selected: isSelected,
-              leading: Icon(
-                file.isDirectory ? Icons.folder : _getFileIcon(file),
-                color: file.isDirectory ? Colors.amber : null,
+              leading: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    file.isDirectory ? Icons.folder : _getFileIcon(file),
+                    color: file.isDirectory ? Colors.amber : null,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildPermissionIndicator(file),
+                ],
               ),
               title: Text(file.name),
               subtitle: Text(
@@ -1064,11 +1079,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         ),
       
       const ContextMenuItem.divider(),
-      
-      ContextMenuItem(
+        ContextMenuItem(
         label: '重命名',
         icon: Icons.edit,
         onTap: () => _renameFile(file),
+      ),
+      ContextMenuItem(
+        label: '权限管理',
+        icon: Icons.security,
+        onTap: () => _managePermissions(file),
       ),
       ContextMenuItem(
         label: '删除',
@@ -1375,7 +1394,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
-
   /// 显示错误消息
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1383,6 +1401,35 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         content: Text(message),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+  /// 构建权限指示器
+  Widget _buildPermissionIndicator(VfsFileInfo file) {
+    // 根据文件路径判断是否为系统保护文件
+    final isSystemProtected = file.path.contains('/.initialized') || 
+                               file.path.contains('/mnt/') ||
+                               file.path == 'indexeddb://r6box/fs/.initialized' ||
+                               file.path.startsWith('indexeddb://r6box/fs/mnt/');
+    
+    if (isSystemProtected) {
+      return Tooltip(
+        message: '系统保护文件',
+        child: Icon(
+          Icons.shield,
+          size: 16,
+          color: Colors.orange,
+        ),
+      );
+    }
+    
+    // 对于普通文件，显示简单的权限指示
+    return Tooltip(
+      message: '用户文件',
+      child: Icon(
+        Icons.lock_open,
+        size: 16,
+        color: Colors.green.shade600,
       ),
     );
   }

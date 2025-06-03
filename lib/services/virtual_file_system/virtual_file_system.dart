@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'vfs_protocol.dart';
 import 'vfs_storage_service.dart';
+import 'vfs_permission_system.dart';
 
 /// 虚拟文件系统管理器
 /// 提供高级文件系统操作接口
@@ -12,7 +13,13 @@ class VirtualFileSystem {
   VirtualFileSystem._internal();
 
   final VfsStorageService _storage = VfsStorageService();
+  final VfsPermissionManager _permissionManager = VfsPermissionManager();
   final Map<String, VfsMount> _mounts = {};
+
+  /// 初始化虚拟文件系统
+  Future<void> initialize() async {
+    await _permissionManager.initialize();
+  }
 
   /// 挂载虚拟文件系统
   void mount(String database, String collection, {VfsMount? mount}) {
@@ -48,10 +55,10 @@ class VirtualFileSystem {
     _validatePath(path);
     return await _storage.exists(path);
   }
-
   /// 读取文件内容
   Future<VfsFileContent?> readFile(String path) async {
     _validatePath(path);
+    await _validateReadPermission(path);
     return await _storage.readFile(path);
   }
 
@@ -83,7 +90,6 @@ class VirtualFileSystem {
       throw VfsException('Failed to parse JSON file: $e', path: path);
     }
   }
-
   /// 写入文件内容
   Future<void> writeFile(
     String path, 
@@ -91,7 +97,7 @@ class VirtualFileSystem {
     bool createDirectories = true,
   }) async {
     _validatePath(path);
-    _validateWritePermission(path);
+    await _validateWritePermission(path);
     await _storage.writeFile(path, content, createDirectories: createDirectories);
   }
 
@@ -169,27 +175,30 @@ class VirtualFileSystem {
 
     await writeFile(path, fileContent, createDirectories: createDirectories);
   }
-
   /// 创建目录
-  Future<void> createDirectory(String path) async {
+  Future<void> createDirectory(String path, {VfsInheritancePolicy? inheritancePolicy}) async {
     _validatePath(path);
-    _validateWritePermission(path);
+    await _validateWritePermission(path);
     await _storage.createDirectory(path);
+    
+    // 设置目录权限
+    final policy = inheritancePolicy ?? VfsInheritancePolicy.defaultPolicy;
+    final permissions = await _permissionManager.applyInheritance(path, policy);
+    await _permissionManager.setPermissions(path, permissions);
   }
 
   /// 删除文件或目录
   Future<bool> delete(String path, {bool recursive = false}) async {
     _validatePath(path);
-    _validateWritePermission(path);
+    await _validateDeletePermission(path);
     return await _storage.delete(path, recursive: recursive);
   }
-
   /// 移动/重命名文件或目录
   Future<bool> move(String fromPath, String toPath) async {
     _validatePath(fromPath);
     _validatePath(toPath);
-    _validateWritePermission(fromPath);
-    _validateWritePermission(toPath);
+    await _validateDeletePermission(fromPath);
+    await _validateWritePermission(toPath);
     return await _storage.move(fromPath, toPath);
   }
 
@@ -197,7 +206,8 @@ class VirtualFileSystem {
   Future<bool> copy(String fromPath, String toPath) async {
     _validatePath(fromPath);
     _validatePath(toPath);
-    _validateWritePermission(toPath);
+    await _validateReadPermission(fromPath);
+    await _validateWritePermission(toPath);
     return await _storage.copy(fromPath, toPath);
   }
 
@@ -255,7 +265,6 @@ class VirtualFileSystem {
 
     return await _storage.getStorageStats(database, collection);
   }
-
   /// 清空集合
   Future<void> clearCollection(String database, String collection) async {
     if (!isMounted(database, collection)) {
@@ -264,6 +273,9 @@ class VirtualFileSystem {
 
     _validateWritePermission(VfsProtocol.buildPath(database, collection, ''));
     await _storage.clearCollection(database, collection);
+    
+    // 清除权限缓存，确保下次访问时重新加载权限
+    _permissionManager.clearCache();
   }
 
   /// 创建文件观察器
@@ -340,15 +352,96 @@ class VirtualFileSystem {
       );
     }
   }
-
   /// 验证写入权限
-  void _validateWritePermission(String path) {
+  Future<void> _validateWritePermission(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
     if (vfsPath == null) return;
 
     final mount = getMount(vfsPath.database, vfsPath.collection);
     if (mount != null && mount.isReadOnly) {
       throw VfsException('Write operation not allowed on read-only mount', path: path);
+    }
+
+    // 检查文件权限
+    final canWrite = await _permissionManager.canWrite(path);
+    if (!canWrite) {
+      throw VfsException('Write permission denied', path: path, code: 'PERMISSION_DENIED');
+    }
+  }
+
+  /// 验证读取权限
+  Future<void> _validateReadPermission(String path) async {
+    final canRead = await _permissionManager.canRead(path);
+    if (!canRead) {
+      throw VfsException('Read permission denied', path: path, code: 'PERMISSION_DENIED');
+    }
+  }
+
+  /// 验证删除权限
+  Future<void> _validateDeletePermission(String path) async {
+    final canDelete = await _permissionManager.canDelete(path);
+    if (!canDelete) {
+      throw VfsException('Delete permission denied', path: path, code: 'PERMISSION_DENIED');
+    }
+  }
+
+  /// 获取文件权限
+  Future<VfsPermissionMask> getPermissions(String path) async {
+    return await _permissionManager.getPermissions(path);
+  }
+
+  /// 设置文件权限
+  Future<void> setPermissions(String path, VfsPermissionMask permissions) async {
+    _validatePath(path);
+    await _permissionManager.setPermissions(path, permissions);
+  }
+
+  /// 检查权限
+  Future<bool> hasPermission(
+    String path,
+    int permission, {
+    VfsPermissionType type = VfsPermissionType.user,
+  }) async {
+    return await _permissionManager.checkPermission(path, permission, type: type);
+  }
+
+  /// 列出目录内容（带权限过滤）
+  Future<List<VfsFileInfo>> listDirectoryWithPermissions(String path) async {
+    _validatePath(path);
+    await _validateReadPermission(path);
+    
+    final files = await _storage.listDirectory(path);
+    return await _permissionManager.filterByPermissions(files);
+  }
+  /// 创建文件时应用权限继承
+  Future<void> createFileWithInheritance(
+    String path,
+    VfsFileContent content, {
+    VfsInheritancePolicy? inheritancePolicy,
+    bool createDirectories = true,
+  }) async {
+    _validatePath(path);
+    
+    final policy = inheritancePolicy ?? VfsInheritancePolicy.defaultPolicy;
+    
+    // 对于权限继承，我们需要特殊处理：
+    // 如果使用继承策略，先应用继承权限，再允许创建文件
+    if (policy.inheritFromParent) {
+      // 应用权限继承
+      final permissions = await _permissionManager.applyInheritance(path, policy);
+      
+      // 对于继承策略，我们跳过普通的写权限检查，直接创建文件
+      await _storage.writeFile(path, content, createDirectories: createDirectories);
+      
+      // 设置继承的权限
+      await _permissionManager.setPermissions(path, permissions);
+    } else {
+      // 普通的文件创建，需要检查写权限
+      await _validateWritePermission(path);
+      await _storage.writeFile(path, content, createDirectories: createDirectories);
+      
+      // 设置默认权限
+      await _permissionManager.setPermissions(path, policy.defaultMask);
     }
   }
 

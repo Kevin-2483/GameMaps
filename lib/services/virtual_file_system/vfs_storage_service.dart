@@ -434,12 +434,18 @@ class VfsStorageService {
           : null,
     };
   }
-
   /// 清空指定数据库和集合的所有数据
   Future<void> clearCollection(String database, String collection) async {
     final db = await this.database;
+    // 删除文件数据
     await db.delete(
       _filesTableName,
+      where: 'database_name = ? AND collection_name = ?',
+      whereArgs: [database, collection],
+    );
+    // 删除元数据（包括权限信息）
+    await db.delete(
+      _metadataTableName,
       where: 'database_name = ? AND collection_name = ?',
       whereArgs: [database, collection],
     );
