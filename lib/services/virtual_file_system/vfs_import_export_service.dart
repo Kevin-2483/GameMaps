@@ -319,12 +319,12 @@ class VfsImportExportService {
     VfsExportOptions options,
   ) async {
     final files = await _storageService.listDirectory(
-      'vfs://$databaseName/$collectionName',
+      'indexeddb://$databaseName/$collectionName',
     );
     final exportFiles = <VfsFileExport>[];
 
     for (final fileInfo in files) {
-      final filePath = 'vfs://$databaseName/$collectionName${fileInfo.path}';
+      final filePath = 'indexeddb://$databaseName/$collectionName${fileInfo.path}';
 
       String? contentBase64;
       if (options.includeFileContent && !fileInfo.isDirectory) {        try {
@@ -516,7 +516,7 @@ class VfsImportExportService {
   ) async {
     try {
       final filePath =
-          'vfs://$databaseName/$collectionName${fileExport.filePath}';
+          'indexeddb://$databaseName/$collectionName${fileExport.filePath}';
 
       // 检查文件是否已存在
       final exists = await _storageService.exists(filePath);
@@ -664,7 +664,7 @@ class VfsImportExportService {
     String databaseName,
     String collectionName,
   ) async {
-    final collectionPath = 'vfs://$databaseName/$collectionName/';
+    final collectionPath = 'indexeddb://$databaseName/$collectionName/';
     try {
       return await _storageService.listDirectory(collectionPath);
     } catch (e) {

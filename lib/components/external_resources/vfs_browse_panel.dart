@@ -500,12 +500,12 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
       _files = [];
       _isLoading = true;
       _errorMessage = null;
-      _currentPath = 'vfs://$_selectedDatabase/$collection/';
+      _currentPath = 'indexeddb://$_selectedDatabase/$collection/';
     });
 
     try {
       final files = await _storageService.listDirectory(
-        'vfs://$_selectedDatabase/$collection/',
+        'indexeddb://$_selectedDatabase/$collection/',
       );
       setState(() {
         _files = files;
@@ -636,7 +636,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
 
   Future<void> _deleteFile(VfsFileInfo file) async {
     try {
-      final filePath = 'vfs://$_selectedDatabase/$_selectedCollection${file.path}';
+      final filePath = 'indexeddb://$_selectedDatabase/$_selectedCollection${file.path}';
       await _storageService.delete(filePath, recursive: file.isDirectory);
         ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

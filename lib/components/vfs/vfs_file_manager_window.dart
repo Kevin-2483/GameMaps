@@ -107,7 +107,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     _tabController.dispose();
     super.dispose();
   }
-
   /// 初始化文件管理器
   Future<void> _initializeFileManager() async {
     setState(() {
@@ -116,6 +115,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     });
 
     try {
+      // 初始化VFS服务和根文件系统
+      await _vfsService.initialize();
+      
       // 加载数据库列表
       await _loadDatabases();
       
@@ -434,6 +436,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _showInfoSnackBar('文件夹创建成功');
     } catch (e) {
       _showErrorSnackBar('创建文件夹失败: $e');
+      print('创建文件夹失败: $e');
     } finally {
       setState(() {
         _isLoading = false;

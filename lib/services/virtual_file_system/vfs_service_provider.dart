@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'vfs_protocol.dart';
 import 'virtual_file_system.dart';
+import 'vfs_database_initializer.dart';
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -12,11 +13,17 @@ class VfsServiceProvider {
   static final VfsServiceProvider _instance = VfsServiceProvider._internal();
   factory VfsServiceProvider() => _instance;
   VfsServiceProvider._internal();
-
   final VirtualFileSystem _vfs = VirtualFileSystem();
+  final VfsDatabaseInitializer _initializer = VfsDatabaseInitializer();
   
   /// 初始化服务
   Future<void> initialize() async {
+    // 首先初始化根文件系统
+    await _initializer.initializeDefaultDatabase();
+    
+    // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
+    _vfs.mount('r6box', 'fs');
+    
     // 挂载默认的应用数据库
     _vfs.mount('r6box', 'app_data');
     _vfs.mount('r6box', 'user_data');
