@@ -69,10 +69,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   String _currentPath = '';
   List<String> _pathHistory = [];
   int _historyIndex = -1;
-  
-  // 选择状态
+    // 选择状态
   Set<String> _selectedFiles = {};
-  VfsFileInfo? _lastSelectedFile;
   
   // 剪贴板状态
   List<VfsFileInfo> _clipboardFiles = [];
@@ -172,12 +170,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     try {
       // 使用权限过滤的文件列表方法
       final files = await _vfsService.listFilesWithPermissions(_selectedCollection!, path.isEmpty ? null : path);
-      
-      setState(() {
+        setState(() {
         _currentFiles = files;
         _currentPath = path;
         _selectedFiles.clear();
-        _lastSelectedFile = null;
       });
       
       // 更新历史记录
@@ -688,11 +684,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       icon: const Icon(Icons.delete, color: Colors.red),
                       tooltip: '删除选中项',
                     ),
-                    IconButton(
-                      onPressed: () {
+                    IconButton(                      onPressed: () {
                         setState(() {
                           _selectedFiles.clear();
-                          _lastSelectedFile = null;
                         });
                       },
                       icon: const Icon(Icons.clear),
@@ -1354,10 +1348,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     ];
   }
-
   /// 构建元数据视图
   Widget _buildMetadataView() {
-    if (_lastSelectedFile == null) {
+    // 获取当前选中的文件
+    final selectedFileInfos = _currentFiles
+        .where((file) => _selectedFiles.contains(file.path))
+        .toList();
+
+    // 如果没有选中任何文件，显示提示信息
+    if (selectedFileInfos.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1370,67 +1369,201 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       );
     }
 
-    final file = _lastSelectedFile!;
-    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        file.isDirectory ? Icons.folder : _getFileIcon(file),
-                        size: 32,
-                        color: file.isDirectory ? Colors.amber : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              file.name,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            Text(
-                              file.path,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
+          // 如果选中了多个文件，显示汇总信息
+          if (selectedFileInfos.length > 1) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.checklist,
+                          size: 32,
+                          color: Colors.blue,
                         ),
-                      ),
-                    ],
-                  ),
-                  
-                  const Divider(),
-                  
-                  _buildMetadataRow('类型', file.isDirectory ? '文件夹' : '文件'),
-                  _buildMetadataRow('大小', _formatFileSize(file.size)),
-                  _buildMetadataRow('创建时间', _formatDateTime(file.createdAt)),
-                  _buildMetadataRow('修改时间', _formatDateTime(file.modifiedAt)),
-                  
-                  if (file.mimeType != null)
-                    _buildMetadataRow('MIME类型', file.mimeType!),
-                  
-                  if (file.metadata != null && file.metadata!.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '已选择 ${selectedFileInfos.length} 个项目',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
                     const Divider(),
+                    
+                    _buildMetadataRow('总数量', selectedFileInfos.length.toString()),
+                    _buildMetadataRow(
+                      '文件夹数量',
+                      selectedFileInfos.where((f) => f.isDirectory).length.toString(),
+                    ),
+                    _buildMetadataRow(
+                      '文件数量',
+                      selectedFileInfos.where((f) => !f.isDirectory).length.toString(),
+                    ),
+                    _buildMetadataRow(
+                      '总大小',
+                      _formatFileSize(
+                        selectedFileInfos.fold(0, (sum, file) => sum + file.size),
+                      ),
+                    ),
+                    
+                    // 显示文件类型统计
+                    if (selectedFileInfos.any((f) => !f.isDirectory)) ...[
+                      const Divider(),
+                      Text(
+                        '文件类型统计',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      ..._buildFileTypeStatistics(selectedFileInfos),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // 显示所有选中文件的列表
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      '自定义元数据',
+                      '选中的文件',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    for (final entry in file.metadata!.entries)
-                      _buildMetadataRow(entry.key, entry.value.toString()),
+                    ...selectedFileInfos.map((file) => _buildFileListItem(file)),
                   ],
-                ],
+                ),
               ),
+            ),
+          ] else ...[
+            // 单个文件的详细信息
+            _buildSingleFileMetadata(selectedFileInfos.first),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 构建单个文件的元数据视图
+  Widget _buildSingleFileMetadata(VfsFileInfo file) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  file.isDirectory ? Icons.folder : _getFileIcon(file),
+                  size: 32,
+                  color: file.isDirectory ? Colors.amber : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        file.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        file.path,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const Divider(),
+            
+            _buildMetadataRow('类型', file.isDirectory ? '文件夹' : '文件'),
+            _buildMetadataRow('大小', _formatFileSize(file.size)),
+            _buildMetadataRow('创建时间', _formatDateTime(file.createdAt)),
+            _buildMetadataRow('修改时间', _formatDateTime(file.modifiedAt)),
+            
+            if (file.mimeType != null)
+              _buildMetadataRow('MIME类型', file.mimeType!),
+            
+            if (file.metadata != null && file.metadata!.isNotEmpty) ...[
+              const Divider(),
+              Text(
+                '自定义元数据',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              for (final entry in file.metadata!.entries)
+                _buildMetadataRow(entry.key, entry.value.toString()),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建文件类型统计
+  List<Widget> _buildFileTypeStatistics(List<VfsFileInfo> files) {
+    final fileTypeCount = <String, int>{};
+    
+    for (final file in files) {
+      if (!file.isDirectory) {
+        String type;
+        if (file.mimeType != null) {
+          type = file.mimeType!;
+        } else {
+          final extension = file.name.split('.').last.toLowerCase();
+          type = extension.isEmpty ? '无扩展名' : '.$extension';
+        }
+        fileTypeCount[type] = (fileTypeCount[type] ?? 0) + 1;
+      }
+    }
+    
+    return fileTypeCount.entries
+        .map((entry) => _buildMetadataRow(entry.key, '${entry.value} 个文件'))
+        .toList();
+  }
+
+  /// 构建文件列表项
+  Widget _buildFileListItem(VfsFileInfo file) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            file.isDirectory ? Icons.folder : _getFileIcon(file),
+            size: 20,
+            color: file.isDirectory ? Colors.amber : null,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              file.name,
+              style: Theme.of(context).textTheme.bodyMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            _formatFileSize(file.size),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -1532,7 +1665,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
-
   /// 切换文件选择状态
   void _toggleFileSelection(VfsFileInfo file) {
     setState(() {
@@ -1541,7 +1673,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       } else {
         _selectedFiles.add(file.path);
       }
-      _lastSelectedFile = file;
     });
   }
 
@@ -1713,16 +1844,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             value: allSelected ? true : (someSelected ? null : false),
             tristate: true,
             onChanged: (value) {
-              setState(() {
-                if (allSelected || someSelected) {
+              setState(() {                if (allSelected || someSelected) {
                   // 清除所有选择
                   _selectedFiles.clear();
-                  _lastSelectedFile = null;
                 } else {
                   // 全选
                   _selectedFiles.clear();
                   _selectedFiles.addAll(files.map((f) => f.path));
-                  _lastSelectedFile = files.isNotEmpty ? files.last : null;
                 }
               });
             },
