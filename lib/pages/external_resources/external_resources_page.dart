@@ -4,6 +4,9 @@ import '../../l10n/app_localizations.dart';
 import '../../components/external_resources/external_resources_export_panel.dart';
 import '../../components/external_resources/external_resources_import_panel.dart';
 import '../../components/external_resources/external_resources_browse_panel.dart';
+import '../../components/external_resources/vfs_export_panel.dart';
+import '../../components/external_resources/vfs_import_panel.dart';
+import '../../components/external_resources/vfs_browse_panel.dart';
 
 /// 外部资源管理页面
 class ExternalResourcesPage extends BasePage {
@@ -25,11 +28,10 @@ class _ExternalResourcesContent extends StatefulWidget {
 class _ExternalResourcesContentState extends State<_ExternalResourcesContent>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -44,9 +46,9 @@ class _ExternalResourcesContentState extends State<_ExternalResourcesContent>
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.resourceManagement),
-        bottom: TabBar(
+        title: Text(l10n.resourceManagement),        bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: [
             Tab(
               icon: const Icon(Icons.file_upload),
@@ -60,15 +62,29 @@ class _ExternalResourcesContentState extends State<_ExternalResourcesContent>
               icon: const Icon(Icons.cloud),
               text: '浏览资源',
             ),
+            Tab(
+              icon: const Icon(Icons.cloud_download),
+              text: 'VFS导出',
+            ),
+            Tab(
+              icon: const Icon(Icons.cloud_upload),
+              text: 'VFS导入',
+            ),
+            Tab(
+              icon: const Icon(Icons.folder_open),
+              text: 'VFS浏览',
+            ),
           ],
         ),
-      ),
-      body: TabBarView(
+      ),      body: TabBarView(
         controller: _tabController,
         children: const [
           ExternalResourcesExportPanel(),
           ExternalResourcesImportPanel(),
           ExternalResourcesBrowsePanel(),
+          VfsExportPanel(),
+          VfsImportPanel(),
+          VfsBrowsePanel(),
         ],
       ),
     );
