@@ -807,30 +807,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           ],
         ),
       );
-    }
-
-    final filesToShow = _isSearchMode ? _searchResults : _currentFiles;
+    }    final filesToShow = _isSearchMode ? _searchResults : _currentFiles;
     
-    if (filesToShow.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _isSearchMode ? Icons.search_off : Icons.folder_open,
-              size: 64,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Column(
       children: [
         // 路径导航
@@ -838,71 +816,232 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         
         // 文件列表
         Expanded(
-          child: _viewType == _ViewType.list
-            ? _buildFileList(filesToShow)
-            : _buildFileGrid(filesToShow),
+          child: filesToShow.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _isSearchMode ? Icons.search_off : Icons.folder_open,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
+                      style: const TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ],
+                ),
+              )
+            : (_viewType == _ViewType.list
+                ? _buildFileList(filesToShow)
+                : _buildFileGrid(filesToShow)),
         ),
       ],
     );
-  }
-
-  /// 构建路径导航
+  }  /// 构建路径导航
   Widget _buildPathNavigation() {
-    final pathSegments = _currentPath.split('/').where((s) => s.isNotEmpty).toList();
+    if (_selectedDatabase == null || _selectedCollection == null) {
+      return Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey[300]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 6),
+            Text('请选择数据库和集合', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+    
+    final pathParts = _parsePath(_currentPath);
+    final breadcrumbs = _buildPathBreadcrumbs(pathParts);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      height: 40,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 6,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor),
-        ),
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => _navigateToPath(''),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _currentPath.isEmpty 
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                  : null,
-                borderRadius: BorderRadius.circular(4),
-              ),
+          Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 6),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.home, size: 16),
-                  const SizedBox(width: 4),
-                  Text(_selectedCollection ?? 'Root'),
-                ],
+                children: breadcrumbs,
               ),
             ),
           ),
-          
-          for (int i = 0; i < pathSegments.length; i++) ...[
-            const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
-            GestureDetector(
-              onTap: () {
-                final path = pathSegments.take(i + 1).join('/');
-                _navigateToPath(path);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: i == pathSegments.length - 1
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                    : null,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(pathSegments[i]),
-              ),
-            ),
-          ],
         ],
       ),
     );
+  }/// 解析路径为面包屑组件
+  List<Map<String, String>> _parsePath(String path) {
+    final parts = <Map<String, String>>[];
+    
+    // 添加根路径
+    parts.add({
+      'name': '🏠 根目录',
+      'path': '',
+      'isLast': 'false',
+    });
+    
+    // 如果有选择的数据库，添加数据库路径
+    if (_selectedDatabase != null) {
+      parts.add({
+        'name': '📁 $_selectedDatabase',
+        'path': '',
+        'isLast': 'false',
+      });
+    }
+    
+    // 如果有选择的集合，添加集合路径
+    if (_selectedCollection != null) {
+      parts.add({
+        'name': '📂 $_selectedCollection',
+        'path': '',
+        'isLast': 'false',
+      });
+    }
+      // 添加当前路径中的所有子文件夹
+    if (_currentPath.isNotEmpty) {
+      final currentSegments = _currentPath.split('/').where((s) => s.isNotEmpty).toList();
+      
+      for (int i = 0; i < currentSegments.length; i++) {
+        final segment = currentSegments[i];
+        // 构建到此文件夹的路径（相对于集合根目录）
+        final folderPath = currentSegments.take(i + 1).join('/');
+        
+        parts.add({
+          'name': '📂 $segment',
+          'path': folderPath,
+          'isLast': i == currentSegments.length - 1 ? 'true' : 'false',
+        });
+      }
+    }
+    
+    // 更新最后一个元素的状态
+    if (parts.isNotEmpty) {
+      parts.last['isLast'] = 'true';
+    }
+    
+    return parts;
+  }
+
+  /// 构建面包屑组件
+  List<Widget> _buildPathBreadcrumbs(List<Map<String, String>> pathParts) {
+    final widgets = <Widget>[];
+    
+    for (int i = 0; i < pathParts.length; i++) {
+      final part = pathParts[i];
+      final isLast = part['isLast'] == 'true';
+      final isRoot = part['path'] == '' && i == 0;
+      
+      // 添加路径组件
+      widgets.add(
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isLast ? null : () => _navigateToPathFromBreadcrumb(part['path']!, i),
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isLast 
+                  ? Colors.blue[100] 
+                  : isRoot 
+                    ? Colors.green[50]
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: isLast 
+                  ? Border.all(color: Colors.blue[300]!, width: 1)
+                  : null,
+              ),
+              child: Text(
+                part['name']!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isLast 
+                    ? Colors.blue[700] 
+                    : isRoot
+                      ? Colors.green[700]
+                      : Colors.blue[600],
+                  fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      
+      // 添加分隔符（除了最后一个）
+      if (i < pathParts.length - 1) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Icon(
+              Icons.chevron_right,
+              size: 14,
+              color: Colors.grey[400],
+            ),
+          ),
+        );
+      }
+    }
+    
+    return widgets;
+  }
+  /// 从面包屑导航到路径
+  Future<void> _navigateToPathFromBreadcrumb(String path, int index) async {
+    if (index == 0) {
+      // 回到根目录 - 清空所有选择
+      setState(() {
+        _selectedDatabase = null;
+        _selectedCollection = null;
+        _collections.clear();
+        _currentFiles.clear();
+        _currentPath = '';
+        _selectedFiles.clear();
+      });
+      return;
+    }
+    
+    if (index == 1) {
+      // 导航到数据库级别（清空集合选择）
+      setState(() {
+        _selectedCollection = null;
+        _currentFiles.clear();
+        _currentPath = '';
+        _selectedFiles.clear();
+      });
+      return;
+    }
+    
+    if (index == 2) {
+      // 导航到集合根目录
+      await _navigateToPath('');
+      return;
+    }
+    
+    // 导航到指定的子文件夹路径
+    await _navigateToPath(path);
   }
 
   /// 构建文件列表视图
