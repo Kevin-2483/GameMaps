@@ -442,11 +442,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   }
   /// 显示搜索对话框
   Future<void> _showSearchDialog() async {
+    if (_selectedDatabase == null) {
+      _showErrorSnackBar('请先选择数据库');
+      return;
+    }
+    
     final query = await VfsFileSearchDialog.show(
       context,
       _vfsService,
-      _selectedDatabase,
-      _selectedCollection,
+      _selectedDatabase!,
+      _selectedCollection!,
       _currentPath,
     );
     if (query != null) {

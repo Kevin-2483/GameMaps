@@ -5,6 +5,7 @@ import '../../components/common/platform_aware_component.dart';
 import '../../components/layout/main_layout.dart';
 import '../../features/feature_registry.dart';
 import '../../features/component-modules/system_info_feature.dart';
+import '../../components/vfs/vfs_file_manager_window.dart';
 
 class HomePage extends BasePage {
   const HomePage({super.key});
@@ -60,7 +61,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 ),
               ),
               const SizedBox(height: 24), // Quick actions
-              Row(
+               Row(
                 children: [
                   Expanded(
                     child: Card(
@@ -79,8 +80,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
+                  ),                  const SizedBox(width: 8),
                   Expanded(
                     child: Card(
                       child: InkWell(
@@ -93,6 +93,28 @@ class _HomePageContentState extends State<_HomePageContent> {
                               Icon(Icons.fullscreen, size: 32),
                               SizedBox(height: 8),
                               Text('全屏测试'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Card(
+                      child: InkWell(
+                        onTap: () {
+                          // 打开VFS文件管理器
+                          VfsFileManagerWindow.show(context);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Icon(Icons.folder_special, size: 32),
+                              SizedBox(height: 8),
+                              Text('文件管理器'),
                             ],
                           ),
                         ),
@@ -120,6 +142,32 @@ class _HomePageContentState extends State<_HomePageContent> {
                               Icon(Icons.info, size: 32),
                               SizedBox(height: 8),
                               Text(l10n.about),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Card(
+                      child: InkWell(
+                        onTap: () {
+                          // Open VFS file manager
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => VfsFileManagerWindow(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Icon(Icons.folder_open, size: 32),
+                              SizedBox(height: 8),
+                              Text('文件管理器'),
                             ],
                           ),
                         ),

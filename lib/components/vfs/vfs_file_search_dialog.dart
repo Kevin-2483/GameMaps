@@ -89,7 +89,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
     try {
       final searchPath = _searchInCurrentPath ? widget.currentPath : '/';
       final allFiles = await widget.vfsService.listFiles(
-        widget.database,
+        // widget.database,
         widget.collection,
         searchPath,
       );
