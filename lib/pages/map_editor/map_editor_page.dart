@@ -1954,8 +1954,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final isNarrowScreen = screenWidth < 800;
     final double headerHeight = compactMode ? 40.0 : 48.0;
     final double minContentHeight = compactMode
-        ? (isNarrowScreen ? 500.0 : 600.0)
-        : (isNarrowScreen ? 600.0 : 700.0);
+        ? (isNarrowScreen ? 800.0 : 900.0)
+        : (isNarrowScreen ? 900.0 : 1000.0);
 
     if (isCollapsed) {
       return Container(

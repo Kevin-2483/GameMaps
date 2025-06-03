@@ -1,0 +1,303 @@
+Date : 2025-06-03 07:07:07
+Directory : e:\code\r6box\r6box
+Total : 174 files,  58370 codes, 3311 comments, 4467 blanks, all 66148 lines
+
+Languages
++-------------------------+------------+------------+------------+------------+------------+
+| language                | files      | code       | comment    | blank      | total      |
++-------------------------+------------+------------+------------+------------+------------+
+| Dart                    |        100 |     25,327 |      2,982 |      3,508 |     31,817 |
+| WebAssembly Text Format |          1 |     14,659 |          0 |        242 |     14,901 |
+| JavaScript              |          2 |      9,526 |          7 |          7 |      9,540 |
+| JSON                    |          7 |      6,041 |          0 |          5 |      6,046 |
+| Markdown                |         14 |      1,074 |          0 |        325 |      1,399 |
+| C++                     |         16 |        554 |        131 |        189 |        874 |
+| XML                     |         10 |        470 |         53 |         12 |        535 |
+| CMake                   |          8 |        465 |          0 |         92 |        557 |
+| Swift                   |          6 |         67 |          7 |         21 |         95 |
+| PowerShell              |          1 |         60 |         10 |         19 |         89 |
+| YAML                    |          4 |         49 |         94 |         27 |        170 |
+| Shell Script            |          1 |         46 |         10 |         12 |         68 |
+| HTML                    |          1 |         24 |         17 |          5 |         46 |
+| Properties              |          3 |          8 |          0 |          3 |         11 |
++-------------------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                       | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                          |        174 |     58,370 |      3,311 |      4,467 |     66,148 |
+| . (Files)                                                                                  |          7 |        111 |         94 |         46 |        251 |
+| android                                                                                    |          9 |         74 |         51 |         11 |        136 |
+| android (Files)                                                                            |          1 |          3 |          0 |          1 |          4 |
+| android\app                                                                                |          7 |         66 |         51 |          9 |        126 |
+| android\app\src                                                                            |          7 |         66 |         51 |          9 |        126 |
+| android\app\src\debug                                                                      |          1 |          3 |          4 |          1 |          8 |
+| android\app\src\main                                                                       |          5 |         60 |         43 |          7 |        110 |
+| android\app\src\main (Files)                                                               |          1 |         34 |         11 |          1 |         46 |
+| android\app\src\main\res                                                                   |          4 |         26 |         32 |          6 |         64 |
+| android\app\src\main\res\drawable                                                          |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\drawable-v21                                                      |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\values                                                            |          1 |          9 |          9 |          1 |         19 |
+| android\app\src\main\res\values-night                                                      |          1 |          9 |          9 |          1 |         19 |
+| android\app\src\profile                                                                    |          1 |          3 |          4 |          1 |          8 |
+| android\gradle                                                                             |          1 |          5 |          0 |          1 |          6 |
+| android\gradle\wrapper                                                                     |          1 |          5 |          0 |          1 |          6 |
+| assets                                                                                     |          3 |      5,793 |          0 |          1 |      5,794 |
+| assets\config                                                                              |          2 |         33 |          0 |          1 |         34 |
+| assets\data                                                                                |          1 |      5,760 |          0 |          0 |      5,760 |
+| docs                                                                                       |         11 |      1,009 |          0 |        305 |      1,314 |
+| ios                                                                                        |          8 |        229 |          4 |         13 |        246 |
+| ios\Runner                                                                                 |          7 |        222 |          2 |          9 |        233 |
+| ios\Runner (Files)                                                                         |          2 |         13 |          0 |          3 |         16 |
+| ios\RunnerTests                                                                            |          1 |          7 |          2 |          4 |         13 |
+| ios\Runner\Assets.xcassets                                                                 |          3 |        148 |          0 |          4 |        152 |
+| ios\Runner\Assets.xcassets\AppIcon.appiconset                                              |          1 |        122 |          0 |          1 |        123 |
+| ios\Runner\Assets.xcassets\LaunchImage.imageset                                            |          2 |         26 |          0 |          3 |         29 |
+| ios\Runner\Base.lproj                                                                      |          2 |         61 |          2 |          2 |         65 |
+| lib                                                                                        |         91 |     24,736 |      2,920 |      3,386 |     31,042 |
+| lib (Files)                                                                                |          1 |         78 |         17 |         12 |        107 |
+| lib\components                                                                             |         21 |      4,559 |        207 |        425 |      5,191 |
+| lib\components (Files)                                                                     |          2 |      1,046 |         56 |         98 |      1,200 |
+| lib\components\common                                                                      |          3 |        366 |         20 |         41 |        427 |
+| lib\components\examples                                                                    |          1 |        208 |          5 |         10 |        223 |
+| lib\components\external_resources                                                          |          3 |      1,874 |         75 |        154 |      2,103 |
+| lib\components\layout                                                                      |          3 |        263 |         28 |         47 |        338 |
+| lib\components\navigation                                                                  |          1 |        187 |          5 |         16 |        208 |
+| lib\components\platform                                                                    |          6 |        360 |          0 |         28 |        388 |
+| lib\components\platform\android                                                            |          1 |         61 |          0 |          5 |         66 |
+| lib\components\platform\ios                                                                |          1 |         58 |          0 |          5 |         63 |
+| lib\components\platform\linux                                                              |          1 |         61 |          0 |          5 |         66 |
+| lib\components\platform\macos                                                              |          1 |         61 |          0 |          4 |         65 |
+| lib\components\platform\web                                                                |          1 |         58 |          0 |          5 |         63 |
+| lib\components\platform\windows                                                            |          1 |         61 |          0 |          4 |         65 |
+| lib\components\web                                                                         |          2 |        255 |         18 |         31 |        304 |
+| lib\config                                                                                 |          4 |        238 |         31 |         56 |        325 |
+| lib\features                                                                               |         12 |        452 |         58 |        126 |        636 |
+| lib\features (Files)                                                                       |          2 |         98 |         19 |         24 |        141 |
+| lib\features\component-modules                                                             |          1 |         91 |          4 |         11 |        106 |
+| lib\features\page-modules                                                                  |          9 |        263 |         35 |         91 |        389 |
+| lib\l10n                                                                                   |          3 |      1,203 |        886 |        634 |      2,723 |
+| lib\mixins                                                                                 |          1 |         38 |          8 |         11 |         57 |
+| lib\models                                                                                 |         13 |      1,540 |        125 |        212 |      1,877 |
+| lib\pages                                                                                  |         22 |     13,900 |      1,237 |      1,470 |     16,607 |
+| lib\pages\config                                                                           |          1 |        218 |          3 |         20 |        241 |
+| lib\pages\demo                                                                             |          1 |        330 |          7 |         19 |        356 |
+| lib\pages\external_resources                                                               |          1 |         66 |          1 |         10 |         77 |
+| lib\pages\home                                                                             |          1 |        178 |          4 |         14 |        196 |
+| lib\pages\legend_manager                                                                   |          1 |        543 |         13 |         36 |        592 |
+| lib\pages\map_atlas                                                                        |          1 |        668 |         19 |         39 |        726 |
+| lib\pages\map_editor                                                                       |          8 |      9,582 |      1,130 |      1,138 |     11,850 |
+| lib\pages\map_editor (Files)                                                               |          1 |      1,962 |        224 |        252 |      2,438 |
+| lib\pages\map_editor\widgets                                                               |          7 |      7,620 |        906 |        886 |      9,412 |
+| lib\pages\settings                                                                         |          7 |      2,273 |         59 |        191 |      2,523 |
+| lib\pages\settings (Files)                                                                 |          2 |        395 |         10 |         32 |        437 |
+| lib\pages\settings\widgets                                                                 |          5 |      1,878 |         49 |        159 |      2,086 |
+| lib\pages\test                                                                             |          1 |         42 |          1 |          3 |         46 |
+| lib\providers                                                                              |          3 |        622 |         58 |         92 |        772 |
+| lib\router                                                                                 |          1 |         65 |          5 |          5 |         75 |
+| lib\services                                                                               |          9 |      1,847 |        261 |        311 |      2,419 |
+| lib\utils                                                                                  |          1 |        194 |         27 |         32 |        253 |
+| linux                                                                                      |          9 |        335 |         37 |         92 |        464 |
+| linux (Files)                                                                              |          1 |        104 |          0 |         25 |        129 |
+| linux\flutter                                                                              |          4 |        115 |          9 |         27 |        151 |
+| linux\runner                                                                               |          4 |        116 |         28 |         40 |        184 |
+| macos                                                                                      |          6 |        459 |          5 |         17 |        481 |
+| macos\Flutter                                                                              |          1 |         18 |          3 |          4 |         25 |
+| macos\Runner                                                                               |          4 |        434 |          0 |          9 |        443 |
+| macos\Runner (Files)                                                                       |          2 |         23 |          0 |          7 |         30 |
+| macos\RunnerTests                                                                          |          1 |          7 |          2 |          4 |         13 |
+| macos\Runner\Assets.xcassets                                                               |          1 |         68 |          0 |          1 |         69 |
+| macos\Runner\Assets.xcassets\AppIcon.appiconset                                            |          1 |         68 |          0 |          1 |         69 |
+| macos\Runner\Base.lproj                                                                    |          1 |        343 |          0 |          1 |        344 |
+| scripts                                                                                    |          7 |        555 |         66 |        121 |        742 |
+| test                                                                                       |          4 |        142 |         16 |         32 |        190 |
+| web                                                                                        |          5 |     24,244 |         24 |        255 |     24,523 |
+| web (Files)                                                                                |          4 |     24,222 |         18 |        250 |     24,490 |
+| web\js                                                                                     |          1 |         22 |          6 |          5 |         33 |
+| windows                                                                                    |         14 |        683 |         94 |        188 |        965 |
+| windows (Files)                                                                            |          1 |         89 |          0 |         20 |        109 |
+| windows\flutter                                                                            |          4 |        132 |          9 |         29 |        170 |
+| windows\runner                                                                             |          9 |        462 |         85 |        139 |        686 |
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| filename                                                                                   | language                | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| e:\code\r6box\r6box\.env                                                                   | Properties              |          0 |          0 |          1 |          1 |
+| e:\code\r6box\r6box\README.md                                                              | Markdown                |         10 |          0 |          7 |         17 |
+| e:\code\r6box\r6box\analysis_options.yaml                                                  | YAML                    |          4 |         21 |          4 |         29 |
+| e:\code\r6box\r6box\android\app\src\debug\AndroidManifest.xml                              | XML                     |          3 |          4 |          1 |          8 |
+| e:\code\r6box\r6box\android\app\src\main\AndroidManifest.xml                               | XML                     |         34 |         11 |          1 |         46 |
+| e:\code\r6box\r6box\android\app\src\main\res\drawable-v21\launch_background.xml            | XML                     |          4 |          7 |          2 |         13 |
+| e:\code\r6box\r6box\android\app\src\main\res\drawable\launch_background.xml                | XML                     |          4 |          7 |          2 |         13 |
+| e:\code\r6box\r6box\android\app\src\main\res\values-night\styles.xml                       | XML                     |          9 |          9 |          1 |         19 |
+| e:\code\r6box\r6box\android\app\src\main\res\values\styles.xml                             | XML                     |          9 |          9 |          1 |         19 |
+| e:\code\r6box\r6box\android\app\src\profile\AndroidManifest.xml                            | XML                     |          3 |          4 |          1 |          8 |
+| e:\code\r6box\r6box\android\gradle.properties                                              | Properties              |          3 |          0 |          1 |          4 |
+| e:\code\r6box\r6box\android\gradle\wrapper\gradle-wrapper.properties                       | Properties              |          5 |          0 |          1 |          6 |
+| e:\code\r6box\r6box\assets\config\1.json                                                   | JSON                    |          6 |          0 |          0 |          6 |
+| e:\code\r6box\r6box\assets\config\app_config.json                                          | JSON                    |         27 |          0 |          1 |         28 |
+| e:\code\r6box\r6box\assets\data\exported_database.json                                     | JSON                    |      5,760 |          0 |          0 |      5,760 |
+| e:\code\r6box\r6box\devtools_options.yaml                                                  | YAML                    |          3 |          0 |          1 |          4 |
+| e:\code\r6box\r6box\docs\AUTO_CLOSE_FEATURE.md                                             | Markdown                |         71 |          0 |         22 |         93 |
+| e:\code\r6box\r6box\docs\DRAWING_TOOLS_OPTIMIZATION.md                                     | Markdown                |        119 |          0 |         27 |        146 |
+| e:\code\r6box\r6box\docs\FRAMEWORK_README.md                                               | Markdown                |        202 |          0 |         63 |        265 |
+| e:\code\r6box\r6box\docs\IMAGE_AREA_TOOL.md                                                | Markdown                |        115 |          0 |         29 |        144 |
+| e:\code\r6box\r6box\docs\IMAGE_AREA_TOOL_COMPLETION.md                                     | Markdown                |         84 |          0 |         24 |        108 |
+| e:\code\r6box\r6box\docs\LAYER_SYSTEM_FINAL.md                                             | Markdown                |        100 |          0 |         28 |        128 |
+| e:\code\r6box\r6box\docs\LAYER_SYSTEM_IMPROVEMENTS.md                                      | Markdown                |         53 |          0 |         15 |         68 |
+| e:\code\r6box\r6box\docs\OPACITY_OPTIMIZATION.md                                           | Markdown                |         80 |          0 |         21 |        101 |
+| e:\code\r6box\r6box\docs\WEB_PLATFORM_GUIDE.md                                             | Markdown                |         69 |          0 |         39 |        108 |
+| e:\code\r6box\r6box\docs\test_legend_auto_deselection.md                                   | Markdown                |         60 |          0 |         15 |         75 |
+| e:\code\r6box\r6box\docs\test_legend_selection_validation.md                               | Markdown                |         56 |          0 |         22 |         78 |
+| e:\code\r6box\r6box\ios\RunnerTests\RunnerTests.swift                                      | Swift                   |          7 |          2 |          4 |         13 |
+| e:\code\r6box\r6box\ios\Runner\AppDelegate.swift                                           | Swift                   |         12 |          0 |          2 |         14 |
+| e:\code\r6box\r6box\ios\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json            | JSON                    |        122 |          0 |          1 |        123 |
+| e:\code\r6box\r6box\ios\Runner\Assets.xcassets\LaunchImage.imageset\Contents.json          | JSON                    |         23 |          0 |          1 |         24 |
+| e:\code\r6box\r6box\ios\Runner\Assets.xcassets\LaunchImage.imageset\README.md              | Markdown                |          3 |          0 |          2 |          5 |
+| e:\code\r6box\r6box\ios\Runner\Base.lproj\LaunchScreen.storyboard                          | XML                     |         36 |          1 |          1 |         38 |
+| e:\code\r6box\r6box\ios\Runner\Base.lproj\Main.storyboard                                  | XML                     |         25 |          1 |          1 |         27 |
+| e:\code\r6box\r6box\ios\Runner\Runner-Bridging-Header.h                                    | C++                     |          1 |          0 |          1 |          2 |
+| e:\code\r6box\r6box\l10n.yaml                                                              | YAML                    |          4 |          0 |          1 |          5 |
+| e:\code\r6box\r6box\lib\components\background_image_settings_dialog.dart                   | Dart                    |        500 |         18 |         28 |        546 |
+| e:\code\r6box\r6box\lib\components\color_picker_dialog.dart                                | Dart                    |        546 |         38 |         70 |        654 |
+| e:\code\r6box\r6box\lib\components\common\center_point_selector.dart                       | Dart                    |        148 |          6 |         15 |        169 |
+| e:\code\r6box\r6box\lib\components\common\config_aware_widgets.dart                        | Dart                    |        157 |         12 |         21 |        190 |
+| e:\code\r6box\r6box\lib\components\common\platform_aware_component.dart                    | Dart                    |         61 |          2 |          5 |         68 |
+| e:\code\r6box\r6box\lib\components\examples\web_context_menu_example.dart                  | Dart                    |        208 |          5 |         10 |        223 |
+| e:\code\r6box\r6box\lib\components\external_resources\external_resources_browse_panel.dart | Dart                    |        351 |          7 |         24 |        382 |
+| e:\code\r6box\r6box\lib\components\external_resources\external_resources_export_panel.dart | Dart                    |        467 |          7 |         38 |        512 |
+| e:\code\r6box\r6box\lib\components\external_resources\external_resources_import_panel.dart | Dart                    |      1,056 |         61 |         92 |      1,209 |
+| e:\code\r6box\r6box\lib\components\layout\app_shell.dart                                   | Dart                    |        133 |         12 |         20 |        165 |
+| e:\code\r6box\r6box\lib\components\layout\main_layout.dart                                 | Dart                    |        103 |         13 |         18 |        134 |
+| e:\code\r6box\r6box\lib\components\layout\page_configuration.dart                          | Dart                    |         27 |          3 |          9 |         39 |
+| e:\code\r6box\r6box\lib\components\navigation\tray_navigation.dart                         | Dart                    |        187 |          5 |         16 |        208 |
+| e:\code\r6box\r6box\lib\components\platform\android\android_component.dart                 | Dart                    |         61 |          0 |          5 |         66 |
+| e:\code\r6box\r6box\lib\components\platform\ios\ios_component.dart                         | Dart                    |         58 |          0 |          5 |         63 |
+| e:\code\r6box\r6box\lib\components\platform\linux\linux_component.dart                     | Dart                    |         61 |          0 |          5 |         66 |
+| e:\code\r6box\r6box\lib\components\platform\macos\macos_component.dart                     | Dart                    |         61 |          0 |          4 |         65 |
+| e:\code\r6box\r6box\lib\components\platform\web\web_component.dart                         | Dart                    |         58 |          0 |          5 |         63 |
+| e:\code\r6box\r6box\lib\components\platform\windows\windows_component.dart                 | Dart                    |         61 |          0 |          4 |         65 |
+| e:\code\r6box\r6box\lib\components\web\web_context_menu_handler.dart                       | Dart                    |        184 |         15 |         20 |        219 |
+| e:\code\r6box\r6box\lib\components\web\web_readonly_components.dart                        | Dart                    |         71 |          3 |         11 |         85 |
+| e:\code\r6box\r6box\lib\config\app_config.dart                                             | Dart                    |         54 |          5 |         20 |         79 |
+| e:\code\r6box\r6box\lib\config\app_config.g.dart                                           | Dart                    |         33 |          4 |          9 |         46 |
+| e:\code\r6box\r6box\lib\config\build_config.dart                                           | Dart                    |         62 |         10 |         10 |         82 |
+| e:\code\r6box\r6box\lib\config\config_manager.dart                                         | Dart                    |         89 |         12 |         17 |        118 |
+| e:\code\r6box\r6box\lib\features\component-modules\system_info_feature.dart                | Dart                    |         91 |          4 |         11 |        106 |
+| e:\code\r6box\r6box\lib\features\feature_registry.dart                                     | Dart                    |         29 |          7 |          9 |         45 |
+| e:\code\r6box\r6box\lib\features\page-modules\config_editor_module.dart                    | Dart                    |         30 |          4 |         10 |         44 |
+| e:\code\r6box\r6box\lib\features\page-modules\external_resources_page_module.dart          | Dart                    |         29 |          4 |         10 |         43 |
+| e:\code\r6box\r6box\lib\features\page-modules\fullscreen_test_page_module.dart             | Dart                    |         32 |          5 |         11 |         48 |
+| e:\code\r6box\r6box\lib\features\page-modules\home_page_module.dart                        | Dart                    |         29 |          4 |         10 |         43 |
+| e:\code\r6box\r6box\lib\features\page-modules\legend_manager_page_module.dart              | Dart                    |         32 |          5 |         11 |         48 |
+| e:\code\r6box\r6box\lib\features\page-modules\map_atlas_page_module.dart                   | Dart                    |         29 |          4 |         10 |         43 |
+| e:\code\r6box\r6box\lib\features\page-modules\settings_page_module.dart                    | Dart                    |         29 |          4 |         10 |         43 |
+| e:\code\r6box\r6box\lib\features\page-modules\user_preferences_page_module.dart            | Dart                    |         29 |          4 |         10 |         43 |
+| e:\code\r6box\r6box\lib\features\page-modules\web_context_menu_demo_page_module.dart       | Dart                    |         24 |          1 |          9 |         34 |
+| e:\code\r6box\r6box\lib\features\page_registry.dart                                        | Dart                    |         69 |         12 |         15 |         96 |
+| e:\code\r6box\r6box\lib\l10n\app_localizations.dart                                        | Dart                    |        259 |        880 |        220 |      1,359 |
+| e:\code\r6box\r6box\lib\l10n\app_localizations_en.dart                                     | Dart                    |        481 |          3 |        207 |        691 |
+| e:\code\r6box\r6box\lib\l10n\app_localizations_zh.dart                                     | Dart                    |        463 |          3 |        207 |        673 |
+| e:\code\r6box\r6box\lib\main.dart                                                          | Dart                    |         78 |         17 |         12 |        107 |
+| e:\code\r6box\r6box\lib\mixins\map_localization_mixin.dart                                 | Dart                    |         38 |          8 |         11 |         57 |
+| e:\code\r6box\r6box\lib\models\legend_item.dart                                            | Dart                    |        102 |          7 |         15 |        124 |
+| e:\code\r6box\r6box\lib\models\legend_item.g.dart                                          | Dart                    |         36 |          4 |          7 |         47 |
+| e:\code\r6box\r6box\lib\models\map_item.dart                                               | Dart                    |        131 |         10 |         18 |        159 |
+| e:\code\r6box\r6box\lib\models\map_item.g.dart                                             | Dart                    |         42 |          4 |          7 |         53 |
+| e:\code\r6box\r6box\lib\models\map_item_summary.dart                                       | Dart                    |         66 |          8 |         12 |         86 |
+| e:\code\r6box\r6box\lib\models\map_item_summary.g.dart                                     | Dart                    |         21 |          4 |          5 |         30 |
+| e:\code\r6box\r6box\lib\models\map_layer.dart                                              | Dart                    |        362 |         11 |         26 |        399 |
+| e:\code\r6box\r6box\lib\models\map_layer.g.dart                                            | Dart                    |        154 |          4 |         13 |        171 |
+| e:\code\r6box\r6box\lib\models\map_layer_example.dart                                      | Dart                    |         70 |          7 |          9 |         86 |
+| e:\code\r6box\r6box\lib\models\map_localization.dart                                       | Dart                    |         84 |         12 |         18 |        114 |
+| e:\code\r6box\r6box\lib\models\map_localization.g.dart                                     | Dart                    |         27 |          4 |          7 |         38 |
+| e:\code\r6box\r6box\lib\models\user_preferences.dart                                       | Dart                    |        312 |         46 |         61 |        419 |
+| e:\code\r6box\r6box\lib\models\user_preferences.g.dart                                     | Dart                    |        133 |          4 |         14 |        151 |
+| e:\code\r6box\r6box\lib\pages\config\config_editor_page.dart                               | Dart                    |        218 |          3 |         20 |        241 |
+| e:\code\r6box\r6box\lib\pages\demo\web_context_menu_demo_page.dart                         | Dart                    |        330 |          7 |         19 |        356 |
+| e:\code\r6box\r6box\lib\pages\external_resources\external_resources_page.dart              | Dart                    |         66 |          1 |         10 |         77 |
+| e:\code\r6box\r6box\lib\pages\home\home_page.dart                                          | Dart                    |        178 |          4 |         14 |        196 |
+| e:\code\r6box\r6box\lib\pages\legend_manager\legend_manager_page.dart                      | Dart                    |        543 |         13 |         36 |        592 |
+| e:\code\r6box\r6box\lib\pages\map_atlas\map_atlas_page.dart                                | Dart                    |        668 |         19 |         39 |        726 |
+| e:\code\r6box\r6box\lib\pages\map_editor\map_editor_page.dart                              | Dart                    |      1,962 |        224 |        252 |      2,438 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\drawing_toolbar.dart                      | Dart                    |      1,572 |         95 |        108 |      1,775 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\layer_legend_binding_drawer.dart          | Dart                    |        254 |          7 |         14 |        275 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\layer_panel.dart                          | Dart                    |      1,276 |        183 |        167 |      1,626 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\legend_group_management_drawer.dart       | Dart                    |        911 |         80 |         68 |      1,059 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\legend_panel.dart                         | Dart                    |        194 |          2 |          8 |        204 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\map_canvas.dart                           | Dart                    |      3,174 |        531 |        510 |      4,215 |
+| e:\code\r6box\r6box\lib\pages\map_editor\widgets\z_index_inspector.dart                    | Dart                    |        239 |          8 |         11 |        258 |
+| e:\code\r6box\r6box\lib\pages\settings\settings_page.dart                                  | Dart                    |        122 |          1 |          8 |        131 |
+| e:\code\r6box\r6box\lib\pages\settings\user_preferences_page.dart                          | Dart                    |        273 |          9 |         24 |        306 |
+| e:\code\r6box\r6box\lib\pages\settings\widgets\layout_settings_section.dart                | Dart                    |        202 |          8 |         23 |        233 |
+| e:\code\r6box\r6box\lib\pages\settings\widgets\map_editor_settings_section.dart            | Dart                    |         92 |          3 |          8 |        103 |
+| e:\code\r6box\r6box\lib\pages\settings\widgets\theme_settings_section.dart                 | Dart                    |        166 |          7 |         19 |        192 |
+| e:\code\r6box\r6box\lib\pages\settings\widgets\tool_settings_section.dart                  | Dart                    |        632 |         11 |         40 |        683 |
+| e:\code\r6box\r6box\lib\pages\settings\widgets\user_management_section.dart                | Dart                    |        786 |         20 |         69 |        875 |
+| e:\code\r6box\r6box\lib\pages\test\fullscreen_test_page.dart                               | Dart                    |         42 |          1 |          3 |         46 |
+| e:\code\r6box\r6box\lib\providers\locale_provider.dart                                     | Dart                    |         41 |          5 |         10 |         56 |
+| e:\code\r6box\r6box\lib\providers\theme_provider.dart                                      | Dart                    |        218 |         11 |         24 |        253 |
+| e:\code\r6box\r6box\lib\providers\user_preferences_provider.dart                           | Dart                    |        363 |         42 |         58 |        463 |
+| e:\code\r6box\r6box\lib\router\app_router.dart                                             | Dart                    |         65 |          5 |          5 |         75 |
+| e:\code\r6box\r6box\lib\services\clipboard_service.dart                                    | Dart                    |        286 |         36 |         31 |        353 |
+| e:\code\r6box\r6box\lib\services\combined_database_exporter.dart                           | Dart                    |        213 |         30 |         28 |        271 |
+| e:\code\r6box\r6box\lib\services\keyboard_shortcut_service.dart                            | Dart                    |         65 |         12 |         12 |         89 |
+| e:\code\r6box\r6box\lib\services\legend_database_service.dart                              | Dart                    |        252 |         33 |         47 |        332 |
+| e:\code\r6box\r6box\lib\services\map_database_service.dart                                 | Dart                    |        300 |         41 |         50 |        391 |
+| e:\code\r6box\r6box\lib\services\map_localization_service.dart                             | Dart                    |        255 |         32 |         47 |        334 |
+| e:\code\r6box\r6box\lib\services\user_preferences_service.dart                             | Dart                    |        308 |         48 |         68 |        424 |
+| e:\code\r6box\r6box\lib\services\web_database_importer.dart                                | Dart                    |         89 |         16 |         13 |        118 |
+| e:\code\r6box\r6box\lib\services\web_database_preloader.dart                               | Dart                    |         79 |         13 |         15 |        107 |
+| e:\code\r6box\r6box\lib\utils\image_utils.dart                                             | Dart                    |        194 |         27 |         32 |        253 |
+| e:\code\r6box\r6box\linux\CMakeLists.txt                                                   | CMake                   |        104 |          0 |         25 |        129 |
+| e:\code\r6box\r6box\linux\flutter\CMakeLists.txt                                           | CMake                   |         79 |          0 |         10 |         89 |
+| e:\code\r6box\r6box\linux\flutter\generated_plugin_registrant.cc                           | C++                     |         11 |          4 |          5 |         20 |
+| e:\code\r6box\r6box\linux\flutter\generated_plugin_registrant.h                            | C++                     |          5 |          5 |          6 |         16 |
+| e:\code\r6box\r6box\linux\flutter\generated_plugins.cmake                                  | CMake                   |         20 |          0 |          6 |         26 |
+| e:\code\r6box\r6box\linux\runner\CMakeLists.txt                                            | CMake                   |         21 |          0 |          6 |         27 |
+| e:\code\r6box\r6box\linux\runner\main.cc                                                   | C++                     |          5 |          0 |          2 |          7 |
+| e:\code\r6box\r6box\linux\runner\my_application.cc                                         | C++                     |         83 |         21 |         27 |        131 |
+| e:\code\r6box\r6box\linux\runner\my_application.h                                          | C++                     |          7 |          7 |          5 |         19 |
+| e:\code\r6box\r6box\macos\Flutter\GeneratedPluginRegistrant.swift                          | Swift                   |         18 |          3 |          4 |         25 |
+| e:\code\r6box\r6box\macos\RunnerTests\RunnerTests.swift                                    | Swift                   |          7 |          2 |          4 |         13 |
+| e:\code\r6box\r6box\macos\Runner\AppDelegate.swift                                         | Swift                   |         11 |          0 |          3 |         14 |
+| e:\code\r6box\r6box\macos\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json          | JSON                    |         68 |          0 |          1 |         69 |
+| e:\code\r6box\r6box\macos\Runner\Base.lproj\MainMenu.xib                                   | XML                     |        343 |          0 |          1 |        344 |
+| e:\code\r6box\r6box\macos\Runner\MainFlutterWindow.swift                                   | Swift                   |         12 |          0 |          4 |         16 |
+| e:\code\r6box\r6box\pubspec.yaml                                                           | YAML                    |         38 |         73 |         21 |        132 |
+| e:\code\r6box\r6box\scripts\build.ps1                                                      | PowerShell              |         60 |         10 |         19 |         89 |
+| e:\code\r6box\r6box\scripts\build.sh                                                       | Shell Script            |         46 |         10 |         12 |         68 |
+| e:\code\r6box\r6box\scripts\build_config_generator.dart                                    | Dart                    |         84 |         11 |         14 |        109 |
+| e:\code\r6box\r6box\scripts\config_validator.dart                                          | Dart                    |        233 |         20 |         47 |        300 |
+| e:\code\r6box\r6box\scripts\config_validator_tool.dart                                     | Dart                    |         27 |          1 |          8 |         36 |
+| e:\code\r6box\r6box\scripts\database_exporter.dart                                         | Dart                    |         82 |         11 |         16 |        109 |
+| e:\code\r6box\r6box\scripts\find_database.dart                                             | Dart                    |         23 |          3 |          5 |         31 |
+| e:\code\r6box\r6box\test\config_system_test.dart                                           | Dart                    |         52 |          7 |         11 |         70 |
+| e:\code\r6box\r6box\test\framework_test.dart                                               | Dart                    |         75 |          3 |         13 |         91 |
+| e:\code\r6box\r6box\test\widget_test.dart                                                  | Dart                    |          6 |          2 |          3 |         11 |
+| e:\code\r6box\r6box\test\widget_test_new.dart                                              | Dart                    |          9 |          4 |          5 |         18 |
+| e:\code\r6box\r6box\test_import_functionality.md                                           | Markdown                |         52 |          0 |         11 |         63 |
+| e:\code\r6box\r6box\web\index.html                                                         | HTML                    |         24 |         17 |          5 |         46 |
+| e:\code\r6box\r6box\web\js\web_context_menu_prevention.js                                  | JavaScript              |         22 |          6 |          5 |         33 |
+| e:\code\r6box\r6box\web\manifest.json                                                      | JSON                    |         35 |          0 |          1 |         36 |
+| e:\code\r6box\r6box\web\sqflite_sw.js                                                      | JavaScript              |      9,504 |          1 |          2 |      9,507 |
+| e:\code\r6box\r6box\web\sqlite3.wasm                                                       | WebAssembly Text Format |     14,659 |          0 |        242 |     14,901 |
+| e:\code\r6box\r6box\windows\CMakeLists.txt                                                 | CMake                   |         89 |          0 |         20 |        109 |
+| e:\code\r6box\r6box\windows\flutter\CMakeLists.txt                                         | CMake                   |         98 |          0 |         12 |        110 |
+| e:\code\r6box\r6box\windows\flutter\generated_plugin_registrant.cc                         | C++                     |          9 |          4 |          5 |         18 |
+| e:\code\r6box\r6box\windows\flutter\generated_plugin_registrant.h                          | C++                     |          5 |          5 |          6 |         16 |
+| e:\code\r6box\r6box\windows\flutter\generated_plugins.cmake                                | CMake                   |         20 |          0 |          6 |         26 |
+| e:\code\r6box\r6box\windows\runner\CMakeLists.txt                                          | CMake                   |         34 |          0 |          7 |         41 |
+| e:\code\r6box\r6box\windows\runner\flutter_window.cpp                                      | C++                     |         49 |          7 |         16 |         72 |
+| e:\code\r6box\r6box\windows\runner\flutter_window.h                                        | C++                     |         20 |          5 |          9 |         34 |
+| e:\code\r6box\r6box\windows\runner\main.cpp                                                | C++                     |         30 |          4 |         10 |         44 |
+| e:\code\r6box\r6box\windows\runner\resource.h                                              | C++                     |          9 |          6 |          2 |         17 |
+| e:\code\r6box\r6box\windows\runner\utils.cpp                                               | C++                     |         54 |          2 |         10 |         66 |
+| e:\code\r6box\r6box\windows\runner\utils.h                                                 | C++                     |          8 |          6 |          6 |         20 |
+| e:\code\r6box\r6box\windows\runner\win32_window.cpp                                        | C++                     |        210 |         24 |         55 |        289 |
+| e:\code\r6box\r6box\windows\runner\win32_window.h                                          | C++                     |         48 |         31 |         24 |        103 |
+| Total                                                                                      |                         |     58,370 |      3,311 |      4,467 |     66,148 |
++--------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+

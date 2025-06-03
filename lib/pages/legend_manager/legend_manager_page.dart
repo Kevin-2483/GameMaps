@@ -237,94 +237,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         _showSuccessSnackBar(l10n.legendDeletedSuccessfully);
       } catch (e) {
         _showErrorSnackBar(l10n.deleteLegendFailed(e.toString()));
-      }
-    }
-  }
-
-  Future<void> _exportDatabase() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      // 显示版本选择对话框
-      final exportVersion = await _showExportVersionDialog(l10n);
-      if (exportVersion != null) {
-        final filePath = await _databaseService.exportDatabase(
-          customVersion: exportVersion,
-        );
-        if (filePath != null) {
-          _showSuccessSnackBar(
-            l10n.legendDatabaseExportedSuccessfully(filePath),
-          );
-        }
-      }
-    } catch (e) {
-      _showErrorSnackBar('导出失败: ${e.toString()}');
-    }
-  }
-
-  Future<int?> _showExportVersionDialog(AppLocalizations l10n) async {
-    final TextEditingController versionController = TextEditingController(
-      text: '1',
-    );
-
-    return showDialog<int>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('选择导出版本'),
-          content: TextField(
-            controller: versionController,
-            decoration: const InputDecoration(
-              labelText: '版本号',
-              hintText: '输入导出数据库版本号',
-            ),
-            keyboardType: TextInputType.number,
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () {
-                final version = int.tryParse(versionController.text) ?? 1;
-                Navigator.of(context).pop(version);
-              },
-              child: const Text('导出'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _importDatabase() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final success = await _databaseService.importDatabase();
-      if (success) {
-        await _loadLegends();
-        _showSuccessSnackBar(l10n.legendDatabaseImportedSuccessfully);
-      }
-    } catch (e) {
-      _showErrorSnackBar('导入失败: ${e.toString()}');
-    }
-  }
-
-  /// 更新外部资源
-  Future<void> _updateExternalResources() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final success = await _databaseService.updateExternalResources();
-      if (success) {
-        await _loadLegends();
-        _showSuccessSnackBar(l10n.legendUpdateSuccessful);
-      } else {
-        _showErrorSnackBar(l10n.legendUpdateFailed('版本不高于当前版本'));
-      }
-    } catch (e) {
-      _showErrorSnackBar(l10n.legendUpdateFailed(e.toString()));
-    }
+      }    }
   }
 
   int _calculateCrossAxisCount(BuildContext context) {
@@ -343,20 +256,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
-            action: PopupMenuButton<String>(
-              onSelected: (value) {
+            action: PopupMenuButton<String>(              onSelected: (value) {
                 switch (value) {
                   case 'add':
                     _addLegend();
-                    break;
-                  case 'import':
-                    _importDatabase();
-                    break;
-                  case 'export':
-                    _exportDatabase();
-                    break;
-                  case 'update':
-                    _updateExternalResources();
                     break;
                 }
               },
@@ -366,27 +269,6 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                   child: ListTile(
                     leading: Icon(Icons.add),
                     title: Text('添加图例'),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'import',
-                  child: ListTile(
-                    leading: const Icon(Icons.file_upload),
-                    title: Text(l10n.importLegendDatabase),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export',
-                  child: ListTile(
-                    leading: const Icon(Icons.file_download),
-                    title: Text(l10n.exportLegendDatabase),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'update',
-                  child: ListTile(
-                    leading: const Icon(Icons.update),
-                    title: Text(l10n.updateLegendExternalResources),
                   ),
                 ),
               ],

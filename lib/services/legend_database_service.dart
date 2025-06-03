@@ -268,57 +268,7 @@ class LegendDatabaseService {
     } catch (e) {
       debugPrint('导入图例数据库失败: $e');
       rethrow;
-    }
-  }
-
-  /// 更新外部资源 (基于版本的数据库更新)
-  Future<bool> updateExternalResources() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        final jsonString = await file.readAsString();
-
-        final Map<String, dynamic> jsonData = jsonDecode(jsonString);
-        final legendDatabase = LegendDatabase.fromJson(jsonData);
-
-        final currentDbVersion = await getDatabaseVersion();
-
-        // 检查数据库版本，如果外部版本更高，则替换所有数据
-        if (legendDatabase.version > currentDbVersion) {
-          // 清空现有数据
-          await clearAllLegends();
-
-          // 导入所有新数据
-          for (final legend in legendDatabase.legends) {
-            await forceInsertLegend(legend.copyWith(id: null));
-          }
-
-          // 更新数据库版本
-          await setDatabaseVersion(legendDatabase.version);
-
-          debugPrint(
-            '图例外部资源更新成功: 版本 $currentDbVersion -> ${legendDatabase.version}，导入 ${legendDatabase.legends.length} 个图例',
-          );
-          return true;
-        } else {
-          debugPrint(
-            '图例外部资源版本不高于当前版本，跳过更新: 外部版本 ${legendDatabase.version} <= 当前版本 $currentDbVersion',
-          );
-          return false;
-        }
-      }
-      return false;
-    } catch (e) {
-      debugPrint('更新图例外部资源失败: $e');
-      rethrow;
-    }
-  }
+    }  }
 
   /// 关闭数据库连接
   Future<void> close() async {

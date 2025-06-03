@@ -357,19 +357,10 @@
   },
   "importDatabase": "Import Database",
   "@importDatabase": {
-    "description": "Import database button"
-  },
-  "updateExternalResources": "Update External Resources",
-  "@updateExternalResources": {
-    "description": "Update external resources button"
-  },
+    "description": "Import database button"  },
   "resourceManagement": "Resource Management",
   "@resourceManagement": {
     "description": "Resource management section title"
-  },
-  "updateExternalResourcesDescription": "Update map database from external file",
-  "@updateExternalResourcesDescription": {
-    "description": "Update external resources description"
   },
   "exportSuccessful": "Database exported successfully: {path}",
   "@exportSuccessful": {

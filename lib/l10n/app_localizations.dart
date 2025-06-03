@@ -608,23 +608,11 @@ abstract class AppLocalizations {
   /// **'Import Database'**
   String get importDatabase;
 
-  /// Update external resources button
-  ///
-  /// In en, this message translates to:
-  /// **'Update External Resources'**
-  String get updateExternalResources;
-
   /// Resource management section title
   ///
   /// In en, this message translates to:
   /// **'Resource Management'**
   String get resourceManagement;
-
-  /// Update external resources description
-  ///
-  /// In en, this message translates to:
-  /// **'Update map database from external file'**
-  String get updateExternalResourcesDescription;
 
   /// Export success message
   ///

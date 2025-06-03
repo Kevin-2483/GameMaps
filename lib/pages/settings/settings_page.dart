@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
-import '../../services/map_database_service.dart';
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
@@ -15,34 +14,6 @@ class SettingsPage extends BasePage {
 
 class _SettingsPageContent extends StatelessWidget {
   const _SettingsPageContent();
-  Future<void> _updateExternalResources(BuildContext context) async {
-    try {
-      final success = await MapDatabaseService().updateExternalResources();
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? l10n.updateSuccessful
-                  : l10n.updateFailed('Unknown error'),
-            ),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.updateFailed(e.toString())),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +85,7 @@ class _SettingsPageContent extends StatelessWidget {
               title: const Text('外部资源管理'),
               subtitle: const Text('导入、导出和浏览应用数据'),
               trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () => context.go('/external-resources'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.cloud_download),
-              title: Text(l10n.updateExternalResources),
-              subtitle: Text(l10n.updateExternalResourcesDescription),
-              onTap: () => _updateExternalResources(context),
-            ),
+              onTap: () => context.go('/external-resources'),            ),
           ],
         ),
       ),

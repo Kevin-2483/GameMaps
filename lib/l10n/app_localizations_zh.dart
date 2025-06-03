@@ -274,13 +274,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importDatabase => '导入数据库';
 
   @override
-  String get updateExternalResources => '更新外部资源';
-
-  @override
   String get resourceManagement => '资源管理';
-
-  @override
-  String get updateExternalResourcesDescription => '从外部文件更新地图数据库';
 
   @override
   String exportSuccessful(String path) {

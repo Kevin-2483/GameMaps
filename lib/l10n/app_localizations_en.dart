@@ -283,14 +283,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importDatabase => 'Import Database';
 
   @override
-  String get updateExternalResources => 'Update External Resources';
-
-  @override
   String get resourceManagement => 'Resource Management';
-
-  @override
-  String get updateExternalResourcesDescription =>
-      'Update map database from external file';
 
   @override
   String exportSuccessful(String path) {

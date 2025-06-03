@@ -330,53 +330,7 @@ class MapDatabaseService {
       }
     } catch (e) {
       debugPrint('导入数据库失败: $e');
-    }
-    return false;
-  }
-
-  /// 更新外部资源 (生产模式)
-  Future<bool> updateExternalResources() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['db'],
-      );
-
-      if (result != null) {
-        final file = File(result.files.single.path!);
-        final jsonData = await file.readAsString();
-        final mapDatabase = MapDatabase.fromJson(jsonDecode(jsonData));
-
-        final currentDbVersion = await getDatabaseVersion();
-
-        // 检查数据库版本，如果外部版本更高，则替换所有数据
-        if (mapDatabase.version > currentDbVersion) {
-          // 清空现有数据
-          await clearAllMaps();
-
-          // 导入所有新数据
-          for (final importedMap in mapDatabase.maps) {
-            await forceInsertMap(importedMap.copyWith(id: null));
-          }
-
-          // 更新数据库版本
-          await setDatabaseVersion(mapDatabase.version);
-
-          debugPrint(
-            '外部资源更新成功: 版本 $currentDbVersion -> ${mapDatabase.version}，导入 ${mapDatabase.maps.length} 个地图',
-          );
-          return true;
-        } else {
-          debugPrint(
-            '外部资源版本不高于当前版本，跳过更新: 外部版本 ${mapDatabase.version} <= 当前版本 $currentDbVersion',
-          );
-          return false;
-        }
-      }
-    } catch (e) {
-      debugPrint('更新外部资源失败: $e');
-    }
-    return false;
+    }    return false;
   }
 
   /// 关闭数据库
