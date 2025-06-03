@@ -46,28 +46,32 @@ jobs:
         
     - name: Get dependencies
       run: flutter pub get
-      
     - name: Build web
       run: |
         flutter build web --release --base-href="/r6box/"
-        
     - name: Add .nojekyll file
       run: touch build/web/.nojekyll
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
-      
+      with:
+        # 自动启用 Pages（如果尚未启用）
+        enablement: true
+        # 设置发布源为 GitHub Actions
+        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: 'build/web'
-
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
