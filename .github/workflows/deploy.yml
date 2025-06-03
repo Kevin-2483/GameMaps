@@ -48,7 +48,7 @@ jobs:
       run: flutter pub get
     - name: Build web
       run: |
-        flutter build web --release --base-href="/r6box/"
+        flutter build web --release
     - name: Add .nojekyll file
       run: touch build/web/.nojekyll
         
