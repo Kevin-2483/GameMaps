@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_import_export_service.dart';
@@ -461,17 +464,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
   }
 
-  /// 导出选中文件
-  Future<void> _exportSelectedFiles() async {
-    // TODO: 实现文件导出功能
-    _showInfoSnackBar('导出功能开发中...');
-  }
-
-  /// 导入文件
-  Future<void> _importFiles() async {
-    // TODO: 实现文件导入功能
-    _showInfoSnackBar('导入功能开发中...');
-  }
   /// 导航到选中的文件或文件夹
   Future<void> _navigateToSelectedFile(VfsFileInfo selectedFile) async {
     try {
@@ -886,9 +878,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                               Text('网格视图'),
                             ],
                           ),
-                        ),
-                      ],
+                        ),                      ],
                     ),
+                    
                     if (_clipboardFiles.isNotEmpty) ...[
                       IconButton(
                         onPressed: _pasteFiles,
@@ -896,6 +888,63 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                         tooltip: '粘贴',
                       ),
                     ],
+                    
+                    // 上传按钮（支持文件和文件夹）
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.upload),
+                      tooltip: '上传',
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'files',
+                          child: Row(
+                            children: [
+                              Icon(Icons.upload_file),
+                              SizedBox(width: 8),
+                              Text('上传文件'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'folder',
+                          child: Row(
+                            children: [
+                              Icon(Icons.drive_folder_upload),
+                              SizedBox(width: 8),
+                              Text('上传文件夹'),
+                            ],
+                          ),                        ),
+                      ],
+                      onSelected: (value) => _handleUpload(value),
+                    ),
+                    
+                    // 下载按钮（支持文件和文件夹）
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.download),
+                      tooltip: '下载',
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'selected',
+                          child: Row(
+                            children: [
+                              Icon(Icons.download),
+                              SizedBox(width: 8),
+                              Text('下载选中项'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'all',
+                          child: Row(
+                            children: [
+                              Icon(Icons.download_for_offline),
+                              SizedBox(width: 8),
+                              Text('下载当前目录'),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onSelected: (value) => _handleDownload(value),
+                    ),
                   ],
                 ),
               ],
@@ -1796,45 +1845,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     );
   }
 
-  /// 构建设置视图
+  /// 构建设置视图  
   Widget _buildSettingsView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('导入/导出', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _importFiles,
-                          icon: const Icon(Icons.upload),
-                          label: const Text('导入文件'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _exportSelectedFiles,
-                          icon: const Icon(Icons.download),
-                          label: const Text('导出选中'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
 
           const SizedBox(height: 16),
 
@@ -2106,6 +2123,349 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
+  /// 处理上传操作
+  Future<void> _handleUpload(String uploadType) async {
+    if (_selectedDatabase == null || _selectedCollection == null) {
+      _showErrorSnackBar('请先选择数据库和集合');
+      return;
+    }
+
+    try {
+      switch (uploadType) {
+        case 'files':
+          await _uploadFiles();
+          break;
+        case 'folder':
+          await _uploadFolder();
+          break;
+      }
+    } catch (e) {
+      _showErrorSnackBar('上传失败: $e');
+    }
+  }
+
+  /// 上传文件
+  Future<void> _uploadFiles() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    await _processFileUploads(result.files);
+  }
+
+  /// 上传文件夹
+  Future<void> _uploadFolder() async {
+    final selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory == null) return;
+
+    final directory = Directory(selectedDirectory);
+    if (!directory.existsSync()) {
+      _showErrorSnackBar('选择的文件夹不存在');
+      return;
+    }
+
+    await _processFolderUpload(directory);
+  }
+
+  /// 处理文件上传
+  Future<void> _processFileUploads(List<PlatformFile> files) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      int successCount = 0;
+      for (var file in files) {
+        final targetFilePath = _currentPath.isEmpty 
+            ? file.name 
+            : '$_currentPath/${file.name}';
+
+        if (file.bytes != null) {
+          // Web平台：使用bytes
+          await _vfsService.vfs.writeBinaryFile(
+            'indexeddb://$_selectedDatabase/$_selectedCollection/$targetFilePath',
+            file.bytes!,
+            mimeType: _getMimeType(file.name),
+          );
+          successCount++;
+        } else if (file.path != null) {
+          // 桌面平台：使用path
+          final localFile = File(file.path!);
+          if (localFile.existsSync()) {
+            final fileData = await localFile.readAsBytes();
+            await _vfsService.vfs.writeBinaryFile(
+              'indexeddb://$_selectedDatabase/$_selectedCollection/$targetFilePath',
+              fileData,
+              mimeType: _getMimeType(file.name),
+            );
+            successCount++;
+          }
+        }
+      }
+
+      _showInfoSnackBar('成功上传 $successCount 个文件');
+      await _refreshCurrentDirectory();
+    } catch (e) {
+      _showErrorSnackBar('上传文件失败: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  /// 处理文件夹上传
+  Future<void> _processFolderUpload(Directory directory) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final files = await _collectFilesRecursively(directory);
+      int successCount = 0;
+
+      // 获取文件夹名称（不是完整路径）
+      final folderName = directory.path.split(Platform.pathSeparator).last;
+      
+      for (var fileEntry in files) {
+        final localFile = File(fileEntry.path);
+        if (localFile.existsSync()) {
+          final fileData = await localFile.readAsBytes();
+          
+          // 正确计算相对路径：保留文件夹名称
+          final fullRelativePath = fileEntry.path.substring(directory.parent.path.length + 1);
+          
+          // 将本地路径分隔符转换为VFS路径分隔符
+          final normalizedPath = fullRelativePath.replaceAll(Platform.pathSeparator, '/');
+          
+          // 构建目标文件路径
+          final targetFilePath = _currentPath.isEmpty 
+              ? normalizedPath 
+              : '$_currentPath/$normalizedPath';
+
+          // 创建必要的目录结构
+          await _ensureDirectoryStructure(targetFilePath);
+
+          // 上传文件
+          await _vfsService.vfs.writeBinaryFile(
+            'indexeddb://$_selectedDatabase/$_selectedCollection/$targetFilePath',
+            fileData,
+            mimeType: _getMimeType(normalizedPath.split('/').last),
+          );
+          successCount++;
+        }
+      }
+
+      _showInfoSnackBar('成功上传文件夹 "$folderName" 包含 $successCount 个文件');
+      await _refreshCurrentDirectory();
+    } catch (e) {
+      _showErrorSnackBar('上传文件夹失败: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// 递归收集文件夹中的所有文件
+  Future<List<FileSystemEntity>> _collectFilesRecursively(Directory directory) async {
+    final List<FileSystemEntity> files = [];
+    
+    await for (var entity in directory.list(recursive: true)) {
+      if (entity is File) {
+        files.add(entity);
+      }
+    }
+    
+    return files;
+  }
+
+  /// 确保目录结构存在
+  Future<void> _ensureDirectoryStructure(String filePath) async {
+    final pathSegments = filePath.split('/');
+    if (pathSegments.length <= 1) return;
+
+    final directoryPath = pathSegments.sublist(0, pathSegments.length - 1).join('/');
+    
+    try {
+      final fullPath = 'indexeddb://$_selectedDatabase/$_selectedCollection/$directoryPath';
+      final exists = await _vfsService.vfs.exists(fullPath);
+      if (!exists) {
+        await _vfsService.vfs.createDirectory(fullPath);
+      }
+    } catch (e) {
+      // 忽略已存在的目录错误
+    }
+  }
+
+  /// 刷新当前目录
+  Future<void> _refreshCurrentDirectory() async {
+    await _navigateToPath(_currentPath);
+  }
+
+  /// 获取文件的MIME类型
+  String _getMimeType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'txt':
+        return 'text/plain';
+      case 'json':
+        return 'application/json';
+      case 'xml':
+        return 'application/xml';
+      case 'html':
+        return 'text/html';
+      case 'css':
+        return 'text/css';
+      case 'js':
+        return 'application/javascript';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'gif':
+        return 'image/gif';
+      case 'pdf':
+        return 'application/pdf';
+      case 'zip':
+        return 'application/zip';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /// 处理下载操作
+  Future<void> _handleDownload(String downloadType) async {
+    if (_selectedDatabase == null || _selectedCollection == null) {
+      _showErrorSnackBar('请先选择数据库和集合');
+      return;
+    }
+
+    try {
+      switch (downloadType) {
+        case 'selected':
+          await _downloadSelectedItems();
+          break;
+        case 'all':
+          await _downloadCurrentDirectory();
+          break;
+      }
+    } catch (e) {
+      _showErrorSnackBar('下载失败: $e');
+    }
+  }
+
+  /// 下载选中项
+  Future<void> _downloadSelectedItems() async {
+    final selectedFiles = _currentFiles
+        .where((file) => _selectedFiles.contains(file.path))
+        .toList();
+
+    if (selectedFiles.isEmpty) {
+      _showErrorSnackBar('请先选择要下载的文件或文件夹');
+      return;
+    }
+
+    await _downloadFiles(selectedFiles);
+  }
+
+  /// 下载当前目录
+  Future<void> _downloadCurrentDirectory() async {
+    if (_currentFiles.isEmpty) {
+      _showErrorSnackBar('当前目录为空');
+      return;
+    }
+
+    await _downloadFiles(_currentFiles);
+  }
+
+  /// 下载文件列表
+  Future<void> _downloadFiles(List<VfsFileInfo> files) async {
+    try {
+      // 选择保存位置
+      final downloadPath = await FilePicker.platform.getDirectoryPath();
+      if (downloadPath == null) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      int fileCount = 0;
+      int folderCount = 0;
+
+      for (var file in files) {
+        if (file.isDirectory) {
+          // 下载整个文件夹
+          final downloadedFiles = await _downloadDirectory(file, downloadPath);
+          fileCount += downloadedFiles;
+          folderCount++;
+        } else {
+          // 下载单个文件
+          await _downloadSingleFile(file, downloadPath);
+          fileCount++;
+        }
+      }
+
+      String message = '';
+      if (fileCount > 0 && folderCount > 0) {
+        message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
+      } else if (fileCount > 0) {
+        message = '已下载 $fileCount 个文件到 $downloadPath';
+      } else if (folderCount > 0) {
+        message = '已下载 $folderCount 个文件夹到 $downloadPath';
+      }
+      
+      if (message.isNotEmpty) {
+        _showInfoSnackBar(message);
+      }
+    } catch (e) {
+      _showErrorSnackBar('下载失败: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// 下载单个文件
+  Future<void> _downloadSingleFile(VfsFileInfo file, String downloadPath) async {
+    final fileName = file.name;
+    final fileContent = await _vfsService.vfs.readFile(file.path);
+
+    if (fileContent != null) {
+      final localFile = File('$downloadPath/$fileName');
+      await localFile.writeAsBytes(fileContent.data);
+    }
+  }
+
+  /// 下载整个目录
+  Future<int> _downloadDirectory(VfsFileInfo directory, String basePath) async {
+    // 创建本地目录
+    final localDir = Directory('$basePath/${directory.name}');
+    if (!localDir.existsSync()) {
+      await localDir.create(recursive: true);
+    }
+
+    // 递归获取目录下的所有文件
+    final allFiles = await _vfsService.vfs.listDirectory(directory.path);
+    int downloadedFiles = 0;
+
+    for (var file in allFiles) {
+      if (file.isDirectory) {
+        // 递归下载子目录
+        downloadedFiles += await _downloadDirectory(file, localDir.path);
+      } else {
+        // 下载文件到子目录
+        await _downloadSingleFile(file, localDir.path);
+        downloadedFiles++;
+      }
+    }
+
+    return downloadedFiles;
+  }
 }
 
 /// 排序类型枚举
@@ -2196,8 +2556,7 @@ class _FileListItemState extends State<_FileListItem> {
             title: Text(widget.file.name),
             subtitle: Text(
               '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
-            ),
-            onTap: widget.onTap,
+            ),            onTap: widget.onTap,
             onLongPress: widget.onLongPress,
           ),
         ),
@@ -2320,8 +2679,7 @@ class _FileGridItemState extends State<_FileGridItem> {
                 child: Checkbox(
                   value: widget.isSelected,
                   onChanged: widget.onSelectionChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,                ),
               ),
             ],
           ),
@@ -2339,9 +2697,10 @@ class _BackgroundContextMenuListView extends StatelessWidget {
 
   const _BackgroundContextMenuListView({
     required this.itemCount,
-    required this.itemBuilder,
-    required this.backgroundMenuBuilder,
-  });  @override
+    required this.itemBuilder,    required this.backgroundMenuBuilder,
+  });
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

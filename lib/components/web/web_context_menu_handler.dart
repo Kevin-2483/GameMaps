@@ -191,9 +191,10 @@ class ContextMenuWrapper extends StatelessWidget {
   const ContextMenuWrapper({
     super.key,
     required this.child,
-    this.menuBuilder,
-    this.enabled = true,
-  });  @override
+    this.menuBuilder,    this.enabled = true,
+  });
+
+  @override
   Widget build(BuildContext context) {
     if (!enabled || menuBuilder == null) {
       return child;
