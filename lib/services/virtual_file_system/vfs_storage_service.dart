@@ -324,7 +324,6 @@ class VfsStorageService {
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
-
   /// 移动/重命名文件或目录
   Future<bool> move(String fromPath, String toPath) async {
     final fromVfsPath = VfsProtocol.parsePath(fromPath);
@@ -338,6 +337,14 @@ class VfsStorageService {
         fromVfsPath.collection != toVfsPath.collection) {
       throw VfsException(
         'Cannot move between different databases or collections',
+      );
+    }
+
+    // 检查循环移动：防止将目录移动到自身内部
+    if (_isCircularMove(fromVfsPath.path, toVfsPath.path)) {
+      throw VfsException(
+        'Cannot move directory into itself or its subdirectories',
+        path: fromPath,
       );
     }
 
@@ -791,5 +798,31 @@ class VfsStorageService {
       'modified_at': now,
       'metadata_json': metadataJson,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// 检查是否为循环移动（将目录移动到自身内部）
+  bool _isCircularMove(String sourcePath, String destinationPath) {
+    // 如果源路径为空（根目录），不是循环移动
+    if (sourcePath.isEmpty) {
+      return false;
+    }
+    
+    // 如果目标路径为空（根目录），不是循环移动
+    if (destinationPath.isEmpty) {
+      return false;
+    }
+    
+    // 检查目标路径是否等于源路径
+    if (destinationPath == sourcePath) {
+      return true;
+    }
+    
+    // 检查目标路径是否在源路径内部
+    // 例如：源路径 "folder1"，目标路径 "folder1/subfolder"
+    if (destinationPath.startsWith('$sourcePath/')) {
+      return true;
+    }
+    
+    return false;
   }
 }
