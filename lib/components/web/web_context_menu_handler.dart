@@ -193,9 +193,7 @@ class ContextMenuWrapper extends StatelessWidget {
     required this.child,
     this.menuBuilder,
     this.enabled = true,
-  });
-
-  @override
+  });  @override
   Widget build(BuildContext context) {
     if (!enabled || menuBuilder == null) {
       return child;
@@ -211,7 +209,11 @@ class ContextMenuWrapper extends StatelessWidget {
             items: items,
           );
         }
+        // 阻止事件继续传播到父级组件
+        return;
       },
+      // 设置behavior为opaque，确保能够拦截和处理事件，防止传播
+      behavior: HitTestBehavior.opaque,
       child: child,
     );
   }

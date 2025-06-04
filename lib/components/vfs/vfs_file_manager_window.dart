@@ -941,44 +941,54 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         if (!_isSearchMode) _buildPathNavigation() else _buildSearchStatusBar(),
 
         // 批量操作栏（当有文件时显示）
-        if (filesToShow.isNotEmpty) _buildBatchOperationBar(filesToShow),
-        // 文件列表
+        if (filesToShow.isNotEmpty)
+          _buildBatchOperationBar(filesToShow), // 文件列表
         Expanded(
-          child: ContextMenuWrapper(
-            menuBuilder: (context) => _buildBackgroundContextMenu(),
-            child: filesToShow.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _isSearchMode ? Icons.search_off : Icons.folder_open,
-                          size: 64,
-                          color: Colors.grey,
+          child: filesToShow.isEmpty
+              ? ContextMenuWrapper(
+                  menuBuilder: (context) => _buildBackgroundContextMenu(),
+                  child: WebContextMenuHandler(
+                    child: Container(
+                      width: double.infinity,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isSearchMode
+                                  ? Icons.search_off
+                                  : Icons.folder_open,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '右键点击此处创建文件夹',
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '右键点击此处创建文件夹',
-                          style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  )
-                : (_viewType == _ViewType.list
+                  ),
+                )
+              : Container(
+                  width: double.infinity,
+                  child: _viewType == _ViewType.list
                       ? _buildFileList(filesToShow)
-                      : _buildFileGrid(filesToShow)),
-          ),
+                      : _buildFileGrid(filesToShow),
+                ),
         ),
       ],
     );
@@ -1235,67 +1245,112 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   /// 构建文件列表视图
   Widget _buildFileList(List<VfsFileInfo> files) {
-    return ContextMenuWrapper(
-      menuBuilder: (context) => _buildBackgroundContextMenu(),
-      child: WebContextMenuHandler(
-        child: ListView.builder(
-          itemCount: files.length,
-          itemBuilder: (context, index) {
-            final file = files[index];
-            final isSelected = _selectedFiles.contains(file.path);
-
-            return ContextMenuWrapper(
-              menuBuilder: (context) => _buildFileContextMenu(file),
-              child: ListTile(
-                selected: isSelected,
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 复选框
-                    Checkbox(
-                      value: isSelected,
-                      onChanged: (value) => _toggleFileSelection(file),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      file.isDirectory ? Icons.folder : _getFileIcon(file),
-                      color: file.isDirectory ? Colors.amber : null,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildPermissionIndicator(file),
-                  ],
-                ),
-                title: Text(file.name),
-                subtitle: Text(
-                  '${_formatFileSize(file.size)} • ${_formatDateTime(file.modifiedAt)}',
-                ),
-                onTap: () {
-                  if (_selectedFiles.isNotEmpty) {
-                    _toggleFileSelection(file);
-                  } else if (file.isDirectory) {
-                    final newPath = _currentPath.isEmpty
-                        ? file.name
-                        : '$_currentPath/${file.name}';
-                    _navigateToPath(newPath);
-                  } else {
-                    _showFileMetadata(file);
-                  }
-                },
-                onLongPress: () => _toggleFileSelection(file),
+    // 如果没有文件，显示空白区域的右键菜单
+    if (files.isEmpty) {
+      return ContextMenuWrapper(
+        menuBuilder: (context) => _buildBackgroundContextMenu(),
+        child: WebContextMenuHandler(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.transparent,
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
-      ),
+      );
+    }
+
+    // 当有文件时，使用自定义的 ListView，在文件之间的空隙支持背景菜单
+    return _BackgroundContextMenuListView(
+      itemCount: files.length,
+      backgroundMenuBuilder: (context) => _buildBackgroundContextMenu(),
+      itemBuilder: (context, index) {
+        final file = files[index];
+        final isSelected = _selectedFiles.contains(file.path);
+
+        return ContextMenuWrapper(
+          menuBuilder: (context) => _buildFileContextMenu(file),
+          child: _FileListItem(
+            file: file,
+            isSelected: isSelected,
+            onTap: () {
+              if (_selectedFiles.isNotEmpty) {
+                _toggleFileSelection(file);
+              } else if (file.isDirectory) {
+                final newPath = _currentPath.isEmpty
+                    ? file.name
+                    : '$_currentPath/${file.name}';
+                _navigateToPath(newPath);
+              } else {
+                _showFileMetadata(file);
+              }
+            },
+            onLongPress: () => _toggleFileSelection(file),
+            onSelectionChanged: (value) => setState(() {
+              if (value == true) {
+                _selectedFiles.add(file.path);
+              } else {
+                _selectedFiles.remove(file.path);
+              }
+            }),
+            formatFileSize: _formatFileSize,
+            formatDateTime: _formatDateTime,
+            getFileIcon: _getFileIcon,
+            buildPermissionIndicator: _buildPermissionIndicator,
+          ),
+        );
+      },
     );
   }
 
   /// 构建文件网格视图
   Widget _buildFileGrid(List<VfsFileInfo> files) {
-    return ContextMenuWrapper(
-      menuBuilder: (context) => _buildBackgroundContextMenu(),
-      child: WebContextMenuHandler(
-        child: GridView.builder(
+    // 如果没有文件，显示空白区域的右键菜单
+    if (files.isEmpty) {
+      return ContextMenuWrapper(
+        menuBuilder: (context) => _buildBackgroundContextMenu(),
+        child: WebContextMenuHandler(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.transparent,
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        // 背景区域，用于处理空白区域的右键菜单
+        Positioned.fill(
+          child: ContextMenuWrapper(
+            menuBuilder: (context) => _buildBackgroundContextMenu(),
+            child: WebContextMenuHandler(
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        ),
+        // 文件网格
+        GridView.builder(
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 4,
@@ -1310,7 +1365,20 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
             return ContextMenuWrapper(
               menuBuilder: (context) => _buildFileContextMenu(file),
-              child: GestureDetector(
+              child: _FileGridItem(
+                file: file,
+                isSelected: isSelected,
+
+                onSelectionChanged: (value) => setState(() {
+                  if (value == true) {
+                    _selectedFiles.add(file.path);
+                  } else {
+                    _selectedFiles.remove(file.path);
+                  }
+                }),
+                formatFileSize: _formatFileSize,
+                getFileIcon: _getFileIcon,
+
                 onTap: () {
                   if (_selectedFiles.isNotEmpty) {
                     _toggleFileSelection(file);
@@ -1324,70 +1392,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   }
                 },
                 onLongPress: () => _toggleFileSelection(file),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).dividerColor,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // 主要内容
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            file.isDirectory
-                                ? Icons.folder
-                                : _getFileIcon(file),
-                            size: 48,
-                            color: file.isDirectory ? Colors.amber : null,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            file.name,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          if (!file.isDirectory) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatFileSize(file.size),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      // 复选框
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: Checkbox(
-                          value: isSelected,
-                          onChanged: (value) => _toggleFileSelection(file),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             );
           },
         ),
-      ),
+      ],
     );
   }
 
@@ -2095,3 +2104,262 @@ enum _SortType { name, size, modified, type }
 
 /// 视图类型枚举
 enum _ViewType { list, grid }
+
+/// 文件列表项小部件，支持悬停阴影效果
+class _FileListItem extends StatefulWidget {
+  final VfsFileInfo file;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final ValueChanged<bool?> onSelectionChanged;
+  final String Function(int) formatFileSize;
+  final String Function(DateTime) formatDateTime;
+  final IconData Function(VfsFileInfo) getFileIcon;
+  final Widget Function(VfsFileInfo) buildPermissionIndicator;
+
+  const _FileListItem({
+    required this.file,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+    required this.onSelectionChanged,
+    required this.formatFileSize,
+    required this.formatDateTime,
+    required this.getFileIcon,
+    required this.buildPermissionIndicator,
+  });
+
+  @override
+  State<_FileListItem> createState() => _FileListItemState();
+}
+
+class _FileListItemState extends State<_FileListItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          child: ListTile(
+            selected: widget.isSelected,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Checkbox(
+                  value: widget.isSelected,
+                  onChanged: widget.onSelectionChanged,
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  widget.file.isDirectory
+                      ? Icons.folder
+                      : widget.getFileIcon(widget.file),
+                  color: widget.file.isDirectory ? Colors.amber : null,
+                ),
+                const SizedBox(width: 8),
+                widget.buildPermissionIndicator(widget.file),
+              ],
+            ),
+            title: Text(widget.file.name),
+            subtitle: Text(
+              '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
+            ),
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 文件网格项小部件，支持悬停阴影效果
+class _FileGridItem extends StatefulWidget {
+  final VfsFileInfo file;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final ValueChanged<bool?> onSelectionChanged;
+  final String Function(int) formatFileSize;
+  final IconData Function(VfsFileInfo) getFileIcon;
+
+  const _FileGridItem({
+    required this.file,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+    required this.onSelectionChanged,
+    required this.formatFileSize,
+    required this.getFileIcon,
+  });
+
+  @override
+  State<_FileGridItem> createState() => _FileGridItemState();
+}
+
+class _FileGridItemState extends State<_FileGridItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: widget.isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).dividerColor,
+              width: widget.isSelected ? 2 : 1,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Stack(
+            children: [
+              // 主要内容
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.file.isDirectory
+                        ? Icons.folder
+                        : widget.getFileIcon(widget.file),
+                    size: 48,
+                    color: widget.file.isDirectory ? Colors.amber : null,
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      widget.file.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (!widget.file.isDirectory) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.formatFileSize(widget.file.size),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              // 复选框
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Checkbox(
+                  value: widget.isSelected,
+                  onChanged: widget.onSelectionChanged,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 支持背景右键菜单的自定义ListView
+class _BackgroundContextMenuListView extends StatelessWidget {
+  final int itemCount;
+  final Widget Function(BuildContext, int) itemBuilder;
+  final List<ContextMenuItem> Function(BuildContext) backgroundMenuBuilder;
+
+  const _BackgroundContextMenuListView({
+    required this.itemCount,
+    required this.itemBuilder,
+    required this.backgroundMenuBuilder,
+  });  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onSecondaryTapDown: (details) {
+        // 显示背景右键菜单
+        final contextMenu = backgroundMenuBuilder(context);
+        if (contextMenu.isNotEmpty) {
+          WebContextMenu.show(
+            context: context,
+            position: details.globalPosition,
+            items: contextMenu,
+          );
+        }
+      },
+      child: ListView.builder(
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          // 将每个item包装在一个容器中，在文件上右键时阻止背景菜单
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onSecondaryTapDown: (details) {
+              // 阻止背景菜单，文件的ContextMenuWrapper会处理右键
+            },
+            child: itemBuilder(context, index),
+          );
+        },
+      ),
+    );
+  }
+}
