@@ -766,6 +766,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       tooltip: '新建文件夹',
                     ),
                     IconButton(
+                      onPressed: () => _navigateToPath(_currentPath),
+                      icon: const Icon(Icons.refresh),
+                      tooltip: '刷新',
+                    ),
+                    IconButton(
+                      onPressed: _showCurrentPathPermissions,
+                      icon: const Icon(Icons.security),
+                      tooltip: '查看文件夹权限',
+                    ),
+                    IconButton(
                       onPressed: _showSearchDialog,
                       icon: const Icon(Icons.search),
                       tooltip: '搜索',
@@ -1027,45 +1037,39 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         if (!_isSearchMode) _buildPathNavigation() else _buildSearchStatusBar(),
 
         // 批量操作栏（当有文件时显示）
-        if (filesToShow.isNotEmpty)
-          _buildBatchOperationBar(filesToShow), // 文件列表
+        if (filesToShow.isNotEmpty) _buildBatchOperationBar(filesToShow),
+
+        // 文件列表
         Expanded(
           child: filesToShow.isEmpty
-              ? ContextMenuWrapper(
-                  menuBuilder: (context) => _buildBackgroundContextMenu(),
-                  child: WebContextMenuHandler(
-                    child: Container(
-                      width: double.infinity,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _isSearchMode
-                                  ? Icons.search_off
-                                  : Icons.folder_open,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '右键点击此处创建文件夹',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+              ? Container(
+                  width: double.infinity,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isSearchMode ? Icons.search_off : Icons.folder_open,
+                          size: 64,
+                          color: Colors.grey,
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '使用工具栏按钮创建文件夹',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -1331,34 +1335,28 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   /// 构建文件列表视图
   Widget _buildFileList(List<VfsFileInfo> files) {
-    // 如果没有文件，显示空白区域的右键菜单
+    // 如果没有文件，显示空白信息
     if (files.isEmpty) {
-      return ContextMenuWrapper(
-        menuBuilder: (context) => _buildBackgroundContextMenu(),
-        child: WebContextMenuHandler(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.transparent,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.folder_open, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.transparent,
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.folder_open, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
+            ],
           ),
         ),
       );
     }
 
-    // 当有文件时，使用自定义的 ListView，在文件之间的空隙支持背景菜单
-    return _BackgroundContextMenuListView(
+    // 当有文件时，使用常规 ListView
+    return ListView.builder(
       itemCount: files.length,
-      backgroundMenuBuilder: (context) => _buildBackgroundContextMenu(),
       itemBuilder: (context, index) {
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
@@ -1400,94 +1398,101 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   /// 构建文件网格视图
   Widget _buildFileGrid(List<VfsFileInfo> files) {
-    // 如果没有文件，显示空白区域的右键菜单
+    // 如果没有文件，显示空白信息
     if (files.isEmpty) {
-      return ContextMenuWrapper(
-        menuBuilder: (context) => _buildBackgroundContextMenu(),
-        child: WebContextMenuHandler(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.transparent,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.folder_open, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.transparent,
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.folder_open, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text('此文件夹为空', style: TextStyle(color: Colors.grey)),
+            ],
           ),
         ),
       );
     }
 
-    return Stack(
-      children: [
-        // 背景区域，用于处理空白区域的右键菜单
-        Positioned.fill(
-          child: ContextMenuWrapper(
-            menuBuilder: (context) => _buildBackgroundContextMenu(),
-            child: WebContextMenuHandler(
-              child: Container(color: Colors.transparent),
-            ),
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: files.length,
+      itemBuilder: (context, index) {
+        final file = files[index];
+        final isSelected = _selectedFiles.contains(file.path);
+
+        return ContextMenuWrapper(
+          menuBuilder: (context) => _buildFileContextMenu(file),
+          child: _FileGridItem(
+            file: file,
+            isSelected: isSelected,
+
+            onSelectionChanged: (value) => setState(() {
+              if (value == true) {
+                _selectedFiles.add(file.path);
+              } else {
+                _selectedFiles.remove(file.path);
+              }
+            }),
+            formatFileSize: _formatFileSize,
+            getFileIcon: _getFileIcon,
+
+            onTap: () {
+              if (_selectedFiles.isNotEmpty) {
+                _toggleFileSelection(file);
+              } else if (file.isDirectory) {
+                final newPath = _currentPath.isEmpty
+                    ? file.name
+                    : '$_currentPath/${file.name}';
+                _navigateToPath(newPath);
+              } else {
+                _showFileMetadata(file);
+              }
+            },
+            onLongPress: () => _toggleFileSelection(file),
           ),
-        ),
-        // 文件网格
-        GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            childAspectRatio: 1,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: files.length,
-          itemBuilder: (context, index) {
-            final file = files[index];
-            final isSelected = _selectedFiles.contains(file.path);
-
-            return ContextMenuWrapper(
-              menuBuilder: (context) => _buildFileContextMenu(file),
-              child: _FileGridItem(
-                file: file,
-                isSelected: isSelected,
-
-                onSelectionChanged: (value) => setState(() {
-                  if (value == true) {
-                    _selectedFiles.add(file.path);
-                  } else {
-                    _selectedFiles.remove(file.path);
-                  }
-                }),
-                formatFileSize: _formatFileSize,
-                getFileIcon: _getFileIcon,
-
-                onTap: () {
-                  if (_selectedFiles.isNotEmpty) {
-                    _toggleFileSelection(file);
-                  } else if (file.isDirectory) {
-                    final newPath = _currentPath.isEmpty
-                        ? file.name
-                        : '$_currentPath/${file.name}';
-                    _navigateToPath(newPath);
-                  } else {
-                    _showFileMetadata(file);
-                  }
-                },
-                onLongPress: () => _toggleFileSelection(file),
-              ),
-            );
-          },
-        ),
-      ],
+        );
+      },
     );
-  }
-
-  /// 构建文件上下文菜单
+  }  /// 构建文件上下文菜单
   List<ContextMenuItem> _buildFileContextMenu(VfsFileInfo file) {
+    // 检查当前文件是否被选中
+    final isCurrentFileSelected = _selectedFiles.contains(file.path);
+    // 检查是否有多个文件被选中
+    final hasMultipleSelected = _selectedFiles.length > 1;
+    // 检查是否有任何文件被选中
+    final hasSelected = _selectedFiles.isNotEmpty;
+
+    // 如果当前文件被选中且有多个选中项，显示批处理菜单
+    if (isCurrentFileSelected && hasMultipleSelected) {
+      return _buildBatchContextMenu();
+    }
+
+    // 如果当前文件被选中且只有一个文件被选中，显示单文件菜单（保持选择状态）
+    if (isCurrentFileSelected && _selectedFiles.length == 1) {
+      // 不清除选择，显示单文件菜单
+    }
+
+    // 如果当前文件未被选中但有其他文件被选中，清除选择并显示单文件菜单
+    if (!isCurrentFileSelected && hasSelected) {
+      // 清除所有选择
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _selectedFiles.clear();
+        });
+      });
+    }
+
+    // 显示单文件上下文菜单
     return [
       if (file.isDirectory)
         ContextMenuItem(
@@ -1550,61 +1555,68 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ContextMenuItem(
         label: '删除',
         icon: Icons.delete,
-        onTap: () => _deleteFiles([file]),
-      ),
+        onTap: () => _deleteFiles([file]),      ),
     ];
   }
 
-  /// 构建背景上下文菜单（空白区域右键）
-  List<ContextMenuItem> _buildBackgroundContextMenu() {
-    // 检查是否有数据库和集合选择
-    if (_selectedDatabase == null || _selectedCollection == null) {
-      return [
-        ContextMenuItem(
-          label: '请先选择数据库和集合',
-          icon: Icons.info,
-          enabled: false,
-          onTap: null,
-        ),
-      ];
-    }
-
-    final menuItems = <ContextMenuItem>[
+  /// 构建批处理上下文菜单
+  List<ContextMenuItem> _buildBatchContextMenu() {
+    final selectedFiles = _currentFiles
+        .where((file) => _selectedFiles.contains(file.path))
+        .toList();
+    
+    return [
       ContextMenuItem(
-        label: '新建文件夹',
-        icon: Icons.create_new_folder,
-        onTap: _createNewFolder,
+        label: '复制选中项',
+        icon: Icons.copy,
+        onTap: () => _copyFiles(selectedFiles),
       ),
-    ];
-
-    // 如果剪贴板有文件，显示粘贴选项
-    if (_clipboardFiles.isNotEmpty) {
-      menuItems.addAll([
-        const ContextMenuItem.divider(),
+      ContextMenuItem(
+        label: '剪切选中项',
+        icon: Icons.cut,
+        onTap: () => _cutFiles(selectedFiles),
+      ),
+      if (_clipboardFiles.isNotEmpty)
         ContextMenuItem(
-          label: '粘贴 (${_clipboardFiles.length} 项)',
+          label: '粘贴',
           icon: Icons.paste,
           onTap: _pasteFiles,
         ),
-      ]);
-    }
-
-    // 显示路径权限
-    menuItems.addAll([
+      
       const ContextMenuItem.divider(),
+      
+      // 下载选项
       ContextMenuItem(
-        label: '查看文件夹权限',
-        icon: Icons.security,
-        onTap: _showCurrentPathPermissions,
+        label: '下载选中项',
+        icon: Icons.download,
+        onTap: () => _downloadFiles(selectedFiles, compress: false),
       ),
       ContextMenuItem(
-        label: '刷新',
-        icon: Icons.refresh,
-        onTap: () => _navigateToPath(_currentPath),
+        label: '下载为压缩包',
+        icon: Icons.archive,
+        onTap: () => _downloadFiles(selectedFiles, compress: true),
       ),
-    ]);
-
-    return menuItems;
+      
+      const ContextMenuItem.divider(),
+      
+      ContextMenuItem(
+        label: '删除选中项',
+        icon: Icons.delete,
+        onTap: () => _deleteFiles(selectedFiles),
+      ),
+      
+      const ContextMenuItem.divider(),
+      
+      ContextMenuItem(
+        label: '取消选择',
+        icon: Icons.clear,
+        onTap: () {
+          setState(() {
+            _selectedFiles.clear();
+          });
+        },
+      ),
+    ];
   }
 
   /// 显示当前路径权限信息
@@ -2709,7 +2721,9 @@ class _FileListItemState extends State<_FileListItem> {
                 : widget.isSelected
                 ? [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                       spreadRadius: 0,
@@ -2717,65 +2731,58 @@ class _FileListItemState extends State<_FileListItem> {
                   ]
                 : null,
           ),
-          child: Stack(
+          child: Row(
             children: [
-              // 主要内容
-              Row(
-                children: [
-                  // 文件图标
-                  Icon(
-                    widget.file.isDirectory
-                        ? Icons.folder
-                        : widget.getFileIcon(widget.file),
-                    size: 40,
-                    color: widget.file.isDirectory ? Colors.amber : null,
-                  ),
-                  const SizedBox(width: 12),
-                  // 文件信息
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              // 复选框 - 移到左侧
+              Checkbox(
+                value: widget.isSelected,
+                onChanged: widget.onSelectionChanged,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              const SizedBox(width: 8),
+              // 文件图标
+              Icon(
+                widget.file.isDirectory
+                    ? Icons.folder
+                    : widget.getFileIcon(widget.file),
+                size: 40,
+                color: widget.file.isDirectory ? Colors.amber : null,
+              ),
+              const SizedBox(width: 12),
+              // 文件信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.file.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.file.name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        Expanded(
+                          child: Text(
+                            '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
-                            const SizedBox(width: 8),
-                            widget.buildPermissionIndicator(widget.file),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              // 复选框
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Checkbox(
-                  value: widget.isSelected,
-                  onChanged: widget.onSelectionChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ],
                 ),
               ),
+              // 权限图标 - 移到垂直中间右侧
+              widget.buildPermissionIndicator(widget.file),
+              const SizedBox(width: 8),
             ],
           ),
         ),
@@ -2857,97 +2864,58 @@ class _FileGridItemState extends State<_FileGridItem> {
           ),
           child: Stack(
             children: [
-              // 主要内容
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    widget.file.isDirectory
-                        ? Icons.folder
-                        : widget.getFileIcon(widget.file),
-                    size: 48,
-                    color: widget.file.isDirectory ? Colors.amber : null,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      widget.file.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                  if (!widget.file.isDirectory) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.formatFileSize(widget.file.size),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              // 复选框
+              // 复选框 - 移到左上角
               Positioned(
                 top: 4,
-                right: 4,
+                left: 4,
                 child: Checkbox(
                   value: widget.isSelected,
                   onChanged: widget.onSelectionChanged,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
+              // 主要内容 - 增加左边距避免与复选框重叠
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 32,
+                  top: 8,
+                  right: 8,
+                  bottom: 8,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      widget.file.isDirectory
+                          ? Icons.folder
+                          : widget.getFileIcon(widget.file),
+                      size: 48,
+                      color: widget.file.isDirectory ? Colors.amber : null,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.file.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    if (!widget.file.isDirectory) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.formatFileSize(widget.file.size),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// 支持背景右键菜单的自定义ListView
-class _BackgroundContextMenuListView extends StatelessWidget {
-  final int itemCount;
-  final Widget Function(BuildContext, int) itemBuilder;
-  final List<ContextMenuItem> Function(BuildContext) backgroundMenuBuilder;
-
-  const _BackgroundContextMenuListView({
-    required this.itemCount,
-    required this.itemBuilder,
-    required this.backgroundMenuBuilder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onSecondaryTapDown: (details) {
-        // 显示背景右键菜单
-        final contextMenu = backgroundMenuBuilder(context);
-        if (contextMenu.isNotEmpty) {
-          WebContextMenu.show(
-            context: context,
-            position: details.globalPosition,
-            items: contextMenu,
-          );
-        }
-      },
-      child: ListView.builder(
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          // 将每个item包装在一个容器中，在文件上右键时阻止背景菜单
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onSecondaryTapDown: (details) {
-              // 阻止背景菜单，文件的ContextMenuWrapper会处理右键
-            },
-            child: itemBuilder(context, index),
-          );
-        },
       ),
     );
   }
