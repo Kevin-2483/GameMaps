@@ -359,41 +359,64 @@ class VfsStorageService {
 
       if (sourceExists.isEmpty) {
         return false;
-      }
-
-      final isDirectory = sourceExists.first['is_directory'] as int == 1;
+      }      final isDirectory = sourceExists.first['is_directory'] as int == 1;
 
       if (isDirectory) {
-        // 移动目录：更新所有子项的路径
+        // 移动目录：获取所有需要移动的文件和目录
         final fromPrefix = fromVfsPath.path.isEmpty
             ? ''
             : '${fromVfsPath.path}/';
-        final toPrefix = toVfsPath.path.isEmpty ? '' : '${toVfsPath.path}/';
 
-        await txn.rawUpdate(
-          '''
-          UPDATE $_filesTableName 
-          SET file_path = REPLACE(file_path, ?, ?),
-              file_name = CASE 
-                WHEN file_path = ? THEN ?
-                ELSE file_name
-              END,
-              modified_at = ?
-          WHERE database_name = ? AND collection_name = ? 
-          AND (file_path = ? OR file_path LIKE ?)
-        ''',
-          [
-            fromPrefix,
-            toPrefix,
-            fromVfsPath.path,
-            toVfsPath.fileName ?? '',
-            now,
+        final itemsToMove = await txn.query(
+          _filesTableName,
+          where: '''database_name = ? AND collection_name = ? 
+                   AND (file_path = ? OR file_path LIKE ?)''',
+          whereArgs: [
             fromVfsPath.database,
             fromVfsPath.collection,
             fromVfsPath.path,
             '$fromPrefix%',
           ],
         );
+
+        // 逐个更新每个文件/目录的路径
+        for (final item in itemsToMove) {
+          final oldPath = item['file_path'] as String;
+          String newPath;
+          String newFileName;
+
+          if (oldPath == fromVfsPath.path) {
+            // 这是被移动的目录本身
+            newPath = toVfsPath.path;
+            newFileName = toVfsPath.fileName ?? '';
+          } else {
+            // 这是子文件/目录，需要更新路径前缀
+            if (fromVfsPath.path.isEmpty) {
+              // 从根目录移动
+              newPath = toVfsPath.path.isEmpty 
+                  ? oldPath 
+                  : '${toVfsPath.path}/$oldPath';
+            } else {
+              // 从非根目录移动
+              final relativePath = oldPath.substring(fromPrefix.length);
+              newPath = toVfsPath.path.isEmpty 
+                  ? relativePath 
+                  : '${toVfsPath.path}/$relativePath';
+            }
+            newFileName = newPath.split('/').last;
+          }
+
+          await txn.update(
+            _filesTableName,
+            {
+              'file_path': newPath,
+              'file_name': newFileName,
+              'modified_at': now,
+            },
+            where: 'id = ?',
+            whereArgs: [item['id']],
+          );
+        }
       } else {
         // 移动文件
         await txn.update(

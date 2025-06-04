@@ -269,7 +269,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     _showInfoSnackBar('已剪切 ${files.length} 个项目');
   }
-
   /// 粘贴文件
   Future<void> _pasteFiles() async {
     if (_clipboardFiles.isEmpty ||
@@ -290,14 +289,17 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             ? fileName
             : '$_currentPath/$fileName';
 
+        // 解析源路径以提取相对路径
+        final sourceVfsPath = VfsProtocol.parsePath(sourcePath);
+        if (sourceVfsPath == null) {
+          throw VfsException('Invalid source path format', path: sourcePath);
+        }
+
         if (_isCutOperation) {
           // 移动文件
           await _vfsService.moveFile(
             _selectedCollection!,
-            sourcePath.replaceFirst(
-              'indexeddb://$_selectedDatabase/$_selectedCollection/',
-              '',
-            ),
+            sourceVfsPath.path, // 使用解析后的路径
             _selectedCollection!,
             targetPath,
           );
@@ -305,10 +307,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           // 复制文件
           await _vfsService.copyFile(
             _selectedCollection!,
-            sourcePath.replaceFirst(
-              'indexeddb://$_selectedDatabase/$_selectedCollection/',
-              '',
-            ),
+            sourceVfsPath.path, // 使用解析后的路径
             _selectedCollection!,
             targetPath,
           );
