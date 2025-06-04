@@ -2679,54 +2679,104 @@ class _FileListItemState extends State<_FileListItem> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          child: ListTile(
-            selected: widget.isSelected,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: widget.isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).dividerColor,
+              width: widget.isSelected ? 2 : 1,
             ),
-            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Checkbox(
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Stack(
+            children: [
+              // 主要内容
+              Row(
+                children: [
+                  // 文件图标
+                  Icon(
+                    widget.file.isDirectory
+                        ? Icons.folder
+                        : widget.getFileIcon(widget.file),
+                    size: 40,
+                    color: widget.file.isDirectory ? Colors.amber : null,
+                  ),
+                  const SizedBox(width: 12),
+                  // 文件信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.file.name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            widget.buildPermissionIndicator(widget.file),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // 复选框
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Checkbox(
                   value: widget.isSelected,
                   onChanged: widget.onSelectionChanged,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                const SizedBox(width: 8),
-                Icon(
-                  widget.file.isDirectory
-                      ? Icons.folder
-                      : widget.getFileIcon(widget.file),
-                  color: widget.file.isDirectory ? Colors.amber : null,
-                ),
-                const SizedBox(width: 8),
-                widget.buildPermissionIndicator(widget.file),
-              ],
-            ),
-            title: Text(widget.file.name),
-            subtitle: Text(
-              '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
-            ),
-            onTap: widget.onTap,
-            onLongPress: widget.onLongPress,
+              ),
+            ],
           ),
         ),
       ),
