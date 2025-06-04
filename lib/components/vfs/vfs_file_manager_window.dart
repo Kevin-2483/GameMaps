@@ -249,26 +249,27 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       return _sortAscending ? result : -result;
     });
   }
-
   /// 复制文件
   Future<void> _copyFiles(List<VfsFileInfo> files) async {
     setState(() {
       _clipboardFiles = List.from(files);
       _isCutOperation = false;
+      _selectedFiles.clear(); // 清空选择
     });
 
     _showInfoSnackBar('已复制 ${files.length} 个项目');
   }
-
   /// 剪切文件
   Future<void> _cutFiles(List<VfsFileInfo> files) async {
     setState(() {
       _clipboardFiles = List.from(files);
       _isCutOperation = true;
+      _selectedFiles.clear(); // 清空选择
     });
 
     _showInfoSnackBar('已剪切 ${files.length} 个项目');
   }
+
   /// 粘贴文件
   Future<void> _pasteFiles() async {
     if (_clipboardFiles.isEmpty ||
@@ -1359,12 +1360,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       itemBuilder: (context, index) {
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
-
         return ContextMenuWrapper(
           menuBuilder: (context) => _buildFileContextMenu(file),
           child: _FileListItem(
             file: file,
             isSelected: isSelected,
+            isCutToClipboard:
+                _isCutOperation &&
+                _clipboardFiles.any((f) => f.path == file.path),
             onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 _toggleFileSelection(file);
@@ -1396,6 +1399,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   }
 
   /// 构建文件网格视图
+
   Widget _buildFileGrid(List<VfsFileInfo> files) {
     // 如果没有文件，显示空白信息
     if (files.isEmpty) {
@@ -1428,13 +1432,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       itemBuilder: (context, index) {
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
-
         return ContextMenuWrapper(
           menuBuilder: (context) => _buildFileContextMenu(file),
           child: _FileGridItem(
             file: file,
             isSelected: isSelected,
-
+            isCutToClipboard:
+                _isCutOperation &&
+                _clipboardFiles.any((f) => f.path == file.path),
             onSelectionChanged: (value) => setState(() {
               if (value == true) {
                 _selectedFiles.add(file.path);
@@ -1462,7 +1467,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         );
       },
     );
-  }  /// 构建文件上下文菜单
+  }
+
+  /// 构建文件上下文菜单
   List<ContextMenuItem> _buildFileContextMenu(VfsFileInfo file) {
     // 检查当前文件是否被选中
     final isCurrentFileSelected = _selectedFiles.contains(file.path);
@@ -1554,7 +1561,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ContextMenuItem(
         label: '删除',
         icon: Icons.delete,
-        onTap: () => _deleteFiles([file]),      ),
+        onTap: () => _deleteFiles([file]),
+      ),
     ];
   }
 
@@ -1563,7 +1571,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     final selectedFiles = _currentFiles
         .where((file) => _selectedFiles.contains(file.path))
         .toList();
-    
+
     return [
       ContextMenuItem(
         label: '复制选中项',
@@ -1576,14 +1584,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         onTap: () => _cutFiles(selectedFiles),
       ),
       if (_clipboardFiles.isNotEmpty)
-        ContextMenuItem(
-          label: '粘贴',
-          icon: Icons.paste,
-          onTap: _pasteFiles,
-        ),
-      
+        ContextMenuItem(label: '粘贴', icon: Icons.paste, onTap: _pasteFiles),
+
       const ContextMenuItem.divider(),
-      
+
       // 下载选项
       ContextMenuItem(
         label: '下载选中项',
@@ -1595,17 +1599,17 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         icon: Icons.archive,
         onTap: () => _downloadFiles(selectedFiles, compress: true),
       ),
-      
+
       const ContextMenuItem.divider(),
-      
+
       ContextMenuItem(
         label: '删除选中项',
         icon: Icons.delete,
         onTap: () => _deleteFiles(selectedFiles),
       ),
-      
+
       const ContextMenuItem.divider(),
-      
+
       ContextMenuItem(
         label: '取消选择',
         icon: Icons.clear,
@@ -2657,6 +2661,7 @@ enum _ViewType { list, grid }
 class _FileListItem extends StatefulWidget {
   final VfsFileInfo file;
   final bool isSelected;
+  final bool isCutToClipboard; // 新增：是否被剪切到剪贴板
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final ValueChanged<bool?> onSelectionChanged;
@@ -2668,6 +2673,7 @@ class _FileListItem extends StatefulWidget {
   const _FileListItem({
     required this.file,
     required this.isSelected,
+    required this.isCutToClipboard,
     required this.onTap,
     required this.onLongPress,
     required this.onSelectionChanged,
@@ -2683,106 +2689,108 @@ class _FileListItem extends StatefulWidget {
 
 class _FileListItemState extends State<_FileListItem> {
   bool _isHovered = false;
-
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
+    return Opacity(
+      opacity: widget.isCutToClipboard ? 0.5 : 1.0,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
               color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).dividerColor,
-              width: widget.isSelected ? 2 : 1,
-            ),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                      spreadRadius: 0,
-                    ),
-                  ]
-                : widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                      spreadRadius: 0,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              // 复选框 - 移到左侧
-              Checkbox(
-                value: widget.isSelected,
-                onChanged: widget.onSelectionChanged,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: widget.isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).dividerColor,
+                width: widget.isSelected ? 2 : 1,
               ),
-              const SizedBox(width: 8),
-              // 文件图标
-              Icon(
-                widget.file.isDirectory
-                    ? Icons.folder
-                    : widget.getFileIcon(widget.file),
-                size: 40,
-                color: widget.file.isDirectory ? Colors.amber : null,
-              ),
-              const SizedBox(width: 12),
-              // 文件信息
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.file.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 0,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
+                    ]
+                  : widget.isSelected
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                        spreadRadius: 0,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                // 复选框 - 移到左侧
+                Checkbox(
+                  value: widget.isSelected,
+                  onChanged: widget.onSelectionChanged,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                const SizedBox(width: 8),
+                // 文件图标
+                Icon(
+                  widget.file.isDirectory
+                      ? Icons.folder
+                      : widget.getFileIcon(widget.file),
+                  size: 40,
+                  color: widget.file.isDirectory ? Colors.amber : null,
+                ),
+                const SizedBox(width: 12),
+                // 文件信息
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.file.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // 权限图标 - 移到垂直中间右侧
-              widget.buildPermissionIndicator(widget.file),
-              const SizedBox(width: 8),
-            ],
+                // 权限图标 - 移到垂直中间右侧
+                widget.buildPermissionIndicator(widget.file),
+                const SizedBox(width: 8),
+              ],
+            ),
           ),
         ),
       ),
@@ -2794,6 +2802,7 @@ class _FileListItemState extends State<_FileListItem> {
 class _FileGridItem extends StatefulWidget {
   final VfsFileInfo file;
   final bool isSelected;
+  final bool isCutToClipboard; // 新增：是否被剪切到剪贴板
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final ValueChanged<bool?> onSelectionChanged;
@@ -2803,6 +2812,7 @@ class _FileGridItem extends StatefulWidget {
   const _FileGridItem({
     required this.file,
     required this.isSelected,
+    required this.isCutToClipboard,
     required this.onTap,
     required this.onLongPress,
     required this.onSelectionChanged,
@@ -2819,100 +2829,103 @@ class _FileGridItemState extends State<_FileGridItem> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
+    return Opacity(
+      opacity: widget.isCutToClipboard ? 0.5 : 1.0,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
               color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).dividerColor,
-              width: widget.isSelected ? 2 : 1,
-            ),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                      spreadRadius: 0,
-                    ),
-                  ]
-                : widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                      spreadRadius: 0,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Stack(
-            children: [
-              // 复选框 - 移到左上角
-              Positioned(
-                top: 4,
-                left: 4,
-                child: Checkbox(
-                  value: widget.isSelected,
-                  onChanged: widget.onSelectionChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: widget.isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).dividerColor,
+                width: widget.isSelected ? 2 : 1,
               ),
-              // 主要内容 - 增加左边距避免与复选框重叠
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 32,
-                  top: 8,
-                  right: 8,
-                  bottom: 8,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      widget.file.isDirectory
-                          ? Icons.folder
-                          : widget.getFileIcon(widget.file),
-                      size: 48,
-                      color: widget.file.isDirectory ? Colors.amber : null,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.file.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    if (!widget.file.isDirectory) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.formatFileSize(widget.file.size),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade600,
-                        ),
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 0,
                       ),
-                    ],
-                  ],
+                    ]
+                  : widget.isSelected
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                        spreadRadius: 0,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Stack(
+              children: [
+                // 复选框 - 移到左上角
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Checkbox(
+                    value: widget.isSelected,
+                    onChanged: widget.onSelectionChanged,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-              ),
-            ],
+                // 主要内容 - 增加左边距避免与复选框重叠
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 32,
+                    top: 8,
+                    right: 8,
+                    bottom: 8,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        widget.file.isDirectory
+                            ? Icons.folder
+                            : widget.getFileIcon(widget.file),
+                        size: 48,
+                        color: widget.file.isDirectory ? Colors.amber : null,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.file.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      if (!widget.file.isDirectory) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.formatFileSize(widget.file.size),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
