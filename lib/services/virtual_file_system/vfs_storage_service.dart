@@ -214,7 +214,6 @@ class VfsStorageService {
       return result > 0;
     }
   }
-
   /// 列出目录内容
   Future<List<VfsFileInfo>> listDirectory(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
@@ -225,24 +224,33 @@ class VfsStorageService {
     final db = await database;
     final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
     
+    debugPrint('🗄️ Storage: listDirectory called with path: $path');
+    debugPrint('🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}');
+    debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
+    
     // 查找直接子项（不包含深层嵌套）
+    // 计算期望的斜杠数量：路径前缀的斜杠数
+    final expectedSlashCount = pathPrefix.split('/').length - 1;
+    
     final result = await db.rawQuery('''
       SELECT * FROM $_filesTableName 
       WHERE database_name = ? AND collection_name = ? 
       AND file_path LIKE ? 
       AND file_path != ?
-      AND (LENGTH(file_path) - LENGTH(REPLACE(file_path, '/', ''))) = 
-          (LENGTH(?) - LENGTH(REPLACE(?, '/', '')) + ?)
+      AND (LENGTH(file_path) - LENGTH(REPLACE(file_path, '/', ''))) = ?
       ORDER BY is_directory DESC, file_name ASC
     ''', [
       vfsPath.database,
       vfsPath.collection,
       '$pathPrefix%',
-      vfsPath.path,
-      pathPrefix,
-      pathPrefix,
-      vfsPath.path.isEmpty ? 0 : 1,
+      vfsPath.path,      expectedSlashCount,
     ]);
+
+    debugPrint('🗄️ Storage: SQL query returned ${result.length} rows');
+    for (final row in result) {
+      debugPrint('🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}');
+    }
+    debugPrint('🗄️ Storage: converted to ${result.length} VfsFileInfo objects');
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
