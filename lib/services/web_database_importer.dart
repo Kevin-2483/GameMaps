@@ -32,6 +32,7 @@ class WebDatabaseImporter {
       await _createSampleData();
     }
   }
+
   /// 从JSON数据导入到数据库
   static Future<void> importFromJson(Map<String, dynamic> data) async {
     await _importData(data);

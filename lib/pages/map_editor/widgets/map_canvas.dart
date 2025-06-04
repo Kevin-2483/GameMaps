@@ -327,9 +327,8 @@ class MapCanvas extends StatefulWidget {
 }
 
 class MapCanvasState extends State<MapCanvas> {
-
   Rect? get currentSelectionRect => _selectionRect;
-  
+
   final TransformationController _transformationController =
       TransformationController();
   Offset? _currentDrawingStart;
@@ -743,15 +742,16 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
+
   Widget _buildLayerImageWidget(MapLayer layer) {
     if (layer.imageData == null) return const SizedBox.shrink();
 
     // 获取有效透明度（预览值或实际值）
     final effectiveOpacity =
-        widget.previewOpacityValues[layer.id] ?? layer.opacity;    // 确定图片适应方式和缩放比例
+        widget.previewOpacityValues[layer.id] ?? layer.opacity; // 确定图片适应方式和缩放比例
     BoxFit imageFit;
     double scale = layer.imageScale; // 使用图层设置的缩放比例
-    
+
     if (layer.imageFit != null) {
       // 使用图层设置的适应方式
       imageFit = layer.imageFit!;
@@ -967,6 +967,7 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
   }
+
   /// 捕获画布区域为RGBA格式的像素数据
   /// 注意：返回的是RGBA格式的数据，不再进行手动转换
   Future<Uint8List?> captureCanvasAreaToRgbaUint8List(Rect area) async {
@@ -1031,7 +1032,8 @@ class MapCanvasState extends State<MapCanvas> {
         // Ensure calculated width/height are not negative or zero after rounding and intersection
         if (cropWidth <= 0 || cropHeight <= 0) {
           return Uint8List(0);
-        }        final Uint8List destPixelsRgba = Uint8List(
+        }
+        final Uint8List destPixelsRgba = Uint8List(
           cropWidth * cropHeight * 4,
         ); // 4 bytes per RGBA pixel
 

@@ -6,10 +6,7 @@ import '../../services/virtual_file_system/vfs_protocol.dart';
 class VfsFileMetadataDialog extends StatefulWidget {
   final VfsFileInfo fileInfo;
 
-  const VfsFileMetadataDialog({
-    super.key,
-    required this.fileInfo,
-  });
+  const VfsFileMetadataDialog({super.key, required this.fileInfo});
 
   @override
   State<VfsFileMetadataDialog> createState() => _VfsFileMetadataDialogState();
@@ -82,9 +79,15 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                     _buildInfoSection('基本信息', [
                       _buildInfoRow('名称', widget.fileInfo.name),
                       _buildInfoRow('路径', widget.fileInfo.path),
-                      _buildInfoRow('类型', widget.fileInfo.isDirectory ? '文件夹' : '文件'),
+                      _buildInfoRow(
+                        '类型',
+                        widget.fileInfo.isDirectory ? '文件夹' : '文件',
+                      ),
                       if (!widget.fileInfo.isDirectory)
-                        _buildInfoRow('大小', _formatFileSize(widget.fileInfo.size)),
+                        _buildInfoRow(
+                          '大小',
+                          _formatFileSize(widget.fileInfo.size),
+                        ),
                       _buildInfoRow(
                         '修改时间',
                         _formatDateTime(widget.fileInfo.modifiedAt),
@@ -95,7 +98,8 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                       ),
                     ]),
                     const SizedBox(height: 16),
-                    if (widget.fileInfo.metadata != null && widget.fileInfo.metadata!.isNotEmpty) ...[
+                    if (widget.fileInfo.metadata != null &&
+                        widget.fileInfo.metadata!.isNotEmpty) ...[
                       _buildInfoSection('元数据', [
                         for (final entry in widget.fileInfo.metadata!.entries)
                           _buildInfoRow(entry.key, entry.value.toString()),
@@ -104,7 +108,10 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                     ],
                     if (!widget.fileInfo.isDirectory) ...[
                       _buildInfoSection('文件详情', [
-                        _buildInfoRow('MIME类型', widget.fileInfo.mimeType ?? '未知'),
+                        _buildInfoRow(
+                          'MIME类型',
+                          widget.fileInfo.mimeType ?? '未知',
+                        ),
                       ]),
                     ],
                   ],
@@ -217,7 +224,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
   }
 
   void _copyToClipboard() {
@@ -226,21 +233,22 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
     buffer.writeln('名称: ${widget.fileInfo.name}');
     buffer.writeln('路径: ${widget.fileInfo.path}');
     buffer.writeln('类型: ${widget.fileInfo.isDirectory ? '文件夹' : '文件'}');
-    
+
     if (!widget.fileInfo.isDirectory) {
       buffer.writeln('大小: ${_formatFileSize(widget.fileInfo.size)}');
     }
-    
+
     buffer.writeln('修改时间: ${_formatDateTime(widget.fileInfo.modifiedAt)}');
     buffer.writeln('创建时间: ${_formatDateTime(widget.fileInfo.createdAt)}');
-    
-    if (widget.fileInfo.metadata != null && widget.fileInfo.metadata!.isNotEmpty) {
+
+    if (widget.fileInfo.metadata != null &&
+        widget.fileInfo.metadata!.isNotEmpty) {
       buffer.writeln('\n元数据:');
       for (final entry in widget.fileInfo.metadata!.entries) {
         buffer.writeln('${entry.key}: ${entry.value}');
       }
     }
-    
+
     if (!widget.fileInfo.isDirectory) {
       if (widget.fileInfo.mimeType != null) {
         buffer.writeln('MIME类型: ${widget.fileInfo.mimeType}');
@@ -248,11 +256,11 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
-    
+
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('文件信息已复制到剪贴板')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('文件信息已复制到剪贴板')));
     }
   }
 }

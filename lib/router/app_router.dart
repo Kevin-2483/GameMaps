@@ -61,7 +61,8 @@ class AppRouter {
     final registry = PageRegistry();
     // 注册核心页面模块
     registry.register(HomePageModule());
-    registry.register(SettingsPageModule());    registry.register(UserPreferencesPageModule());
+    registry.register(SettingsPageModule());
+    registry.register(UserPreferencesPageModule());
     registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
     registry.register(ExternalResourcesPageModule());

@@ -22,7 +22,8 @@ class _ExternalResourcesContent extends StatefulWidget {
   const _ExternalResourcesContent();
 
   @override
-  State<_ExternalResourcesContent> createState() => _ExternalResourcesContentState();
+  State<_ExternalResourcesContent> createState() =>
+      _ExternalResourcesContentState();
 }
 
 class _ExternalResourcesContentState extends State<_ExternalResourcesContent>
@@ -43,40 +44,27 @@ class _ExternalResourcesContentState extends State<_ExternalResourcesContent>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.resourceManagement),        bottom: TabBar(
+        title: Text(l10n.resourceManagement),
+        bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: [
-            Tab(
-              icon: const Icon(Icons.file_upload),
-              text: l10n.exportDatabase,
-            ),
+            Tab(icon: const Icon(Icons.file_upload), text: l10n.exportDatabase),
             Tab(
               icon: const Icon(Icons.file_download),
               text: l10n.importDatabase,
             ),
-            Tab(
-              icon: const Icon(Icons.cloud),
-              text: '浏览资源',
-            ),
-            Tab(
-              icon: const Icon(Icons.cloud_download),
-              text: 'VFS导出',
-            ),
-            Tab(
-              icon: const Icon(Icons.cloud_upload),
-              text: 'VFS导入',
-            ),
-            Tab(
-              icon: const Icon(Icons.folder_open),
-              text: 'VFS浏览',
-            ),
+            Tab(icon: const Icon(Icons.cloud), text: '浏览资源'),
+            Tab(icon: const Icon(Icons.cloud_download), text: 'VFS导出'),
+            Tab(icon: const Icon(Icons.cloud_upload), text: 'VFS导入'),
+            Tab(icon: const Icon(Icons.folder_open), text: 'VFS浏览'),
           ],
         ),
-      ),      body: TabBarView(
+      ),
+      body: TabBarView(
         controller: _tabController,
         children: const [
           ExternalResourcesExportPanel(),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/map_database_service.dart';
-import '../../services/legend_database_service.dart'; 
+import '../../services/legend_database_service.dart';
 import '../../models/map_item.dart';
 import '../../models/legend_item.dart';
 
@@ -10,10 +10,12 @@ class ExternalResourcesBrowsePanel extends StatefulWidget {
   const ExternalResourcesBrowsePanel({super.key});
 
   @override
-  State<ExternalResourcesBrowsePanel> createState() => _ExternalResourcesBrowsePanelState();
+  State<ExternalResourcesBrowsePanel> createState() =>
+      _ExternalResourcesBrowsePanelState();
 }
 
-class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePanel>
+class _ExternalResourcesBrowsePanelState
+    extends State<ExternalResourcesBrowsePanel>
     with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
@@ -52,20 +54,17 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
               children: [
                 Icon(Icons.storage, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Text(
-                  '数据库浏览',
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text('数据库浏览', style: theme.textTheme.titleMedium),
                 const Spacer(),
                 IconButton(
                   onPressed: _isLoading ? null : _loadData,
-                  icon: _isLoading 
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh),
                   tooltip: '刷新数据',
                 ),
               ],
@@ -113,6 +112,7 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
       ],
     );
   }
+
   Widget _buildMapsTab() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -140,6 +140,7 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
       },
     );
   }
+
   Widget _buildMapCard(MapItem map) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -165,7 +166,8 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
-                      onPressed: () => _copyToClipboard(map.id?.toString() ?? ''),
+                      onPressed: () =>
+                          _copyToClipboard(map.id?.toString() ?? ''),
                       icon: const Icon(Icons.copy, size: 16),
                       label: const Text('复制ID'),
                     ),
@@ -178,6 +180,7 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
       ),
     );
   }
+
   Widget _buildLegendsTab() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -221,7 +224,10 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
               children: [
                 _buildInfoRow('标题', legend.title),
                 _buildInfoRow('ID', legend.id?.toString() ?? '未知'),
-                _buildInfoRow('中心点', '(${legend.centerX.toStringAsFixed(3)}, ${legend.centerY.toStringAsFixed(3)})'),
+                _buildInfoRow(
+                  '中心点',
+                  '(${legend.centerX.toStringAsFixed(3)}, ${legend.centerY.toStringAsFixed(3)})',
+                ),
                 _buildInfoRow('版本', legend.version.toString()),
                 _buildInfoRow('创建时间', _formatDateTime(legend.createdAt)),
                 _buildInfoRow('更新时间', _formatDateTime(legend.updatedAt)),
@@ -230,7 +236,8 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
-                      onPressed: () => _copyToClipboard(legend.id?.toString() ?? ''),
+                      onPressed: () =>
+                          _copyToClipboard(legend.id?.toString() ?? ''),
                       icon: const Icon(Icons.copy, size: 16),
                       label: const Text('复制ID'),
                     ),
@@ -243,6 +250,7 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
       ),
     );
   }
+
   Widget _buildLocalizationsTab() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -321,9 +329,7 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -332,8 +338,9 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return '未知';
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
+
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -342,13 +349,12 @@ class _ExternalResourcesBrowsePanelState extends State<ExternalResourcesBrowsePa
     try {
       // 加载地图数据
       _maps = await _mapService.getAllMaps();
-      
+
       // 加载传奇数据
       _legends = await _legendService.getAllLegends();
-      
+
       // 加载本地化数据 - 暂时使用硬编码的示例
       _localizationLocales = ['zh-CN', 'en-US', 'ja-JP'];
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

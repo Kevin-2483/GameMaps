@@ -1270,7 +1270,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('不保存退出'),
-          ),          ElevatedButton(
+          ),
+          ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop(false); // 先关闭对话框
               await _saveMap(); // 保存地图
@@ -2288,7 +2289,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         );
       },
     );
-  }  /// 处理键盘事件
+  }
+
+  /// 处理键盘事件
   KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
     // 只处理按键按下事件
     if (event is! RawKeyDownEvent) {
@@ -2301,7 +2304,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final copyShortcut = toolPrefs.shortcuts['copy'] ?? 'Ctrl+C';
     final undoShortcut = toolPrefs.shortcuts['undo'] ?? 'Ctrl+Z';
     final redoShortcut = toolPrefs.shortcuts['redo'] ?? 'Ctrl+Y';
-    
+
     // 检查撤销快捷键
     if (_isShortcutPressed(event, undoShortcut)) {
       if (_canUndo) {
@@ -2309,7 +2312,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         return KeyEventResult.handled;
       }
     }
-    
+
     // 检查重做快捷键
     if (_isShortcutPressed(event, redoShortcut)) {
       if (_canRedo) {
@@ -2317,7 +2320,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         return KeyEventResult.handled;
       }
     }
-    
+
     // 检查复制快捷键
     if (_isShortcutPressed(event, copyShortcut)) {
       _handleCopySelection();
@@ -2326,12 +2329,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return KeyEventResult.ignored;
   }
+
   /// 检查是否按下了指定的快捷键
   bool _isShortcutPressed(RawKeyEvent event, String shortcut) {
     final parts = shortcut.toLowerCase().split('+');
     final key = parts.last;
     final modifiers = parts.take(parts.length - 1).toList();
-    
+
     // 检查主键
     bool keyMatch = false;
     switch (key) {
@@ -2353,21 +2357,21 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       default:
         return false;
     }
-    
+
     if (!keyMatch) return false;
-    
+
     // 检查修饰键
     bool ctrlRequired = modifiers.contains('ctrl');
     bool shiftRequired = modifiers.contains('shift');
     bool altRequired = modifiers.contains('alt');
-    
+
     bool ctrlPressed = event.isControlPressed || event.isMetaPressed;
     bool shiftPressed = event.isShiftPressed;
     bool altPressed = event.isAltPressed;
-    
+
     return (ctrlRequired == ctrlPressed) &&
-           (shiftRequired == shiftPressed) &&
-           (altRequired == altPressed);
+        (shiftRequired == shiftPressed) &&
+        (altRequired == altPressed);
   }
 
   /// 处理复制选区的逻辑
@@ -2390,13 +2394,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         );
       }
       return;
-    }    try {
+    }
+    try {
       // 从画布捕获选区图像
       final imageData = await mapCanvas.captureCanvasAreaToRgbaUint8List(
         selectionRect,
       );
       if (imageData == null) {
-        throw Exception('无法捕获画布区域');      }// 复制到剪贴板
+        throw Exception('无法捕获画布区域');
+      } // 复制到剪贴板
       final success = await ClipboardService.copyCanvasSelectionToClipboard(
         rgbaData: imageData,
         width: selectionRect.width.round(),

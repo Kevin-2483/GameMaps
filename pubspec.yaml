@@ -52,12 +52,14 @@ dependencies:
   sqflite: ^2.3.3+1
   sqflite_common_ffi: ^2.3.3
   sqflite_common_ffi_web: ^0.4.3+1
-  
-  # File picker
+    # File picker
   file_picker: ^8.1.2
     # Path utilities
   path: ^1.9.0
   path_provider: ^2.1.4
+  
+  # Archive support for compression
+  archive: ^3.6.1
     # Image handling
   image: ^4.2.0
   

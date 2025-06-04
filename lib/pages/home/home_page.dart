@@ -61,7 +61,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 ),
               ),
               const SizedBox(height: 24), // Quick actions
-               Row(
+              Row(
                 children: [
                   Expanded(
                     child: Card(
@@ -80,7 +80,8 @@ class _HomePageContentState extends State<_HomePageContent> {
                         ),
                       ),
                     ),
-                  ),                  const SizedBox(width: 8),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Card(
                       child: InkWell(

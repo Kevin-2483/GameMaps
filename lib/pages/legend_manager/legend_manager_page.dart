@@ -237,7 +237,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         _showSuccessSnackBar(l10n.legendDeletedSuccessfully);
       } catch (e) {
         _showErrorSnackBar(l10n.deleteLegendFailed(e.toString()));
-      }    }
+      }
+    }
   }
 
   int _calculateCrossAxisCount(BuildContext context) {
@@ -256,7 +257,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
-            action: PopupMenuButton<String>(              onSelected: (value) {
+            action: PopupMenuButton<String>(
+              onSelected: (value) {
                 switch (value) {
                   case 'add':
                     _addLegend();

@@ -5,24 +5,16 @@ import '../../services/virtual_file_system/vfs_protocol.dart';
 class VfsFileRenameDialog extends StatefulWidget {
   final VfsFileInfo fileInfo;
 
-  const VfsFileRenameDialog({
-    super.key,
-    required this.fileInfo,
-  });
+  const VfsFileRenameDialog({super.key, required this.fileInfo});
 
   @override
   State<VfsFileRenameDialog> createState() => _VfsFileRenameDialogState();
 
   /// 显示文件重命名对话框
-  static Future<String?> show(
-    BuildContext context,
-    VfsFileInfo fileInfo,
-  ) {
+  static Future<String?> show(BuildContext context, VfsFileInfo fileInfo) {
     return showDialog<String>(
       context: context,
-      builder: (context) => VfsFileRenameDialog(
-        fileInfo: fileInfo,
-      ),
+      builder: (context) => VfsFileRenameDialog(fileInfo: fileInfo),
     );
   }
 }
@@ -39,7 +31,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
   void initState() {
     super.initState();
     _originalName = widget.fileInfo.name;
-    
+
     // 分离文件名和扩展名
     if (!widget.fileInfo.isDirectory) {
       final lastDotIndex = _originalName.lastIndexOf('.');
@@ -54,7 +46,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
       _nameWithoutExtension = _originalName;
       _extension = '';
     }
-    
+
     _nameController = TextEditingController(text: _nameWithoutExtension);
     _nameController.addListener(_validateName);
   }
@@ -67,7 +59,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
 
   void _validateName() {
     final name = _nameController.text.trim();
-    
+
     setState(() {
       if (name.isEmpty) {
         _isValidName = false;
@@ -93,22 +85,41 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
 
   bool _isReservedName(String name) {
     const reservedNames = [
-      'CON', 'PRN', 'AUX', 'NUL',
-      'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
-      'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+      'CON',
+      'PRN',
+      'AUX',
+      'NUL',
+      'COM1',
+      'COM2',
+      'COM3',
+      'COM4',
+      'COM5',
+      'COM6',
+      'COM7',
+      'COM8',
+      'COM9',
+      'LPT1',
+      'LPT2',
+      'LPT3',
+      'LPT4',
+      'LPT5',
+      'LPT6',
+      'LPT7',
+      'LPT8',
+      'LPT9',
     ];
     return reservedNames.contains(name.toUpperCase());
   }
 
   void _handleRename() {
     if (!_isValidName) return;
-    
+
     final newName = _nameController.text.trim() + _extension;
     if (newName == _originalName) {
       Navigator.of(context).pop();
       return;
     }
-    
+
     Navigator.of(context).pop(newName);
   }
 
@@ -148,7 +159,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // 当前名称显示
             Container(
               width: double.infinity,
@@ -156,9 +167,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceVariant.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: colorScheme.outline.withOpacity(0.3),
-                ),
+                border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +190,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // 新名称输入
             Text(
               '新名称:',
@@ -191,7 +200,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             Row(
               children: [
                 Expanded(
@@ -236,7 +245,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                 ],
               ],
             ),
-            
+
             if (_extension.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
@@ -247,9 +256,9 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             // 按钮栏
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

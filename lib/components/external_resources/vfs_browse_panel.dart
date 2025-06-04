@@ -13,13 +13,13 @@ class VfsBrowsePanel extends StatefulWidget {
 
 class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
   final VfsStorageService _storageService = VfsStorageService();
-  
+
   List<String> _databases = [];
   String? _selectedDatabase;
   List<String> _collections = [];
   String? _selectedCollection;
   List<VfsFileInfo> _files = [];
-  
+
   bool _isLoading = false;
   String? _errorMessage;
   String _currentPath = '';
@@ -64,9 +64,9 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
               ),
               Text(
                 '浏览虚拟文件系统中的数据',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -90,9 +90,9 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           children: [
             Text(
               '导航',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -104,10 +104,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
                     children: [
                       Text(
                         '数据库',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                       DropdownButtonFormField<String>(
                         value: _selectedDatabase,
@@ -119,10 +116,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
                           ),
                         ),
                         items: _databases.map((db) {
-                          return DropdownMenuItem(
-                            value: db,
-                            child: Text(db),
-                          );
+                          return DropdownMenuItem(value: db, child: Text(db));
                         }).toList(),
                         onChanged: _onDatabaseChanged,
                         hint: const Text('选择数据库'),
@@ -138,10 +132,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
                     children: [
                       Text(
                         '集合',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                       DropdownButtonFormField<String>(
                         value: _selectedCollection,
@@ -163,13 +154,15 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
                       ),
                     ],
                   ),
-                ),                const SizedBox(width: 16),
+                ),
+                const SizedBox(width: 16),
                 // 刷新按钮
                 ElevatedButton.icon(
                   onPressed: _refresh,
                   icon: const Icon(Icons.refresh),
                   label: const Text('刷新'),
-                ),              ],
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             _buildPathNavigation(),
@@ -183,7 +176,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
     if (_errorMessage != null) {
       return _buildErrorMessage();
     }
-    
+
     if (_selectedDatabase == null) {
       return _buildPlaceholder(
         icon: Icons.storage,
@@ -191,7 +184,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
         subtitle: '请先选择一个数据库以查看其内容',
       );
     }
-    
+
     if (_selectedCollection == null) {
       return _buildPlaceholder(
         icon: Icons.folder,
@@ -199,7 +192,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
         subtitle: '请选择一个集合以查看其文件',
       );
     }
-    
+
     if (_files.isEmpty) {
       return _buildPlaceholder(
         icon: Icons.folder_open,
@@ -207,7 +200,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
         subtitle: '此集合中没有文件',
       );
     }
-    
+
     return _buildFileList();
   }
 
@@ -331,18 +324,12 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
             children: [
               Text(
                 _formatFileSize(file.size),
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
               const SizedBox(width: 16),
               Text(
                 _formatDateTime(file.modifiedAt),
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
               if (file.mimeType != null) ...[
                 const SizedBox(width: 16),
@@ -357,10 +344,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
                   ),
                   child: Text(
                     file.mimeType!,
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontSize: 10,
-                    ),
+                    style: TextStyle(color: Colors.blue[700], fontSize: 10),
                   ),
                 ),
               ],
@@ -373,11 +357,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           const PopupMenuItem(
             value: 'info',
             child: Row(
-              children: [
-                Icon(Icons.info),
-                SizedBox(width: 8),
-                Text('详细信息'),
-              ],
+              children: [Icon(Icons.info), SizedBox(width: 8), Text('详细信息')],
             ),
           ),
           if (!file.isDirectory)
@@ -418,7 +398,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _loadDatabases() async {
@@ -532,13 +512,13 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
             _buildInfoRow('大小', _formatFileSize(file.size)),
             _buildInfoRow('创建时间', _formatDateTime(file.createdAt)),
             _buildInfoRow('修改时间', _formatDateTime(file.modifiedAt)),
-            if (file.mimeType != null)
-              _buildInfoRow('MIME类型', file.mimeType!),
+            if (file.mimeType != null) _buildInfoRow('MIME类型', file.mimeType!),
             if (file.metadata != null && file.metadata!.isNotEmpty) ...[
               const SizedBox(height: 8),
               const Text('元数据:', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...file.metadata!.entries.map((entry) =>
-                _buildInfoRow(entry.key, entry.value.toString())),
+              ...file.metadata!.entries.map(
+                (entry) => _buildInfoRow(entry.key, entry.value.toString()),
+              ),
             ],
           ],
         ),
@@ -568,9 +548,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -578,11 +556,9 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
 
   void _downloadFile(VfsFileInfo file) {
     // TODO: 实现文件下载功能
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('文件下载功能即将推出'),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('文件下载功能即将推出')));
   }
 
   void _confirmDelete(VfsFileInfo file) {
@@ -608,11 +584,13 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
       ),
     );
   }
+
   Future<void> _deleteFile(VfsFileInfo file) async {
     try {
-      final filePath = 'indexeddb://$_selectedDatabase/$_selectedCollection${file.path}';
+      final filePath =
+          'indexeddb://$_selectedDatabase/$_selectedCollection${file.path}';
       await _storageService.delete(filePath, recursive: file.isDirectory);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -621,7 +599,7 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           ),
         );
       }
-      
+
       // 刷新文件列表
       if (mounted) {
         await _refresh();
@@ -629,14 +607,13 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('删除失败: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('删除失败: $e'), backgroundColor: Colors.red),
         );
       }
     }
-  }  Widget _buildPathNavigation() {
+  }
+
+  Widget _buildPathNavigation() {
     // 根据当前状态构建路径
     String pathToShow = _currentPath;
     if (pathToShow.isEmpty && _selectedDatabase != null) {
@@ -646,15 +623,12 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
     if (pathToShow.isEmpty) {
       pathToShow = '/';
     }
-    
+
     // 解析路径为可点击的组件
     final pathParts = _parsePath(pathToShow);
-    
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(6),
@@ -667,66 +641,70 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _buildPathBreadcrumbs(pathParts),
-              ),
+              child: Row(children: _buildPathBreadcrumbs(pathParts)),
             ),
           ),
         ],
       ),
     );
-  }List<Map<String, String>> _parsePath(String path) {
+  }
+
+  List<Map<String, String>> _parsePath(String path) {
     final parts = <Map<String, String>>[];
-    
+
     // 添加根路径
     parts.add({
       'name': '🏠 根目录',
       'path': '',
       'isLast': 'true', // 默认为最后一个，后面会根据实际情况更新
     });
-    
+
     // 只处理 indexeddb:// 协议的路径
     if (path.isNotEmpty && path.startsWith('indexeddb://')) {
       final pathWithoutProtocol = path.substring(12); // Remove 'indexeddb://'
-      final segments = pathWithoutProtocol.split('/').where((s) => s.isNotEmpty).toList();
-      
+      final segments = pathWithoutProtocol
+          .split('/')
+          .where((s) => s.isNotEmpty)
+          .toList();
+
       String currentPath = 'indexeddb://';
-      
+
       for (int i = 0; i < segments.length; i++) {
         final segment = segments[i];
         currentPath += '$segment/';
-        
+
         String displayName = segment;
         if (i == 0) {
           displayName = '📁 $segment'; // 数据库
         } else if (i == 1) {
           displayName = '📂 $segment'; // 集合
         }
-        
+
         parts.add({
           'name': displayName,
           'path': currentPath,
           'isLast': 'false',
         });
       }
-      
+
       // 更新最后一个元素的状态
       if (parts.length > 1) {
         parts.first['isLast'] = 'false'; // 根目录不再是最后一个
-        parts.last['isLast'] = 'true';    // 最后一个路径段是当前位置
+        parts.last['isLast'] = 'true'; // 最后一个路径段是当前位置
       }
     }
-    
+
     return parts;
   }
+
   List<Widget> _buildPathBreadcrumbs(List<Map<String, String>> pathParts) {
     final widgets = <Widget>[];
-    
+
     for (int i = 0; i < pathParts.length; i++) {
       final part = pathParts[i];
       final isLast = part['isLast'] == 'true';
       final isRoot = part['path'] == '';
-      
+
       // 添加路径组件
       widgets.add(
         Material(
@@ -737,23 +715,23 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: isLast 
-                  ? Colors.blue[100] 
-                  : isRoot 
+                color: isLast
+                    ? Colors.blue[100]
+                    : isRoot
                     ? Colors.green[50]
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
-                border: isLast 
-                  ? Border.all(color: Colors.blue[300]!, width: 1)
-                  : null,
+                border: isLast
+                    ? Border.all(color: Colors.blue[300]!, width: 1)
+                    : null,
               ),
               child: Text(
                 part['name']!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isLast 
-                    ? Colors.blue[700] 
-                    : isRoot
+                  color: isLast
+                      ? Colors.blue[700]
+                      : isRoot
                       ? Colors.green[700]
                       : Colors.blue[600],
                   fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
@@ -763,24 +741,21 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           ),
         ),
       );
-      
+
       // 添加分隔符（除了最后一个）
       if (i < pathParts.length - 1) {
         widgets.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Icon(
-              Icons.chevron_right,
-              size: 14,
-              color: Colors.grey[400],
-            ),
+            child: Icon(Icons.chevron_right, size: 14, color: Colors.grey[400]),
           ),
         );
       }
     }
-    
+
     return widgets;
   }
+
   Future<void> _navigateToPath(String path) async {
     // 如果是根路径，重置所有选择
     if (path.isEmpty) {
@@ -794,14 +769,18 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
       });
       return;
     }
-    
+
     // 解析路径并导航到指定位置
     if (path.startsWith('indexeddb://')) {
-      final pathWithoutProtocol = path.substring(12);      final segments = pathWithoutProtocol.split('/').where((s) => s.isNotEmpty).toList();
-      
+      final pathWithoutProtocol = path.substring(12);
+      final segments = pathWithoutProtocol
+          .split('/')
+          .where((s) => s.isNotEmpty)
+          .toList();
+
       if (segments.isNotEmpty) {
         final database = segments[0];
-        
+
         // 如果只有数据库，清空集合选择
         if (segments.length == 1) {
           setState(() {
@@ -818,12 +797,13 @@ class _VfsBrowsePanelState extends State<VfsBrowsePanel> {
           setState(() {
             _selectedDatabase = database;
           });
-          
+
           // 如果数据库改变了，需要先加载集合列表
-          if (_selectedDatabase != database || !_collections.contains(collection)) {
+          if (_selectedDatabase != database ||
+              !_collections.contains(collection)) {
             await _onDatabaseChanged(database);
           }
-          
+
           // 然后设置集合
           await _onCollectionChanged(collection);
         }

@@ -330,7 +330,8 @@ class MapDatabaseService {
       }
     } catch (e) {
       debugPrint('导入数据库失败: $e');
-    }    return false;
+    }
+    return false;
   }
 
   /// 关闭数据库

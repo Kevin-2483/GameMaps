@@ -13,18 +13,18 @@ class VfsExportPanel extends StatefulWidget {
 
 class _VfsExportPanelState extends State<VfsExportPanel> {
   final VfsImportExportService _importExportService = VfsImportExportService();
-  
+
   String? _outputPath;
   bool _isExporting = false;
   bool _includeMetadata = true;
   bool _includeFileContent = true;
   bool _compressOutput = false;
-  
+
   Set<String> _selectedDatabases = {};
   Set<String> _selectedCollections = {};
   List<String> _availableDatabases = [];
   Map<String, List<String>> _databaseCollections = {};
-  
+
   VfsExportPreview? _exportPreview;
   String? _exportStatus;
 
@@ -80,9 +80,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
               ),
               Text(
                 '将虚拟文件系统数据导出为JSON文件',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -100,9 +100,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
           children: [
             Text(
               '选择要导出的数据',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             if (_availableDatabases.isEmpty)
@@ -141,7 +141,7 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
               ..._availableDatabases.map((dbName) {
                 final isSelected = _selectedDatabases.contains(dbName);
                 final collections = _databaseCollections[dbName] ?? [];
-                
+
                 return ExpansionTile(
                   leading: Checkbox(
                     value: isSelected,
@@ -166,17 +166,20 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
                     final collKey = '$dbName/$collName';
                     return CheckboxListTile(
                       title: Text(collName),
-                      value: isSelected || _selectedCollections.contains(collKey),
-                      onChanged: isSelected ? null : (value) {
-                        setState(() {
-                          if (value == true) {
-                            _selectedCollections.add(collKey);
-                          } else {
-                            _selectedCollections.remove(collKey);
-                          }
-                          _updatePreview();
-                        });
-                      },
+                      value:
+                          isSelected || _selectedCollections.contains(collKey),
+                      onChanged: isSelected
+                          ? null
+                          : (value) {
+                              setState(() {
+                                if (value == true) {
+                                  _selectedCollections.add(collKey);
+                                } else {
+                                  _selectedCollections.remove(collKey);
+                                }
+                                _updatePreview();
+                              });
+                            },
                     );
                   }).toList(),
                 );
@@ -197,9 +200,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
           children: [
             Text(
               '导出选项',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             CheckboxListTile(
@@ -249,9 +252,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
           children: [
             Text(
               '输出位置',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -297,9 +300,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
           children: [
             Text(
               '导出预览',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Container(
@@ -311,7 +314,10 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildPreviewItem('数据库数量', '${_exportPreview!.databases.length}'),
+                  _buildPreviewItem(
+                    '数据库数量',
+                    '${_exportPreview!.databases.length}',
+                  ),
                   _buildPreviewItem('总文件数', '${_exportPreview!.totalFiles}'),
                   _buildPreviewItem(
                     '预估大小',
@@ -366,10 +372,7 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
         children: [
           SizedBox(
             width: 100,
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+            child: Text(label, style: TextStyle(color: Colors.grey[600])),
           ),
           Text(value),
         ],
@@ -398,7 +401,8 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
   }
 
   Widget _buildStatusMessage() {
-    final isError = _exportStatus!.contains('错误') || _exportStatus!.contains('失败');
+    final isError =
+        _exportStatus!.contains('错误') || _exportStatus!.contains('失败');
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -429,9 +433,9 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
   }
 
   bool _canExport() {
-    return _outputPath != null && 
-           !_isExporting && 
-           (_selectedDatabases.isNotEmpty || _selectedCollections.isNotEmpty);
+    return _outputPath != null &&
+        !_isExporting &&
+        (_selectedDatabases.isNotEmpty || _selectedCollections.isNotEmpty);
   }
 
   String _formatFileSize(int bytes) {
@@ -447,12 +451,12 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
     try {
       final databases = await _importExportService.getAllDatabases();
       final collections = <String, List<String>>{};
-      
+
       for (final dbName in databases) {
         final dbCollections = await _importExportService.getCollections(dbName);
         collections[dbName] = dbCollections;
       }
-      
+
       setState(() {
         _availableDatabases = databases;
         _databaseCollections = collections;
@@ -495,15 +499,21 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
 
     try {
       final options = VfsExportOptions(
-        includeDatabases: _selectedDatabases.isEmpty ? null : _selectedDatabases,
-        includeCollections: _selectedCollections.isEmpty ? null : _selectedCollections,
+        includeDatabases: _selectedDatabases.isEmpty
+            ? null
+            : _selectedDatabases,
+        includeCollections: _selectedCollections.isEmpty
+            ? null
+            : _selectedCollections,
         includeMetadata: _includeMetadata,
         includeFileContent: _includeFileContent,
         compressOutput: _compressOutput,
       );
 
-      final preview = await _importExportService.getExportPreview(options: options);
-      
+      final preview = await _importExportService.getExportPreview(
+        options: options,
+      );
+
       setState(() {
         _exportPreview = preview;
       });
@@ -524,8 +534,12 @@ class _VfsExportPanelState extends State<VfsExportPanel> {
 
     try {
       final options = VfsExportOptions(
-        includeDatabases: _selectedDatabases.isEmpty ? null : _selectedDatabases,
-        includeCollections: _selectedCollections.isEmpty ? null : _selectedCollections,
+        includeDatabases: _selectedDatabases.isEmpty
+            ? null
+            : _selectedDatabases,
+        includeCollections: _selectedCollections.isEmpty
+            ? null
+            : _selectedCollections,
         includeMetadata: _includeMetadata,
         includeFileContent: _includeFileContent,
         compressOutput: _compressOutput,

@@ -1271,7 +1271,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   ),
                 ],
               ),
-              const SizedBox(height: 4),              Text(
+              const SizedBox(height: 4),
+              Text(
                 '1. 点击"上传图片"选择文件或"剪贴板"粘贴图片\n'
                 '2. 在画布上拖拽创建选区\n'
                 '3. 图片将自动适应选区大小\n'
@@ -1509,7 +1510,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
             ],
           ),
-        ),        const SizedBox(height: 12),
+        ),
+        const SizedBox(height: 12),
 
         // 上传按钮和剪贴板按钮
         Row(
@@ -1532,7 +1534,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // 剪贴板按钮
             Expanded(
               child: ElevatedButton.icon(

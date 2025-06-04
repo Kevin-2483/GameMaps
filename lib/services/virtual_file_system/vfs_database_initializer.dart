@@ -7,20 +7,22 @@ import 'vfs_permission_system.dart';
 /// VFS数据库初始化服务
 /// 用于创建默认的根文件系统（空的文件系统）
 class VfsDatabaseInitializer {
-  static final VfsDatabaseInitializer _instance = VfsDatabaseInitializer._internal();
+  static final VfsDatabaseInitializer _instance =
+      VfsDatabaseInitializer._internal();
   factory VfsDatabaseInitializer() => _instance;
   VfsDatabaseInitializer._internal();
 
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
+
   /// 初始化默认数据库结构
   Future<void> initializeDefaultDatabase() async {
     try {
       debugPrint('开始初始化VFS根文件系统...');
-      
+
       // 初始化权限系统
       await _permissionManager.initialize();
-      
+
       // 检查是否已经初始化过
       if (await _isAlreadyInitialized()) {
         debugPrint('VFS根文件系统已存在，跳过初始化');
@@ -29,19 +31,20 @@ class VfsDatabaseInitializer {
 
       // 创建根文件系统
       await _createRootFileSystem();
-      
+
       // 设置系统保护路径的权限
       await _setupSystemPermissions();
-      
+
       // 标记为已初始化
       await _markAsInitialized();
-      
+
       debugPrint('VFS根文件系统初始化完成');
     } catch (e) {
       debugPrint('VFS根文件系统初始化失败: $e');
       rethrow;
     }
   }
+
   /// 检查是否已经初始化过
   Future<bool> _isAlreadyInitialized() async {
     try {
@@ -50,32 +53,39 @@ class VfsDatabaseInitializer {
       return false;
     }
   }
+
   /// 创建根文件系统
   Future<void> _createRootFileSystem() async {
     // 创建根文件系统 - 使用 'r6box' 作为数据库名，'fs' 作为集合名
     const databaseName = 'r6box';
     const collectionName = 'fs';
-    
+
     // 创建根目录（空目录）
-    await _storage.createDirectory('indexeddb://$databaseName/$collectionName/');
+    await _storage.createDirectory(
+      'indexeddb://$databaseName/$collectionName/',
+    );
     debugPrint('创建根目录: /');
-    
+
     // 创建挂载点目录，供其他数据库挂载使用
-    await _storage.createDirectory('indexeddb://$databaseName/$collectionName/mnt/');
+    await _storage.createDirectory(
+      'indexeddb://$databaseName/$collectionName/mnt/',
+    );
     debugPrint('创建挂载点目录: /mnt/');
   }
 
   /// 标记为已初始化
   Future<void> _markAsInitialized() async {
     final content = VfsFileContent(
-      data: utf8.encode(json.encode({
-        'initialized_at': DateTime.now().toIso8601String(),
-        'version': '1.0.0',
-        'description': 'Clean root file system for user file management',
-      })),
+      data: utf8.encode(
+        json.encode({
+          'initialized_at': DateTime.now().toIso8601String(),
+          'version': '1.0.0',
+          'description': 'Clean root file system for user file management',
+        }),
+      ),
       mimeType: 'application/json',
     );
-      await _storage.writeFile('indexeddb://r6box/fs/.initialized', content);
+    await _storage.writeFile('indexeddb://r6box/fs/.initialized', content);
     debugPrint('VFS根文件系统标记为已初始化');
   }
 
@@ -86,19 +96,19 @@ class VfsDatabaseInitializer {
       'indexeddb://r6box/fs/',
       VfsPermissionMask.defaultUser,
     );
-    
+
     // 设置挂载点权限（系统保护，用户可访问但不能删除）
     await _permissionManager.setPermissions(
       'indexeddb://r6box/fs/mnt/',
       VfsPermissionMask.mountPoint,
     );
-    
+
     // 设置初始化标记文件权限（系统保护）
     await _permissionManager.setPermissions(
       'indexeddb://r6box/fs/.initialized',
       VfsPermissionMask.systemProtected,
     );
-    
+
     debugPrint('系统权限设置完成');
   }
 
@@ -118,7 +128,10 @@ class VfsDatabaseInitializer {
 
         for (final collection in collections) {
           try {
-            final collectionStats = await _storage.getStorageStats(dbName, collection);
+            final collectionStats = await _storage.getStorageStats(
+              dbName,
+              collection,
+            );
             totalFiles += collectionStats['totalFiles'] as int;
             totalSize += collectionStats['totalSize'] as int;
           } catch (e) {

@@ -88,72 +88,90 @@ class ImageUtils {
     }
   }
 
-    /// 验证图片数据是否有效
+  /// 验证图片数据是否有效
   static bool isValidImageData(Uint8List data) {
     if (data.isEmpty) return false;
-    
+
     // 检查常见的图片文件头
     // PNG: 89 50 4E 47
-    if (data.length >= 4 && 
-        data[0] == 0x89 && data[1] == 0x50 && 
-        data[2] == 0x4E && data[3] == 0x47) {
+    if (data.length >= 4 &&
+        data[0] == 0x89 &&
+        data[1] == 0x50 &&
+        data[2] == 0x4E &&
+        data[3] == 0x47) {
       return true;
     }
-    
+
     // JPEG: FF D8
-    if (data.length >= 2 && 
-        data[0] == 0xFF && data[1] == 0xD8) {
+    if (data.length >= 2 && data[0] == 0xFF && data[1] == 0xD8) {
       return true;
     }
-    
+
     // GIF: 47 49 46 38
-    if (data.length >= 4 && 
-        data[0] == 0x47 && data[1] == 0x49 && 
-        data[2] == 0x46 && data[3] == 0x38) {
+    if (data.length >= 4 &&
+        data[0] == 0x47 &&
+        data[1] == 0x49 &&
+        data[2] == 0x46 &&
+        data[3] == 0x38) {
       return true;
     }
-    
+
     // WebP: 52 49 46 46 (RIFF) 然后在第8-11字节是 57 45 42 50 (WEBP)
-    if (data.length >= 12 && 
-        data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
-        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+    if (data.length >= 12 &&
+        data[0] == 0x52 &&
+        data[1] == 0x49 &&
+        data[2] == 0x46 &&
+        data[3] == 0x46 &&
+        data[8] == 0x57 &&
+        data[9] == 0x45 &&
+        data[10] == 0x42 &&
+        data[11] == 0x50) {
       return true;
     }
-    
+
     return false;
   }
 
-    /// 获取图片的MIME类型
+  /// 获取图片的MIME类型
   static String? getImageMimeType(Uint8List data) {
     if (!isValidImageData(data)) return null;
-    
+
     // PNG
-    if (data.length >= 4 && 
-        data[0] == 0x89 && data[1] == 0x50 && 
-        data[2] == 0x4E && data[3] == 0x47) {
+    if (data.length >= 4 &&
+        data[0] == 0x89 &&
+        data[1] == 0x50 &&
+        data[2] == 0x4E &&
+        data[3] == 0x47) {
       return 'image/png';
     }
-    
+
     // JPEG
-    if (data.length >= 2 && 
-        data[0] == 0xFF && data[1] == 0xD8) {
+    if (data.length >= 2 && data[0] == 0xFF && data[1] == 0xD8) {
       return 'image/jpeg';
     }
-    
+
     // GIF
-    if (data.length >= 4 && 
-        data[0] == 0x47 && data[1] == 0x49 && 
-        data[2] == 0x46 && data[3] == 0x38) {
+    if (data.length >= 4 &&
+        data[0] == 0x47 &&
+        data[1] == 0x49 &&
+        data[2] == 0x46 &&
+        data[3] == 0x38) {
       return 'image/gif';
     }
-    
+
     // WebP
-    if (data.length >= 12 && 
-        data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
-        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+    if (data.length >= 12 &&
+        data[0] == 0x52 &&
+        data[1] == 0x49 &&
+        data[2] == 0x46 &&
+        data[3] == 0x46 &&
+        data[8] == 0x57 &&
+        data[9] == 0x45 &&
+        data[10] == 0x42 &&
+        data[11] == 0x50) {
       return 'image/webp';
     }
-    
+
     return null;
   }
 

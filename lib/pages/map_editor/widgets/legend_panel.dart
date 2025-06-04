@@ -92,41 +92,41 @@ class LegendPanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // if (!isPreviewMode)
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 18),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 16),
-                        SizedBox(width: 8),
-                        Text('编辑'),
-                      ],
-                    ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, size: 18),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 16),
+                      SizedBox(width: 8),
+                      Text('编辑'),
+                    ],
                   ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 16),
-                        SizedBox(width: 8),
-                        Text('删除'),
-                      ],
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 16),
+                      SizedBox(width: 8),
+                      Text('删除'),
+                    ],
                   ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'edit':
-                      _showEditLegendGroupDialog(context, legendGroup);
-                      break;
-                    case 'delete':
-                      _showDeleteConfirmDialog(context, legendGroup);
-                      break;
-                  }
-                },
-              ),
+                ),
+              ],
+              onSelected: (value) {
+                switch (value) {
+                  case 'edit':
+                    _showEditLegendGroupDialog(context, legendGroup);
+                    break;
+                  case 'delete':
+                    _showDeleteConfirmDialog(context, legendGroup);
+                    break;
+                }
+              },
+            ),
           ],
         ),
         onTap: () => onLegendGroupTapped?.call(legendGroup),

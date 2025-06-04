@@ -16,40 +16,49 @@ class VfsServiceProvider {
   VfsServiceProvider._internal();
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final VfsDatabaseInitializer _initializer = VfsDatabaseInitializer();
-    /// 初始化服务
+
+  /// 初始化服务
   Future<void> initialize() async {
     // 首先初始化根文件系统
     await _initializer.initializeDefaultDatabase();
-    
+
     // 初始化虚拟文件系统（包括权限系统）
     await _vfs.initialize();
-    
+
     // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
     _vfs.mount('r6box', 'fs');
-    
+
     // 挂载默认的应用数据库
     _vfs.mount('r6box', 'app_data');
     _vfs.mount('r6box', 'user_data');
     _vfs.mount('r6box', 'maps');
     _vfs.mount('r6box', 'legends');
     _vfs.mount('r6box', 'cache');
-    _vfs.mount('r6box', 'temp', mount: const VfsMount(
-      database: 'r6box',
-      collection: 'temp',
-      isReadOnly: false,
-      options: {'autoCleanup': true},
-    ));
+    _vfs.mount(
+      'r6box',
+      'temp',
+      mount: const VfsMount(
+        database: 'r6box',
+        collection: 'temp',
+        isReadOnly: false,
+        options: {'autoCleanup': true},
+      ),
+    );
 
     debugPrint('VFS Service Provider initialized');
   }
 
   /// 为组件注册专用存储空间
   void registerComponent(String componentName, {bool readOnly = false}) {
-    _vfs.mount('r6box', componentName, mount: VfsMount(
-      database: 'r6box',
-      collection: componentName,
-      isReadOnly: readOnly,
-    ));
+    _vfs.mount(
+      'r6box',
+      componentName,
+      mount: VfsMount(
+        database: 'r6box',
+        collection: componentName,
+        isReadOnly: readOnly,
+      ),
+    );
     debugPrint('Registered component storage: $componentName');
   }
 
@@ -78,7 +87,8 @@ class VfsServiceProvider {
     String documentId,
     Map<String, dynamic> document,
   ) async {
-    final path = 'indexeddb://r6box/user_data/$userId/documents/$documentId.json';
+    final path =
+        'indexeddb://r6box/user_data/$userId/documents/$documentId.json';
     await _vfs.writeJsonFile(path, document, prettyPrint: true);
   }
 
@@ -87,7 +97,8 @@ class VfsServiceProvider {
     String userId,
     String documentId,
   ) async {
-    final path = 'indexeddb://r6box/user_data/$userId/documents/$documentId.json';
+    final path =
+        'indexeddb://r6box/user_data/$userId/documents/$documentId.json';
     return await _vfs.readJsonFile(path);
   }
 
@@ -120,7 +131,7 @@ class VfsServiceProvider {
   Future<Uint8List?> loadImageResource(String resourceId) async {
     // 尝试多种可能的扩展名
     final extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-    
+
     for (final ext in extensions) {
       final path = 'indexeddb://r6box/app_data/images/$resourceId$ext';
       if (await _vfs.exists(path)) {
@@ -128,15 +139,12 @@ class VfsServiceProvider {
         return content?.data;
       }
     }
-    
+
     return null;
   }
 
   /// 保存地图数据
-  Future<void> saveMapData(
-    String mapId,
-    Map<String, dynamic> mapData,
-  ) async {
+  Future<void> saveMapData(String mapId, Map<String, dynamic> mapData) async {
     final path = 'indexeddb://r6box/maps/$mapId/data.json';
     await _vfs.writeJsonFile(path, mapData);
   }
@@ -161,7 +169,7 @@ class VfsServiceProvider {
   /// 读取地图图片
   Future<Uint8List?> loadMapImage(String mapId) async {
     final extensions = ['.png', '.jpg', '.jpeg'];
-    
+
     for (final ext in extensions) {
       final path = 'indexeddb://r6box/maps/$mapId/image$ext';
       if (await _vfs.exists(path)) {
@@ -169,7 +177,7 @@ class VfsServiceProvider {
         return content?.data;
       }
     }
-    
+
     return null;
   }
 
@@ -184,7 +192,7 @@ class VfsServiceProvider {
       'cachedAt': DateTime.now().toIso8601String(),
       'ttl': ttl?.inMilliseconds,
     };
-    
+
     final path = 'indexeddb://r6box/cache/$cacheKey.json';
     await _vfs.writeJsonFile(path, cacheData);
   }
@@ -193,22 +201,22 @@ class VfsServiceProvider {
   Future<Map<String, dynamic>?> getCachedData(String cacheKey) async {
     final path = 'indexeddb://r6box/cache/$cacheKey.json';
     final cacheData = await _vfs.readJsonFile(path);
-    
+
     if (cacheData == null) return null;
-    
+
     // 检查TTL
     final ttl = cacheData['ttl'] as int?;
     if (ttl != null) {
       final cachedAt = DateTime.parse(cacheData['cachedAt'] as String);
       final expiredAt = cachedAt.add(Duration(milliseconds: ttl));
-      
+
       if (DateTime.now().isAfter(expiredAt)) {
         // 缓存已过期，删除并返回null
         await _vfs.delete(path);
         return null;
       }
     }
-    
+
     return cacheData['data'] as Map<String, dynamic>?;
   }
 
@@ -218,19 +226,19 @@ class VfsServiceProvider {
     try {
       final files = await _vfs.listDirectory(path);
       final now = DateTime.now();
-      
+
       for (final file in files) {
         if (file.isDirectory) continue;
-        
+
         try {
           final cacheData = await _vfs.readJsonFile(file.path);
           if (cacheData == null) continue;
-          
+
           final ttl = cacheData['ttl'] as int?;
           if (ttl != null) {
             final cachedAt = DateTime.parse(cacheData['cachedAt'] as String);
             final expiredAt = cachedAt.add(Duration(milliseconds: ttl));
-            
+
             if (now.isAfter(expiredAt)) {
               await _vfs.delete(file.path);
               debugPrint('Cleaned up expired cache: ${file.name}');
@@ -247,7 +255,14 @@ class VfsServiceProvider {
 
   /// 获取存储统计信息
   Future<Map<String, dynamic>> getStorageStats() async {
-    final collections = ['app_data', 'user_data', 'maps', 'legends', 'cache', 'temp'];
+    final collections = [
+      'app_data',
+      'user_data',
+      'maps',
+      'legends',
+      'cache',
+      'temp',
+    ];
     final stats = <String, dynamic>{};
     int totalSize = 0;
     int totalFiles = 0;
@@ -277,6 +292,7 @@ class VfsServiceProvider {
 
     return stats;
   }
+
   /// 搜索文件
   Future<List<VfsFileInfo>> searchFiles(
     String collection,
@@ -308,8 +324,11 @@ class VfsServiceProvider {
   }
 
   /// 列出目录内容
-  Future<List<VfsFileInfo>> listFiles(String collection, [String? subPath]) async {
-    final path = subPath != null 
+  Future<List<VfsFileInfo>> listFiles(
+    String collection, [
+    String? subPath,
+  ]) async {
+    final path = subPath != null
         ? 'indexeddb://r6box/$collection/$subPath'
         : 'indexeddb://r6box/$collection';
     return await _vfs.listDirectory(path);
@@ -353,7 +372,8 @@ class VfsServiceProvider {
 
   /// 获取MIME类型
   String getMimeType(String filePath) {
-    return _vfs.getMimeType('indexeddb://r6box/temp/$filePath') ?? 'application/octet-stream';
+    return _vfs.getMimeType('indexeddb://r6box/temp/$filePath') ??
+        'application/octet-stream';
   }
 
   /// 从MIME类型获取文件扩展名
@@ -378,7 +398,10 @@ class VfsServiceProvider {
   VirtualFileSystem get vfs => _vfs;
 
   /// 获取文件权限
-  Future<VfsPermissionMask> getFilePermissions(String collection, String filePath) async {
+  Future<VfsPermissionMask> getFilePermissions(
+    String collection,
+    String filePath,
+  ) async {
     final path = 'indexeddb://r6box/$collection/$filePath';
     return await _vfs.getPermissions(path);
   }
@@ -413,11 +436,8 @@ class VfsServiceProvider {
     VfsInheritancePolicy? inheritancePolicy,
   }) async {
     final path = 'indexeddb://r6box/$collection/$filePath';
-    final content = VfsFileContent(
-      data: data,
-      mimeType: mimeType,
-    );
-    
+    final content = VfsFileContent(data: data, mimeType: mimeType);
+
     await _vfs.createFileWithInheritance(
       path,
       content,
@@ -436,8 +456,11 @@ class VfsServiceProvider {
   }
 
   /// 列出目录内容（带权限过滤）
-  Future<List<VfsFileInfo>> listFilesWithPermissions(String collection, [String? subPath]) async {
-    final path = subPath != null 
+  Future<List<VfsFileInfo>> listFilesWithPermissions(
+    String collection, [
+    String? subPath,
+  ]) async {
+    final path = subPath != null
         ? 'indexeddb://r6box/$collection/$subPath'
         : 'indexeddb://r6box/$collection';
     return await _vfs.listDirectoryWithPermissions(path);

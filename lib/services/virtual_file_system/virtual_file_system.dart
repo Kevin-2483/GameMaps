@@ -24,7 +24,8 @@ class VirtualFileSystem {
   /// 挂载虚拟文件系统
   void mount(String database, String collection, {VfsMount? mount}) {
     final key = '$database/$collection';
-    _mounts[key] = mount ?? VfsMount(database: database, collection: collection);
+    _mounts[key] =
+        mount ?? VfsMount(database: database, collection: collection);
   }
 
   /// 卸载虚拟文件系统
@@ -55,6 +56,7 @@ class VirtualFileSystem {
     _validatePath(path);
     return await _storage.exists(path);
   }
+
   /// 读取文件内容
   Future<VfsFileContent?> readFile(String path) async {
     _validatePath(path);
@@ -90,20 +92,25 @@ class VirtualFileSystem {
       throw VfsException('Failed to parse JSON file: $e', path: path);
     }
   }
+
   /// 写入文件内容
   Future<void> writeFile(
-    String path, 
+    String path,
     VfsFileContent content, {
     bool createDirectories = true,
   }) async {
     _validatePath(path);
     await _validateWritePermission(path);
-    await _storage.writeFile(path, content, createDirectories: createDirectories);
+    await _storage.writeFile(
+      path,
+      content,
+      createDirectories: createDirectories,
+    );
   }
 
   /// 写入文本文件
   Future<void> writeTextFile(
-    String path, 
+    String path,
     String content, {
     String encoding = 'utf-8',
     String? mimeType,
@@ -132,7 +139,7 @@ class VirtualFileSystem {
 
   /// 写入 JSON 文件
   Future<void> writeJsonFile(
-    String path, 
+    String path,
     Map<String, dynamic> data, {
     bool prettyPrint = false,
     Map<String, dynamic>? metadata,
@@ -151,7 +158,7 @@ class VirtualFileSystem {
     }
 
     await writeTextFile(
-      path, 
+      path,
       jsonString,
       mimeType: 'application/json',
       metadata: metadata,
@@ -161,7 +168,7 @@ class VirtualFileSystem {
 
   /// 写入二进制文件
   Future<void> writeBinaryFile(
-    String path, 
+    String path,
     Uint8List data, {
     String? mimeType,
     Map<String, dynamic>? metadata,
@@ -175,12 +182,16 @@ class VirtualFileSystem {
 
     await writeFile(path, fileContent, createDirectories: createDirectories);
   }
+
   /// 创建目录
-  Future<void> createDirectory(String path, {VfsInheritancePolicy? inheritancePolicy}) async {
+  Future<void> createDirectory(
+    String path, {
+    VfsInheritancePolicy? inheritancePolicy,
+  }) async {
     _validatePath(path);
     await _validateWritePermission(path);
     await _storage.createDirectory(path);
-    
+
     // 设置目录权限
     final policy = inheritancePolicy ?? VfsInheritancePolicy.defaultPolicy;
     final permissions = await _permissionManager.applyInheritance(path, policy);
@@ -193,6 +204,7 @@ class VirtualFileSystem {
     await _validateDeletePermission(path);
     return await _storage.delete(path, recursive: recursive);
   }
+
   /// 移动/重命名文件或目录
   Future<bool> move(String fromPath, String toPath) async {
     _validatePath(fromPath);
@@ -222,28 +234,33 @@ class VirtualFileSystem {
     _validatePath(path);
     return await _storage.getFileInfo(path);
   }
+
   /// 搜索文件
   Future<List<VfsFileInfo>> search(
-    String database, 
-    String collection, 
+    String database,
+    String collection,
     String pattern, {
     bool caseSensitive = false,
     bool includeDirectories = true,
     int? maxResults,
   }) async {
     if (!isMounted(database, collection)) {
-      throw VfsException('Database/collection not mounted: $database/$collection');
+      throw VfsException(
+        'Database/collection not mounted: $database/$collection',
+      );
     }
 
-    debugPrint('🔍 VFS: search called with pattern: "$pattern", caseSensitive: $caseSensitive, includeDirectories: $includeDirectories');
+    debugPrint(
+      '🔍 VFS: search called with pattern: "$pattern", caseSensitive: $caseSensitive, includeDirectories: $includeDirectories',
+    );
 
     // 简单的文件名匹配搜索
     final rootPath = VfsProtocol.buildPath(database, collection, '');
     final allFiles = await _getAllFilesRecursive(rootPath);
-    
+
     final regexPattern = pattern.replaceAll('*', '.*').replaceAll('?', '.');
     final regex = RegExp(regexPattern, caseSensitive: caseSensitive);
-    
+
     debugPrint('🔍 VFS: regex pattern: "$regexPattern"');
     debugPrint('🔍 VFS: found ${allFiles.length} total files');
 
@@ -253,12 +270,17 @@ class VirtualFileSystem {
         return false;
       }
       final matches = regex.hasMatch(file.name);
-      debugPrint('🔍 VFS: testing "${file.name}" against pattern - matches: $matches');
-      return matches;    }).toList();
+      debugPrint(
+        '🔍 VFS: testing "${file.name}" against pattern - matches: $matches',
+      );
+      return matches;
+    }).toList();
 
     debugPrint('🔍 VFS: search found ${results.length} matching files');
     for (final result in results) {
-      debugPrint('🔍 VFS: result: ${result.name} (${result.isDirectory ? 'DIR' : 'FILE'})');
+      debugPrint(
+        '🔍 VFS: result: ${result.name} (${result.isDirectory ? 'DIR' : 'FILE'})',
+      );
     }
 
     if (maxResults != null && results.length > maxResults) {
@@ -269,22 +291,30 @@ class VirtualFileSystem {
   }
 
   /// 获取存储统计信息
-  Future<Map<String, dynamic>> getStorageStats(String database, String collection) async {
+  Future<Map<String, dynamic>> getStorageStats(
+    String database,
+    String collection,
+  ) async {
     if (!isMounted(database, collection)) {
-      throw VfsException('Database/collection not mounted: $database/$collection');
+      throw VfsException(
+        'Database/collection not mounted: $database/$collection',
+      );
     }
 
     return await _storage.getStorageStats(database, collection);
   }
+
   /// 清空集合
   Future<void> clearCollection(String database, String collection) async {
     if (!isMounted(database, collection)) {
-      throw VfsException('Database/collection not mounted: $database/$collection');
+      throw VfsException(
+        'Database/collection not mounted: $database/$collection',
+      );
     }
 
     _validateWritePermission(VfsProtocol.buildPath(database, collection, ''));
     await _storage.clearCollection(database, collection);
-    
+
     // 清除权限缓存，确保下次访问时重新加载权限
     _permissionManager.clearCache();
   }
@@ -323,10 +353,11 @@ class VirtualFileSystem {
 
     return mimeTypes[extension] ?? 'application/octet-stream';
   }
+
   /// 递归获取所有文件
   Future<List<VfsFileInfo>> _getAllFilesRecursive(String path) async {
     debugPrint('🔍 VFS: _getAllFilesRecursive called with path: $path');
-    
+
     try {
       // 直接使用存储服务的递归查询方法，不受深度限制
       final result = await _storage.getAllFilesRecursive(path);
@@ -352,6 +383,7 @@ class VirtualFileSystem {
       );
     }
   }
+
   /// 验证写入权限
   Future<void> _validateWritePermission(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
@@ -359,13 +391,20 @@ class VirtualFileSystem {
 
     final mount = getMount(vfsPath.database, vfsPath.collection);
     if (mount != null && mount.isReadOnly) {
-      throw VfsException('Write operation not allowed on read-only mount', path: path);
+      throw VfsException(
+        'Write operation not allowed on read-only mount',
+        path: path,
+      );
     }
 
     // 检查文件权限
     final canWrite = await _permissionManager.canWrite(path);
     if (!canWrite) {
-      throw VfsException('Write permission denied', path: path, code: 'PERMISSION_DENIED');
+      throw VfsException(
+        'Write permission denied',
+        path: path,
+        code: 'PERMISSION_DENIED',
+      );
     }
   }
 
@@ -373,7 +412,11 @@ class VirtualFileSystem {
   Future<void> _validateReadPermission(String path) async {
     final canRead = await _permissionManager.canRead(path);
     if (!canRead) {
-      throw VfsException('Read permission denied', path: path, code: 'PERMISSION_DENIED');
+      throw VfsException(
+        'Read permission denied',
+        path: path,
+        code: 'PERMISSION_DENIED',
+      );
     }
   }
 
@@ -381,7 +424,11 @@ class VirtualFileSystem {
   Future<void> _validateDeletePermission(String path) async {
     final canDelete = await _permissionManager.canDelete(path);
     if (!canDelete) {
-      throw VfsException('Delete permission denied', path: path, code: 'PERMISSION_DENIED');
+      throw VfsException(
+        'Delete permission denied',
+        path: path,
+        code: 'PERMISSION_DENIED',
+      );
     }
   }
 
@@ -391,7 +438,10 @@ class VirtualFileSystem {
   }
 
   /// 设置文件权限
-  Future<void> setPermissions(String path, VfsPermissionMask permissions) async {
+  Future<void> setPermissions(
+    String path,
+    VfsPermissionMask permissions,
+  ) async {
     _validatePath(path);
     await _permissionManager.setPermissions(path, permissions);
   }
@@ -402,17 +452,22 @@ class VirtualFileSystem {
     int permission, {
     VfsPermissionType type = VfsPermissionType.user,
   }) async {
-    return await _permissionManager.checkPermission(path, permission, type: type);
+    return await _permissionManager.checkPermission(
+      path,
+      permission,
+      type: type,
+    );
   }
 
   /// 列出目录内容（带权限过滤）
   Future<List<VfsFileInfo>> listDirectoryWithPermissions(String path) async {
     _validatePath(path);
     await _validateReadPermission(path);
-    
+
     final files = await _storage.listDirectory(path);
     return await _permissionManager.filterByPermissions(files);
   }
+
   /// 创建文件时应用权限继承
   Future<void> createFileWithInheritance(
     String path,
@@ -421,25 +476,36 @@ class VirtualFileSystem {
     bool createDirectories = true,
   }) async {
     _validatePath(path);
-    
+
     final policy = inheritancePolicy ?? VfsInheritancePolicy.defaultPolicy;
-    
+
     // 对于权限继承，我们需要特殊处理：
     // 如果使用继承策略，先应用继承权限，再允许创建文件
     if (policy.inheritFromParent) {
       // 应用权限继承
-      final permissions = await _permissionManager.applyInheritance(path, policy);
-      
+      final permissions = await _permissionManager.applyInheritance(
+        path,
+        policy,
+      );
+
       // 对于继承策略，我们跳过普通的写权限检查，直接创建文件
-      await _storage.writeFile(path, content, createDirectories: createDirectories);
-      
+      await _storage.writeFile(
+        path,
+        content,
+        createDirectories: createDirectories,
+      );
+
       // 设置继承的权限
       await _permissionManager.setPermissions(path, permissions);
     } else {
       // 普通的文件创建，需要检查写权限
       await _validateWritePermission(path);
-      await _storage.writeFile(path, content, createDirectories: createDirectories);
-      
+      await _storage.writeFile(
+        path,
+        content,
+        createDirectories: createDirectories,
+      );
+
       // 设置默认权限
       await _permissionManager.setPermissions(path, policy.defaultMask);
     }
@@ -476,8 +542,8 @@ class VfsMount {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is VfsMount &&
-           other.database == database &&
-           other.collection == collection;
+        other.database == database &&
+        other.collection == collection;
   }
 
   @override

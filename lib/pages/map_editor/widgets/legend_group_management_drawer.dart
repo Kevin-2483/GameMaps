@@ -252,11 +252,11 @@ class _LegendGroupManagementDrawerState
                       ),
                     ),
                     // if (!widget.isPreviewMode)
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        onPressed: _showEditNameDialog,
-                        tooltip: '编辑名称',
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 18),
+                      onPressed: _showEditNameDialog,
+                      tooltip: '编辑名称',
+                    ),
                     IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: widget.onClose,

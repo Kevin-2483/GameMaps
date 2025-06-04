@@ -229,7 +229,8 @@ class VfsImportExportService {
     required String outputPath,
     VfsExportOptions? options,
   }) async {
-    try {      final vfsExportData = await exportData(options: options);
+    try {
+      final vfsExportData = await exportData(options: options);
       final json = jsonEncode(vfsExportData.toJson());
 
       final file = File(outputPath);
@@ -324,10 +325,12 @@ class VfsImportExportService {
     final exportFiles = <VfsFileExport>[];
 
     for (final fileInfo in files) {
-      final filePath = 'indexeddb://$databaseName/$collectionName${fileInfo.path}';
+      final filePath =
+          'indexeddb://$databaseName/$collectionName${fileInfo.path}';
 
       String? contentBase64;
-      if (options.includeFileContent && !fileInfo.isDirectory) {        try {
+      if (options.includeFileContent && !fileInfo.isDirectory) {
+        try {
           final content = await _storageService.readFile(filePath);
           if (content != null) {
             contentBase64 = base64Encode(content.data);

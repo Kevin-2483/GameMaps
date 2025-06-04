@@ -268,7 +268,8 @@ class LegendDatabaseService {
     } catch (e) {
       debugPrint('导入图例数据库失败: $e');
       rethrow;
-    }  }
+    }
+  }
 
   /// 关闭数据库连接
   Future<void> close() async {

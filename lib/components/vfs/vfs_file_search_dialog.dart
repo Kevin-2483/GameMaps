@@ -20,6 +20,7 @@ class VfsFileSearchDialog extends StatefulWidget {
 
   @override
   State<VfsFileSearchDialog> createState() => _VfsFileSearchDialogState();
+
   /// 显示文件搜索对话框
   static Future<VfsFileInfo?> show(
     BuildContext context,
@@ -83,7 +84,9 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
 
     setState(() {
       _isSearching = true;
-    });    try {      // 使用专用的搜索方法而不是listFiles，这样可以递归搜索所有文件
+    });
+    try {
+      // 使用专用的搜索方法而不是listFiles，这样可以递归搜索所有文件
       final pattern = '*$query*'; // 使用通配符模式
       final allResults = await widget.vfsService.searchFiles(
         widget.collection,
@@ -97,20 +100,25 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
         // 类型过滤
         if (file.isDirectory && !_includeFolders) return false;
         if (!file.isDirectory && !_includeFiles) return false;
-        
+
         // 如果设置了只在当前路径搜索，则过滤路径
         if (_searchInCurrentPath && widget.currentPath.isNotEmpty) {
-          final expectedPrefix = widget.currentPath.endsWith('/') 
-              ? widget.currentPath 
+          final expectedPrefix = widget.currentPath.endsWith('/')
+              ? widget.currentPath
               : '${widget.currentPath}/';
-          final filePath = file.path.replaceFirst('indexeddb://${widget.database}/${widget.collection}/', '');
-          if (!filePath.startsWith(expectedPrefix) && filePath != widget.currentPath) {
+          final filePath = file.path.replaceFirst(
+            'indexeddb://${widget.database}/${widget.collection}/',
+            '',
+          );
+          if (!filePath.startsWith(expectedPrefix) &&
+              filePath != widget.currentPath) {
             return false;
           }
         }
-        
+
         return true;
-      }).toList();      if (mounted) {
+      }).toList();
+      if (mounted) {
         setState(() {
           _searchResults = filteredResults;
           _isSearching = false;
@@ -122,13 +130,14 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
           _searchResults.clear();
           _isSearching = false;
         });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('搜索失败: $e')),
-        );
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('搜索失败: $e')));
       }
     }
   }
+
   void _selectFile(VfsFileInfo file) {
     // 返回文件信息以便文件管理器进行导航
     Navigator.of(context).pop(file);
@@ -158,10 +167,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.search,
-                    color: colorScheme.primary,
-                  ),
+                  Icon(Icons.search, color: colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -179,7 +185,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                 ],
               ),
             ),
-            
+
             // 搜索区域
             Padding(
               padding: const EdgeInsets.all(16),
@@ -199,26 +205,28 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                               height: 20,
                               child: Padding(
                                 padding: EdgeInsets.all(12),
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             )
                           : _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                  },
-                                )
-                              : null,
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                              },
+                            )
+                          : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onSubmitted: (_) => _performSearch(),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // 搜索选项
                   Wrap(
                     spacing: 16,
@@ -289,19 +297,21 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                 ],
               ),
             ),
-            
+
             // 搜索结果
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                  border: Border.all(
+                    color: colorScheme.outline.withOpacity(0.3),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: _buildSearchResults(),
               ),
             ),
-            
+
             // 底部按钮
             Container(
               padding: const EdgeInsets.all(16),
@@ -325,7 +335,8 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: const Text('取消'),
                       ),
-                      const SizedBox(width: 8),                      FilledButton(
+                      const SizedBox(width: 8),
+                      FilledButton(
                         onPressed: _searchController.text.isNotEmpty
                             ? () => Navigator.of(context).pop(null)
                             : null,
@@ -344,20 +355,14 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
 
   Widget _buildSearchResults() {
     if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_searchResults.isEmpty) {
       if (_searchController.text.isEmpty) {
-        return const Center(
-          child: Text('输入关键词开始搜索'),
-        );
+        return const Center(child: Text('输入关键词开始搜索'));
       } else {
-        return const Center(
-          child: Text('未找到匹配的文件'),
-        );
+        return const Center(child: Text('未找到匹配的文件'));
       }
     }
 

@@ -116,7 +116,8 @@ class VfsStorageService {
     final db = await database;
     final result = await db.query(
       _filesTableName,
-      where: 'database_name = ? AND collection_name = ? AND file_path = ? AND is_directory = 0',
+      where:
+          'database_name = ? AND collection_name = ? AND file_path = ? AND is_directory = 0',
       whereArgs: [vfsPath.database, vfsPath.collection, vfsPath.path],
       limit: 1,
     );
@@ -127,7 +128,7 @@ class VfsStorageService {
 
     final row = result.first;
     final contentData = row['content_data'] as Uint8List?;
-    
+
     if (contentData == null) {
       throw VfsException('File content is null', path: path);
     }
@@ -159,23 +160,19 @@ class VfsStorageService {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.insert(
-      _filesTableName,
-      {
-        'database_name': vfsPath.database,
-        'collection_name': vfsPath.collection,
-        'file_path': vfsPath.path,
-        'file_name': vfsPath.fileName ?? '',
-        'is_directory': 1,
-        'content_data': null,
-        'mime_type': null,
-        'file_size': 0,
-        'created_at': now,
-        'modified_at': now,
-        'metadata_json': null,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert(_filesTableName, {
+      'database_name': vfsPath.database,
+      'collection_name': vfsPath.collection,
+      'file_path': vfsPath.path,
+      'file_name': vfsPath.fileName ?? '',
+      'is_directory': 1,
+      'content_data': null,
+      'mime_type': null,
+      'file_size': 0,
+      'created_at': now,
+      'modified_at': now,
+      'metadata_json': null,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   /// 删除文件或目录
@@ -186,7 +183,7 @@ class VfsStorageService {
     }
 
     final db = await database;
-    
+
     if (recursive) {
       // 递归删除：删除所有以该路径开头的文件和目录
       final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
@@ -197,10 +194,10 @@ class VfsStorageService {
           (file_path = ? OR file_path LIKE ?)
         ''',
         whereArgs: [
-          vfsPath.database, 
-          vfsPath.collection, 
+          vfsPath.database,
+          vfsPath.collection,
           vfsPath.path,
-          '$pathPrefix%'
+          '$pathPrefix%',
         ],
       );
       return result > 0;
@@ -214,6 +211,7 @@ class VfsStorageService {
       return result > 0;
     }
   }
+
   /// 列出目录内容
   Future<List<VfsFileInfo>> listDirectory(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
@@ -223,37 +221,48 @@ class VfsStorageService {
 
     final db = await database;
     final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
-    
+
     debugPrint('🗄️ Storage: listDirectory called with path: $path');
-    debugPrint('🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}');
+    debugPrint(
+      '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
+    );
     debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
-    
+
     // 查找直接子项（不包含深层嵌套）
     // 计算期望的斜杠数量：路径前缀的斜杠数
     final expectedSlashCount = pathPrefix.split('/').length - 1;
-    
-    final result = await db.rawQuery('''
+
+    final result = await db.rawQuery(
+      '''
       SELECT * FROM $_filesTableName 
       WHERE database_name = ? AND collection_name = ? 
       AND file_path LIKE ? 
       AND file_path != ?
       AND (LENGTH(file_path) - LENGTH(REPLACE(file_path, '/', ''))) = ?
       ORDER BY is_directory DESC, file_name ASC
-    ''', [
-      vfsPath.database,
-      vfsPath.collection,
-      '$pathPrefix%',
-      vfsPath.path,      expectedSlashCount,
-    ]);
+    ''',
+      [
+        vfsPath.database,
+        vfsPath.collection,
+        '$pathPrefix%',
+        vfsPath.path,
+        expectedSlashCount,
+      ],
+    );
 
     debugPrint('🗄️ Storage: SQL query returned ${result.length} rows');
     for (final row in result) {
-      debugPrint('🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}');
+      debugPrint(
+        '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
+      );
     }
-    debugPrint('🗄️ Storage: converted to ${result.length} VfsFileInfo objects');
+    debugPrint(
+      '🗄️ Storage: converted to ${result.length} VfsFileInfo objects',
+    );
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
+
   /// 获取文件信息
   Future<VfsFileInfo?> getFileInfo(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
@@ -285,28 +294,32 @@ class VfsStorageService {
 
     final db = await database;
     final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
-    
+
     debugPrint('🗄️ Storage: getAllFilesRecursive called with path: $path');
-    debugPrint('🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}');
+    debugPrint(
+      '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
+    );
     debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
-    
+
     // 查找所有以路径前缀开头的文件（包括深层嵌套），但不包括路径本身
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT * FROM $_filesTableName 
       WHERE database_name = ? AND collection_name = ? 
       AND file_path LIKE ? 
       AND file_path != ?
       ORDER BY is_directory DESC, file_name ASC
-    ''', [
-      vfsPath.database,
-      vfsPath.collection,
-      '$pathPrefix%',
-      vfsPath.path,
-    ]);
+    ''',
+      [vfsPath.database, vfsPath.collection, '$pathPrefix%', vfsPath.path],
+    );
 
-    debugPrint('🗄️ Storage: getAllFilesRecursive SQL query returned ${result.length} rows');
+    debugPrint(
+      '🗄️ Storage: getAllFilesRecursive SQL query returned ${result.length} rows',
+    );
     for (final row in result) {
-      debugPrint('🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}');
+      debugPrint(
+        '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
+      );
     }
 
     return result.map((row) => _rowToFileInfo(row)).toList();
@@ -316,14 +329,16 @@ class VfsStorageService {
   Future<bool> move(String fromPath, String toPath) async {
     final fromVfsPath = VfsProtocol.parsePath(fromPath);
     final toVfsPath = VfsProtocol.parsePath(toPath);
-    
+
     if (fromVfsPath == null || toVfsPath == null) {
       throw VfsException('Invalid path format');
     }
 
     if (fromVfsPath.database != toVfsPath.database ||
         fromVfsPath.collection != toVfsPath.collection) {
-      throw VfsException('Cannot move between different databases or collections');
+      throw VfsException(
+        'Cannot move between different databases or collections',
+      );
     }
 
     final db = await database;
@@ -334,7 +349,11 @@ class VfsStorageService {
       final sourceExists = await txn.query(
         _filesTableName,
         where: 'database_name = ? AND collection_name = ? AND file_path = ?',
-        whereArgs: [fromVfsPath.database, fromVfsPath.collection, fromVfsPath.path],
+        whereArgs: [
+          fromVfsPath.database,
+          fromVfsPath.collection,
+          fromVfsPath.path,
+        ],
         limit: 1,
       );
 
@@ -346,10 +365,13 @@ class VfsStorageService {
 
       if (isDirectory) {
         // 移动目录：更新所有子项的路径
-        final fromPrefix = fromVfsPath.path.isEmpty ? '' : '${fromVfsPath.path}/';
+        final fromPrefix = fromVfsPath.path.isEmpty
+            ? ''
+            : '${fromVfsPath.path}/';
         final toPrefix = toVfsPath.path.isEmpty ? '' : '${toVfsPath.path}/';
 
-        await txn.rawUpdate('''
+        await txn.rawUpdate(
+          '''
           UPDATE $_filesTableName 
           SET file_path = REPLACE(file_path, ?, ?),
               file_name = CASE 
@@ -359,17 +381,19 @@ class VfsStorageService {
               modified_at = ?
           WHERE database_name = ? AND collection_name = ? 
           AND (file_path = ? OR file_path LIKE ?)
-        ''', [
-          fromPrefix,
-          toPrefix,
-          fromVfsPath.path,
-          toVfsPath.fileName ?? '',
-          now,
-          fromVfsPath.database,
-          fromVfsPath.collection,
-          fromVfsPath.path,
-          '$fromPrefix%',
-        ]);
+        ''',
+          [
+            fromPrefix,
+            toPrefix,
+            fromVfsPath.path,
+            toVfsPath.fileName ?? '',
+            now,
+            fromVfsPath.database,
+            fromVfsPath.collection,
+            fromVfsPath.path,
+            '$fromPrefix%',
+          ],
+        );
       } else {
         // 移动文件
         await txn.update(
@@ -380,7 +404,11 @@ class VfsStorageService {
             'modified_at': now,
           },
           where: 'database_name = ? AND collection_name = ? AND file_path = ?',
-          whereArgs: [fromVfsPath.database, fromVfsPath.collection, fromVfsPath.path],
+          whereArgs: [
+            fromVfsPath.database,
+            fromVfsPath.collection,
+            fromVfsPath.path,
+          ],
         );
       }
 
@@ -392,7 +420,7 @@ class VfsStorageService {
   Future<bool> copy(String fromPath, String toPath) async {
     final fromVfsPath = VfsProtocol.parsePath(fromPath);
     final toVfsPath = VfsProtocol.parsePath(toPath);
-    
+
     if (fromVfsPath == null || toVfsPath == null) {
       throw VfsException('Invalid path format');
     }
@@ -409,10 +437,10 @@ class VfsStorageService {
           (file_path = ? OR file_path LIKE ?)
         ''',
         whereArgs: [
-          fromVfsPath.database, 
-          fromVfsPath.collection, 
+          fromVfsPath.database,
+          fromVfsPath.collection,
           fromVfsPath.path,
-          '${fromVfsPath.path}/%'
+          '${fromVfsPath.path}/%',
         ],
       );
 
@@ -422,29 +450,25 @@ class VfsStorageService {
 
       for (final item in sourceItems) {
         final oldPath = item['file_path'] as String;
-        final newPath = oldPath == fromVfsPath.path 
-            ? toVfsPath.path 
+        final newPath = oldPath == fromVfsPath.path
+            ? toVfsPath.path
             : oldPath.replaceFirst(fromVfsPath.path, toVfsPath.path);
 
         final newFileName = newPath.split('/').last;
 
-        await txn.insert(
-          _filesTableName,
-          {
-            'database_name': toVfsPath.database,
-            'collection_name': toVfsPath.collection,
-            'file_path': newPath,
-            'file_name': newFileName,
-            'is_directory': item['is_directory'],
-            'content_data': item['content_data'],
-            'mime_type': item['mime_type'],
-            'file_size': item['file_size'],
-            'created_at': now,
-            'modified_at': now,
-            'metadata_json': item['metadata_json'],
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert(_filesTableName, {
+          'database_name': toVfsPath.database,
+          'collection_name': toVfsPath.collection,
+          'file_path': newPath,
+          'file_name': newFileName,
+          'is_directory': item['is_directory'],
+          'content_data': item['content_data'],
+          'mime_type': item['mime_type'],
+          'file_size': item['file_size'],
+          'created_at': now,
+          'modified_at': now,
+          'metadata_json': item['metadata_json'],
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       return true;
@@ -452,10 +476,14 @@ class VfsStorageService {
   }
 
   /// 获取数据库统计信息
-  Future<Map<String, dynamic>> getStorageStats(String database, String collection) async {
+  Future<Map<String, dynamic>> getStorageStats(
+    String database,
+    String collection,
+  ) async {
     final db = await this.database;
-    
-    final result = await db.rawQuery('''
+
+    final result = await db.rawQuery(
+      '''
       SELECT 
         COUNT(*) as total_files,
         SUM(CASE WHEN is_directory = 0 THEN 1 ELSE 0 END) as file_count,
@@ -464,7 +492,9 @@ class VfsStorageService {
         MAX(modified_at) as last_modified
       FROM $_filesTableName 
       WHERE database_name = ? AND collection_name = ?
-    ''', [database, collection]);
+    ''',
+      [database, collection],
+    );
 
     final row = result.first;
     return {
@@ -472,11 +502,12 @@ class VfsStorageService {
       'fileCount': row['file_count'] as int,
       'directoryCount': row['directory_count'] as int,
       'totalSize': row['total_size'] as int? ?? 0,
-      'lastModified': row['last_modified'] != null 
+      'lastModified': row['last_modified'] != null
           ? DateTime.fromMillisecondsSinceEpoch(row['last_modified'] as int)
           : null,
     };
   }
+
   /// 清空指定数据库和集合的所有数据
   Future<void> clearCollection(String database, String collection) async {
     final db = await this.database;
@@ -506,23 +537,19 @@ class VfsStorageService {
       final dirSegments = vfsPath.segments.sublist(0, i + 1);
       final dirPath = dirSegments.join('/');
 
-      await db.insert(
-        _filesTableName,
-        {
-          'database_name': vfsPath.database,
-          'collection_name': vfsPath.collection,
-          'file_path': dirPath,
-          'file_name': dirSegments.last,
-          'is_directory': 1,
-          'content_data': null,
-          'mime_type': null,
-          'file_size': 0,
-          'created_at': now,
-          'modified_at': now,
-          'metadata_json': null,
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      await db.insert(_filesTableName, {
+        'database_name': vfsPath.database,
+        'collection_name': vfsPath.collection,
+        'file_path': dirPath,
+        'file_name': dirSegments.last,
+        'is_directory': 1,
+        'content_data': null,
+        'mime_type': null,
+        'file_size': 0,
+        'created_at': now,
+        'modified_at': now,
+        'metadata_json': null,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -548,7 +575,9 @@ class VfsStorageService {
       isDirectory: (row['is_directory'] as int) == 1,
       size: row['file_size'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int),
-      modifiedAt: DateTime.fromMillisecondsSinceEpoch(row['modified_at'] as int),
+      modifiedAt: DateTime.fromMillisecondsSinceEpoch(
+        row['modified_at'] as int,
+      ),
       mimeType: row['mime_type'] as String?,
       metadata: metadata,
     );
@@ -593,7 +622,7 @@ class VfsStorageService {
       where: 'database_name = ?',
       whereArgs: [databaseName],
     );
-    
+
     final metadata = <String, String>{};
     for (final row in result) {
       metadata[row['key'] as String] = row['value'] as String;
@@ -602,14 +631,17 @@ class VfsStorageService {
   }
 
   /// 获取集合元数据
-  Future<Map<String, String>> getCollectionMetadata(String databaseName, String collectionName) async {
+  Future<Map<String, String>> getCollectionMetadata(
+    String databaseName,
+    String collectionName,
+  ) async {
     final db = await database;
     final result = await db.query(
       _metadataTableName,
       where: 'database_name = ? AND collection_name = ?',
       whereArgs: [databaseName, collectionName],
     );
-    
+
     final metadata = <String, String>{};
     for (final row in result) {
       metadata[row['key'] as String] = row['value'] as String;
@@ -618,26 +650,32 @@ class VfsStorageService {
   }
 
   /// 设置元数据
-  Future<void> setMetadata(String databaseName, String key, String value, {String? collectionName}) async {
+  Future<void> setMetadata(
+    String databaseName,
+    String key,
+    String value, {
+    String? collectionName,
+  }) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
-    
-    await db.insert(
-      _metadataTableName,
-      {
-        'database_name': databaseName,
-        'collection_name': collectionName ?? '',
-        'key': key,
-        'value': value,
-        'created_at': now,
-        'updated_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+
+    await db.insert(_metadataTableName, {
+      'database_name': databaseName,
+      'collection_name': collectionName ?? '',
+      'key': key,
+      'value': value,
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 设置集合元数据
-  Future<void> setCollectionMetadata(String databaseName, String collectionName, String key, String value) async {
+  Future<void> setCollectionMetadata(
+    String databaseName,
+    String collectionName,
+    String key,
+    String value,
+  ) async {
     await setMetadata(databaseName, key, value, collectionName: collectionName);
   }
 
@@ -675,7 +713,7 @@ class VfsStorageService {
 
   /// 重载写入文件方法以支持Uint8List
   Future<void> writeFile(
-    String path, 
+    String path,
     dynamic content, {
     bool createDirectories = true,
     Map<String, dynamic>? metadata,
@@ -691,7 +729,7 @@ class VfsStorageService {
 
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
-    
+
     Uint8List? data;
     String? mimeType;
     int size = 0;
@@ -717,22 +755,18 @@ class VfsStorageService {
       }
     }
 
-    await db.insert(
-      _filesTableName,
-      {
-        'database_name': vfsPath.database,
-        'collection_name': vfsPath.collection,
-        'file_path': vfsPath.path,
-        'file_name': vfsPath.fileName ?? '',
-        'is_directory': 0,
-        'content_data': data,
-        'mime_type': mimeType,
-        'file_size': size,
-        'created_at': now,
-        'modified_at': now,
-        'metadata_json': metadataJson,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_filesTableName, {
+      'database_name': vfsPath.database,
+      'collection_name': vfsPath.collection,
+      'file_path': vfsPath.path,
+      'file_name': vfsPath.fileName ?? '',
+      'is_directory': 0,
+      'content_data': data,
+      'mime_type': mimeType,
+      'file_size': size,
+      'created_at': now,
+      'modified_at': now,
+      'metadata_json': metadataJson,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

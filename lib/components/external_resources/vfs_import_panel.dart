@@ -15,7 +15,7 @@ class VfsImportPanel extends StatefulWidget {
 
 class _VfsImportPanelState extends State<VfsImportPanel> {
   final VfsImportExportService _importExportService = VfsImportExportService();
-  
+
   String? _selectedFilePath;
   bool _isImporting = false;
   bool _overwriteExisting = false;
@@ -68,9 +68,9 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
               ),
               Text(
                 '从JSON文件导入虚拟文件系统数据',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -88,9 +88,9 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
           children: [
             Text(
               '选择导入文件',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -108,7 +108,9 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
                     child: Text(
                       _selectedFilePath ?? '未选择文件',
                       style: TextStyle(
-                        color: _selectedFilePath != null ? null : Colors.grey[600],
+                        color: _selectedFilePath != null
+                            ? null
+                            : Colors.grey[600],
                       ),
                     ),
                   ),
@@ -136,9 +138,9 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
           children: [
             Text(
               '导入选项',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             CheckboxListTile(
@@ -186,9 +188,9 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
           children: [
             Text(
               '导入预览',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Container(
@@ -254,10 +256,7 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
         children: [
           SizedBox(
             width: 120,
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+            child: Text(label, style: TextStyle(color: Colors.grey[600])),
           ),
           Text(value),
         ],
@@ -286,7 +285,8 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
   }
 
   Widget _buildStatusMessage() {
-    final isError = _importStatus!.contains('错误') || _importStatus!.contains('失败');
+    final isError =
+        _importStatus!.contains('错误') || _importStatus!.contains('失败');
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -334,7 +334,7 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
           _previewData = null;
           _importStatus = null;
         });
-        
+
         await _loadPreview();
       }
     } catch (e) {
@@ -350,14 +350,13 @@ class _VfsImportPanelState extends State<VfsImportPanel> {
     try {
       setState(() {
         _importStatus = '正在加载预览...';
-      });      final file = File(_selectedFilePath!);
+      });
+      final file = File(_selectedFilePath!);
       final content = await file.readAsString();
-      final json = Map<String, dynamic>.from(
-        jsonDecode(content),
-      );
-      
+      final json = Map<String, dynamic>.from(jsonDecode(content));
+
       final exportData = VfsExportData.fromJson(json);
-      
+
       setState(() {
         _previewData = exportData;
         _importStatus = null;

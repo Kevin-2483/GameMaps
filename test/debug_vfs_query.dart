@@ -11,7 +11,7 @@ void testSqlLogic() {
     {
       'file_path': '2/ww',
       'query_path': '2',
-      'expected': true,  // 应该被包含
+      'expected': true, // 应该被包含
     },
     {
       'file_path': '2/subfolder/file',
@@ -34,27 +34,29 @@ void testSqlLogic() {
     final filePath = testCase['file_path'] as String;
     final queryPath = testCase['query_path'] as String;
     final expected = testCase['expected'] as bool;
-    
+
     // 模拟修复后的SQL逻辑
     final pathPrefix = queryPath.isEmpty ? '' : '$queryPath/';
-    
+
     // 检查 LIKE 条件
     final likesCondition = filePath.startsWith(pathPrefix);
-    
+
     // 检查不等于条件
     final notEqualsCondition = filePath != queryPath;
-    
+
     // 检查斜杠数量条件（修复后的逻辑）
     final fileSlashCount = countSlashes(filePath);
     final expectedSlashCount = pathPrefix.split('/').length - 1;
     final slashCondition = fileSlashCount == expectedSlashCount;
-    
+
     final result = likesCondition && notEqualsCondition && slashCondition;
-    
+
     print('Test: $filePath (query: $queryPath)');
     print('  LIKE "$pathPrefix%": $likesCondition');
     print('  != "$queryPath": $notEqualsCondition');
-    print('  Slash count: $fileSlashCount == $expectedSlashCount: $slashCondition');
+    print(
+      '  Slash count: $fileSlashCount == $expectedSlashCount: $slashCondition',
+    );
     print('  Result: $result (Expected: $expected)');
     print('  ${result == expected ? "✅ PASS" : "❌ FAIL"}');
     print('');

@@ -9,10 +9,12 @@ class ExternalResourcesExportPanel extends StatefulWidget {
   const ExternalResourcesExportPanel({super.key});
 
   @override
-  State<ExternalResourcesExportPanel> createState() => _ExternalResourcesExportPanelState();
+  State<ExternalResourcesExportPanel> createState() =>
+      _ExternalResourcesExportPanelState();
 }
 
-class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPanel> {
+class _ExternalResourcesExportPanelState
+    extends State<ExternalResourcesExportPanel> {
   bool _isExporting = false;
   bool _includeMaps = true;
   bool _includeLegends = true;
@@ -20,10 +22,11 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
   bool _enableSelectiveMaps = false;
   bool _enableSelectiveLegends = false;
   String? _exportPath;
-  
+
   List<MapItemSummary> _availableMaps = [];
   List<LegendItem> _availableLegends = [];
-  Set<int> _selectedMapIds = {};  Set<int> _selectedLegendIds = {};
+  Set<int> _selectedMapIds = {};
+  Set<int> _selectedLegendIds = {};
   bool _isLoadingData = true;
 
   @override
@@ -38,7 +41,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
       final exporter = CombinedDatabaseExporter();
       final maps = await exporter.getAvailableMaps();
       final legends = await exporter.getAvailableLegends();
-      
+
       setState(() {
         _availableMaps = maps;
         _availableLegends = legends;
@@ -77,25 +80,23 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        '导出说明',
-                        style: theme.textTheme.titleMedium,
+                      Icon(
+                        Icons.info_outline,
+                        color: theme.colorScheme.primary,
                       ),
+                      const SizedBox(width: 8),
+                      Text('导出说明', style: theme.textTheme.titleMedium),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '将当前应用中的地图、传奇和本地化数据导出为JSON文件，可以用于备份或分享给其他用户。',
-                  ),
+                  const Text('将当前应用中的地图、传奇和本地化数据导出为JSON文件，可以用于备份或分享给其他用户。'),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // 导出选项
           Card(
             child: Padding(
@@ -103,16 +104,13 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '导出内容',
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  Text('导出内容', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 16),
-                    CheckboxListTile(
+                  CheckboxListTile(
                     title: const Text('地图数据'),
-                    subtitle: _isLoadingData 
-                      ? const Text('加载中...')
-                      : Text('包含${_availableMaps.length}个地图'),
+                    subtitle: _isLoadingData
+                        ? const Text('加载中...')
+                        : Text('包含${_availableMaps.length}个地图'),
                     value: _includeMaps,
                     onChanged: (value) {
                       setState(() {
@@ -120,7 +118,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                       });
                     },
                   ),
-                  
+
                   if (_includeMaps && !_isLoadingData) ...[
                     Padding(
                       padding: const EdgeInsets.only(left: 56.0, right: 16.0),
@@ -132,7 +130,9 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                               setState(() {
                                 _enableSelectiveMaps = value ?? false;
                                 if (!_enableSelectiveMaps) {
-                                  _selectedMapIds = _availableMaps.map((m) => m.id).toSet();
+                                  _selectedMapIds = _availableMaps
+                                      .map((m) => m.id)
+                                      .toSet();
                                 }
                               });
                             },
@@ -140,20 +140,28 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           const Text('选择特定地图'),
                           const Spacer(),
                           if (_enableSelectiveMaps)
-                            Text('已选择 ${_selectedMapIds.length}/${_availableMaps.length}'),
+                            Text(
+                              '已选择 ${_selectedMapIds.length}/${_availableMaps.length}',
+                            ),
                         ],
                       ),
                     ),
-                      if (_enableSelectiveMaps)
+                    if (_enableSelectiveMaps)
                       Container(
-                        margin: const EdgeInsets.only(left: 56.0, right: 16.0, bottom: 8.0),
+                        margin: const EdgeInsets.only(
+                          left: 56.0,
+                          right: 16.0,
+                          bottom: 8.0,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             TextButton(
                               onPressed: () {
                                 setState(() {
-                                  _selectedMapIds = _availableMaps.map((m) => m.id).toSet();
+                                  _selectedMapIds = _availableMaps
+                                      .map((m) => m.id)
+                                      .toSet();
                                 });
                               },
                               child: const Text('全选'),
@@ -169,7 +177,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           ],
                         ),
                       ),
-                    
+
                     if (_enableSelectiveMaps)
                       Container(
                         margin: const EdgeInsets.only(left: 56.0, right: 16.0),
@@ -201,11 +209,11 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                         ),
                       ),
                   ],
-                    CheckboxListTile(
+                  CheckboxListTile(
                     title: const Text('传奇数据'),
-                    subtitle: _isLoadingData 
-                      ? const Text('加载中...')
-                      : Text('包含${_availableLegends.length}个传奇'),
+                    subtitle: _isLoadingData
+                        ? const Text('加载中...')
+                        : Text('包含${_availableLegends.length}个传奇'),
                     value: _includeLegends,
                     onChanged: (value) {
                       setState(() {
@@ -213,7 +221,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                       });
                     },
                   ),
-                  
+
                   if (_includeLegends && !_isLoadingData) ...[
                     Padding(
                       padding: const EdgeInsets.only(left: 56.0, right: 16.0),
@@ -226,9 +234,9 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                                 _enableSelectiveLegends = value ?? false;
                                 if (!_enableSelectiveLegends) {
                                   _selectedLegendIds = _availableLegends
-                                    .where((l) => l.id != null)
-                                    .map((l) => l.id!)
-                                    .toSet();
+                                      .where((l) => l.id != null)
+                                      .map((l) => l.id!)
+                                      .toSet();
                                 }
                               });
                             },
@@ -236,13 +244,19 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           const Text('选择特定传奇'),
                           const Spacer(),
                           if (_enableSelectiveLegends)
-                            Text('已选择 ${_selectedLegendIds.length}/${_availableLegends.length}'),
+                            Text(
+                              '已选择 ${_selectedLegendIds.length}/${_availableLegends.length}',
+                            ),
                         ],
                       ),
                     ),
-                      if (_enableSelectiveLegends)
+                    if (_enableSelectiveLegends)
                       Container(
-                        margin: const EdgeInsets.only(left: 56.0, right: 16.0, bottom: 8.0),
+                        margin: const EdgeInsets.only(
+                          left: 56.0,
+                          right: 16.0,
+                          bottom: 8.0,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -250,9 +264,9 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                               onPressed: () {
                                 setState(() {
                                   _selectedLegendIds = _availableLegends
-                                    .where((l) => l.id != null)
-                                    .map((l) => l.id!)
-                                    .toSet();
+                                      .where((l) => l.id != null)
+                                      .map((l) => l.id!)
+                                      .toSet();
                                 });
                               },
                               child: const Text('全选'),
@@ -268,7 +282,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           ],
                         ),
                       ),
-                    
+
                     if (_enableSelectiveLegends)
                       Container(
                         margin: const EdgeInsets.only(left: 56.0, right: 16.0),
@@ -281,7 +295,8 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           itemCount: _availableLegends.length,
                           itemBuilder: (context, index) {
                             final legend = _availableLegends[index];
-                            if (legend.id == null) return const SizedBox.shrink();
+                            if (legend.id == null)
+                              return const SizedBox.shrink();
                             return CheckboxListTile(
                               dense: true,
                               title: Text(legend.title),
@@ -301,7 +316,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                         ),
                       ),
                   ],
-                  
+
                   CheckboxListTile(
                     title: const Text('本地化数据'),
                     subtitle: const Text('包含多语言翻译数据'),
@@ -316,9 +331,9 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // 导出路径选择
           Card(
             child: Padding(
@@ -326,12 +341,9 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '导出位置',
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  Text('导出位置', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 16),
-                  
+
                   Row(
                     children: [
                       Expanded(
@@ -344,9 +356,10 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
                           child: Text(
                             _exportPath ?? '请选择导出位置',
                             style: TextStyle(
-                              color: _exportPath != null 
-                                ? theme.textTheme.bodyMedium?.color 
-                                : theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                              color: _exportPath != null
+                                  ? theme.textTheme.bodyMedium?.color
+                                  : theme.textTheme.bodyMedium?.color
+                                        ?.withOpacity(0.6),
                             ),
                           ),
                         ),
@@ -363,21 +376,21 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // 导出按钮
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _canExport() ? _exportDatabase : null,
-              icon: _isExporting 
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.file_upload),
+              icon: _isExporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.file_upload),
               label: Text(_isExporting ? '正在导出...' : '导出数据库'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -388,11 +401,12 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
       ),
     );
   }
+
   bool _canExport() {
     if (_isExporting || _exportPath == null) return false;
-    
+
     bool hasValidContent = false;
-    
+
     if (_includeMaps) {
       if (_enableSelectiveMaps) {
         hasValidContent |= _selectedMapIds.isNotEmpty;
@@ -400,7 +414,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
         hasValidContent |= _availableMaps.isNotEmpty;
       }
     }
-    
+
     if (_includeLegends) {
       if (_enableSelectiveLegends) {
         hasValidContent |= _selectedLegendIds.isNotEmpty;
@@ -408,11 +422,11 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
         hasValidContent |= _availableLegends.isNotEmpty;
       }
     }
-    
+
     if (_includeLocalizations) {
       hasValidContent = true;
     }
-    
+
     return hasValidContent;
   }
 
@@ -424,6 +438,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
       });
     }
   }
+
   Future<void> _exportDatabase() async {
     if (!_canExport()) return;
 
@@ -433,19 +448,19 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
 
     try {
       final exporter = CombinedDatabaseExporter();
-      
+
       // 准备导出参数
       List<int>? selectedMapIds;
       List<int>? selectedLegendIds;
-      
+
       if (_includeMaps && _enableSelectiveMaps) {
         selectedMapIds = _selectedMapIds.toList();
       }
-      
+
       if (_includeLegends && _enableSelectiveLegends) {
         selectedLegendIds = _selectedLegendIds.toList();
       }
-      
+
       final exportPath = await exporter.exportAllDatabases(
         includeMaps: _includeMaps,
         includeLegends: _includeLegends,
@@ -456,21 +471,25 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
 
       if (exportPath != null && mounted) {
         String message = '数据库导出成功: $exportPath';
-        
+
         // 添加导出统计信息
         List<String> stats = [];
         if (_includeMaps) {
-          int mapCount = _enableSelectiveMaps ? _selectedMapIds.length : _availableMaps.length;
+          int mapCount = _enableSelectiveMaps
+              ? _selectedMapIds.length
+              : _availableMaps.length;
           stats.add('地图: $mapCount');
         }
         if (_includeLegends) {
-          int legendCount = _enableSelectiveLegends ? _selectedLegendIds.length : _availableLegends.length;
+          int legendCount = _enableSelectiveLegends
+              ? _selectedLegendIds.length
+              : _availableLegends.length;
           stats.add('传奇: $legendCount');
         }
         if (_includeLocalizations) {
           stats.add('本地化数据');
         }
-        
+
         if (stats.isNotEmpty) {
           message += '\n导出内容: ${stats.join(', ')}';
         }
@@ -480,10 +499,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
             content: Text(message),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: '确定',
-              onPressed: () {},
-            ),
+            action: SnackBarAction(label: '确定', onPressed: () {}),
           ),
         );
       }
@@ -493,10 +509,7 @@ class _ExternalResourcesExportPanelState extends State<ExternalResourcesExportPa
           SnackBar(
             content: Text('导出失败: ${e.toString()}'),
             backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: '确定',
-              onPressed: () {},
-            ),
+            action: SnackBarAction(label: '确定', onPressed: () {}),
           ),
         );
       }

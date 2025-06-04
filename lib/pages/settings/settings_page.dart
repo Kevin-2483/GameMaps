@@ -79,13 +79,15 @@ class _SettingsPageContent extends StatelessWidget {
             Text(
               l10n.resourceManagement,
               style: Theme.of(context).textTheme.titleMedium,
-            ),            const SizedBox(height: 8),
+            ),
+            const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.cloud_sync),
               title: const Text('外部资源管理'),
               subtitle: const Text('导入、导出和浏览应用数据'),
               trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () => context.go('/external-resources'),            ),
+              onTap: () => context.go('/external-resources'),
+            ),
           ],
         ),
       ),

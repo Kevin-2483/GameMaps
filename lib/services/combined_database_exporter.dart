@@ -20,6 +20,7 @@ class CombinedDatabaseExporter {
   final MapDatabaseService _mapService = MapDatabaseService();
   final LegendDatabaseService _legendService = LegendDatabaseService();
   final MapLocalizationService _localizationService = MapLocalizationService();
+
   /// 导出数据库数据为单个JSON文件
   ///
   /// [customVersion] 自定义导出版本号
@@ -37,7 +38,8 @@ class CombinedDatabaseExporter {
     bool includeLocalizations = true,
     List<int>? selectedMapIds,
     List<int>? selectedLegendIds,
-  }) async {    try {
+  }) async {
+    try {
       final mapVersion =
           customVersion ?? await _mapService.getDatabaseVersion();
       final legendVersion = await _legendService.getDatabaseVersion();
@@ -229,6 +231,7 @@ class CombinedDatabaseExporter {
       return null;
     }
   }
+
   /// 获取所有可用的地图摘要（用于选择性导出）
   Future<List<MapItemSummary>> getAvailableMaps() async {
     try {
@@ -254,17 +257,11 @@ class CombinedDatabaseExporter {
     try {
       final maps = await _mapService.getAllMapsSummary();
       final legends = await _legendService.getAllLegends();
-      
-      return {
-        'mapsCount': maps.length,
-        'legendsCount': legends.length,
-      };
+
+      return {'mapsCount': maps.length, 'legendsCount': legends.length};
     } catch (e) {
       debugPrint('获取数据库统计信息失败: $e');
-      return {
-        'mapsCount': 0,
-        'legendsCount': 0,
-      };
+      return {'mapsCount': 0, 'legendsCount': 0};
     }
   }
 }

@@ -23,19 +23,19 @@ class VfsPermissionDialog extends StatefulWidget {
     VfsFileInfo fileInfo,
   ) async {
     final vfsService = VfsServiceProvider();
-    
+
     try {
       // 解析文件路径获取collection和filePath
       final vfsPath = VfsProtocol.parsePath(fileInfo.path);
       if (vfsPath == null) {
         throw Exception('Invalid file path');
       }
-      
+
       final permissions = await vfsService.getFilePermissions(
         vfsPath.collection,
         vfsPath.path,
       );
-      
+
       return showDialog<VfsPermissionMask>(
         context: context,
         builder: (context) => VfsPermissionDialog(
@@ -83,7 +83,9 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
             Row(
               children: [
                 Icon(
-                  widget.fileInfo.isDirectory ? Icons.folder : Icons.description,
+                  widget.fileInfo.isDirectory
+                      ? Icons.folder
+                      : Icons.description,
                   color: widget.fileInfo.isDirectory ? Colors.amber : null,
                 ),
                 const SizedBox(width: 12),
@@ -110,9 +112,9 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 系统保护状态
             if (_permissions.isSystemProtected) ...[
               Container(
@@ -137,7 +139,7 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // 当前权限显示
             Text(
               '当前权限: ${_permissions.toString()}',
@@ -146,48 +148,48 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
                 backgroundColor: colorScheme.surfaceVariant,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 权限设置
             if (!_permissions.isSystemProtected) ...[
-              Text(
-                '权限设置',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('权限设置', style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
-              
-              _buildPermissionSection('用户权限', _permissions.userPermissions, (value) {
+
+              _buildPermissionSection('用户权限', _permissions.userPermissions, (
+                value,
+              ) {
                 setState(() {
                   _permissions = _permissions.copyWith(userPermissions: value);
                 });
               }),
-              
-              _buildPermissionSection('组权限', _permissions.groupPermissions, (value) {
+
+              _buildPermissionSection('组权限', _permissions.groupPermissions, (
+                value,
+              ) {
                 setState(() {
                   _permissions = _permissions.copyWith(groupPermissions: value);
                 });
               }),
-              
-              _buildPermissionSection('其他权限', _permissions.otherPermissions, (value) {
+
+              _buildPermissionSection('其他权限', _permissions.otherPermissions, (
+                value,
+              ) {
                 setState(() {
                   _permissions = _permissions.copyWith(otherPermissions: value);
                 });
               }),
             ] else ...[
-              Text(
-                '权限详情',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('权限详情', style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
-              
+
               _buildPermissionDisplay('用户权限', _permissions.userPermissions),
               _buildPermissionDisplay('组权限', _permissions.groupPermissions),
               _buildPermissionDisplay('其他权限', _permissions.otherPermissions),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             // 按钮
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -231,25 +233,31 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
             _buildPermissionCheckbox(
               '读取',
               permissions & VfsPermission.read != 0,
-              (value) => onChanged(value
-                  ? permissions | VfsPermission.read
-                  : permissions & ~VfsPermission.read),
+              (value) => onChanged(
+                value
+                    ? permissions | VfsPermission.read
+                    : permissions & ~VfsPermission.read,
+              ),
             ),
             const SizedBox(width: 16),
             _buildPermissionCheckbox(
               '写入',
               permissions & VfsPermission.write != 0,
-              (value) => onChanged(value
-                  ? permissions | VfsPermission.write
-                  : permissions & ~VfsPermission.write),
+              (value) => onChanged(
+                value
+                    ? permissions | VfsPermission.write
+                    : permissions & ~VfsPermission.write,
+              ),
             ),
             const SizedBox(width: 16),
             _buildPermissionCheckbox(
               '执行',
               permissions & VfsPermission.execute != 0,
-              (value) => onChanged(value
-                  ? permissions | VfsPermission.execute
-                  : permissions & ~VfsPermission.execute),
+              (value) => onChanged(
+                value
+                    ? permissions | VfsPermission.execute
+                    : permissions & ~VfsPermission.execute,
+              ),
             ),
           ],
         ),
@@ -266,11 +274,20 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
         const SizedBox(height: 8),
         Row(
           children: [
-            _buildPermissionIndicator('读取', permissions & VfsPermission.read != 0),
+            _buildPermissionIndicator(
+              '读取',
+              permissions & VfsPermission.read != 0,
+            ),
             const SizedBox(width: 16),
-            _buildPermissionIndicator('写入', permissions & VfsPermission.write != 0),
+            _buildPermissionIndicator(
+              '写入',
+              permissions & VfsPermission.write != 0,
+            ),
             const SizedBox(width: 16),
-            _buildPermissionIndicator('执行', permissions & VfsPermission.execute != 0),
+            _buildPermissionIndicator(
+              '执行',
+              permissions & VfsPermission.execute != 0,
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -318,29 +335,23 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
     try {
       final vfsService = VfsServiceProvider();
       final vfsPath = VfsProtocol.parsePath(widget.fileInfo.path);
-      
+
       if (vfsPath != null) {
         await vfsService.setFilePermissions(
           vfsPath.collection,
           vfsPath.path,
           _permissions,
         );
-        
+
         Navigator.of(context).pop(_permissions);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('权限已保存'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('权限已保存'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('保存权限失败: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('保存权限失败: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() {

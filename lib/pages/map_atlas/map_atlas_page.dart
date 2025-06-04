@@ -222,8 +222,6 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     }
   }
 
-
-
   Future<void> _uploadLocalizationFile() async {
     try {
       final success = await localizationService.importLocalizationFile();
@@ -282,12 +280,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.mapAtlas),
-        actions: [          // 上传本地化文件按钮
+        actions: [
+          // 上传本地化文件按钮
           IconButton(
             onPressed: _uploadLocalizationFile,
             icon: const Icon(Icons.translate),
             tooltip: '上传本地化文件',
-          ),          // 调试模式功能
+          ), // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
             action: PopupMenuButton<String>(

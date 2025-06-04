@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:archive/archive.dart';
 
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
@@ -248,6 +249,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       return _sortAscending ? result : -result;
     });
   }
+
   /// 复制文件
   Future<void> _copyFiles(List<VfsFileInfo> files) async {
     setState(() {
@@ -444,6 +446,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
+
   /// 显示搜索对话框
   Future<void> _showSearchDialog() async {
     if (_selectedDatabase == null) {
@@ -458,7 +461,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _selectedCollection!,
       _currentPath,
     );
-    
+
     if (selectedFile != null) {
       await _navigateToSelectedFile(selectedFile);
     }
@@ -467,22 +470,24 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 导航到选中的文件或文件夹
   Future<void> _navigateToSelectedFile(VfsFileInfo selectedFile) async {
     try {
-      debugPrint('🧭 Navigating to selected file: ${selectedFile.name} at path: ${selectedFile.path}');
-      
+      debugPrint(
+        '🧭 Navigating to selected file: ${selectedFile.name} at path: ${selectedFile.path}',
+      );
+
       // 解析文件路径，移除协议前缀
       String cleanPath = selectedFile.path;
       if (cleanPath.startsWith('indexeddb://')) {
         final uri = Uri.parse(cleanPath);
         final pathSegments = uri.pathSegments;
         debugPrint('🧭 URI path segments: $pathSegments');
-        
+
         if (pathSegments.length >= 3) {
           // pathSegments: [database, collection, ...path]
           cleanPath = pathSegments.skip(2).join('/');
           debugPrint('🧭 Clean path after processing: "$cleanPath"');
         }
       }
-      
+
       if (selectedFile.isDirectory) {
         // 如果是文件夹，直接导航到该文件夹
         debugPrint('🧭 Navigating to directory: "$cleanPath"');
@@ -490,19 +495,21 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         _showInfoSnackBar('已导航到文件夹: ${selectedFile.name}');
       } else {
         // 如果是文件，导航到文件所在的文件夹并选中该文件
-        final parentPath = cleanPath.contains('/') 
+        final parentPath = cleanPath.contains('/')
             ? cleanPath.substring(0, cleanPath.lastIndexOf('/'))
             : '';
-        
-        debugPrint('🧭 Navigating to parent directory: "$parentPath" for file: ${selectedFile.name}');
+
+        debugPrint(
+          '🧭 Navigating to parent directory: "$parentPath" for file: ${selectedFile.name}',
+        );
         await _navigateToPath(parentPath);
-        
+
         // 选中该文件
         setState(() {
           _selectedFiles.clear();
           _selectedFiles.add(selectedFile.path);
         });
-        
+
         _showInfoSnackBar('已导航到文件: ${selectedFile.name}');
       }
     } catch (e) {
@@ -878,9 +885,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                               Text('网格视图'),
                             ],
                           ),
-                        ),                      ],
+                        ),
+                      ],
                     ),
-                    
+
                     if (_clipboardFiles.isNotEmpty) ...[
                       IconButton(
                         onPressed: _pasteFiles,
@@ -888,7 +896,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                         tooltip: '粘贴',
                       ),
                     ],
-                    
+
                     // 上传按钮（支持文件和文件夹）
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.upload),
@@ -912,12 +920,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                               SizedBox(width: 8),
                               Text('上传文件夹'),
                             ],
-                          ),                        ),
+                          ),
+                        ),
                       ],
                       onSelected: (value) => _handleUpload(value),
-                    ),
-                    
-                    // 下载按钮（支持文件和文件夹）
+                    ), // 下载按钮（支持文件和文件夹）
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.download),
                       tooltip: '下载',
@@ -933,12 +940,33 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                           ),
                         ),
                         const PopupMenuItem(
+                          value: 'selected_zip',
+                          child: Row(
+                            children: [
+                              Icon(Icons.archive),
+                              SizedBox(width: 8),
+                              Text('下载选中项（压缩）'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
                           value: 'all',
                           child: Row(
                             children: [
                               Icon(Icons.download_for_offline),
                               SizedBox(width: 8),
                               Text('下载当前目录'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'all_zip',
+                          child: Row(
+                            children: [
+                              Icon(Icons.folder_zip),
+                              SizedBox(width: 8),
+                              Text('下载当前目录（压缩）'),
                             ],
                           ),
                         ),
@@ -1493,6 +1521,20 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
       if (_clipboardFiles.isNotEmpty)
         ContextMenuItem(label: '粘贴', icon: Icons.paste, onTap: _pasteFiles),
+      const ContextMenuItem.divider(),
+
+      // 下载选项
+      ContextMenuItem(
+        label: '下载',
+        icon: Icons.download,
+        onTap: () => _downloadFiles([file], compress: false),
+      ),
+      if (file.isDirectory)
+        ContextMenuItem(
+          label: '下载为压缩包',
+          icon: Icons.archive,
+          onTap: () => _downloadFiles([file], compress: true),
+        ),
 
       const ContextMenuItem.divider(),
       ContextMenuItem(
@@ -1845,14 +1887,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     );
   }
 
-  /// 构建设置视图  
+  /// 构建设置视图
   Widget _buildSettingsView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 16),
 
           Card(
@@ -2123,6 +2164,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
+
   /// 处理上传操作
   Future<void> _handleUpload(String uploadType) async {
     if (_selectedDatabase == null || _selectedCollection == null) {
@@ -2179,8 +2221,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     try {
       int successCount = 0;
       for (var file in files) {
-        final targetFilePath = _currentPath.isEmpty 
-            ? file.name 
+        final targetFilePath = _currentPath.isEmpty
+            ? file.name
             : '$_currentPath/${file.name}';
 
         if (file.bytes != null) {
@@ -2216,6 +2258,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
+
   /// 处理文件夹上传
   Future<void> _processFolderUpload(Directory directory) async {
     setState(() {
@@ -2228,21 +2271,26 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       // 获取文件夹名称（不是完整路径）
       final folderName = directory.path.split(Platform.pathSeparator).last;
-      
+
       for (var fileEntry in files) {
         final localFile = File(fileEntry.path);
         if (localFile.existsSync()) {
           final fileData = await localFile.readAsBytes();
-          
+
           // 正确计算相对路径：保留文件夹名称
-          final fullRelativePath = fileEntry.path.substring(directory.parent.path.length + 1);
-          
+          final fullRelativePath = fileEntry.path.substring(
+            directory.parent.path.length + 1,
+          );
+
           // 将本地路径分隔符转换为VFS路径分隔符
-          final normalizedPath = fullRelativePath.replaceAll(Platform.pathSeparator, '/');
-          
+          final normalizedPath = fullRelativePath.replaceAll(
+            Platform.pathSeparator,
+            '/',
+          );
+
           // 构建目标文件路径
-          final targetFilePath = _currentPath.isEmpty 
-              ? normalizedPath 
+          final targetFilePath = _currentPath.isEmpty
+              ? normalizedPath
               : '$_currentPath/$normalizedPath';
 
           // 创建必要的目录结构
@@ -2270,15 +2318,17 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   }
 
   /// 递归收集文件夹中的所有文件
-  Future<List<FileSystemEntity>> _collectFilesRecursively(Directory directory) async {
+  Future<List<FileSystemEntity>> _collectFilesRecursively(
+    Directory directory,
+  ) async {
     final List<FileSystemEntity> files = [];
-    
+
     await for (var entity in directory.list(recursive: true)) {
       if (entity is File) {
         files.add(entity);
       }
     }
-    
+
     return files;
   }
 
@@ -2287,10 +2337,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     final pathSegments = filePath.split('/');
     if (pathSegments.length <= 1) return;
 
-    final directoryPath = pathSegments.sublist(0, pathSegments.length - 1).join('/');
-    
+    final directoryPath = pathSegments
+        .sublist(0, pathSegments.length - 1)
+        .join('/');
+
     try {
-      final fullPath = 'indexeddb://$_selectedDatabase/$_selectedCollection/$directoryPath';
+      final fullPath =
+          'indexeddb://$_selectedDatabase/$_selectedCollection/$directoryPath';
       final exists = await _vfsService.vfs.exists(fullPath);
       if (!exists) {
         await _vfsService.vfs.createDirectory(fullPath);
@@ -2347,10 +2400,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     try {
       switch (downloadType) {
         case 'selected':
-          await _downloadSelectedItems();
+          await _downloadSelectedItems(compress: false);
+          break;
+        case 'selected_zip':
+          await _downloadSelectedItems(compress: true);
           break;
         case 'all':
-          await _downloadCurrentDirectory();
+          await _downloadCurrentDirectory(compress: false);
+          break;
+        case 'all_zip':
+          await _downloadCurrentDirectory(compress: true);
           break;
       }
     } catch (e) {
@@ -2359,7 +2418,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   }
 
   /// 下载选中项
-  Future<void> _downloadSelectedItems() async {
+  Future<void> _downloadSelectedItems({bool compress = false}) async {
     final selectedFiles = _currentFiles
         .where((file) => _selectedFiles.contains(file.path))
         .toList();
@@ -2369,57 +2428,31 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       return;
     }
 
-    await _downloadFiles(selectedFiles);
+    await _downloadFiles(selectedFiles, compress: compress);
   }
 
   /// 下载当前目录
-  Future<void> _downloadCurrentDirectory() async {
+  Future<void> _downloadCurrentDirectory({bool compress = false}) async {
     if (_currentFiles.isEmpty) {
       _showErrorSnackBar('当前目录为空');
       return;
     }
 
-    await _downloadFiles(_currentFiles);
+    await _downloadFiles(_currentFiles, compress: compress);
   }
 
   /// 下载文件列表
-  Future<void> _downloadFiles(List<VfsFileInfo> files) async {
+  Future<void> _downloadFiles(
+    List<VfsFileInfo> files, {
+    bool compress = false,
+  }) async {
     try {
-      // 选择保存位置
-      final downloadPath = await FilePicker.platform.getDirectoryPath();
-      if (downloadPath == null) return;
-
-      setState(() {
-        _isLoading = true;
-      });
-
-      int fileCount = 0;
-      int folderCount = 0;
-
-      for (var file in files) {
-        if (file.isDirectory) {
-          // 下载整个文件夹
-          final downloadedFiles = await _downloadDirectory(file, downloadPath);
-          fileCount += downloadedFiles;
-          folderCount++;
-        } else {
-          // 下载单个文件
-          await _downloadSingleFile(file, downloadPath);
-          fileCount++;
-        }
-      }
-
-      String message = '';
-      if (fileCount > 0 && folderCount > 0) {
-        message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
-      } else if (fileCount > 0) {
-        message = '已下载 $fileCount 个文件到 $downloadPath';
-      } else if (folderCount > 0) {
-        message = '已下载 $folderCount 个文件夹到 $downloadPath';
-      }
-      
-      if (message.isNotEmpty) {
-        _showInfoSnackBar(message);
+      if (compress) {
+        // 压缩下载
+        await _downloadFilesAsArchive(files);
+      } else {
+        // 普通下载
+        await _downloadFilesNormally(files);
       }
     } catch (e) {
       _showErrorSnackBar('下载失败: $e');
@@ -2430,8 +2463,143 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
   }
 
+  /// 普通下载（原有的下载逻辑）
+  Future<void> _downloadFilesNormally(List<VfsFileInfo> files) async {
+    // 选择保存位置
+    final downloadPath = await FilePicker.platform.getDirectoryPath();
+    if (downloadPath == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    int fileCount = 0;
+    int folderCount = 0;
+
+    for (var file in files) {
+      if (file.isDirectory) {
+        // 下载整个文件夹
+        final downloadedFiles = await _downloadDirectory(file, downloadPath);
+        fileCount += downloadedFiles;
+        folderCount++;
+      } else {
+        // 下载单个文件
+        await _downloadSingleFile(file, downloadPath);
+        fileCount++;
+      }
+    }
+
+    String message = '';
+    if (fileCount > 0 && folderCount > 0) {
+      message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
+    } else if (fileCount > 0) {
+      message = '已下载 $fileCount 个文件到 $downloadPath';
+    } else if (folderCount > 0) {
+      message = '已下载 $folderCount 个文件夹到 $downloadPath';
+    }
+
+    if (message.isNotEmpty) {
+      _showInfoSnackBar(message);
+    }
+  }
+
+  /// 压缩下载
+  Future<void> _downloadFilesAsArchive(List<VfsFileInfo> files) async {
+    // 选择保存位置和文件名
+    final zipPath = await FilePicker.platform.saveFile(
+      dialogTitle: '保存压缩文件',
+      fileName:
+          '${_currentPath.isEmpty ? '根目录' : _currentPath.split('/').last}_${DateTime.now().millisecondsSinceEpoch}.zip',
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+    );
+
+    if (zipPath == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 创建压缩包
+      final archive = Archive();
+      int totalFiles = 0;
+
+      for (var file in files) {
+        if (file.isDirectory) {
+          totalFiles += await _addDirectoryToArchive(archive, file, '');
+        } else {
+          await _addFileToArchive(archive, file, '');
+          totalFiles++;
+        }
+      }
+
+      // 编码压缩包
+      final zipEncoder = ZipEncoder();
+      final zipData = zipEncoder.encode(archive);
+
+      if (zipData != null) {
+        // 保存到文件
+        final zipFile = File(zipPath);
+        await zipFile.writeAsBytes(zipData);
+
+        final fileSize = _formatFileSize(zipData.length);
+        _showInfoSnackBar('已压缩下载 $totalFiles 个文件到 $zipPath\n压缩包大小: $fileSize');
+      } else {
+        _showErrorSnackBar('压缩失败');
+      }
+    } catch (e) {
+      _showErrorSnackBar('压缩下载失败: $e');
+    }
+  }
+
+  /// 添加文件到压缩包
+  Future<void> _addFileToArchive(
+    Archive archive,
+    VfsFileInfo file,
+    String basePath,
+  ) async {
+    final fileContent = await _vfsService.vfs.readFile(file.path);
+    if (fileContent != null) {
+      final archiveFile = ArchiveFile(
+        basePath.isEmpty ? file.name : '$basePath/${file.name}',
+        fileContent.data.length,
+        fileContent.data,
+      );
+      archive.addFile(archiveFile);
+    }
+  }
+
+  /// 递归添加目录到压缩包
+  Future<int> _addDirectoryToArchive(
+    Archive archive,
+    VfsFileInfo directory,
+    String basePath,
+  ) async {
+    final allFiles = await _vfsService.vfs.listDirectory(directory.path);
+    int fileCount = 0;
+
+    final dirPath = basePath.isEmpty
+        ? directory.name
+        : '$basePath/${directory.name}';
+
+    for (var file in allFiles) {
+      if (file.isDirectory) {
+        fileCount += await _addDirectoryToArchive(archive, file, dirPath);
+      } else {
+        await _addFileToArchive(archive, file, dirPath);
+        fileCount++;
+      }
+    }
+
+    return fileCount;
+  }
+
   /// 下载单个文件
-  Future<void> _downloadSingleFile(VfsFileInfo file, String downloadPath) async {
+  Future<void> _downloadSingleFile(
+    VfsFileInfo file,
+    String downloadPath,
+  ) async {
     final fileName = file.name;
     final fileContent = await _vfsService.vfs.readFile(file.path);
 
@@ -2556,7 +2724,8 @@ class _FileListItemState extends State<_FileListItem> {
             title: Text(widget.file.name),
             subtitle: Text(
               '${widget.formatFileSize(widget.file.size)} • ${widget.formatDateTime(widget.file.modifiedAt)}',
-            ),            onTap: widget.onTap,
+            ),
+            onTap: widget.onTap,
             onLongPress: widget.onLongPress,
           ),
         ),
@@ -2679,7 +2848,8 @@ class _FileGridItemState extends State<_FileGridItem> {
                 child: Checkbox(
                   value: widget.isSelected,
                   onChanged: widget.onSelectionChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,                ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),
@@ -2697,7 +2867,8 @@ class _BackgroundContextMenuListView extends StatelessWidget {
 
   const _BackgroundContextMenuListView({
     required this.itemCount,
-    required this.itemBuilder,    required this.backgroundMenuBuilder,
+    required this.itemBuilder,
+    required this.backgroundMenuBuilder,
   });
 
   @override
