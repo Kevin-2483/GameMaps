@@ -254,7 +254,6 @@ class VfsStorageService {
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
-
   /// 获取文件信息
   Future<VfsFileInfo?> getFileInfo(String path) async {
     final vfsPath = VfsProtocol.parsePath(path);
@@ -275,6 +274,42 @@ class VfsStorageService {
     }
 
     return _rowToFileInfo(result.first);
+  }
+
+  /// 递归获取指定路径下的所有文件（不受深度限制）
+  Future<List<VfsFileInfo>> getAllFilesRecursive(String path) async {
+    final vfsPath = VfsProtocol.parsePath(path);
+    if (vfsPath == null) {
+      throw VfsException('Invalid path format', path: path);
+    }
+
+    final db = await database;
+    final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
+    
+    debugPrint('🗄️ Storage: getAllFilesRecursive called with path: $path');
+    debugPrint('🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}');
+    debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
+    
+    // 查找所有以路径前缀开头的文件（包括深层嵌套），但不包括路径本身
+    final result = await db.rawQuery('''
+      SELECT * FROM $_filesTableName 
+      WHERE database_name = ? AND collection_name = ? 
+      AND file_path LIKE ? 
+      AND file_path != ?
+      ORDER BY is_directory DESC, file_name ASC
+    ''', [
+      vfsPath.database,
+      vfsPath.collection,
+      '$pathPrefix%',
+      vfsPath.path,
+    ]);
+
+    debugPrint('🗄️ Storage: getAllFilesRecursive SQL query returned ${result.length} rows');
+    for (final row in result) {
+      debugPrint('🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}');
+    }
+
+    return result.map((row) => _rowToFileInfo(row)).toList();
   }
 
   /// 移动/重命名文件或目录

@@ -277,12 +277,12 @@ class VfsServiceProvider {
 
     return stats;
   }
-
   /// 搜索文件
   Future<List<VfsFileInfo>> searchFiles(
     String collection,
     String pattern, {
     bool caseSensitive = false,
+    bool includeDirectories = false,
     int? maxResults,
   }) async {
     return await _vfs.search(
@@ -290,7 +290,7 @@ class VfsServiceProvider {
       collection,
       pattern,
       caseSensitive: caseSensitive,
-      includeDirectories: false,
+      includeDirectories: includeDirectories,
       maxResults: maxResults,
     );
   }

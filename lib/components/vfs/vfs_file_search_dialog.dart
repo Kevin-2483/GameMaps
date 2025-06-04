@@ -20,16 +20,15 @@ class VfsFileSearchDialog extends StatefulWidget {
 
   @override
   State<VfsFileSearchDialog> createState() => _VfsFileSearchDialogState();
-
   /// 显示文件搜索对话框
-  static Future<String?> show(
+  static Future<VfsFileInfo?> show(
     BuildContext context,
     VfsServiceProvider vfsService,
     String database,
     String collection,
     String currentPath,
   ) {
-    return showDialog<String>(
+    return showDialog<VfsFileInfo>(
       context: context,
       builder: (context) => VfsFileSearchDialog(
         vfsService: vfsService,
@@ -84,29 +83,34 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
 
     setState(() {
       _isSearching = true;
-    });
-
-    try {
-      final searchPath = _searchInCurrentPath ? widget.currentPath : '/';
-      final allFiles = await widget.vfsService.listFiles(
-        // widget.database,
+    });    try {      // 使用专用的搜索方法而不是listFiles，这样可以递归搜索所有文件
+      final pattern = '*$query*'; // 使用通配符模式
+      final allResults = await widget.vfsService.searchFiles(
         widget.collection,
-        searchPath,
+        pattern,
+        caseSensitive: _caseSensitive,
+        includeDirectories: _includeFolders, // 传递文件夹包含设置
+        maxResults: 1000, // 设置合理的最大结果数
       );
 
-      final filteredResults = allFiles.where((file) {
+      final filteredResults = allResults.where((file) {
         // 类型过滤
         if (file.isDirectory && !_includeFolders) return false;
         if (!file.isDirectory && !_includeFiles) return false;
-
-        // 名称匹配
-        final fileName = _caseSensitive ? file.name : file.name.toLowerCase();
-        final searchQuery = _caseSensitive ? query : query.toLowerCase();
         
-        return fileName.contains(searchQuery);
-      }).toList();
-
-      if (mounted) {
+        // 如果设置了只在当前路径搜索，则过滤路径
+        if (_searchInCurrentPath && widget.currentPath.isNotEmpty) {
+          final expectedPrefix = widget.currentPath.endsWith('/') 
+              ? widget.currentPath 
+              : '${widget.currentPath}/';
+          final filePath = file.path.replaceFirst('indexeddb://${widget.database}/${widget.collection}/', '');
+          if (!filePath.startsWith(expectedPrefix) && filePath != widget.currentPath) {
+            return false;
+          }
+        }
+        
+        return true;
+      }).toList();      if (mounted) {
         setState(() {
           _searchResults = filteredResults;
           _isSearching = false;
@@ -125,9 +129,9 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
       }
     }
   }
-
   void _selectFile(VfsFileInfo file) {
-    Navigator.of(context).pop(_searchController.text);
+    // 返回文件信息以便文件管理器进行导航
+    Navigator.of(context).pop(file);
   }
 
   @override
@@ -321,10 +325,9 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: const Text('取消'),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton(
+                      const SizedBox(width: 8),                      FilledButton(
                         onPressed: _searchController.text.isNotEmpty
-                            ? () => Navigator.of(context).pop(_searchController.text)
+                            ? () => Navigator.of(context).pop(null)
                             : null,
                         child: const Text('确定'),
                       ),

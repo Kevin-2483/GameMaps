@@ -245,43 +245,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       return _sortAscending ? result : -result;
     });
   }
-
-  /// 搜索文件
-  Future<void> _searchFiles(String query) async {
-    if (_selectedDatabase == null || _selectedCollection == null) return;
-
-    setState(() {
-      _searchQuery = query;
-      _isSearchMode = query.isNotEmpty;
-      _isLoading = true;
-    });
-
-    if (query.isEmpty) {
-      await _navigateToPath(_currentPath);
-      return;
-    }
-
-    try {
-      final results = await _vfsService.searchFiles(
-        _selectedCollection!,
-        '*$query*',
-        caseSensitive: false,
-        maxResults: 100,
-      );
-
-      setState(() {
-        _searchResults = results;
-        _selectedFiles.clear();
-      });
-    } catch (e) {
-      _showErrorSnackBar('搜索失败: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   /// 复制文件
   Future<void> _copyFiles(List<VfsFileInfo> files) async {
     setState(() {
@@ -478,7 +441,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
-
   /// 显示搜索对话框
   Future<void> _showSearchDialog() async {
     if (_selectedDatabase == null) {
@@ -486,15 +448,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       return;
     }
 
-    final query = await VfsFileSearchDialog.show(
+    final selectedFile = await VfsFileSearchDialog.show(
       context,
       _vfsService,
       _selectedDatabase!,
       _selectedCollection!,
       _currentPath,
     );
-    if (query != null) {
-      _searchFiles(query);
+    
+    if (selectedFile != null) {
+      await _navigateToSelectedFile(selectedFile);
     }
   }
 
@@ -508,6 +471,52 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   Future<void> _importFiles() async {
     // TODO: 实现文件导入功能
     _showInfoSnackBar('导入功能开发中...');
+  }
+  /// 导航到选中的文件或文件夹
+  Future<void> _navigateToSelectedFile(VfsFileInfo selectedFile) async {
+    try {
+      debugPrint('🧭 Navigating to selected file: ${selectedFile.name} at path: ${selectedFile.path}');
+      
+      // 解析文件路径，移除协议前缀
+      String cleanPath = selectedFile.path;
+      if (cleanPath.startsWith('indexeddb://')) {
+        final uri = Uri.parse(cleanPath);
+        final pathSegments = uri.pathSegments;
+        debugPrint('🧭 URI path segments: $pathSegments');
+        
+        if (pathSegments.length >= 3) {
+          // pathSegments: [database, collection, ...path]
+          cleanPath = pathSegments.skip(2).join('/');
+          debugPrint('🧭 Clean path after processing: "$cleanPath"');
+        }
+      }
+      
+      if (selectedFile.isDirectory) {
+        // 如果是文件夹，直接导航到该文件夹
+        debugPrint('🧭 Navigating to directory: "$cleanPath"');
+        await _navigateToPath(cleanPath);
+        _showInfoSnackBar('已导航到文件夹: ${selectedFile.name}');
+      } else {
+        // 如果是文件，导航到文件所在的文件夹并选中该文件
+        final parentPath = cleanPath.contains('/') 
+            ? cleanPath.substring(0, cleanPath.lastIndexOf('/'))
+            : '';
+        
+        debugPrint('🧭 Navigating to parent directory: "$parentPath" for file: ${selectedFile.name}');
+        await _navigateToPath(parentPath);
+        
+        // 选中该文件
+        setState(() {
+          _selectedFiles.clear();
+          _selectedFiles.add(selectedFile.path);
+        });
+        
+        _showInfoSnackBar('已导航到文件: ${selectedFile.name}');
+      }
+    } catch (e) {
+      debugPrint('🧭 Navigation failed: $e');
+      _showErrorSnackBar('导航失败: $e');
+    }
   }
 
   @override

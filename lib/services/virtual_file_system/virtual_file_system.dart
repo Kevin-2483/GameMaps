@@ -222,7 +222,6 @@ class VirtualFileSystem {
     _validatePath(path);
     return await _storage.getFileInfo(path);
   }
-
   /// 搜索文件
   Future<List<VfsFileInfo>> search(
     String database, 
@@ -236,19 +235,31 @@ class VirtualFileSystem {
       throw VfsException('Database/collection not mounted: $database/$collection');
     }
 
+    debugPrint('🔍 VFS: search called with pattern: "$pattern", caseSensitive: $caseSensitive, includeDirectories: $includeDirectories');
+
     // 简单的文件名匹配搜索
     final rootPath = VfsProtocol.buildPath(database, collection, '');
     final allFiles = await _getAllFilesRecursive(rootPath);
     
-    final regex = RegExp(
-      pattern.replaceAll('*', '.*').replaceAll('?', '.'),
-      caseSensitive: caseSensitive,
-    );
+    final regexPattern = pattern.replaceAll('*', '.*').replaceAll('?', '.');
+    final regex = RegExp(regexPattern, caseSensitive: caseSensitive);
+    
+    debugPrint('🔍 VFS: regex pattern: "$regexPattern"');
+    debugPrint('🔍 VFS: found ${allFiles.length} total files');
 
     var results = allFiles.where((file) {
-      if (!includeDirectories && file.isDirectory) return false;
-      return regex.hasMatch(file.name);
-    }).toList();
+      if (!includeDirectories && file.isDirectory) {
+        debugPrint('🔍 VFS: skipping directory: ${file.name}');
+        return false;
+      }
+      final matches = regex.hasMatch(file.name);
+      debugPrint('🔍 VFS: testing "${file.name}" against pattern - matches: $matches');
+      return matches;    }).toList();
+
+    debugPrint('🔍 VFS: search found ${results.length} matching files');
+    for (final result in results) {
+      debugPrint('🔍 VFS: result: ${result.name} (${result.isDirectory ? 'DIR' : 'FILE'})');
+    }
 
     if (maxResults != null && results.length > maxResults) {
       results = results.take(maxResults).toList();
@@ -312,30 +323,19 @@ class VirtualFileSystem {
 
     return mimeTypes[extension] ?? 'application/octet-stream';
   }
-
   /// 递归获取所有文件
   Future<List<VfsFileInfo>> _getAllFilesRecursive(String path) async {
-    final result = <VfsFileInfo>[];
-    final queue = <String>[path];
-
-    while (queue.isNotEmpty) {
-      final currentPath = queue.removeAt(0);
-      try {
-        final items = await listDirectory(currentPath);
-        result.addAll(items);
-
-        for (final item in items) {
-          if (item.isDirectory) {
-            queue.add(item.path);
-          }
-        }
-      } catch (e) {
-        // 忽略无法访问的目录
-        debugPrint('Failed to list directory $currentPath: $e');
-      }
+    debugPrint('🔍 VFS: _getAllFilesRecursive called with path: $path');
+    
+    try {
+      // 直接使用存储服务的递归查询方法，不受深度限制
+      final result = await _storage.getAllFilesRecursive(path);
+      debugPrint('🔍 VFS: _getAllFilesRecursive found ${result.length} files');
+      return result;
+    } catch (e) {
+      debugPrint('🔍 VFS: Failed to get files recursively from $path: $e');
+      return [];
     }
-
-    return result;
   }
 
   /// 验证路径格式
