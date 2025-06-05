@@ -26,11 +26,6 @@ class BuildTimeConfig {
       'MapAtlasPage',
     if (bool.fromEnvironment('ENABLE_LEGEND_MANAGER_PAGE', defaultValue: true))
       'LegendManagerPage',
-    if (bool.fromEnvironment(
-      'ENABLE_EXTERNAL_RESOURCES_PAGE',
-      defaultValue: true,
-    ))
-      'ExternalResourcesPage',
     if (bool.fromEnvironment('ENABLE_VFS_FILE_MANAGER_PAGE', defaultValue: true))
       'VfsFileManagerPage',
     if (bool.fromEnvironment('ENABLE_FULLSCREEN_TEST_PAGE', defaultValue: true))
