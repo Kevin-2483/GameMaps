@@ -103,49 +103,49 @@ class LegendVfsService {
   static const String _metaFile = 'indexeddb://r6box/legends/.meta.json';
 
   // 添加初始化状态标记，避免重复初始化
-  bool _isInitialized = false;
+  // bool _isInitialized = false;
 
   /// 初始化VFS图例存储系统
-  Future<void> initialize() async {
-    if (_isInitialized) {
-      debugPrint('图例VFS系统已初始化，跳过重复初始化');
-      return;
-    }
+  // Future<void> initialize() async {
+  //   if (_isInitialized) {
+  //     debugPrint('图例VFS系统已初始化，跳过重复初始化');
+  //     return;
+  //   }
 
-    try {
-      // 首先初始化VFS系统
-      final vfsInitializer = VfsDatabaseInitializer();
-      await vfsInitializer.initializeApplicationVfs();
+  //   try {
+  //     // 首先初始化VFS系统
+  //     final vfsInitializer = VfsDatabaseInitializer();
+  //     await vfsInitializer.initializeApplicationVfs();
 
-      // 挂载legends集合到VFS系统
-      if (!_vfs.isMounted(_database, _collection)) {
-        _vfs.mount(_database, _collection);
-        debugPrint('挂载legends集合到VFS系统: $_database/$_collection');
-      }
+  //     // 挂载legends集合到VFS系统
+  //     if (!_vfs.isMounted(_database, _collection)) {
+  //       _vfs.mount(_database, _collection);
+  //       debugPrint('挂载legends集合到VFS系统: $_database/$_collection');
+  //     }
 
-      // 确保集合目录存在
-      final collectionPath = 'indexeddb://$_database/$_collection';
-      if (!await _vfs.exists(collectionPath)) {
-        await _vfs.createDirectory(collectionPath);
-      }
+  //     // 确保集合目录存在
+  //     final collectionPath = 'indexeddb://$_database/$_collection';
+  //     if (!await _vfs.exists(collectionPath)) {
+  //       await _vfs.createDirectory(collectionPath);
+  //     }
 
-      // 确保元数据文件存在
-      if (!await _vfs.exists(_metaFile)) {
-        final defaultMeta = VfsLegendMeta(
-          version: 1,
-          legendVersions: {},
-          lastUpdated: DateTime.now(),
-        );
-        await _saveMeta(defaultMeta);
-      }
+  //     // 确保元数据文件存在
+  //     if (!await _vfs.exists(_metaFile)) {
+  //       final defaultMeta = VfsLegendMeta(
+  //         version: 1,
+  //         legendVersions: {},
+  //         lastUpdated: DateTime.now(),
+  //       );
+  //       await _saveMeta(defaultMeta);
+  //     }
 
-      _isInitialized = true;
-      debugPrint('图例VFS系统初始化完成');
-    } catch (e) {
-      debugPrint('图例VFS系统初始化失败: $e');
-      rethrow;
-    }
-  }
+  //     _isInitialized = true;
+  //     debugPrint('图例VFS系统初始化完成');
+  //   } catch (e) {
+  //     debugPrint('图例VFS系统初始化失败: $e');
+  //     rethrow;
+  //   }
+  // }
 
   /// 构建图例文件夹路径
   String _buildLegendPath(String title) {

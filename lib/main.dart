@@ -39,9 +39,9 @@ void main() async {
     debugPrint('VFS系统初始化成功');
     
     // Initialize legend service to ensure proper mounting
-    final legendService = LegendCompatibilityService();
-    await legendService.initialize();
-    debugPrint('图例服务初始化成功');
+    // final legendService = LegendCompatibilityService();
+    // await legendService.initialize();
+    // debugPrint('图例服务初始化成功');
   } catch (e) {
     debugPrint('VFS系统初始化失败: $e');
     // VFS初始化失败不应该阻止应用启动，只记录错误

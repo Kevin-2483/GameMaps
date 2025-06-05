@@ -89,6 +89,8 @@ class VfsDatabaseInitializer {
     }
   }
 
+  
+
   /// 初始化应用数据库和挂载点
   Future<void> _initializeApplicationDatabases() async {
     try {
@@ -96,13 +98,21 @@ class VfsDatabaseInitializer {
 
       // 创建应用数据库的集合目录
       const databaseName = 'r6box';
-      final collections = ['legends'];
+      final collections = ['legends', 'maps'];
 
       for (final collection in collections) {
         await _storage.createDirectory(
           'indexeddb://$databaseName/$collection/',
         );
         debugPrint('创建应用集合目录: /$collection/');
+      }
+
+      // 挂载legends集合到VFS系统
+      for (final collection in collections) {
+        if (!_vfs.isMounted(databaseName, collection)) {
+          _vfs.mount(databaseName, collection);
+          debugPrint('挂载$collection集合到VFS系统: $databaseName/$collection');
+        }
       }
 
       debugPrint('应用数据库初始化完成');

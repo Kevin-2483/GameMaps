@@ -16,16 +16,16 @@ class LegendCompatibilityService {
   bool _initialized = false;
   
   /// 初始化服务
-  Future<void> initialize() async {
-    if (!_initialized) {
-      await _vfsService.initialize();
-      _initialized = true;
-    }
-  }
+  // Future<void> initialize() async {
+  //   if (!_initialized) {
+  //     await _vfsService.initialize();
+  //     _initialized = true;
+  //   }
+  // }
 
   /// 添加图例 (检查标题重复)
   Future<int> insertLegend(LegendItem legend) async {
-    await initialize();
+    // await initialize();
     
     // 检查是否已存在相同标题的图例
     final existing = await getLegendByTitle(legend.title);
@@ -49,14 +49,14 @@ class LegendCompatibilityService {
 
   /// 强制添加图例 (忽略标题重复检查)
   Future<int> forceInsertLegend(LegendItem legend) async {
-    await initialize();
+    // await initialize();
     await _vfsService.saveLegend(legend);
     return legend.title.hashCode.abs();
   }
 
   /// 获取所有图例
   Future<List<LegendItem>> getAllLegends() async {
-    await initialize();
+    // await initialize();
     final legends = await _vfsService.getAllLegends();
     
     // 为每个图例生成虚拟ID（基于标题哈希）
@@ -67,7 +67,7 @@ class LegendCompatibilityService {
 
   /// 根据ID获取图例 (ID是基于标题的哈希值)
   Future<LegendItem?> getLegendById(int id) async {
-    await initialize();
+    // await initialize();
     final legends = await getAllLegends();
     
     for (final legend in legends) {
@@ -81,7 +81,7 @@ class LegendCompatibilityService {
 
   /// 更新图例
   Future<void> updateLegend(LegendItem legend) async {
-    await initialize();
+    // await initialize();
     
     // 使用更新的时间戳
     final updatedLegend = legend.copyWith(updatedAt: DateTime.now());
@@ -90,7 +90,7 @@ class LegendCompatibilityService {
 
   /// 删除图例
   Future<void> deleteLegend(int id) async {
-    await initialize();
+    // await initialize();
     
     // 根据ID找到对应的标题
     final legend = await getLegendById(id);
@@ -101,7 +101,7 @@ class LegendCompatibilityService {
 
   /// 根据标题查找图例
   Future<LegendItem?> getLegendByTitle(String title) async {
-    await initialize();
+    // await initialize();
     final legend = await _vfsService.getLegend(title);
     
     if (legend != null) {
@@ -113,7 +113,7 @@ class LegendCompatibilityService {
 
   /// 清空所有图例数据
   Future<void> clearAllLegends() async {
-    await initialize();
+    // await initialize();
     await _vfsService.clearAllLegends();
   }
 
@@ -132,7 +132,7 @@ class LegendCompatibilityService {
   /// 导出数据库到文件
   Future<String?> exportDatabase({int? customVersion}) async {
     try {
-      await initialize();
+      // await initialize();
       
       // 获取所有图例，确保包含图像数据
       final legends = await getAllLegends();
@@ -171,7 +171,7 @@ class LegendCompatibilityService {
   /// 从文件导入数据库
   Future<bool> importDatabase() async {
     try {
-      await initialize();
+      // await initialize();
       
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -205,7 +205,7 @@ class LegendCompatibilityService {
 
   /// 获取存储统计信息
   Future<Map<String, dynamic>> getStorageStats() async {
-    await initialize();
+    // await initialize();
     
     final vfsInfo = await _vfsService.getStorageInfo();
     final legends = await getAllLegends();
@@ -228,7 +228,7 @@ class LegendCompatibilityService {
 
   /// 验证数据完整性
   Future<Map<String, dynamic>> verifyDataIntegrity() async {
-    await initialize();
+    // await initialize();
     
     final legends = await getAllLegends();
     int validCount = 0;
