@@ -14,10 +14,20 @@ class VfsDatabaseInitializer {
 
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
+    // 添加全局初始化状态标记
+  static bool _isInitialized = false;
 
+  /// 检查VFS系统是否已初始化
+  static bool get isInitialized => _isInitialized;
   /// 在应用启动时初始化整个VFS系统
   /// 包括根文件系统、权限系统、挂载点以及应用数据库
   Future<void> initializeApplicationVfs() async {
+    // 如果已经初始化过，直接返回
+    if (_isInitialized) {
+      debugPrint('VFS系统已初始化，跳过重复初始化');
+      return;
+    }
+
     try {
       debugPrint('开始初始化应用VFS系统...');
 
@@ -30,15 +40,21 @@ class VfsDatabaseInitializer {
       // 3. 初始化应用数据库和挂载点
       await _initializeApplicationDatabases();
 
+      // 标记为已初始化
+      _isInitialized = true;
       debugPrint('应用VFS系统初始化完成');
     } catch (e) {
       debugPrint('应用VFS系统初始化失败: $e');
       rethrow;
     }
   }
-
   /// 初始化根文件系统（保持向后兼容）
   Future<void> initializeDefaultDatabase() async {
+    // 如果已经通过 initializeApplicationVfs 初始化过，直接返回
+    if (_isInitialized) {
+      debugPrint('VFS系统已通过全局初始化完成，跳过默认数据库初始化');
+      return;
+    }
     await _initializeRootFileSystem();
   }
 

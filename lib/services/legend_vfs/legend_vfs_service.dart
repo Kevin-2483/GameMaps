@@ -96,14 +96,21 @@ class LegendVfsService {
   static final LegendVfsService _instance = LegendVfsService._internal();
   factory LegendVfsService() => _instance;
   LegendVfsService._internal();
-
   final VirtualFileSystem _vfs = VirtualFileSystem();
   static const String _database = 'r6box';
   static const String _collection = 'legends';
   static const String _metaFile = 'indexeddb://r6box/legends/.meta.json';
+  
+  // 添加初始化状态标记，避免重复初始化
+  bool _isInitialized = false;
 
   /// 初始化VFS图例存储系统
   Future<void> initialize() async {
+    if (_isInitialized) {
+      debugPrint('图例VFS系统已初始化，跳过重复初始化');
+      return;
+    }
+    
     try {
       // 确保集合目录存在
       final collectionPath = 'indexeddb://$_database/$_collection';
@@ -121,6 +128,7 @@ class LegendVfsService {
         await _saveMeta(defaultMeta);
       }
 
+      _isInitialized = true;
       debugPrint('图例VFS系统初始化完成');
     } catch (e) {
       debugPrint('图例VFS系统初始化失败: $e');

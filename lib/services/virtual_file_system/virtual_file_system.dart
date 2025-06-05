@@ -11,14 +11,23 @@ class VirtualFileSystem {
   static final VirtualFileSystem _instance = VirtualFileSystem._internal();
   factory VirtualFileSystem() => _instance;
   VirtualFileSystem._internal();
-
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
   final Map<String, VfsMount> _mounts = {};
+  
+  // 添加初始化状态标记，避免重复初始化
+  bool _isInitialized = false;
 
   /// 初始化虚拟文件系统
   Future<void> initialize() async {
+    if (_isInitialized) {
+      debugPrint('虚拟文件系统已初始化，跳过重复初始化');
+      return;
+    }
+    
     await _permissionManager.initialize();
+    _isInitialized = true;
+    debugPrint('虚拟文件系统初始化完成');
   }
 
   /// 挂载虚拟文件系统

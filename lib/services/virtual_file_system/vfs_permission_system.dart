@@ -186,20 +186,28 @@ class VfsPermissionManager {
       VfsPermissionManager._internal();
   factory VfsPermissionManager() => _instance;
   VfsPermissionManager._internal();
-
   final VfsStorageService _storage = VfsStorageService();
   final Map<String, VfsPermissionMask> _permissionCache = {};
+  
+  // 添加初始化状态标记，避免重复初始化
+  bool _isInitialized = false;
 
   /// 受保护的路径模式
   static const List<String> _protectedPaths = ['.initialized', 'mnt/', 'mnt'];
 
   /// 初始化权限系统
   Future<void> initialize() async {
+    if (_isInitialized) {
+      debugPrint('VFS权限系统已初始化，跳过重复初始化');
+      return;
+    }
+    
     debugPrint('Initializing VFS Permission System...');
 
     // 设置系统保护路径的权限
     await _setupSystemProtectedPaths();
 
+    _isInitialized = true;
     debugPrint('VFS Permission System initialized');
   }
 
