@@ -13,6 +13,7 @@ import '../../components/vfs/vfs_file_rename_dialog.dart';
 import '../../components/vfs/vfs_file_search_dialog.dart';
 import '../../components/vfs/vfs_permission_dialog.dart';
 import '../../components/layout/main_layout.dart';
+import '../../services/virtual_file_system/vfs_database_initializer.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -152,7 +153,8 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
     try {
       // 初始化VFS服务和根文件系统
-      await _vfsService.initialize();
+    final vfsInitializer = VfsDatabaseInitializer();
+    await vfsInitializer.initializeApplicationVfs();
 
       // 加载数据库列表
       await _loadDatabases();

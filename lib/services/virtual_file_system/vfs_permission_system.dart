@@ -193,7 +193,7 @@ class VfsPermissionManager {
   bool _isInitialized = false;
 
   /// 受保护的路径模式
-  static const List<String> _protectedPaths = ['.initialized', 'mnt/', 'mnt'];
+  static const List<String> _protectedPaths = ['.initialized'];
 
   /// 初始化权限系统
   Future<void> initialize() async {

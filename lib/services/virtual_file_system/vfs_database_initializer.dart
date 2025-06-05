@@ -31,14 +31,14 @@ class VfsDatabaseInitializer {
     try {
       debugPrint('开始初始化应用VFS系统...');
 
-      // 1. 初始化权限系统
-      await _permissionManager.initialize();
-
       // 2. 初始化根文件系统
       await _initializeRootFileSystem();
 
       // 3. 初始化应用数据库和挂载点
       await _initializeApplicationDatabases();
+
+      // 1. 初始化权限系统
+      await _permissionManager.initialize();
 
       // 标记为已初始化
       _isInitialized = true;
@@ -71,9 +71,6 @@ class VfsDatabaseInitializer {
 
       // 创建根文件系统
       await _createRootFileSystem();
-
-      // 设置系统保护路径的权限
-      await _setupSystemPermissions();
 
       // 标记为已初始化
       await _markAsInitialized();
@@ -136,12 +133,6 @@ class VfsDatabaseInitializer {
       'indexeddb://$databaseName/$collectionName/',
     );
     debugPrint('创建根目录: /');
-
-    // 创建挂载点目录，供其他数据库挂载使用
-    await _storage.createDirectory(
-      'indexeddb://$databaseName/$collectionName/mnt/',
-    );
-    debugPrint('创建挂载点目录: /mnt/');
   }
 
   /// 标记为已初始化
@@ -158,29 +149,6 @@ class VfsDatabaseInitializer {
     );
     await _storage.writeFile('indexeddb://r6box/fs/.initialized', content);
     debugPrint('VFS根文件系统标记为已初始化');
-  }
-
-  /// 设置系统权限
-  Future<void> _setupSystemPermissions() async {
-    // 设置根目录权限（用户可读写）
-    await _permissionManager.setPermissions(
-      'indexeddb://r6box/fs/',
-      VfsPermissionMask.defaultUser,
-    );
-
-    // 设置挂载点权限（系统保护，用户可访问但不能删除）
-    await _permissionManager.setPermissions(
-      'indexeddb://r6box/fs/mnt/',
-      VfsPermissionMask.mountPoint,
-    );
-
-    // 设置初始化标记文件权限（系统保护）
-    await _permissionManager.setPermissions(
-      'indexeddb://r6box/fs/.initialized',
-      VfsPermissionMask.systemProtected,
-    );
-
-    debugPrint('系统权限设置完成');
   }
 
   /// 获取数据库统计信息

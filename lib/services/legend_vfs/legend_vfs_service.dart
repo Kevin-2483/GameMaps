@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../models/legend_item.dart';
 import '../virtual_file_system/virtual_file_system.dart';
+import '../virtual_file_system/vfs_database_initializer.dart';
 
 /// VFS图例元数据
 class VfsLegendMeta {
@@ -100,7 +101,7 @@ class LegendVfsService {
   static const String _database = 'r6box';
   static const String _collection = 'legends';
   static const String _metaFile = 'indexeddb://r6box/legends/.meta.json';
-  
+
   // 添加初始化状态标记，避免重复初始化
   bool _isInitialized = false;
 
@@ -110,8 +111,18 @@ class LegendVfsService {
       debugPrint('图例VFS系统已初始化，跳过重复初始化');
       return;
     }
-    
+
     try {
+      // 首先初始化VFS系统
+      final vfsInitializer = VfsDatabaseInitializer();
+      await vfsInitializer.initializeApplicationVfs();
+
+      // 挂载legends集合到VFS系统
+      if (!_vfs.isMounted(_database, _collection)) {
+        _vfs.mount(_database, _collection);
+        debugPrint('挂载legends集合到VFS系统: $_database/$_collection');
+      }
+
       // 确保集合目录存在
       final collectionPath = 'indexeddb://$_database/$_collection';
       if (!await _vfs.exists(collectionPath)) {
@@ -186,7 +197,7 @@ class LegendVfsService {
   /// 添加或更新图例
   Future<String> saveLegend(LegendItem legend) async {
     final legendPath = _buildLegendPath(legend.title);
-    
+
     // 确保目录存在
     await _vfs.createDirectory(legendPath);
 
@@ -218,10 +229,7 @@ class LegendVfsService {
     // 更新元数据
     final meta = await _getMeta();
     final updatedMeta = meta.copyWith(
-      legendVersions: {
-        ...meta.legendVersions,
-        legend.title: legend.version,
-      },
+      legendVersions: {...meta.legendVersions, legend.title: legend.version},
       lastUpdated: DateTime.now(),
     );
     await _saveMeta(updatedMeta);
@@ -280,7 +288,7 @@ class LegendVfsService {
     try {
       final rootPath = 'indexeddb://$_database/$_collection';
       final entries = await _vfs.listDirectory(rootPath);
-      
+
       return entries
           .where((entry) => entry.isDirectory && entry.name.endsWith('.legend'))
           .map((entry) => entry.name.replaceAll('.legend', ''))
@@ -296,14 +304,14 @@ class LegendVfsService {
   Future<List<LegendItem>> getAllLegends() async {
     final titles = await getAllLegendTitles();
     final List<LegendItem> legends = [];
-    
+
     for (final title in titles) {
       final legend = await getLegend(title);
       if (legend != null) {
         legends.add(legend);
       }
     }
-    
+
     return legends;
   }
 
@@ -314,24 +322,24 @@ class LegendVfsService {
     try {
       if (await _vfs.exists(legendPath)) {
         await _vfs.delete(legendPath, recursive: true);
-        
+
         // 更新元数据
         final meta = await _getMeta();
         final updatedVersions = Map<String, int>.from(meta.legendVersions);
         updatedVersions.remove(title);
-        
+
         final updatedMeta = meta.copyWith(
           legendVersions: updatedVersions,
           lastUpdated: DateTime.now(),
         );
         await _saveMeta(updatedMeta);
-        
+
         return true;
       }
     } catch (e) {
       debugPrint('删除图例失败: $title, 错误: $e');
     }
-    
+
     return false;
   }
 
@@ -348,7 +356,7 @@ class LegendVfsService {
       for (final title in titles) {
         await deleteLegend(title);
       }
-      
+
       // 重置元数据
       final meta = VfsLegendMeta(
         version: 1,
@@ -366,7 +374,7 @@ class LegendVfsService {
   Future<Map<String, dynamic>> getStorageInfo() async {
     final meta = await _getMeta();
     final titles = await getAllLegendTitles();
-    
+
     return {
       'version': meta.version,
       'totalLegends': titles.length,

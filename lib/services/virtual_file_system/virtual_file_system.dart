@@ -19,16 +19,7 @@ class VirtualFileSystem {
   bool _isInitialized = false;
 
   /// 初始化虚拟文件系统
-  Future<void> initialize() async {
-    if (_isInitialized) {
-      debugPrint('虚拟文件系统已初始化，跳过重复初始化');
-      return;
-    }
-    
-    await _permissionManager.initialize();
-    _isInitialized = true;
-    debugPrint('虚拟文件系统初始化完成');
-  }
+
 
   /// 挂载虚拟文件系统
   void mount(String database, String collection, {VfsMount? mount}) {

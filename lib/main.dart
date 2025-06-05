@@ -14,6 +14,7 @@ import 'config/config_manager.dart';
 import 'services/web_database_importer.dart';
 import 'services/virtual_file_system/vfs_database_initializer.dart';
 import 'components/web/web_context_menu_handler.dart';
+import 'services/legend_vfs/legend_compatibility_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,12 +32,16 @@ void main() async {
 
   // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
-
   // Initialize VFS system
   try {
     final vfsInitializer = VfsDatabaseInitializer();
     await vfsInitializer.initializeApplicationVfs();
     debugPrint('VFS系统初始化成功');
+    
+    // Initialize legend service to ensure proper mounting
+    final legendService = LegendCompatibilityService();
+    await legendService.initialize();
+    debugPrint('图例服务初始化成功');
   } catch (e) {
     debugPrint('VFS系统初始化失败: $e');
     // VFS初始化失败不应该阻止应用启动，只记录错误

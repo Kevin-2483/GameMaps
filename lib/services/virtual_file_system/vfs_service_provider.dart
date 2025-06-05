@@ -5,6 +5,7 @@ import 'virtual_file_system.dart';
 import 'vfs_database_initializer.dart';
 import 'vfs_permission_system.dart';
 import 'vfs_storage_service.dart';
+import 'vfs_database_initializer.dart';
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -21,7 +22,8 @@ class VfsServiceProvider {
     if (VfsDatabaseInitializer.isInitialized) {
       debugPrint('VFS服务已通过全局初始化完成，跳过重复初始化');
       // 即使全局已初始化，也需要确保虚拟文件系统和挂载点设置
-      await _vfs.initialize();
+      final vfsInitializer = VfsDatabaseInitializer();
+      await vfsInitializer.initializeApplicationVfs();
       _vfs.mount('r6box', 'fs');
       debugPrint('VFS Service Provider ready (skip duplicate init)');
       return;
@@ -34,7 +36,8 @@ class VfsServiceProvider {
     await _initializer.initializeDefaultDatabase();
 
     // 初始化虚拟文件系统（包括权限系统）
-    await _vfs.initialize();
+    final vfsInitializer = VfsDatabaseInitializer();
+    await vfsInitializer.initializeApplicationVfs();
 
     // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
     _vfs.mount('r6box', 'fs');
