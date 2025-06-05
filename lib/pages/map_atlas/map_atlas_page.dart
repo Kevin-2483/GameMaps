@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
 import '../../services/map_database_service.dart';
+import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../mixins/map_localization_mixin.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../map_editor/map_editor_page.dart';
@@ -35,7 +36,7 @@ class _MapAtlasContent extends StatefulWidget {
 
 class _MapAtlasContentState extends State<_MapAtlasContent>
     with MapLocalizationMixin {
-  final MapDatabaseService _databaseService = MapDatabaseService();
+  final MapDatabaseService _databaseService = VfsMapServiceFactory.createMapDatabaseService();
   List<MapItemSummary> _maps = [];
   bool _isLoading = true;
   Map<String, String> _localizedTitles = {};

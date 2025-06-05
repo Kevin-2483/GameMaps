@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 import '../services/map_database_service.dart';
+import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
 
@@ -16,7 +17,7 @@ class WebDatabasePreloader {
     if (!kIsWeb) return;
 
     try {
-      final mapService = MapDatabaseService();
+      final mapService = VfsMapServiceFactory.createMapDatabaseService();
 
       // 检查是否已有示例数据
       final existingMaps = await mapService.getAllMapsSummary();
@@ -70,11 +71,10 @@ class WebDatabasePreloader {
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
     return base64Decode(base64String);
   }
-
   /// 直接插入示例地图（绕过Web只读限制）
   static Future<void> _insertSampleMapDirectly(MapItem mapItem) async {
     try {
-      final database = await MapDatabaseService().database;
+      final database = await VfsMapServiceFactory.createMapDatabaseService().database;
       final data = mapItem.toDatabase();
 
       await database.insert(
@@ -89,10 +89,8 @@ class WebDatabasePreloader {
 
   /// 清理示例数据（仅用于开发调试）
   static Future<void> clearSampleData() async {
-    if (!kIsWeb) return;
-
-    try {
-      final database = await MapDatabaseService().database;
+    if (!kIsWeb) return;    try {
+      final database = await VfsMapServiceFactory.createMapDatabaseService().database;
       await database.delete(
         'maps',
         where: 'title = ?',

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../models/map_item.dart';
 import '../models/legend_item.dart';
 import '../services/map_database_service.dart';
+import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
 
 /// Web平台数据库导入工具
@@ -37,10 +38,9 @@ class WebDatabaseImporter {
   static Future<void> importFromJson(Map<String, dynamic> data) async {
     await _importData(data);
   }
-
   /// 导入数据到数据库
   static Future<void> _importData(Map<String, dynamic> data) async {
-    final mapService = MapDatabaseService();
+    final mapService = VfsMapServiceFactory.createMapDatabaseService();
     final legendService = LegendCompatibilityService();
 
     // 导入地图数据 - 处理新的嵌套格式
@@ -85,9 +85,7 @@ class WebDatabaseImporter {
 
   /// 创建示例数据（当没有导出数据时使用）
   static Future<void> _createSampleData() async {
-    print('WebDatabaseImporter: 创建示例数据');
-
-    final mapService = MapDatabaseService();
+    print('WebDatabaseImporter: 创建示例数据');    final mapService = VfsMapServiceFactory.createMapDatabaseService();
 
     // 创建示例地图
     final sampleMap = MapItem(

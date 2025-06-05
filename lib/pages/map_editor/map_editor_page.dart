@@ -8,6 +8,7 @@ import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/map_database_service.dart';
+import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/legend_vfs/legend_compatibility_service.dart';
 import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -71,7 +72,7 @@ class _MapEditorContent extends StatefulWidget {
 class _MapEditorContentState extends State<_MapEditorContent> {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
-  final MapDatabaseService _mapDatabaseService = MapDatabaseService();
+  final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
   final LegendCompatibilityService _legendDatabaseService = LegendCompatibilityService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
