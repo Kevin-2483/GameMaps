@@ -25,28 +25,27 @@ import 'widgets/z_index_inspector.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
-  final int? mapId; // 地图ID，用于按需加载
+  final String? mapTitle; // 地图标题，用于按需加载
   final bool isPreviewMode;
 
   const MapEditorPage({
     super.key,
     this.mapItem,
-    this.mapId,
+    this.mapTitle,
     this.isPreviewMode = false,
   }) : assert(
-         mapItem != null || mapId != null,
-         'Either mapItem or mapId must be provided',
+         mapItem != null || mapTitle != null,
+         'Either mapItem or mapTitle must be provided',
        );
 
   @override
-  bool get showTrayNavigation => false; // 禁用 TrayNavigation
-  @override
+  bool get showTrayNavigation => false; // 禁用 TrayNavigation  @override
   Widget buildContent(BuildContext context) {
     return WebReadOnlyBanner(
       showBanner: kIsWeb,
       child: _MapEditorContent(
         mapItem: mapItem,
-        mapId: mapId,
+        mapTitle: mapTitle,
         // isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
         isPreviewMode: isPreviewMode,
       ),
@@ -56,12 +55,12 @@ class MapEditorPage extends BasePage {
 
 class _MapEditorContent extends StatefulWidget {
   final MapItem? mapItem;
-  final int? mapId;
+  final String? mapTitle;
   final bool isPreviewMode;
 
   const _MapEditorContent({
     this.mapItem,
-    this.mapId,
+    this.mapTitle,
     this.isPreviewMode = false,
   });
 
@@ -171,21 +170,20 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
     });
   }
-
   Future<void> _initializeMap() async {
     setState(() => _isLoading = true);
     try {
-      // 如果已有 mapItem，直接使用；否则通过 mapId 从数据库加载
+      // 如果已有 mapItem，直接使用；否则通过 mapTitle 从数据库加载
       if (widget.mapItem != null) {
         _currentMap = widget.mapItem!;
-      } else if (widget.mapId != null) {
-        final loadedMap = await _mapDatabaseService.getMapById(widget.mapId!);
+      } else if (widget.mapTitle != null) {
+        final loadedMap = await _mapDatabaseService.getMapByTitle(widget.mapTitle!);
         if (loadedMap == null) {
-          throw Exception('未找到ID为 ${widget.mapId} 的地图');
+          throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
         }
         _currentMap = loadedMap;
       } else {
-        throw Exception('mapItem 和 mapId 都为空');
+        throw Exception('mapItem 和 mapTitle 都为空');
       }
 
       // 加载可用图例

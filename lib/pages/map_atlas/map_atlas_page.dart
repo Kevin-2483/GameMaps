@@ -237,18 +237,17 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
   }
-
-  void _openMapEditor(int mapId) async {
+  void _openMapEditor(String mapTitle) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConfigAwareWidget(
           featureId: 'DebugMode',
           child: MapEditorPage(
-            mapId: mapId,
+            mapTitle: mapTitle,
             isPreviewMode: kIsWeb ? true : false, // Web平台强制预览模式
           ),
           fallback: MapEditorPage(
-            mapId: mapId,
+            mapTitle: mapTitle,
             isPreviewMode: true, // 非调试模式下只能预览
           ),
         ),
@@ -357,14 +356,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   return _MapCard(
                     map: map,
                     localizedTitle: _localizedTitles[map.title] ?? map.title,
-                    onDelete: () {
-                      if (kIsWeb) {
+                    onDelete: () {                  if (kIsWeb) {
                         WebReadOnlyDialog.show(context, '删除地图');
                       } else {
                         _deleteMap(map);
                       }
                     },
-                    onTap: () => _openMapEditor(map.id),
+                    onTap: () => _openMapEditor(map.title),
                   );
                 },
               ),

@@ -4,59 +4,58 @@ import '../../models/map_layer.dart';
 
 /// VFS地图数据服务抽象接口
 /// 定义VFS兼容的地图数据操作方法
+/// 注意：由于VFS系统使用基于标题的存储，大部分方法使用mapTitle作为地图标识符
 abstract class VfsMapService {
   // 地图CRUD操作
   Future<List<MapItem>> getAllMaps();
-  Future<MapItem?> getMapById(String id);
+  Future<MapItem?> getMapById(String id);  // 兼容性方法，内部转换为标题查找
   Future<MapItem?> getMapByTitle(String title);
-  Future<String> saveMap(MapItem map);
-  Future<void> deleteMap(String id);
-  Future<void> updateMapMeta(String id, MapItem map);
+  Future<String> saveMap(MapItem map);  // 返回标题作为标识符
+  Future<void> deleteMap(String mapTitle);
+  Future<void> updateMapMeta(String mapTitle, MapItem map);
+    // 图层操作 - 使用mapTitle作为地图标识符
+  Future<List<MapLayer>> getMapLayers(String mapTitle);
+  Future<MapLayer?> getLayerById(String mapTitle, String layerId);
+  Future<void> saveLayer(String mapTitle, MapLayer layer);
+  Future<void> deleteLayer(String mapTitle, String layerId);
+  Future<void> updateLayerOrder(String mapTitle, List<String> layerIds);
   
-  // 图层操作
-  Future<List<MapLayer>> getMapLayers(String mapId);
-  Future<MapLayer?> getLayerById(String mapId, String layerId);
-  Future<void> saveLayer(String mapId, MapLayer layer);
-  Future<void> deleteLayer(String mapId, String layerId);
-  Future<void> updateLayerOrder(String mapId, List<String> layerIds);
+  // 绘制元素操作 - 使用mapTitle作为地图标识符
+  Future<List<MapDrawingElement>> getLayerElements(String mapTitle, String layerId);
+  Future<MapDrawingElement?> getElementById(String mapTitle, String layerId, String elementId);
+  Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element);
+  Future<void> deleteElement(String mapTitle, String layerId, String elementId);
+  Future<void> updateElementsOrder(String mapTitle, String layerId, List<String> elementIds);
   
-  // 绘制元素操作
-  Future<List<MapDrawingElement>> getLayerElements(String mapId, String layerId);
-  Future<MapDrawingElement?> getElementById(String mapId, String layerId, String elementId);
-  Future<void> saveElement(String mapId, String layerId, MapDrawingElement element);
-  Future<void> deleteElement(String mapId, String layerId, String elementId);
-  Future<void> updateElementsOrder(String mapId, String layerId, List<String> elementIds);
+  // 图例组操作 - 使用mapTitle作为地图标识符
+  Future<List<LegendGroup>> getMapLegendGroups(String mapTitle);
+  Future<LegendGroup?> getLegendGroupById(String mapTitle, String groupId);
+  Future<void> saveLegendGroup(String mapTitle, LegendGroup group);
+  Future<void> deleteLegendGroup(String mapTitle, String groupId);
   
-  // 图例组操作
-  Future<List<LegendGroup>> getMapLegendGroups(String mapId);
-  Future<LegendGroup?> getLegendGroupById(String mapId, String groupId);
-  Future<void> saveLegendGroup(String mapId, LegendGroup group);
-  Future<void> deleteLegendGroup(String mapId, String groupId);
+  // 图例项操作 - 使用mapTitle作为地图标识符
+  Future<List<LegendItem>> getLegendGroupItems(String mapTitle, String groupId);
+  Future<LegendItem?> getLegendItemById(String mapTitle, String groupId, String itemId);
+  Future<void> saveLegendItem(String mapTitle, String groupId, LegendItem item);
+  Future<void> deleteLegendItem(String mapTitle, String groupId, String itemId);
+  // 资产管理 - 每个地图独立的资产存储
+  Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType);
+  Future<Uint8List?> getAsset(String mapTitle, String hash);
+  Future<void> deleteAsset(String mapTitle, String hash);
+  Future<void> cleanupUnusedAssets(String mapTitle);
+  Future<Map<String, int>> getAssetUsageStats(String mapTitle);
   
-  // 图例项操作
-  Future<List<LegendItem>> getLegendGroupItems(String mapId, String groupId);
-  Future<LegendItem?> getLegendItemById(String mapId, String groupId, String itemId);
-  Future<void> saveLegendItem(String mapId, String groupId, LegendItem item);
-  Future<void> deleteLegendItem(String mapId, String groupId, String itemId);
+  // 本地化支持 - 使用mapTitle作为地图标识符
+  Future<Map<String, String>> getMapLocalizations(String mapTitle);
+  Future<void> saveMapLocalizations(String mapTitle, Map<String, String> localizations);
   
-  // 资产管理
-  Future<String> saveAsset(Uint8List data, String? mimeType);
-  Future<Uint8List?> getAsset(String hash);
-  Future<void> deleteAsset(String hash);
-  Future<void> cleanupUnusedAssets(String mapId);
-  Future<Map<String, int>> getAssetUsageStats(String mapId);
+  // 工具方法 - 兼容性方法，支持ID和标题查找
+  Future<bool> mapExists(String idOrTitle);
+  Future<Map<String, dynamic>> getMapStats(String idOrTitle);
+  Future<void> validateMapIntegrity(String idOrTitle);
   
-  // 本地化支持
-  Future<Map<String, String>> getMapLocalizations(String mapId);
-  Future<void> saveMapLocalizations(String mapId, Map<String, String> localizations);
-  
-  // 工具方法
-  Future<bool> mapExists(String id);
-  Future<Map<String, dynamic>> getMapStats(String id);
-  Future<void> validateMapIntegrity(String id);
-  
-  // 批量操作
-  Future<void> duplicateMap(String sourceId, String newTitle);
-  Future<void> exportMap(String id, String exportPath);
+  // 批量操作 - 使用标题作为标识符
+  Future<void> duplicateMap(String sourceTitle, String newTitle);
+  Future<void> exportMap(String mapTitle, String exportPath);
   Future<String> importMap(String importPath, {bool overwrite = false});
 }

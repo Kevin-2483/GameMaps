@@ -108,18 +108,28 @@ void main() {
       final layers = await vfsMapService.getMapLayers(mapId);
       expect(layers.length, equals(1));
       expect(layers.first.id, equals('layer1'));
-    });
-
-    test('资产管理', () async {
+    });    test('资产管理', () async {
+      // 创建测试地图
+      final testMap = MapItem(
+        title: '资产测试地图',
+        imageData: Uint8List.fromList([1, 2, 3]),
+        version: 1,
+        layers: [],
+        legendGroups: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await vfsMapService.saveMap(testMap);
+      
       // 创建测试资产
       final assetData = Uint8List.fromList([255, 216, 255, 224]); // JPEG头部
       
-      // 保存资产
-      final assetHash = await vfsMapService.saveAsset(assetData, 'image/jpeg');
+      // 保存资产到该地图
+      final assetHash = await vfsMapService.saveAsset(testMap.title, assetData, 'image/jpeg');
       expect(assetHash, isNotEmpty);
 
       // 获取资产
-      final retrievedAsset = await vfsMapService.getAsset(assetHash);
+      final retrievedAsset = await vfsMapService.getAsset(testMap.title, assetHash);
       expect(retrievedAsset, isNotNull);
       expect(retrievedAsset, equals(assetData));
     });
@@ -245,20 +255,18 @@ void main() {
       expect(summaries.any((summary) => summary.title == '适配器测试地图'), isTrue);
     });
   });
-
   group('VFS Map Data Migration Tests', () {
-    test('数据迁移测试', () async {
+    test('VFS直接存储测试', () async {
       final storageService = VfsStorageService();
       final vfsMapService = VfsMapServiceFactory.createVfsMapService(
         storageService: storageService,
       );
-      final migrator = VfsMapDataMigrator(vfsMapService, storageService);
-
+      
       // 创建测试地图列表
       final testMaps = <MapItem>[];
       for (int i = 0; i < 3; i++) {
         final map = MapItem(
-          title: '迁移测试地图 $i',
+          title: 'VFS测试地图 $i',
           imageData: Uint8List.fromList([i, i + 1, i + 2]),
           version: 1,
           layers: [],
@@ -269,15 +277,22 @@ void main() {
         testMaps.add(map);
       }
 
-      // 执行迁移
-      final result = await migrator.migrateAllMaps(testMaps);
-      expect(result.successCount, equals(3));
-      expect(result.failureCount, equals(0));
-      expect(result.hasFailures, isFalse);
+      // 直接使用VFS存储保存地图
+      for (final map in testMaps) {
+        final savedId = await vfsMapService.saveMap(map);
+        expect(savedId, equals(map.title));
+      }
 
-      // 验证迁移结果
-      final isValid = await migrator.verifyMigration(testMaps);
-      expect(isValid, isTrue);
+      // 验证保存结果
+      final allMaps = await vfsMapService.getAllMaps();
+      expect(allMaps.length, greaterThanOrEqualTo(3));
+      
+      // 验证每个地图都能正确加载
+      for (final map in testMaps) {
+        final loadedMap = await vfsMapService.getMapByTitle(map.title);
+        expect(loadedMap, isNotNull);
+        expect(loadedMap!.title, equals(map.title));
+      }
     });
   });
 }

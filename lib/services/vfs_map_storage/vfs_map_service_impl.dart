@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import '../virtual_file_system/vfs_storage_service.dart';
 import '../virtual_file_system/vfs_protocol.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../utils/filename_sanitizer.dart';
 
 /// VFS地图服务具体实现
 /// 基于VFS虚拟文件系统存储地图数据
@@ -14,11 +16,9 @@ class VfsMapServiceImpl implements VfsMapService {
   final VfsStorageService _storageService;
   final String _databaseName;
   final String _mapsCollection;
-  
-  // 缓存管理
+    // 缓存管理
   final Map<String, MapItem> _mapCache = {};
-  final Map<String, List<MapLayer>> _layerCache = {};
-  final Map<String, String> _assetHashIndex = {};
+  final Map<String, List<MapLayer>> _layerCache = {};  final Map<String, String> _assetHashIndex = {};
   
   VfsMapServiceImpl({
     required VfsStorageService storageService,
@@ -27,26 +27,30 @@ class VfsMapServiceImpl implements VfsMapService {
   })  : _storageService = storageService,
         _databaseName = databaseName,
         _mapsCollection = mapsCollection;
-
-  // 路径构建方法
-  String _getMapPath(String mapId) => '$mapId.mapdata';
-  String _getMapMetaPath(String mapId) => '${_getMapPath(mapId)}/meta.json';
-  String _getMapLocalizationPath(String mapId) => '${_getMapPath(mapId)}/localization.json';
-  String _getMapCoverPath(String mapId) => '${_getMapPath(mapId)}/cover.png';
-  String _getLayersPath(String mapId) => '${_getMapPath(mapId)}/data/default/layers';
-  String _getLayerPath(String mapId, String layerId) => '${_getLayersPath(mapId)}/$layerId';
-  String _getLayerConfigPath(String mapId, String layerId) => '${_getLayerPath(mapId, layerId)}/config.json';
-  String _getElementsPath(String mapId, String layerId) => '${_getLayerPath(mapId, layerId)}/elements';
-  String _getElementPath(String mapId, String layerId, String elementId) => '${_getElementsPath(mapId, layerId)}/$elementId.json';
-  String _getLegendsPath(String mapId) => '${_getMapPath(mapId)}/data/default/legends';
-  String _getLegendGroupPath(String mapId, String groupId) => '${_getLegendsPath(mapId)}/$groupId';
-  String _getLegendGroupConfigPath(String mapId, String groupId) => '${_getLegendGroupPath(mapId, groupId)}/config.json';
-  String _getLegendItemsPath(String mapId, String groupId) => '${_getLegendGroupPath(mapId, groupId)}/items';
-  String _getLegendItemPath(String mapId, String groupId, String itemId) => '${_getLegendItemsPath(mapId, groupId)}/$itemId.json';
+  // 路径构建方法 - 使用基于标题的文件名
+  String _getMapPath(String mapTitle) {
+    final sanitizedTitle = FilenameSanitizer.sanitize(mapTitle);
+    return '$sanitizedTitle.mapdata';
+  }
+  
+  String _getMapMetaPath(String mapTitle) => '${_getMapPath(mapTitle)}/meta.json';
+  String _getMapLocalizationPath(String mapTitle) => '${_getMapPath(mapTitle)}/localization.json';
+  String _getMapCoverPath(String mapTitle) => '${_getMapPath(mapTitle)}/cover.png';
+  String _getLayersPath(String mapTitle) => '${_getMapPath(mapTitle)}/data/default/layers';
+  String _getLayerPath(String mapTitle, String layerId) => '${_getLayersPath(mapTitle)}/$layerId';
+  String _getLayerConfigPath(String mapTitle, String layerId) => '${_getLayerPath(mapTitle, layerId)}/config.json';
+  String _getElementsPath(String mapTitle, String layerId) => '${_getLayerPath(mapTitle, layerId)}/elements';
+  String _getElementPath(String mapTitle, String layerId, String elementId) => '${_getElementsPath(mapTitle, layerId)}/$elementId.json';
+  String _getLegendsPath(String mapTitle) => '${_getMapPath(mapTitle)}/data/default/legends';
+  String _getLegendGroupPath(String mapTitle, String groupId) => '${_getLegendsPath(mapTitle)}/$groupId';
+  String _getLegendGroupConfigPath(String mapTitle, String groupId) => '${_getLegendGroupPath(mapTitle, groupId)}/config.json';
+  String _getLegendItemsPath(String mapTitle, String groupId) => '${_getLegendGroupPath(mapTitle, groupId)}/items';
+  String _getLegendItemPath(String mapTitle, String groupId, String itemId) => '${_getLegendItemsPath(mapTitle, groupId)}/$itemId.json';  // 资产管理路径构建
+  String _getAssetsPath(String mapTitle) => '${_getMapPath(mapTitle)}/assets';
+  String _getAssetPath(String mapTitle, String filename) => '${_getAssetsPath(mapTitle)}/$filename';
 
   // VFS路径构建
-  String _buildVfsPath(String path) => VfsProtocol.buildPath(_databaseName, _mapsCollection, path);
-  @override
+  String _buildVfsPath(String path) => VfsProtocol.buildPath(_databaseName, _mapsCollection, path);@override
   Future<List<MapItem>> getAllMaps() async {
     try {
       final files = await _storageService.listDirectory(_buildVfsPath(''));
@@ -54,8 +58,9 @@ class VfsMapServiceImpl implements VfsMapService {
       
       for (final file in files) {
         if (file.isDirectory && file.name.endsWith('.mapdata')) {
-          final mapId = file.name.replaceAll('.mapdata', '');
-          final map = await getMapById(mapId);
+          // 从文件名提取标题
+          final mapTitle = file.name.replaceAll('.mapdata', '');
+          final map = await getMapByTitle(FilenameSanitizer.desanitize(mapTitle));
           if (map != null) {
             maps.add(map);
           }
@@ -64,20 +69,36 @@ class VfsMapServiceImpl implements VfsMapService {
       
       return maps;
     } catch (e) {
-      debugPrint('获取所有地图失败: $e');
+      debugPrint('获取所有地图失�? $e');
       return [];
     }
   }
-
   @override
   Future<MapItem?> getMapById(String id) async {
     try {
-      // 检查缓存
-      if (_mapCache.containsKey(id)) {
-        return _mapCache[id];
+      // 为了兼容性，getMapById会尝试将ID作为标题查找
+      // 首先尝试直接作为标题查找
+      final map = await getMapByTitle(id);
+      if (map != null) {
+        return map;
+      }
+      
+      // 如果找不到，可能是数字ID，在这种情况下我们无法处�?
+      debugPrint('无法通过ID查找地图，VFS系统使用基于标题的存�? $id');
+      return null;
+    } catch (e) {
+      debugPrint('通过ID加载地图失败 [$id]: $e');
+      return null;
+    }
+  }@override
+  Future<MapItem?> getMapByTitle(String title) async {
+    try {
+      // 检查缓�?
+      if (_mapCache.containsKey(title)) {
+        return _mapCache[title];
       }
 
-      final metaPath = _buildVfsPath(_getMapMetaPath(id));
+      final metaPath = _buildVfsPath(_getMapMetaPath(title));
       final metaData = await _storageService.readFile(metaPath);
       
       if (metaData == null) {
@@ -87,20 +108,22 @@ class VfsMapServiceImpl implements VfsMapService {
       final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
       
       // 加载图层数据
-      final layers = await getMapLayers(id);
+      final layers = await getMapLayers(title);
       
-      // 加载图例组数据
-      final legendGroups = await getMapLegendGroups(id);
-        // 加载封面图片
+      // 加载图例组数�?
+      final legendGroups = await getMapLegendGroups(title);
+      
+      // 加载封面图片
       VfsFileContent? coverData;
       try {
-        final coverPath = _buildVfsPath(_getMapCoverPath(id));        coverData = await _storageService.readFile(coverPath);
+        final coverPath = _buildVfsPath(_getMapCoverPath(title));
+        coverData = await _storageService.readFile(coverPath);
       } catch (e) {
         debugPrint('加载地图封面失败: $e');
       }
 
       final map = MapItem(
-        id: int.tryParse(id),
+        id: int.tryParse(metaJson['id'] as String? ?? ''),
         title: metaJson['title'] as String,
         imageData: coverData?.data ?? Uint8List(0),
         version: metaJson['version'] as int,
@@ -111,81 +134,66 @@ class VfsMapServiceImpl implements VfsMapService {
       );
 
       // 缓存结果
-      _mapCache[id] = map;
+      _mapCache[title] = map;
       return map;
     } catch (e) {
-      debugPrint('加载地图失败 [$id]: $e');
+      debugPrint('加载地图失败 [$title]: $e');
       return null;
     }
   }
-  @override
-  Future<MapItem?> getMapByTitle(String title) async {
-    final maps = await getAllMaps();
-    try {
-      return maps.firstWhere((map) => map.title == title);
-    } catch (e) {
-      return null;
-    }
-  }
-
   @override
   Future<String> saveMap(MapItem map) async {
-    final mapId = map.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
-    
     try {
-      // 保存元数据
-      await _saveMapMeta(mapId, map);
+      // 保存元数�?
+      await _saveMapMeta(map.title, map);
       
       // 保存封面图片      
       if (map.imageData != null && map.imageData!.isNotEmpty) {
-        await _saveMapCover(mapId, map.imageData!);
+        await _saveMapCover(map.title, map.imageData!);
       }
       
       // 保存图层数据
       for (final layer in map.layers) {
-        await saveLayer(mapId, layer);
+        await saveLayer(map.title, layer);
       }
       
-      // 保存图例组数据
+      // 保存图例组数�?
       for (final group in map.legendGroups) {
-        await saveLegendGroup(mapId, group);
+        await saveLegendGroup(map.title, group);
       }
       
       // 清除缓存
-      _mapCache.remove(mapId);
-      _layerCache.remove(mapId);
+      _mapCache.remove(map.title);
+      _layerCache.remove(map.title);
       
-      return mapId;
+      return map.title; // 返回标题作为标识�?
     } catch (e) {
-      debugPrint('保存地图失败 [$mapId]: $e');
+      debugPrint('保存地图失败 [${map.title}]: $e');
       rethrow;
     }
-  }
-
-  @override
-  Future<void> deleteMap(String id) async {
+  }  @override
+  Future<void> deleteMap(String mapTitle) async {
     try {
-      final mapPath = _buildVfsPath(_getMapPath(id));
+      final mapPath = _buildVfsPath(_getMapPath(mapTitle));
       await _storageService.delete(mapPath);
       
       // 清除缓存
-      _mapCache.remove(id);
-      _layerCache.remove(id);
+      _mapCache.remove(mapTitle);
+      _layerCache.remove(mapTitle);
     } catch (e) {
-      debugPrint('删除地图失败 [$id]: $e');
+      debugPrint('删除地图失败 [$mapTitle]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> updateMapMeta(String id, MapItem map) async {
-    await _saveMapMeta(id, map);
-    _mapCache.remove(id); // 清除缓存
-  }
-  // 私有方法：保存地图元数据
-  Future<void> _saveMapMeta(String mapId, MapItem map) async {
+  Future<void> updateMapMeta(String mapTitle, MapItem map) async {
+    await _saveMapMeta(mapTitle, map);
+    _mapCache.remove(mapTitle); // 清除缓存
+  }// 私有方法：保存地图元数据
+  Future<void> _saveMapMeta(String mapTitle, MapItem map) async {
     final metaData = {
-      'id': mapId,
+      'id': map.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'title': map.title,
       'version': map.version,
       'createdAt': map.createdAt.toIso8601String(),
@@ -195,30 +203,31 @@ class VfsMapServiceImpl implements VfsMapService {
       'hasImage': map.imageData != null && map.imageData!.isNotEmpty,
     };
 
-    final metaPath = _buildVfsPath(_getMapMetaPath(mapId));
+    final metaPath = _buildVfsPath(_getMapMetaPath(mapTitle));
     final metaJson = jsonEncode(metaData);
     await _storageService.writeFile(metaPath, utf8.encode(metaJson));
   }
 
-  // 私有方法：保存地图封面
-  Future<void> _saveMapCover(String mapId, Uint8List imageData) async {
-    final coverPath = _buildVfsPath(_getMapCoverPath(mapId));
+  // 私有方法：保存地图封�?
+  Future<void> _saveMapCover(String mapTitle, Uint8List imageData) async {
+    final coverPath = _buildVfsPath(_getMapCoverPath(mapTitle));
     await _storageService.writeFile(coverPath, imageData);
   }
-
   @override
-  Future<List<MapLayer>> getMapLayers(String mapId) async {
+  Future<List<MapLayer>> getMapLayers(String mapTitle) async {
     try {
-      // 检查缓存
-      if (_layerCache.containsKey(mapId)) {
-        return _layerCache[mapId]!;
-      }      final layersPath = _buildVfsPath(_getLayersPath(mapId));
+      // 检查缓�?
+      if (_layerCache.containsKey(mapTitle)) {
+        return _layerCache[mapTitle]!;
+      }
+      
+      final layersPath = _buildVfsPath(_getLayersPath(mapTitle));
       final files = await _storageService.listDirectory(layersPath);
       final layers = <MapLayer>[];
 
       for (final file in files) {
         if (file.isDirectory) {
-          final layer = await getLayerById(mapId, file.name);
+          final layer = await getLayerById(mapTitle, file.name);
           if (layer != null) {
             layers.add(layer);
           }
@@ -229,49 +238,77 @@ class VfsMapServiceImpl implements VfsMapService {
       layers.sort((a, b) => a.order.compareTo(b.order));
       
       // 缓存结果
-      _layerCache[mapId] = layers;
+      _layerCache[mapTitle] = layers;
       return layers;
     } catch (e) {
-      debugPrint('加载图层列表失败 [$mapId]: $e');
+      debugPrint('加载图层列表失败 [$mapTitle]: $e');
       return [];
     }
   }
 
   @override
-  Future<MapLayer?> getLayerById(String mapId, String layerId) async {
+  Future<MapLayer?> getLayerById(String mapTitle, String layerId) async {
     try {
-      final configPath = _buildVfsPath(_getLayerConfigPath(mapId, layerId));
+      final configPath = _buildVfsPath(_getLayerConfigPath(mapTitle, layerId));
       final configData = await _storageService.readFile(configPath);
-        if (configData == null) {
+      
+      if (configData == null) {
         return null;
-      }
-
-      final configJson = jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
+      }      final configJson = jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
       
       // 加载图层的绘制元素
-      final elements = await getLayerElements(mapId, layerId);
-        return MapLayer(
+      final elements = await getLayerElements(mapTitle, layerId);
+      
+      // 加载图层背景图片数据（如果存在）
+      Uint8List? imageData;
+      if (configJson['imageData'] != null) {
+        final imageConfig = configJson['imageData'] as Map<String, dynamic>;
+        final hash = imageConfig['hash'] as String;
+        imageData = await getAsset(mapTitle, hash);
+        if (imageData != null) {
+          debugPrint('图层背景图已从资产系统加载，哈希: $hash (${imageData.length} bytes)');
+        } else {
+          debugPrint('警告：无法从资产系统加载图层背景图，哈希: $hash');
+        }
+      }
+
+      // 解析图片适应方式
+      BoxFit? imageFit;
+      if (configJson['imageFit'] != null) {
+        final fitString = configJson['imageFit'] as String;
+        try {
+          imageFit = BoxFit.values.firstWhere((fit) => fit.name == fitString);
+        } catch (e) {
+          imageFit = BoxFit.contain; // 默认值
+        }
+      }
+      
+      return MapLayer(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
         order: configJson['order'] as int,
         opacity: (configJson['opacity'] as num).toDouble(),
         isVisible: configJson['isVisible'] as bool,
+        imageData: imageData, // 设置加载的背景图片数据
+        imageFit: imageFit,
+        xOffset: (configJson['xOffset'] as num?)?.toDouble() ?? 0.0,
+        yOffset: (configJson['yOffset'] as num?)?.toDouble() ?? 0.0,
+        imageScale: (configJson['imageScale'] as num?)?.toDouble() ?? 1.0,
         legendGroupIds: List<String>.from(configJson['legendGroupIds'] ?? []),
         elements: elements,
         createdAt: DateTime.parse(configJson['createdAt'] as String),
         updatedAt: DateTime.parse(configJson['updatedAt'] as String),
+        isLinkedToNext: configJson['isLinkedToNext'] as bool? ?? false,
       );
     } catch (e) {
-      debugPrint('加载图层失败 [$mapId/$layerId]: $e');
+      debugPrint('加载图层失败 [$mapTitle/$layerId]: $e');
       return null;
     }
-  }
-
-  @override
-  Future<void> saveLayer(String mapId, MapLayer layer) async {
+  }  @override
+  Future<void> saveLayer(String mapTitle, MapLayer layer) async {
     try {
-      // 保存图层配置      
-      final configData = {
+      // 保存图层配置，包括背景图片数据处理
+      final Map<String, dynamic> configData = {
         'id': layer.id,
         'name': layer.name,
         'order': layer.order,
@@ -282,59 +319,81 @@ class VfsMapServiceImpl implements VfsMapService {
         'updatedAt': layer.updatedAt.toIso8601String(),
       };
 
-      final configPath = _buildVfsPath(_getLayerConfigPath(mapId, layer.id));
+      // 如果图层有背景图片数据，保存到资产目录并记录引用
+      if (layer.imageData != null && layer.imageData!.isNotEmpty) {
+        final hash = await saveAsset(mapTitle, layer.imageData!, 'image/png');
+        configData['imageData'] = {
+          'path': 'assets/$hash.png',
+          'hash': hash,
+          'originalName': 'layer_background.png',
+          'size': layer.imageData!.length,
+          'mimeType': 'image/png',
+        };
+        debugPrint('图层背景图已保存到资产系统，哈希: $hash (${layer.imageData!.length} bytes)');
+      }
+
+      // 添加其他图层属性
+      if (layer.imageFit != null) {
+        configData['imageFit'] = layer.imageFit!.name;
+      }
+      configData['xOffset'] = layer.xOffset;
+      configData['yOffset'] = layer.yOffset;
+      configData['imageScale'] = layer.imageScale;
+      configData['isLinkedToNext'] = layer.isLinkedToNext;
+
+      final configPath = _buildVfsPath(_getLayerConfigPath(mapTitle, layer.id));
       final configJson = jsonEncode(configData);
       await _storageService.writeFile(configPath, utf8.encode(configJson));
 
       // 保存绘制元素
       for (final element in layer.elements) {
-        await saveElement(mapId, layer.id, element);
+        await saveElement(mapTitle, layer.id, element);
       }
 
       // 清除缓存
-      _layerCache.remove(mapId);
+      _layerCache.remove(mapTitle);
     } catch (e) {
-      debugPrint('保存图层失败 [$mapId/${layer.id}]: $e');
+      debugPrint('保存图层失败 [$mapTitle/${layer.id}]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> deleteLayer(String mapId, String layerId) async {
+  Future<void> deleteLayer(String mapTitle, String layerId) async {
     try {
-      final layerPath = _buildVfsPath(_getLayerPath(mapId, layerId));
+      final layerPath = _buildVfsPath(_getLayerPath(mapTitle, layerId));
       await _storageService.delete(layerPath);
       
       // 清除缓存
-      _layerCache.remove(mapId);
+      _layerCache.remove(mapTitle);
     } catch (e) {
-      debugPrint('删除图层失败 [$mapId/$layerId]: $e');
+      debugPrint('删除图层失败 [$mapTitle/$layerId]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> updateLayerOrder(String mapId, List<String> layerIds) async {
+  Future<void> updateLayerOrder(String mapTitle, List<String> layerIds) async {
     // 重新排序图层
     for (int i = 0; i < layerIds.length; i++) {
-      final layer = await getLayerById(mapId, layerIds[i]);
+      final layer = await getLayerById(mapTitle, layerIds[i]);
       if (layer != null) {
         final updatedLayer = layer.copyWith(order: i);
-        await saveLayer(mapId, updatedLayer);
+        await saveLayer(mapTitle, updatedLayer);
       }
     }
   }
-
   @override
-  Future<List<MapDrawingElement>> getLayerElements(String mapId, String layerId) async {
-    try {      final elementsPath = _buildVfsPath(_getElementsPath(mapId, layerId));
+  Future<List<MapDrawingElement>> getLayerElements(String mapTitle, String layerId) async {
+    try {      
+      final elementsPath = _buildVfsPath(_getElementsPath(mapTitle, layerId));
       final files = await _storageService.listDirectory(elementsPath);
       final elements = <MapDrawingElement>[];
 
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final elementId = file.name.replaceAll('.json', '');
-          final element = await getElementById(mapId, layerId, elementId);
+          final element = await getElementById(mapTitle, layerId, elementId);
           if (element != null) {
             elements.add(element);
           }
@@ -343,71 +402,77 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return elements;
     } catch (e) {
-      debugPrint('加载绘制元素失败 [$mapId/$layerId]: $e');
+      debugPrint('加载绘制元素失败 [$mapTitle/$layerId]: $e');
       return [];
     }
-  }
-
-  @override
-  Future<MapDrawingElement?> getElementById(String mapId, String layerId, String elementId) async {
+  }  @override
+  Future<MapDrawingElement?> getElementById(String mapTitle, String layerId, String elementId) async {
     try {
-      final elementPath = _buildVfsPath(_getElementPath(mapId, layerId, elementId));
+      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, elementId));
       final elementData = await _storageService.readFile(elementPath);
         if (elementData == null) {
         return null;
       }
 
       final elementJson = jsonDecode(utf8.decode(elementData.data)) as Map<String, dynamic>;
+      
+      // 直接从JSON加载元素，图像数据已经包含在其中
       return MapDrawingElement.fromJson(elementJson);
     } catch (e) {
-      debugPrint('加载绘制元素失败 [$mapId/$layerId/$elementId]: $e');
+      debugPrint('加载绘制元素失败 [$mapTitle/$layerId/$elementId]: $e');
       return null;
     }
-  }
-
-  @override
-  Future<void> saveElement(String mapId, String layerId, MapDrawingElement element) async {
+  }  @override
+  Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element) async {
     try {
-      final elementPath = _buildVfsPath(_getElementPath(mapId, layerId, element.id));
+      // 如果元素包含图像数据，先将图像数据保存到该地图的资产系统（使用hash文件名自动去重）
+      if (element.imageData != null && element.imageData!.isNotEmpty) {
+        // 保存图像到该地图的资产目录，它会使用hash作为文件名，自动去重
+        await saveAsset(mapTitle, element.imageData!, 'image/png');
+        debugPrint('图像已保存到地图资产系统，大小: ${element.imageData!.length} bytes');
+      }
+      
+      // 直接保存元素（保留原始图像数据）
+      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, element.id));
       final elementJson = jsonEncode(element.toJson());
       await _storageService.writeFile(elementPath, utf8.encode(elementJson));
     } catch (e) {
-      debugPrint('保存绘制元素失败 [$mapId/$layerId/${element.id}]: $e');
+      debugPrint('保存绘制元素失败 [$mapTitle/$layerId/${element.id}]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> deleteElement(String mapId, String layerId, String elementId) async {
+  Future<void> deleteElement(String mapTitle, String layerId, String elementId) async {
     try {
-      final elementPath = _buildVfsPath(_getElementPath(mapId, layerId, elementId));
+      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, elementId));
       await _storageService.delete(elementPath);
     } catch (e) {
-      debugPrint('删除绘制元素失败 [$mapId/$layerId/$elementId]: $e');
+      debugPrint('删除绘制元素失败 [$mapTitle/$layerId/$elementId]: $e');
       rethrow;
     }
   }
   @override
-  Future<void> updateElementsOrder(String mapId, String layerId, List<String> elementIds) async {
+  Future<void> updateElementsOrder(String mapTitle, String layerId, List<String> elementIds) async {
     // 重新排序绘制元素
     for (int i = 0; i < elementIds.length; i++) {
-      final element = await getElementById(mapId, layerId, elementIds[i]);
+      final element = await getElementById(mapTitle, layerId, elementIds[i]);
       if (element != null) {
-        // MapDrawingElement copyWith 方法中没有 order 参数，这里直接保存
-        await saveElement(mapId, layerId, element);
+        // MapDrawingElement copyWith 方法中没�?order 参数，这里直接保�?
+        await saveElement(mapTitle, layerId, element);
       }
     }
   }
 
   @override
-  Future<List<LegendGroup>> getMapLegendGroups(String mapId) async {
-    try {      final legendsPath = _buildVfsPath(_getLegendsPath(mapId));
+  Future<List<LegendGroup>> getMapLegendGroups(String mapTitle) async {
+    try {      final legendsPath = _buildVfsPath(_getLegendsPath(mapTitle));
       final files = await _storageService.listDirectory(legendsPath);
       final groups = <LegendGroup>[];
 
       for (final file in files) {
         if (file.isDirectory) {
-          final group = await getLegendGroupById(mapId, file.name);
+          final group = await getLegendGroupById(mapTitle, file.name);
           if (group != null) {
             groups.add(group);
           }
@@ -416,15 +481,15 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return groups;
     } catch (e) {
-      debugPrint('加载图例组失败 [$mapId]: $e');
+      debugPrint('加载图例组失�?[$mapTitle]: $e');
       return [];
     }
   }
 
   @override
-  Future<LegendGroup?> getLegendGroupById(String mapId, String groupId) async {
+  Future<LegendGroup?> getLegendGroupById(String mapTitle, String groupId) async {
     try {
-      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapId, groupId));
+      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapTitle, groupId));
       final configData = await _storageService.readFile(configPath);
       
       if (configData == null) {
@@ -433,8 +498,8 @@ class VfsMapServiceImpl implements VfsMapService {
 
       final configJson = jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
       
-      // 加载图例项
-      final items = await getLegendGroupItems(mapId, groupId);
+      // 加载图例�?
+      final items = await getLegendGroupItems(mapTitle, groupId);
         return LegendGroup(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
@@ -445,14 +510,14 @@ class VfsMapServiceImpl implements VfsMapService {
         updatedAt: DateTime.parse(configJson['updatedAt'] as String),
       );
     } catch (e) {
-      debugPrint('加载图例组失败 [$mapId/$groupId]: $e');
+      debugPrint('加载图例组失�?[$mapTitle/$groupId]: $e');
       return null;
     }
   }
   @override
-  Future<void> saveLegendGroup(String mapId, LegendGroup group) async {
+  Future<void> saveLegendGroup(String mapTitle, LegendGroup group) async {
     try {
-      // 保存图例组配置
+      // 保存图例组配�?
       final configData = {
         'id': group.id,
         'name': group.name,
@@ -462,41 +527,41 @@ class VfsMapServiceImpl implements VfsMapService {
         'updatedAt': group.updatedAt.toIso8601String(),
       };
 
-      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapId, group.id));
+      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapTitle, group.id));
       final configJson = jsonEncode(configData);
       await _storageService.writeFile(configPath, utf8.encode(configJson));
 
-      // 保存图例项
+      // 保存图例�?
       for (final item in group.legendItems) {
-        await saveLegendItem(mapId, group.id, item);
+        await saveLegendItem(mapTitle, group.id, item);
       }
     } catch (e) {
-      debugPrint('保存图例组失败 [$mapId/${group.id}]: $e');
+      debugPrint('保存图例组失�?[$mapTitle/${group.id}]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> deleteLegendGroup(String mapId, String groupId) async {
+  Future<void> deleteLegendGroup(String mapTitle, String groupId) async {
     try {
-      final groupPath = _buildVfsPath(_getLegendGroupPath(mapId, groupId));
+      final groupPath = _buildVfsPath(_getLegendGroupPath(mapTitle, groupId));
       await _storageService.delete(groupPath);
     } catch (e) {
-      debugPrint('删除图例组失败 [$mapId/$groupId]: $e');
+      debugPrint('删除图例组失�?[$mapTitle/$groupId]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<List<LegendItem>> getLegendGroupItems(String mapId, String groupId) async {
-    try {      final itemsPath = _buildVfsPath(_getLegendItemsPath(mapId, groupId));
+  Future<List<LegendItem>> getLegendGroupItems(String mapTitle, String groupId) async {
+    try {      final itemsPath = _buildVfsPath(_getLegendItemsPath(mapTitle, groupId));
       final files = await _storageService.listDirectory(itemsPath);
       final items = <LegendItem>[];
 
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final itemId = file.name.replaceAll('.json', '');
-          final item = await getLegendItemById(mapId, groupId, itemId);
+          final item = await getLegendItemById(mapTitle, groupId, itemId);
           if (item != null) {
             items.add(item);
           }
@@ -505,15 +570,15 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return items;
     } catch (e) {
-      debugPrint('加载图例项失败 [$mapId/$groupId]: $e');
+      debugPrint('加载图例项失�?[$mapTitle/$groupId]: $e');
       return [];
     }
   }
 
   @override
-  Future<LegendItem?> getLegendItemById(String mapId, String groupId, String itemId) async {
+  Future<LegendItem?> getLegendItemById(String mapTitle, String groupId, String itemId) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapId, groupId, itemId));
+      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, itemId));
       final itemData = await _storageService.readFile(itemPath);
       
       if (itemData == null) {
@@ -523,36 +588,35 @@ class VfsMapServiceImpl implements VfsMapService {
       final itemJson = jsonDecode(utf8.decode(itemData.data)) as Map<String, dynamic>;
       return LegendItem.fromJson(itemJson);
     } catch (e) {
-      debugPrint('加载图例项失败 [$mapId/$groupId/$itemId]: $e');
+      debugPrint('加载图例项失�?[$mapTitle/$groupId/$itemId]: $e');
       return null;
     }
   }
 
   @override
-  Future<void> saveLegendItem(String mapId, String groupId, LegendItem item) async {
+  Future<void> saveLegendItem(String mapTitle, String groupId, LegendItem item) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapId, groupId, item.id.toString()));
+      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, item.id.toString()));
       final itemJson = jsonEncode(item.toJson());
       await _storageService.writeFile(itemPath, utf8.encode(itemJson));
     } catch (e) {
-      debugPrint('保存图例项失败 [$mapId/$groupId/${item.id}]: $e');
+      debugPrint('保存图例项失�?[$mapTitle/$groupId/${item.id}]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> deleteLegendItem(String mapId, String groupId, String itemId) async {
+  Future<void> deleteLegendItem(String mapTitle, String groupId, String itemId) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapId, groupId, itemId));
+      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, itemId));
       await _storageService.delete(itemPath);
     } catch (e) {
-      debugPrint('删除图例项失败 [$mapId/$groupId/$itemId]: $e');
+      debugPrint('删除图例项失�?[$mapTitle/$groupId/$itemId]: $e');
       rethrow;
     }
   }
-
   @override
-  Future<String> saveAsset(Uint8List data, String? mimeType) async {
+  Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType) async {
     try {
       // 计算SHA-256哈希
       final hash = sha256.convert(data).toString();
@@ -577,14 +641,17 @@ class VfsMapServiceImpl implements VfsMapService {
       
       final filename = '$hash$extension';
       
-      // 建立全局资产索引（跨地图共享）
-      final globalAssetPath = VfsProtocol.buildPath(_databaseName, 'assets', filename);
+      // 使用每个地图独立的资产存储
+      final assetPath = _buildVfsPath(_getAssetPath(mapTitle, filename));
       
-      // 检查资产是否已存在
-      final existingData = await _storageService.readFile(globalAssetPath);
+      // 检查相同哈希的文件是否已在此地图中存在，如果存在则无需重复保存
+      final existingData = await _storageService.readFile(assetPath);
       if (existingData == null) {
-        // 保存新资产
-        await _storageService.writeFile(globalAssetPath, data);
+        // 保存新资产文件
+        await _storageService.writeFile(assetPath, data);
+        debugPrint('保存新图像资产到地图 [$mapTitle]: $filename (${data.length} bytes)');
+      } else {
+        debugPrint('图像资产已在地图 [$mapTitle] 中存在，跳过保存: $filename');
       }
       
       // 更新哈希索引
@@ -595,18 +662,17 @@ class VfsMapServiceImpl implements VfsMapService {
       debugPrint('保存资产失败: $e');
       rethrow;
     }
-  }
-  @override
-  Future<Uint8List?> getAsset(String hash) async {
+  }  @override
+  Future<Uint8List?> getAsset(String mapTitle, String hash) async {
     try {
-      // 优先从全局资产库查找
-      final globalAssetPath = VfsProtocol.buildPath(_databaseName, 'assets', '$hash.png');
-      VfsFileContent? fileContent = await _storageService.readFile(globalAssetPath);
+      // 从指定地图的资产目录查找
+      final assetPath = _buildVfsPath(_getAssetPath(mapTitle, '$hash.png'));
+      VfsFileContent? fileContent = await _storageService.readFile(assetPath);
       
       if (fileContent == null) {
         // 尝试其他扩展名
         for (final ext in ['.jpg', '.svg', '']) {
-          final path = VfsProtocol.buildPath(_databaseName, 'assets', '$hash$ext');
+          final path = _buildVfsPath(_getAssetPath(mapTitle, '$hash$ext'));
           fileContent = await _storageService.readFile(path);
           if (fileContent != null) break;
         }
@@ -614,18 +680,18 @@ class VfsMapServiceImpl implements VfsMapService {
       
       return fileContent?.data;
     } catch (e) {
-      debugPrint('获取资产失败 [$hash]: $e');
+      debugPrint('获取资产失败 [$mapTitle/$hash]: $e');
       return null;
     }
   }
 
   @override
-  Future<void> deleteAsset(String hash) async {
+  Future<void> deleteAsset(String mapTitle, String hash) async {
     try {
-      // 从全局资产库删除
+      // 从指定地图的资产目录删除
       for (final ext in ['.png', '.jpg', '.svg', '']) {
         try {
-          final path = VfsProtocol.buildPath(_databaseName, 'assets', '$hash$ext');
+          final path = _buildVfsPath(_getAssetPath(mapTitle, '$hash$ext'));
           await _storageService.delete(path);
         } catch (e) {
           // 忽略文件不存在的错误
@@ -634,27 +700,27 @@ class VfsMapServiceImpl implements VfsMapService {
       
       _assetHashIndex.remove(hash);
     } catch (e) {
-      debugPrint('删除资产失败 [$hash]: $e');
+      debugPrint('删除资产失败 [$mapTitle/$hash]: $e');
       rethrow;
     }
   }
 
   @override
-  Future<void> cleanupUnusedAssets(String mapId) async {
+  Future<void> cleanupUnusedAssets(String mapTitle) async {
     // TODO: 实现未使用资产清理逻辑
     // 需要扫描地图中所有引用的资产哈希，删除未被引用的资产
   }
 
   @override
-  Future<Map<String, int>> getAssetUsageStats(String mapId) async {
+  Future<Map<String, int>> getAssetUsageStats(String mapTitle) async {
     // TODO: 实现资产使用统计
     return {};
   }
 
   @override
-  Future<Map<String, String>> getMapLocalizations(String mapId) async {
+  Future<Map<String, String>> getMapLocalizations(String mapTitle) async {
     try {
-      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapId));
+      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle));
       final localizationData = await _storageService.readFile(localizationPath);
       
       if (localizationData == null) {
@@ -664,19 +730,19 @@ class VfsMapServiceImpl implements VfsMapService {
       final localizationJson = jsonDecode(utf8.decode(localizationData.data)) as Map<String, dynamic>;
       return Map<String, String>.from(localizationJson);
     } catch (e) {
-      debugPrint('获取地图本地化失败 [$mapId]: $e');
+      debugPrint('获取地图本地化失�?[$mapTitle]: $e');
       return {};
     }
   }
 
   @override
-  Future<void> saveMapLocalizations(String mapId, Map<String, String> localizations) async {
+  Future<void> saveMapLocalizations(String mapTitle, Map<String, String> localizations) async {
     try {
-      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapId));
+      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle));
       final localizationJson = jsonEncode(localizations);
       await _storageService.writeFile(localizationPath, utf8.encode(localizationJson));
     } catch (e) {
-      debugPrint('保存地图本地化失败 [$mapId]: $e');
+      debugPrint('保存地图本地化失�?[$mapTitle]: $e');
       rethrow;
     }
   }
@@ -723,7 +789,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
   @override
   Future<void> validateMapIntegrity(String id) async {
-    // TODO: 实现地图完整性验证
+    // TODO: 实现地图完整性验�?
     // 检查文件结构完整性、引用完整性等
   }
 

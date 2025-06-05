@@ -129,6 +129,7 @@ class MapDrawingElement {
   final double? fontSize; // 字体大小（用于文本框）
   @Uint8ListConverter()
   final Uint8List? imageData; // 图片二进制数据（用于图片选区）
+  final String? imageHash; // VFS资产系统中的图像哈希引用
   @BoxFitConverter()
   final BoxFit? imageFit; // 图片适应方式（用于图片选区）
   final DateTime createdAt;
@@ -146,13 +147,13 @@ class MapDrawingElement {
     this.text,
     this.fontSize,
     this.imageData, // 图片二进制数据
+    this.imageHash, // VFS资产哈希引用
     this.imageFit = BoxFit.contain, // 默认图片适应方式
     required this.createdAt,
   });
   factory MapDrawingElement.fromJson(Map<String, dynamic> json) =>
       _$MapDrawingElementFromJson(json);
   Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
-
   MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
@@ -167,9 +168,11 @@ class MapDrawingElement {
     String? text,
     double? fontSize,
     Uint8List? imageData,
+    String? imageHash,
     BoxFit? imageFit,
     DateTime? createdAt,
     bool clearImageData = false, // 用于明确清除图片数据
+    bool clearImageHash = false, // 用于明确清除图像哈希
   }) {
     return MapDrawingElement(
       id: id ?? this.id,
@@ -185,6 +188,7 @@ class MapDrawingElement {
       text: text ?? this.text,
       fontSize: fontSize ?? this.fontSize,
       imageData: clearImageData ? null : (imageData ?? this.imageData),
+      imageHash: clearImageHash ? null : (imageHash ?? this.imageHash),
       imageFit: imageFit ?? this.imageFit,
       createdAt: createdAt ?? this.createdAt,
     );

@@ -12,12 +12,31 @@ import '../../models/map_item_summary.dart';
 class VfsMapDatabaseAdapter implements MapDatabaseService {
   final VfsMapService _vfsService;
   
-  // 用于兼容性的ID映射缓存
-  final Map<int, String> _legacyIdToVfsId = {};
-  final Map<String, int> _vfsIdToLegacyId = {};
+  // 用于兼容性的ID映射缓存 - 现在映射到标题
+  final Map<int, String> _legacyIdToTitle = {};
+  final Map<String, int> _titleToLegacyId = {};
   int _nextLegacyId = 1;
 
-  VfsMapDatabaseAdapter(this._vfsService);
+  VfsMapDatabaseAdapter(this._vfsService) {
+    _initializeMapping();
+  }
+
+  /// 初始化ID映射
+  Future<void> _initializeMapping() async {
+    try {
+      final maps = await _vfsService.getAllMaps();
+      for (final map in maps) {
+        final title = map.title;
+        if (!_titleToLegacyId.containsKey(title)) {
+          final legacyId = _nextLegacyId++;
+          _legacyIdToTitle[legacyId] = title;
+          _titleToLegacyId[title] = legacyId;
+        }
+      }
+    } catch (e) {
+      debugPrint('初始化ID映射失败: $e');
+    }
+  }
 
   /// 获取数据库实例（适配器模式：VFS不使用传统数据库）
   /// 此getter用于兼容MapDatabaseService接口，实际返回一个placeholder Future
@@ -27,39 +46,35 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
       'VFS adapter does not use traditional database. Use VFS methods instead.',
     );
   }
-
   // 辅助方法：生成或获取Legacy ID
-  int _getOrCreateLegacyId(String vfsId) {
-    if (_vfsIdToLegacyId.containsKey(vfsId)) {
-      return _vfsIdToLegacyId[vfsId]!;
+  int _getOrCreateLegacyId(String title) {
+    if (_titleToLegacyId.containsKey(title)) {
+      return _titleToLegacyId[title]!;
     }
     
     final legacyId = _nextLegacyId++;
-    _legacyIdToVfsId[legacyId] = vfsId;
-    _vfsIdToLegacyId[vfsId] = legacyId;
+    _legacyIdToTitle[legacyId] = title;
+    _titleToLegacyId[title] = legacyId;
     return legacyId;
   }
 
-  // 辅助方法：获取VFS ID
-  String? _getVfsId(int legacyId) {
-    return _legacyIdToVfsId[legacyId];
+  // 辅助方法：获取标题
+  String? _getTitle(int legacyId) {
+    return _legacyIdToTitle[legacyId];
   }
 
   // 辅助方法：为MapItem添加Legacy ID
-  MapItem _addLegacyId(MapItem map, String vfsId) {
-    final legacyId = _getOrCreateLegacyId(vfsId);
+  MapItem _addLegacyId(MapItem map, String title) {
+    final legacyId = _getOrCreateLegacyId(title);
     return map.copyWith(id: legacyId);
   }
-
   @override
   Future<List<MapItem>> getAllMaps() async {
     final vfsMaps = await _vfsService.getAllMaps();
     final result = <MapItem>[];
     
-    for (int i = 0; i < vfsMaps.length; i++) {
-      final map = vfsMaps[i];
-      final vfsId = map.id?.toString() ?? i.toString();
-      result.add(_addLegacyId(map, vfsId));
+    for (final map in vfsMaps) {
+      result.add(_addLegacyId(map, map.title));
     }
     
     return result;
@@ -77,27 +92,23 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
       updatedAt: map.updatedAt,
     )).toList();
   }
-
   @override
   Future<MapItem?> getMapById(int id) async {
-    final vfsId = _getVfsId(id);
-    if (vfsId == null) return null;
+    final title = _getTitle(id);
+    if (title == null) return null;
     
-    final map = await _vfsService.getMapById(vfsId);
+    final map = await _vfsService.getMapByTitle(title);
     if (map == null) return null;
     
-    return _addLegacyId(map, vfsId);
+    return _addLegacyId(map, title);
   }
-
   @override
   Future<MapItem?> getMapByTitle(String title) async {
     final map = await _vfsService.getMapByTitle(title);
     if (map == null) return null;
     
-    final vfsId = map.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
-    return _addLegacyId(map, vfsId);
+    return _addLegacyId(map, title);
   }
-
   @override
   Future<int> insertMap(MapItem map) async {
     // 检查是否已存在相同标题的地图
@@ -105,53 +116,59 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
     if (existing != null) {
       // 如果新地图版本更高，则更新现有地图
       if (map.version > existing.version) {
-        final vfsId = existing.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
-        await _vfsService.updateMapMeta(vfsId, map);
-        return _getOrCreateLegacyId(vfsId);
+        await _vfsService.updateMapMeta(map.title, map);
+        return _getOrCreateLegacyId(map.title);
       } else {
         // 否则不插入，返回现有地图的ID
-        final vfsId = existing.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
-        return _getOrCreateLegacyId(vfsId);
+        return _getOrCreateLegacyId(map.title);
       }
     }
 
     // 不存在重复标题，直接插入
-    final vfsId = await _vfsService.saveMap(map);
-    return _getOrCreateLegacyId(vfsId);
+    final title = await _vfsService.saveMap(map);
+    return _getOrCreateLegacyId(title);
   }
-
   @override
   Future<int> forceInsertMap(MapItem map) async {
-    final vfsId = await _vfsService.saveMap(map);
-    return _getOrCreateLegacyId(vfsId);
-  }
-
-  @override
+    final title = await _vfsService.saveMap(map);
+    return _getOrCreateLegacyId(title);
+  }  @override
   Future<void> updateMap(MapItem map) async {
     if (map.id == null) {
       throw ArgumentError('Map ID cannot be null for update operation');
     }
     
-    final vfsId = _getVfsId(map.id!);
-    if (vfsId == null) {
-      throw ArgumentError('Map with ID ${map.id} not found in VFS mapping');
+    String? title = _getTitle(map.id!);
+    
+    // 如果ID映射失败，尝试使用地图标题直接查找
+    if (title == null) {
+      // 检查地图标题是否存在于VFS中
+      final existingMap = await _vfsService.getMapByTitle(map.title);
+      if (existingMap != null) {
+        // 重新建立映射关系
+        title = map.title;
+        _legacyIdToTitle[map.id!] = title;
+        _titleToLegacyId[title] = map.id!;
+      } else {
+        throw ArgumentError('Map with ID ${map.id} and title "${map.title}" not found');
+      }
     }
     
-    await _vfsService.updateMapMeta(vfsId, map);
+    // 使用saveMap来保存完整的地图数据，而不仅仅是元数据
+    await _vfsService.saveMap(map);
   }
-
   @override
   Future<void> deleteMap(int id) async {
-    final vfsId = _getVfsId(id);
-    if (vfsId == null) {
-      throw ArgumentError('Map with ID $id not found in VFS mapping');
+    final title = _getTitle(id);
+    if (title == null) {
+      throw ArgumentError('Map with ID $id not found in mapping');
     }
     
-    await _vfsService.deleteMap(vfsId);
+    await _vfsService.deleteMap(title);
     
     // 清理映射
-    _legacyIdToVfsId.remove(id);
-    _vfsIdToLegacyId.remove(vfsId);
+    _legacyIdToTitle.remove(id);
+    _titleToLegacyId.remove(title);
   }
 
   @override
@@ -185,10 +202,8 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
         version: dbVersion,
         maps: maps,
         exportedAt: DateTime.now(),
-      );
-
-      // 构建导出文件名
-      final fileName = 'maps_vfs_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.json';
+      );      // 构建导出文件名 - VFS系统会处理文件命名
+      debugPrint('开始导出VFS地图数据库...');
       
       // 在Web平台上，直接返回JSON数据
       if (kIsWeb) {
@@ -219,12 +234,11 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
       return false;
     }
   }
-
   @override
   Future<void> close() async {
     // 清理资源
-    _legacyIdToVfsId.clear();
-    _vfsIdToLegacyId.clear();
+    _legacyIdToTitle.clear();
+    _titleToLegacyId.clear();
     _nextLegacyId = 1;
   }
 }

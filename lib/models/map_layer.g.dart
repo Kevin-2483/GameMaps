@@ -71,6 +71,7 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
       imageData: const Uint8ListConverter().fromJson(
         json['imageData'] as String?,
       ),
+      imageHash: json['imageHash'] as String?,
       imageFit: json['imageFit'] == null
           ? BoxFit.contain
           : const BoxFitConverter().fromJson(json['imageFit'] as String?),
@@ -92,6 +93,7 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'text': instance.text,
       'fontSize': instance.fontSize,
       'imageData': const Uint8ListConverter().toJson(instance.imageData),
+      'imageHash': instance.imageHash,
       'imageFit': const BoxFitConverter().toJson(instance.imageFit),
       'createdAt': instance.createdAt.toIso8601String(),
     };

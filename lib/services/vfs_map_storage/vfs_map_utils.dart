@@ -237,12 +237,10 @@ class VfsMapBackupService {
         'version': '1.0.0',
         'map': map.toJson(),
         'assets': <String, String>{}, // 资产数据的Base64编码
-      };
-
-      // 添加资产数据
+      };      // 添加资产数据
       final assets = bundle['assets'] as Map<String, String>;
       for (final hash in assetHashes) {
-        final assetData = await _mapService.getAsset(hash);
+        final assetData = await _mapService.getAsset(map.title, hash);
         if (assetData != null) {
           assets[hash] = base64Encode(assetData);        }
       }
