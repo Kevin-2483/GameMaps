@@ -19,6 +19,7 @@
 indexeddb://r6box/maps/
 ├── {map_id}.mapdata/
 │   ├── meta.json              # 地图元数据
+│   ├──localization.json       # 地图国际化文本
 │   ├── cover.png              # 地图封面图（可选，便于预览）
 │   ├── data/                  # 数据目录
 │   │   └── default/           # 默认数据集
