@@ -10,18 +10,21 @@ class ConfigValidator {
     'Android',
     'iOS',
     'Web',
-  ];
-  static const List<String> _validPages = [
+  ];  static const List<String> _validPages = [
     'HomePage',
     'SettingsPage',
+    'UserPreferencesPage',
     'MapAtlasPage',
     'LegendManagerPage',
+    'ExternalResourcesPage',
+    'VfsFileManagerPage',
+    'FullscreenTestPage',
   ];
-
   static const List<String> _validFeatures = [
     'DebugMode',
     'ExperimentalFeatures',
     'TrayNavigation',
+    'WebReadOnlyMode',
   ];
 
   static Future<ValidationResult> validateConfigFile(String filePath) async {

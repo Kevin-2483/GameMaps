@@ -86,15 +86,15 @@ class _TrayNavigationState extends State<TrayNavigation>
       final item = items[i];
       final isActive = currentPath == item.path;
 
-      // 在设置按钮前添加主题切换按钮
-      if (item.name == 'settings' && i > 0) {
-        buttons.add(_buildThemeToggleButton(context, isVertical));
-        if (isVertical) {
-          buttons.add(const SizedBox(height: 8));
-        } else {
-          buttons.add(const SizedBox(width: 8));
-        }
-      }
+      // // 在设置按钮前添加主题切换按钮
+      // if (item.name == 'settings' && i > 0) {
+      //   buttons.add(_buildThemeToggleButton(context, isVertical));
+      //   if (isVertical) {
+      //     buttons.add(const SizedBox(height: 8));
+      //   } else {
+      //     buttons.add(const SizedBox(width: 8));
+      //   }
+      // }
 
       buttons.add(_buildNavigationButton(context, item, isActive, isVertical));
 
@@ -163,45 +163,45 @@ class _TrayNavigationState extends State<TrayNavigation>
     );
   }
 
-  Widget _buildThemeToggleButton(BuildContext context, bool isVertical) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => themeProvider.toggleTheme(),
-            child: Container(
-              width: isVertical ? 64 : null,
-              height: isVertical ? null : 64,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    themeProvider.themeMode == AppThemeMode.dark
-                        ? Icons.light_mode
-                        : Icons.dark_mode,
-                    size: 24,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '主题',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Widget _buildThemeToggleButton(BuildContext context, bool isVertical) {
+  //   return Consumer<ThemeProvider>(
+  //     builder: (context, themeProvider, _) {
+  //       return Material(
+  //         color: Colors.transparent,
+  //         child: InkWell(
+  //           onTap: () => themeProvider.toggleTheme(),
+  //           child: Container(
+  //             width: isVertical ? 64 : null,
+  //             height: isVertical ? null : 64,
+  //             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 Icon(
+  //                   themeProvider.themeMode == AppThemeMode.dark
+  //                       ? Icons.light_mode
+  //                       : Icons.dark_mode,
+  //                   size: 24,
+  //                   color: Theme.of(context).colorScheme.onSurface,
+  //                 ),
+  //                 const SizedBox(height: 4),
+  //                 Text(
+  //                   '主题',
+  //                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
+  //                     color: Theme.of(context).colorScheme.onSurface,
+  //                     fontSize: 10,
+  //                   ),
+  //                   textAlign: TextAlign.center,
+  //                   maxLines: 1,
+  //                   overflow: TextOverflow.ellipsis,
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }

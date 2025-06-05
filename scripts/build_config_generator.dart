@@ -56,9 +56,17 @@ class BuildConfigGenerator {
       );
       buildParams.add(
         '--dart-define=ENABLE_MAP_ATLAS_PAGE=${pages.contains('MapAtlasPage')}',
+      );      buildParams.add(
+        '--dart-define=ENABLE_LEGEND_MANAGER_PAGE=${pages.contains('LegendManagerPage')}',
       );
       buildParams.add(
-        '--dart-define=ENABLE_LEGEND_MANAGER_PAGE=${pages.contains('LegendManagerPage')}',
+        '--dart-define=ENABLE_EXTERNAL_RESOURCES_PAGE=${pages.contains('ExternalResourcesPage')}',
+      );
+      buildParams.add(
+        '--dart-define=ENABLE_VFS_FILE_MANAGER_PAGE=${pages.contains('VfsFileManagerPage')}',
+      );
+      buildParams.add(
+        '--dart-define=ENABLE_FULLSCREEN_TEST_PAGE=${pages.contains('FullscreenTestPage')}',
       );
 
       // 添加功能配置

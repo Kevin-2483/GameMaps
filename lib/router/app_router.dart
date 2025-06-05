@@ -9,8 +9,9 @@ import '../features/page-modules/map_atlas_page_module.dart';
 import '../features/page-modules/legend_manager_page_module.dart';
 import '../features/page-modules/external_resources_page_module.dart';
 import '../features/page-modules/config_editor_module.dart';
-import '../features/page-modules/fullscreen_test_page_module.dart';
-import '../features/page-modules/web_context_menu_demo_page_module.dart';
+// import '../features/page-modules/fullscreen_test_page_module.dart';
+// import '../features/page-modules/web_context_menu_demo_page_module.dart';
+import '../features/page-modules/vfs_file_manager_page_module.dart';
 import '../components/layout/app_shell.dart';
 
 class AppRouter {
@@ -62,14 +63,14 @@ class AppRouter {
     // 注册核心页面模块
     registry.register(HomePageModule());
     registry.register(SettingsPageModule());
-    registry.register(UserPreferencesPageModule());
-    registry.register(MapAtlasPageModule());
+    registry.register(UserPreferencesPageModule());    registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
     registry.register(ExternalResourcesPageModule());
     registry.register(ConfigEditorModule());
-    registry.register(FullscreenTestPageModule());
+    // registry.register(FullscreenTestPageModule());
+    registry.register(VfsFileManagerPageModule());
 
     // 注册演示页面模块
-    WebContextMenuDemoPageModule.register();
+    // WebContextMenuDemoPageModule.register();
   }
 }

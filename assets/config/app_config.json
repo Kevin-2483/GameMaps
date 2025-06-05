@@ -1,20 +1,20 @@
 {  "platform": {    "Windows": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "FullscreenTestPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "MacOS": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "FullscreenTestPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "Linux": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "FullscreenTestPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "Android": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "FullscreenTestPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "iOS": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "FullscreenTestPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "Web": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "ExternalResourcesPage"],
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "ExternalResourcesPage", "VfsFileManagerPage"],
       "features": [ "WebReadOnlyMode", "TrayNavigation" ]
     }
   },

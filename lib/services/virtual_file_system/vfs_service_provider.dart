@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'vfs_protocol.dart';
 import 'virtual_file_system.dart';
 import 'vfs_database_initializer.dart';
 import 'vfs_permission_system.dart';
+import 'vfs_storage_service.dart';
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -16,6 +14,7 @@ class VfsServiceProvider {
   VfsServiceProvider._internal();
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final VfsDatabaseInitializer _initializer = VfsDatabaseInitializer();
+  final VfsStorageService _storage = VfsStorageService();
 
   /// 初始化服务
   Future<void> initialize() async {
@@ -454,7 +453,6 @@ class VfsServiceProvider {
     final path = 'indexeddb://r6box/$collection/$dirPath';
     await _vfs.createDirectory(path, inheritancePolicy: inheritancePolicy);
   }
-
   /// 列出目录内容（带权限过滤）
   Future<List<VfsFileInfo>> listFilesWithPermissions(
     String collection, [
@@ -464,6 +462,16 @@ class VfsServiceProvider {
         ? 'indexeddb://r6box/$collection/$subPath'
         : 'indexeddb://r6box/$collection';
     return await _vfs.listDirectoryWithPermissions(path);
+  }
+
+  /// 获取所有数据库列表
+  Future<List<String>> getDatabases() async {
+    return await _storage.getAllDatabases();
+  }
+
+  /// 获取指定数据库的集合列表
+  Future<List<String>> getCollections(String database) async {
+    return await _storage.getCollections(database);
   }
 
   /// 关闭服务

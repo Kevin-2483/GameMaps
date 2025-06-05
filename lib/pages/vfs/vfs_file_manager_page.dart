@@ -7,17 +7,18 @@ import 'package:archive/archive.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_import_export_service.dart';
-import '../web/web_context_menu_handler.dart';
-import 'vfs_file_metadata_dialog.dart';
-import 'vfs_file_rename_dialog.dart';
-import 'vfs_file_search_dialog.dart';
-import 'vfs_permission_dialog.dart';
+import '../../components/web/web_context_menu_handler.dart';
+import '../../components/vfs/vfs_file_metadata_dialog.dart';
+import '../../components/vfs/vfs_file_rename_dialog.dart';
+import '../../components/vfs/vfs_file_search_dialog.dart';
+import '../../components/vfs/vfs_permission_dialog.dart';
+import '../../components/layout/main_layout.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
 
-/// VFS文件管理器窗口，作为全屏覆盖层显示
-class VfsFileManagerWindow extends StatefulWidget {
+/// VFS文件管理器页面
+class VfsFileManagerPage extends BasePage {
   final VoidCallback? onClose;
   final String? initialDatabase;
   final String? initialCollection;
@@ -27,7 +28,7 @@ class VfsFileManagerWindow extends StatefulWidget {
   final bool allowDirectorySelection;
   final List<String>? allowedExtensions;
 
-  const VfsFileManagerWindow({
+  const VfsFileManagerPage({
     super.key,
     this.onClose,
     this.initialDatabase,
@@ -40,98 +41,47 @@ class VfsFileManagerWindow extends StatefulWidget {
   });
 
   @override
-  State<VfsFileManagerWindow> createState() => _VfsFileManagerWindowState();
-
-  /// 显示VFS文件管理器窗口（浏览模式）
-  static Future<void> show(
-    BuildContext context, {
-    String? initialDatabase,
-    String? initialCollection,
-    String? initialPath,
-  }) {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      builder: (context) => VfsFileManagerWindow(
-        onClose: () => Navigator.of(context).pop(),
-        initialDatabase: initialDatabase,
-        initialCollection: initialCollection,
-        initialPath: initialPath,
-      ),
+  Widget buildContent(BuildContext context) {
+    return _VfsFileManagerPageContent(
+      onClose: onClose,
+      initialDatabase: initialDatabase,
+      initialCollection: initialCollection,
+      initialPath: initialPath,
+      onFilesSelected: onFilesSelected,
+      allowMultipleSelection: allowMultipleSelection,
+      allowDirectorySelection: allowDirectorySelection,
+      allowedExtensions: allowedExtensions,
     );
-  }
-
-  /// 显示文件选择器窗口（单选模式）
-  static Future<String?> showFilePicker(
-    BuildContext context, {
-    String? initialDatabase,
-    String? initialCollection,
-    String? initialPath,
-    bool allowDirectorySelection = true,
-    List<String>? allowedExtensions,
-  }) async {
-    String? selectedFile;
-    
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      builder: (context) => VfsFileManagerWindow(
-        onClose: () => Navigator.of(context).pop(),
-        initialDatabase: initialDatabase,
-        initialCollection: initialCollection,
-        initialPath: initialPath,
-        allowMultipleSelection: false,
-        allowDirectorySelection: allowDirectorySelection,
-        allowedExtensions: allowedExtensions,
-        onFilesSelected: (files) {
-          if (files.isNotEmpty) {
-            selectedFile = files.first;
-          }
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-    
-    return selectedFile;
-  }
-
-  /// 显示文件选择器窗口（多选模式）
-  static Future<List<String>?> showMultiFilePicker(
-    BuildContext context, {
-    String? initialDatabase,
-    String? initialCollection,
-    String? initialPath,
-    bool allowDirectorySelection = true,
-    List<String>? allowedExtensions,
-  }) async {
-    List<String>? selectedFiles;
-    
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      builder: (context) => VfsFileManagerWindow(
-        onClose: () => Navigator.of(context).pop(),
-        initialDatabase: initialDatabase,
-        initialCollection: initialCollection,
-        initialPath: initialPath,
-        allowMultipleSelection: true,
-        allowDirectorySelection: allowDirectorySelection,
-        allowedExtensions: allowedExtensions,
-        onFilesSelected: (files) {
-          selectedFiles = files;
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-    
-    return selectedFiles;
   }
 }
 
-class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
+/// VFS文件管理器页面内容
+class _VfsFileManagerPageContent extends StatefulWidget {
+  final VoidCallback? onClose;
+  final String? initialDatabase;
+  final String? initialCollection;
+  final String? initialPath;
+  final FileSelectionCallback? onFilesSelected;
+  final bool allowMultipleSelection;
+  final bool allowDirectorySelection;
+  final List<String>? allowedExtensions;
+
+  const _VfsFileManagerPageContent({
+    this.onClose,
+    this.initialDatabase,
+    this.initialCollection,
+    this.initialPath,
+    this.onFilesSelected,
+    this.allowMultipleSelection = false,
+    this.allowDirectorySelection = true,
+    this.allowedExtensions,
+  });
+
+  @override
+  State<_VfsFileManagerPageContent> createState() => _VfsFileManagerPageState();
+}
+
+class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late VfsServiceProvider _vfsService;
@@ -249,6 +199,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     setState(() {});
   }
+
   /// 导航到指定路径
   Future<void> _navigateToPath(String path) async {
     if (_selectedDatabase == null || _selectedCollection == null) return;
@@ -264,12 +215,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         _selectedCollection!,
         path.isEmpty ? null : path,
       );
-      
+
       // 在选择模式下应用文件过滤
-      final filteredFiles = _shouldApplyFiltering() 
-        ? _filterFiles(allFiles)
-        : allFiles;
-      
+      final filteredFiles = _shouldApplyFiltering()
+          ? _filterFiles(allFiles)
+          : allFiles;
+
       setState(() {
         _currentFiles = filteredFiles;
         _currentPath = path;
@@ -328,7 +279,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           final bExt = b.name.split('.').last.toLowerCase();
           result = aExt.compareTo(bExt);
           break;
-      }      return _sortAscending ? result : -result;
+      }
+      return _sortAscending ? result : -result;
     });
   }
 
@@ -354,8 +306,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       }
 
       // 如果指定了文件扩展名限制，过滤文件
-      if (!file.isDirectory && 
-          widget.allowedExtensions != null && 
+      if (!file.isDirectory &&
+          widget.allowedExtensions != null &&
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
         if (!widget.allowedExtensions!.contains(extension)) {
@@ -383,8 +335,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
 
     // 检查文件扩展名限制
-    if (!file.isDirectory && 
-        widget.allowedExtensions != null && 
+    if (!file.isDirectory &&
+        widget.allowedExtensions != null &&
         widget.allowedExtensions!.isNotEmpty) {
       final extension = file.name.split('.').last.toLowerCase();
       if (!widget.allowedExtensions!.contains(extension)) {
@@ -410,6 +362,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     _showInfoSnackBar('已复制 ${files.length} 个项目');
   }
+
   /// 剪切文件
   Future<void> _cutFiles(List<VfsFileInfo> files) async {
     setState(() {
@@ -671,52 +624,32 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Center(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.9,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 5,
-              ),
-            ],
+    return Scaffold(
+      body: Column(
+        children: [
+          _buildHeader(),
+          _buildToolbar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFileBrowser(),
+                _buildMetadataView(),
+                _buildSettingsView(),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildToolbar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildFileBrowser(),
-                    _buildMetadataView(),
-                    _buildSettingsView(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
+
   /// 构建头部
   Widget _buildHeader() {
-    final isSelectionMode = widget.onFilesSelected != null;
-    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
         children: [
@@ -726,52 +659,64 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             size: 28,
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isSelectionMode ? '选择文件' : 'VFS 文件管理器',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (isSelectionMode && _selectedFiles.isNotEmpty)
-                  Text(
-                    '已选择 ${_selectedFiles.length} 个文件',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-              ],
+          Text(
+            'VFS 文件管理器',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          
-          // 选择模式：显示确认和取消按钮
-          if (isSelectionMode) ...[
-            TextButton(
-              onPressed: () {
-                widget.onClose?.call();
+          const SizedBox(width: 24),
+          // 数据库选择
+          Expanded(
+            flex: 2,
+            child: DropdownButton<String>(
+              value: _selectedDatabase,
+              hint: const Text('选择数据库'),
+              isExpanded: true,
+              items: _databases.map((db) {
+                return DropdownMenuItem(value: db, child: Text(db));
+              }).toList(),
+              onChanged: (value) async {
+                if (value != null) {
+                  setState(() {
+                    _selectedDatabase = value;
+                    _selectedCollection = null;
+                    _currentFiles.clear();
+                    _selectedFiles.clear();
+                  });
+                  await _loadCollections(value);
+                }
               },
-              child: const Text('取消'),
             ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _selectedFiles.isNotEmpty
-                  ? () {
-                      widget.onFilesSelected?.call(_selectedFiles.toList());
-                    }
-                  : null,
-              child: const Text('确认'),
+          ),
+          const SizedBox(width: 16),
+          // 集合选择
+          Expanded(
+            flex: 2,
+            child: DropdownButton<String>(
+              value: _selectedCollection,
+              hint: const Text('选择集合'),
+              isExpanded: true,
+              items:
+                  _collections[_selectedDatabase]?.map((collection) {
+                    return DropdownMenuItem(
+                      value: collection,
+                      child: Text(collection),
+                    );
+                  }).toList() ??
+                  [],
+              onChanged: (value) async {
+                if (value != null) {
+                  setState(() {
+                    _selectedCollection = value;
+                    _selectedFiles.clear();
+                  });
+                  await _navigateToPath('');
+                }
+              },
             ),
-          ] else
-            // 浏览模式：显示关闭按钮
-            IconButton(
-              onPressed: widget.onClose,
-              icon: const Icon(Icons.close),
-              tooltip: '关闭',
-            ),
+          ),
         ],
       ),
     );
@@ -791,400 +736,333 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
-      child: Column(
+      child: Row(
         children: [
-          // 数据库和集合选择（仅在文件浏览页显示）
+          // 导航按钮（仅在文件浏览页显示）
           if (isFileBrowserTab) ...[
             Row(
               children: [
-                Expanded(
-                  child: DropdownButton<String>(
-                    value: _selectedDatabase,
-                    hint: const Text('选择数据库'),
-                    isExpanded: true,
-                    items: _databases.map((db) {
-                      return DropdownMenuItem(value: db, child: Text(db));
-                    }).toList(),
-                    onChanged: (value) async {
-                      if (value != null) {
-                        setState(() {
-                          _selectedDatabase = value;
-                          _selectedCollection = null;
-                        });
-                        await _loadCollections(value);
-                      }
-                    },
-                  ),
+                IconButton(
+                  onPressed: _historyIndex > 0
+                      ? () async {
+                          _historyIndex--;
+                          await _navigateToPath(_pathHistory[_historyIndex]);
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: '后退',
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButton<String>(
-                    value: _selectedCollection,
-                    hint: const Text('选择集合'),
-                    isExpanded: true,
-                    items:
-                        _collections[_selectedDatabase]?.map((collection) {
-                          return DropdownMenuItem(
-                            value: collection,
-                            child: Text(collection),
-                          );
-                        }).toList() ??
-                        [],
-                    onChanged: (value) async {
-                      if (value != null) {
-                        setState(() {
-                          _selectedCollection = value;
-                        });
-                        await _navigateToPath('');
-                      }
-                    },
-                  ),
+                IconButton(
+                  onPressed: _historyIndex < _pathHistory.length - 1
+                      ? () async {
+                          _historyIndex++;
+                          await _navigateToPath(_pathHistory[_historyIndex]);
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_forward),
+                  tooltip: '前进',
+                ),
+                IconButton(
+                  onPressed: () => _navigateToPath(''),
+                  icon: const Icon(Icons.home),
+                  tooltip: '根目录',
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-          ],
+            const SizedBox(width: 8),
 
-          // 工具按钮和标签栏
-          Row(
-            children: [
-              // 导航按钮（仅在文件浏览页显示）
-              if (isFileBrowserTab) ...[
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: _historyIndex > 0
-                          ? () async {
-                              _historyIndex--;
-                              await _navigateToPath(
-                                _pathHistory[_historyIndex],
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_back),
-                      tooltip: '后退',
+            // 操作按钮
+            Row(
+              children: [
+                // 批量操作按钮（仅在有选中文件时显示）
+                if (_selectedFiles.isNotEmpty) ...[
+                  Text(
+                    '已选择 ${_selectedFiles.length} 项',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
                     ),
-                    IconButton(
-                      onPressed: _historyIndex < _pathHistory.length - 1
-                          ? () async {
-                              _historyIndex++;
-                              await _navigateToPath(
-                                _pathHistory[_historyIndex],
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_forward),
-                      tooltip: '前进',
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      final selectedFileInfos = _currentFiles
+                          .where((file) => _selectedFiles.contains(file.path))
+                          .toList();
+                      _copyFiles(selectedFileInfos);
+                    },
+                    icon: const Icon(Icons.copy),
+                    tooltip: '复制选中项',
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      final selectedFileInfos = _currentFiles
+                          .where((file) => _selectedFiles.contains(file.path))
+                          .toList();
+                      _cutFiles(selectedFileInfos);
+                    },
+                    icon: const Icon(Icons.cut),
+                    tooltip: '剪切选中项',
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      final selectedFileInfos = _currentFiles
+                          .where((file) => _selectedFiles.contains(file.path))
+                          .toList();
+                      _deleteFiles(selectedFileInfos);
+                    },
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    tooltip: '删除选中项',
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedFiles.clear();
+                      });
+                    },
+                    icon: const Icon(Icons.clear),
+                    tooltip: '清除选择',
+                  ),
+                  const SizedBox(width: 16),
+                ],
+                IconButton(
+                  onPressed: _createNewFolder,
+                  icon: const Icon(Icons.create_new_folder),
+                  tooltip: '新建文件夹',
+                ),
+                IconButton(
+                  onPressed: () => _navigateToPath(_currentPath),
+                  icon: const Icon(Icons.refresh),
+                  tooltip: '刷新',
+                ),
+                IconButton(
+                  onPressed: _showCurrentPathPermissions,
+                  icon: const Icon(Icons.security),
+                  tooltip: '查看文件夹权限',
+                ),
+                IconButton(
+                  onPressed: _showSearchDialog,
+                  icon: const Icon(Icons.search),
+                  tooltip: '搜索',
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.sort),
+                  tooltip: '排序',
+                  onSelected: (value) {
+                    setState(() {
+                      if (value == _sortType.name) {
+                        _sortAscending = !_sortAscending;
+                      } else {
+                        _sortType = _SortType.values.firstWhere(
+                          (e) => e.name == value,
+                        );
+                        _sortAscending = true;
+                      }
+                    });
+                    _sortFiles();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'name',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _sortType == _SortType.name
+                                ? (_sortAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                : Icons.sort_by_alpha,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('按名称'),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      onPressed: () => _navigateToPath(''),
-                      icon: const Icon(Icons.home),
-                      tooltip: '根目录',
+                    PopupMenuItem(
+                      value: 'size',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _sortType == _SortType.size
+                                ? (_sortAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                : Icons.data_usage,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('按大小'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'modified',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _sortType == _SortType.modified
+                                ? (_sortAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                : Icons.access_time,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('按修改时间'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'type',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _sortType == _SortType.type
+                                ? (_sortAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                : Icons.category,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('按类型'),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 8),
-
-                // 操作按钮
-                Row(
-                  children: [
-                    // 批量操作按钮（仅在有选中文件时显示）
-                    if (_selectedFiles.isNotEmpty) ...[
-                      Text(
-                        '已选择 ${_selectedFiles.length} 项',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                PopupMenuButton<_ViewType>(
+                  icon: Icon(
+                    _viewType == _ViewType.list
+                        ? Icons.view_list
+                        : Icons.grid_view,
+                  ),
+                  tooltip: '视图',
+                  onSelected: (value) {
+                    setState(() {
+                      _viewType = value;
+                    });
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: _ViewType.list,
+                      child: const Row(
+                        children: [
+                          Icon(Icons.view_list),
+                          SizedBox(width: 8),
+                          Text('列表视图'),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          final selectedFileInfos = _currentFiles
-                              .where(
-                                (file) => _selectedFiles.contains(file.path),
-                              )
-                              .toList();
-                          _copyFiles(selectedFileInfos);
-                        },
-                        icon: const Icon(Icons.copy),
-                        tooltip: '复制选中项',
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          final selectedFileInfos = _currentFiles
-                              .where(
-                                (file) => _selectedFiles.contains(file.path),
-                              )
-                              .toList();
-                          _cutFiles(selectedFileInfos);
-                        },
-                        icon: const Icon(Icons.cut),
-                        tooltip: '剪切选中项',
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          final selectedFileInfos = _currentFiles
-                              .where(
-                                (file) => _selectedFiles.contains(file.path),
-                              )
-                              .toList();
-                          _deleteFiles(selectedFileInfos);
-                        },
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        tooltip: '删除选中项',
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedFiles.clear();
-                          });
-                        },
-                        icon: const Icon(Icons.clear),
-                        tooltip: '清除选择',
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                    IconButton(
-                      onPressed: _createNewFolder,
-                      icon: const Icon(Icons.create_new_folder),
-                      tooltip: '新建文件夹',
                     ),
-                    IconButton(
-                      onPressed: () => _navigateToPath(_currentPath),
-                      icon: const Icon(Icons.refresh),
-                      tooltip: '刷新',
-                    ),
-                    IconButton(
-                      onPressed: _showCurrentPathPermissions,
-                      icon: const Icon(Icons.security),
-                      tooltip: '查看文件夹权限',
-                    ),
-                    IconButton(
-                      onPressed: _showSearchDialog,
-                      icon: const Icon(Icons.search),
-                      tooltip: '搜索',
-                    ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.sort),
-                      tooltip: '排序',
-                      onSelected: (value) {
-                        setState(() {
-                          if (value == _sortType.name) {
-                            _sortAscending = !_sortAscending;
-                          } else {
-                            _sortType = _SortType.values.firstWhere(
-                              (e) => e.name == value,
-                            );
-                            _sortAscending = true;
-                          }
-                        });
-                        _sortFiles();
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'name',
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortType == _SortType.name
-                                    ? (_sortAscending
-                                          ? Icons.arrow_upward
-                                          : Icons.arrow_downward)
-                                    : Icons.sort_by_alpha,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text('按名称'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'size',
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortType == _SortType.size
-                                    ? (_sortAscending
-                                          ? Icons.arrow_upward
-                                          : Icons.arrow_downward)
-                                    : Icons.data_usage,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text('按大小'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'modified',
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortType == _SortType.modified
-                                    ? (_sortAscending
-                                          ? Icons.arrow_upward
-                                          : Icons.arrow_downward)
-                                    : Icons.access_time,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text('按修改时间'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'type',
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortType == _SortType.type
-                                    ? (_sortAscending
-                                          ? Icons.arrow_upward
-                                          : Icons.arrow_downward)
-                                    : Icons.category,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text('按类型'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    PopupMenuButton<_ViewType>(
-                      icon: Icon(
-                        _viewType == _ViewType.list
-                            ? Icons.view_list
-                            : Icons.grid_view,
+                    PopupMenuItem(
+                      value: _ViewType.grid,
+                      child: const Row(
+                        children: [
+                          Icon(Icons.grid_view),
+                          SizedBox(width: 8),
+                          Text('网格视图'),
+                        ],
                       ),
-                      tooltip: '视图',
-                      onSelected: (value) {
-                        setState(() {
-                          _viewType = value;
-                        });
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: _ViewType.list,
-                          child: const Row(
-                            children: [
-                              Icon(Icons.view_list),
-                              SizedBox(width: 8),
-                              Text('列表视图'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: _ViewType.grid,
-                          child: const Row(
-                            children: [
-                              Icon(Icons.grid_view),
-                              SizedBox(width: 8),
-                              Text('网格视图'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (_clipboardFiles.isNotEmpty) ...[
-                      IconButton(
-                        onPressed: _pasteFiles,
-                        icon: const Icon(Icons.paste),
-                        tooltip: '粘贴',
-                      ),
-                    ],
-
-                    // 上传按钮（支持文件和文件夹）
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.upload),
-                      tooltip: '上传',
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'files',
-                          child: Row(
-                            children: [
-                              Icon(Icons.upload_file),
-                              SizedBox(width: 8),
-                              Text('上传文件'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'folder',
-                          child: Row(
-                            children: [
-                              Icon(Icons.drive_folder_upload),
-                              SizedBox(width: 8),
-                              Text('上传文件夹'),
-                            ],
-                          ),
-                        ),
-                      ],
-                      onSelected: (value) => _handleUpload(value),
-                    ), // 下载按钮（支持文件和文件夹）
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.download),
-                      tooltip: '下载',
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'selected',
-                          child: Row(
-                            children: [
-                              Icon(Icons.download),
-                              SizedBox(width: 8),
-                              Text('下载选中项'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'selected_zip',
-                          child: Row(
-                            children: [
-                              Icon(Icons.archive),
-                              SizedBox(width: 8),
-                              Text('下载选中项（压缩）'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'all',
-                          child: Row(
-                            children: [
-                              Icon(Icons.download_for_offline),
-                              SizedBox(width: 8),
-                              Text('下载当前目录'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'all_zip',
-                          child: Row(
-                            children: [
-                              Icon(Icons.folder_zip),
-                              SizedBox(width: 8),
-                              Text('下载当前目录（压缩）'),
-                            ],
-                          ),
-                        ),
-                      ],
-                      onSelected: (value) => _handleDownload(value),
                     ),
                   ],
+                ),
+
+                if (_clipboardFiles.isNotEmpty) ...[
+                  IconButton(
+                    onPressed: _pasteFiles,
+                    icon: const Icon(Icons.paste),
+                    tooltip: '粘贴',
+                  ),
+                ],
+
+                // 上传按钮（支持文件和文件夹）
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.upload),
+                  tooltip: '上传',
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'files',
+                      child: Row(
+                        children: [
+                          Icon(Icons.upload_file),
+                          SizedBox(width: 8),
+                          Text('上传文件'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'folder',
+                      child: Row(
+                        children: [
+                          Icon(Icons.drive_folder_upload),
+                          SizedBox(width: 8),
+                          Text('上传文件夹'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) => _handleUpload(value),
+                ), // 下载按钮（支持文件和文件夹）
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.download),
+                  tooltip: '下载',
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'selected',
+                      child: Row(
+                        children: [
+                          Icon(Icons.download),
+                          SizedBox(width: 8),
+                          Text('下载选中项'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'selected_zip',
+                      child: Row(
+                        children: [
+                          Icon(Icons.archive),
+                          SizedBox(width: 8),
+                          Text('下载选中项（压缩）'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'all',
+                      child: Row(
+                        children: [
+                          Icon(Icons.download_for_offline),
+                          SizedBox(width: 8),
+                          Text('下载当前目录'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'all_zip',
+                      child: Row(
+                        children: [
+                          Icon(Icons.folder_zip),
+                          SizedBox(width: 8),
+                          Text('下载当前目录（压缩）'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) => _handleDownload(value),
                 ),
               ],
+            ),
+          ],
 
-              const Spacer(),
+          const Spacer(),
 
-              // 标签栏（始终显示）
-              TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Theme.of(context).colorScheme.primary,
-                tabs: const [
-                  Tab(icon: Icon(Icons.folder), text: '文件浏览'),
-                  Tab(icon: Icon(Icons.info), text: '元数据'),
-                  Tab(icon: Icon(Icons.settings), text: '设置'),
-                ],
-              ),
+          // 标签栏（始终显示）
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelColor: Theme.of(context).colorScheme.primary,
+            tabs: const [
+              Tab(icon: Icon(Icons.folder), text: '文件浏览'),
+              Tab(icon: Icon(Icons.info), text: '元数据'),
+              Tab(icon: Icon(Icons.settings), text: '设置'),
             ],
           ),
         ],
@@ -2121,6 +1999,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
+
   /// 切换文件选择状态
   void _toggleFileSelection(VfsFileInfo file) {
     // 检查是否可以选择此文件
@@ -2129,17 +2008,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       String message = '';
       if (file.isDirectory && widget.allowDirectorySelection == false) {
         message = '不允许选择文件夹';
-      } else if (!file.isDirectory && 
-          widget.allowedExtensions != null && 
+      } else if (!file.isDirectory &&
+          widget.allowedExtensions != null &&
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
         if (!widget.allowedExtensions!.contains(extension)) {
           message = '不支持的文件类型: .$extension';
         }
-      } else if (widget.allowMultipleSelection == false && _selectedFiles.length >= 1) {
+      } else if (widget.allowMultipleSelection == false &&
+          _selectedFiles.length >= 1) {
         message = '单选模式下只能选择一个文件';
       }
-      
+
       if (message.isNotEmpty) {
         _showErrorSnackBar(message);
       }
