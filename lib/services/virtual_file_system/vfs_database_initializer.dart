@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'vfs_storage_service.dart';
 import 'vfs_protocol.dart';
 import 'vfs_permission_system.dart';
+import 'virtual_file_system.dart';
 
 /// VFS数据库初始化服务
 /// 用于在应用启动时统一初始化VFS系统，包括根文件系统和应用数据库
@@ -11,14 +12,16 @@ class VfsDatabaseInitializer {
       VfsDatabaseInitializer._internal();
   factory VfsDatabaseInitializer() => _instance;
   VfsDatabaseInitializer._internal();
+  final VirtualFileSystem _vfs = VirtualFileSystem();
 
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
-    // 添加全局初始化状态标记
+  // 添加全局初始化状态标记
   static bool _isInitialized = false;
 
   /// 检查VFS系统是否已初始化
   static bool get isInitialized => _isInitialized;
+
   /// 在应用启动时初始化整个VFS系统
   /// 包括根文件系统、权限系统、挂载点以及应用数据库
   Future<void> initializeApplicationVfs() async {
@@ -48,6 +51,7 @@ class VfsDatabaseInitializer {
       rethrow;
     }
   }
+
   /// 初始化根文件系统（保持向后兼容）
   Future<void> initializeDefaultDatabase() async {
     // 如果已经通过 initializeApplicationVfs 初始化过，直接返回
@@ -66,11 +70,14 @@ class VfsDatabaseInitializer {
       // 检查是否已经初始化过
       if (await _isAlreadyInitialized()) {
         debugPrint('VFS根文件系统已存在，跳过初始化');
+        _vfs.mount('r6box', 'fs');
         return;
       }
 
       // 创建根文件系统
       await _createRootFileSystem();
+
+      _vfs.mount('r6box', 'fs');
 
       // 标记为已初始化
       await _markAsInitialized();
@@ -89,9 +96,7 @@ class VfsDatabaseInitializer {
 
       // 创建应用数据库的集合目录
       const databaseName = 'r6box';
-      final collections = [
-        'legends',
-      ];
+      final collections = ['legends'];
 
       for (final collection in collections) {
         await _storage.createDirectory(
@@ -99,12 +104,6 @@ class VfsDatabaseInitializer {
         );
         debugPrint('创建应用集合目录: /$collection/');
       }
-
-      // 为legends集合创建挂载点到/mnt/
-      await _storage.createDirectory(
-        'indexeddb://$databaseName/fs/mnt/legends/',
-      );
-      debugPrint('创建legends挂载点: /mnt/legends/');
 
       debugPrint('应用数据库初始化完成');
     } catch (e) {

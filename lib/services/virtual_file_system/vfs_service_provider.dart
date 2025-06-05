@@ -14,35 +14,8 @@ class VfsServiceProvider {
   factory VfsServiceProvider() => _instance;
   VfsServiceProvider._internal();
   final VirtualFileSystem _vfs = VirtualFileSystem();
-  final VfsDatabaseInitializer _initializer = VfsDatabaseInitializer();
   final VfsStorageService _storage = VfsStorageService();
-  /// 初始化服务
-  Future<void> initialize() async {
-    // 检查是否已经通过 main.dart 中的全局初始化完成
-    if (VfsDatabaseInitializer.isInitialized) {
-      debugPrint('VFS服务已通过全局初始化完成，跳过重复初始化');
-      // 即使全局已初始化，也需要确保虚拟文件系统和挂载点设置
-      final vfsInitializer = VfsDatabaseInitializer();
-      await vfsInitializer.initializeApplicationVfs();
-      _vfs.mount('r6box', 'fs');
-      debugPrint('VFS Service Provider ready (skip duplicate init)');
-      return;
-    }
 
-    // 兼容性支持：如果没有通过全局初始化，执行本地初始化
-    debugPrint('执行VFS服务本地初始化...');
-    
-    // 首先初始化根文件系统
-    await _initializer.initializeDefaultDatabase();
-
-    // 初始化虚拟文件系统（包括权限系统）
-    final vfsInitializer = VfsDatabaseInitializer();
-    await vfsInitializer.initializeApplicationVfs();
-
-    // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
-    _vfs.mount('r6box', 'fs');
-    debugPrint('VFS Service Provider initialized');
-  }
 
   /// 为组件注册专用存储空间
   void registerComponent(String componentName, {bool readOnly = false}) {

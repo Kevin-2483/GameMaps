@@ -7,6 +7,7 @@ import 'package:archive/archive.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_import_export_service.dart';
+import '../../services/virtual_file_system/vfs_database_initializer.dart';
 import '../web/web_context_menu_handler.dart';
 import 'vfs_file_metadata_dialog.dart';
 import 'vfs_file_rename_dialog.dart';
@@ -72,7 +73,7 @@ class VfsFileManagerWindow extends StatefulWidget {
     List<String>? allowedExtensions,
   }) async {
     String? selectedFile;
-    
+
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -93,7 +94,7 @@ class VfsFileManagerWindow extends StatefulWidget {
         },
       ),
     );
-    
+
     return selectedFile;
   }
 
@@ -107,7 +108,7 @@ class VfsFileManagerWindow extends StatefulWidget {
     List<String>? allowedExtensions,
   }) async {
     List<String>? selectedFiles;
-    
+
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -126,7 +127,7 @@ class VfsFileManagerWindow extends StatefulWidget {
         },
       ),
     );
-    
+
     return selectedFiles;
   }
 }
@@ -202,7 +203,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     try {
       // 初始化VFS服务和根文件系统
-      await _vfsService.initialize();
+      final vfsInitializer = VfsDatabaseInitializer();
+      await vfsInitializer.initializeApplicationVfs();
 
       // 加载数据库列表
       await _loadDatabases();
@@ -249,6 +251,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     setState(() {});
   }
+
   /// 导航到指定路径
   Future<void> _navigateToPath(String path) async {
     if (_selectedDatabase == null || _selectedCollection == null) return;
@@ -264,12 +267,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         _selectedCollection!,
         path.isEmpty ? null : path,
       );
-      
+
       // 在选择模式下应用文件过滤
-      final filteredFiles = _shouldApplyFiltering() 
-        ? _filterFiles(allFiles)
-        : allFiles;
-      
+      final filteredFiles = _shouldApplyFiltering()
+          ? _filterFiles(allFiles)
+          : allFiles;
+
       setState(() {
         _currentFiles = filteredFiles;
         _currentPath = path;
@@ -328,7 +331,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           final bExt = b.name.split('.').last.toLowerCase();
           result = aExt.compareTo(bExt);
           break;
-      }      return _sortAscending ? result : -result;
+      }
+      return _sortAscending ? result : -result;
     });
   }
 
@@ -354,8 +358,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       }
 
       // 如果指定了文件扩展名限制，过滤文件
-      if (!file.isDirectory && 
-          widget.allowedExtensions != null && 
+      if (!file.isDirectory &&
+          widget.allowedExtensions != null &&
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
         if (!widget.allowedExtensions!.contains(extension)) {
@@ -383,8 +387,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
 
     // 检查文件扩展名限制
-    if (!file.isDirectory && 
-        widget.allowedExtensions != null && 
+    if (!file.isDirectory &&
+        widget.allowedExtensions != null &&
         widget.allowedExtensions!.isNotEmpty) {
       final extension = file.name.split('.').last.toLowerCase();
       if (!widget.allowedExtensions!.contains(extension)) {
@@ -410,6 +414,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     _showInfoSnackBar('已复制 ${files.length} 个项目');
   }
+
   /// 剪切文件
   Future<void> _cutFiles(List<VfsFileInfo> files) async {
     setState(() {
@@ -708,10 +713,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
+
   /// 构建头部
   Widget _buildHeader() {
     final isSelectionMode = widget.onFilesSelected != null;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -747,7 +753,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               ],
             ),
           ),
-          
+
           // 选择模式：显示确认和取消按钮
           if (isSelectionMode) ...[
             TextButton(
@@ -2121,6 +2127,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
     );
   }
+
   /// 切换文件选择状态
   void _toggleFileSelection(VfsFileInfo file) {
     // 检查是否可以选择此文件
@@ -2129,17 +2136,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       String message = '';
       if (file.isDirectory && widget.allowDirectorySelection == false) {
         message = '不允许选择文件夹';
-      } else if (!file.isDirectory && 
-          widget.allowedExtensions != null && 
+      } else if (!file.isDirectory &&
+          widget.allowedExtensions != null &&
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
         if (!widget.allowedExtensions!.contains(extension)) {
           message = '不支持的文件类型: .$extension';
         }
-      } else if (widget.allowMultipleSelection == false && _selectedFiles.length >= 1) {
+      } else if (widget.allowMultipleSelection == false &&
+          _selectedFiles.length >= 1) {
         message = '单选模式下只能选择一个文件';
       }
-      
+
       if (message.isNotEmpty) {
         _showErrorSnackBar(message);
       }
