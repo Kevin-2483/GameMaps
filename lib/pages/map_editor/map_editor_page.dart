@@ -9,7 +9,7 @@ import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/map_database_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
-import '../../services/legend_vfs/legend_compatibility_service.dart';
+import '../../services/legend_vfs/legend_vfs_service.dart';
 import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart' as legend_db;
@@ -72,7 +72,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
-  final LegendCompatibilityService _legendDatabaseService = LegendCompatibilityService();
+  final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具

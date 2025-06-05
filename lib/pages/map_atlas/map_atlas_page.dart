@@ -10,11 +10,14 @@ import '../../components/web/web_readonly_components.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
-import '../../services/map_database_service.dart';
+import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
+import '../../services/virtual_file_system/vfs_storage_service.dart';
+import 'dart:convert';
 import '../../mixins/map_localization_mixin.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../map_editor/map_editor_page.dart';
+import '../../utils/filename_sanitizer.dart';
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -36,7 +39,8 @@ class _MapAtlasContent extends StatefulWidget {
 
 class _MapAtlasContentState extends State<_MapAtlasContent>
     with MapLocalizationMixin {
-  final MapDatabaseService _databaseService = VfsMapServiceFactory.createMapDatabaseService();
+  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService();
+  final VfsStorageService _storageService = VfsStorageService();
   List<MapItemSummary> _maps = [];
   bool _isLoading = true;
   Map<String, String> _localizedTitles = {};
@@ -45,12 +49,57 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   void initState() {
     super.initState();
     _loadMaps();
-  }
-
-  Future<void> _loadMaps() async {
+  }  Future<void> _loadMaps() async {
     setState(() => _isLoading = true);
     try {
-      final maps = await _databaseService.getAllMapsSummary();
+      // 直接使用VFS列出所有.mapdata文件夹
+      final files = await _storageService.listDirectory('indexeddb://r6box/maps/');
+      final maps = <MapItemSummary>[];
+      
+      for (final file in files) {
+        if (file.isDirectory && file.name.endsWith('.mapdata')) {
+          try {
+            // 从文件名提取地图标题
+            final mapTitle = file.name.replaceAll('.mapdata', '');
+            final decodedTitle = Uri.decodeComponent(mapTitle);
+            
+            // 读取元数据
+            final metaPath = 'indexeddb://r6box/maps/${file.name}/meta.json';
+            final metaExists = await _storageService.exists(metaPath);
+            
+            if (metaExists) {
+              final metaFile = await _storageService.readFile(metaPath);
+              if (metaFile != null) {
+                // 解码JSON元数据
+                final metaJson = utf8.decode(metaFile.data);
+                final metaData = jsonDecode(metaJson) as Map<String, dynamic>;
+                
+                // 读取封面图片
+                Uint8List? coverImage;
+                final coverPath = 'indexeddb://r6box/maps/${file.name}/cover.png';
+                if (await _storageService.exists(coverPath)) {
+                  final coverFile = await _storageService.readFile(coverPath);
+                  coverImage = coverFile?.data;
+                }
+                
+                // 创建MapItemSummary，使用地图标题作为ID的哈希值以兼容现有接口
+                final mapSummary = MapItemSummary(
+                  id: decodedTitle.hashCode, // 使用标题哈希作为ID
+                  title: decodedTitle,
+                  imageData: coverImage,
+                  version: (metaData['version'] as num?)?.toInt() ?? 1,
+                  createdAt: DateTime.parse(metaData['created_at'] as String? ?? DateTime.now().toIso8601String()),
+                  updatedAt: DateTime.parse(metaData['updated_at'] as String? ?? DateTime.now().toIso8601String()),
+                );
+                
+                maps.add(mapSummary);
+              }
+            }
+          } catch (e) {
+            debugPrint('加载地图失败: ${file.name} - $e');
+          }
+        }
+      }
 
       // 加载本地化标题
       if (mounted) {
@@ -83,7 +132,6 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
-
   Future<void> _addMap() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -109,7 +157,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
               updatedAt: DateTime.now(),
             );
 
-            await _databaseService.insertMap(mapItem);
+            // 使用VFS直接保存地图
+            await _vfsMapService.saveMap(mapItem);
             await _loadMaps();
             _showSuccessSnackBar(l10n.mapAddedSuccessfully);
           } catch (e) {
@@ -210,11 +259,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ],
         );
       },
-    );
-
-    if (confirmed == true) {
+    );    if (confirmed == true) {
       try {
-        await _databaseService.deleteMap(map.id);
+        // 使用VFS直接删除整个地图目录，使用与VFS服务一致的文件名清理方式
+        final sanitizedTitle = FilenameSanitizer.sanitize(map.title);
+        final encodedTitle = Uri.encodeComponent(sanitizedTitle);
+        final mapDirectoryPath = 'indexeddb://r6box/maps/$encodedTitle.mapdata';
+        
+        await _storageService.delete(mapDirectoryPath, recursive: true);
         await _loadMaps();
         _showSuccessSnackBar(l10n.mapDeletedSuccessfully);
       } catch (e) {

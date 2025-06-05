@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart';
-import '../../services/legend_vfs/legend_compatibility_service.dart';
+import '../../services/legend_vfs/legend_vfs_service.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../../components/common/center_point_selector.dart';
 
@@ -27,7 +27,7 @@ class _LegendManagerContent extends StatefulWidget {
 }
 
 class _LegendManagerContentState extends State<_LegendManagerContent> {
-  final LegendCompatibilityService _databaseService = LegendCompatibilityService();
+  final LegendVfsService _vfsService = LegendVfsService();
   List<LegendItem> _legends = [];
   bool _isLoading = true;
 
@@ -36,11 +36,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     super.initState();
     _loadLegends();
   }
-
   Future<void> _loadLegends() async {
     setState(() => _isLoading = true);
     try {
-      final legends = await _databaseService.getAllLegends();
+      final legends = await _vfsService.getAllLegends();
       setState(() {
         _legends = legends;
         _isLoading = false;
@@ -93,7 +92,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             );
-            await _databaseService.insertLegend(legendItem);
+            await _vfsService.saveLegend(legendItem);
             await _loadLegends();
             _showSuccessSnackBar(l10n.legendAddedSuccessfully);
           } catch (e) {
@@ -232,7 +231,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     if (confirmed == true) {
       try {
-        await _databaseService.deleteLegend(legend.id!);
+        await _vfsService.deleteLegend(legend.title);
         await _loadLegends();
         _showSuccessSnackBar(l10n.legendDeletedSuccessfully);
       } catch (e) {
