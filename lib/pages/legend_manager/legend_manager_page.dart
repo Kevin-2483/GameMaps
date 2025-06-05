@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart';
-import '../../services/legend_database_service.dart';
+import '../../services/legend_vfs/legend_compatibility_service.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../../components/common/center_point_selector.dart';
 
@@ -27,7 +27,7 @@ class _LegendManagerContent extends StatefulWidget {
 }
 
 class _LegendManagerContentState extends State<_LegendManagerContent> {
-  final LegendDatabaseService _databaseService = LegendDatabaseService();
+  final LegendCompatibilityService _databaseService = LegendCompatibilityService();
   List<LegendItem> _legends = [];
   bool _isLoading = true;
 

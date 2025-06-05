@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../services/map_database_service.dart';
-import '../../services/legend_database_service.dart';
+import '../../services/legend_vfs/legend_compatibility_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../models/legend_item.dart' as legend_db;
@@ -39,7 +39,7 @@ class _ExternalResourcesImportPanelState
 
   // 数据库服务
   final MapDatabaseService _mapService = MapDatabaseService();
-  final LegendDatabaseService _legendService = LegendDatabaseService();
+  final LegendCompatibilityService _legendService = LegendCompatibilityService();
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

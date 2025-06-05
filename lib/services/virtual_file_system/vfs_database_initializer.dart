@@ -5,7 +5,7 @@ import 'vfs_protocol.dart';
 import 'vfs_permission_system.dart';
 
 /// VFS数据库初始化服务
-/// 用于创建默认的根文件系统（空的文件系统）
+/// 用于在应用启动时统一初始化VFS系统，包括根文件系统和应用数据库
 class VfsDatabaseInitializer {
   static final VfsDatabaseInitializer _instance =
       VfsDatabaseInitializer._internal();
@@ -15,13 +15,37 @@ class VfsDatabaseInitializer {
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
 
-  /// 初始化默认数据库结构
+  /// 在应用启动时初始化整个VFS系统
+  /// 包括根文件系统、权限系统、挂载点以及应用数据库
+  Future<void> initializeApplicationVfs() async {
+    try {
+      debugPrint('开始初始化应用VFS系统...');
+
+      // 1. 初始化权限系统
+      await _permissionManager.initialize();
+
+      // 2. 初始化根文件系统
+      await _initializeRootFileSystem();
+
+      // 3. 初始化应用数据库和挂载点
+      await _initializeApplicationDatabases();
+
+      debugPrint('应用VFS系统初始化完成');
+    } catch (e) {
+      debugPrint('应用VFS系统初始化失败: $e');
+      rethrow;
+    }
+  }
+
+  /// 初始化根文件系统（保持向后兼容）
   Future<void> initializeDefaultDatabase() async {
+    await _initializeRootFileSystem();
+  }
+
+  /// 初始化根文件系统
+  Future<void> _initializeRootFileSystem() async {
     try {
       debugPrint('开始初始化VFS根文件系统...');
-
-      // 初始化权限系统
-      await _permissionManager.initialize();
 
       // 检查是否已经初始化过
       if (await _isAlreadyInitialized()) {
@@ -41,6 +65,37 @@ class VfsDatabaseInitializer {
       debugPrint('VFS根文件系统初始化完成');
     } catch (e) {
       debugPrint('VFS根文件系统初始化失败: $e');
+      rethrow;
+    }
+  }
+
+  /// 初始化应用数据库和挂载点
+  Future<void> _initializeApplicationDatabases() async {
+    try {
+      debugPrint('开始初始化应用数据库...');
+
+      // 创建应用数据库的集合目录
+      const databaseName = 'r6box';
+      final collections = [
+        'legends',
+      ];
+
+      for (final collection in collections) {
+        await _storage.createDirectory(
+          'indexeddb://$databaseName/$collection/',
+        );
+        debugPrint('创建应用集合目录: /$collection/');
+      }
+
+      // 为legends集合创建挂载点到/mnt/
+      await _storage.createDirectory(
+        'indexeddb://$databaseName/fs/mnt/legends/',
+      );
+      debugPrint('创建legends挂载点: /mnt/legends/');
+
+      debugPrint('应用数据库初始化完成');
+    } catch (e) {
+      debugPrint('应用数据库初始化失败: $e');
       rethrow;
     }
   }

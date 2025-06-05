@@ -12,6 +12,7 @@ import 'providers/user_preferences_provider.dart';
 import 'router/app_router.dart';
 import 'config/config_manager.dart';
 import 'services/web_database_importer.dart';
+import 'services/virtual_file_system/vfs_database_initializer.dart';
 import 'components/web/web_context_menu_handler.dart';
 
 void main() async {
@@ -30,6 +31,16 @@ void main() async {
 
   // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
+
+  // Initialize VFS system
+  try {
+    final vfsInitializer = VfsDatabaseInitializer();
+    await vfsInitializer.initializeApplicationVfs();
+    debugPrint('VFS系统初始化成功');
+  } catch (e) {
+    debugPrint('VFS系统初始化失败: $e');
+    // VFS初始化失败不应该阻止应用启动，只记录错误
+  }
 
   // Import data from assets for Web platform
   if (kIsWeb) {

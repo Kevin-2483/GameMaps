@@ -6,7 +6,7 @@ import '../models/map_item.dart';
 import '../models/map_item_summary.dart';
 import '../models/legend_item.dart';
 import 'map_database_service.dart';
-import 'legend_database_service.dart';
+import 'legend_vfs/legend_compatibility_service.dart';
 import 'map_localization_service.dart';
 
 /// 合并数据库导出服务
@@ -18,7 +18,7 @@ class CombinedDatabaseExporter {
   CombinedDatabaseExporter._internal();
 
   final MapDatabaseService _mapService = MapDatabaseService();
-  final LegendDatabaseService _legendService = LegendDatabaseService();
+  final LegendCompatibilityService _legendService = LegendCompatibilityService();
   final MapLocalizationService _localizationService = MapLocalizationService();
 
   /// 导出数据库数据为单个JSON文件

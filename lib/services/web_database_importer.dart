@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import '../models/map_item.dart';
 import '../models/legend_item.dart';
 import '../services/map_database_service.dart';
-import '../services/legend_database_service.dart';
+import 'legend_vfs/legend_compatibility_service.dart';
 
 /// Web平台数据库导入工具
 /// 用于将从客户端导出的JSON数据导入到Web平台数据库
@@ -41,7 +41,7 @@ class WebDatabaseImporter {
   /// 导入数据到数据库
   static Future<void> _importData(Map<String, dynamic> data) async {
     final mapService = MapDatabaseService();
-    final legendService = LegendDatabaseService();
+    final legendService = LegendCompatibilityService();
 
     // 导入地图数据 - 处理新的嵌套格式
     if (data.containsKey('maps')) {

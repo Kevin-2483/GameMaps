@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/map_database_service.dart';
-import '../../services/legend_database_service.dart';
+import '../../services/legend_vfs/legend_compatibility_service.dart';
 import '../../models/map_item.dart';
 import '../../models/legend_item.dart';
 
@@ -24,7 +24,7 @@ class _ExternalResourcesBrowsePanelState
   List<String> _localizationLocales = [];
   // 服务实例
   final MapDatabaseService _mapService = MapDatabaseService();
-  final LegendDatabaseService _legendService = LegendDatabaseService();
+  final LegendCompatibilityService _legendService = LegendCompatibilityService();
 
   @override
   void initState() {

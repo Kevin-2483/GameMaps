@@ -26,24 +26,6 @@ class VfsServiceProvider {
 
     // 挂载根文件系统 - 这是默认的根目录，供用户文件管理使用
     _vfs.mount('r6box', 'fs');
-
-    // 挂载默认的应用数据库
-    _vfs.mount('r6box', 'app_data');
-    _vfs.mount('r6box', 'user_data');
-    _vfs.mount('r6box', 'maps');
-    _vfs.mount('r6box', 'legends');
-    _vfs.mount('r6box', 'cache');
-    _vfs.mount(
-      'r6box',
-      'temp',
-      mount: const VfsMount(
-        database: 'r6box',
-        collection: 'temp',
-        isReadOnly: false,
-        options: {'autoCleanup': true},
-      ),
-    );
-
     debugPrint('VFS Service Provider initialized');
   }
 
