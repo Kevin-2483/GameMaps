@@ -2888,15 +2888,14 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     if (_selectedDatabase == null || _selectedCollection == null) {
       _showErrorSnackBar('请先选择数据库和集合');
       return;
-    }
-
-    try {      // 使用VfsFileManagerWindow.showFilePicker选择解压目标路径
+    }    try {      // 使用VfsFileManagerWindow.showFilePicker选择解压目标路径
       final selectedPath = await VfsFileManagerWindow.showFilePicker(
         context,
         initialDatabase: _selectedDatabase,
         initialCollection: _selectedCollection,
         initialPath: _currentPath,
         allowDirectorySelection: true,
+        selectionType: SelectionType.directoriesOnly,
         allowedExtensions: null, // 允许选择目录，不限制扩展名
       );
 
