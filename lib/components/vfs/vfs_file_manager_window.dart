@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
 
@@ -9,6 +11,7 @@ import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_import_export_service.dart';
 import '../../services/virtual_file_system/vfs_database_initializer.dart';
 import '../web/web_context_menu_handler.dart';
+import '../../utils/web_download_utils.dart';
 import 'vfs_file_metadata_dialog.dart';
 import 'vfs_file_rename_dialog.dart';
 import 'vfs_file_search_dialog.dart';
@@ -2519,6 +2522,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           // 将本地路径分隔符转换为VFS路径分隔符
           final normalizedPath = fullRelativePath.replaceAll(
             Platform.pathSeparator,
+
             '/',
           );
 
@@ -2697,59 +2701,53 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
   }
 
-  /// 普通下载（原有的下载逻辑）
+  /// 普通下载（支持Web平台和桌面平台）
   Future<void> _downloadFilesNormally(List<VfsFileInfo> files) async {
-    // 选择保存位置
-    final downloadPath = await FilePicker.platform.getDirectoryPath();
-    if (downloadPath == null) return;
+    if (kIsWeb) {
+      // Web平台：直接下载文件，不需要选择目录
+      await _downloadFilesForWeb(files);
+    } else {
+      // 桌面平台：选择保存位置
+      final downloadPath = await FilePicker.platform.getDirectoryPath();
+      if (downloadPath == null) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+      setState(() {
+        _isLoading = true;
+      });
 
-    int fileCount = 0;
-    int folderCount = 0;
+      int fileCount = 0;
+      int folderCount = 0;
 
-    for (var file in files) {
-      if (file.isDirectory) {
-        // 下载整个文件夹
-        final downloadedFiles = await _downloadDirectory(file, downloadPath);
-        fileCount += downloadedFiles;
-        folderCount++;
-      } else {
-        // 下载单个文件
-        await _downloadSingleFile(file, downloadPath);
-        fileCount++;
+      for (var file in files) {
+        if (file.isDirectory) {
+          // 下载整个文件夹
+          final downloadedFiles = await _downloadDirectory(file, downloadPath);
+          fileCount += downloadedFiles;
+          folderCount++;
+        } else {
+          // 下载单个文件
+          await _downloadSingleFile(file, downloadPath);
+          fileCount++;
+        }
       }
-    }
 
-    String message = '';
-    if (fileCount > 0 && folderCount > 0) {
-      message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
-    } else if (fileCount > 0) {
-      message = '已下载 $fileCount 个文件到 $downloadPath';
-    } else if (folderCount > 0) {
-      message = '已下载 $folderCount 个文件夹到 $downloadPath';
-    }
+      String message = '';
+      if (fileCount > 0 && folderCount > 0) {
+        message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
+      } else if (fileCount > 0) {
+        message = '已下载 $fileCount 个文件到 $downloadPath';
+      } else if (folderCount > 0) {
+        message = '已下载 $folderCount 个文件夹到 $downloadPath';
+      }
 
-    if (message.isNotEmpty) {
-      _showInfoSnackBar(message);
+      if (message.isNotEmpty) {
+        _showInfoSnackBar(message);
+      }
     }
   }
 
-  /// 压缩下载
+  /// 压缩下载（支持Web平台和桌面平台）
   Future<void> _downloadFilesAsArchive(List<VfsFileInfo> files) async {
-    // 选择保存位置和文件名
-    final zipPath = await FilePicker.platform.saveFile(
-      dialogTitle: '保存压缩文件',
-      fileName:
-          '${_currentPath.isEmpty ? '根目录' : _currentPath.split('/').last}_${DateTime.now().millisecondsSinceEpoch}.zip',
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
-    );
-
-    if (zipPath == null) return;
-
     setState(() {
       _isLoading = true;
     });
@@ -2771,14 +2769,41 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       // 编码压缩包
       final zipEncoder = ZipEncoder();
       final zipData = zipEncoder.encode(archive);
-
       if (zipData != null) {
-        // 保存到文件
-        final zipFile = File(zipPath);
-        await zipFile.writeAsBytes(zipData);
+        if (kIsWeb) {
+          // Web平台：直接下载压缩包
+          final fileName = WebDownloadUtils.generateTimestampedFileName(
+            _currentPath.isEmpty ? '根目录' : _currentPath.split('/').last,
+            'zip',
+          );
+          await WebDownloadUtils.downloadZipFile(
+            fileName,
+            Uint8List.fromList(zipData),
+          );
 
-        final fileSize = _formatFileSize(zipData.length);
-        _showInfoSnackBar('已压缩下载 $totalFiles 个文件到 $zipPath\n压缩包大小: $fileSize');
+          final fileSize = _formatFileSize(zipData.length);
+          _showInfoSnackBar('已压缩下载 $totalFiles 个文件\n压缩包大小: $fileSize');
+        } else {
+          // 桌面平台：选择保存位置和文件名
+          final zipPath = await FilePicker.platform.saveFile(
+            dialogTitle: '保存压缩文件',
+            fileName:
+                '${_currentPath.isEmpty ? '根目录' : _currentPath.split('/').last}_${DateTime.now().millisecondsSinceEpoch}.zip',
+            type: FileType.custom,
+            allowedExtensions: ['zip'],
+          );
+
+          if (zipPath == null) return;
+
+          // 保存到文件
+          final zipFile = File(zipPath);
+          await zipFile.writeAsBytes(zipData);
+
+          final fileSize = _formatFileSize(zipData.length);
+          _showInfoSnackBar(
+            '已压缩下载 $totalFiles 个文件到 $zipPath\n压缩包大小: $fileSize',
+          );
+        }
       } else {
         _showErrorSnackBar('压缩失败');
       }
@@ -2860,9 +2885,102 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         // 递归下载子目录
         downloadedFiles += await _downloadDirectory(file, localDir.path);
       } else {
-        // 下载文件到子目录
-        await _downloadSingleFile(file, localDir.path);
+        // 下载文件到子目录        await _downloadSingleFile(file, localDir.path);
         downloadedFiles++;
+      }
+    }
+
+    return downloadedFiles;
+  }
+
+  /// Web平台文件下载方法
+  Future<void> _downloadFilesForWeb(List<VfsFileInfo> files) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      int fileCount = 0;
+      int directoryCount = 0;
+
+      for (var file in files) {
+        if (file.isDirectory) {
+          // 下载目录中的所有文件
+          final dirFiles = await _downloadDirectoryForWeb(file);
+          fileCount += dirFiles;
+          directoryCount++;
+        } else {
+          // 下载单个文件
+          await _downloadSingleFileForWeb(file);
+          fileCount++;
+        }
+      }
+
+      String message = '';
+      if (fileCount > 0 && directoryCount > 0) {
+        message = '已下载 $fileCount 个文件和 $directoryCount 个目录';
+      } else if (fileCount > 0) {
+        message = '已下载 $fileCount 个文件';
+      } else if (directoryCount > 0) {
+        message = '已下载 $directoryCount 个目录中的文件';
+      }
+
+      if (message.isNotEmpty) {
+        _showInfoSnackBar(message);
+      }
+    } catch (e) {
+      _showErrorSnackBar('Web平台下载失败: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Web平台下载单个文件
+  Future<void> _downloadSingleFileForWeb(VfsFileInfo file) async {
+    final fileContent = await _vfsService.vfs.readFile(file.path);
+    if (fileContent != null) {
+      final fileName = WebDownloadUtils.sanitizeFileName(file.name);
+      await WebDownloadUtils.downloadFile(
+        fileName,
+        fileContent.data,
+        mimeType: fileContent.mimeType ?? 'application/octet-stream',
+      );
+    }
+  }
+
+  /// Web平台下载目录中的所有文件
+  Future<int> _downloadDirectoryForWeb(VfsFileInfo directory) async {
+    final allFiles = await _vfsService.vfs.listDirectory(directory.path);
+    int downloadedFiles = 0;
+
+    for (var file in allFiles) {
+      if (file.isDirectory) {
+        // 递归下载子目录
+        downloadedFiles += await _downloadDirectoryForWeb(file);
+      } else {
+        // 下载文件，文件名包含目录结构
+        final relativePath = file.path
+            .replaceFirst(directory.path, '')
+            .replaceFirst('/', '');
+
+        final fileName = WebDownloadUtils.sanitizeFileName(
+          '${directory.name}_$relativePath',
+        );
+
+        final fileContent = await _vfsService.vfs.readFile(file.path);
+        if (fileContent != null) {
+          await WebDownloadUtils.downloadFile(
+            fileName,
+            fileContent.data,
+            mimeType: fileContent.mimeType ?? 'application/octet-stream',
+          );
+          downloadedFiles++;
+
+          // 添加小延迟，避免浏览器阻止多个下载
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
       }
     }
 
