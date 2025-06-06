@@ -537,7 +537,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     return true;
   }
-
   /// 构建选择模式描述文本
   String _buildSelectionModeDescription() {
     final List<String> restrictions = [];
@@ -549,16 +548,25 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       restrictions.add('仅单选');
     }
     
-    // 添加类型限制
-    if (widget.allowDirectorySelection && 
-        (widget.allowedExtensions == null || widget.allowedExtensions!.isEmpty)) {
-      restrictions.add('文件和文件夹');
-    } else if (widget.allowDirectorySelection) {
-      restrictions.add('文件夹和指定类型文件');
-    } else if (widget.allowedExtensions != null && widget.allowedExtensions!.isNotEmpty) {
-      restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')})');
-    } else {
-      restrictions.add('仅文件');
+    // 添加选择类型限制（优先使用新的 SelectionType）
+    switch (widget.selectionType) {
+      case SelectionType.filesOnly:
+        if (widget.allowedExtensions != null && widget.allowedExtensions!.isNotEmpty) {
+          restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')})');
+        } else {
+          restrictions.add('仅文件');
+        }
+        break;
+      case SelectionType.directoriesOnly:
+        restrictions.add('仅文件夹');
+        break;
+      case SelectionType.both:
+        if (widget.allowedExtensions != null && widget.allowedExtensions!.isNotEmpty) {
+          restrictions.add('文件夹和指定类型文件 (${widget.allowedExtensions!.join(', ')})');
+        } else {
+          restrictions.add('文件和文件夹');
+        }
+        break;
     }
     
     return restrictions.join(' • ');
