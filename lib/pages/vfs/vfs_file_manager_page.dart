@@ -17,6 +17,7 @@ import '../../components/vfs/vfs_file_search_dialog.dart';
 import '../../components/vfs/vfs_permission_dialog.dart';
 import '../../components/layout/main_layout.dart';
 import '../../services/virtual_file_system/vfs_database_initializer.dart';
+import '../../components/vfs/vfs_file_picker_window.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -1597,11 +1598,19 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         label: '剪切',
         icon: Icons.cut,
         onTap: () => _cutFiles([file]),
-      ),
-      if (_clipboardFiles.isNotEmpty)
+      ),      if (_clipboardFiles.isNotEmpty)
         ContextMenuItem(label: '粘贴', icon: Icons.paste, onTap: _pasteFiles),
+      
       const ContextMenuItem.divider(),
-
+      
+      // ZIP解压选项（仅对ZIP文件显示）
+      if (_isZipFile(file))
+        ContextMenuItem(
+          label: '解压到...',
+          icon: Icons.folder_zip,
+          onTap: () => _extractZipFile(file),
+        ),
+      
       // 下载选项
       ContextMenuItem(
         label: '下载',
@@ -2503,6 +2512,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
   }
 
   /// 处理下载操作
+
   Future<void> _handleDownload(String downloadType) async {
     if (_selectedDatabase == null || _selectedCollection == null) {
       _showErrorSnackBar('请先选择数据库和集合');
@@ -2860,6 +2870,111 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
     return downloadedFiles;
   }
+
+  /// 检查是否为ZIP文件
+  bool _isZipFile(VfsFileInfo file) {
+    if (file.isDirectory) return false;
+    final extension = file.name.split('.').last.toLowerCase();
+    return extension == 'zip';
+  }
+
+  /// 解压ZIP文件
+  Future<void> _extractZipFile(VfsFileInfo file) async {
+    if (!_isZipFile(file)) {
+      _showErrorSnackBar('所选文件不是ZIP文件');
+      return;
+    }
+
+    if (_selectedDatabase == null || _selectedCollection == null) {
+      _showErrorSnackBar('请先选择数据库和集合');
+      return;
+    }
+
+    try {      // 使用VfsFileManagerWindow.showFilePicker选择解压目标路径
+      final selectedPath = await VfsFileManagerWindow.showFilePicker(
+        context,
+        initialDatabase: _selectedDatabase,
+        initialCollection: _selectedCollection,
+        initialPath: _currentPath,
+        allowDirectorySelection: true,
+        allowedExtensions: null, // 允许选择目录，不限制扩展名
+      );
+
+      if (selectedPath == null) {
+        return; // 用户取消了选择
+      }
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // 解析选中的路径，提取相对路径部分
+      String targetBasePath = '';
+      if (selectedPath.isNotEmpty) {
+        // 如果是绝对路径（indexeddb://database/collection/path），解析出相对路径部分
+        final vfsPath = VfsProtocol.parsePath(selectedPath);
+        if (vfsPath != null) {
+          targetBasePath = vfsPath.path;
+        } else {
+          // 如果不是绝对路径，直接使用
+          targetBasePath = selectedPath;
+        }
+      }
+
+      // 读取ZIP文件内容
+      final zipContent = await _vfsService.vfs.readFile(file.path);
+      if (zipContent == null) {
+        throw Exception('无法读取ZIP文件内容');
+      }
+
+      // 解压ZIP文件
+      final archive = ZipDecoder().decodeBytes(zipContent.data);
+      int extractedCount = 0;
+
+      for (final archiveFile in archive) {
+        if (archiveFile.isFile) {
+          // 构建目标文件路径（相对路径）
+          final targetPath = targetBasePath.isEmpty 
+              ? archiveFile.name 
+              : '$targetBasePath/${archiveFile.name}';
+
+          // 确保目标目录存在
+          final parentPath = targetPath.contains('/') 
+              ? targetPath.substring(0, targetPath.lastIndexOf('/'))
+              : '';
+          
+          if (parentPath.isNotEmpty) {
+            try {
+              await _vfsService.createDirectory(_selectedCollection!, parentPath);
+            } catch (e) {
+              // 目录可能已存在，忽略错误
+            }
+          }
+
+          // 写入文件（使用完整的绝对路径）
+          await _vfsService.vfs.writeFile(
+            'indexeddb://$_selectedDatabase/$_selectedCollection/$targetPath',
+            VfsFileContent(
+              data: Uint8List.fromList(archiveFile.content),
+              mimeType: _getMimeType(archiveFile.name),
+            ),
+          );
+          extractedCount++;
+        }
+      }
+
+      // 刷新当前目录以显示解压的文件
+      await _navigateToPath(_currentPath);
+
+      _showInfoSnackBar('成功解压 $extractedCount 个文件');
+    } catch (e) {
+      _showErrorSnackBar('解压失败: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 }
 
 /// 排序类型枚举
@@ -3004,8 +3119,7 @@ class _FileListItemState extends State<_FileListItem> {
             ),
           ),
         ),
-      ),
-    );
+      ),);
   }
 }
 
@@ -3139,7 +3253,6 @@ class _FileGridItemState extends State<_FileGridItem> {
             ),
           ),
         ),
-      ),
-    );
+      ),);
   }
 }

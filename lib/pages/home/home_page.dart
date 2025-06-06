@@ -5,7 +5,7 @@ import '../../components/common/platform_aware_component.dart';
 import '../../components/layout/main_layout.dart';
 import '../../features/feature_registry.dart';
 import '../../features/component-modules/system_info_feature.dart';
-import '../../components/vfs/vfs_file_manager_window.dart';
+import '../../components/vfs/vfs_file_picker_window.dart';
 
 class HomePage extends BasePage {
   const HomePage({super.key});
