@@ -410,31 +410,55 @@ class VfsMapServiceImpl implements VfsMapService {
     try {
       final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, elementId));
       final elementData = await _storageService.readFile(elementPath);
-        if (elementData == null) {
+      
+      if (elementData == null) {
         return null;
       }
 
       final elementJson = jsonDecode(utf8.decode(elementData.data)) as Map<String, dynamic>;
       
-      // 直接从JSON加载元素，图像数据已经包含在其中
-      return MapDrawingElement.fromJson(elementJson);
+      // 从JSON加载元素
+      MapDrawingElement element = MapDrawingElement.fromJson(elementJson);
+      
+      // 如果元素有图像哈希引用，从资产系统加载图片数据
+      if (element.imageHash != null && element.imageHash!.isNotEmpty) {
+        final imageData = await getAsset(mapTitle, element.imageHash!);
+        if (imageData != null) {
+          // 将资产数据恢复到元素的imageData字段
+          element = element.copyWith(imageData: imageData);
+          debugPrint('已从资产系统加载图像数据，哈希: ${element.imageHash} (${imageData.length} bytes)');
+        } else {
+          debugPrint('警告：无法从资产系统加载图像，哈希: ${element.imageHash}');
+        }
+      }
+      
+      return element;
     } catch (e) {
       debugPrint('加载绘制元素失败 [$mapTitle/$layerId/$elementId]: $e');
       return null;
     }
-  }  @override
+  }@override
   Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element) async {
     try {
-      // 如果元素包含图像数据，先将图像数据保存到该地图的资产系统（使用hash文件名自动去重）
+      // 创建用于保存的元素副本
+      MapDrawingElement elementToSave = element;
+      
+      // 如果元素包含图像数据，保存到资产系统并使用哈希引用
       if (element.imageData != null && element.imageData!.isNotEmpty) {
-        // 保存图像到该地图的资产目录，它会使用hash作为文件名，自动去重
-        await saveAsset(mapTitle, element.imageData!, 'image/png');
-        debugPrint('图像已保存到地图资产系统，大小: ${element.imageData!.length} bytes');
+        // 保存图像到资产系统并获取哈希
+        final hash = await saveAsset(mapTitle, element.imageData!, 'image/png');
+        debugPrint('图像已保存到地图资产系统，哈希: $hash (${element.imageData!.length} bytes)');
+        
+        // 创建使用哈希引用而不是直接数据的元素
+        elementToSave = element.copyWith(
+          imageHash: hash,
+          clearImageData: true, // 清除直接图像数据
+        );
       }
       
-      // 直接保存元素（保留原始图像数据）
+      // 保存修改后的元素JSON（包含哈希引用而非直接数据）
       final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, element.id));
-      final elementJson = jsonEncode(element.toJson());
+      final elementJson = jsonEncode(elementToSave.toJson());
       await _storageService.writeFile(elementPath, utf8.encode(elementJson));
     } catch (e) {
       debugPrint('保存绘制元素失败 [$mapTitle/$layerId/${element.id}]: $e');
