@@ -1399,11 +1399,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             layers: layers,
             legendGroups: legendGroups,
             updatedAt: DateTime.now(),
-          );
-            // 创建版本并添加到版本管理器
+          );          // 创建版本并添加到版本管理器
+          final displayName = await _getVersionDisplayName(versionId); // 生成友好的显示名称
           final version = _versionManager!.createVersionFromData(
             versionId,
-            _getVersionDisplayName(versionId), // 生成友好的显示名称
+            displayName,
             versionMapData,
           );
           
@@ -1430,14 +1430,25 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       print('加载现有版本失败: $e');
     }
   }
-
   /// 为版本ID生成友好的显示名称
-  String _getVersionDisplayName(String versionId) {
+  Future<String> _getVersionDisplayName(String versionId) async {
     if (versionId == 'default') {
       return '默认版本';
     }
     
-    // 如果是时间戳格式的版本ID，尝试提取时间
+    if (_currentMap != null) {
+      try {
+        // 优先尝试从版本元数据获取存储的名称
+        final storedName = await _vfsMapService.getVersionName(_currentMap!.title, versionId);
+        if (storedName != null && storedName.isNotEmpty) {
+          return storedName;
+        }
+      } catch (e) {
+        print('获取版本名称失败 [$versionId]: $e');
+      }
+    }
+    
+    // 如果没有存储的名称，尝试从时间戳格式的版本ID提取时间
     if (versionId.startsWith('version_')) {
       final timestampStr = versionId.replaceFirst('version_', '');
       final timestamp = int.tryParse(timestampStr);
@@ -1450,9 +1461,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 默认使用版本ID作为名称
     return '版本 $versionId';
   }
-
   /// 创建新版本
-  void _createVersion(String name) {
+  void _createVersion(String name) async {
     if (_versionManager == null || _currentMap == null) return;
     
     // 保存当前状态到撤销历史
@@ -1464,9 +1474,27 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _hasUnsavedVersionChanges = false; // 新版本创建时数据已保存到内存
     });
     
+    // 保存版本名称到VFS元数据
+    try {
+      final currentVersion = _versionManager!.currentVersion;
+      if (currentVersion != null) {
+        await _vfsMapService.saveVersionMetadata(
+          _currentMap!.title, 
+          currentVersion.id, 
+          currentVersion.name,
+          createdAt: currentVersion.createdAt,
+          updatedAt: currentVersion.updatedAt,
+        );
+        print('版本名称已保存到元数据: ${currentVersion.name} (ID: ${currentVersion.id})');
+      }
+    } catch (e) {
+      print('保存版本元数据失败: $e');
+      // 不影响主流程，只是记录错误
+    }
+    
     print('新版本已创建: ${_versionManager!.currentVersionId}');
     _showSuccessSnackBar('版本 "$name" 已创建');
-  }  /// 切换版本
+  }/// 切换版本
   void _switchVersion(String versionId) {
     if (_versionManager == null || versionId == _versionManager!.currentVersionId) {
       return;
@@ -1544,13 +1572,40 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           });
         }
       }
+        // 删除VFS存储中的版本数据和元数据
+      print('开始删除版本 "${version.name}" 的存储数据...');
       
-      // 现在可以安全地从内存中删除版本（只做内存删除，不删除持久存储）
+      // 1. 删除VFS中的版本数据
+      try {
+        await _vfsMapService.deleteMapVersion(_currentMap!.title, versionId);
+        print('VFS版本数据删除成功: $versionId');
+      } catch (e) {
+        print('删除VFS版本数据失败: $e');
+        // 如果删除VFS数据失败，仍然继续删除元数据
+      }
+      
+      // 2. 删除版本元数据
+      try {
+        await _vfsMapService.deleteVersionMetadata(_currentMap!.title, versionId);
+        print('版本元数据删除成功: $versionId');
+      } catch (e) {
+        print('删除版本元数据失败: $e');
+        // 元数据删除失败不影响主流程
+      }
+      
+      // 3. 删除版本会话状态
+      if (_versionSessionManager != null) {
+        _versionSessionManager!.removeVersionSession(versionId);
+        print('版本会话状态已清除: $versionId');
+      }
+      
+      // 4. 最后从内存中删除版本
       if (_versionManager!.deleteVersion(versionId)) {
         setState(() {
           _hasUnsavedVersionChanges = true;
         });
-        _showSuccessSnackBar('版本 "${version.name}" 已从内存中删除');
+        print('版本 "${version.name}" 完全删除成功');
+        _showSuccessSnackBar('版本 "${version.name}" 已完全删除');
       } else {
         _showErrorSnackBar('无法删除该版本');
       }

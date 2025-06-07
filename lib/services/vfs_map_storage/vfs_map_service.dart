@@ -45,6 +45,13 @@ abstract class VfsMapService {
   Future<void> deleteMapVersion(String mapTitle, String version);
   Future<bool> mapVersionExists(String mapTitle, String version);
   Future<void> copyVersionData(String mapTitle, String sourceVersion, String targetVersion);
+  
+  // 版本元数据管理
+  Future<void> saveVersionMetadata(String mapTitle, String versionId, String versionName, {DateTime? createdAt, DateTime? updatedAt});
+  Future<String?> getVersionName(String mapTitle, String versionId);
+  Future<Map<String, String>> getAllVersionNames(String mapTitle);
+  Future<void> deleteVersionMetadata(String mapTitle, String versionId);
+  
   // 资产管理 - 每个地图独立的资产存储
   Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType);
   Future<Uint8List?> getAsset(String mapTitle, String hash);

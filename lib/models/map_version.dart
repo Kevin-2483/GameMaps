@@ -113,11 +113,15 @@ class MapVersionManager {
     _versions[versionId] = version;
     return version;
   }
-
   /// 创建新版本
   MapVersion createVersion(String name, MapItem currentMapData) {
     final now = DateTime.now();
-    final versionId = 'version_${now.millisecondsSinceEpoch}';
+    
+    // 使用清理后的版本名称作为版本ID
+    String versionId = _sanitizeVersionName(name);
+    
+    // 确保版本ID唯一
+    versionId = _ensureUniqueVersionId(versionId);
     
     final version = MapVersion(
       id: versionId,
@@ -129,6 +133,48 @@ class MapVersionManager {
     
     _versions[versionId] = version;
     return version;
+  }
+
+  /// 清理版本名称，使其可以作为文件夹名
+  String _sanitizeVersionName(String name) {
+    if (name.isEmpty) {
+      return 'untitled_version';
+    }
+    
+    String sanitized = name
+        // 替换不安全的字符为下划线
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        // 替换空格为下划线
+        .replaceAll(RegExp(r'\s+'), '_')
+        // 移除连续的下划线
+        .replaceAll(RegExp(r'_+'), '_')
+        // 移除首尾的点和下划线
+        .replaceAll(RegExp(r'^[._]+|[._]+$'), '')
+        // 限制长度
+        .substring(0, name.length > 50 ? 50 : name.length);
+    
+    // 如果处理后为空，使用默认名称
+    if (sanitized.isEmpty) {
+      return 'untitled_version';
+    }
+    
+    return sanitized;
+  }
+
+  /// 确保版本ID唯一
+  String _ensureUniqueVersionId(String baseId) {
+    if (!_versions.containsKey(baseId)) {
+      return baseId;
+    }
+    
+    int counter = 1;
+    String uniqueId;
+    do {
+      uniqueId = '${baseId}_$counter';
+      counter++;
+    } while (_versions.containsKey(uniqueId));
+    
+    return uniqueId;
   }
 
   /// 切换到指定版本
