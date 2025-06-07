@@ -1164,8 +1164,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         // 首先更新当前版本的数据
         final currentVersionId = _versionManager!.currentVersionId;
         _versionManager!.updateVersionData(currentVersionId, updatedMap);
-        print('当前版本数据已更新到内存 [版本: $currentVersionId]');
-        
+        await _mapDatabaseService.updateMap(updatedMap);
         // 保存所有版本的数据到持久存储
         await _saveAllVersionsToStorage();
         print('所有版本数据已保存到持久存储');
@@ -1338,22 +1337,67 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       
       _showSuccessSnackBar('已切换到版本 "${_versionManager!.currentVersion?.name}"');
     }
-  }
-    /// 删除版本
-  void _deleteVersion(String versionId) {
-    if (_versionManager == null) return;
+  }  /// 删除版本
+  Future<void> _deleteVersion(String versionId) async {
+    if (_versionManager == null || _currentMap == null) return;
     
     final version = _versionManager!.getVersion(versionId);
     if (version == null) return;
     
-    if (_versionManager!.deleteVersion(versionId)) {
-      setState(() {
-        _hasUnsavedVersionChanges = true;
-      });
-      _showSuccessSnackBar('版本 "${version.name}" 已删除');
-    } else {
-      _showErrorSnackBar('无法删除该版本');
-    }  }
+    try {
+      // 如果要删除的是当前版本，需要先切换到另一个版本
+      if (versionId == _versionManager!.currentVersionId) {
+        // 找到另一个可用的版本进行切换
+        final availableVersions = _versionManager!.versions
+            .where((v) => v.id != versionId)
+            .toList();
+        
+        if (availableVersions.isEmpty) {
+          _showErrorSnackBar('无法删除：这是唯一的版本');
+          return;
+        }
+        
+        // 优先切换到默认版本，如果默认版本就是要删除的版本，则切换到第一个可用版本
+        final targetVersion = availableVersions.firstWhere(
+          (v) => v.id == 'default',
+          orElse: () => availableVersions.first,
+        );
+        
+        print('正在切换到版本 "${targetVersion.name}" 以便删除当前版本');
+        _versionManager!.switchToVersion(targetVersion.id);
+        
+        // 更新UI显示新的当前版本数据
+        final targetVersionData = _versionManager!.getVersionData(targetVersion.id);
+        if (targetVersionData != null) {
+          setState(() {
+            _currentMap = targetVersionData;
+            _hasUnsavedVersionChanges = false;
+            
+            // 重置选择状态
+            _selectedLayer = _currentMap!.layers.isNotEmpty ? _currentMap!.layers.first : null;
+            _selectedLayerGroup = null;
+            _selectedElementId = null;
+            
+            // 更新显示顺序
+            _updateDisplayOrderAfterLayerChange();
+          });
+        }
+      }
+      
+      // 现在可以安全地从内存中删除版本（只做内存删除，不删除持久存储）
+      if (_versionManager!.deleteVersion(versionId)) {
+        setState(() {
+          _hasUnsavedVersionChanges = true;
+        });
+        _showSuccessSnackBar('版本 "${version.name}" 已从内存中删除');
+      } else {
+        _showErrorSnackBar('无法删除该版本');
+      }
+    } catch (e) {
+      print('删除版本失败: $e');
+      _showErrorSnackBar('删除版本失败: ${e.toString()}');
+    }
+  }
 
   /// 保存所有版本数据到持久存储
   Future<void> _saveAllVersionsToStorage() async {
@@ -1384,7 +1428,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
               await _vfsMapService.createMapVersion(mapTitle, version.id, 'default');
             }
           }
-            // 不要调用saveMap，因为它会删除所有版本的数据目录
           // 只在第一个版本时保存基础地图元数据
           if (version.id == 'default') {
             // 对于默认版本，只保存地图的基础元数据
