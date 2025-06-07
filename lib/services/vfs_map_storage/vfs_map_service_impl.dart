@@ -140,10 +140,12 @@ class VfsMapServiceImpl implements VfsMapService {
       debugPrint('加载地图失败 [$title]: $e');
       return null;
     }
-  }
-  @override
+  }  @override
   Future<String> saveMap(MapItem map) async {
     try {
+      // 删除旧的data和assets目录，为新数据腾出空间
+      await _deleteOldDataAndAssets(map.title);
+      
       // 保存元数�?
       await _saveMapMeta(map.title, map);
       
@@ -171,7 +173,7 @@ class VfsMapServiceImpl implements VfsMapService {
       debugPrint('保存地图失败 [${map.title}]: $e');
       rethrow;
     }
-  }  @override
+  }@override
   Future<void> deleteMap(String mapTitle) async {
     try {
       final mapPath = _buildVfsPath(_getMapPath(mapTitle));
@@ -207,11 +209,33 @@ class VfsMapServiceImpl implements VfsMapService {
     final metaJson = jsonEncode(metaData);
     await _storageService.writeFile(metaPath, utf8.encode(metaJson));
   }
-
   // 私有方法：保存地图封�?
   Future<void> _saveMapCover(String mapTitle, Uint8List imageData) async {
     final coverPath = _buildVfsPath(_getMapCoverPath(mapTitle));
     await _storageService.writeFile(coverPath, imageData);
+  }
+  // 私有方法：删除旧的data和assets目录
+  Future<void> _deleteOldDataAndAssets(String mapTitle) async {
+    try {
+      // 删除data目录（递归删除所有子文件和子目录）
+      final dataPath = _buildVfsPath('${_getMapPath(mapTitle)}/data');
+      final dataExists = await _storageService.exists(dataPath);
+      if (dataExists) {
+        await _storageService.delete(dataPath, recursive: true);
+        debugPrint('已递归删除旧的data目录及其所有内容: $dataPath');
+      }
+      
+      // 删除assets目录（递归删除所有子文件和子目录）
+      final assetsPath = _buildVfsPath(_getAssetsPath(mapTitle));
+      final assetsExists = await _storageService.exists(assetsPath);
+      if (assetsExists) {
+        await _storageService.delete(assetsPath, recursive: true);
+        debugPrint('已递归删除旧的assets目录及其所有内容: $assetsPath');
+      }
+    } catch (e) {
+      debugPrint('删除旧数据目录时出错 [$mapTitle]: $e');
+      // 继续执行，不抛出异常，因为旧数据不存在是正常情况
+    }
   }
   @override
   Future<List<MapLayer>> getMapLayers(String mapTitle) async {
