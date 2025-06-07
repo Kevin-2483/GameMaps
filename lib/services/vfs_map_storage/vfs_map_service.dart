@@ -13,31 +13,38 @@ abstract class VfsMapService {
   Future<String> saveMap(MapItem map);  // 返回标题作为标识符
   Future<void> deleteMap(String mapTitle);
   Future<void> updateMapMeta(String mapTitle, MapItem map);
-    // 图层操作 - 使用mapTitle作为地图标识符
-  Future<List<MapLayer>> getMapLayers(String mapTitle);
-  Future<MapLayer?> getLayerById(String mapTitle, String layerId);
-  Future<void> saveLayer(String mapTitle, MapLayer layer);
-  Future<void> deleteLayer(String mapTitle, String layerId);
-  Future<void> updateLayerOrder(String mapTitle, List<String> layerIds);
+  // 图层操作 - 使用mapTitle作为地图标识符
+  Future<List<MapLayer>> getMapLayers(String mapTitle, [String version = 'default']);
+  Future<MapLayer?> getLayerById(String mapTitle, String layerId, [String version = 'default']);
+  Future<void> saveLayer(String mapTitle, MapLayer layer, [String version = 'default']);
+  Future<void> deleteLayer(String mapTitle, String layerId, [String version = 'default']);
+  Future<void> updateLayerOrder(String mapTitle, List<String> layerIds, [String version = 'default']);
   
   // 绘制元素操作 - 使用mapTitle作为地图标识符
-  Future<List<MapDrawingElement>> getLayerElements(String mapTitle, String layerId);
-  Future<MapDrawingElement?> getElementById(String mapTitle, String layerId, String elementId);
-  Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element);
-  Future<void> deleteElement(String mapTitle, String layerId, String elementId);
-  Future<void> updateElementsOrder(String mapTitle, String layerId, List<String> elementIds);
+  Future<List<MapDrawingElement>> getLayerElements(String mapTitle, String layerId, [String version = 'default']);
+  Future<MapDrawingElement?> getElementById(String mapTitle, String layerId, String elementId, [String version = 'default']);
+  Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element, [String version = 'default']);
+  Future<void> deleteElement(String mapTitle, String layerId, String elementId, [String version = 'default']);
+  Future<void> updateElementsOrder(String mapTitle, String layerId, List<String> elementIds, [String version = 'default']);
   
   // 图例组操作 - 使用mapTitle作为地图标识符
-  Future<List<LegendGroup>> getMapLegendGroups(String mapTitle);
-  Future<LegendGroup?> getLegendGroupById(String mapTitle, String groupId);
-  Future<void> saveLegendGroup(String mapTitle, LegendGroup group);
-  Future<void> deleteLegendGroup(String mapTitle, String groupId);
+  Future<List<LegendGroup>> getMapLegendGroups(String mapTitle, [String version = 'default']);
+  Future<LegendGroup?> getLegendGroupById(String mapTitle, String groupId, [String version = 'default']);
+  Future<void> saveLegendGroup(String mapTitle, LegendGroup group, [String version = 'default']);
+  Future<void> deleteLegendGroup(String mapTitle, String groupId, [String version = 'default']);
   
   // 图例项操作 - 使用mapTitle作为地图标识符
-  Future<List<LegendItem>> getLegendGroupItems(String mapTitle, String groupId);
-  Future<LegendItem?> getLegendItemById(String mapTitle, String groupId, String itemId);
-  Future<void> saveLegendItem(String mapTitle, String groupId, LegendItem item);
-  Future<void> deleteLegendItem(String mapTitle, String groupId, String itemId);
+  Future<List<LegendItem>> getLegendGroupItems(String mapTitle, String groupId, [String version = 'default']);
+  Future<LegendItem?> getLegendItemById(String mapTitle, String groupId, String itemId, [String version = 'default']);
+  Future<void> saveLegendItem(String mapTitle, String groupId, LegendItem item, [String version = 'default']);
+  Future<void> deleteLegendItem(String mapTitle, String groupId, String itemId, [String version = 'default']);
+  
+  // 版本管理
+  Future<List<String>> getMapVersions(String mapTitle);
+  Future<void> createMapVersion(String mapTitle, String version, [String? sourceVersion]);
+  Future<void> deleteMapVersion(String mapTitle, String version);
+  Future<bool> mapVersionExists(String mapTitle, String version);
+  Future<void> copyVersionData(String mapTitle, String sourceVersion, String targetVersion);
   // 资产管理 - 每个地图独立的资产存储
   Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType);
   Future<Uint8List?> getAsset(String mapTitle, String hash);

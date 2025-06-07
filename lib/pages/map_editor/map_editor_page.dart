@@ -9,6 +9,7 @@ import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/map_database_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
+import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/legend_vfs/legend_vfs_service.dart';
 import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -22,6 +23,8 @@ import 'widgets/drawing_toolbar.dart';
 import 'widgets/layer_legend_binding_drawer.dart';
 import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
+import 'widgets/version_tab_bar.dart';
+import '../../models/map_version.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -72,6 +75,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
+  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService(); // 用于版本管理
   final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
@@ -120,10 +124,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
   LegendGroup? _currentLegendGroupForManagement;
-  String? _initialSelectedLegendItemId; // 初始选中的图例项ID
-  // 撤销/重做历史记录管理
+  String? _initialSelectedLegendItemId; // 初始选中的图例项ID  // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
+  
+  // 版本管理
+  MapVersionManager? _versionManager;
+  bool _hasUnsavedVersionChanges = false;
   // 动态获取撤销历史记录数量限制
   int get _maxUndoHistory {
     final provider = context.read<UserPreferencesProvider>();
@@ -181,10 +188,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         if (loadedMap == null) {
           throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
         }
-        _currentMap = loadedMap;
-      } else {
+        _currentMap = loadedMap;      } else {
         throw Exception('mapItem 和 mapTitle 都为空');
       }
+
+      // 初始化版本管理器
+      final mapTitle = _currentMap!.title;
+      _versionManager = MapVersionManager(mapTitle: mapTitle);
+      _versionManager!.initializeDefault();
+      
+      // 加载现有版本
+      await _loadVersions();
 
       // 加载可用图例
       await _loadAvailableLegends();
@@ -1226,6 +1240,145 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
   }
 
+  // 版本管理相关方法
+  /// 加载现有版本
+  Future<void> _loadVersions() async {
+    if (_versionManager == null || _currentMap == null) return;
+    
+    try {
+      final mapTitle = _currentMap!.title;
+        // 从VFS存储中加载所有版本信息
+      final existingVersions = await _vfsMapService.getMapVersions(mapTitle);
+      
+      // 确保默认版本存在
+      if (!existingVersions.contains('default')) {
+        // 如果默认版本不存在，保存当前地图数据作为默认版本
+        await _saveMapToVersion(mapTitle, 'default');
+      }
+      
+      // 为每个存在的版本创建版本记录
+      for (final versionId in existingVersions) {
+        if (!_versionManager!.hasVersion(versionId)) {
+          // 从存储中加载版本数据
+          final versionData = await _loadMapFromVersion(mapTitle, versionId);
+          if (versionData != null) {
+            final displayName = versionId == 'default' ? '默认版本' : versionId;
+            _versionManager!.createVersionFromData(versionId, displayName, versionData);
+          }
+        }
+      }
+      
+      // 设置当前版本数据
+      _versionManager!.updateVersionData('default', _currentMap!);
+        } catch (e) {
+      print('加载版本失败: $e');
+      _showErrorSnackBar('加载版本失败: ${e.toString()}');
+    }
+  }
+    /// 从指定版本加载地图数据
+  Future<MapItem?> _loadMapFromVersion(String mapTitle, String version) async {
+    try {
+      // 加载图层数据
+      final layers = await _vfsMapService.getMapLayers(mapTitle, version);
+      
+      // 加载图例组数据
+      final legendGroups = await _vfsMapService.getMapLegendGroups(mapTitle, version);
+      
+      // 创建地图数据副本
+      return _currentMap!.copyWith(
+        layers: layers,
+        legendGroups: legendGroups,
+      );
+    } catch (e) {
+      print('从版本加载地图数据失败 [$mapTitle:$version]: $e');
+      return null;
+    }
+  }
+
+  /// 保存地图数据到指定版本
+  Future<void> _saveMapToVersion(String mapTitle, String version) async {
+    if (_currentMap == null) return;
+    
+    try {
+      // 保存图层数据
+      for (final layer in _currentMap!.layers) {
+        await _vfsMapService.saveLayer(mapTitle, layer, version);
+      }
+      
+      // 保存图例组数据
+      for (final group in _currentMap!.legendGroups) {
+        await _vfsMapService.saveLegendGroup(mapTitle, group, version);
+      }
+    } catch (e) {
+      print('保存地图数据到版本失败 [$mapTitle:$version]: $e');
+      rethrow;
+    }
+  }
+  
+  /// 创建新版本
+  void _createVersion(String name) {
+    if (_versionManager == null || _currentMap == null) return;
+    
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+    
+    setState(() {
+      final newVersion = _versionManager!.createVersion(name, _currentMap!);
+      _versionManager!.switchToVersion(newVersion.id);
+      _hasUnsavedVersionChanges = true;
+    });
+    
+    _showSuccessSnackBar('版本 "$name" 已创建');
+  }
+  
+  /// 切换版本
+  void _switchVersion(String versionId) {
+    if (_versionManager == null || versionId == _versionManager!.currentVersionId) {
+      return;
+    }
+    
+    // 保存当前版本的更改
+    if (_hasUnsavedVersionChanges) {
+      _versionManager!.updateVersionData(_versionManager!.currentVersionId, _currentMap!);
+    }
+    
+    // 切换到新版本
+    _versionManager!.switchToVersion(versionId);
+    final versionData = _versionManager!.getVersionData(versionId);
+    
+    if (versionData != null) {
+      setState(() {
+        _currentMap = versionData;
+        _hasUnsavedVersionChanges = false;
+        
+        // 重置选择状态
+        _selectedLayer = _currentMap!.layers.isNotEmpty ? _currentMap!.layers.first : null;
+        _selectedLayerGroup = null;
+        _selectedElementId = null;
+        
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      });
+      
+      _showSuccessSnackBar('已切换到版本 "${_versionManager!.currentVersion?.name}"');
+    }
+  }
+    /// 删除版本
+  void _deleteVersion(String versionId) {
+    if (_versionManager == null) return;
+    
+    final version = _versionManager!.getVersion(versionId);
+    if (version == null) return;
+    
+    if (_versionManager!.deleteVersion(versionId)) {
+      setState(() {
+        _hasUnsavedVersionChanges = true;
+      });
+      _showSuccessSnackBar('版本 "${version.name}" 已删除');
+    } else {
+      _showErrorSnackBar('无法删除该版本');
+    }  }
+
   void _showErrorSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1345,54 +1498,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
       // 只有在启用自动恢复面板状态时才保存
       if (!prefsProvider.layout.autoRestorePanelStates) {
-        return;
-      }
-
-      bool isCollapsed;
-
-      switch (panelType) {
-        case 'drawing':
-          isCollapsed = _isDrawingToolbarCollapsed;
-          break;
-        case 'layer':
-          isCollapsed = _isLayerPanelCollapsed;
-          break;
-        case 'legend':
-          isCollapsed = _isLegendPanelCollapsed;
-          break;
-        default:
-          return;
-      }
-
-      prefsProvider.updatePanelState(
-        panelType: panelType,
-        isCollapsed: isCollapsed,
-      );
-    }
-  }
-
-  /// 处理面板自动关闭切换
-  void _handleAutoCloseToggle(String panelType, bool value) {
-    setState(() {
-      switch (panelType) {
-        case 'drawing':
-          _isDrawingToolbarAutoClose = value;
-          break;
-        case 'layer':
-          _isLayerPanelAutoClose = value;
-          break;
-        case 'legend':
-          _isLegendPanelAutoClose = value;
-          break;
-      }
-    });
-
-    // 保存到用户首选项
-    if (mounted) {
-      final prefsProvider = context.read<UserPreferencesProvider>();
-      prefsProvider.updatePanelState(panelType: panelType, autoClose: value);
-    }
-  }
+        return;      }
+    }}
 
   /// 选择单个图层时的处理
   void _onLayerSelected(MapLayer layer) {
@@ -1431,6 +1538,31 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     } else {
       // 没有选择
       return '未选择图层';
+    }  }
+
+  /// 处理自动关闭切换
+  void _handleAutoCloseToggle(String panelType, bool value) {
+    setState(() {
+      switch (panelType) {
+        case 'drawing':
+          _isDrawingToolbarAutoClose = value;
+          break;
+        case 'layer':
+          _isLayerPanelAutoClose = value;
+          break;
+        case 'legend':
+          _isLegendPanelAutoClose = value;
+          break;
+      }
+    });    // 保存到用户首选项
+    if (mounted) {
+      final prefsProvider = context.read<UserPreferencesProvider>();
+      prefsProvider.updateLayout(
+        panelAutoCloseStates: {
+          ...prefsProvider.layout.panelAutoCloseStates,
+          panelType: value,
+        },
+      );
     }
   }
 
@@ -1454,58 +1586,73 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           },
           child: Focus(
             autofocus: true,
-            onKey: _handleKeyEvent,
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor,
-                ),
-                actions: [
-                  ...[
-                    WebFeatureRestriction(
-                      operationName: '保存地图',
-                      enabled: !kIsWeb,
-                      child: IconButton(
-                        onPressed: _isLoading || kIsWeb ? null : _saveMap,
-                        icon: const Icon(Icons.save),
-                        tooltip: kIsWeb ? 'Web版本为只读模式' : '保存地图',
+            onKey: _handleKeyEvent,            child: Scaffold(
+              appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight + 50), // 增加高度以容纳版本标签栏
+                child: AppBar(
+                  title: Text(
+                    widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor,
+                  ),
+                  actions: [
+                    ...[
+                      WebFeatureRestriction(
+                        operationName: '保存地图',
+                        enabled: !kIsWeb,
+                        child: IconButton(
+                          onPressed: _isLoading || kIsWeb ? null : _saveMap,
+                          icon: const Icon(Icons.save),
+                          tooltip: kIsWeb ? 'Web版本为只读模式' : '保存地图',
+                        ),
                       ),
-                    ),
-                  ],
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('地图信息'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('标题: ${_currentMap?.title ?? "未知"}'),
-                              Text('版本: v${_currentMap?.version ?? "0"}'),
-                              Text('图层数量: ${_currentMap?.layers.length ?? 0}'),
-                              Text(
-                                '图例组数量: ${_currentMap?.legendGroups.length ?? 0}',
-                              ),
-                              Text(
-                                '模式: ${widget.isPreviewMode ? "预览模式" : "编辑模式"}',
+                    ],
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('地图信息'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('标题: ${_currentMap?.title ?? "未知"}'),
+                                Text('版本: v${_currentMap?.version ?? "0"}'),
+                                Text('图层数量: ${_currentMap?.layers.length ?? 0}'),
+                                Text(
+                                  '图例组数量: ${_currentMap?.legendGroups.length ?? 0}',
+                                ),
+                                Text(
+                                  '模式: ${widget.isPreviewMode ? "预览模式" : "编辑模式"}',
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('关闭'),
                               ),
                             ],
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('关闭'),
-                            ),
-                          ],
+                        );
+                      },
+                      icon: const Icon(Icons.info),
+                      tooltip: '地图信息',
+                    ),
+                  ],
+                  bottom: _versionManager != null 
+                    ? PreferredSize(
+                        preferredSize: const Size.fromHeight(50),
+                        child: VersionTabBar(
+                          versions: _versionManager!.versions,
+                          currentVersionId: _versionManager!.currentVersionId,
+                          onVersionSelected: _switchVersion,
+                          onVersionCreated: _createVersion,
+                          onVersionDeleted: _deleteVersion,
+                          isPreviewMode: widget.isPreviewMode,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.info),
-                    tooltip: '地图信息',
-                  ),
-                ],
+                      )
+                    : null,
+                ),
               ),
               body: _isLoading
                   ? const Center(child: CircularProgressIndicator())
