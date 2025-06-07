@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'dart:typed_data';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/map_item.dart';
@@ -40,9 +39,10 @@ class MapEditorPage extends BasePage {
          mapItem != null || mapTitle != null,
          'Either mapItem or mapTitle must be provided',
        );
+  @override
+  bool get showTrayNavigation => false; // 禁用 TrayNavigation
 
   @override
-  bool get showTrayNavigation => false; // 禁用 TrayNavigation  @override
   Widget buildContent(BuildContext context) {
     return WebReadOnlyBanner(
       showBanner: kIsWeb,
@@ -72,10 +72,9 @@ class _MapEditorContent extends StatefulWidget {
 }
 
 class _MapEditorContentState extends State<_MapEditorContent> {
-  final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
-  MapItem? _currentMap; // 可能为空，需要加载
+  final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();  MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
-  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService(); // 用于版本管理
+  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
@@ -190,15 +189,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
         _currentMap = loadedMap;      } else {
         throw Exception('mapItem 和 mapTitle 都为空');
-      }
-
-      // 初始化版本管理器
+      }      // 初始化版本管理器
       final mapTitle = _currentMap!.title;
       _versionManager = MapVersionManager(mapTitle: mapTitle);
-      _versionManager!.initializeDefault();
       
-      // 加载现有版本
-      await _loadVersions();
+      // 初始化版本数据
+      await _initializeVersions();
 
       // 加载可用图例
       await _loadAvailableLegends();
@@ -242,11 +238,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
 
     // 保存当前状态到撤销历史
-    _undoHistory.add(_currentMap!.copyWith());
-
-    // 清空重做历史，因为新的操作会使重做历史失效
+    _undoHistory.add(_currentMap!.copyWith());    // 清空重做历史，因为新的操作会使重做历史失效
     _redoHistory.clear();
-
     // 限制历史记录数量
     if (_undoHistory.length > _maxUndoHistory) {
       _undoHistory.removeAt(0);
@@ -472,7 +465,18 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         // 更新显示顺序
         _updateDisplayOrderAfterLayerChange();
       }
+    });  }
+  void _onLayerSelected(MapLayer layer) {
+    setState(() {
+      _selectedLayer = layer;
+      // 清除图层组选择，但保持单图层选择
+      _selectedLayerGroup = null;
     });
+
+    // 触发优先显示逻辑
+    _prioritizeLayerAndGroupDisplay();
+    // 清除画布上的选区
+    _clearCanvasSelection();
   }
 
   void _onLayerGroupSelected(List<MapLayer> group) {
@@ -644,13 +648,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool get _hasNoLayerSelected {
     return _selectedLayer == null && _selectedLayerGroup == null;
   }
-
-  void _enableDrawingTools() {
-    // 重新启用绘制工具的逻辑
-    print('绘制工具已启用');
-    // 这里可以添加重新启用绘制工具的逻辑
-  }
-
   List<MapLayer> get _layersForDisplay {
     if (_displayOrderLayers.isEmpty && _currentMap != null) {
       // 如果显示顺序列表为空，初始化为正常顺序
@@ -1078,68 +1075,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           : legendItemId; // 空字符串表示取消选中
     });
   }
-
-  // 检查并清除不兼容的图例选择
-  void _clearIncompatibleLegendSelection() {
-    // 如果没有选中的图例项，直接返回
-    if (_selectedElementId == null || _selectedElementId!.isEmpty) return;
-
-    // 如果没有当前地图或图例组，直接返回
-    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
-
-    // 查找包含当前选中图例项的图例组
-    LegendGroup? containingGroup;
-
-    for (final legendGroup in _currentMap!.legendGroups) {
-      for (final legendItem in legendGroup.legendItems) {
-        if (legendItem.id == _selectedElementId) {
-          containingGroup = legendGroup;
-          break;
-        }
-      }
-      if (containingGroup != null) break;
-    }
-
-    // 如果找不到对应的图例组，清除选择
-    if (containingGroup == null) {
-      _selectedElementId = null;
-      return;
-    }
-
-    // 检查图例组是否可见
-    if (!containingGroup.isVisible) {
-      _selectedElementId = null;
-      return;
-    }
-
-    // 检查当前选中的图层是否与该图例组有绑定关系
-    if (_selectedLayer == null) {
-      _selectedElementId = null;
-      return;
-    }
-
-    // 查找绑定了该图例组的图层
-    final boundLayers = _currentMap!.layers.where((layer) {
-      return layer.legendGroupIds.contains(containingGroup!.id);
-    }).toList();
-
-    // 如果图例组没有绑定任何图层，保持当前选择
-    if (boundLayers.isEmpty) return;
-
-    // 检查当前选中的图层是否在绑定的图层列表中
-    final isLayerBound = boundLayers.any(
-      (layer) => layer.id == _selectedLayer!.id,
-    );
-
-    // 如果当前图层没有绑定该图例组，清除图例选择
-    if (!isLayerBound) {
-      _selectedElementId = null;
-      // 同时通知图例组管理抽屉清除选择（如果它是打开的）
-      // 这个通知通过_selectLegendItem方法实现，传入空字符串表示清除选择
-      _selectLegendItem('');
-    }
-  }
-
   // 处理绘制工具预览
   void _handleDrawingToolPreview(DrawingElementType? tool) {
     setState(() {
@@ -1196,7 +1131,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _imageBufferFit = BoxFit.contain;
     });
   }
-
   Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
 
@@ -1224,7 +1158,25 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       // 尝试序列化数据以检查是否有格式问题
       final databaseData = updatedMap.toDatabase();
       print('数据库数据准备完成，字段数量: ${databaseData.keys.length}');
-      await _mapDatabaseService.updateMap(updatedMap);
+      
+      // 如果有版本管理器，需要保存所有版本的数据
+      if (_versionManager != null) {
+        // 首先更新当前版本的数据
+        final currentVersionId = _versionManager!.currentVersionId;
+        _versionManager!.updateVersionData(currentVersionId, updatedMap);
+        print('当前版本数据已更新到内存 [版本: $currentVersionId]');
+        
+        // 保存所有版本的数据到持久存储
+        await _saveAllVersionsToStorage();
+        print('所有版本数据已保存到持久存储');
+        
+        _hasUnsavedVersionChanges = false;
+      } else {
+        // 没有版本管理器时，直接保存当前地图
+        await _mapDatabaseService.updateMap(updatedMap);
+        print('单版本地图保存完成');
+      }
+      
       print('地图保存成功完成');
       _showSuccessSnackBar('地图保存成功');
 
@@ -1239,82 +1191,104 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       setState(() => _isLoading = false);
     }
   }
-
-  // 版本管理相关方法
-  /// 加载现有版本
-  Future<void> _loadVersions() async {
+  // 版本管理相关方法  /// 初始化版本管理
+  Future<void> _initializeVersions() async {
     if (_versionManager == null || _currentMap == null) return;
     
     try {
-      final mapTitle = _currentMap!.title;
-        // 从VFS存储中加载所有版本信息
-      final existingVersions = await _vfsMapService.getMapVersions(mapTitle);
-      
-      // 确保默认版本存在
-      if (!existingVersions.contains('default')) {
-        // 如果默认版本不存在，保存当前地图数据作为默认版本
-        await _saveMapToVersion(mapTitle, 'default');
-      }
-      
-      // 为每个存在的版本创建版本记录
-      for (final versionId in existingVersions) {
-        if (!_versionManager!.hasVersion(versionId)) {
-          // 从存储中加载版本数据
-          final versionData = await _loadMapFromVersion(mapTitle, versionId);
-          if (versionData != null) {
-            final displayName = versionId == 'default' ? '默认版本' : versionId;
-            _versionManager!.createVersionFromData(versionId, displayName, versionData);
-          }
-        }
-      }
-      
-      // 设置当前版本数据
+      // 确保默认版本存在并包含当前地图数据
+      _versionManager!.initializeDefault();
       _versionManager!.updateVersionData('default', _currentMap!);
-        } catch (e) {
-      print('加载版本失败: $e');
-      _showErrorSnackBar('加载版本失败: ${e.toString()}');
-    }
-  }
-    /// 从指定版本加载地图数据
-  Future<MapItem?> _loadMapFromVersion(String mapTitle, String version) async {
-    try {
-      // 加载图层数据
-      final layers = await _vfsMapService.getMapLayers(mapTitle, version);
+      print('版本管理已初始化，默认版本已设置');
       
-      // 加载图例组数据
-      final legendGroups = await _vfsMapService.getMapLegendGroups(mapTitle, version);
-      
-      // 创建地图数据副本
-      return _currentMap!.copyWith(
-        layers: layers,
-        legendGroups: legendGroups,
-      );
+      // 加载已保存的版本
+      await _loadExistingVersions();
     } catch (e) {
-      print('从版本加载地图数据失败 [$mapTitle:$version]: $e');
-      return null;
+      print('初始化版本失败: $e');
+      _showErrorSnackBar('初始化版本失败: ${e.toString()}');
     }
   }
 
-  /// 保存地图数据到指定版本
-  Future<void> _saveMapToVersion(String mapTitle, String version) async {
-    if (_currentMap == null) return;
-    
+  /// 加载已存在的版本
+  Future<void> _loadExistingVersions() async {
+    if (_versionManager == null || _currentMap == null) return;
+
     try {
-      // 保存图层数据
-      for (final layer in _currentMap!.layers) {
-        await _vfsMapService.saveLayer(mapTitle, layer, version);
+      final mapTitle = _currentMap!.title;
+      print('开始加载现有版本 [地图: $mapTitle]');
+      
+      // 获取VFS中存储的所有版本
+      final storedVersions = await _vfsMapService.getMapVersions(mapTitle);
+      print('在存储中找到版本: $storedVersions');
+      
+      for (final versionId in storedVersions) {
+        if (versionId == 'default') {
+          // 默认版本已经在初始化时处理，跳过
+          continue;
+        }
+        
+        try {
+          print('加载版本数据: $versionId');
+          
+          // 加载图层数据
+          final layers = await _vfsMapService.getMapLayers(mapTitle, versionId);
+          
+          // 加载图例组数据  
+          final legendGroups = await _vfsMapService.getMapLegendGroups(mapTitle, versionId);
+          
+          // 构建版本的地图数据
+          final versionMapData = _currentMap!.copyWith(
+            layers: layers,
+            legendGroups: legendGroups,
+            updatedAt: DateTime.now(),
+          );
+          
+          // 创建版本并添加到版本管理器
+          final version = _versionManager!.createVersionFromData(
+            versionId,
+            _getVersionDisplayName(versionId), // 生成友好的显示名称
+            versionMapData,
+          );
+          
+          print('成功加载版本: ${version.name} (ID: ${version.id})');
+        } catch (e) {
+          print('加载版本 $versionId 失败: $e');
+        }
       }
       
-      // 保存图例组数据
-      for (final group in _currentMap!.legendGroups) {
-        await _vfsMapService.saveLegendGroup(mapTitle, group, version);
+      print('版本加载完成，总共 ${_versionManager!.versions.length} 个版本');
+      
+      // 刷新UI显示版本列表
+      if (mounted) {
+        setState(() {
+          // 触发UI更新以显示加载的版本
+        });
       }
     } catch (e) {
-      print('保存地图数据到版本失败 [$mapTitle:$version]: $e');
-      rethrow;
+      print('加载现有版本失败: $e');
     }
   }
-  
+
+  /// 为版本ID生成友好的显示名称
+  String _getVersionDisplayName(String versionId) {
+    if (versionId == 'default') {
+      return '默认版本';
+    }
+    
+    // 如果是时间戳格式的版本ID，尝试提取时间
+    if (versionId.startsWith('version_')) {
+      final timestampStr = versionId.replaceFirst('version_', '');
+      final timestamp = int.tryParse(timestampStr);
+      if (timestamp != null) {
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return '版本 ${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+      }
+    }
+    
+    // 默认使用版本ID作为名称
+    return '版本 $versionId';
+  }
+
   /// 创建新版本
   void _createVersion(String name) {
     if (_versionManager == null || _currentMap == null) return;
@@ -1325,21 +1299,23 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     setState(() {
       final newVersion = _versionManager!.createVersion(name, _currentMap!);
       _versionManager!.switchToVersion(newVersion.id);
-      _hasUnsavedVersionChanges = true;
+      _hasUnsavedVersionChanges = false; // 新版本创建时数据已保存到内存
     });
     
+    print('新版本已创建: ${_versionManager!.currentVersionId}');
     _showSuccessSnackBar('版本 "$name" 已创建');
   }
-  
   /// 切换版本
   void _switchVersion(String versionId) {
     if (_versionManager == null || versionId == _versionManager!.currentVersionId) {
       return;
     }
     
-    // 保存当前版本的更改
-    if (_hasUnsavedVersionChanges) {
-      _versionManager!.updateVersionData(_versionManager!.currentVersionId, _currentMap!);
+    // 保存当前版本的更改到内存
+    if (_hasUnsavedVersionChanges && _currentMap != null) {
+      final currentVersionId = _versionManager!.currentVersionId;
+      _versionManager!.updateVersionData(currentVersionId, _currentMap!);
+      print('当前版本数据已保存到内存 [版本: $currentVersionId]');
     }
     
     // 切换到新版本
@@ -1378,6 +1354,66 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     } else {
       _showErrorSnackBar('无法删除该版本');
     }  }
+
+  /// 保存所有版本数据到持久存储
+  Future<void> _saveAllVersionsToStorage() async {
+    if (_versionManager == null || _currentMap == null) {
+      print('版本管理器或当前地图为空，跳过保存所有版本');
+      return;
+    }
+
+    try {
+      final mapTitle = _currentMap!.title;
+      print('开始保存所有版本到持久存储 [地图: $mapTitle]');
+      
+      // 获取所有版本
+      final versions = _versionManager!.versions;
+      print('找到 ${versions.length} 个版本需要保存');
+      
+      for (final version in versions) {
+        final versionData = version.mapData;
+        if (versionData != null) {
+          print('保存版本 "${version.name}" (ID: ${version.id}) 到持久存储');
+          
+          // 为每个版本创建VFS存储的版本目录
+          if (version.id != 'default') {
+            // 非默认版本需要先确保版本目录存在
+            final versionExists = await _vfsMapService.mapVersionExists(mapTitle, version.id);
+            if (!versionExists) {
+              print('创建新版本目录: ${version.id}');
+              await _vfsMapService.createMapVersion(mapTitle, version.id, 'default');
+            }
+          }
+            // 不要调用saveMap，因为它会删除所有版本的数据目录
+          // 只在第一个版本时保存基础地图元数据
+          if (version.id == 'default') {
+            // 对于默认版本，只保存地图的基础元数据
+            await _vfsMapService.updateMapMeta(mapTitle, versionData);
+          }
+          
+          // 保存图层数据到对应版本
+          for (final layer in versionData.layers) {
+            await _vfsMapService.saveLayer(mapTitle, layer, version.id);
+          }
+          
+          // 保存图例组数据到对应版本
+          for (final group in versionData.legendGroups) {
+            await _vfsMapService.saveLegendGroup(mapTitle, group, version.id);
+          }
+          
+          print('版本 "${version.name}" 保存完成');
+        } else {
+          print('版本 "${version.name}" 没有地图数据，跳过');
+        }
+      }
+      
+      print('所有版本数据已成功保存到持久存储');
+    } catch (e, stackTrace) {
+      print('保存所有版本到持久存储时发生错误: $e');
+      print('错误堆栈: $stackTrace');
+      rethrow;
+    }
+  }
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
@@ -1469,8 +1505,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             changedPanels.add('legend');
           }
           _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
-          break;
-        case 'legend':
+          break;        case 'legend':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
@@ -1484,51 +1519,16 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
       }
     });
-
-    // 保存所有发生变化的面板状态到用户首选项
-    for (String changedPanel in changedPanels) {
-      _savePanelStateToPreferences(changedPanel);
-    }
-  }
-
-  /// 保存面板状态到用户首选项
-  void _savePanelStateToPreferences(String panelType) {
-    if (mounted) {
-      final prefsProvider = context.read<UserPreferencesProvider>();
-
-      // 只有在启用自动恢复面板状态时才保存
-      if (!prefsProvider.layout.autoRestorePanelStates) {
-        return;      }
-    }}
-
-  /// 选择单个图层时的处理
-  void _onLayerSelected(MapLayer layer) {
-    setState(() {
-      _selectedLayer = layer;
-      // 修改：不清除组选择，允许同时选择
-      // _selectedLayerGroup = null; // 这行代码被注释掉
-
-      // 检查并清除不兼容的图例选择
-      _clearIncompatibleLegendSelection();
-    });
-
-    // 重新启用绘制工具
-    _enableDrawingTools();
-
-    // 应用新的优先显示逻辑
-    _prioritizeLayerAndGroupDisplay();
-    //：清除画布上的选区
-    _clearCanvasSelection();
   }
 
   /// 构建图层面板的副标题
   String _buildLayerPanelSubtitle() {
     final hasSelectedLayer = _selectedLayer != null;
-    final hasSelectedGroup = _selectedLayerGroup != null;
-
+    final hasSelectedGroup = _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
+    
     if (hasSelectedLayer && hasSelectedGroup) {
-      // 同时选中图层和图层组
-      return '图层: ${_selectedLayer!.name} + 图层组 (${_selectedLayerGroup!.length} 个)';
+      // 既选中图层又选中图层组
+      return '图层: ${_selectedLayer!.name} | 组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}';
     } else if (hasSelectedLayer) {
       // 只选中图层
       return '当前: ${_selectedLayer!.name}';
@@ -1538,7 +1538,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     } else {
       // 没有选择
       return '未选择图层';
-    }  }
+    }}
 
   /// 处理自动关闭切换
   void _handleAutoCloseToggle(String panelType, bool value) {
