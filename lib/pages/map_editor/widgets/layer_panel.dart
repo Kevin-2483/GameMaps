@@ -209,29 +209,16 @@ class _LayerPanelState extends State<LayerPanel> {
     }
 
     return groups;
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 图层列表
-          Expanded(
-            child: widget.layers.isEmpty
-                ? const Center(
-                    child: Text(
-                      '暂无图层',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  )
-                : _buildGroupedLayerList(),
-          ),
-        ],
-      ),
-    );
+    return widget.layers.isEmpty
+        ? const Center(
+            child: Text(
+              '暂无图层',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          )
+        : _buildGroupedLayerList();
   }
 
   /// 构建分组的图层列表

@@ -1702,11 +1702,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _buildCollapsiblePanel(
         title: '绘制工具',
         icon: Icons.brush,
-        isCollapsed: _isDrawingToolbarCollapsed,
-        onToggleCollapsed: () => _handlePanelToggle('drawing'),
+        isCollapsed: _isDrawingToolbarCollapsed,        onToggleCollapsed: () => _handlePanelToggle('drawing'),
         autoCloseEnabled: _isDrawingToolbarAutoClose,
         onAutoCloseToggled: (value) => _handleAutoCloseToggle('drawing', value),
-        needsScrolling: true,
         compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
@@ -1932,16 +1930,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     return panels;
-  }
-
-  Widget _buildCollapsiblePanel({
+  }  Widget _buildCollapsiblePanel({
     required String title,
     required IconData icon,
     required bool isCollapsed,
     required VoidCallback onToggleCollapsed,
     Widget? child,
     List<Widget>? actions,
-    bool needsScrolling = false,
     bool autoCloseEnabled = true,
     ValueChanged<bool>? onAutoCloseToggled,
     String? collapsedSubtitle, // 折叠状态下显示的附加信息
@@ -1953,9 +1948,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 800;
     final double headerHeight = compactMode ? 40.0 : 48.0;
-    final double minContentHeight = compactMode
-        ? (isNarrowScreen ? 800.0 : 900.0)
-        : (isNarrowScreen ? 900.0 : 1000.0);
 
     if (isCollapsed) {
       return Container(
@@ -2010,10 +2002,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           ),
         ),
       );
-    }
-
-    return Container(
-      constraints: BoxConstraints(minHeight: minContentHeight),
+    }    return Expanded(
       child: Card(
         margin: EdgeInsets.all(isNarrowScreen ? 2 : 4), // 窄屏时减小边距
         child: Column(
@@ -2078,25 +2067,18 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     // 动作按钮
                     if (actions != null) ...actions,
                     const Icon(Icons.expand_less, size: 20),
-                  ],
-                ),
+                  ],                ),
               ),
-            ),
-
-            // 内容
+            ),            // 内容
             if (child != null)
-              Container(
-                height: minContentHeight,
-                child: needsScrolling
-                    ? SingleChildScrollView(child: child)
-                    : child,
+              Expanded(
+                child: child,
               ),
           ],
         ),
       ),
     );
   }
-
   /// 宽屏布局（传统横向布局）
   Widget _buildWideScreenLayout(UserPreferencesProvider userPrefsProvider) {
     final layout = userPrefsProvider.layout;
@@ -2104,17 +2086,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return Row(
       children: [
-        // 左侧工具面板
+        // 左侧工具面板 - 移除 SingleChildScrollView，改为不可滚动的固定容器
         SizedBox(
           width: sidebarWidth,
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
-              ),
-              child: Column(children: _buildToolPanels(userPrefsProvider)),
-            ),
-          ),
+          height: MediaQuery.of(context).size.height - kToolbarHeight,
+          child: Column(children: _buildToolPanels(userPrefsProvider)),
         ),
 
         const VerticalDivider(),

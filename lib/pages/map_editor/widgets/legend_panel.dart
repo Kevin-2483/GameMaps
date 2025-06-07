@@ -20,37 +20,25 @@ class LegendPanel extends StatelessWidget {
     required this.onLegendGroupDeleted,
     required this.onLegendGroupAdded,
     this.onLegendGroupTapped,
-  });
-
-  @override
+  });  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Legend groups list
-          Expanded(
-            child: legendGroups.isEmpty
-                ? const Center(
-                    child: Text(
-                      '暂无图例组',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: legendGroups.length,
-                    itemBuilder: (context, index) {
-                      return _buildLegendGroupCard(
-                        context,
-                        legendGroups[index],
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
+    return legendGroups.isEmpty
+        ? const Center(
+            child: Text(
+              '暂无图例组',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: legendGroups.length,
+            itemBuilder: (context, index) {
+              return _buildLegendGroupCard(
+                context,
+                legendGroups[index],
+              );
+            },
+          );
   }
 
   Widget _buildLegendGroupCard(BuildContext context, LegendGroup legendGroup) {

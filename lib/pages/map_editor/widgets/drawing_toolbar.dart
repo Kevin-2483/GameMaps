@@ -419,16 +419,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         return '工具';
     }
   }
-
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Drawing tools
           const Text(
             '工具',
@@ -766,7 +766,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ),
         ],
       ),
-    );
+    ),);
   }
 
   Widget _buildToolButton(
