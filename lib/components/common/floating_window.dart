@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+/// 调整大小手柄类型
+enum _ResizeHandle {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
 
 /// 浮动窗口组件，模仿VFS文件选择器的设计风格
 /// 提供统一的浮动窗口外观和行为
@@ -120,6 +129,8 @@ class _FloatingWindowState extends State<FloatingWindow> {
   double? _currentHeight;
   Offset _position = Offset.zero;
   bool _isDragging = false;
+  bool _isResizing = false;
+  _ResizeHandle? _activeResizeHandle;
 
   @override
   void initState() {
@@ -130,8 +141,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
         _initializeSize();
       }
     });
-  }
-  void _initializeSize() {
+  }  void _initializeSize() {
     final screenSize = MediaQuery.of(context).size;
     double width = screenSize.width * widget.widthRatio;
     double height = screenSize.height * widget.heightRatio;
@@ -149,6 +159,14 @@ class _FloatingWindowState extends State<FloatingWindow> {
     
     _currentWidth = width;
     _currentHeight = height;
+    
+    // 设置窗口初始位置为屏幕中心
+    if (widget.draggable) {
+      _position = Offset(
+        (screenSize.width - width) / 2,
+        (screenSize.height - height) / 2,
+      );
+    }
     
     setState(() {});
   }
@@ -175,9 +193,8 @@ class _FloatingWindowState extends State<FloatingWindow> {
       color: Colors.transparent,
       child: windowContent,
     );
-  }
-  Widget _buildWindowContent() {
-    return Container(
+  }  Widget _buildWindowContent() {
+    Widget content = Container(
       width: _currentWidth!,
       height: _currentHeight!,
       decoration: BoxDecoration(
@@ -198,6 +215,18 @@ class _FloatingWindowState extends State<FloatingWindow> {
         ],
       ),
     );
+
+    // 如果可以调整大小，添加调整大小手柄
+    if (widget.resizable) {
+      content = Stack(
+        children: [
+          content,
+          ..._buildResizeHandles(),
+        ],
+      );
+    }
+
+    return content;
   }
 
   Widget _buildDraggableWindow(Widget child) {
@@ -211,12 +240,11 @@ class _FloatingWindowState extends State<FloatingWindow> {
       ],
     );
   }
-
   Widget _buildHeader() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
+    Widget headerContent = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
@@ -224,45 +252,174 @@ class _FloatingWindowState extends State<FloatingWindow> {
           top: Radius.circular(widget.borderRadius),
         ),
       ),
-      child: widget.draggable ? _buildDraggableHeader() : _buildStaticHeader(),
-    );
-  }
-
-  Widget _buildStaticHeader() {
-    return _buildHeaderContent();
-  }
-
-  Widget _buildDraggableHeader() {
-    return GestureDetector(
-      onPanStart: (details) {
-        _isDragging = true;
-      },
-      onPanUpdate: (details) {
-        if (_isDragging) {
-          setState(() {
-            _position += details.delta;
-              // 限制拖拽范围在屏幕内
-            final screenSize = MediaQuery.of(context).size;
-            _position = Offset(
-              _position.dx.clamp(
-                -_currentWidth! + 100, // 允许部分窗口移出屏幕
-                screenSize.width - 100,
-              ),
-              _position.dy.clamp(
-                -50,
-                screenSize.height - 100,
-              ),
-            );
-          });
-        }
-      },
-      onPanEnd: (details) {
-        _isDragging = false;
-      },
       child: _buildHeaderContent(),
     );
+
+    // 如果可拖拽，将整个标题栏包装为拖拽区域
+    if (widget.draggable) {
+      headerContent = GestureDetector(
+        onPanStart: (details) {
+          _isDragging = true;
+        },
+        onPanUpdate: (details) {
+          if (_isDragging) {
+            setState(() {
+              _position += details.delta;
+              // 限制拖拽范围在屏幕内
+              final screenSize = MediaQuery.of(context).size;
+              _position = Offset(
+                _position.dx.clamp(
+                  -_currentWidth! + 100, // 允许部分窗口移出屏幕
+                  screenSize.width - 100,
+                ),
+                _position.dy.clamp(
+                  -50,
+                  screenSize.height - 100,
+                ),
+              );
+            });
+          }
+        },
+        onPanEnd: (details) {
+          _isDragging = false;
+        },
+        child: headerContent,
+      );
+    }    return headerContent;
   }
 
+  /// 构建调整大小手柄
+  List<Widget> _buildResizeHandles() {
+    const handleSize = 16.0;
+    
+    return [
+      // 左上角
+      _buildResizeHandle(_ResizeHandle.topLeft, handleSize, 
+        top: -handleSize / 2, 
+        left: -handleSize / 2,
+        cursor: SystemMouseCursors.resizeUpLeft,
+      ),
+      // 右上角
+      _buildResizeHandle(_ResizeHandle.topRight, handleSize,
+        top: -handleSize / 2,
+        right: -handleSize / 2,
+        cursor: SystemMouseCursors.resizeUpRight,
+      ),
+      // 左下角
+      _buildResizeHandle(_ResizeHandle.bottomLeft, handleSize,
+        bottom: -handleSize / 2,
+        left: -handleSize / 2,
+        cursor: SystemMouseCursors.resizeDownLeft,
+      ),
+      // 右下角
+      _buildResizeHandle(_ResizeHandle.bottomRight, handleSize,
+        bottom: -handleSize / 2,
+        right: -handleSize / 2,
+        cursor: SystemMouseCursors.resizeDownRight,
+      ),
+    ];
+  }
+  /// 构建单个调整大小手柄
+  Widget _buildResizeHandle(
+    _ResizeHandle handle,
+    double size, {
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required SystemMouseCursor cursor,
+  }) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: MouseRegion(
+        cursor: cursor,
+        child: GestureDetector(
+          onPanStart: (details) {
+            _isResizing = true;
+            _activeResizeHandle = handle;
+          },
+          onPanUpdate: (details) {
+            if (_isResizing && _activeResizeHandle == handle) {
+              _handleResize(handle, details.delta);
+            }
+          },
+          onPanEnd: (details) {
+            _isResizing = false;
+            _activeResizeHandle = null;
+          },
+          child: Container(
+            width: size,
+            height: size,
+            // 完全透明的容器，保持功能但不显示
+            color: Colors.transparent,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 处理调整大小
+  void _handleResize(_ResizeHandle handle, Offset delta) {
+    final screenSize = MediaQuery.of(context).size;
+    double newWidth = _currentWidth!;
+    double newHeight = _currentHeight!;
+    Offset newPosition = _position;
+
+    switch (handle) {
+      case _ResizeHandle.topLeft:
+        newWidth -= delta.dx;
+        newHeight -= delta.dy;
+        newPosition += Offset(delta.dx, delta.dy);
+        break;
+      case _ResizeHandle.topRight:
+        newWidth += delta.dx;
+        newHeight -= delta.dy;
+        newPosition += Offset(0, delta.dy);
+        break;
+      case _ResizeHandle.bottomLeft:
+        newWidth -= delta.dx;
+        newHeight += delta.dy;
+        newPosition += Offset(delta.dx, 0);
+        break;
+      case _ResizeHandle.bottomRight:
+        newWidth += delta.dx;
+        newHeight += delta.dy;
+        break;
+    }
+
+    // 应用最小尺寸限制
+    final minWidth = widget.minSize?.width ?? 200;
+    final minHeight = widget.minSize?.height ?? 150;
+    newWidth = newWidth.clamp(minWidth, double.infinity);
+    newHeight = newHeight.clamp(minHeight, double.infinity);
+
+    // 应用最大尺寸限制
+    if (widget.maxSize != null) {
+      newWidth = newWidth.clamp(0, widget.maxSize!.width);
+      newHeight = newHeight.clamp(0, widget.maxSize!.height);
+    }
+
+    // 确保窗口不会超出屏幕边界
+    newPosition = Offset(
+      newPosition.dx.clamp(
+        -newWidth + 100,
+        screenSize.width - 100,
+      ),
+      newPosition.dy.clamp(
+        -50,
+        screenSize.height - 100,
+      ),
+    );
+
+    setState(() {
+      _currentWidth = newWidth;
+      _currentHeight = newHeight;
+      _position = newPosition;
+    });
+  }
   Widget _buildHeaderContent() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

@@ -259,15 +259,18 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           ],
         ),
       );
-    }
-
-    return GestureDetector(
+    }    return GestureDetector(
       onTap: _toggleControls,
       onDoubleTap: _toggleActualSize,
       child: InteractiveViewer(
         transformationController: _transformationController,
         minScale: 0.1,
         maxScale: 10.0,
+        // 确保启用拖动功能
+        panEnabled: true,
+        scaleEnabled: true,
+        // 设置边界行为，允许图片被拖动到边界外
+        boundaryMargin: const EdgeInsets.all(double.infinity),
         onInteractionStart: (details) {
           setState(() {
             _showControls = false;
