@@ -111,9 +111,7 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
   void initState() {
     super.initState();
     _loadMarkdownFile();
-  }
-
-  @override
+  }  @override
   void dispose() {
     _tocController.dispose();
     super.dispose();
@@ -326,22 +324,16 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
         ],
       ),
     );
-  }
-
-  /// 构建Markdown内容
+  }  /// 构建Markdown内容
   Widget _buildMarkdownContent() {
     final config = _buildMarkdownConfig();
 
     return Container(
       color: _isDarkTheme ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
-
       padding: const EdgeInsets.all(24),
-
       child: MarkdownWidget(
         data: _markdownContent,
-
         config: config,
-
         tocController: _tocController,
       ),
     );
@@ -397,9 +389,7 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
         // TaskListExtension(isDarkTheme: isDark),
       ],
     );
-  }
-
-  /// 处理链接点击
+  }  /// 处理链接点击
   void _onLinkTap(String url) {
     if (url.startsWith('indexeddb://')) {
       // VFS协议链接，使用文件打开服务
@@ -408,11 +398,11 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       // 外部链接
       _openExternalLink(url);
     } else if (url.startsWith('#')) {
-      // 锚点链接，暂时忽略
-      print('锚点链接: $url');
+      // 锚点链接，跳转到对应位置
+      _handleAnchorLink(url);
     } else {
-      // 相对路径或其他类型链接
-      print('未知链接类型: $url');
+      // 相对路径链接，解析为VFS路径
+      _openRelativeLink(url);
     }
   }
 
@@ -438,6 +428,50 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       _showErrorSnackBar('打开链接失败: $e');
     }
   }
+  /// 处理锚点链接
+  void _handleAnchorLink(String anchor) {
+    try {
+      // 移除 # 前缀并进行URL解码
+      String anchorId = Uri.decodeComponent(anchor.substring(1));
+      
+      // 简单的文本搜索滚动
+      _scrollToText(anchorId);
+      
+    } catch (e) {
+      _showErrorSnackBar('跳转到锚点失败: $e');
+    }
+  }  /// 使用TOC控制器跳转到锚点
+  void _scrollToText(String searchText) {
+    try {
+      // 尝试使用TOC控制器直接跳转到锚点
+      // 首先尝试完整匹配
+      if (_tocController.tocList.isNotEmpty) {        // 查找匹配的TOC项
+        for (final toc in _tocController.tocList) {
+          // 从HeadingNode获取标题文本
+          final headingSpan = toc.node.childrenSpan;
+          final headingText = headingSpan.toPlainText().replaceAll(RegExp(r'[#\s]+'), '');
+          
+          // 尝试匹配标题文本
+          if (headingText.toLowerCase().contains(searchText.toLowerCase())) {
+            _tocController.jumpToIndex(toc.widgetIndex);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('已跳转到: $headingText'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+            return;
+          }
+        }
+      }
+      
+      // 如果TOC中没找到，显示未找到提示
+      _showErrorSnackBar('未找到锚点: $searchText');
+    } catch (e) {
+      _showErrorSnackBar('锚点跳转失败: $e');
+    }
+  }
+
   /// 构建图片组件 - 支持VFS协议
   Widget _buildImage(String url, Map<String, String> attributes) {
     if (url.startsWith('indexeddb://')) {
@@ -687,5 +721,64 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  /// 打开相对路径链接
+  Future<void> _openRelativeLink(String relativePath) async {
+    try {
+      // 获取当前文件的目录路径
+      final currentDir = _getCurrentDirectory();
+      
+      // 解析相对路径为绝对VFS路径
+      final absolutePath = _resolveRelativePath(currentDir, relativePath);
+      
+      // 使用VFS文件打开服务打开文件
+      await VfsFileOpenerService.openFile(context, absolutePath);
+    } catch (e) {
+      _showErrorSnackBar('打开相对路径链接失败: $e');
+    }
+  }
+
+  /// 获取当前Markdown文件的目录路径
+  String _getCurrentDirectory() {
+    final parts = widget.vfsPath.split('/');
+    if (parts.length > 1) {
+      parts.removeLast(); // 移除文件名
+      return parts.join('/');
+    }
+    return '';
+  }
+
+  /// 解析相对路径为绝对路径
+  String _resolveRelativePath(String currentDir, String relativePath) {
+    // 如果是绝对路径，直接返回
+    if (relativePath.startsWith('/') || relativePath.startsWith('indexeddb://')) {
+      return relativePath;
+    }
+
+    // 处理相对路径
+    List<String> currentParts = currentDir.isEmpty ? [] : currentDir.split('/');
+    List<String> relativeParts = relativePath.split('/');
+
+    // 处理 ".." 和 "." 路径段
+    for (String part in relativeParts) {
+      if (part == '..') {
+        if (currentParts.isNotEmpty) {
+          currentParts.removeLast();
+        }
+      } else if (part != '.' && part.isNotEmpty) {
+        currentParts.add(part);
+      }
+    }
+
+    // 构建最终路径
+    String finalPath = currentParts.join('/');
+    
+    // 确保以indexeddb://开头（如果不是的话）
+    if (!finalPath.startsWith('indexeddb://')) {
+      finalPath = 'indexeddb://$finalPath';
+    }
+
+    return finalPath;
   }
 }
