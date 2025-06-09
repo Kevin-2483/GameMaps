@@ -1,6 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:flutter_highlight/themes/github.dart';
+import 'package:highlight/languages/dart.dart';
+import 'package:highlight/languages/json.dart';
+import 'package:highlight/languages/xml.dart';
+import 'package:highlight/languages/javascript.dart';
+import 'package:highlight/languages/python.dart';
+import 'package:highlight/languages/sql.dart';
+import 'package:highlight/languages/yaml.dart';
+import 'package:highlight/languages/markdown.dart';
 import '../../../components/common/floating_window.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
@@ -91,30 +102,26 @@ class VfsTextViewerWindow extends StatefulWidget {
 
 class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
-  final ScrollController _scrollController = ScrollController();
   
   bool _isLoading = true;
   String? _errorMessage;
-  String? _textContent;
   VfsFileInfo? _fileInfo;
   
-  // 文本查看器状态
-  double _fontSize = 14.0;
-  bool _wordWrap = true;
-  TextSelection? _currentSelection;
-  int _lineCount = 0;
-  bool _isJson = false;
-  bool _jsonFormatted = false;
+  // 代码编辑器相关
+  late CodeController _codeController;
+  bool _isReadOnly = true;
+  bool _isDarkTheme = false;
 
   @override
   void initState() {
     super.initState();
+    _codeController = CodeController();
     _loadTextFile();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
@@ -136,14 +143,12 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           textContent = latin1.decode(fileContent.data);
         }
         
-        final extension = widget.vfsPath.split('.').last.toLowerCase();
-        final isJsonFile = extension == 'json';
+        // 设置代码编辑器内容和语言
+        _codeController.text = textContent;
+        _setLanguageMode();
         
         setState(() {
-          _textContent = textContent;
           _fileInfo = widget.fileInfo;
-          _lineCount = _countLines(textContent);
-          _isJson = isJsonFile;
           _isLoading = false;
         });
       } else {
@@ -158,11 +163,43 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         _isLoading = false;
       });
     }
-  }
-
-  /// 计算行数
-  int _countLines(String text) {
-    return text.split('\n').length;
+  }  /// 根据文件扩展名设置语言模式
+  void _setLanguageMode() {
+    final extension = widget.vfsPath.split('.').last.toLowerCase();
+    
+    switch (extension) {
+      case 'dart':
+        _codeController.language = dart;
+        break;
+      case 'json':
+        _codeController.language = json;
+        break;
+      case 'xml':
+      case 'html':
+        _codeController.language = xml;
+        break;
+      case 'js':
+      case 'ts':
+        _codeController.language = javascript;
+        break;
+      case 'py':
+        _codeController.language = python;
+        break;
+      case 'sql':
+        _codeController.language = sql;
+        break;
+      case 'yaml':
+      case 'yml':
+        _codeController.language = yaml;
+        break;
+      case 'md':
+        _codeController.language = markdown;
+        break;
+      default:
+        // 使用纯文本模式
+        _codeController.language = null;
+        break;
+    }
   }
 
   @override
@@ -171,9 +208,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       children: [
         // 工具栏
         _buildToolbar(),
-        // 文本查看区域
+        // 代码编辑器
         Expanded(
-          child: _buildTextViewer(),
+          child: _buildCodeEditor(),
         ),
         // 状态栏
         _buildStatusBar(),
@@ -191,59 +228,51 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         ),
       ),
       child: Row(
-        children: [
-          // 字体大小控制
+        children: [          // 编辑模式切换
           IconButton(
-            onPressed: _decreaseFontSize,
-            icon: const Icon(Icons.text_decrease),
-            tooltip: '减小字体',
+            onPressed: _toggleReadOnlyMode,
+            icon: Icon(_isReadOnly ? Icons.edit_off : Icons.edit),
+            tooltip: _isReadOnly ? '启用编辑' : '只读模式',
           ),
-          Text(
-            '${_fontSize.toInt()}px',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          
+          // 保存按钮（仅在编辑模式下显示）
+          if (!_isReadOnly) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _saveFile,
+              icon: const Icon(Icons.save),
+              tooltip: '保存文件',
+            ),
+          ],
+          
+          const SizedBox(width: 16),
+          
+          // 主题切换
           IconButton(
-            onPressed: _increaseFontSize,
-            icon: const Icon(Icons.text_increase),
-            tooltip: '增大字体',
+            onPressed: _toggleTheme,
+            icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
+            tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
           ),
           
           const SizedBox(width: 16),
           
-          // 自动换行
-          IconButton(
-            onPressed: _toggleWordWrap,
-            icon: Icon(_wordWrap ? Icons.wrap_text : Icons.text_fields),
-            tooltip: _wordWrap ? '关闭自动换行' : '开启自动换行',
-          ),
-          
           // JSON格式化（仅JSON文件）
-          if (_isJson) ...[
-            const SizedBox(width: 8),
+          if (_isJsonFile()) ...[
             IconButton(
-              onPressed: _toggleJsonFormat,
-              icon: Icon(_jsonFormatted ? Icons.code_off : Icons.code),
-              tooltip: _jsonFormatted ? '显示原始格式' : '格式化JSON',
+              onPressed: _formatJson,
+              icon: const Icon(Icons.code),
+              tooltip: '格式化JSON',
             ),
+            const SizedBox(width: 8),
           ],
           
           const Spacer(),
           
           // 复制按钮
-          if (_currentSelection != null && !_currentSelection!.isCollapsed) ...[
-            IconButton(
-              onPressed: _copySelection,
-              icon: const Icon(Icons.copy),
-              tooltip: '复制选中文本',
-            ),
-            const SizedBox(width: 8),
-          ],
-          
-          // 全选按钮
           IconButton(
-            onPressed: _selectAll,
-            icon: const Icon(Icons.select_all),
-            tooltip: '全选',
+            onPressed: _copyContent,
+            icon: const Icon(Icons.copy),
+            tooltip: '复制所有内容',
           ),
           
           // 刷新按钮
@@ -257,8 +286,8 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
     );
   }
 
-  /// 构建文本查看器
-  Widget _buildTextViewer() {
+  /// 构建代码编辑器
+  Widget _buildCodeEditor() {
     if (_isLoading) {
       return const Center(
         child: Column(
@@ -292,53 +321,54 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           ],
         ),
       );
-    }
-
-    if (_textContent == null) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.text_snippet_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('无法显示文本内容'),
-          ],
-        ),
-      );
-    }
-
-    String displayText = _textContent!;
-    if (_isJson && _jsonFormatted) {
-      try {
-        final jsonObject = json.decode(_textContent!);
-        displayText = const JsonEncoder.withIndent('  ').convert(jsonObject);
-      } catch (e) {
-        // 如果格式化失败，显示原始内容
-        displayText = _textContent!;
-      }
-    }
-
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16),
-          child: SelectableText(
-            displayText,
-            style: TextStyle(
-              fontSize: _fontSize,
-              fontFamily: 'Courier',
-              height: 1.4,
+    }    return Container(
+      color: _isDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
+      child: CodeTheme(
+        data: _isDarkTheme 
+            ? CodeThemeData(styles: monokaiSublimeTheme)
+            : CodeThemeData(styles: githubTheme),
+        child: CodeField(
+          controller: _codeController,
+          readOnly: _isReadOnly,
+          textStyle: TextStyle(
+            fontFamily: 'Courier New',
+            fontSize: 14,
+            height: 1.4,
+            color: _isDarkTheme ? Colors.white : Colors.black,
+          ),
+          gutterStyle: GutterStyle(
+            showLineNumbers: true,
+            showErrors: true,
+            showFoldingHandles: true,
+            margin: 8,
+            width: 60,
+            background: _isDarkTheme ? const Color(0xFF3C3C3C) : const Color(0xFFF5F5F5),
+            textStyle: TextStyle(
+              color: _isDarkTheme ? Colors.white70 : Colors.black54,
+              fontSize: 12,
             ),
-            onSelectionChanged: (selection, cause) {
-              setState(() {
-                _currentSelection = selection;
-              });
-            },
-            scrollPhysics: const NeverScrollableScrollPhysics(),
+          ),
+          wrap: false,
+          lineNumberStyle: LineNumberStyle(
+            width: 60,
+            margin: 8,
+            textAlign: TextAlign.right,
+            background: _isDarkTheme ? const Color(0xFF3C3C3C) : const Color(0xFFF5F5F5),
+            textStyle: TextStyle(
+              color: _isDarkTheme ? Colors.white70 : Colors.black54,
+              fontSize: 12,
+            ),
+          ),
+          background: _isDarkTheme 
+              ? const Color(0xFF2B2B2B)
+              : const Color(0xFFFAFAFA),
+          decoration: BoxDecoration(
+            color: _isDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
+            border: Border.all(
+              color: _isDarkTheme 
+                  ? Colors.grey.shade700.withOpacity(0.3)
+                  : Theme.of(context).dividerColor.withOpacity(0.2),
+            ),
           ),
         ),
       ),
@@ -347,6 +377,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
 
   /// 构建状态栏
   Widget _buildStatusBar() {
+    final lineCount = _codeController.text.split('\n').length;
+    final charCount = _codeController.text.length;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -358,15 +391,14 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       child: Row(
         children: [
           Text(
-            '行数: $_lineCount',
+            '行数: $lineCount',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(width: 16),
-          if (_textContent != null)
-            Text(
-              '字符数: ${_textContent!.length}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          Text(
+            '字符数: $charCount',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const Spacer(),
           if (_fileInfo != null) ...[
             Text(
@@ -374,67 +406,117 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
+          const SizedBox(width: 16),
+          Text(
+            _isReadOnly ? '只读模式' : '编辑模式',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
   }
 
-  /// 减小字体
-  void _decreaseFontSize() {
+  /// 切换只读模式
+  void _toggleReadOnlyMode() {
     setState(() {
-      _fontSize = (_fontSize - 1).clamp(8.0, 32.0);
+      _isReadOnly = !_isReadOnly;
     });
   }
 
-  /// 增大字体
-  void _increaseFontSize() {
+  /// 切换主题
+  void _toggleTheme() {
     setState(() {
-      _fontSize = (_fontSize + 1).clamp(8.0, 32.0);
+      _isDarkTheme = !_isDarkTheme;
     });
   }
 
-  /// 切换自动换行
-  void _toggleWordWrap() {
-    setState(() {
-      _wordWrap = !_wordWrap;
-    });
+  /// 判断是否是JSON文件
+  bool _isJsonFile() {
+    final extension = widget.vfsPath.split('.').last.toLowerCase();
+    return extension == 'json';
   }
-
-  /// 切换JSON格式化
-  void _toggleJsonFormat() {
-    setState(() {
-      _jsonFormatted = !_jsonFormatted;
-    });
-  }
-
-  /// 复制选中文本
-  void _copySelection() {
-    if (_currentSelection != null && !_currentSelection!.isCollapsed && _textContent != null) {
-      final selectedText = _textContent!.substring(
-        _currentSelection!.start,
-        _currentSelection!.end,
-      );
-      Clipboard.setData(ClipboardData(text: selectedText));
+  /// 格式化JSON
+  void _formatJson() {
+    if (!_isJsonFile()) return;
+    
+    try {
+      final jsonObject = jsonDecode(_codeController.text);
+      final formattedJson = const JsonEncoder.withIndent('  ').convert(jsonObject);
+      _codeController.text = formattedJson;
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('已复制到剪贴板'),
+          content: Text('JSON格式化完成'),
           duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('JSON格式化失败: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
   }
-
-  /// 全选
-  void _selectAll() {
-    setState(() {
-      if (_textContent != null) {
-        _currentSelection = TextSelection(
-          baseOffset: 0,
-          extentOffset: _textContent!.length,
-        );
-      }
-    });
+  /// 复制所有内容
+  void _copyContent() {
+    Clipboard.setData(ClipboardData(text: _codeController.text));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('已复制到剪贴板'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+  /// 保存文件
+  Future<void> _saveFile() async {
+    try {
+      // 将文本内容转换为Uint8List
+      final textBytes = utf8.encode(_codeController.text);
+      
+      // 直接使用VFS路径保存文件
+      await _vfsService.vfs.writeBinaryFile(
+        widget.vfsPath,
+        textBytes,
+        mimeType: 'text/plain; charset=utf-8',
+      );
+      
+      // 更新文件信息
+      setState(() {
+        if (_fileInfo != null) {
+          final now = DateTime.now();
+          _fileInfo = VfsFileInfo(
+            path: _fileInfo!.path,
+            name: _fileInfo!.name,
+            isDirectory: _fileInfo!.isDirectory,
+            size: textBytes.length,
+            createdAt: _fileInfo!.createdAt,
+            modifiedAt: now,
+            mimeType: _fileInfo!.mimeType,
+            metadata: _fileInfo!.metadata,
+          );
+        }
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('文件保存成功'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('保存文件失败: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   /// 格式化文件大小
