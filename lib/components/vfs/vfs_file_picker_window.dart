@@ -17,6 +17,7 @@ import 'vfs_file_rename_dialog.dart';
 import 'vfs_file_search_dialog.dart';
 import 'vfs_permission_dialog.dart';
 import '../common/floating_window.dart';
+import '../../services/vfs/vfs_file_opener_service.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -742,10 +743,24 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
-
   /// 显示文件元数据
   Future<void> _showFileMetadata(VfsFileInfo file) async {
     await VfsFileMetadataDialog.show(context, file);
+  }
+
+  /// 打开文件
+  Future<void> _openFile(VfsFileInfo file) async {
+    try {
+      await VfsFileOpenerService.openFile(
+        context,
+        file.path,
+        fileInfo: file,
+      );
+    } catch (e) {
+      _showErrorSnackBar('打开文件失败: $e');
+      // 如果文件打开失败，回退到显示文件元数据
+      await _showFileMetadata(file);
+    }
   }
 
   /// 管理文件权限
@@ -1702,8 +1717,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       itemCount: files.length,
       itemBuilder: (context, index) {
         final file = files[index];
-        final isSelected = _selectedFiles.contains(file.path);
-        return ContextMenuWrapper(
+        final isSelected = _selectedFiles.contains(file.path);        return ContextMenuWrapper(
           menuBuilder: (context) => _buildFileContextMenu(file),
           child: _FileListItem(
             file: file,
@@ -1721,7 +1735,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                _showFileMetadata(file);
+                // 在浏览模式下打开文件，在选择模式下显示元数据
+                if (widget.onFilesSelected == null) {
+                  _openFile(file);
+                } else {
+                  _showFileMetadata(file);
+                }
               }
             },
             onLongPress: () => _toggleFileSelection(file),
@@ -1805,9 +1824,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   })
                 : null,
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,
-
-            onTap: () {
+            getFileIcon: _getFileIcon,            onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
@@ -1816,7 +1833,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                _showFileMetadata(file);
+                // 在浏览模式下打开文件，在选择模式下显示元数据
+                if (widget.onFilesSelected == null) {
+                  _openFile(file);
+                } else {
+                  _showFileMetadata(file);
+                }
               }
             },
             onLongPress: () => _toggleFileSelection(file),
@@ -1866,14 +1888,21 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 ? file.name
                 : '$_currentPath/${file.name}';
             _navigateToPath(newPath);
-          },
-        )
-      else
+          },        )
+      else ...[
+        // 在浏览模式下显示"打开"选项，在选择模式下显示"查看详情"
+        if (widget.onFilesSelected == null)
+          ContextMenuItem(
+            label: '打开',
+            icon: Icons.open_in_new,
+            onTap: () => _openFile(file),
+          ),
         ContextMenuItem(
           label: '查看详情',
           icon: Icons.info,
           onTap: () => _showFileMetadata(file),
         ),
+      ],
 
       const ContextMenuItem.divider(),
 

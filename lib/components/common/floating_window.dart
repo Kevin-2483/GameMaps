@@ -116,8 +116,8 @@ class FloatingWindow extends StatefulWidget {
 }
 
 class _FloatingWindowState extends State<FloatingWindow> {
-  late double _currentWidth;
-  late double _currentHeight;
+  double? _currentWidth;
+  double? _currentHeight;
   Offset _position = Offset.zero;
   bool _isDragging = false;
 
@@ -131,30 +131,31 @@ class _FloatingWindowState extends State<FloatingWindow> {
       }
     });
   }
-
   void _initializeSize() {
     final screenSize = MediaQuery.of(context).size;
-    _currentWidth = screenSize.width * widget.widthRatio;
-    _currentHeight = screenSize.height * widget.heightRatio;
+    double width = screenSize.width * widget.widthRatio;
+    double height = screenSize.height * widget.heightRatio;
     
     // 应用最小和最大尺寸限制
     if (widget.minSize != null) {
-      _currentWidth = _currentWidth.clamp(widget.minSize!.width, double.infinity);
-      _currentHeight = _currentHeight.clamp(widget.minSize!.height, double.infinity);
+      width = width.clamp(widget.minSize!.width, double.infinity);
+      height = height.clamp(widget.minSize!.height, double.infinity);
     }
     
     if (widget.maxSize != null) {
-      _currentWidth = _currentWidth.clamp(0, widget.maxSize!.width);
-      _currentHeight = _currentHeight.clamp(0, widget.maxSize!.height);
+      width = width.clamp(0, widget.maxSize!.width);
+      height = height.clamp(0, widget.maxSize!.height);
     }
+    
+    _currentWidth = width;
+    _currentHeight = height;
     
     setState(() {});
   }
-
   @override
   Widget build(BuildContext context) {
     // 如果尺寸还未初始化，显示加载指示器
-    if (_currentWidth == 0 || _currentHeight == 0) {
+    if (_currentWidth == null || _currentHeight == null) {
       return const Material(
         color: Colors.transparent,
         child: Center(child: CircularProgressIndicator()),
@@ -175,11 +176,10 @@ class _FloatingWindowState extends State<FloatingWindow> {
       child: windowContent,
     );
   }
-
   Widget _buildWindowContent() {
     return Container(
-      width: _currentWidth,
-      height: _currentHeight,
+      width: _currentWidth!,
+      height: _currentHeight!,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -241,12 +241,11 @@ class _FloatingWindowState extends State<FloatingWindow> {
         if (_isDragging) {
           setState(() {
             _position += details.delta;
-            
-            // 限制拖拽范围在屏幕内
+              // 限制拖拽范围在屏幕内
             final screenSize = MediaQuery.of(context).size;
             _position = Offset(
               _position.dx.clamp(
-                -_currentWidth + 100, // 允许部分窗口移出屏幕
+                -_currentWidth! + 100, // 允许部分窗口移出屏幕
                 screenSize.width - 100,
               ),
               _position.dy.clamp(
@@ -326,7 +325,6 @@ class FloatingWindowBuilder {
   String? _title;
   IconData? _icon;
   Widget? _child;
-  VoidCallback? _onClose;
   double _widthRatio = 0.9;
   double _heightRatio = 0.9;
   Size? _minSize;
@@ -350,14 +348,8 @@ class FloatingWindowBuilder {
     _icon = icon;
     return this;
   }
-
   FloatingWindowBuilder child(Widget child) {
     _child = child;
-    return this;
-  }
-
-  FloatingWindowBuilder onClose(VoidCallback onClose) {
-    _onClose = onClose;
     return this;
   }
 

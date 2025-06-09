@@ -18,6 +18,7 @@ import '../../components/vfs/vfs_permission_dialog.dart';
 import '../../components/layout/main_layout.dart';
 import '../../services/virtual_file_system/vfs_database_initializer.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
+import '../../services/vfs/vfs_file_opener_service.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -511,10 +512,23 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       });
     }
   }
-
   /// 显示文件元数据
   Future<void> _showFileMetadata(VfsFileInfo file) async {
     await VfsFileMetadataDialog.show(context, file);
+  }
+  /// 打开文件
+  Future<void> _openFile(VfsFileInfo file) async {
+    try {
+      await VfsFileOpenerService.openFile(
+        context,
+        file.path,
+        fileInfo: file,
+      );
+    } catch (e) {
+      _showErrorSnackBar('打开文件失败: $e');
+      // 如果文件打开失败，回退到显示文件元数据
+      await _showFileMetadata(file);
+    }
   }
 
   /// 管理文件权限
@@ -1430,8 +1444,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
         return ContextMenuWrapper(
-          menuBuilder: (context) => _buildFileContextMenu(file),
-          child: _FileListItem(
+          menuBuilder: (context) => _buildFileContextMenu(file),          child: _FileListItem(
             file: file,
             isSelected: isSelected,
             isCutToClipboard:
@@ -1446,7 +1459,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                _showFileMetadata(file);
+                _openFile(file);
               }
             },
             onLongPress: () => _toggleFileSelection(file),
@@ -1517,9 +1530,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
               }
             }),
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,
-
-            onTap: () {
+            getFileIcon: _getFileIcon,            onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
@@ -1528,7 +1539,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                _showFileMetadata(file);
+                _openFile(file);
               }
             },
             onLongPress: () => _toggleFileSelection(file),
@@ -1565,9 +1576,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           _selectedFiles.clear();
         });
       });
-    }
-
-    // 显示单文件上下文菜单
+    }    // 显示单文件上下文菜单
     return [
       if (file.isDirectory)
         ContextMenuItem(
@@ -1580,12 +1589,18 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
             _navigateToPath(newPath);
           },
         )
-      else
+      else ...[
+        ContextMenuItem(
+          label: '打开',
+          icon: Icons.open_in_new,
+          onTap: () => _openFile(file),
+        ),
         ContextMenuItem(
           label: '查看详情',
           icon: Icons.info,
           onTap: () => _showFileMetadata(file),
         ),
+      ],
 
       const ContextMenuItem.divider(),
 
