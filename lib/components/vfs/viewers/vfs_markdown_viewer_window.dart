@@ -479,7 +479,6 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       _showErrorSnackBar('锚点跳转失败: $e');
     }
   }
-
   /// 构建图片组件 - 支持VFS协议
   Widget _buildImage(String url, Map<String, String> attributes) {
     if (url.startsWith('indexeddb://')) {
@@ -487,7 +486,10 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
     } else if (url.startsWith('http://') || url.startsWith('https://')) {
       return _buildNetworkImage(url, attributes);
     } else {
-      return _buildImageError(url, '不支持的图片协议');
+      // 处理相对路径，解析为VFS绝对路径
+      final currentDir = _getCurrentDirectory();
+      final absolutePath = _resolveRelativePath(currentDir, url);
+      return _buildVfsImage(absolutePath, attributes);
     }
   }
 
@@ -745,22 +747,33 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       _showErrorSnackBar('打开相对路径链接失败: $e');
     }
   }
-
   /// 获取当前Markdown文件的目录路径
   String _getCurrentDirectory() {
-    final parts = widget.vfsPath.split('/');
-    if (parts.length > 1) {
-      parts.removeLast(); // 移除文件名
-      return parts.join('/');
+    // 解析VFS路径
+    final vfsPath = VfsProtocol.parsePath(widget.vfsPath);
+    if (vfsPath == null || vfsPath.segments.isEmpty) {
+      return '';
     }
+    
+    // 获取文件所在目录的路径（移除文件名）
+    if (vfsPath.segments.length > 1) {
+      final dirSegments = vfsPath.segments.sublist(0, vfsPath.segments.length - 1);
+      return dirSegments.join('/');
+    }
+    
     return '';
   }
-
   /// 解析相对路径为绝对路径
   String _resolveRelativePath(String currentDir, String relativePath) {
     // 如果是绝对路径，直接返回
     if (relativePath.startsWith('/') || relativePath.startsWith('indexeddb://')) {
       return relativePath;
+    }
+
+    // 从当前VFS路径中提取数据库和集合信息
+    final currentVfsPath = VfsProtocol.parsePath(widget.vfsPath);
+    if (currentVfsPath == null) {
+      return relativePath; // 如果解析失败，返回原路径
     }
 
     // 处理相对路径
@@ -779,14 +792,14 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
     }
 
     // 构建最终路径
-    String finalPath = currentParts.join('/');
+    final finalRelativePath = currentParts.join('/');
     
-    // 确保以indexeddb://开头（如果不是的话）
-    if (!finalPath.startsWith('indexeddb://')) {
-      finalPath = 'indexeddb://$finalPath';
-    }
-
-    return finalPath;
+    // 使用VfsProtocol构建完整的VFS路径
+    return VfsProtocol.buildPath(
+      currentVfsPath.database,
+      currentVfsPath.collection,
+      finalRelativePath,
+    );
   }
 
   /// 使用文本编辑器打开当前Markdown文件
