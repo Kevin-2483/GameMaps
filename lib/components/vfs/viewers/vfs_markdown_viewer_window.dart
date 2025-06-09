@@ -7,6 +7,7 @@ import '../../../components/common/floating_window.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
+import 'vfs_text_viewer_window.dart';
 
 /// VFS Markdown查看器窗口
 class VfsMarkdownViewerWindow extends StatefulWidget {
@@ -223,6 +224,13 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
           ),
 
           const Spacer(),
+
+          // 使用文本编辑器打开
+          IconButton(
+            onPressed: _openWithTextEditor,
+            icon: const Icon(Icons.edit),
+            tooltip: '使用文本编辑器打开',
+          ),
 
           // 复制按钮
           IconButton(
@@ -711,7 +719,6 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 2)),
     );
   }
-
   /// 显示错误提示
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -780,5 +787,19 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
     }
 
     return finalPath;
+  }
+
+  /// 使用文本编辑器打开当前Markdown文件
+  Future<void> _openWithTextEditor() async {
+    try {
+      await VfsTextViewerWindow.show(
+        context,
+        vfsPath: widget.vfsPath,
+        fileInfo: _fileInfo,
+        config: VfsFileOpenConfig.forText,
+      );
+    } catch (e) {
+      _showErrorSnackBar('打开文本编辑器失败: $e');
+    }
   }
 }

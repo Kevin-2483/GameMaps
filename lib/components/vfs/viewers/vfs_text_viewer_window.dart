@@ -21,13 +21,13 @@ import '../../../services/virtual_file_system/vfs_protocol.dart';
 class VfsTextViewerWindow extends StatefulWidget {
   /// VFS文件路径
   final String vfsPath;
-  
+
   /// 文件信息（可选）
   final VfsFileInfo? fileInfo;
-  
+
   /// 窗口配置
   final VfsFileOpenConfig config;
-  
+
   /// 关闭回调
   final VoidCallback? onClose;
 
@@ -47,7 +47,7 @@ class VfsTextViewerWindow extends StatefulWidget {
     VfsFileOpenConfig? config,
   }) {
     final finalConfig = config ?? VfsFileOpenConfig.forText;
-    
+
     return FloatingWindow.show(
       context,
       title: _getTitleFromPath(vfsPath, fileInfo),
@@ -87,13 +87,14 @@ class VfsTextViewerWindow extends StatefulWidget {
   static String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
   static String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -102,11 +103,11 @@ class VfsTextViewerWindow extends StatefulWidget {
 
 class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
-  
+
   bool _isLoading = true;
   String? _errorMessage;
   VfsFileInfo? _fileInfo;
-  
+
   // 代码编辑器相关
   late CodeController _codeController;
   bool _isReadOnly = true;
@@ -142,11 +143,11 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           // 如果UTF-8解码失败，尝试使用Latin-1
           textContent = latin1.decode(fileContent.data);
         }
-        
+
         // 设置代码编辑器内容和语言
         _codeController.text = textContent;
         _setLanguageMode();
-        
+
         setState(() {
           _fileInfo = widget.fileInfo;
           _isLoading = false;
@@ -163,10 +164,12 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         _isLoading = false;
       });
     }
-  }  /// 根据文件扩展名设置语言模式
+  }
+
+  /// 根据文件扩展名设置语言模式
   void _setLanguageMode() {
     final extension = widget.vfsPath.split('.').last.toLowerCase();
-    
+
     switch (extension) {
       case 'dart':
         _codeController.language = dart;
@@ -209,9 +212,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         // 工具栏
         _buildToolbar(),
         // 代码编辑器
-        Expanded(
-          child: _buildCodeEditor(),
-        ),
+        Expanded(child: _buildCodeEditor()),
         // 状态栏
         _buildStatusBar(),
       ],
@@ -228,13 +229,14 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         ),
       ),
       child: Row(
-        children: [          // 编辑模式切换
+        children: [
+          // 编辑模式切换
           IconButton(
             onPressed: _toggleReadOnlyMode,
             icon: Icon(_isReadOnly ? Icons.edit_off : Icons.edit),
             tooltip: _isReadOnly ? '启用编辑' : '只读模式',
           ),
-          
+
           // 保存按钮（仅在编辑模式下显示）
           if (!_isReadOnly) ...[
             const SizedBox(width: 8),
@@ -244,18 +246,18 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               tooltip: '保存文件',
             ),
           ],
-          
+
           const SizedBox(width: 16),
-          
+
           // 主题切换
           IconButton(
             onPressed: _toggleTheme,
             icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
             tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // JSON格式化（仅JSON文件）
           if (_isJsonFile()) ...[
             IconButton(
@@ -265,16 +267,16 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
             ),
             const SizedBox(width: 8),
           ],
-          
+
           const Spacer(),
-          
+
           // 复制按钮
           IconButton(
             onPressed: _copyContent,
             icon: const Icon(Icons.copy),
             tooltip: '复制所有内容',
           ),
-          
+
           // 刷新按钮
           IconButton(
             onPressed: _loadTextFile,
@@ -314,60 +316,66 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               style: const TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadTextFile,
-              child: const Text('重试'),
-            ),
+            ElevatedButton(onPressed: _loadTextFile, child: const Text('重试')),
           ],
         ),
       );
-    }    return Container(
+    }
+    return Container(
       color: _isDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
       child: CodeTheme(
-        data: _isDarkTheme 
+        data: _isDarkTheme
             ? CodeThemeData(styles: monokaiSublimeTheme)
             : CodeThemeData(styles: githubTheme),
-        child: CodeField(
-          controller: _codeController,
-          readOnly: _isReadOnly,
-          textStyle: TextStyle(
-            fontFamily: 'Courier New',
-            fontSize: 14,
-            height: 1.4,
-            color: _isDarkTheme ? Colors.white : Colors.black,
-          ),
-          gutterStyle: GutterStyle(
-            showLineNumbers: true,
-            showErrors: true,
-            showFoldingHandles: true,
-            margin: 8,
-            width: 60,
-            background: _isDarkTheme ? const Color(0xFF3C3C3C) : const Color(0xFFF5F5F5),
+        child: SingleChildScrollView(
+          child: CodeField(
+            controller: _codeController,
+            readOnly: _isReadOnly,
             textStyle: TextStyle(
-              color: _isDarkTheme ? Colors.white70 : Colors.black54,
-              fontSize: 12,
+              fontFamily: 'Courier New',
+              fontSize: 14,
+              height: 1.4,
+              color: _isDarkTheme ? Colors.white : Colors.black,
             ),
-          ),
-          wrap: false,
-          lineNumberStyle: LineNumberStyle(
-            width: 60,
-            margin: 8,
-            textAlign: TextAlign.right,
-            background: _isDarkTheme ? const Color(0xFF3C3C3C) : const Color(0xFFF5F5F5),
-            textStyle: TextStyle(
-              color: _isDarkTheme ? Colors.white70 : Colors.black54,
-              fontSize: 12,
+            gutterStyle: GutterStyle(
+              showLineNumbers: true,
+              showErrors: true,
+              showFoldingHandles: true,
+              margin: 8,
+              width: 60,
+              background: _isDarkTheme
+                  ? const Color(0xFF3C3C3C)
+                  : const Color(0xFFF5F5F5),
+              textStyle: TextStyle(
+                color: _isDarkTheme ? Colors.white70 : Colors.black54,
+                fontSize: 12,
+              ),
             ),
-          ),
-          background: _isDarkTheme 
-              ? const Color(0xFF2B2B2B)
-              : const Color(0xFFFAFAFA),
-          decoration: BoxDecoration(
-            color: _isDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
-            border: Border.all(
-              color: _isDarkTheme 
-                  ? Colors.grey.shade700.withOpacity(0.3)
-                  : Theme.of(context).dividerColor.withOpacity(0.2),
+            wrap: true,
+            lineNumberStyle: LineNumberStyle(
+              width: 60,
+              margin: 8,
+              textAlign: TextAlign.right,
+              background: _isDarkTheme
+                  ? const Color(0xFF3C3C3C)
+                  : const Color(0xFFF5F5F5),
+              textStyle: TextStyle(
+                color: _isDarkTheme ? Colors.white70 : Colors.black54,
+                fontSize: 12,
+              ),
+            ),
+            background: _isDarkTheme
+                ? const Color(0xFF2B2B2B)
+                : const Color(0xFFFAFAFA),
+            decoration: BoxDecoration(
+              color: _isDarkTheme
+                  ? const Color(0xFF2B2B2B)
+                  : const Color(0xFFFAFAFA),
+              border: Border.all(
+                color: _isDarkTheme
+                    ? Colors.grey.shade700.withOpacity(0.3)
+                    : Theme.of(context).dividerColor.withOpacity(0.2),
+              ),
             ),
           ),
         ),
@@ -379,26 +387,18 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   Widget _buildStatusBar() {
     final lineCount = _codeController.text.split('\n').length;
     final charCount = _codeController.text.length;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
-        ),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         children: [
-          Text(
-            '行数: $lineCount',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('行数: $lineCount', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(width: 16),
-          Text(
-            '字符数: $charCount',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
           const Spacer(),
           if (_fileInfo != null) ...[
             Text(
@@ -435,15 +435,18 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
     final extension = widget.vfsPath.split('.').last.toLowerCase();
     return extension == 'json';
   }
+
   /// 格式化JSON
   void _formatJson() {
     if (!_isJsonFile()) return;
-    
+
     try {
       final jsonObject = jsonDecode(_codeController.text);
-      final formattedJson = const JsonEncoder.withIndent('  ').convert(jsonObject);
+      final formattedJson = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(jsonObject);
       _codeController.text = formattedJson;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('JSON格式化完成'),
@@ -460,30 +463,29 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       );
     }
   }
+
   /// 复制所有内容
   void _copyContent() {
     Clipboard.setData(ClipboardData(text: _codeController.text));
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('已复制到剪贴板'),
-        duration: Duration(seconds: 2),
-      ),
+      const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 2)),
     );
   }
+
   /// 保存文件
   Future<void> _saveFile() async {
     try {
       // 将文本内容转换为Uint8List
       final textBytes = utf8.encode(_codeController.text);
-      
+
       // 直接使用VFS路径保存文件
       await _vfsService.vfs.writeBinaryFile(
         widget.vfsPath,
         textBytes,
         mimeType: 'text/plain; charset=utf-8',
       );
-      
+
       // 更新文件信息
       setState(() {
         if (_fileInfo != null) {
@@ -500,7 +502,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           );
         }
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('文件保存成功'),
@@ -523,7 +525,8 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 }
