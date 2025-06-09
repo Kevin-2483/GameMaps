@@ -352,10 +352,67 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
     final isDark = _isDarkTheme;
     final baseConfig = isDark
         ? MarkdownConfig.darkConfig
-        : MarkdownConfig.defaultConfig;
-
-    return baseConfig.copy(
+        : MarkdownConfig.defaultConfig;    return baseConfig.copy(
       configs: [
+        // 段落文本配置 - 确保在黑暗模式下文本可见
+        PConfig(
+          textStyle: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 16,
+            height: 1.6,
+          ),
+        ),
+
+        // 标题配置
+        H1Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+        H2Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+        H3Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+        H4Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+        H5Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+        H6Config(
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+
         // 链接配置 - 支持VFS协议链接
         LinkConfig(
           style: TextStyle(
@@ -363,7 +420,9 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
             decoration: TextDecoration.underline,
           ),
           onTap: _onLinkTap,
-        ),        // 图片配置 - 支持VFS协议图片
+        ),
+
+        // 图片配置 - 支持VFS协议图片
         ImgConfig(
           builder: (url, attributes) => _buildImage(url, attributes),
           errorBuilder: (url, alt, error) =>
@@ -385,6 +444,69 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
                     color: Color(0xFF333333),
                   ),
                 },
+        ),
+
+        // 行内代码配置
+        CodeConfig(
+          style: TextStyle(
+            color: isDark ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
+            backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+            fontFamily: 'Courier',
+            fontSize: 14,
+          ),
+        ),        // 引用块配置
+        BlockquoteConfig(
+          textColor: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+          sideColor: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+        ),
+
+        // 列表配置 - 支持自定义标记颜色
+        ListConfig(
+          marginLeft: 32.0,
+          marginBottom: 4.0,
+          marker: (isOrdered, depth, index) {
+            final color = isDark ? Colors.white : Colors.black87;
+            if (isOrdered) {
+              // 有序列表数字标记
+              return Container(
+                alignment: Alignment.topRight,
+                padding: const EdgeInsets.only(right: 1),
+                child: SelectionContainer.disabled(
+                  child: Text(
+                    '${index + 1}.',
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 16,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              // 无序列表点标记
+              final parentStyleHeight = 16.0 * 1.6;
+              return Padding(
+                padding: EdgeInsets.only(top: (parentStyleHeight / 2) - 1.5),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: _getUnorderedListDecoration(depth, color),
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+
+        // 复选框配置 - 支持自定义颜色
+        CheckBoxConfig(
+          builder: (checked) => Icon(
+            checked ? Icons.check_box : Icons.check_box_outline_blank,
+            size: 20,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
 
         // // HTML支持扩展
@@ -813,6 +935,28 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       );
     } catch (e) {
       _showErrorSnackBar('打开文本编辑器失败: $e');
+    }
+  }
+
+  /// 获取无序列表标记装饰
+  BoxDecoration _getUnorderedListDecoration(int depth, Color color) {
+    switch (depth % 3) {
+      case 0:
+        // 第一层：实心圆点
+        return BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        );
+      case 1:
+        // 第二层：空心圆点
+        return BoxDecoration(
+          border: Border.all(color: color, width: 1),
+          shape: BoxShape.circle,
+        );
+      case 2:
+      default:
+        // 第三层及以上：实心方块
+        return BoxDecoration(color: color);
     }
   }
 }
