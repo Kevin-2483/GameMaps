@@ -858,7 +858,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _showErrorSnackBar('导航失败: $e');
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final isSelectionMode = widget.onFilesSelected != null;
@@ -869,6 +868,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       icon: Icons.folder_special,
       onClose: widget.onClose,
       headerActions: _buildActionButtons(),
+      showCloseButton: !isSelectionMode, // 在选择模式下隐藏关闭按钮，因为已经有"取消"按钮
       child: Column(
         children: [
           _buildToolbar(),

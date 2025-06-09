@@ -137,10 +137,30 @@ context.floatingWindow
 | `draggable` | `bool` | `false` | 是否支持拖拽 |
 | `resizable` | `bool` | `false` | 是否支持调整大小 |
 | `headerActions` | `List<Widget>?` | `null` | 头部操作按钮 |
-| `showCloseButton` | `bool` | `true` | 是否显示关闭按钮 |
+| `showCloseButton` | `bool` | `true` | 是否显示关闭按钮<br/>**注意**：当headerActions中包含取消类型的按钮时，建议设为false避免冗余 |
 | `barrierColor` | `Color?` | `Colors.black54` | 背景遮罩颜色 |
 | `borderRadius` | `double` | `16.0` | 窗口圆角半径 |
 | `shadows` | `List<BoxShadow>?` | 默认阴影 | 自定义阴影效果 |
+
+## 智能关闭按钮处理
+
+FloatingWindow组件支持智能地处理关闭按钮的显示：
+
+- **默认行为**：显示右上角的关闭按钮(X)
+- **推荐做法**：当headerActions中已包含"取消"、"关闭"等功能性按钮时，设置`showCloseButton: false`避免UI冗余
+- **VFS选择器案例**：在文件选择模式下，已有"取消"和"确认"按钮，因此隐藏默认关闭按钮
+
+```dart
+FloatingWindow(
+  title: '选择文件',
+  headerActions: [
+    TextButton(onPressed: onCancel, child: Text('取消')),
+    ElevatedButton(onPressed: onConfirm, child: Text('确认')),
+  ],
+  showCloseButton: false, // 避免与"取消"按钮冗余
+  child: child,
+)
+```
 
 ## 在现有VFS文件选择器中的应用
 
@@ -208,6 +228,7 @@ Widget build(BuildContext context) {
     icon: Icons.folder_special,
     onClose: widget.onClose,
     headerActions: _buildActionButtons(),
+    showCloseButton: !isSelectionMode, // 智能隐藏关闭按钮
     child: Column(
       children: [
         _buildToolbar(),
@@ -262,6 +283,11 @@ List<Widget> _buildActionButtons() {
 2. **设计一致性**：自动获得统一的浮动窗口外观
 3. **功能增强**：自动获得拖拽、响应式设计等功能
 4. **维护性提升**：样式更新只需修改FloatingWindow组件
+5. **UI优化**：智能地隐藏冗余的关闭按钮，避免界面混乱
+
+**关闭按钮优化前后对比**：
+- **优化前**：选择模式下同时显示"取消"按钮和关闭按钮(X)，造成UI冗余
+- **优化后**：选择模式下仅显示"取消"和"确认"按钮，浏览模式下显示关闭按钮，UI更清晰
 
 ## 样式自定义
 
