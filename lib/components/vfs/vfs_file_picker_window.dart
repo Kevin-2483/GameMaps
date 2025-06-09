@@ -16,6 +16,7 @@ import 'vfs_file_metadata_dialog.dart';
 import 'vfs_file_rename_dialog.dart';
 import 'vfs_file_search_dialog.dart';
 import 'vfs_permission_dialog.dart';
+import '../common/floating_window.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -24,8 +25,10 @@ typedef FileSelectionCallback = void Function(List<String> selectedPaths);
 enum SelectionType {
   /// 只能选择文件
   filesOnly,
+
   /// 只能选择目录
   directoriesOnly,
+
   /// 可以选择文件和目录
   both,
 }
@@ -77,6 +80,7 @@ class VfsFileManagerWindow extends StatefulWidget {
       ),
     );
   }
+
   /// 显示文件选择器窗口（单选模式）
   static Future<String?> showFilePicker(
     BuildContext context, {
@@ -113,6 +117,7 @@ class VfsFileManagerWindow extends StatefulWidget {
 
     return selectedFile;
   }
+
   /// 显示文件选择器窗口（多选模式）
   static Future<List<String>?> showMultiFilePicker(
     BuildContext context, {
@@ -147,6 +152,7 @@ class VfsFileManagerWindow extends StatefulWidget {
 
     return selectedFiles;
   }
+
   /// 显示路径选择对话框（单选模式）
   static Future<String?> showPathPicker(
     BuildContext context, {
@@ -184,6 +190,7 @@ class VfsFileManagerWindow extends StatefulWidget {
 
     return selectedPath;
   }
+
   /// 显示路径选择对话框（多选模式）
   static Future<List<String>?> showMultiPathPicker(
     BuildContext context, {
@@ -462,7 +469,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     }
 
     return filteredFiles;
-  }  /// 检查选择限制
+  }
+
+  /// 检查选择限制
   bool _canSelectFile(VfsFileInfo file) {
     if (widget.onFilesSelected == null) {
       return true;
@@ -496,7 +505,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         widget.allowedExtensions!.isNotEmpty) {
       final extension = file.name.split('.').last.toLowerCase();
       if (!widget.allowedExtensions!.contains(extension)) {
-        return false;      }
+        return false;
+      }
     }
 
     return true;
@@ -517,7 +527,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     for (final selectedPath in _selectedFiles) {
       final selectedFile = _currentFiles.firstWhere(
         (file) => file.path == selectedPath,
-        orElse: () => throw StateError('Selected file not found in current files'),
+        orElse: () =>
+            throw StateError('Selected file not found in current files'),
       );
 
       // 检查目录选择权限
@@ -532,26 +543,29 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         final extension = selectedFile.name.split('.').last.toLowerCase();
         if (!widget.allowedExtensions!.contains(extension)) {
           return false;
-        }      }
+        }
+      }
     }
 
     return true;
   }
+
   /// 构建选择模式描述文本
   String _buildSelectionModeDescription() {
     final List<String> restrictions = [];
-    
+
     // 添加选择数量限制
     if (widget.allowMultipleSelection) {
       restrictions.add('支持多选');
     } else {
       restrictions.add('仅单选');
     }
-    
+
     // 添加选择类型限制（优先使用新的 SelectionType）
     switch (widget.selectionType) {
       case SelectionType.filesOnly:
-        if (widget.allowedExtensions != null && widget.allowedExtensions!.isNotEmpty) {
+        if (widget.allowedExtensions != null &&
+            widget.allowedExtensions!.isNotEmpty) {
           restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')})');
         } else {
           restrictions.add('仅文件');
@@ -561,14 +575,17 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         restrictions.add('仅文件夹');
         break;
       case SelectionType.both:
-        if (widget.allowedExtensions != null && widget.allowedExtensions!.isNotEmpty) {
-          restrictions.add('文件夹和指定类型文件 (${widget.allowedExtensions!.join(', ')})');
+        if (widget.allowedExtensions != null &&
+            widget.allowedExtensions!.isNotEmpty) {
+          restrictions.add(
+            '文件夹和指定类型文件 (${widget.allowedExtensions!.join(', ')})',
+          );
         } else {
           restrictions.add('文件和文件夹');
         }
         break;
     }
-    
+
     return restrictions.join(' • ');
   }
 
@@ -844,118 +861,78 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Center(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.9,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 5,
-              ),
-            ],
+    final isSelectionMode = widget.onFilesSelected != null;
+
+    return FloatingWindow(
+      title: isSelectionMode ? '选择文件' : 'VFS 文件管理器',
+      subtitle: _buildSubtitle(),
+      icon: Icons.folder_special,
+      onClose: widget.onClose,
+      headerActions: _buildActionButtons(),
+      child: Column(
+        children: [
+          _buildToolbar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFileBrowser(),
+                _buildMetadataView(),
+                _buildSettingsView(),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildToolbar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildFileBrowser(),
-                    _buildMetadataView(),
-                    _buildSettingsView(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 
-  /// 构建头部
-  Widget _buildHeader() {
+  /// 构建副标题
+  String? _buildSubtitle() {
     final isSelectionMode = widget.onFilesSelected != null;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.folder_special,
-            color: Theme.of(context).colorScheme.primary,
-            size: 28,
-          ),
-          const SizedBox(width: 12),            Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isSelectionMode ? '选择文件' : 'VFS 文件管理器',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (isSelectionMode) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _buildSelectionModeDescription(),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                  if (_selectedFiles.isNotEmpty)
-                    Text(
-                      '已选择 ${_selectedFiles.length} 个项目',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ),// 选择模式：显示确认和取消按钮
-          if (isSelectionMode) ...[
-            TextButton(
-              onPressed: () {
-                widget.onClose?.call();
-              },
-              child: const Text('取消'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _canConfirmSelection()
-                  ? () {
-                      widget.onFilesSelected?.call(_selectedFiles.toList());
-                    }
-                  : null,
-              child: const Text('确认'),
-            ),
-          ] else
-            // 浏览模式：显示关闭按钮
-            IconButton(
-              onPressed: widget.onClose,
-              icon: const Icon(Icons.close),
-              tooltip: '关闭',
-            ),
-        ],
-      ),
-    );
+    if (!isSelectionMode) return null;
+
+    String subtitle = _buildSelectionModeDescription();
+
+    if (_selectedFiles.isNotEmpty) {
+      subtitle += ' - 已选择 ${_selectedFiles.length} 个项目';
+    }
+
+    return subtitle;
+  }
+
+  /// 构建操作按钮
+  List<Widget> _buildActionButtons() {
+    final isSelectionMode = widget.onFilesSelected != null;
+
+    if (isSelectionMode) {
+      return [
+        TextButton(
+          onPressed: () {
+            widget.onClose?.call();
+          },
+          child: const Text('取消'),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: _canConfirmSelection()
+              ? () {
+                  widget.onFilesSelected?.call(_selectedFiles.toList());
+                }
+              : null,
+          child: const Text('确认'),
+        ),
+      ];
+    } else {
+      return [
+        IconButton(
+          onPressed: widget.onClose,
+          icon: const Icon(Icons.close),
+          tooltip: '关闭',
+        ),
+      ];
+    }
   }
 
   /// 构建工具栏
@@ -1369,7 +1346,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             ],
           ),
         ],
-      ),);
+      ),
+    );
   }
 
   /// 构建文件浏览器
@@ -1726,7 +1704,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
         return ContextMenuWrapper(
-          menuBuilder: (context) => _buildFileContextMenu(file),          child: _FileListItem(
+          menuBuilder: (context) => _buildFileContextMenu(file),
+          child: _FileListItem(
             file: file,
             isSelected: isSelected,
             isCutToClipboard:
@@ -1744,18 +1723,21 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               } else {
                 _showFileMetadata(file);
               }
-            },            onLongPress: () => _toggleFileSelection(file),
-            onSelectionChanged: _canSelectFile(file) ? (value) => setState(() {
-              if (value == true) {
-                // 单选模式下，先清空之前的选择
-                if (!widget.allowMultipleSelection) {
-                  _selectedFiles.clear();
-                }
-                _selectedFiles.add(file.path);
-              } else {
-                _selectedFiles.remove(file.path);
-              }
-            }) : null,
+            },
+            onLongPress: () => _toggleFileSelection(file),
+            onSelectionChanged: _canSelectFile(file)
+                ? (value) => setState(() {
+                    if (value == true) {
+                      // 单选模式下，先清空之前的选择
+                      if (!widget.allowMultipleSelection) {
+                        _selectedFiles.clear();
+                      }
+                      _selectedFiles.add(file.path);
+                    } else {
+                      _selectedFiles.remove(file.path);
+                    }
+                  })
+                : null,
             formatFileSize: _formatFileSize,
             formatDateTime: _formatDateTime,
             getFileIcon: _getFileIcon,
@@ -1801,23 +1783,27 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
         return ContextMenuWrapper(
-          menuBuilder: (context) => _buildFileContextMenu(file),          child: _FileGridItem(
+          menuBuilder: (context) => _buildFileContextMenu(file),
+          child: _FileGridItem(
             file: file,
             isSelected: isSelected,
             isCutToClipboard:
                 _isCutOperation &&
-                _clipboardFiles.any((f) => f.path == file.path),            canBeSelected: _canSelectFile(file),
-            onSelectionChanged: _canSelectFile(file) ? (value) => setState(() {
-              if (value == true) {
-                // 单选模式下，先清空之前的选择
-                if (!widget.allowMultipleSelection) {
-                  _selectedFiles.clear();
-                }
-                _selectedFiles.add(file.path);
-              } else {
-                _selectedFiles.remove(file.path);
-              }
-            }) : null,
+                _clipboardFiles.any((f) => f.path == file.path),
+            canBeSelected: _canSelectFile(file),
+            onSelectionChanged: _canSelectFile(file)
+                ? (value) => setState(() {
+                    if (value == true) {
+                      // 单选模式下，先清空之前的选择
+                      if (!widget.allowMultipleSelection) {
+                        _selectedFiles.clear();
+                      }
+                      _selectedFiles.add(file.path);
+                    } else {
+                      _selectedFiles.remove(file.path);
+                    }
+                  })
+                : null,
             formatFileSize: _formatFileSize,
             getFileIcon: _getFileIcon,
 
@@ -2306,13 +2292,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         ],
       ),
     );
-  }  /// 切换文件选择状态
+  }
+
+  /// 切换文件选择状态
   void _toggleFileSelection(VfsFileInfo file) {
     // 检查是否可以选择此文件
     if (!_canSelectFile(file)) {
       // 显示详细的提示信息
       String message = '';
-      
+
       // 检查选择类型限制
       switch (widget.selectionType) {
         case SelectionType.filesOnly:
@@ -2329,14 +2317,17 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           // 继续其他检查
           break;
       }
-      
+
       // 向后兼容的目录选择检查
-      if (message.isEmpty && file.isDirectory && widget.allowDirectorySelection == false) {
+      if (message.isEmpty &&
+          file.isDirectory &&
+          widget.allowDirectorySelection == false) {
         message = '当前选择模式不允许选择文件夹';
       }
-      
+
       // 检查文件扩展名限制
-      if (message.isEmpty && !file.isDirectory &&
+      if (message.isEmpty &&
+          !file.isDirectory &&
           widget.allowedExtensions != null &&
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
@@ -2505,6 +2496,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       child: Icon(Icons.lock_open, size: 16, color: Colors.green.shade600),
     );
   }
+
   /// 构建批量操作栏
   Widget _buildBatchOperationBar(List<VfsFileInfo> files) {
     final hasFiles = files.isNotEmpty;
@@ -2526,37 +2518,40 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           Checkbox(
             value: allSelected ? true : (someSelected ? null : false),
             tristate: true,
-            onChanged: isMultipleSelectionAllowed ? (value) {
-              setState(() {
-                if (allSelected || someSelected) {
-                  // 清除所有选择
-                  _selectedFiles.clear();
-                } else {
-                  // 全选 - 只选择可选择的文件
-                  _selectedFiles.clear();
-                  for (final file in files) {
-                    if (_canSelectFile(file)) {
-                      _selectedFiles.add(file.path);
-                    }
+            onChanged: isMultipleSelectionAllowed
+                ? (value) {
+                    setState(() {
+                      if (allSelected || someSelected) {
+                        // 清除所有选择
+                        _selectedFiles.clear();
+                      } else {
+                        // 全选 - 只选择可选择的文件
+                        _selectedFiles.clear();
+                        for (final file in files) {
+                          if (_canSelectFile(file)) {
+                            _selectedFiles.add(file.path);
+                          }
+                        }
+                      }
+                    });
                   }
-                }
-              });
-            } : null, // 单选模式下禁用
-          ),          const SizedBox(width: 8),
+                : null, // 单选模式下禁用
+          ),
+          const SizedBox(width: 8),
           Text(
             someSelected
                 ? '已选择 ${_selectedFiles.length} / ${files.length} 项'
-                : isMultipleSelectionAllowed 
-                    ? '全选 (${files.length} 项)'
-                    : '单选模式 (${files.length} 项)',
+                : isMultipleSelectionAllowed
+                ? '全选 (${files.length} 项)'
+                : '单选模式 (${files.length} 项)',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: someSelected
                   ? Theme.of(context).colorScheme.primary
                   : isMultipleSelectionAllowed
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           const Spacer(),
@@ -2662,7 +2657,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             ? file.name
             : '$_currentPath/${file.name}';
 
-        if ( file.bytes != null) {
+        if (file.bytes != null) {
           // Web平台：使用bytes
           await _vfsService.vfs.writeBinaryFile(
             'indexeddb://$_selectedDatabase/$_selectedCollection/$targetFilePath',
@@ -3227,15 +3222,19 @@ class _FileListItem extends StatefulWidget {
 }
 
 class _FileListItemState extends State<_FileListItem> {
-  bool _isHovered = false;  @override
+  bool _isHovered = false;
+  @override
   Widget build(BuildContext context) {
-    final opacity = widget.isCutToClipboard ? 0.5 : 
-                   (!widget.canBeSelected ? 0.6 : 1.0);
-    
+    final opacity = widget.isCutToClipboard
+        ? 0.5
+        : (!widget.canBeSelected ? 0.6 : 1.0);
+
     return Opacity(
       opacity: opacity,
       child: MouseRegion(
-        cursor: widget.canBeSelected ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+        cursor: widget.canBeSelected
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.forbidden,
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
@@ -3249,15 +3248,17 @@ class _FileListItemState extends State<_FileListItem> {
               color: widget.isSelected
                   ? Theme.of(context).colorScheme.primaryContainer
                   : (!widget.canBeSelected)
-                      ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3)
-                      : Theme.of(context).colorScheme.surface,
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.surfaceVariant.withOpacity(0.3)
+                  : Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected
                     ? Theme.of(context).colorScheme.primary
                     : (!widget.canBeSelected)
-                        ? Theme.of(context).colorScheme.outline.withOpacity(0.3)
-                        : Theme.of(context).dividerColor,
+                    ? Theme.of(context).colorScheme.outline.withOpacity(0.3)
+                    : Theme.of(context).dividerColor,
                 width: widget.isSelected ? 2 : 1,
               ),
               boxShadow: _isHovered && widget.canBeSelected
@@ -3337,8 +3338,9 @@ class _FileListItemState extends State<_FileListItem> {
               ],
             ),
           ),
-        ),),
-      );
+        ),
+      ),
+    );
   }
 }
 
@@ -3385,9 +3387,15 @@ class _FileGridItemState extends State<_FileGridItem> {
     return Opacity(
       opacity: opacity,
       child: MouseRegion(
-        cursor: widget.canBeSelected ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
-        onEnter: widget.canBeSelected ? (_) => setState(() => _isHovered = true) : null,
-        onExit: widget.canBeSelected ? (_) => setState(() => _isHovered = false) : null,
+        cursor: widget.canBeSelected
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.forbidden,
+        onEnter: widget.canBeSelected
+            ? (_) => setState(() => _isHovered = true)
+            : null,
+        onExit: widget.canBeSelected
+            ? (_) => setState(() => _isHovered = false)
+            : null,
         child: GestureDetector(
           onTap: widget.canBeSelected ? widget.onTap : null,
           onLongPress: widget.canBeSelected ? widget.onLongPress : null,
@@ -3481,6 +3489,7 @@ class _FileGridItemState extends State<_FileGridItem> {
             ),
           ),
         ),
-      ),);
+      ),
+    );
   }
 }
