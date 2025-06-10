@@ -269,7 +269,6 @@ class VersionSessionManager {
     _sessionStates.clear();
     _currentVersionId = null;
   }
-
   /// 保存会话状态到本地存储
   Future<void> saveToStorage() async {
     try {
@@ -286,7 +285,10 @@ class VersionSessionManager {
       final sessionJson = json.encode(sessionData);
       await prefs.setString('version_session_$mapTitle', sessionJson);
       
-      debugPrint('版本会话状态已保存 [地图: $mapTitle]');
+      // 只在debug模式下打印详细日志
+      if (kDebugMode) {
+        debugPrint('版本会话状态已保存 [地图: $mapTitle]');
+      }
     } catch (e) {
       debugPrint('保存版本会话状态失败: $e');
     }

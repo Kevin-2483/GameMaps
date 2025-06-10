@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -75,7 +76,8 @@ class _MapEditorContent extends StatefulWidget {
 }
 
 class _MapEditorContentState extends State<_MapEditorContent> {
-  final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();  MapItem? _currentMap; // 可能为空，需要加载
+  final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
+  MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
   final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
@@ -91,7 +93,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   double _selectedDensity = 3.0; // 默认密度为3.0
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
   TriangleCutType _selectedTriangleCut = TriangleCutType.none; // 默认无三角形切割
-  String? _selectedElementId; // 当前选中的元素ID  // 工具栏折叠状态
+  String? _selectedElementId; // 当前选中的元素ID
+  
+  // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
@@ -139,12 +143,21 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final provider = context.read<UserPreferencesProvider>();
     return provider.mapEditor.undoHistoryLimit;
   }
-
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
+  
+  // 性能优化：防抖计时器
+  Timer? _autoSaveTimer;
+  Timer? _sessionStateTimer;
+  bool _isSessionStateDirty = false;
+  
+  // 增量更新支持
+  final Set<String> _dirtyLayers = {}; // 需要重绘的图层ID
+  final Set<String> _dirtyLegends = {}; // 需要重绘的图例组ID  
+  final Set<String> _dirtyStickyNotes = {}; // 需要重绘的便签ID
 
   @override
   void initState() {
@@ -222,7 +235,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       setState(() => _isLoading = false);
     }
   }
-
   /// 预加载所有图层的图片
   /// 在地图初始化完成后调用，确保所有图片区域元素立即显示而不是显示蓝色"解码中"占位符
   void _preloadAllLayerImages() {
@@ -234,7 +246,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       // 这会导致MapCanvas重新构建并预加载所有图层的图片
       _updateDisplayOrderAfterLayerChange();
     });
-  }  // 撤销历史记录管理方法
+  }
+
+  // 撤销历史记录管理方法
   void _saveToUndoHistory() {
     if (_currentMap == null) return;
 
@@ -803,13 +817,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
     return _displayOrderLayers;
   }
-
-  // 修改所有涉及图层更新的方法，确保同步更新显示顺序
+  // 修改所有涉及图层更新的方法，确保同步更新显示顺序  
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
 
     // 在修改前保存当前状态
     _saveToUndoHistory();
+
+    // 标记图层需要重绘
+    _dirtyLayers.add(updatedLayer.id);
 
     setState(() {
       final layerIndex = _currentMap!.layers.indexWhere(
@@ -828,6 +844,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _updateDisplayOrderAfterLayerChange();
       }
     });
+
+    // 清理脏组件标记
+    _clearDirtyComponents();
+    
+    // 使用防抖自动保存
+    _debouncedAutoSave();
   }
 
   void _reorderLayers(int oldIndex, int newIndex) {
@@ -1083,13 +1105,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           .toList();
       _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
     });
-  }
-
-  void _updateLegendGroup(LegendGroup updatedGroup) {
+  }  void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
     _saveToUndoHistory();
+
+    // 标记图例组需要重绘
+    _dirtyLegends.add(updatedGroup.id);
 
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
@@ -1101,13 +1124,28 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
       }
     });
-  } // 处理透明度预览
 
+    // 清理脏组件标记
+    _clearDirtyComponents();
+
+    // 使用防抖自动保存
+    _debouncedAutoSave();
+  }// 处理透明度预览
   void _handleOpacityPreview(String layerId, double opacity) {
-    setState(() {
-      _previewOpacityValues[layerId] = opacity;
-    });
-  } // 显示图层图例绑定抽屉
+    // 只更新预览状态，不触发完整重绘
+    _previewOpacityValues[layerId] = opacity;
+      // 标记特定图层需要重绘
+    _dirtyLayers.add(layerId);
+    
+    // 使用优化的setState，避免全量重绘
+    if (mounted) {
+      setState(() {
+        // 只更新透明度预览值
+      });
+      // 清理脏组件标记
+      _clearDirtyComponents();
+    }
+  }// 显示图层图例绑定抽屉
 
   void _showLayerLegendBindingDrawer(
     MapLayer layer,
@@ -1816,7 +1854,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     });
   }
 
-  /// 构建图层面板的副标题
+    /// 构建图层面板的副标题
   String _buildLayerPanelSubtitle() {
     final hasSelectedLayer = _selectedLayer != null;
     final hasSelectedGroup = _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
@@ -1833,7 +1871,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     } else {
       // 没有选择
       return '未选择图层';
-    }}
+    }
+  }
 
   /// 处理自动关闭切换
   void _handleAutoCloseToggle(String panelType, bool value) {
@@ -2734,11 +2773,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
               .read<UserPreferencesProvider>()
               .mapEditor
               .zoomSensitivity,
-          shouldDisableDrawingTools: _shouldDisableDrawingTools,
-          // 添加图片缓冲区数据
+          shouldDisableDrawingTools: _shouldDisableDrawingTools,          // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
           displayOrderLayers: _layersForDisplay, //：传递显示顺序
+            // 添加便签相关参数
+          selectedStickyNote: _selectedStickyNote,
+          previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
+          onStickyNoteUpdated: _updateStickyNote,
+          
+          // 增量更新参数
+          dirtyLayers: _dirtyLayers,
+          dirtyLegends: _dirtyLegends, 
+          dirtyStickyNotes: _dirtyStickyNotes,
         );
       },
     );
@@ -2951,9 +2998,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     }
   }
-
   @override
   void dispose() {
+    // 清理防抖计时器
+    _autoSaveTimer?.cancel();
+    _sessionStateTimer?.cancel();
+    
     // 保存会话状态到本地存储
     if (_versionSessionManager != null && _currentMap != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
@@ -2991,27 +3041,42 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     }
   }
-
-  /// 自动保存会话状态（非阻塞）
+  /// 自动保存会话状态（防抖）
   void _autoSaveSessionState() {
-    if (_versionSessionManager != null && _currentMap != null && _versionManager != null) {
-      // 使用异步方式自动保存，不阻塞UI
-      Future.microtask(() async {
-        try {
-          final currentVersionId = _versionManager!.currentVersionId;
-          _versionSessionManager!.updateVersionData(
-            currentVersionId, 
-            _currentMap!, 
-            markAsChanged: _hasUnsavedVersionChanges
-          );
-          
-          // 每隔一定时间保存到本地存储（避免频繁IO操作）
-          await _versionSessionManager!.saveToStorage();
-        } catch (e) {
-          print('自动保存会话状态失败: $e');
-        }
-      });
+    if (_versionSessionManager == null || _currentMap == null || _versionManager == null) {
+      return;
     }
+    
+    // 标记需要保存
+    _isSessionStateDirty = true;
+    
+    // 取消之前的计时器
+    _sessionStateTimer?.cancel();
+    
+    // 设置新的防抖计时器（延迟1秒保存）
+    _sessionStateTimer = Timer(const Duration(seconds: 1), () async {
+      if (!_isSessionStateDirty) return;
+      
+      try {
+        final currentVersionId = _versionManager!.currentVersionId;
+        _versionSessionManager!.updateVersionData(
+          currentVersionId, 
+          _currentMap!, 
+          markAsChanged: _hasUnsavedVersionChanges
+        );
+        
+        // 降低保存频率，避免频繁I/O
+        await _versionSessionManager!.saveToStorage();
+        _isSessionStateDirty = false;
+        
+        // 只在debug模式下打印日志
+        if (kDebugMode) {
+          print('版本会话状态已保存 [地图: ${_currentMap!.title}]');
+        }
+      } catch (e) {
+        print('自动保存会话状态失败: $e');
+      }
+    });
   }
 
   // 便签管理方法
@@ -3019,13 +3084,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
-    _saveToUndoHistory();
-
-    final newNote = StickyNote(
+    _saveToUndoHistory();    final newNote = StickyNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: '新便签 ${_currentMap!.stickyNotes.length + 1}',
-      position: const Offset(100, 100), // 默认位置      
-      size: const Size(200, 150), // 默认大小
+      position: const Offset(0.1, 0.1), // 相对位置 (10%, 10%)      
+      size: const Size(0.2, 0.15), // 相对大小 (20%宽, 15%高)
       opacity: 1.0,
       backgroundColor: Colors.yellow.shade100,
       textColor: Colors.black,
@@ -3040,13 +3103,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
       _selectedStickyNote = newNote;
     });
-  }
-
-  void _updateStickyNote(StickyNote updatedNote) {
+  }  void _updateStickyNote(StickyNote updatedNote) {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
     _saveToUndoHistory();
+
+    // 标记便签需要重绘
+    _dirtyStickyNotes.add(updatedNote.id);
 
     setState(() {
       final noteIndex = _currentMap!.stickyNotes.indexWhere(
@@ -3063,6 +3127,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
       }
     });
+
+    // 清理脏组件标记
+    _clearDirtyComponents();
+
+    // 使用防抖自动保存
+    _debouncedAutoSave();
   }
 
   void _deleteStickyNote(StickyNote note) {
@@ -3103,12 +3173,41 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       notes.insert(newIndex, item);
       _currentMap = _currentMap!.copyWith(stickyNotes: notes);
     });
+  }  /// 防抖自动保存
+  void _debouncedAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(milliseconds: 1000), () {
+      _autoSaveSessionState();
+    });
   }
 
-  void _handleStickyNoteOpacityPreview(String noteId, double opacity) {
-    setState(() {
-      _previewStickyNoteOpacityValues[noteId] = opacity;
+  /// 清理脏组件标记
+  /// 在setState执行完毕后调用，确保增量更新状态被重置
+  void _clearDirtyComponents() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _dirtyLayers.clear();
+        _dirtyLegends.clear(); 
+        _dirtyStickyNotes.clear();
+        print('🧹 已清理脏组件标记，下次将根据实际变化进行增量更新');
+      }
     });
+  }
+
+  /// 处理便签透明度预览
+  void _handleStickyNoteOpacityPreview(String noteId, double opacity) {
+    // 只更新预览状态，不触发完整重绘
+    _previewStickyNoteOpacityValues[noteId] = opacity;
+    
+    // 标记特定便签需要重绘
+    _dirtyStickyNotes.add(noteId);
+    
+    // 使用优化的setState，只更新必要的部分
+    if (mounted) {
+      setState(() {
+        // 只更新透明度预览值
+      });
+    }
   }
 
   // 选中便签
