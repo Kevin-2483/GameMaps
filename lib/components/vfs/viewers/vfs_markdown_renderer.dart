@@ -8,6 +8,7 @@ import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'vfs_text_viewer_window.dart';
+import 'html_processor.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -106,11 +107,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   String? _errorMessage;
   String _markdownContent = '';
   VfsFileInfo? _fileInfo;
-
   // 显示配置
   bool _isDarkTheme = false;
   bool _showToc = false;
   double _contentScale = 1.0;
+  bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
 
   @override
   void initState() {
@@ -123,7 +124,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     _tocController.dispose();
     super.dispose();
   }
-
   /// 加载Markdown文件
   Future<void> _loadMarkdownFile() async {
     setState(() {
@@ -140,6 +140,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         } catch (e) {
           // 如果UTF-8解码失败，尝试使用Latin-1
           textContent = latin1.decode(fileContent.data);
+        }
+
+        // 如果启用HTML渲染，预处理HTML内容
+        if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
+          textContent = _preprocessHtmlContent(textContent);
         }
 
         setState(() {
@@ -213,7 +218,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     );
   }
-
   /// 构建基础控制按钮
   List<Widget> _buildBasicControls() {
     return [
@@ -231,6 +235,20 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         onPressed: _toggleTheme,
         icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
         tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
+      ),
+
+      const SizedBox(width: 16),
+
+      // HTML渲染切换
+      IconButton(
+        onPressed: _toggleHtmlRendering,
+        icon: Icon(_enableHtmlRendering ? Icons.code : Icons.code_off),
+        tooltip: _enableHtmlRendering ? '禁用HTML渲染' : '启用HTML渲染',
+        style: IconButton.styleFrom(
+          foregroundColor: _enableHtmlRendering 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
       ),
     ];
   }
@@ -263,10 +281,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     ];
   }
-
   /// 构建动作按钮
   List<Widget> _buildActionButtons() {
     return [
+      // HTML信息按钮（如果包含HTML）
+      if (_containsHtml())
+        IconButton(
+          onPressed: _showHtmlInfo,
+          icon: const Icon(Icons.info_outline),
+          tooltip: 'HTML信息',
+        ),
+
       // 使用文本编辑器打开
       IconButton(
         onPressed: _openWithTextEditor,
@@ -391,11 +416,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
     );
-  }
-
-  /// 构建Markdown配置
+  }  /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
     final isDark = _isDarkTheme;
+    
+    // 如果启用HTML渲染，使用HTML扩展配置
+    if (_enableHtmlRendering) {
+      return HtmlConfigExtension.createWithHtmlSupport(
+        isDarkTheme: isDark,
+      );
+    }
+    
+    // 否则使用标准配置
     final baseConfig = isDark
         ? MarkdownConfig.darkConfig
         : MarkdownConfig.defaultConfig;
@@ -561,12 +593,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ],
     );
   }
-
   /// 构建状态栏
   Widget _buildStatusBar() {
     final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
     final lineCount = _markdownContent.split('\n').length;
+    final htmlStats = _getHtmlStats();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -581,6 +613,58 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           Text('字数: $wordCount', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(width: 16),
           Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
+          
+          // 显示HTML信息
+          if (htmlStats['hasHtml'] == true) ...[
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _enableHtmlRendering 
+                    ? Colors.green.withOpacity(0.2)
+                    : Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: _enableHtmlRendering 
+                      ? Colors.green.withOpacity(0.5)
+                      : Colors.orange.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _enableHtmlRendering ? Icons.code : Icons.code_off,
+                    size: 12,
+                    color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'HTML${_enableHtmlRendering ? '' : '(禁用)'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (htmlStats['linkCount'] != null && htmlStats['linkCount'] > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '链接: ${htmlStats['linkCount']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            if (htmlStats['imageCount'] != null && htmlStats['imageCount'] > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '图片: ${htmlStats['imageCount']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ],
+
           const Spacer(),
           if (_fileInfo != null) ...[
             Text(
@@ -854,12 +938,20 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       _showToc = !_showToc;
     });
   }
-
   /// 切换主题
   void _toggleTheme() {
     setState(() {
       _isDarkTheme = !_isDarkTheme;
     });
+  }
+
+  /// 切换HTML渲染
+  void _toggleHtmlRendering() {
+    setState(() {
+      _enableHtmlRendering = !_enableHtmlRendering;
+    });
+    // 重新加载内容以应用HTML渲染设置
+    _loadMarkdownFile();
   }
 
   /// 缩放控制
@@ -904,6 +996,135 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         content: Text(message),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }  /// 显示HTML信息对话框
+  void _showHtmlInfo() {
+    final htmlStats = _getHtmlStats();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.code, size: 24),
+            SizedBox(width: 8),
+            Text('HTML内容信息'),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // HTML状态
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _enableHtmlRendering ? Icons.check_circle : Icons.cancel,
+                        color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'HTML渲染状态',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          Text(
+                            _enableHtmlRendering ? '已启用' : '已禁用',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _toggleHtmlRendering();
+                        },
+                        child: Text(_enableHtmlRendering ? '禁用' : '启用'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // HTML内容统计
+              if (htmlStats['hasHtml'] == true) ...[
+                Text(
+                  'HTML内容统计',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                
+                if (htmlStats['linkCount'] != null && htmlStats['linkCount'] > 0) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.link, size: 16),
+                      const SizedBox(width: 8),
+                      Text('HTML链接: ${htmlStats['linkCount']}个'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                
+                if (htmlStats['imageCount'] != null && htmlStats['imageCount'] > 0) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.image, size: 16),
+                      const SizedBox(width: 8),
+                      Text('HTML图片: ${htmlStats['imageCount']}个'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                const SizedBox(height: 16),
+
+                // 支持的HTML标签
+                Text(
+                  '支持的HTML标签',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 120,
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: HtmlProcessor.getSupportedTags()
+                          .map((tag) => Chip(
+                                label: Text(
+                                  '<$tag>',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
       ),
     );
   }
@@ -999,7 +1220,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         return BoxDecoration(color: color);
     }
   }
-
   /// 格式化文件大小
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -1007,5 +1227,56 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (bytes < 1024 * 1024 * 1024)
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
+  }
+
+  // ========== HTML处理方法 ==========
+  /// 预处理HTML内容
+  /// 将HTML标签转换为Markdown兼容格式或保持原样以便后续处理
+  String _preprocessHtmlContent(String content) {
+    try {
+      // 首先清理不安全的HTML内容
+      final sanitizedContent = HtmlUtils.sanitizeHtml(content);
+      
+      if (_enableHtmlRendering) {
+        // 如果启用HTML渲染，可以选择性转换一些HTML为Markdown
+        // 同时保留复杂的HTML结构（如表格）给markdown_widget处理
+        return HtmlProcessor.convertHtmlToMarkdown(sanitizedContent);
+      } else {
+        // 如果禁用HTML渲染，移除所有HTML标签
+        return HtmlProcessor.stripHtmlTags(sanitizedContent);
+      }
+    } catch (e) {
+      print('HTML预处理失败: $e');
+      // 如果预处理失败，返回原内容
+      return content;
+    }
+  }
+
+  /// 检查内容是否包含HTML
+  bool _containsHtml() {
+    return HtmlProcessor.containsHtml(_markdownContent);
+  }
+
+  /// 获取HTML统计信息
+  Map<String, dynamic> _getHtmlStats() {
+    if (!_containsHtml()) {
+      return {'hasHtml': false};
+    }
+    
+    try {
+      final links = HtmlUtils.extractLinks(_markdownContent);
+      final images = HtmlUtils.extractImages(_markdownContent);
+      
+      return {
+        'hasHtml': true,
+        'linkCount': links.length,
+        'imageCount': images.length,
+        'links': links,
+        'images': images,
+      };
+    } catch (e) {
+      print('HTML统计失败: $e');
+      return {'hasHtml': true, 'error': e.toString()};
+    }
   }
 }
