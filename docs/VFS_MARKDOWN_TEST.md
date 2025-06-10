@@ -39,14 +39,18 @@
 ![VFS图片示例](indexeddb://r6box/fs/docs/images/example.png)
 ```
 
+![VFS图片示例](indexeddb://r6box/fs/docs/images/example.png)
+
 #### 2. 网络图片测试
-![Flutter Logo](https://flutter.dev/assets/images/shared/brand/flutter/logo/flutter-lockup.png)
+![Flutter Logo](https://nixos-and-flakes.thiscute.world/nixos-and-flakes-book.webp)
 
 #### 3. 相对路径图片测试
 如果在同目录有图片文件：
 ```markdown
 ![相对路径图片](./images/example.png)
 ```
+
+![相对路径图片](./images/example.png)
 
 ### 📝 代码示例
 
