@@ -214,77 +214,122 @@ class HtmlProcessor {
     
     return html;
   }
-
   /// 转换无序列表
   static String _convertUnorderedLists(String html) {
-    // 匹配完整的 <ul> 标签
+    // 匹配完整的 <ul> 标签，使用非贪婪匹配避免嵌套问题
     final ulPattern = RegExp(r'<ul[^>]*>(.*?)</ul>', 
         caseSensitive: false, multiLine: true, dotAll: true);
     
-    html = html.replaceAllMapped(ulPattern, (match) {
-      String listContent = match.group(1) ?? '';
-      
-      // 提取所有 <li> 项
-      final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
-      
-      final items = <String>[];
-      listContent.replaceAllMapped(liPattern, (liMatch) {
-        String itemContent = liMatch.group(1)?.trim() ?? '';
+    // 多次处理以处理嵌套列表，从内到外
+    String result = html;
+    int maxIterations = 5; // 限制迭代次数避免无限循环
+    int iteration = 0;
+    
+    while (result.contains('<ul>') && iteration < maxIterations) {
+      bool hasChanges = false;
+      result = result.replaceAllMapped(ulPattern, (match) {
+        String listContent = match.group(1) ?? '';
         
-        // 处理嵌套列表
-        if (itemContent.contains('<ul>') || itemContent.contains('<ol>')) {
-          itemContent = _convertLists(itemContent);
-          // 为嵌套项添加缩进
-          itemContent = itemContent.replaceAll(RegExp(r'^- ', multiLine: true), '  - ');
-          itemContent = itemContent.replaceAll(RegExp(r'^\d+\. ', multiLine: true), '  1. ');
+        // 只处理不包含嵌套<ul>的列表（从最内层开始）
+        if (!listContent.contains('<ul>') && !listContent.contains('<ol>')) {
+          hasChanges = true;
+          
+          // 提取所有 <li> 项
+          final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
+              caseSensitive: false, multiLine: true, dotAll: true);
+          
+          final items = <String>[];
+          listContent.replaceAllMapped(liPattern, (liMatch) {
+            String itemContent = liMatch.group(1)?.trim() ?? '';
+            // 清理内部HTML标签但保留文本
+            itemContent = _cleanHtmlTags(itemContent);
+            items.add('- $itemContent');
+            return '';
+          });
+          
+          return '\n${items.join('\n')}\n';
         }
         
-        items.add('- $itemContent');
-        return '';
+        return match.group(0) ?? ''; // 保持原样
       });
       
-      return '\n${items.join('\n')}\n';
-    });
+      if (!hasChanges) break;
+      iteration++;
+    }
     
-    return html;
+    return result;
   }
 
   /// 转换有序列表
   static String _convertOrderedLists(String html) {
-    // 匹配完整的 <ol> 标签
+    // 匹配完整的 <ol> 标签，使用非贪婪匹配避免嵌套问题
     final olPattern = RegExp(r'<ol[^>]*>(.*?)</ol>', 
         caseSensitive: false, multiLine: true, dotAll: true);
     
-    html = html.replaceAllMapped(olPattern, (match) {
-      String listContent = match.group(1) ?? '';
-      
-      // 提取所有 <li> 项
-      final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
-      
-      final items = <String>[];
-      int index = 1;
-      listContent.replaceAllMapped(liPattern, (liMatch) {
-        String itemContent = liMatch.group(1)?.trim() ?? '';
+    // 多次处理以处理嵌套列表，从内到外
+    String result = html;
+    int maxIterations = 5; // 限制迭代次数避免无限循环
+    int iteration = 0;
+    
+    while (result.contains('<ol>') && iteration < maxIterations) {
+      bool hasChanges = false;
+      result = result.replaceAllMapped(olPattern, (match) {
+        String listContent = match.group(1) ?? '';
         
-        // 处理嵌套列表
-        if (itemContent.contains('<ul>') || itemContent.contains('<ol>')) {
-          itemContent = _convertLists(itemContent);
-          // 为嵌套项添加缩进
-          itemContent = itemContent.replaceAll(RegExp(r'^- ', multiLine: true), '  - ');
-          itemContent = itemContent.replaceAll(RegExp(r'^\d+\. ', multiLine: true), '  1. ');
+        // 只处理不包含嵌套<ol>的列表（从最内层开始）
+        if (!listContent.contains('<ul>') && !listContent.contains('<ol>')) {
+          hasChanges = true;
+          
+          // 提取所有 <li> 项
+          final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
+              caseSensitive: false, multiLine: true, dotAll: true);
+          
+          final items = <String>[];
+          int index = 1;
+          listContent.replaceAllMapped(liPattern, (liMatch) {
+            String itemContent = liMatch.group(1)?.trim() ?? '';
+            // 清理内部HTML标签但保留文本
+            itemContent = _cleanHtmlTags(itemContent);
+            items.add('$index. $itemContent');
+            index++;
+            return '';
+          });
+          
+          return '\n${items.join('\n')}\n';
         }
         
-        items.add('$index. $itemContent');
-        index++;
-        return '';
+        return match.group(0) ?? ''; // 保持原样
       });
       
-      return '\n${items.join('\n')}\n';
-    });
+      if (!hasChanges) break;
+      iteration++;
+    }
     
-    return html;
+    return result;
+  }
+  
+  /// 清理HTML标签但保留基本格式
+  static String _cleanHtmlTags(String content) {
+    // 保留一些基本的格式标签
+    content = content.replaceAllMapped(
+        RegExp(r'<(b|strong)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
+        (match) => '**${match.group(2)}**');
+    
+    content = content.replaceAllMapped(
+        RegExp(r'<(i|em)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
+        (match) => '*${match.group(2)}*');
+    
+    content = content.replaceAllMapped(
+        RegExp(r'<code[^>]*>(.*?)</code>', caseSensitive: false, multiLine: true, dotAll: true),
+        (match) => '`${match.group(1)}`');
+    
+    // 移除其他HTML标签
+    content = content.replaceAll(RegExp(r'<[^>]*>'), '');
+    
+    // 清理多余的空白字符
+    content = content.replaceAll(RegExp(r'\s+'), ' ').trim();
+    
+    return content;
   }
 
   /// 转换表格标签
