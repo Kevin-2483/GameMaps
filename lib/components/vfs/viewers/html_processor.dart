@@ -90,6 +90,7 @@ class HtmlProcessor {
   static String stripHtmlTags(String html) {
     return html.replaceAll(htmlRep, '');
   }
+
   /// 获取支持的HTML标签列表
   static List<String> getSupportedTags() {
     return [
@@ -123,8 +124,20 @@ class HtmlProcessor {
       // 转换格式化标签
       result = _convertFormatting(result);
       
-      // 转换列表（保持HTML形式，因为markdown_widget支持）
-      // 表格也保持HTML形式
+      // 转换链接标签
+      result = _convertLinks(result);
+      
+      // 转换列表标签
+      result = _convertLists(result);
+      
+      // 转换表格标签
+      result = _convertTables(result);
+      
+      // 转换引用块
+      result = _convertBlockquotes(result);
+      
+      // 转换代码块
+      result = _convertCodeBlocks(result);
       
       // 转换段落标签
       result = _convertParagraphs(result);
@@ -174,6 +187,235 @@ class HtmlProcessor {
         (match) => '~~${match.group(2)}~~');
     
     return html;
+  }
+
+  /// 转换链接标签
+  static String _convertLinks(String html) {
+    // 转换 <a href="url">text</a> 为 [text](url)
+    html = html.replaceAllMapped(
+        RegExp(r"""<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>""", 
+    caseSensitive: false, multiLine: true, dotAll: true),
+        (match) {
+          final url = match.group(1) ?? '';
+          final text = match.group(2) ?? '';
+          return '[$text]($url)';
+        });
+    
+    return html;
+  }
+
+  /// 转换列表标签
+  static String _convertLists(String html) {
+    // 转换无序列表
+    html = _convertUnorderedLists(html);
+    
+    // 转换有序列表
+    html = _convertOrderedLists(html);
+    
+    return html;
+  }
+
+  /// 转换无序列表
+  static String _convertUnorderedLists(String html) {
+    // 匹配完整的 <ul> 标签
+    final ulPattern = RegExp(r'<ul[^>]*>(.*?)</ul>', 
+        caseSensitive: false, multiLine: true, dotAll: true);
+    
+    html = html.replaceAllMapped(ulPattern, (match) {
+      String listContent = match.group(1) ?? '';
+      
+      // 提取所有 <li> 项
+      final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
+          caseSensitive: false, multiLine: true, dotAll: true);
+      
+      final items = <String>[];
+      listContent.replaceAllMapped(liPattern, (liMatch) {
+        String itemContent = liMatch.group(1)?.trim() ?? '';
+        
+        // 处理嵌套列表
+        if (itemContent.contains('<ul>') || itemContent.contains('<ol>')) {
+          itemContent = _convertLists(itemContent);
+          // 为嵌套项添加缩进
+          itemContent = itemContent.replaceAll(RegExp(r'^- ', multiLine: true), '  - ');
+          itemContent = itemContent.replaceAll(RegExp(r'^\d+\. ', multiLine: true), '  1. ');
+        }
+        
+        items.add('- $itemContent');
+        return '';
+      });
+      
+      return '\n${items.join('\n')}\n';
+    });
+    
+    return html;
+  }
+
+  /// 转换有序列表
+  static String _convertOrderedLists(String html) {
+    // 匹配完整的 <ol> 标签
+    final olPattern = RegExp(r'<ol[^>]*>(.*?)</ol>', 
+        caseSensitive: false, multiLine: true, dotAll: true);
+    
+    html = html.replaceAllMapped(olPattern, (match) {
+      String listContent = match.group(1) ?? '';
+      
+      // 提取所有 <li> 项
+      final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
+          caseSensitive: false, multiLine: true, dotAll: true);
+      
+      final items = <String>[];
+      int index = 1;
+      listContent.replaceAllMapped(liPattern, (liMatch) {
+        String itemContent = liMatch.group(1)?.trim() ?? '';
+        
+        // 处理嵌套列表
+        if (itemContent.contains('<ul>') || itemContent.contains('<ol>')) {
+          itemContent = _convertLists(itemContent);
+          // 为嵌套项添加缩进
+          itemContent = itemContent.replaceAll(RegExp(r'^- ', multiLine: true), '  - ');
+          itemContent = itemContent.replaceAll(RegExp(r'^\d+\. ', multiLine: true), '  1. ');
+        }
+        
+        items.add('$index. $itemContent');
+        index++;
+        return '';
+      });
+      
+      return '\n${items.join('\n')}\n';
+    });
+    
+    return html;
+  }
+
+  /// 转换表格标签
+  static String _convertTables(String html) {
+    // 匹配完整的 <table> 标签
+    final tablePattern = RegExp(r'<table[^>]*>(.*?)</table>', 
+        caseSensitive: false, multiLine: true, dotAll: true);
+    
+    html = html.replaceAllMapped(tablePattern, (match) {
+      String tableContent = match.group(1) ?? '';
+      
+      // 提取表头
+      final theadPattern = RegExp(r'<thead[^>]*>(.*?)</thead>', 
+          caseSensitive: false, multiLine: true, dotAll: true);
+      String? headerContent;
+      tableContent = tableContent.replaceAllMapped(theadPattern, (theadMatch) {
+        headerContent = theadMatch.group(1);
+        return '';
+      });
+      
+      // 提取表体
+      final tbodyPattern = RegExp(r'<tbody[^>]*>(.*?)</tbody>', 
+          caseSensitive: false, multiLine: true, dotAll: true);
+      String? bodyContent;
+      tableContent = tableContent.replaceAllMapped(tbodyPattern, (tbodyMatch) {
+        bodyContent = tbodyMatch.group(1);
+        return '';
+      });
+      
+      // 如果没有显式的tbody，使用整个表格内容
+      if (bodyContent == null) {
+        bodyContent = tableContent;
+      }
+      
+      final rows = <String>[];
+      
+      // 处理表头
+      if (headerContent != null) {
+        final headerRow = _convertTableRow(headerContent!, true);
+        if (headerRow.isNotEmpty) {
+          rows.add(headerRow);
+          // 添加分隔行
+          final separatorCells = headerRow.split('|').length - 2; // 减去前后的空格
+          rows.add('|${List.filled(separatorCells, ' --- ').join('|')}|');
+        }
+      }
+      
+      // 处理表体行
+      final trPattern = RegExp(r'<tr[^>]*>(.*?)</tr>', 
+          caseSensitive: false, multiLine: true, dotAll: true);
+      
+      bodyContent!.replaceAllMapped(trPattern, (trMatch) {
+        final rowContent = trMatch.group(1) ?? '';
+        final row = _convertTableRow(rowContent, false);
+        if (row.isNotEmpty) {
+          rows.add(row);
+        }
+        return '';
+      });
+      
+      return rows.isEmpty ? '' : '\n${rows.join('\n')}\n';
+    });
+    
+    return html;
+  }
+
+  /// 转换表格行
+  static String _convertTableRow(String rowContent, bool isHeader) {
+    final cellPattern = isHeader 
+        ? RegExp(r'<th[^>]*>(.*?)</th>', caseSensitive: false, multiLine: true, dotAll: true)
+        : RegExp(r'<td[^>]*>(.*?)</td>', caseSensitive: false, multiLine: true, dotAll: true);
+    
+    final cells = <String>[];
+    rowContent.replaceAllMapped(cellPattern, (cellMatch) {
+      final cellContent = cellMatch.group(1)?.trim() ?? '';
+      cells.add(' $cellContent ');
+      return '';
+    });
+    
+    return cells.isEmpty ? '' : '|${cells.join('|')}|';
+  }
+
+  /// 转换引用块
+  static String _convertBlockquotes(String html) {
+    // 转换 <blockquote> 为 > 引用格式
+    html = html.replaceAllMapped(
+        RegExp(r'<blockquote[^>]*>(.*?)</blockquote>', 
+            caseSensitive: false, multiLine: true, dotAll: true),
+        (match) {
+          String content = match.group(1)?.trim() ?? '';
+          
+          // 移除内部的段落标签
+          content = content.replaceAll(RegExp(r'</?p[^>]*>', caseSensitive: false), '');
+          
+          // 为每行添加 > 前缀
+          final lines = content.split('\n');
+          final quotedLines = lines.map((line) => '> ${line.trim()}').where((line) => line.trim() != '>');
+          
+          return '\n${quotedLines.join('\n')}\n';
+        });
+    
+    return html;
+  }
+
+  /// 转换代码块
+  static String _convertCodeBlocks(String html) {
+    // 转换 <pre><code> 为 ``` 代码块
+    html = html.replaceAllMapped(
+        RegExp(r'<pre[^>]*><code[^>]*>(.*?)</code></pre>', 
+            caseSensitive: false, multiLine: true, dotAll: true),
+        (match) {
+          String code = match.group(1) ?? '';
+          
+          // 解码HTML实体
+          code = _decodeHtmlEntities(code);
+          
+          return '\n```\n$code\n```\n';
+        });
+    
+    return html;
+  }
+
+  /// 解码常见的HTML实体
+  static String _decodeHtmlEntities(String text) {
+    return text
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&nbsp;', ' ');
   }
 
   /// 转换段落标签
@@ -380,7 +622,8 @@ extension HtmlConfigExtension on MarkdownConfig {
               ),
             ],
           ),
-        ),      ),
+        ),
+      ),
       
       // 添加标题配置
       H1Config(
@@ -487,7 +730,8 @@ extension HtmlConfigExtension on MarkdownConfig {
             return Padding(
               padding: EdgeInsets.only(top: (parentStyleHeight / 2) - 1.5),
               child: Align(
-                alignment: Alignment.center,                child: Container(
+                alignment: Alignment.center,
+                child: Container(
                   width: 6,
                   height: 6,
                   decoration: _getUnorderedListDecoration(depth, color),
@@ -504,6 +748,27 @@ extension HtmlConfigExtension on MarkdownConfig {
           checked ? Icons.check_box : Icons.check_box_outline_blank,
           size: 20,
           color: isDarkTheme ? Colors.white : Colors.black87,
+        ),
+      ),      // 表格配置
+      TableConfig(
+        wrapper: (table) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: table,
+        ),
+        defaultColumnWidth: const FlexColumnWidth(1.0),
+        headerStyle: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
+        bodyStyle: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+        ),
+        border: TableBorder.all(
+          color: isDarkTheme ? Colors.grey.shade600 : Colors.grey.shade400,
+          width: 1,
+        ),
+        headerRowDecoration: BoxDecoration(
+          color: isDarkTheme ? Colors.grey.shade800 : Colors.grey.shade200,
         ),
       ),
       
@@ -597,6 +862,7 @@ class HtmlUtils {
     
     return images;
   }
+
   /// 清理不安全的HTML标签和属性
   static String sanitizeHtml(String html) {
     final document = safeParseFragment(html);
