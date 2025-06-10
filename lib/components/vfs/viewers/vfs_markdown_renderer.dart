@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import 'package:markdown/markdown.dart' as m;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
@@ -145,14 +146,19 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           textContent = latin1.decode(fileContent.data);
         }        // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
+          print('🔧 _loadMarkdownFile: 预处理HTML内容');
           textContent = _preprocessHtmlContent(textContent);
-        }        // 如果启用LaTeX渲染，预处理LaTeX内容
+        }
+
+        // 如果启用LaTeX渲染，预处理LaTeX内容
         if (_enableLatexRendering && LatexProcessor.containsLatex(textContent)) {
+          print('🔧 _loadMarkdownFile: 预处理LaTeX内容');
           textContent = _preprocessLatexContent(textContent);
         }
 
         // 如果启用视频渲染，预处理视频内容
         if (_enableVideoRendering && VideoProcessor.containsVideo(textContent)) {
+          print('🎥 _loadMarkdownFile: 预处理视频内容');
           textContent = _preprocessVideoContent(textContent);
         }
 
@@ -445,14 +451,35 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     );
   }  /// 构建Markdown内容
   Widget _buildMarkdownContent() {
+    print('🔧 _buildMarkdownContent: 开始构建');
+    print('🔧 _buildMarkdownContent: _enableVideoRendering = $_enableVideoRendering');
+    print('🔧 _buildMarkdownContent: _enableHtmlRendering = $_enableHtmlRendering');
+    print('🔧 _buildMarkdownContent: _enableLatexRendering = $_enableLatexRendering');
+    
     final config = _buildMarkdownConfig();
     
-    // 创建自定义的MarkdownGenerator来支持LaTeX渲染
+    // 创建自定义的MarkdownGenerator来支持多种扩展渲染
     MarkdownGenerator? markdownGenerator;
+    final generators = <SpanNodeGeneratorWithTag>[];
+    final inlineSyntaxList = <m.InlineSyntax>[];
+    
+    // 添加LaTeX支持
     if (_enableLatexRendering) {
+      inlineSyntaxList.add(LatexSyntax());
+      generators.add(LatexProcessor.createGenerator());
+    }    // 添加视频支持
+    if (_enableVideoRendering) {
+      print('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
+      inlineSyntaxList.add(VideoProcessor.createSyntax());
+      generators.add(VideoProcessor.createGenerator());
+    }
+    
+    // 如果有任何自定义生成器或语法，创建MarkdownGenerator
+    if (generators.isNotEmpty || inlineSyntaxList.isNotEmpty) {
+      print('🔧 _buildMarkdownContent: 创建MarkdownGenerator - generators: ${generators.length}, syntaxes: ${inlineSyntaxList.length}');
       markdownGenerator = MarkdownGenerator(
-        inlineSyntaxList: [LatexSyntax()],
-        generators: [LatexProcessor.createGenerator()],
+        inlineSyntaxList: inlineSyntaxList,
+        generators: generators,
       );
     }
 
@@ -461,8 +488,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       padding: const EdgeInsets.all(24),
       child: Transform.scale(
         scale: _contentScale,
-        alignment: Alignment.topLeft,
-        child: MarkdownWidget(
+        alignment: Alignment.topLeft,        child: MarkdownWidget(
           data: _markdownContent,
           config: config,
           tocController: _tocController,
@@ -470,12 +496,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
     );
-  }/// 构建Markdown配置
+  }  /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
     final isDark = _isDarkTheme;
     
     // 如果启用HTML和LaTeX渲染，使用混合配置
-    if (_enableHtmlRendering && _enableLatexRendering) {
+    if (_enableHtmlRendering && _enableLatexRendering && _enableVideoRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用HTML和LaTeX渲染，使用混合配置
+    else if (_enableHtmlRendering && _enableLatexRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用HTML和视频渲染，使用混合配置
+    else if (_enableHtmlRendering && _enableVideoRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用LaTeX和视频渲染，使用混合配置
+    else if (_enableLatexRendering && _enableVideoRendering) {
       return _createMixedRenderingConfig(isDark);
     }
     // 如果只启用HTML渲染，使用HTML扩展配置
@@ -485,13 +523,23 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         onLinkTap: _onLinkTap,
         imageBuilder: _buildImage,
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
-      );    }
+      );
+    }
     // 如果只启用LaTeX渲染，使用LaTeX扩展配置
     else if (_enableLatexRendering) {
       return LatexConfigExtension.createWithLatexSupport(
         isDarkTheme: isDark,
         onLinkTap: _onLinkTap,
         imageBuilder: (url, alt) => _buildImage(url, {'alt': alt}),
+        imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
+      );
+    }
+    // 如果只启用视频渲染，使用视频扩展配置
+    else if (_enableVideoRendering) {
+      return VideoConfigExtension.createWithVideoSupport(
+        isDarkTheme: isDark,
+        onLinkTap: _onLinkTap,
+        imageBuilder: _buildImage,
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
     }
@@ -1623,11 +1671,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 重新加载内容以应用视频渲染设置
     _loadMarkdownFile();
   }
-
   /// 预处理视频内容
   String _preprocessVideoContent(String content) {
-    if (!_enableVideoRendering) return content;
-    return VideoProcessor.convertMarkdownVideos(content);
+    print('🎥 _preprocessVideoContent: 开始处理');
+    if (!_enableVideoRendering) {
+      print('🎥 _preprocessVideoContent: 视频渲染已禁用');
+      return content;
+    }
+    
+    final result = VideoProcessor.convertMarkdownVideos(content);
+    print('🎥 _preprocessVideoContent: 转换完成');
+    return result;
   }
 
   /// 检查内容是否包含视频
@@ -1715,15 +1769,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     );
   }
-
-  /// 创建混合渲染配置（支持HTML和LaTeX）
+  /// 创建混合渲染配置（支持HTML、LaTeX和视频）
   MarkdownConfig _createMixedRenderingConfig(bool isDark) {
     // 创建基础配置
     final baseConfig = isDark
         ? MarkdownConfig.darkConfig
         : MarkdownConfig.defaultConfig;
     
-    // 合并HTML和LaTeX的配置
+    // 合并HTML、LaTeX和视频的配置
     final configs = <WidgetConfig>[
       // 段落文本配置 - 确保在黑暗模式下文本可见
       PConfig(
@@ -1880,12 +1933,22 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           size: 20,
           color: isDark ? Colors.white : Colors.black87,
         ),
-      ),    ];
-
-    // 如果启用LaTeX渲染，添加LaTeX配置
+      ),
+    ];    // 如果启用LaTeX渲染，添加LaTeX配置
     if (_enableLatexRendering) {
       configs.add(LatexConfig(isDarkTheme: isDark));
-    }    // 创建配置
+    }
+
+    // 如果启用视频渲染，添加视频配置
+    if (_enableVideoRendering) {
+      configs.add(VideoNodeConfig(
+        isDarkTheme: isDark,
+        onVideoTap: _onLinkTap,
+        errorBuilder: (url, alt, error) => _buildImageError(url, error.toString()),
+      ));
+    }
+
+    // 创建配置
     var config = baseConfig.copy(configs: configs);
     
     return config;

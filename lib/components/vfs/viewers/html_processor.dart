@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom_parsing.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import 'video_processor.dart';
 
 /// HTML处理器 - 用于在Markdown中渲染HTML内容
 /// 基于markdown_widget的HTML扩展支持
@@ -45,7 +46,6 @@ class HtmlProcessor {
       mNodes.add(element);
     }
   }
-
   /// 解析Markdown Text节点中的HTML内容为SpanNode
   static List<SpanNode> parseHtml(
     m.Text node, {
@@ -53,24 +53,35 @@ class HtmlProcessor {
     WidgetVisitor? visitor,
     TextStyle? parentStyle,
   }) {
+    print('🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: ${node.textContent.substring(0, node.textContent.length > 100 ? 100 : node.textContent.length)}...');
+    
     try {
       final text = node.textContent.replaceAll(
           visitor?.splitRegExp ?? WidgetVisitor.defaultSplitRegExp, '');
       
       // 如果不包含HTML标签，直接返回文本节点
       if (!text.contains(htmlRep)) {
+        print('🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点');
         return [TextNode(text: node.text)];
       }
+      
+      print('🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析');
       
       // 解析HTML片段
       h.DocumentFragment document = parseFragment(text);
       
+      print('🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}');
+      
       // 使用HTML转SpanNode访问器处理
-      return HtmlToSpanVisitor(
+      final result = HtmlToSpanVisitor(
         visitor: visitor, 
         parentStyle: parentStyle,
       ).toVisit(document.nodes.toList());
+      
+      print('🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}');
+      return result;
     } catch (e) {
+      print('🔧 HtmlProcessor.parseHtml: 解析失败 - $e');
       onError?.call(e);
       return [TextNode(text: node.text)];
     }
@@ -583,11 +594,22 @@ class HtmlToSpanVisitor extends TreeVisitor {
       final textNode = TextNode(text: node.text);
       last.accept(textNode);
     }
-  }
-
-  @override
+  }  @override
   void visitElement(h.Element node) {
     final localName = node.localName ?? '';
+    print('🔧 HtmlToSpanVisitor.visitElement: 处理标签 - $localName, attributes: ${node.attributes}');
+    
+    // 特殊处理video标签 - 直接创建VideoNode
+    if (localName == 'video') {
+      print('🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode');
+      final videoNode = _createVideoNode(node);
+      final last = _spansStack.last;
+      if (last is ElementNode) {
+        last.accept(videoNode);
+        print('🎥 HtmlToSpanVisitor: VideoNode已添加到父节点');
+      }
+      return; // video标签不需要处理子节点
+    }
     
     // 创建对应的markdown元素
     final mdElement = m.Element(localName, []);
@@ -615,6 +637,22 @@ class HtmlToSpanVisitor extends TreeVisitor {
       visit(child);
     }
     _spansStack.removeLast();
+  }  /// 创建VideoNode
+  SpanNode _createVideoNode(h.Element videoElement) {
+    final attributes = <String, String>{};
+    
+    // 正确处理attributes - html包的Element.attributes是LinkedHashMap<Object, String>
+    for (final entry in videoElement.attributes.entries) {
+      attributes[entry.key.toString()] = entry.value;
+    }
+    
+    // 提取text content
+    final textContent = videoElement.text;
+    
+    print('🎥 HtmlToSpanVisitor._createVideoNode: attributes: $attributes, textContent: $textContent');
+    
+    // 创建VideoNode实例
+    return VideoNode(attributes, textContent);
   }
 }
 

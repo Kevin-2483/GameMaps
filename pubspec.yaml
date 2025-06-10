@@ -70,16 +70,16 @@ dependencies:
     # Code editor
   flutter_code_editor: ^0.3.2
   highlight: ^0.7.0
-  flutter_highlight: ^0.7.0
-  # Markdown widget
+  flutter_highlight: ^0.7.0  # Markdown widget
   markdown_widget: ^2.3.2+6
   url_launcher: ^6.3.0
   visibility_detector: ^0.4.0+2
   flutter_math_fork: ^0.7.2
   html: ^0.15.4
-  
-  # Video player
-  video_player: ^2.7.2
+    # Video player
+  media_kit: ^1.1.10+1
+  media_kit_video: ^1.2.4
+  media_kit_libs_video: ^1.0.4
 
 dev_dependencies:
   flutter_test:

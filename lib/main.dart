@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:media_kit/media_kit.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'l10n/app_localizations.dart';
@@ -32,7 +33,7 @@ void main() async {
 
   // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
-  // Initialize VFS system
+    // Initialize VFS system
   try {
     final vfsInitializer = VfsDatabaseInitializer();
     await vfsInitializer.initializeApplicationVfs();
@@ -46,6 +47,9 @@ void main() async {
     debugPrint('VFS系统初始化失败: $e');
     // VFS初始化失败不应该阻止应用启动，只记录错误
   }
+
+  // Initialize media_kit for video playback
+  MediaKit.ensureInitialized();
 
   // Import data from assets for Web platform
   if (kIsWeb) {
