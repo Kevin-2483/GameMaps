@@ -10,6 +10,7 @@ import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'vfs_text_viewer_window.dart';
 import 'html_processor.dart';
 import 'latex_processor.dart';
+import 'video_processor.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -110,10 +111,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   VfsFileInfo? _fileInfo;
   // 显示配置
   bool _isDarkTheme = false;
-  bool _showToc = false;
-  double _contentScale = 1.0;
+  bool _showToc = false;  double _contentScale = 1.0;
   bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
   bool _enableLatexRendering = true; // 是否启用LaTeX渲染支持
+  bool _enableVideoRendering = true; // 是否启用视频渲染支持
 
   @override
   void initState() {
@@ -145,11 +146,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         }        // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
           textContent = _preprocessHtmlContent(textContent);
-        }
-
-        // 如果启用LaTeX渲染，预处理LaTeX内容
+        }        // 如果启用LaTeX渲染，预处理LaTeX内容
         if (_enableLatexRendering && LatexProcessor.containsLatex(textContent)) {
           textContent = _preprocessLatexContent(textContent);
+        }
+
+        // 如果启用视频渲染，预处理视频内容
+        if (_enableVideoRendering && VideoProcessor.containsVideo(textContent)) {
+          textContent = _preprocessVideoContent(textContent);
         }
 
         setState(() {
@@ -254,15 +258,27 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
 
-      const SizedBox(width: 16),
-
-      // LaTeX渲染切换
+      const SizedBox(width: 16),      // LaTeX渲染切换
       IconButton(
         onPressed: _toggleLatexRendering,
         icon: Icon(_enableLatexRendering ? Icons.functions : Icons.functions_outlined),
         tooltip: _enableLatexRendering ? '禁用LaTeX渲染' : '启用LaTeX渲染',
         style: IconButton.styleFrom(
           foregroundColor: _enableLatexRendering 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+      ),
+
+      const SizedBox(width: 16),
+
+      // 视频渲染切换
+      IconButton(
+        onPressed: _toggleVideoRendering,
+        icon: Icon(_enableVideoRendering ? Icons.videocam : Icons.videocam_off),
+        tooltip: _enableVideoRendering ? '禁用视频渲染' : '启用视频渲染',
+        style: IconButton.styleFrom(
+          foregroundColor: _enableVideoRendering 
               ? Theme.of(context).colorScheme.primary 
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
@@ -306,14 +322,20 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           onPressed: _showHtmlInfo,
           icon: const Icon(Icons.info_outline),
           tooltip: 'HTML信息',
-        ),
-
-      // LaTeX信息按钮（如果包含LaTeX）
+        ),      // LaTeX信息按钮（如果包含LaTeX）
       if (_containsLatex())
         IconButton(
           onPressed: _showLatexInfo,
           icon: const Icon(Icons.analytics_outlined),
           tooltip: 'LaTeX信息',
+        ),
+
+      // 视频信息按钮（如果包含视频）
+      if (_containsVideo())
+        IconButton(
+          onPressed: _showVideoInfo,
+          icon: const Icon(Icons.videocam_outlined),
+          tooltip: '视频信息',
         ),
 
       // 使用文本编辑器打开
@@ -643,9 +665,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   /// 构建状态栏
   Widget _buildStatusBar() {    final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
-    final lineCount = _markdownContent.split('\n').length;
-    final htmlStats = _getHtmlStats();
+    final lineCount = _markdownContent.split('\n').length;    final htmlStats = _getHtmlStats();
     final latexStats = _getLatexStats();
+    final videoStats = _getVideoStats();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -750,6 +772,49 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               const SizedBox(width: 8),
               Text(
                 '公式: ${latexStats['totalCount']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],          ],
+
+          // 显示视频信息
+          if (videoStats['hasVideo'] == true) ...[
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _enableVideoRendering 
+                    ? Colors.purple.withOpacity(0.2)
+                    : Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: _enableVideoRendering 
+                      ? Colors.purple.withOpacity(0.5)
+                      : Colors.orange.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _enableVideoRendering ? Icons.videocam : Icons.videocam_off,
+                    size: 12,
+                    color: _enableVideoRendering ? Colors.purple : Colors.orange,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '视频${_enableVideoRendering ? '' : '(禁用)'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _enableVideoRendering ? Colors.purple : Colors.orange,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (videoStats['videoCount'] != null && videoStats['videoCount'] > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '视频: ${videoStats['videoCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1215,6 +1280,134 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             child: const Text('关闭'),
           ),
         ],
+      ),    );
+  }
+
+  /// 显示LaTeX信息对话框
+  void _showLatexInfo() {
+    final latexStats = _getLatexStats();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.functions, size: 24),
+            SizedBox(width: 8),
+            Text('LaTeX公式信息'),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // LaTeX状态
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _enableLatexRendering ? Icons.check_circle : Icons.cancel,
+                        color: _enableLatexRendering ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'LaTeX渲染状态',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          Text(
+                            _enableLatexRendering ? '已启用' : '已禁用',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _enableLatexRendering ? Colors.green : Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _toggleLatexRendering();
+                        },
+                        child: Text(_enableLatexRendering ? '禁用' : '启用'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),              // LaTeX统计信息
+              if (latexStats['hasLatex'] == true) ...[
+                Text(
+                  'LaTeX公式统计',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      if (latexStats['inlineCount'] != null) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('行内公式'),
+                            Text('${latexStats['inlineCount']}个'),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      if (latexStats['blockCount'] != null) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('块级公式'),
+                            Text('${latexStats['blockCount']}个'),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      if (latexStats['totalCount'] != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('总计'),
+                            Text(
+                              '${latexStats['totalCount']}个',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  '此文档不包含LaTeX公式',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
       ),
     );
   }
@@ -1413,7 +1606,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   Map<String, dynamic> _getLatexStats() {
     return LatexUtils.getLatexStats(_markdownContent);
   }
-
   /// 切换LaTeX渲染
   void _toggleLatexRendering() {
     setState(() {
@@ -1423,153 +1615,91 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     _loadMarkdownFile();
   }
 
-  /// 显示LaTeX信息对话框
-  void _showLatexInfo() {
-    final latexStats = _getLatexStats();
+  /// 切换视频渲染
+  void _toggleVideoRendering() {
+    setState(() {
+      _enableVideoRendering = !_enableVideoRendering;
+    });
+    // 重新加载内容以应用视频渲染设置
+    _loadMarkdownFile();
+  }
+
+  /// 预处理视频内容
+  String _preprocessVideoContent(String content) {
+    if (!_enableVideoRendering) return content;
+    return VideoProcessor.convertMarkdownVideos(content);
+  }
+
+  /// 检查内容是否包含视频
+  bool _containsVideo() {
+    return _enableVideoRendering && VideoProcessor.containsVideo(_markdownContent);
+  }
+
+  /// 获取视频统计信息
+  Map<String, dynamic> _getVideoStats() {
+    if (!_enableVideoRendering) {
+      return {'hasVideo': false, 'videoCount': 0, 'videos': []};
+    }
+    return VideoProcessor.getVideoStats(_markdownContent);
+  }
+
+  /// 显示视频信息对话框
+  void _showVideoInfo() {
+    final videoStats = _getVideoStats();
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.functions, size: 24),
-            SizedBox(width: 8),
-            Text('LaTeX内容信息'),
-          ],
-        ),
+        title: const Text('视频信息'),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // LaTeX状态
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _enableLatexRendering ? Icons.check_circle : Icons.cancel,
-                        color: _enableLatexRendering ? Colors.green : Colors.orange,
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'LaTeX渲染状态',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          Text(
-                            _enableLatexRendering ? '已启用' : '已禁用',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: _enableLatexRendering ? Colors.green : Colors.orange,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          _toggleLatexRendering();
-                        },
-                        child: Text(_enableLatexRendering ? '禁用' : '启用'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
+              Text('视频数量: ${videoStats['videoCount']}'),
               const SizedBox(height: 16),
-
-              // LaTeX内容统计
-              if (latexStats['hasLatex'] == true) ...[
-                Text(
-                  'LaTeX内容统计',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+              if (videoStats['hasVideo'] as bool) ...[
+                const Text('视频列表:'),
                 const SizedBox(height: 8),
-                
-                if (latexStats['totalCount'] != null && latexStats['totalCount'] > 0) ...[
-                  Row(
-                    children: [
-                      const Icon(Icons.functions, size: 16),
-                      const SizedBox(width: 8),
-                      Text('LaTeX表达式: ${latexStats['totalCount']}个'),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                ],
-                
-                if (latexStats['inlineCount'] != null && latexStats['inlineCount'] > 0) ...[
-                  Row(
-                    children: [
-                      const Icon(Icons.text_fields, size: 16),
-                      const SizedBox(width: 8),
-                      Text('行内公式: ${latexStats['inlineCount']}个'),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                ],
-
-                if (latexStats['blockCount'] != null && latexStats['blockCount'] > 0) ...[
-                  Row(
-                    children: [
-                      const Icon(Icons.view_module, size: 16),
-                      const SizedBox(width: 8),
-                      Text('块级公式: ${latexStats['blockCount']}个'),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                ],
-
-                const SizedBox(height: 16),
-
-                // LaTeX表达式预览
-                if (latexStats['expressions'] != null && 
-                    (latexStats['expressions'] as List).isNotEmpty) ...[
-                  Text(
-                    'LaTeX表达式预览',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 120,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: (latexStats['expressions'] as List<String>)
-                            .take(5) // 最多显示5个表达式
-                            .map((expr) => Container(
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    expr.length > 50 ? '${expr.substring(0, 50)}...' : expr,
-                                    style: const TextStyle(
-                                      fontFamily: 'Courier',
-                                      fontSize: 12,
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: (videoStats['videos'] as List<String>)
+                          .take(10)
+                          .map((video) => Container(
+                                padding: const EdgeInsets.all(8),
+                                margin: const EdgeInsets.only(bottom: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.videocam, size: 16),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        video.length > 50 ? '${video.substring(0, 50)}...' : video,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
                                     ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
                     ),
                   ),
-                  if ((latexStats['expressions'] as List).length > 5)
-                    Text(
-                      '... 还有${(latexStats['expressions'] as List).length - 5}个表达式',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                ],
+                ),
+                if ((videoStats['videos'] as List).length > 10)
+                  Text(
+                    '... 还有${(videoStats['videos'] as List).length - 10}个视频',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
               ] else ...[
                 Text(
-                  '此文档不包含LaTeX表达式',
+                  '此文档不包含视频内容',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -1585,6 +1715,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     );
   }
+
   /// 创建混合渲染配置（支持HTML和LaTeX）
   MarkdownConfig _createMixedRenderingConfig(bool isDark) {
     // 创建基础配置
@@ -1754,9 +1885,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 如果启用LaTeX渲染，添加LaTeX配置
     if (_enableLatexRendering) {
       configs.add(LatexConfig(isDarkTheme: isDark));
-    }
-
-    // 创建配置
+    }    // 创建配置
     var config = baseConfig.copy(configs: configs);
     
     return config;

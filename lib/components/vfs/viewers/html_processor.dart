@@ -90,7 +90,6 @@ class HtmlProcessor {
   static String stripHtmlTags(String html) {
     return html.replaceAll(htmlRep, '');
   }
-
   /// 获取支持的HTML标签列表
   static List<String> getSupportedTags() {
     return [
@@ -135,9 +134,11 @@ class HtmlProcessor {
       
       // 转换引用块
       result = _convertBlockquotes(result);
-      
-      // 转换代码块
+        // 转换代码块
       result = _convertCodeBlocks(result);
+      
+      // 转换视频标签
+      result = _convertVideoTags(result);
       
       // 转换段落标签
       result = _convertParagraphs(result);
@@ -451,7 +452,6 @@ class HtmlProcessor {
     
     return html;
   }
-
   /// 解码常见的HTML实体
   static String _decodeHtmlEntities(String text) {
     return text
@@ -472,6 +472,36 @@ class HtmlProcessor {
     
     // 换行标签
     html = html.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+    
+    return html;
+  }
+
+  /// 转换视频标签
+  static String _convertVideoTags(String html) {
+    // 保留视频标签，让后续的视频处理器处理
+    // 这里我们可以做一些基本的格式化
+    final videoPattern = RegExp(r'<video([^>]*)>(.*?)</video>', 
+        caseSensitive: false, multiLine: true, dotAll: true);
+    
+    html = html.replaceAllMapped(videoPattern, (match) {
+      final attributes = match.group(1) ?? '';
+      final content = match.group(2) ?? '';
+      
+      // 提取src属性
+      final srcPattern = RegExp(r'''src=["\']([^"\']*)["\']''', caseSensitive: false);
+      final srcMatch = srcPattern.firstMatch(attributes);
+      
+      if (srcMatch != null) {
+        // 保持video标签格式，确保有controls属性
+        var cleanAttributes = attributes;
+        if (!cleanAttributes.contains('controls')) {
+          cleanAttributes += ' controls';
+        }
+        return '<video$cleanAttributes>$content</video>';
+      }
+      
+      return match.group(0) ?? '';
+    });
     
     return html;
   }
@@ -891,7 +921,6 @@ class HtmlUtils {
     
     return links;
   }
-
   /// 提取HTML中的所有图片URL
   static List<String> extractImages(String html) {
     final document = safeParseFragment(html);
@@ -906,6 +935,30 @@ class HtmlUtils {
     });
     
     return images;
+  }
+
+  /// 提取HTML中的所有视频URL
+  static List<String> extractVideos(String html) {
+    final document = safeParseFragment(html);
+    if (document == null) return [];
+    
+    final videos = <String>[];
+    document.querySelectorAll('video[src]').forEach((element) {
+      final src = element.attributes['src'];
+      if (src != null && src.isNotEmpty) {
+        videos.add(src);
+      }
+    });
+    
+    // 也检查source标签
+    document.querySelectorAll('video source[src]').forEach((element) {
+      final src = element.attributes['src'];
+      if (src != null && src.isNotEmpty) {
+        videos.add(src);
+      }
+    });
+    
+    return videos;
   }
 
   /// 清理不安全的HTML标签和属性
