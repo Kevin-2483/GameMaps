@@ -308,6 +308,10 @@ extension HtmlConfigExtension on MarkdownConfig {
   static MarkdownConfig createWithHtmlSupport({
     bool isDarkTheme = false,
     MarkdownConfig? baseConfig,
+    // 添加VFS协议支持参数
+    void Function(String)? onLinkTap,
+    Widget Function(String, Map<String, String>)? imageBuilder,
+    Widget Function(String, String, dynamic)? imageErrorBuilder,
   }) {
     // 基础配置列表
     final configs = <WidgetConfig>[
@@ -320,18 +324,19 @@ extension HtmlConfigExtension on MarkdownConfig {
         ),
       ),
       
-      // HTML链接处理
+      // HTML链接处理 - 保留VFS协议支持
       LinkConfig(
         style: TextStyle(
           color: isDarkTheme ? Colors.lightBlueAccent : Colors.blue,
           decoration: TextDecoration.underline,
         ),
+        onTap: onLinkTap, // 使用传入的链接处理器
       ),
       
-      // HTML图片处理
+      // HTML图片处理 - 保留VFS协议支持
       ImgConfig(
-        builder: (url, attributes) {
-          // 可以在这里添加特殊的HTML图片处理逻辑
+        builder: imageBuilder ?? (url, attributes) {
+          // 默认的网络图片处理逻辑
           return Image.network(
             url,
             errorBuilder: (context, error, stackTrace) {
@@ -357,6 +362,149 @@ extension HtmlConfigExtension on MarkdownConfig {
             },
           );
         },
+        errorBuilder: imageErrorBuilder ?? (url, alt, error) => Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            border: Border.all(color: Colors.red.shade200),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.broken_image, color: Colors.red.shade400),
+              const SizedBox(width: 8),
+              Text(
+                '图片加载失败: $error',
+                style: TextStyle(color: Colors.red.shade600),
+              ),
+            ],
+          ),
+        ),      ),
+      
+      // 添加标题配置
+      H1Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H2Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H3Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H4Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H5Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H6Config(
+        style: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black87,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+
+      // 代码块配置
+      PreConfig(
+        theme: isDarkTheme
+            ? const {
+                'root': TextStyle(
+                  backgroundColor: Color(0xFF2D2D2D),
+                  color: Color(0xFFE6E6E6),
+                ),
+              }
+            : const {
+                'root': TextStyle(
+                  backgroundColor: Color(0xFFF8F8F8),
+                  color: Color(0xFF333333),
+                ),
+              },
+      ),
+
+      // 行内代码配置
+      CodeConfig(
+        style: TextStyle(
+          color: isDarkTheme ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
+          backgroundColor: isDarkTheme ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+          fontFamily: 'Courier',
+          fontSize: 14,
+        ),
+      ),
+
+      // 引用块配置
+      BlockquoteConfig(
+        textColor: isDarkTheme ? Colors.grey.shade300 : Colors.grey.shade700,
+        sideColor: isDarkTheme ? Colors.grey.shade600 : Colors.grey.shade400,
+      ),
+
+      // 列表配置
+      ListConfig(
+        marginLeft: 32.0,
+        marginBottom: 4.0,
+        marker: (isOrdered, depth, index) {
+          final color = isDarkTheme ? Colors.white : Colors.black87;
+          if (isOrdered) {
+            // 有序列表数字标记
+            return Container(
+              alignment: Alignment.centerRight,
+              width: 24,
+              child: Text(
+                '${index + 1}.',
+                style: TextStyle(color: color, fontWeight: FontWeight.w500),
+              ),
+            );
+          } else {
+            // 无序列表点标记
+            final parentStyleHeight = 16.0 * 1.6;
+            return Padding(
+              padding: EdgeInsets.only(top: (parentStyleHeight / 2) - 1.5),
+              child: Align(
+                alignment: Alignment.center,                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: _getUnorderedListDecoration(depth, color),
+                ),
+              ),
+            );
+          }
+        },
+      ),
+
+      // 复选框配置
+      CheckBoxConfig(
+        builder: (checked) => Icon(
+          checked ? Icons.check_box : Icons.check_box_outline_blank,
+          size: 20,
+          color: isDarkTheme ? Colors.white : Colors.black87,
+        ),
       ),
       
       // 如果是深色主题，添加深色配置
@@ -381,6 +529,28 @@ extension HtmlConfigExtension on MarkdownConfig {
     
     // 否则创建新的配置
     return MarkdownConfig(configs: configs);
+  }
+
+  /// 获取无序列表标记装饰
+  static BoxDecoration _getUnorderedListDecoration(int depth, Color color) {
+    switch (depth % 3) {
+      case 0:
+        // 第一层：实心圆点
+        return BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        );
+      case 1:
+        // 第二层：空心圆点
+        return BoxDecoration(
+          border: Border.all(color: color, width: 1),
+          shape: BoxShape.circle,
+        );
+      case 2:
+      default:
+        // 第三层及以上：实心方块
+        return BoxDecoration(color: color);
+    }
   }
 }
 

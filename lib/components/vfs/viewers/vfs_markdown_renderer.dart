@@ -424,6 +424,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (_enableHtmlRendering) {
       return HtmlConfigExtension.createWithHtmlSupport(
         isDarkTheme: isDark,
+        // 传入VFS协议处理函数，保持原有功能
+        onLinkTap: _onLinkTap,
+        imageBuilder: _buildImage,
+        imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
     }
     
