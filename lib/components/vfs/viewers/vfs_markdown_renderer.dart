@@ -9,6 +9,7 @@ import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'vfs_text_viewer_window.dart';
 import 'html_processor.dart';
+import 'latex_processor.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -112,6 +113,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   bool _showToc = false;
   double _contentScale = 1.0;
   bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
+  bool _enableLatexRendering = true; // 是否启用LaTeX渲染支持
 
   @override
   void initState() {
@@ -140,11 +142,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         } catch (e) {
           // 如果UTF-8解码失败，尝试使用Latin-1
           textContent = latin1.decode(fileContent.data);
-        }
-
-        // 如果启用HTML渲染，预处理HTML内容
+        }        // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
           textContent = _preprocessHtmlContent(textContent);
+        }
+
+        // 如果启用LaTeX渲染，预处理LaTeX内容
+        if (_enableLatexRendering && LatexProcessor.containsLatex(textContent)) {
+          textContent = _preprocessLatexContent(textContent);
         }
 
         setState(() {
@@ -237,15 +242,27 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
       ),
 
-      const SizedBox(width: 16),
-
-      // HTML渲染切换
+      const SizedBox(width: 16),      // HTML渲染切换
       IconButton(
         onPressed: _toggleHtmlRendering,
         icon: Icon(_enableHtmlRendering ? Icons.code : Icons.code_off),
         tooltip: _enableHtmlRendering ? '禁用HTML渲染' : '启用HTML渲染',
         style: IconButton.styleFrom(
           foregroundColor: _enableHtmlRendering 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+      ),
+
+      const SizedBox(width: 16),
+
+      // LaTeX渲染切换
+      IconButton(
+        onPressed: _toggleLatexRendering,
+        icon: Icon(_enableLatexRendering ? Icons.functions : Icons.functions_outlined),
+        tooltip: _enableLatexRendering ? '禁用LaTeX渲染' : '启用LaTeX渲染',
+        style: IconButton.styleFrom(
+          foregroundColor: _enableLatexRendering 
               ? Theme.of(context).colorScheme.primary 
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
@@ -282,14 +299,21 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     ];
   }
   /// 构建动作按钮
-  List<Widget> _buildActionButtons() {
-    return [
+  List<Widget> _buildActionButtons() {    return [
       // HTML信息按钮（如果包含HTML）
       if (_containsHtml())
         IconButton(
           onPressed: _showHtmlInfo,
           icon: const Icon(Icons.info_outline),
           tooltip: 'HTML信息',
+        ),
+
+      // LaTeX信息按钮（如果包含LaTeX）
+      if (_containsLatex())
+        IconButton(
+          onPressed: _showLatexInfo,
+          icon: const Icon(Icons.analytics_outlined),
+          tooltip: 'LaTeX信息',
         ),
 
       // 使用文本编辑器打开
@@ -397,11 +421,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ],
       ),
     );
-  }
-
-  /// 构建Markdown内容
+  }  /// 构建Markdown内容
   Widget _buildMarkdownContent() {
     final config = _buildMarkdownConfig();
+    
+    // 创建自定义的MarkdownGenerator来支持LaTeX渲染
+    MarkdownGenerator? markdownGenerator;
+    if (_enableLatexRendering) {
+      markdownGenerator = MarkdownGenerator(
+        inlineSyntaxList: [LatexSyntax()],
+        generators: [LatexProcessor.createGenerator()],
+      );
+    }
 
     return Container(
       color: _isDarkTheme ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
@@ -413,20 +444,32 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           data: _markdownContent,
           config: config,
           tocController: _tocController,
+          markdownGenerator: markdownGenerator,
         ),
       ),
     );
-  }  /// 构建Markdown配置
+  }/// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
     final isDark = _isDarkTheme;
     
-    // 如果启用HTML渲染，使用HTML扩展配置
-    if (_enableHtmlRendering) {
+    // 如果启用HTML和LaTeX渲染，使用混合配置
+    if (_enableHtmlRendering && _enableLatexRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果只启用HTML渲染，使用HTML扩展配置
+    else if (_enableHtmlRendering) {
       return HtmlConfigExtension.createWithHtmlSupport(
         isDarkTheme: isDark,
-        // 传入VFS协议处理函数，保持原有功能
         onLinkTap: _onLinkTap,
         imageBuilder: _buildImage,
+        imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
+      );    }
+    // 如果只启用LaTeX渲染，使用LaTeX扩展配置
+    else if (_enableLatexRendering) {
+      return LatexConfigExtension.createWithLatexSupport(
+        isDarkTheme: isDark,
+        onLinkTap: _onLinkTap,
+        imageBuilder: (url, alt) => _buildImage(url, {'alt': alt}),
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
     }
@@ -598,11 +641,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     );
   }
   /// 构建状态栏
-  Widget _buildStatusBar() {
-    final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
+  Widget _buildStatusBar() {    final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
     final lineCount = _markdownContent.split('\n').length;
     final htmlStats = _getHtmlStats();
+    final latexStats = _getLatexStats();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -617,8 +660,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           Text('字数: $wordCount', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(width: 16),
           Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
-          
-          // 显示HTML信息
+            // 显示HTML信息
           if (htmlStats['hasHtml'] == true) ...[
             const SizedBox(width: 16),
             Container(
@@ -664,6 +706,50 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               const SizedBox(width: 8),
               Text(
                 '图片: ${htmlStats['imageCount']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ],
+
+          // 显示LaTeX信息
+          if (latexStats['hasLatex'] == true) ...[
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _enableLatexRendering 
+                    ? Colors.blue.withOpacity(0.2)
+                    : Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: _enableLatexRendering 
+                      ? Colors.blue.withOpacity(0.5)
+                      : Colors.orange.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _enableLatexRendering ? Icons.functions : Icons.functions_outlined,
+                    size: 12,
+                    color: _enableLatexRendering ? Colors.blue : Colors.orange,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'LaTeX${_enableLatexRendering ? '' : '(禁用)'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _enableLatexRendering ? Colors.blue : Colors.orange,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (latexStats['totalCount'] != null && latexStats['totalCount'] > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '公式: ${latexStats['totalCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1260,7 +1346,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   bool _containsHtml() {
     return HtmlProcessor.containsHtml(_markdownContent);
   }
-
   /// 获取HTML统计信息
   Map<String, dynamic> _getHtmlStats() {
     if (!_containsHtml()) {
@@ -1282,5 +1367,398 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       print('HTML统计失败: $e');
       return {'hasHtml': true, 'error': e.toString()};
     }
+  }
+
+  // ========== LaTeX处理方法 ==========
+  
+  /// 预处理LaTeX内容
+  String _preprocessLatexContent(String content) {
+    try {
+      if (_enableLatexRendering) {
+        // LaTeX渲染已启用，保持LaTeX语法
+        return content;
+      } else {
+        // LaTeX渲染已禁用，移除LaTeX语法标记
+        return _stripLatexSyntax(content);
+      }
+    } catch (e) {
+      print('LaTeX预处理失败: $e');
+      return content;
+    }
+  }
+
+  /// 移除LaTeX语法标记
+  String _stripLatexSyntax(String content) {
+    // 移除块级LaTeX语法 $$...$$
+    content = content.replaceAllMapped(
+      RegExp(r'\$\$(.*?)\$\$', multiLine: true, dotAll: true),
+      (match) => match.group(1) ?? '',
+    );
+    
+    // 移除行内LaTeX语法 $...$
+    content = content.replaceAllMapped(
+      RegExp(r'\$([^$]+)\$'),
+      (match) => match.group(1) ?? '',
+    );
+    
+    return content;
+  }
+
+  /// 检查内容是否包含LaTeX
+  bool _containsLatex() {
+    return LatexProcessor.containsLatex(_markdownContent);
+  }
+
+  /// 获取LaTeX统计信息
+  Map<String, dynamic> _getLatexStats() {
+    return LatexUtils.getLatexStats(_markdownContent);
+  }
+
+  /// 切换LaTeX渲染
+  void _toggleLatexRendering() {
+    setState(() {
+      _enableLatexRendering = !_enableLatexRendering;
+    });
+    // 重新加载内容以应用LaTeX渲染设置
+    _loadMarkdownFile();
+  }
+
+  /// 显示LaTeX信息对话框
+  void _showLatexInfo() {
+    final latexStats = _getLatexStats();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.functions, size: 24),
+            SizedBox(width: 8),
+            Text('LaTeX内容信息'),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // LaTeX状态
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _enableLatexRendering ? Icons.check_circle : Icons.cancel,
+                        color: _enableLatexRendering ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'LaTeX渲染状态',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          Text(
+                            _enableLatexRendering ? '已启用' : '已禁用',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _enableLatexRendering ? Colors.green : Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _toggleLatexRendering();
+                        },
+                        child: Text(_enableLatexRendering ? '禁用' : '启用'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // LaTeX内容统计
+              if (latexStats['hasLatex'] == true) ...[
+                Text(
+                  'LaTeX内容统计',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                
+                if (latexStats['totalCount'] != null && latexStats['totalCount'] > 0) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.functions, size: 16),
+                      const SizedBox(width: 8),
+                      Text('LaTeX表达式: ${latexStats['totalCount']}个'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                
+                if (latexStats['inlineCount'] != null && latexStats['inlineCount'] > 0) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.text_fields, size: 16),
+                      const SizedBox(width: 8),
+                      Text('行内公式: ${latexStats['inlineCount']}个'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                if (latexStats['blockCount'] != null && latexStats['blockCount'] > 0) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.view_module, size: 16),
+                      const SizedBox(width: 8),
+                      Text('块级公式: ${latexStats['blockCount']}个'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                const SizedBox(height: 16),
+
+                // LaTeX表达式预览
+                if (latexStats['expressions'] != null && 
+                    (latexStats['expressions'] as List).isNotEmpty) ...[
+                  Text(
+                    'LaTeX表达式预览',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 120,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: (latexStats['expressions'] as List<String>)
+                            .take(5) // 最多显示5个表达式
+                            .map((expr) => Container(
+                                  margin: const EdgeInsets.only(bottom: 4),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    expr.length > 50 ? '${expr.substring(0, 50)}...' : expr,
+                                    style: const TextStyle(
+                                      fontFamily: 'Courier',
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                  if ((latexStats['expressions'] as List).length > 5)
+                    Text(
+                      '... 还有${(latexStats['expressions'] as List).length - 5}个表达式',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ] else ...[
+                Text(
+                  '此文档不包含LaTeX表达式',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+  /// 创建混合渲染配置（支持HTML和LaTeX）
+  MarkdownConfig _createMixedRenderingConfig(bool isDark) {
+    // 创建基础配置
+    final baseConfig = isDark
+        ? MarkdownConfig.darkConfig
+        : MarkdownConfig.defaultConfig;
+    
+    // 合并HTML和LaTeX的配置
+    final configs = <WidgetConfig>[
+      // 段落文本配置 - 确保在黑暗模式下文本可见
+      PConfig(
+        textStyle: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 16,
+          height: 1.6,
+        ),
+      ),
+
+      // 标题配置
+      H1Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H2Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H3Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H4Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H5Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+      H6Config(
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          height: 1.4,
+        ),
+      ),
+
+      // 链接配置 - 支持VFS协议链接
+      LinkConfig(
+        style: TextStyle(
+          color: isDark ? Colors.lightBlueAccent : Colors.blue,
+          decoration: TextDecoration.underline,
+        ),
+        onTap: _onLinkTap,
+      ),
+
+      // 图片配置 - 支持VFS协议图片
+      ImgConfig(
+        builder: (url, attributes) => _buildImage(url, attributes),
+        errorBuilder: (url, alt, error) =>
+            _buildImageError(url, error.toString()),
+      ),
+
+      // 代码块配置
+      PreConfig(
+        theme: isDark
+            ? const {
+                'root': TextStyle(
+                  backgroundColor: Color(0xFF2D2D2D),
+                  color: Color(0xFFE6E6E6),
+                ),
+              }
+            : const {
+                'root': TextStyle(
+                  backgroundColor: Color(0xFFF8F8F8),
+                  color: Color(0xFF333333),
+                ),
+              },
+      ),
+
+      // 行内代码配置
+      CodeConfig(
+        style: TextStyle(
+          color: isDark ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
+          backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+          fontFamily: 'Courier',
+          fontSize: 14,
+        ),
+      ),
+
+      // 引用块配置
+      BlockquoteConfig(
+        textColor: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+        sideColor: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+      ),
+
+      // 列表配置 - 支持自定义标记颜色
+      ListConfig(
+        marginLeft: 32.0,
+        marginBottom: 4.0,
+        marker: (isOrdered, depth, index) {
+          final color = isDark ? Colors.white : Colors.black87;
+          if (isOrdered) {
+            // 有序列表数字标记
+            return Container(
+              alignment: Alignment.topRight,
+              padding: const EdgeInsets.only(right: 1),
+              child: SelectionContainer.disabled(
+                child: Text(
+                  '${index + 1}.',
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            // 无序列表点标记
+            final parentStyleHeight = 16.0 * 1.6;
+            return Padding(
+              padding: EdgeInsets.only(top: (parentStyleHeight / 2) - 1.5),
+              child: Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: _getUnorderedListDecoration(depth, color),
+                ),
+              ),
+            );
+          }
+        },
+      ),
+
+      // 复选框配置 - 支持自定义颜色
+      CheckBoxConfig(
+        builder: (checked) => Icon(
+          checked ? Icons.check_box : Icons.check_box_outline_blank,
+          size: 20,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+      ),    ];
+
+    // 如果启用LaTeX渲染，添加LaTeX配置
+    if (_enableLatexRendering) {
+      configs.add(LatexConfig(isDarkTheme: isDark));
+    }
+
+    // 创建配置
+    var config = baseConfig.copy(configs: configs);
+    
+    return config;
   }
 }
