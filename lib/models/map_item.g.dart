@@ -21,6 +21,11 @@ MapItem _$MapItemFromJson(Map<String, dynamic> json) => MapItem(
           ?.map((e) => LegendGroup.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  stickyNotes:
+      (json['stickyNotes'] as List<dynamic>?)
+          ?.map((e) => StickyNote.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -32,6 +37,7 @@ Map<String, dynamic> _$MapItemToJson(MapItem instance) => <String, dynamic>{
   'version': instance.version,
   'layers': instance.layers,
   'legendGroups': instance.legendGroups,
+  'stickyNotes': instance.stickyNotes,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
 };

@@ -23,6 +23,8 @@ import 'widgets/layer_legend_binding_drawer.dart';
 import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
 import 'widgets/version_tab_bar.dart';
+import 'widgets/sticky_note_panel.dart';
+import '../../models/sticky_note.dart';
 import '../../models/map_version.dart';
 import '../../services/version_session_manager.dart';
 
@@ -89,11 +91,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   double _selectedDensity = 3.0; // 默认密度为3.0
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
   TriangleCutType _selectedTriangleCut = TriangleCutType.none; // 默认无三角形切割
-  String? _selectedElementId; // 当前选中的元素ID
-  // 工具栏折叠状态
+  String? _selectedElementId; // 当前选中的元素ID  // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
+  bool _isStickyNotePanelCollapsed = false;
 
   //：图层组折叠状态
   Map<String, bool> _layerGroupCollapsedStates = {};
@@ -102,6 +104,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isDrawingToolbarAutoClose = true;
   bool _isLayerPanelAutoClose = true;
   bool _isLegendPanelAutoClose = true;
+  bool _isStickyNotePanelAutoClose = true;
 
   // 悬浮工具栏状态（用于窄屏）
   bool _isFloatingToolbarVisible = false; // 透明度预览状态
@@ -139,6 +142,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;
+  // 便签管理状态
+  StickyNote? _selectedStickyNote; // 当前选中的便签
+  final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
+
   @override
   void initState() {
     super.initState();
@@ -1742,8 +1749,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     Set<String> changedPanels = {panelType};
 
     setState(() {
-      switch (panelType) {
-        case 'drawing':
+      switch (panelType) {        case 'drawing':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
@@ -1752,6 +1758,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
+          }
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+            _isStickyNotePanelCollapsed = true;
+            changedPanels.add('stickyNote');
           }
           _isDrawingToolbarCollapsed = !_isDrawingToolbarCollapsed;
           break;
@@ -1765,8 +1775,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
           }
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+            _isStickyNotePanelCollapsed = true;
+            changedPanels.add('stickyNote');
+          }
           _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
-          break;        case 'legend':
+          break;case 'legend':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
@@ -1776,7 +1790,27 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             _isLayerPanelCollapsed = true;
             changedPanels.add('layer');
           }
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+            _isStickyNotePanelCollapsed = true;
+            changedPanels.add('stickyNote');
+          }
           _isLegendPanelCollapsed = !_isLegendPanelCollapsed;
+          break;
+        case 'stickyNote':
+          // 如果其他面板开启了自动关闭，则关闭它们
+          if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
+            _isDrawingToolbarCollapsed = true;
+            changedPanels.add('drawing');
+          }
+          if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
+            _isLayerPanelCollapsed = true;
+            changedPanels.add('layer');
+          }
+          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
+            _isLegendPanelCollapsed = true;
+            changedPanels.add('legend');
+          }
+          _isStickyNotePanelCollapsed = !_isStickyNotePanelCollapsed;
           break;
       }
     });
@@ -1810,9 +1844,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
         case 'layer':
           _isLayerPanelAutoClose = value;
-          break;
-        case 'legend':
+          break;        case 'legend':
           _isLegendPanelAutoClose = value;
+          break;
+        case 'stickyNote':
+          _isStickyNotePanelAutoClose = value;
           break;
       }
     });    // 保存到用户首选项
@@ -2187,7 +2223,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     onZIndexInspectorRequested: _showZIndexInspector,
                     // 图片缓冲区相关参数
                     imageBufferData: _imageBufferData,
-                    imageBufferFit: _imageBufferFit,
+                    imageBufferFit: _imageBufferFit,                    
                     onImageBufferUpdated: _handleImageBufferUpdated,
                     onImageBufferFitChanged: _handleImageBufferFitChanged,
                     onImageBufferCleared: _handleImageBufferCleared,
@@ -2331,8 +2367,42 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 isPreviewMode: widget.isPreviewMode,
                 onLegendGroupUpdated: _updateLegendGroup,
                 onLegendGroupDeleted: _deleteLegendGroup,
-                onLegendGroupAdded: _addLegendGroup,
-                onLegendGroupTapped: _showLegendGroupManagementDrawer,
+                onLegendGroupAdded: _addLegendGroup,                onLegendGroupTapped: _showLegendGroupManagementDrawer,
+              ),
+      ),
+    );
+
+    // 便签面板
+    panels.add(
+      _buildCollapsiblePanel(
+        title: '便签',
+        icon: Icons.sticky_note_2,
+        isCollapsed: _isStickyNotePanelCollapsed,
+        onToggleCollapsed: () => _handlePanelToggle('stickyNote'),
+        autoCloseEnabled: _isStickyNotePanelAutoClose,
+        onAutoCloseToggled: (value) => _handleAutoCloseToggle('stickyNote', value),
+        compactMode: layout.compactMode,
+        showTooltips: layout.showTooltips,
+        animationDuration: layout.animationDuration,
+        enableAnimations: layout.enableAnimations,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: _addNewStickyNote,
+            tooltip: layout.showTooltips ? '添加便签' : null,
+          ),
+        ],
+        child: _isStickyNotePanelCollapsed
+            ? null
+            : StickyNotePanel(
+                stickyNotes: _currentMap?.stickyNotes ?? [],
+                isPreviewMode: widget.isPreviewMode,
+                onStickyNoteUpdated: _updateStickyNote,
+                onStickyNoteDeleted: _deleteStickyNote,
+                onStickyNoteAdded: _addNewStickyNote,
+                onStickyNotesReordered: _reorderStickyNotes,
+                onOpacityPreview: _handleStickyNoteOpacityPreview,
+                onStickyNoteSelected: _selectStickyNote,
               ),
       ),
     );
@@ -2942,5 +3012,109 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
       });
     }
+  }
+
+  // 便签管理方法
+  void _addNewStickyNote() {
+    if (_currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+
+    final newNote = StickyNote(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: '新便签 ${_currentMap!.stickyNotes.length + 1}',
+      position: const Offset(100, 100), // 默认位置      
+      size: const Size(200, 150), // 默认大小
+      opacity: 1.0,
+      backgroundColor: Colors.yellow.shade100,
+      textColor: Colors.black,
+      isCollapsed: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    setState(() {
+      _currentMap = _currentMap!.copyWith(
+        stickyNotes: [..._currentMap!.stickyNotes, newNote],
+      );
+      _selectedStickyNote = newNote;
+    });
+  }
+
+  void _updateStickyNote(StickyNote updatedNote) {
+    if (_currentMap == null) return;
+
+    // 保存当前状态到撤销历史（只在非预览模式下）
+    _saveToUndoHistory();
+
+    setState(() {
+      final noteIndex = _currentMap!.stickyNotes.indexWhere(
+        (note) => note.id == updatedNote.id,
+      );
+      if (noteIndex != -1) {
+        final updatedNotes = List<StickyNote>.from(_currentMap!.stickyNotes);
+        updatedNotes[noteIndex] = updatedNote.copyWith(updatedAt: DateTime.now());
+        _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
+        
+        // 如果当前选中的是这个便签，更新选中状态
+        if (_selectedStickyNote?.id == updatedNote.id) {
+          _selectedStickyNote = updatedNotes[noteIndex];
+        }
+      }
+    });
+  }
+
+  void _deleteStickyNote(StickyNote note) {
+    if (_currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+
+    setState(() {
+      final updatedNotes = _currentMap!.stickyNotes
+          .where((n) => n.id != note.id)
+          .toList();
+      _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
+      
+      // 如果删除的是当前选中的便签，清除选中状态
+      if (_selectedStickyNote?.id == note.id) {
+        _selectedStickyNote = null;
+      }
+    });
+  }
+
+  void _reorderStickyNotes(int oldIndex, int newIndex) {
+    if (_currentMap == null || 
+        oldIndex < 0 || 
+        oldIndex >= _currentMap!.stickyNotes.length ||
+        newIndex < 0 || 
+        newIndex >= _currentMap!.stickyNotes.length ||
+        oldIndex == newIndex) {
+      return;
+    }
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+
+    setState(() {
+      final notes = List<StickyNote>.from(_currentMap!.stickyNotes);
+      final item = notes.removeAt(oldIndex);
+      notes.insert(newIndex, item);
+      _currentMap = _currentMap!.copyWith(stickyNotes: notes);
+    });
+  }
+
+  void _handleStickyNoteOpacityPreview(String noteId, double opacity) {
+    setState(() {
+      _previewStickyNoteOpacityValues[noteId] = opacity;
+    });
+  }
+
+  // 选中便签
+  void _selectStickyNote(StickyNote? note) {
+    setState(() {
+      _selectedStickyNote = note;
+    });
   }
 }

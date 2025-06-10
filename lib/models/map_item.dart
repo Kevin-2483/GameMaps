@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'map_layer.dart';
+import 'sticky_note.dart'; // 导入StickyNote
 
 part 'map_item.g.dart';
 
@@ -32,6 +33,7 @@ class MapItem {
   final int version; // 地图版本
   final List<MapLayer> layers; // 图层列表
   final List<LegendGroup> legendGroups; // 图例组列表
+  final List<StickyNote> stickyNotes; // 便签列表
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -42,6 +44,7 @@ class MapItem {
     required this.version,
     this.layers = const [],
     this.legendGroups = const [],
+    this.stickyNotes = const [], // 默认无便签
     required this.createdAt,
     required this.updatedAt,
   });
@@ -52,12 +55,12 @@ class MapItem {
   factory MapItem.fromJson(Map<String, dynamic> json) =>
       _$MapItemFromJson(json);
   Map<String, dynamic> toJson() => _$MapItemToJson(this);
-
   /// 从数据库记录创建 MapItem
   factory MapItem.fromDatabase(Map<String, dynamic> map) {
-    // 解析图层和图例组数据
+    // 解析图层、图例组和便签数据
     List<MapLayer> layers = [];
     List<LegendGroup> legendGroups = [];
+    List<StickyNote> stickyNotes = [];
 
     if (map['layers'] != null) {
       try {
@@ -87,18 +90,30 @@ class MapItem {
       }
     }
 
-    return MapItem(
+    if (map['sticky_notes'] != null) {
+      try {
+        final stickyNotesJson = json.decode(map['sticky_notes'] as String);
+        if (stickyNotesJson is List) {
+          stickyNotes = stickyNotesJson
+              .map((e) => StickyNote.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (e) {
+        print('解析便签数据失败: $e');
+        // 如果解析失败，继续使用空列表
+      }
+    }    return MapItem(
       id: map['id'] as int?,
       title: map['title'] as String,
       imageData: map['image_data'] as Uint8List?,
       version: map['version'] as int,
       layers: layers,
       legendGroups: legendGroups,
+      stickyNotes: stickyNotes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
   }
-
   /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
@@ -110,11 +125,13 @@ class MapItem {
       'legend_groups': json.encode(
         legendGroups.map((e) => e.toJson()).toList(),
       ),
+      'sticky_notes': json.encode(
+        stickyNotes.map((e) => e.toJson()).toList(),
+      ),
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
-
   /// 创建副本
   MapItem copyWith({
     int? id,
@@ -123,6 +140,7 @@ class MapItem {
     int? version,
     List<MapLayer>? layers,
     List<LegendGroup>? legendGroups,
+    List<StickyNote>? stickyNotes,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -133,6 +151,7 @@ class MapItem {
       version: version ?? this.version,
       layers: layers ?? this.layers,
       legendGroups: legendGroups ?? this.legendGroups,
+      stickyNotes: stickyNotes ?? this.stickyNotes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
