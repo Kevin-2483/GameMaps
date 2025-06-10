@@ -755,7 +755,7 @@ extension HtmlConfigExtension on MarkdownConfig {
           scrollDirection: Axis.horizontal,
           child: table,
         ),
-        defaultColumnWidth: const FlexColumnWidth(1.0),
+        defaultColumnWidth: const IntrinsicColumnWidth(),
         headerStyle: TextStyle(
           color: isDarkTheme ? Colors.white : Colors.black87,
           fontWeight: FontWeight.bold,
