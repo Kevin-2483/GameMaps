@@ -731,9 +731,7 @@ class MapCanvasState extends State<MapCanvas> {
                               onPanEnd: _onDrawingEnd,
                               behavior: HitTestBehavior.translucent,
                             ),
-                    ),
-
-                  // Touch handler for element interaction - 当没有绘制工具选中时
+                    ),                  // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
@@ -745,7 +743,7 @@ class MapCanvasState extends State<MapCanvas> {
                         onPanStart: _onElementInteractionPanStart,
                         onPanUpdate: _onElementInteractionPanUpdate,
                         onPanEnd: _onElementInteractionPanEnd,
-                        behavior: HitTestBehavior.translucent,
+                        behavior: HitTestBehavior.deferToChild, // 改为deferToChild，让便签优先处理手势
                       ),
                     ),
                 ],
@@ -862,19 +860,22 @@ class MapCanvasState extends State<MapCanvas> {
     final size = Size(
       note.size.width * kCanvasWidth,
       note.size.height * kCanvasHeight,
-    );
-
-    return Positioned(
+    );    return Positioned(
       left: position.dx,
       top: position.dy,
       width: size.width,
       height: size.height,
       child: Opacity(
-        opacity: effectiveOpacity,        child: StickyNoteDisplay(
-          note: note,
-          isSelected: widget.selectedStickyNote?.id == note.id,
-          isPreviewMode: widget.isPreviewMode,
-          onNoteUpdated: widget.onStickyNoteUpdated,
+        opacity: effectiveOpacity,        
+        child: GestureDetector(
+          // 添加手势检测器包装便签，确保能接收到手势
+          behavior: HitTestBehavior.opaque,
+          child: StickyNoteDisplay(
+            note: note,
+            isSelected: widget.selectedStickyNote?.id == note.id,
+            isPreviewMode: widget.isPreviewMode,
+            onNoteUpdated: widget.onStickyNoteUpdated,
+          ),
         ),
       ),
     );
