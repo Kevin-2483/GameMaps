@@ -1,8 +1,8 @@
-import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/map_item.dart';
-import '../models/map_version.dart';
+
 
 /// 版本会话状态
 class VersionSessionState {
@@ -274,90 +274,6 @@ class VersionSessionManager {
     _currentVersionId = null;
   }
 
-  /// 保存会话状态到本地存储
-  /// 保存会话状态到本地存储
-  Future<void> saveToStorage() async {
-    try {
-      final stopwatch = Stopwatch()..start();
-
-      final prefs = await SharedPreferences.getInstance();
-      final prefsTime = stopwatch.elapsedMicroseconds;
-
-      // 在后台线程进行JSON编码
-      final sessionJson = await compute(_encodeSessionData, {
-        'mapTitle': mapTitle,
-        'currentVersionId': _currentVersionId,
-        'sessionStates': _sessionStates.map(
-          (key, value) => MapEntry(key, value.toJson()),
-        ),
-        'savedAt': DateTime.now().toIso8601String(),
-      });
-
-      final dataTime = stopwatch.elapsedMicroseconds;
-
-      final jsonTime = stopwatch.elapsedMicroseconds;
-
-      await prefs.setString('version_session_$mapTitle', sessionJson);
-
-      final saveTime = stopwatch.elapsedMicroseconds;
-
-      stopwatch.stop();
-
-      // 只在debug模式下打印详细日志
-      if (kDebugMode) {
-        final jsonSize = utf8.encode(sessionJson).length;
-        debugPrint('版本会话状态已保存 [地图: $mapTitle]');
-        debugPrint('性能统计:');
-        debugPrint('  获取SharedPreferences: ${prefsTime}μs');
-        debugPrint('  构建数据结构: ${dataTime - prefsTime}μs');
-        debugPrint('  JSON编码: ${jsonTime - dataTime}μs');
-        debugPrint('  本地存储: ${saveTime - jsonTime}μs');
-        debugPrint('  总耗时: ${saveTime}μs');
-        debugPrint('  JSON大小: ${(jsonSize / 1024).toStringAsFixed(2)} KB');
-        debugPrint('  版本数量: ${_sessionStates.length}');
-      }
-    } catch (e) {
-      debugPrint('保存版本会话状态失败: $e');
-    }
-  }
-
-  // 顶层函数，用于compute
-  String _encodeSessionData(Map<String, dynamic> data) {
-    return json.encode(data);
-  }
-
-  /// 从本地存储加载会话状态
-  Future<void> loadFromStorage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final sessionJson = prefs.getString('version_session_$mapTitle');
-
-      if (sessionJson != null) {
-        final sessionData = json.decode(sessionJson) as Map<String, dynamic>;
-
-        _currentVersionId = sessionData['currentVersionId'] as String?;
-
-        final sessionStatesData =
-            sessionData['sessionStates'] as Map<String, dynamic>?;
-        if (sessionStatesData != null) {
-          _sessionStates.clear();
-          for (final entry in sessionStatesData.entries) {
-            try {
-              _sessionStates[entry.key] = VersionSessionState.fromJson(
-                entry.value as Map<String, dynamic>,
-              );
-            } catch (e) {
-              debugPrint('加载版本会话状态失败 [版本: ${entry.key}]: $e');
-            }
-          }
-        }
-
-        debugPrint('版本会话状态已加载 [地图: $mapTitle, 版本数: ${_sessionStates.length}]');
-      }
-    } catch (e) {
-      debugPrint('加载版本会话状态失败: $e');
-    }
-  }
 
   /// 清理过期的会话状态（超过指定天数的状态）
   void cleanupExpiredSessions({int expireDays = 7}) {

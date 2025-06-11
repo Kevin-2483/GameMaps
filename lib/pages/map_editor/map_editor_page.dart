@@ -149,11 +149,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   StickyNote? _selectedStickyNote; // 当前选中的便签
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
   
-  // 性能优化：防抖计时器
-  Timer? _autoSaveTimer;
-  Timer? _sessionStateTimer;
-  bool _isSessionStateDirty = false;
-  
   // 增量更新支持
   final Set<String> _dirtyLayers = {}; // 需要重绘的图层ID
   final Set<String> _dirtyLegends = {}; // 需要重绘的图例组ID  
@@ -273,9 +268,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_undoHistory.length > _maxUndoHistory) {
       _undoHistory.removeAt(0);
     }
-    
-    // 自动保存会话状态
-    _autoSaveSessionState();
+
   }
   void _undo() {
     if (_undoHistory.isEmpty || _currentMap == null) return;
@@ -848,8 +841,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 清理脏组件标记
     _clearDirtyComponents();
     
-    // 使用防抖自动保存
-    _debouncedAutoSave();
   }
 
   void _reorderLayers(int oldIndex, int newIndex) {
@@ -1128,8 +1119,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 清理脏组件标记
     _clearDirtyComponents();
 
-    // 使用防抖自动保存
-    _debouncedAutoSave();
   }// 处理透明度预览
   void _handleOpacityPreview(String layerId, double opacity) {
     // 只更新预览状态，不触发完整重绘
@@ -1386,9 +1375,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         maxUndoHistory: _maxUndoHistory,
       );
       
-      // 从本地存储加载会话状态
-      await _versionSessionManager!.loadFromStorage();
-      
       // 确保默认版本存在并包含当前地图数据
       _versionManager!.initializeDefault();
       _versionManager!.updateVersionData('default', _currentMap!);
@@ -1567,8 +1553,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 恢复目标版本的会话状态
     _restoreVersionSession(versionId);
     
-    // 自动保存会话状态到本地存储
-    _autoSaveSessionState();
     
     _showSuccessSnackBar('已切换到版本 "${_versionManager!.currentVersion?.name}"');
   }/// 删除版本
@@ -1745,7 +1729,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   // 退出确认对话框
   Future<bool> _showExitConfirmDialog() async {
     // 无论是否有未保存的更改，都先保存会话状态
-    await _saveSessionStateOnExit();
+
     
     if (!_hasUnsavedChanges || widget.isPreviewMode || kIsWeb) {
       return true; // 如果没有未保存更改或在预览模式，直接允许退出
@@ -2998,86 +2982,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     }
   }
-  @override
-  void dispose() {
-    // 清理防抖计时器
-    _autoSaveTimer?.cancel();
-    _sessionStateTimer?.cancel();
-    
-    // 保存会话状态到本地存储
-    if (_versionSessionManager != null && _currentMap != null && _versionManager != null) {
-      final currentVersionId = _versionManager!.currentVersionId;
-      _versionSessionManager!.updateVersionData(
-        currentVersionId, 
-        _currentMap!, 
-        markAsChanged: _hasUnsavedVersionChanges
-      );
-      
-      // 异步保存到本地存储
-      _versionSessionManager!.saveToStorage().catchError((error) {
-        print('页面退出时保存会话状态失败: $error');
-      });
-    }
-    super.dispose();
-  }
 
-  /// 页面退出时保存会话状态
-  Future<void> _saveSessionStateOnExit() async {
-    if (_versionSessionManager != null && _currentMap != null && _versionManager != null) {
-      try {
-        // 保存当前版本的会话数据
-        final currentVersionId = _versionManager!.currentVersionId;
-        _versionSessionManager!.updateVersionData(
-          currentVersionId, 
-          _currentMap!, 
-          markAsChanged: _hasUnsavedVersionChanges
-        );
-        
-        // 保存会话状态到本地存储
-        await _versionSessionManager!.saveToStorage();
-        print('会话状态已保存到本地存储');
-      } catch (e) {
-        print('保存会话状态失败: $e');
-      }
-    }
-  }
-  /// 自动保存会话状态（防抖）
-  void _autoSaveSessionState() {
-    if (_versionSessionManager == null || _currentMap == null || _versionManager == null) {
-      return;
-    }
-    
-    // 标记需要保存
-    _isSessionStateDirty = true;
-    
-    // 取消之前的计时器
-    _sessionStateTimer?.cancel();
-    
-    // 设置新的防抖计时器（延迟1秒保存）
-    _sessionStateTimer = Timer(const Duration(seconds: 1), () async {
-      if (!_isSessionStateDirty) return;
-      
-      try {
-        final currentVersionId = _versionManager!.currentVersionId;
-        _versionSessionManager!.updateVersionData(
-          currentVersionId, 
-          _currentMap!, 
-          markAsChanged: _hasUnsavedVersionChanges
-        );
-        
-        // 降低保存频率，避免频繁I/O
-        await _versionSessionManager!.saveToStorage();
-        _isSessionStateDirty = false;
-        
-        // 只在debug模式下打印日志
-        if (kDebugMode) {
-          print('版本会话状态已保存 [地图: ${_currentMap!.title}]');
-        }
-      } catch (e) {
-        print('自动保存会话状态失败: $e');
-      }
-    });
-  }
 
   // 便签管理方法
   void _addNewStickyNote() {
@@ -3131,8 +3036,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 清理脏组件标记
     _clearDirtyComponents();
 
-    // 使用防抖自动保存
-    _debouncedAutoSave();
+
   }
 
   void _deleteStickyNote(StickyNote note) {
@@ -3174,12 +3078,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _currentMap = _currentMap!.copyWith(stickyNotes: notes);
     });
   }  /// 防抖自动保存
-  void _debouncedAutoSave() {
-    _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(milliseconds: 1000), () {
-      _autoSaveSessionState();
-    });
-  }
+
 
   /// 清理脏组件标记
   /// 在setState执行完毕后调用，确保增量更新状态被重置
