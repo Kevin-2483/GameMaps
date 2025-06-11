@@ -721,19 +721,22 @@ class VfsMapServiceImpl implements VfsMapService {
       debugPrint('获取地图版本失败 [$mapTitle]: $e');
       return [];
     }
-  }
-
-  @override
+  }  @override
   Future<void> createMapVersion(String mapTitle, String version, [String? sourceVersion]) async {
     try {
-      sourceVersion ??= 'default';
-      
       if (await mapVersionExists(mapTitle, version)) {
         throw Exception('版本已存在: $version');
       }
-      
-      // 复制数据
-      await copyVersionData(mapTitle, sourceVersion, version);
+        // 如果 sourceVersion 为 null，创建空的版本目录
+      if (sourceVersion == null) {
+        final versionPath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$version');
+        await _storageService.createDirectory(versionPath);
+        debugPrint('创建空版本目录: $version');
+      } else {
+        // 否则从指定源版本复制数据
+        await copyVersionData(mapTitle, sourceVersion, version);
+        debugPrint('从版本 $sourceVersion 复制数据到版本 $version');
+      }
     } catch (e) {
       debugPrint('创建地图版本失败 [$mapTitle:$version]: $e');
       rethrow;

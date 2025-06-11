@@ -243,7 +243,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     });
   }
 
-  // 撤销历史记录管理方法
+  // 撤销历史记录管理方法  
   void _saveToUndoHistory() {
     if (_currentMap == null) return;
 
@@ -253,13 +253,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _hasUnsavedVersionChanges = true;
     }
 
+    // 创建地图的深拷贝，避免引用问题
+    final deepCopiedMap = _currentMap!.copyWith(
+      layers: _currentMap!.layers.map((layer) => layer.copyWith()).toList(),
+      legendGroups: _currentMap!.legendGroups.map((group) => group.copyWith()).toList(),
+    );
+    
     // 保存当前状态到撤销历史
-    _undoHistory.add(_currentMap!.copyWith());
+    _undoHistory.add(deepCopiedMap);
     
     // 同时保存到版本会话管理器
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
-      _versionSessionManager!.addToUndoHistory(currentVersionId, _currentMap!.copyWith());
+      _versionSessionManager!.addToUndoHistory(currentVersionId, deepCopiedMap);
     }
     
     // 清空重做历史，因为新的操作会使重做历史失效

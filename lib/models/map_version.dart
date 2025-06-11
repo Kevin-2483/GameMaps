@@ -97,23 +97,28 @@ class MapVersionManager {
   void addVersion(MapVersion version) {
     _versions[version.id] = version;
   }
-
   /// 从数据创建版本（用于加载已存在的版本）
   MapVersion createVersionFromData(String versionId, String name, MapItem mapData) {
     final now = DateTime.now();
+    
+    // 创建地图数据的深拷贝，避免引用问题
+    final deepCopiedMapData = mapData.copyWith(
+      layers: mapData.layers.map((layer) => layer.copyWith()).toList(),
+      legendGroups: mapData.legendGroups.map((group) => group.copyWith()).toList(),
+      updatedAt: now,
+    );
     
     final version = MapVersion(
       id: versionId,
       name: name,
       createdAt: now,
       updatedAt: now,
-      mapData: mapData,
+      mapData: deepCopiedMapData,
     );
     
     _versions[versionId] = version;
     return version;
-  }
-  /// 创建新版本
+  }/// 创建新版本
   MapVersion createVersion(String name, MapItem currentMapData) {
     final now = DateTime.now();
     
@@ -123,12 +128,19 @@ class MapVersionManager {
     // 确保版本ID唯一
     versionId = _ensureUniqueVersionId(versionId);
     
+    // 创建地图数据的深拷贝，避免引用问题
+    final deepCopiedMapData = currentMapData.copyWith(
+      layers: currentMapData.layers.map((layer) => layer.copyWith()).toList(),
+      legendGroups: currentMapData.legendGroups.map((group) => group.copyWith()).toList(),
+      updatedAt: now,
+    );
+    
     final version = MapVersion(
       id: versionId,
       name: name,
       createdAt: now,
       updatedAt: now,
-      mapData: currentMapData,
+      mapData: deepCopiedMapData,
     );
     
     _versions[versionId] = version;
@@ -203,13 +215,19 @@ class MapVersionManager {
   bool hasVersion(String versionId) {
     return _versions.containsKey(versionId);
   }
-
   /// 更新版本数据
   void updateVersionData(String versionId, MapItem mapData) {
     final version = _versions[versionId];
     if (version != null) {
+      // 创建地图数据的深拷贝，避免引用问题
+      final deepCopiedMapData = mapData.copyWith(
+        layers: mapData.layers.map((layer) => layer.copyWith()).toList(),
+        legendGroups: mapData.legendGroups.map((group) => group.copyWith()).toList(),
+        updatedAt: DateTime.now(),
+      );
+      
       _versions[versionId] = version.copyWith(
-        mapData: mapData,
+        mapData: deepCopiedMapData,
         updatedAt: DateTime.now(),
       );
     }
