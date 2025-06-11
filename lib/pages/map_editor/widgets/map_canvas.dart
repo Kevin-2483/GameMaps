@@ -11,6 +11,7 @@ import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
 import 'sticky_note_display.dart'; // 导入便签显示组件
+import '../utils/drawing_utils.dart'; // 导入绘制工具函数
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -53,168 +54,18 @@ class DrawingPreviewData {
   });
 }
 
-/// 创建三角形裁剪路径
-Path _createTrianglePath(Rect rect, TriangleCutType triangleCut) {
-  final path = Path();
-
-  switch (triangleCut) {
-    case TriangleCutType.topLeft:
-      // 左上三角：保留左上角，切掉右下角
-      path.moveTo(rect.left, rect.top);
-      path.lineTo(rect.right, rect.top);
-      path.lineTo(rect.left, rect.bottom);
-      path.close();
-      break;
-
-    case TriangleCutType.topRight:
-      // 右上三角：保留右上角，切掉左下角
-      path.moveTo(rect.left, rect.top);
-      path.lineTo(rect.right, rect.top);
-      path.lineTo(rect.right, rect.bottom);
-      path.close();
-      break;
-
-    case TriangleCutType.bottomRight:
-      // 右下三角：保留右下角，切掉左上角
-      path.moveTo(rect.right, rect.top);
-      path.lineTo(rect.right, rect.bottom);
-      path.lineTo(rect.left, rect.bottom);
-      path.close();
-      break;
-
-    case TriangleCutType.bottomLeft:
-      // 左下三角：保留左下角，切掉右上角
-      path.moveTo(rect.left, rect.top);
-      path.lineTo(rect.right, rect.bottom);
-      path.lineTo(rect.left, rect.bottom);
-      path.close();
-      break;
-    case TriangleCutType.none:
-      // 无切割：返回整个矩形
-      path.addRect(rect);
-      break;
-  }
-
-  return path;
-}
-
-/// 创建超椭圆路径（从圆角矩形到椭圆的渐变）
-Path _createSuperellipsePath(Rect rect, double curvature) {
-  if (curvature <= 0.0) {
-    return Path()..addRect(rect);
-  }
-
-  // 限制弧度值在合理范围内 (0.0 到 1.0)
-  final clampedCurvature = curvature.clamp(0.0, 1.0);
-
-  final centerX = rect.center.dx;
-  final centerY = rect.center.dy;
-  final a = rect.width / 2;
-  final b = rect.height / 2;
-
-  if (a < 2 || b < 2) {
-    return Path()..addRect(rect);
-  }
-
-  // 使用与 _drawCurvedRectangle 相同的三段式插值逻辑
-  double n;
-  bool useStandardEllipse = false;
-
-  if (clampedCurvature <= 0.3) {
-    // 圆角矩形阶段：从尖角 (n=8) 到圆角 (n=4)
-    final t = clampedCurvature / 0.3;
-    n = 8.0 - (t * 4.0); // 从 8.0 到 4.0
-  } else if (clampedCurvature <= 0.7) {
-    // 过渡阶段：从圆角 (n=4) 到椭圆准备 (n=2.2)
-    final t = (clampedCurvature - 0.3) / 0.4;
-    n = 4.0 - (t * 1.8); // 从 4.0 到 2.2
-  } else {
-    // 椭圆阶段：使用标准椭圆方程
-    useStandardEllipse = true;
-    n = 2.0; // 标准椭圆
-  }
-
-  final path = Path();
-  const int numPoints = 100;
-
-  bool isFirstPoint = true;
-
-  for (int i = 0; i <= numPoints; i++) {
-    final t = (i / numPoints) * 2 * math.pi;
-
-    double x, y;
-
-    if (useStandardEllipse) {
-      // 使用标准椭圆方程: x = a*cos(t), y = b*sin(t)
-      x = centerX + a * math.cos(t);
-      y = centerY + b * math.sin(t);
-    } else {
-      // 使用超椭圆方程
-      final cosT = math.cos(t);
-      final sinT = math.sin(t);
-
-      final signCos = cosT >= 0 ? 1.0 : -1.0;
-      final signSin = sinT >= 0 ? 1.0 : -1.0;
-
-      x = centerX + a * signCos * math.pow(cosT.abs(), 2.0 / n);
-      y = centerY + b * signSin * math.pow(sinT.abs(), 2.0 / n);
-    }
-
-    if (isFirstPoint) {
-      path.moveTo(x, y);
-      isFirstPoint = false;
-    } else {
-      path.lineTo(x, y);
-    }
-  }
-
-  path.close();
-  return path;
-}
-
-Path _getFinalEraserPath(
-  Rect rect,
-  double curvature,
-  TriangleCutType triangleCut,
-) {
-  Path curvedPath = _createSuperellipsePath(rect, curvature); // 这是你处理曲率生成路径的函数
-
-  if (triangleCut == TriangleCutType.none) {
-    return curvedPath;
-  }
-  Path triangleAreaPath = _createTrianglePath(rect, triangleCut); // 你提供的函数
-
-  // 返回两个路径的交集
-  return Path.combine(PathOperation.intersect, curvedPath, triangleAreaPath);
-}
+// 这些工具函数已经移动到 drawing_utils.dart 中
+// 现在保留包装函数以便于调用
 
 // --- 重构后的 _drawCurvedRectangle 函数 ---
 /// 绘制弧度矩形（从圆角矩形到椭圆的渐变）
-/// 现在它调用 _createEraserShapePath 来获取路径。
 void _drawCurvedRectangle(
   Canvas canvas,
   Rect rect,
   Paint paint,
   double curvature,
 ) {
-  // 基本的提前返回条件可以保留，或者让 _createEraserShapePath 处理
-  // 例如，如果曲率直接是0，_createEraserShapePath 会返回一个矩形路径
-  // if (curvature <= 0.0) { // _createEraserShapePath 内部会处理这种情况
-  //   canvas.drawRect(rect, paint);
-  //   return;
-  // }
-  //
-  // // 如果矩形太小，_createEraserShapePath 也会处理并返回矩形路径
-  // if (rect.width / 2 < 2 || rect.height / 2 < 2) {
-  //   canvas.drawRect(rect, paint);
-  //   return;
-  // }
-
-  // 调用核心函数来创建路径
-  final Path path = _createSuperellipsePath(rect, curvature);
-
-  // 绘制生成的路径
-  canvas.drawPath(path, paint);
+  drawCurvedRectangle(canvas, rect, paint, curvature);
 }
 
 void _drawCurvedTrianglePath(
@@ -224,24 +75,7 @@ void _drawCurvedTrianglePath(
   double curvature,
   TriangleCutType triangleCut,
 ) {
-  // 基本的提前返回条件可以保留，或者让 _createEraserShapePath 处理
-  // 例如，如果曲率直接是0，_createEraserShapePath 会返回一个矩形路径
-  // if (curvature <= 0.0) { // _createEraserShapePath 内部会处理这种情况
-  //   canvas.drawRect(rect, paint);
-  //   return;
-  // }
-  //
-  // // 如果矩形太小，_createEraserShapePath 也会处理并返回矩形路径
-  // if (rect.width / 2 < 2 || rect.height / 2 < 2) {
-  //   canvas.drawRect(rect, paint);
-  //   return;
-  // }
-
-  // 调用核心函数来创建路径
-  final Path path = _getFinalEraserPath(rect, curvature, triangleCut);
-
-  // 绘制生成的路径
-  canvas.drawPath(path, paint);
+  drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
 }
 
 /// 辅助类：用于管理分层元素
@@ -2622,70 +2456,11 @@ class _SelectionPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // 绘制虚线边框
-    _drawDashedRect(canvas, selectionRect!, borderPaint, 5.0, 3.0);
-  }
-
-  void _drawDashedRect(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final path = Path();
-
-    // 顶边
-    _addDashedLine(path, rect.topLeft, rect.topRight, dashWidth, dashSpace);
-    // 右边
-    _addDashedLine(path, rect.topRight, rect.bottomRight, dashWidth, dashSpace);
-    // 底边
-    _addDashedLine(
-      path,
-      rect.bottomRight,
-      rect.bottomLeft,
-      dashWidth,
-      dashSpace,
-    );
-    // 左边
-    _addDashedLine(path, rect.bottomLeft, rect.topLeft, dashWidth, dashSpace);
-
-    canvas.drawPath(path, paint);
-  }
-
-  void _addDashedLine(
-    Path path,
-    Offset start,
-    Offset end,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final distance = (end - start).distance;
-    final unitVector = (end - start) / distance;
-
-    double currentDistance = 0.0;
-    bool isDash = true;
-
-    while (currentDistance < distance) {
-      final segmentLength = isDash ? dashWidth : dashSpace;
-      final nextDistance = (currentDistance + segmentLength).clamp(
-        0.0,
-        distance,
-      );
-
-      if (isDash) {
-        final segmentStart = start + unitVector * currentDistance;
-        final segmentEnd = start + unitVector * nextDistance;
-        path.moveTo(segmentStart.dx, segmentStart.dy);
-        path.lineTo(segmentEnd.dx, segmentEnd.dy);
-      }
-
-      currentDistance = nextDistance;
-      isDash = !isDash;
-    }
+    drawDashedRect(canvas, selectionRect!, borderPaint, 5.0, 3.0);
   }
 
   @override
-  bool shouldRepaint(covariant _SelectionPainter oldDelegate) {
+  bool shouldRepaint(_SelectionPainter oldDelegate) {
     return oldDelegate.selectionRect != selectionRect;
   }
 }
@@ -2863,12 +2638,12 @@ class _LayerPainter extends CustomPainter {
             break;
           case DrawingElementType.dashedLine:
             paint.style = PaintingStyle.stroke;
-            _drawDashedLine(canvas, start, end, paint, element.density);
+            drawDashedLine(canvas, start, end, paint, element.density);
             break;
 
           case DrawingElementType.arrow:
             paint.style = PaintingStyle.stroke;
-            _drawArrow(canvas, start, end, paint);
+            drawArrow(canvas, start, end, paint);
             break;
           case DrawingElementType.rectangle:
             paint.style = PaintingStyle.fill;
@@ -2883,17 +2658,17 @@ class _LayerPainter extends CustomPainter {
             break;
           case DrawingElementType.diagonalLines:
             paint.style = PaintingStyle.stroke;
-            _drawDiagonalPattern(canvas, start, end, paint, element.density);
+            drawDiagonalPattern(canvas, start, end, paint, element.density);
             break;
 
           case DrawingElementType.crossLines:
             paint.style = PaintingStyle.stroke;
-            _drawCrossPattern(canvas, start, end, paint, element.density);
+            drawCrossPattern(canvas, start, end, paint, element.density);
             break;
 
           case DrawingElementType.dotGrid:
             paint.style = PaintingStyle.fill;
-            _drawDotGrid(canvas, start, end, paint, element.density);
+            drawDotGrid(canvas, start, end, paint, element.density);
             break;
 
           default:
@@ -2947,7 +2722,6 @@ class _LayerPainter extends CustomPainter {
       canvas.drawCircle(center, radius, fillPaint);
     }
   }
-
   void _drawElementWithEraserMask(
     Canvas canvas,
     MapDrawingElement element,
@@ -2998,10 +2772,10 @@ class _LayerPainter extends CustomPainter {
           eraser,
           size,
         );
-        // print(doesEraserAffectElement);
+        // print(doesEraserAffectElement);        
         if (doesEraserAffectElement) {
-          // *** 修改在这里：调用 _getFinalEraserPath 并传入 triangleCut ***
-          final Path singleEraserPath = _getFinalEraserPath(
+          // *** 修改在这里：调用 getFinalEraserPath 并传入 triangleCut ***
+          final Path singleEraserPath = getFinalEraserPath(
             eraserRect,
             eraser.curvature,
             eraser.triangleCut, // 使用橡皮擦元素的 triangleCut 属性
@@ -3059,7 +2833,7 @@ class _LayerPainter extends CustomPainter {
             element.points[0].dx * size.width,
             element.points[0].dy * size.height,
           );
-          return _isPointInFinalEraserShape(
+          return isPointInFinalEraserShape(
             textPosition,
             eraserRect,
             eraserCurvature,
@@ -3075,7 +2849,7 @@ class _LayerPainter extends CustomPainter {
             pointModel.dx * size.width,
             pointModel.dy * size.height,
           );
-          if (_isPointInFinalEraserShape(
+          if (isPointInFinalEraserShape(
             screenPoint,
             eraserRect,
             eraserCurvature,
@@ -3113,113 +2887,6 @@ class _LayerPainter extends CustomPainter {
     }
   }
 
-  /// 检查点是否在橡皮擦形状内（可以是矩形、超椭圆或标准椭圆）
-  /// Checks if a point is inside the eraser shape (can be a rectangle, superellipse, or standard ellipse)
-  bool _isPointInEraserShape(Offset point, Rect eraserRect, double curvature) {
-    // 1. 处理曲率为0或负数的情况（矩形）
-    // 1. Handle curvature <= 0.0 (rectangle)
-    if (curvature <= 0.0) {
-      return eraserRect.contains(point);
-    }
-
-    // 2. 限制弧度值在合理范围内 (0.0 到 1.0)
-    // 2. Clamp curvature value to a reasonable range (0.0 to 1.0)
-    final clampedCurvature = curvature.clamp(0.0, 1.0);
-
-    // 如果限制后的曲率仍然是0或以下，则按矩形处理
-    // If clamped curvature is still 0 or less, treat as a rectangle
-    if (clampedCurvature <= 0.0) {
-      return eraserRect.contains(point);
-    }
-
-    final center = eraserRect.center;
-    final a = eraserRect.width / 2; // 半宽 (Half-width)
-    final b = eraserRect.height / 2; // 半高 (Half-height)
-
-    // 如果半宽或半高为0或负数，则点不可能在形状内 (除非点恰好是中心且a,b都为0)
-    // If half-width or half-height is zero or negative, the point cannot be inside
-    // (unless the point is the center and a, b are both 0, which is a degenerate case)
-    if (a <= 0 || b <= 0) {
-      // For a point to be contained, width and height must be positive.
-      // If a or b is zero, it's a line or a point.
-      // A point is contained in a zero-area rect if it's exactly that point.
-      // However, for shapes like ellipses/superellipses, non-positive a or b means no area.
-      return false;
-    }
-
-    final dx = point.dx - center.dx;
-    final dy = point.dy - center.dy;
-
-    // 3. 根据 clampedCurvature 确定 n 值和是否使用标准椭圆
-    // 3. Determine n value and whether to use standard ellipse based on clampedCurvature
-    double n;
-    bool useStandardEllipse = false;
-
-    if (clampedCurvature <= 0.3) {
-      // 圆角矩形阶段 (超椭圆)
-      // Rounded rectangle stage (superellipse)
-      final t = clampedCurvature / 0.3;
-      n = 8.0 - (t * 4.0); // n 从 8.0 变化到 4.0 (n varies from 8.0 to 4.0)
-    } else if (clampedCurvature <= 0.7) {
-      // 过渡阶段 (超椭圆)
-      // Transition stage (superellipse)
-      final t = (clampedCurvature - 0.3) / 0.4;
-      n = 4.0 - (t * 1.8); // n 从 4.0 变化到 2.2 (n varies from 4.0 to 2.2)
-    } else {
-      // 标准椭圆阶段
-      // Standard ellipse stage
-      useStandardEllipse = true;
-      n = 2.0; // For standard ellipse, the exponent in the general form is 2
-    }
-
-    // 4. 点在形状内的判断
-    // 4. Point-in-shape test
-    if (useStandardEllipse || n == 2.0) {
-      // n=2.0 is the standard ellipse case
-      // 标准椭圆方程: (x/a)² + (y/b)² <= 1
-      // Standard ellipse equation: (x/a)² + (y/b)² <= 1
-      // (dx * dx) / (a * a) can cause issues if a is very small.
-      // (dx/a) * (dx/a) is numerically more stable.
-      final termX = (dx / a);
-      final termY = (dy / b);
-      return (termX * termX) + (termY * termY) <= 1.0;
-    } else {
-      // 超椭圆方程: (|x/a|)^n + (|y/b|)^n <= 1
-      // Superellipse equation: (|dx/a|)^n + (|dy/b|)^n <= 1
-      // Ensure a and b are not zero to prevent division by zero.
-      // This was already checked by (a <= 0 || b <= 0)
-
-      final termX = (dx.abs() / a);
-      final termY = (dy.abs() / b);
-
-      // math.pow can be computationally intensive.
-      // Also, math.pow(negative, non-integer) can result in NaN.
-      // Since we use .abs(), the base for pow will be non-negative.
-      return math.pow(termX, n) + math.pow(termY, n) <= 1.0;
-    }
-  }
-
-  bool _isPointInFinalEraserShape(
-    Offset point,
-    Rect eraserRect,
-    double curvature,
-    TriangleCutType triangleCut,
-  ) {
-    // 1. 首先检查点是否在由 curvature 定义的基础形状内
-    if (!_isPointInEraserShape(point, eraserRect, curvature)) {
-      return false; // 如果不在基础形状内，则肯定不在最终切割后的形状内
-    }
-
-    // 2. 如果没有对角线切割，则点在基础形状内即为在最终形状内
-    if (triangleCut == TriangleCutType.none) {
-      return true;
-    }
-
-    // 3. 如果有对角线切割，则还需要检查点是否在 _createTrianglePath 定义的三角形区域内
-    // _createTrianglePath 返回的是要“保留”的三角形区域
-    Path triangleAreaPath = _createTrianglePath(eraserRect, triangleCut);
-    return triangleAreaPath.contains(point); // 使用 Path.contains() 判断
-  }
 
   /// 检查矩形是否与橡皮擦形状重叠
   /// 检查矩形是否与橡皮擦形状重叠
@@ -3274,13 +2941,13 @@ class _LayerPainter extends CustomPainter {
     // 特殊处理：文本元素只需要一个点，自由绘制可能有多个点
     if (element.type == DrawingElementType.text) {
       if (points.isEmpty) return;
-      _drawText(canvas, element, size);
+      drawText(canvas, element, size);
       return;
     }
 
     if (element.type == DrawingElementType.freeDrawing) {
       if (points.isEmpty) return;
-      _drawFreeDrawingPath(canvas, element, paint, size);
+      drawFreeDrawingPath(canvas, element, paint, size);
       return;
     }
 
@@ -3292,12 +2959,12 @@ class _LayerPainter extends CustomPainter {
     final rect = Rect.fromPoints(start, end); // 检查是否需要应用三角形切割
     final needsTriangleClip =
         element.triangleCut != TriangleCutType.none &&
-        _isTriangleCutApplicable(element.type);
+        isTriangleCutApplicable(element.type);
 
     if (needsTriangleClip) {
       // 保存画布状态并应用三角形裁剪
       canvas.save();
-      final trianglePath = _createTrianglePath(rect, element.triangleCut);
+      final trianglePath = createTrianglePath(rect, element.triangleCut);
       canvas.clipPath(trianglePath);
     }
 
@@ -3306,7 +2973,7 @@ class _LayerPainter extends CustomPainter {
         canvas.drawLine(start, end, paint);
         break;
       case DrawingElementType.dashedLine:
-        _drawDashedLine(canvas, start, end, paint, element.density);
+        drawDashedLine(canvas, start, end, paint, element.density);
         break;
 
       case DrawingElementType.imageArea:
@@ -3314,7 +2981,7 @@ class _LayerPainter extends CustomPainter {
         break;
 
       case DrawingElementType.arrow:
-        _drawArrow(canvas, start, end, paint);
+        drawArrow(canvas, start, end, paint);
         break;
       case DrawingElementType.rectangle:
         paint.style = PaintingStyle.fill;
@@ -3335,7 +3002,7 @@ class _LayerPainter extends CustomPainter {
         break;
       case DrawingElementType.diagonalLines:
         if (element.curvature > 0.0) {
-          _drawCurvedDiagonalPattern(
+          drawCurvedDiagonalPattern(
             canvas,
             rect,
             paint,
@@ -3343,13 +3010,13 @@ class _LayerPainter extends CustomPainter {
             element.curvature,
           );
         } else {
-          _drawDiagonalPattern(canvas, start, end, paint, element.density);
+          drawDiagonalPattern(canvas, start, end, paint, element.density);
         }
         break;
 
       case DrawingElementType.crossLines:
         if (element.curvature > 0.0) {
-          _drawCurvedCrossPattern(
+          drawCurvedCrossPattern(
             canvas,
             rect,
             paint,
@@ -3357,13 +3024,13 @@ class _LayerPainter extends CustomPainter {
             element.curvature,
           );
         } else {
-          _drawCrossPattern(canvas, start, end, paint, element.density);
+          drawCrossPattern(canvas, start, end, paint, element.density);
         }
         break;
 
       case DrawingElementType.dotGrid:
         if (element.curvature > 0.0) {
-          _drawCurvedDotGrid(
+          drawCurvedDotGrid(
             canvas,
             rect,
             paint,
@@ -3371,7 +3038,7 @@ class _LayerPainter extends CustomPainter {
             element.curvature,
           );
         } else {
-          _drawDotGrid(canvas, start, end, paint, element.density);
+          drawDotGrid(canvas, start, end, paint, element.density);
         }
         break;
 
@@ -3415,20 +3082,20 @@ class _LayerPainter extends CustomPainter {
       canvas.save();
 
       if (needsCurvatureClip && needsTriangleClip) {
-        final Path finalPath = _getFinalEraserPath(
+        final Path finalPath = getFinalEraserPath(
           rect,
           element.curvature,
           element.triangleCut,
         );
         canvas.clipPath(finalPath);
       } else if (needsCurvatureClip) {
-        final Path curvedPath = _createSuperellipsePath(
+        final Path curvedPath = createSuperellipsePath(
           rect,
           element.curvature,
         );
         canvas.clipPath(curvedPath);
       } else if (needsTriangleClip) {
-        final Path trianglePath = _createTrianglePath(
+        final Path trianglePath = createTrianglePath(
           rect,
           element.triangleCut,
         );
@@ -3465,7 +3132,7 @@ class _LayerPainter extends CustomPainter {
       }
     } else {
       // 3. 没有任何图片数据，显示空白占位符
-      _drawImageEmptyPlaceholder(
+      drawImageEmptyPlaceholder(
         canvas,
         rect,
         element.imageFit ?? BoxFit.contain,
@@ -3602,7 +3269,7 @@ class _LayerPainter extends CustomPainter {
     );
 
     // 绘制图片适应方式提示
-    final fitText = _getBoxFitDisplayName(fit);
+    final fitText = getBoxFitDisplayName(fit);
     final fitTextPainter = TextPainter(
       text: TextSpan(
         text: '适应: $fitText',
@@ -3620,474 +3287,11 @@ class _LayerPainter extends CustomPainter {
     );
   }
 
-  /// 绘制空白图片占位符
-  void _drawImageEmptyPlaceholder(Canvas canvas, Rect rect, BoxFit fit) {
-    // 虚线边框
-    final borderPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
 
-    // 绘制虚线矩形
-    _drawDashedRect(canvas, rect, borderPaint, 5.0);
 
-    // 图片图标
-    final iconSize = math.min(rect.width, rect.height) * 0.2;
-    final center = rect.center;
-
-    final iconPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    // 简单的图片图标 (矩形加山峰)
-    final iconRect = Rect.fromCenter(
-      center: center,
-      width: iconSize,
-      height: iconSize * 0.8,
-    );
-    canvas.drawRect(iconRect, iconPaint);
-
-    // 画一个简单的山峰图标
-    final mountainPath = Path();
-    mountainPath.moveTo(
-      iconRect.left + iconRect.width * 0.2,
-      iconRect.bottom - iconRect.height * 0.3,
-    );
-    mountainPath.lineTo(
-      iconRect.left + iconRect.width * 0.5,
-      iconRect.top + iconRect.height * 0.2,
-    );
-    mountainPath.lineTo(
-      iconRect.left + iconRect.width * 0.8,
-      iconRect.bottom - iconRect.height * 0.3,
-    );
-    canvas.drawPath(mountainPath, iconPaint);
-
-    // 绘制提示文本
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '点击上传图片',
-        style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
-    );
-  }
-
-  /// 绘制虚线矩形
-  void _drawDashedRect(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double dashWidth,
-  ) {
-    final Path path = Path();
-
-    // 顶边
-    double currentX = rect.left;
-    bool draw = true;
-    while (currentX < rect.right) {
-      final nextX = math.min(currentX + dashWidth, rect.right);
-      if (draw) {
-        path.moveTo(currentX, rect.top);
-        path.lineTo(nextX, rect.top);
-      }
-      currentX = nextX;
-      draw = !draw;
-    }
-
-    // 右边
-    double currentY = rect.top;
-    draw = true;
-    while (currentY < rect.bottom) {
-      final nextY = math.min(currentY + dashWidth, rect.bottom);
-      if (draw) {
-        path.moveTo(rect.right, currentY);
-        path.lineTo(rect.right, nextY);
-      }
-      currentY = nextY;
-      draw = !draw;
-    }
-
-    // 底边
-    currentX = rect.right;
-    draw = true;
-    while (currentX > rect.left) {
-      final nextX = math.max(currentX - dashWidth, rect.left);
-      if (draw) {
-        path.moveTo(currentX, rect.bottom);
-        path.lineTo(nextX, rect.bottom);
-      }
-      currentX = nextX;
-      draw = !draw;
-    }
-
-    // 左边
-    currentY = rect.bottom;
-    draw = true;
-    while (currentY > rect.top) {
-      final nextY = math.max(currentY - dashWidth, rect.top);
-      if (draw) {
-        path.moveTo(rect.left, currentY);
-        path.lineTo(rect.left, nextY);
-      }
-      currentY = nextY;
-      draw = !draw;
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  String _getBoxFitDisplayName(BoxFit boxFit) {
-    switch (boxFit) {
-      case BoxFit.fill:
-        return '填充';
-      case BoxFit.contain:
-        return '包含';
-      case BoxFit.cover:
-        return '覆盖';
-      case BoxFit.fitWidth:
-        return '适宽';
-      case BoxFit.fitHeight:
-        return '适高';
-      case BoxFit.none:
-        return '原始';
-      case BoxFit.scaleDown:
-        return '缩小';
-    }
-  }
-
-  /// 检查绘制元素类型是否支持三角形切割
-  bool _isTriangleCutApplicable(DrawingElementType type) {
-    switch (type) {
-      case DrawingElementType.rectangle:
-      case DrawingElementType.hollowRectangle:
-      case DrawingElementType.diagonalLines:
-      case DrawingElementType.crossLines:
-      case DrawingElementType.dotGrid:
-      case DrawingElementType.eraser:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  void _drawDashedLine(
-    Canvas canvas,
-    Offset start,
-    Offset end,
-    Paint paint,
-    double density,
-  ) {
-    final dashWidth = paint.strokeWidth * density * 0.8; // 虚线长度基于密度
-    final dashSpace = paint.strokeWidth * density * 0.4; // 间隔基于密度
-
-    final distance = (end - start).distance;
-    if (distance == 0) return;
-
-    final direction = (end - start) / distance;
-
-    double currentDistance = 0;
-    bool isDash = true;
-
-    while (currentDistance < distance) {
-      final segmentLength = isDash ? dashWidth : dashSpace;
-      final segmentEnd = currentDistance + segmentLength > distance
-          ? distance
-          : currentDistance + segmentLength;
-
-      if (isDash) {
-        final segmentStart = start + direction * currentDistance;
-        final segmentEndPoint = start + direction * segmentEnd;
-        canvas.drawLine(segmentStart, segmentEndPoint, paint);
-      }
-
-      currentDistance = segmentEnd;
-      isDash = !isDash;
-    }
-  }
-
-  void _drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
-    // Draw main line
-    canvas.drawLine(start, end, paint);
-
-    // Draw arrowhead
-    const arrowLength = 10.0;
-    const arrowAngle = 0.5;
-
-    final direction = (end - start).direction;
-    final arrowPoint1 =
-        end +
-        Offset(
-          arrowLength * -1 * math.cos(direction - arrowAngle),
-          arrowLength * -1 * math.sin(direction - arrowAngle),
-        );
-    final arrowPoint2 =
-        end +
-        Offset(
-          arrowLength * -1 * math.cos(direction + arrowAngle),
-          arrowLength * -1 * math.sin(direction + arrowAngle),
-        );
-
-    canvas.drawLine(end, arrowPoint1, paint);
-    canvas.drawLine(end, arrowPoint2, paint);
-  }
-
-  void _drawDiagonalPattern(
-    Canvas canvas,
-    Offset start,
-    Offset end,
-    Paint paint,
-    double density,
-  ) {
-    final rect = Rect.fromPoints(start, end);
-    final spacing = paint.strokeWidth * density;
-
-    final width = rect.width;
-    final height = rect.height;
-
-    // 计算需要的线条数量：覆盖从左上到右下的所有45度平行线
-    final int totalLines = ((width + height) / spacing).ceil();
-
-    for (int i = 0; i < totalLines; i++) {
-      final double offset = i * spacing;
-
-      Offset lineStart;
-      Offset lineEnd;
-
-      if (offset <= width) {
-        // 起点在顶边界上（从左上角往右推进）
-        lineStart = Offset(rect.left + offset, rect.top);
-      } else {
-        // 起点在右边界上（从右上角往下推进）
-        lineStart = Offset(rect.right, rect.top + (offset - width));
-      }
-
-      if (offset <= height) {
-        // 终点在左边界上（从左上角往下推进）
-        lineEnd = Offset(rect.left, rect.top + offset);
-      } else {
-        // 终点在底边界上（从左下角往右推进）
-        lineEnd = Offset(rect.left + (offset - height), rect.bottom);
-      }
-
-      canvas.drawLine(lineStart, lineEnd, paint);
-    }
-  }
-
-  void _drawCrossPattern(
-    Canvas canvas,
-    Offset start,
-    Offset end,
-    Paint paint,
-    double density,
-  ) {
-    final rect = Rect.fromPoints(start, end);
-    final spacing = paint.strokeWidth * density;
-
-    // Vertical lines
-    for (double x = rect.left; x <= rect.right; x += spacing) {
-      canvas.drawLine(Offset(x, rect.top), Offset(x, rect.bottom), paint);
-    }
-
-    // Horizontal lines
-    for (double y = rect.top; y <= rect.bottom; y += spacing) {
-      canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), paint);
-    }
-  }
-
-  void _drawDotGrid(
-    Canvas canvas,
-    Offset start,
-    Offset end,
-    Paint paint,
-    double density,
-  ) {
-    final rect = Rect.fromPoints(start, end);
-    final spacing = paint.strokeWidth * density;
-    final dotRadius = paint.strokeWidth * 0.5; // 点的半径基于线宽
-
-    final dotPaint = Paint()
-      ..color = paint.color
-      ..style = PaintingStyle.fill;
-
-    for (double x = rect.left; x <= rect.right; x += spacing) {
-      for (double y = rect.top; y <= rect.bottom; y += spacing) {
-        canvas.drawCircle(Offset(x, y), dotRadius, dotPaint);
-      }
-    }
-  }
-
-  void _drawFreeDrawingPath(
-    Canvas canvas,
-    MapDrawingElement element,
-    Paint paint,
-    Size size,
-  ) {
-    if (element.points.length < 2) return;
-
-    final path = Path();
-    final screenPoints = element.points
-        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
-        .toList();
-
-    path.moveTo(screenPoints[0].dx, screenPoints[0].dy);
-    for (int i = 1; i < screenPoints.length; i++) {
-      path.lineTo(screenPoints[i].dx, screenPoints[i].dy);
-    }
-
-    paint.style = PaintingStyle.stroke;
-    canvas.drawPath(path, paint);
-  }
-
-  void _drawText(Canvas canvas, MapDrawingElement element, Size size) {
-    if (element.text == null || element.text!.isEmpty || element.points.isEmpty)
-      return;
-
-    final position = Offset(
-      element.points[0].dx * size.width,
-      element.points[0].dy * size.height,
-    );
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: element.text!,
-        style: TextStyle(
-          color: element.color,
-          fontSize: element.fontSize ?? 16.0,
-          fontWeight: FontWeight.normal,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-    textPainter.paint(canvas, position);
-  }
-
-  /// 绘制弧度对角线图案
-  void _drawCurvedDiagonalPattern(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double density,
-    double curvature,
-  ) {
-    // 创建超椭圆路径作为裁剪区域
-    final clipPath = _createSuperellipsePath(rect, curvature);
-
-    // 保存画布状态
-    canvas.save();
-    canvas.clipPath(clipPath);
-
-    // 在裁剪区域内绘制对角线图案
-    final spacing = paint.strokeWidth * density;
-    final width = rect.width;
-    final height = rect.height;
-
-    final int totalLines = ((width + height) / spacing).ceil();
-
-    for (int i = 0; i < totalLines; i++) {
-      final double offset = i * spacing;
-
-      Offset lineStart;
-      Offset lineEnd;
-
-      if (offset <= width) {
-        lineStart = Offset(rect.left + offset, rect.top);
-      } else {
-        lineStart = Offset(rect.right, rect.top + (offset - width));
-      }
-
-      if (offset <= height) {
-        lineEnd = Offset(rect.left, rect.top + offset);
-      } else {
-        lineEnd = Offset(rect.left + (offset - height), rect.bottom);
-      }
-
-      canvas.drawLine(lineStart, lineEnd, paint);
-    }
-
-    // 恢复画布状态
-    canvas.restore();
-  }
-
-  /// 绘制弧度十字线图案
-  void _drawCurvedCrossPattern(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double density,
-    double curvature,
-  ) {
-    // 创建超椭圆路径作为裁剪区域
-    final clipPath = _createSuperellipsePath(rect, curvature);
-
-    // 保存画布状态
-    canvas.save();
-    canvas.clipPath(clipPath);
-
-    // 在裁剪区域内绘制十字线图案
-    final spacing = paint.strokeWidth * density;
-
-    // 垂直线
-    for (double x = rect.left; x <= rect.right; x += spacing) {
-      canvas.drawLine(Offset(x, rect.top), Offset(x, rect.bottom), paint);
-    }
-
-    // 水平线
-    for (double y = rect.top; y <= rect.bottom; y += spacing) {
-      canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), paint);
-    }
-
-    // 恢复画布状态
-    canvas.restore();
-  }
-
-  /// 绘制弧度点网格图案
-  void _drawCurvedDotGrid(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double density,
-    double curvature,
-  ) {
-    // 创建超椭圆路径作为裁剪区域
-    final clipPath = _createSuperellipsePath(rect, curvature);
-
-    // 保存画布状态
-    canvas.save();
-    canvas.clipPath(clipPath);
-
-    // 在裁剪区域内绘制点网格
-    final spacing = paint.strokeWidth * density;
-    final dotRadius = paint.strokeWidth * 0.5;
-
-    final dotPaint = Paint()
-      ..color = paint.color
-      ..style = PaintingStyle.fill;
-
-    for (double x = rect.left; x <= rect.right; x += spacing) {
-      for (double y = rect.top; y <= rect.bottom; y += spacing) {
-        canvas.drawCircle(Offset(x, y), dotRadius, dotPaint);
-      }
-    }
-
-    // 恢复画布状态
-    canvas.restore();
-  }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
 
 class _CurrentDrawingPainter extends CustomPainter {
@@ -4272,9 +3476,8 @@ class _CurrentDrawingPainter extends CustomPainter {
     );
     layerPainter.paint(canvas, size);
   }
-
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
 
 /// 背景图案画笔，支持多种背景模式
@@ -4335,9 +3538,8 @@ class _BackgroundPatternPainter extends CustomPainter {
       }
     }
   }
-
   @override
-  bool shouldRepaint(covariant _BackgroundPatternPainter oldDelegate) {
+  bool shouldRepaint(_BackgroundPatternPainter oldDelegate) {
     return oldDelegate.pattern != pattern;
   }
 }

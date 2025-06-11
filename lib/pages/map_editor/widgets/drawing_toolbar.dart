@@ -7,6 +7,7 @@ import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
 import '../../../services/clipboard_service.dart';
+import '../utils/drawing_utils.dart'; // 导入绘制工具函数
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -1333,7 +1334,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               : Colors.transparent,
         ),
         child: Text(
-          _getBoxFitDisplayName(fit),
+          getBoxFitDisplayName(fit),
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -1344,26 +1345,6 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         ),
       ),
     );
-  }
-
-  /// 获取BoxFit的显示名称
-  String _getBoxFitDisplayName(BoxFit fit) {
-    switch (fit) {
-      case BoxFit.contain:
-        return '包含';
-      case BoxFit.cover:
-        return '覆盖';
-      case BoxFit.fill:
-        return '填充';
-      case BoxFit.fitWidth:
-        return '适宽';
-      case BoxFit.fitHeight:
-        return '适高';
-      case BoxFit.none:
-        return '原始';
-      case BoxFit.scaleDown:
-        return '缩小';
-    }
   }
 
   /// 获取当前选中的图片适应方式
@@ -1380,7 +1361,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // 显示更改提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('图片适应方式已设置为: ${_getBoxFitDisplayName(fit)}'),
+        content: Text('图片适应方式已设置为: ${getBoxFitDisplayName(fit)}'),
         duration: const Duration(seconds: 1),
       ),
     );
