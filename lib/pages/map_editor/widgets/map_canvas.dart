@@ -288,16 +288,12 @@ class MapCanvas extends StatefulWidget {
   final Uint8List? imageBufferData; // 图片缓冲区数据
   final BoxFit imageBufferFit; // 图片适应方式
   final List<MapLayer>? displayOrderLayers; //：优先显示顺序的图层列表
-  
+
   // 便签相关参数
   final StickyNote? selectedStickyNote; // 当前选中的便签
   final Map<String, double> previewStickyNoteOpacityValues; // 便签透明度预览值
-  final Function(StickyNote)? onStickyNoteUpdated; // 便签更新回调  
-  
-  // 增量更新支持
-  final Set<String>? dirtyLayers; // 需要重绘的图层ID
-  final Set<String>? dirtyLegends; // 需要重绘的图例组ID  
-  final Set<String>? dirtyStickyNotes; // 需要重绘的便签ID
+  final Function(StickyNote)? onStickyNoteUpdated; // 便签更新回调
+
   const MapCanvas({
     super.key,
     required this.mapItem,
@@ -327,19 +323,14 @@ class MapCanvas extends StatefulWidget {
     this.displayOrderLayers,
     this.onSelectionCleared,
     this.shouldDisableDrawingTools = false,
-    
+
     // 添加图片缓冲区参数
     this.imageBufferData,
     this.imageBufferFit = BoxFit.contain,
-      // 便签相关参数
+    // 便签相关参数
     this.selectedStickyNote,
     this.previewStickyNoteOpacityValues = const {},
     this.onStickyNoteUpdated,
-    
-    // 增量更新参数
-    this.dirtyLayers,
-    this.dirtyLegends,
-    this.dirtyStickyNotes,
   });
 
   @override
@@ -371,6 +362,7 @@ class MapCanvasState extends State<MapCanvas> {
       _preloadAllLayerImages();
     });
   }
+
   // 监听图片缓冲区变化
   Uint8List? _lastImageBufferData;
   ui.Image? _imageBufferCachedImage;
@@ -531,7 +523,8 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   /// 处理图片缓冲区变化
-  void _handleImageBufferChange() {    // 如果图片缓冲区清空了
+  void _handleImageBufferChange() {
+    // 如果图片缓冲区清空了
     if (widget.imageBufferData == null) {
       _imageBufferCachedImage?.dispose();
       _imageBufferCachedImage = null;
@@ -542,7 +535,8 @@ class MapCanvasState extends State<MapCanvas> {
     // 如果图片数据没有变化，不需要重新解码
     if (widget.imageBufferData == _lastImageBufferData) {
       return;
-    }    _lastImageBufferData = widget.imageBufferData;
+    }
+    _lastImageBufferData = widget.imageBufferData;
 
     // 开始异步解码新图片
     _decodeImageBuffer(widget.imageBufferData!);
@@ -731,7 +725,7 @@ class MapCanvasState extends State<MapCanvas> {
                               onPanEnd: _onDrawingEnd,
                               behavior: HitTestBehavior.translucent,
                             ),
-                    ),                  // Touch handler for element interaction - 当没有绘制工具选中时
+                    ), // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
@@ -743,7 +737,8 @@ class MapCanvasState extends State<MapCanvas> {
                         onPanStart: _onElementInteractionPanStart,
                         onPanUpdate: _onElementInteractionPanUpdate,
                         onPanEnd: _onElementInteractionPanEnd,
-                        behavior: HitTestBehavior.deferToChild, // 改为deferToChild，让便签优先处理手势
+                        behavior: HitTestBehavior
+                            .deferToChild, // 改为deferToChild，让便签优先处理手势
                       ),
                     ),
                 ],
@@ -830,6 +825,7 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
+
   Widget _buildLegendWidget(LegendGroup legendGroup) {
     if (!legendGroup.isVisible) return const SizedBox.shrink();
 
@@ -850,7 +846,8 @@ class MapCanvasState extends State<MapCanvas> {
     if (!note.isVisible) return const SizedBox.shrink();
 
     // 获取有效透明度（预览值或实际值）
-    final effectiveOpacity = widget.previewStickyNoteOpacityValues[note.id] ?? note.opacity;
+    final effectiveOpacity =
+        widget.previewStickyNoteOpacityValues[note.id] ?? note.opacity;
 
     // 转换相对坐标到画布坐标
     final position = Offset(
@@ -860,13 +857,14 @@ class MapCanvasState extends State<MapCanvas> {
     final size = Size(
       note.size.width * kCanvasWidth,
       note.size.height * kCanvasHeight,
-    );    return Positioned(
+    );
+    return Positioned(
       left: position.dx,
       top: position.dy,
       width: size.width,
       height: size.height,
       child: Opacity(
-        opacity: effectiveOpacity,        
+        opacity: effectiveOpacity,
         child: GestureDetector(
           // 添加手势检测器包装便签，确保能接收到手势
           behavior: HitTestBehavior.opaque,
@@ -996,14 +994,14 @@ class MapCanvasState extends State<MapCanvas> {
   // 元素交互手势处理方法  /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // 优先检测便签点击
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
       // 如果点击了便签，不处理其他交互，让便签自己处理点击
       return;
     }
-    
+
     final hitElementId = _getHitElement(canvasPosition);
 
     // 检查是否有选区，如果有则清除选区
@@ -1255,7 +1253,7 @@ class MapCanvasState extends State<MapCanvas> {
           topLeft.dy,
           imageSize,
           imageSize,
-        );        // 检查点击位置是否在图例项的显示区域内
+        ); // 检查点击位置是否在图例项的显示区域内
         if (itemRect.contains(canvasPosition)) {
           return item;
         }
@@ -1298,6 +1296,7 @@ class MapCanvasState extends State<MapCanvas> {
     }
     return null;
   }
+
   void _onElementInteractionPanStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
 
@@ -1959,24 +1958,10 @@ class MapCanvasState extends State<MapCanvas> {
 
     widget.onLayerUpdated(updatedLayer);
   }
+
   /// 构建按层级排序的所有元素（支持增量更新）
   List<Widget> _buildLayeredElements() {
     print('=== 开始构建图层元素 (增量更新模式) ===');
-    
-    // 检查是否有脏组件
-    final hasDirtyLayers = widget.dirtyLayers?.isNotEmpty ?? false;
-    final hasDirtyLegends = widget.dirtyLegends?.isNotEmpty ?? false;
-    final hasDirtyStickyNotes = widget.dirtyStickyNotes?.isNotEmpty ?? false;
-    final hasAnyDirtyComponents = hasDirtyLayers || hasDirtyLegends || hasDirtyStickyNotes;
-    
-    if (hasAnyDirtyComponents) {
-      print('检测到脏组件:');
-      if (hasDirtyLayers) print('  - 脏图层: ${widget.dirtyLayers}');
-      if (hasDirtyLegends) print('  - 脏图例: ${widget.dirtyLegends}');
-      if (hasDirtyStickyNotes) print('  - 脏便签: ${widget.dirtyStickyNotes}');
-    } else {
-      print('无脏组件，执行全量构建');
-    }
 
     final List<_LayeredElement> allElements = [];
 
@@ -1990,7 +1975,7 @@ class MapCanvasState extends State<MapCanvas> {
       print('使用默认图层排序（按 order 字段）');
     } else {
       print('使用传入的显示顺序图层列表');
-    }    // 收集所有图层及其元素（按照排序后的顺序）- 支持增量更新
+    } // 收集所有图层及其元素（按照排序后的顺序）- 支持增量更新
     for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
       final layer = sortedLayers[layerIndex];
       if (!layer.isVisible) {
@@ -1999,10 +1984,9 @@ class MapCanvasState extends State<MapCanvas> {
       }
 
       final isSelectedLayer = widget.selectedLayer?.id == layer.id;
-      final isLayerDirty = !hasAnyDirtyComponents || (widget.dirtyLayers?.contains(layer.id) ?? false);
-      
+
       print(
-        '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}, 脏状态=$isLayerDirty',
+        '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}',
       );
       print('是否选中: $isSelectedLayer');
 
@@ -2010,36 +1994,34 @@ class MapCanvasState extends State<MapCanvas> {
       final renderOrder = layerIndex;
 
       // 增量更新：只处理脏图层或在全量构建模式下
-      if (isLayerDirty) {
-        // 添加图层图片（如果有）
-        if (layer.imageData != null) {
-          print(
-            '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
-          );
-          allElements.add(
-            _LayeredElement(
-              order: renderOrder, // 使用在显示列表中的位置索引
-              isSelected: isSelectedLayer,
-              widget: _buildLayerImageWidget(layer),
-            ),
-          );
-        }
 
-        // 添加图层绘制元素
+      // 添加图层图片（如果有）
+      if (layer.imageData != null) {
         print(
-          '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+          '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
         );
         allElements.add(
           _LayeredElement(
             order: renderOrder, // 使用在显示列表中的位置索引
             isSelected: isSelectedLayer,
-            widget: _buildLayerWidget(layer),
+            widget: _buildLayerImageWidget(layer),
           ),
         );
-      } else {
-        print('跳过干净图层: ${layer.name}');
       }
-    }    print('--- 处理图例组 (增量更新) ---');
+
+      // 添加图层绘制元素
+      print(
+        '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+      );
+      allElements.add(
+        _LayeredElement(
+          order: renderOrder, // 使用在显示列表中的位置索引
+          isSelected: isSelectedLayer,
+          widget: _buildLayerWidget(layer),
+        ),
+      );
+    }
+    print('--- 处理图例组 (增量更新) ---');
     // 收集所有图例组 - 支持增量更新
     for (final legendGroup in widget.mapItem.legendGroups) {
       if (!legendGroup.isVisible) {
@@ -2047,52 +2029,45 @@ class MapCanvasState extends State<MapCanvas> {
         continue;
       }
 
-      final isLegendDirty = !hasAnyDirtyComponents || (widget.dirtyLegends?.contains(legendGroup.id) ?? false);
-      print('处理图例组: ${legendGroup.name}, 可见=${legendGroup.isVisible}, 脏状态=$isLegendDirty');
+      // 计算图例组的层级（基于绑定的最高图层在显示列表中的位置）
+      int legendRenderOrder = -1;
+      bool isLegendSelected = false;
+      List<String> boundLayerNames = [];
 
-      // 增量更新：只处理脏图例或在全量构建模式下
-      if (isLegendDirty) {
-        // 计算图例组的层级（基于绑定的最高图层在显示列表中的位置）
-        int legendRenderOrder = -1;
-        bool isLegendSelected = false;
-        List<String> boundLayerNames = [];
-
-        for (int i = 0; i < sortedLayers.length; i++) {
-          final layer = sortedLayers[i];
-          if (layer.legendGroupIds.contains(legendGroup.id)) {
-            boundLayerNames.add('${layer.name}(${layer.order})');
-            legendRenderOrder = math.max(legendRenderOrder, i); // 使用位置索引而不是order
-            // 如果任何绑定的图层被选中，图例也被认为是选中的
-            if (widget.selectedLayer?.id == layer.id) {
-              isLegendSelected = true;
-            }
+      for (int i = 0; i < sortedLayers.length; i++) {
+        final layer = sortedLayers[i];
+        if (layer.legendGroupIds.contains(legendGroup.id)) {
+          boundLayerNames.add('${layer.name}(${layer.order})');
+          legendRenderOrder = math.max(legendRenderOrder, i); // 使用位置索引而不是order
+          // 如果任何绑定的图层被选中，图例也被认为是选中的
+          if (widget.selectedLayer?.id == layer.id) {
+            isLegendSelected = true;
           }
         }
-
-        print('绑定的图层: $boundLayerNames');
-        print('计算得到的 legendRenderOrder: $legendRenderOrder');
-        print('是否选中: $isLegendSelected');
-
-        // 如果图例组没有绑定到任何图层，使用默认位置
-        if (legendRenderOrder == -1) {
-          legendRenderOrder = 0;
-          print('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
-        }
-
-        print(
-          '添加图例组元素 - renderOrder=$legendRenderOrder, selected=$isLegendSelected',
-        );
-        allElements.add(
-          _LayeredElement(
-            order: legendRenderOrder,
-            isSelected: isLegendSelected,
-            widget: _buildLegendWidget(legendGroup),
-          ),
-        );
-      } else {
-        print('跳过干净图例组: ${legendGroup.name}');
       }
-    }    print('--- 处理便签 (增量更新) ---');
+
+      print('绑定的图层: $boundLayerNames');
+      print('计算得到的 legendRenderOrder: $legendRenderOrder');
+      print('是否选中: $isLegendSelected');
+
+      // 如果图例组没有绑定到任何图层，使用默认位置
+      if (legendRenderOrder == -1) {
+        legendRenderOrder = 0;
+        print('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
+      }
+
+      print(
+        '添加图例组元素 - renderOrder=$legendRenderOrder, selected=$isLegendSelected',
+      );
+      allElements.add(
+        _LayeredElement(
+          order: legendRenderOrder,
+          isSelected: isLegendSelected,
+          widget: _buildLegendWidget(legendGroup),
+        ),
+      );
+    }
+    print('--- 处理便签 (增量更新) ---');
     // 收集所有便签（按zIndex排序）- 支持增量更新
     final sortedStickyNotes = List<StickyNote>.from(widget.mapItem.stickyNotes)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -2105,32 +2080,28 @@ class MapCanvasState extends State<MapCanvas> {
       }
 
       final isSelectedNote = widget.selectedStickyNote?.id == note.id;
-      final isNoteDirty = !hasAnyDirtyComponents || (widget.dirtyStickyNotes?.contains(note.id) ?? false);
-      
+
       print(
-        '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}, 脏状态=$isNoteDirty',
+        '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}',
       );
       print('是否选中: $isSelectedNote');
 
-      // 增量更新：只处理脏便签或在全量构建模式下
-      if (isNoteDirty) {
-        // 便签在图层和图例之上显示，使用较高的渲染顺序
-        final renderOrder = sortedLayers.length + noteIndex + 100; // +100确保在图层和图例之上
+      // 便签在图层和图例之上显示，使用较高的渲染顺序
+      final renderOrder =
+          sortedLayers.length + noteIndex + 100; // +100确保在图层和图例之上
 
-        print(
-          '添加便签元素 - renderOrder=$renderOrder (原zIndex=${note.zIndex}), selected=$isSelectedNote',
-        );
-        allElements.add(
-          _LayeredElement(
-            order: renderOrder,
-            isSelected: isSelectedNote,
-            widget: _buildStickyNoteWidget(note),
-          ),
-        );
-      } else {
-        print('跳过干净便签: ${note.title}');
-      }
-    }    print('--- 排序前的元素列表 (增量更新结果) ---');
+      print(
+        '添加便签元素 - renderOrder=$renderOrder (原zIndex=${note.zIndex}), selected=$isSelectedNote',
+      );
+      allElements.add(
+        _LayeredElement(
+          order: renderOrder,
+          isSelected: isSelectedNote,
+          widget: _buildStickyNoteWidget(note),
+        ),
+      );
+    }
+    print('--- 排序前的元素列表 ---');
     print('本次构建的组件数量: ${allElements.length}');
     for (int i = 0; i < allElements.length; i++) {
       final element = allElements[i];
@@ -2154,7 +2125,8 @@ class MapCanvasState extends State<MapCanvas> {
       if (a.isSelected && !b.isSelected) return 1;
       if (!a.isSelected && b.isSelected) return -1;
       return a.order.compareTo(b.order);
-    });    print('--- 排序后的渲染顺序 (从底层到顶层) ---');
+    });
+    print('--- 排序后的渲染顺序 (从底层到顶层) ---');
     for (int i = 0; i < allElements.length; i++) {
       final element = allElements[i];
       final typeDescription =
@@ -2172,13 +2144,7 @@ class MapCanvasState extends State<MapCanvas> {
       );
     }
 
-    print('=== 图层元素构建完成 (增量更新) ===');
-    if (hasAnyDirtyComponents) {
-      print('本次重绘的组件数量: ${allElements.length}');
-      print('性能优化：跳过了干净的组件，减少了重绘开销');
-    } else {
-      print('全量构建完成，总组件数量: ${allElements.length}');
-    }
+    print('=== 图层元素构建完成 ===');
     return allElements.map((e) => e.widget).toList();
   }
 

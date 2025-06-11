@@ -148,11 +148,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
-  
-  // 增量更新支持
-  final Set<String> _dirtyLayers = {}; // 需要重绘的图层ID
-  final Set<String> _dirtyLegends = {}; // 需要重绘的图例组ID  
-  final Set<String> _dirtyStickyNotes = {}; // 需要重绘的便签ID
+
 
   @override
   void initState() {
@@ -823,9 +819,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
-    // 标记图层需要重绘
-    _dirtyLayers.add(updatedLayer.id);
-
     setState(() {
       final layerIndex = _currentMap!.layers.indexWhere(
         (l) => l.id == updatedLayer.id,
@@ -844,8 +837,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
 
-    // 清理脏组件标记
-    _clearDirtyComponents();
     
   }
 
@@ -1107,10 +1098,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     // 保存当前状态到撤销历史（只在非预览模式下）
     _saveToUndoHistory();
-
-    // 标记图例组需要重绘
-    _dirtyLegends.add(updatedGroup.id);
-
     setState(() {
       final groupIndex = _currentMap!.legendGroups.indexWhere(
         (g) => g.id == updatedGroup.id,
@@ -1122,23 +1109,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
 
-    // 清理脏组件标记
-    _clearDirtyComponents();
-
   }// 处理透明度预览
   void _handleOpacityPreview(String layerId, double opacity) {
     // 只更新预览状态，不触发完整重绘
     _previewOpacityValues[layerId] = opacity;
-      // 标记特定图层需要重绘
-    _dirtyLayers.add(layerId);
+
     
     // 使用优化的setState，避免全量重绘
     if (mounted) {
       setState(() {
         // 只更新透明度预览值
       });
-      // 清理脏组件标记
-      _clearDirtyComponents();
     }
   }// 显示图层图例绑定抽屉
 
@@ -2789,11 +2770,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           selectedStickyNote: _selectedStickyNote,
           previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
           onStickyNoteUpdated: _updateStickyNote,
-          
-          // 增量更新参数
-          dirtyLayers: _dirtyLayers,
-          dirtyLegends: _dirtyLegends, 
-          dirtyStickyNotes: _dirtyStickyNotes,
         );
       },
     );
@@ -3038,9 +3014,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 保存当前状态到撤销历史（只在非预览模式下）
     _saveToUndoHistory();
 
-    // 标记便签需要重绘
-    _dirtyStickyNotes.add(updatedNote.id);
-
     setState(() {
       final noteIndex = _currentMap!.stickyNotes.indexWhere(
         (note) => note.id == updatedNote.id,
@@ -3056,11 +3029,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         }
       }
     });
-
-    // 清理脏组件标记
-    _clearDirtyComponents();
-
-
   }
 
   void _deleteStickyNote(StickyNote note) {
@@ -3104,26 +3072,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }  /// 防抖自动保存
 
 
-  /// 清理脏组件标记
-  /// 在setState执行完毕后调用，确保增量更新状态被重置
-  void _clearDirtyComponents() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _dirtyLayers.clear();
-        _dirtyLegends.clear(); 
-        _dirtyStickyNotes.clear();
-        print('🧹 已清理脏组件标记，下次将根据实际变化进行增量更新');
-      }
-    });
-  }
 
   /// 处理便签透明度预览
   void _handleStickyNoteOpacityPreview(String noteId, double opacity) {
     // 只更新预览状态，不触发完整重绘
     _previewStickyNoteOpacityValues[noteId] = opacity;
-    
-    // 标记特定便签需要重绘
-    _dirtyStickyNotes.add(noteId);
+
     
     // 使用优化的setState，只更新必要的部分
     if (mounted) {
