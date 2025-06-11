@@ -59,11 +59,13 @@ class VersionSessionState {
           : null,
       hasUnsavedChanges: json['hasUnsavedChanges'] as bool? ?? false,
       lastModified: DateTime.parse(json['lastModified'] as String),
-      undoHistory: (json['undoHistory'] as List<dynamic>?)
+      undoHistory:
+          (json['undoHistory'] as List<dynamic>?)
               ?.map((item) => MapItem.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
-      redoHistory: (json['redoHistory'] as List<dynamic>?)
+      redoHistory:
+          (json['redoHistory'] as List<dynamic>?)
               ?.map((item) => MapItem.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
@@ -79,16 +81,14 @@ class VersionSessionManager {
   String? _currentVersionId;
   final int maxUndoHistory;
 
-  VersionSessionManager({
-    required this.mapTitle,
-    this.maxUndoHistory = 50,
-  });
+  VersionSessionManager({required this.mapTitle, this.maxUndoHistory = 50});
 
   /// 获取当前版本ID
   String? get currentVersionId => _currentVersionId;
 
   /// 获取所有会话状态
-  List<VersionSessionState> get allSessionStates => _sessionStates.values.toList();
+  List<VersionSessionState> get allSessionStates =>
+      _sessionStates.values.toList();
 
   /// 获取指定版本的会话状态
   VersionSessionState? getSessionState(String versionId) {
@@ -133,7 +133,11 @@ class VersionSessionManager {
   }
 
   /// 更新版本数据
-  void updateVersionData(String versionId, MapItem newData, {bool markAsChanged = true}) {
+  void updateVersionData(
+    String versionId,
+    MapItem newData, {
+    bool markAsChanged = true,
+  }) {
     final currentState = _sessionStates[versionId];
     if (currentState != null) {
       _sessionStates[versionId] = currentState.copyWith(
@@ -175,7 +179,7 @@ class VersionSessionManager {
     if (currentState != null) {
       final newUndoHistory = List<MapItem>.from(currentState.undoHistory);
       newUndoHistory.add(state);
-      
+
       // 限制历史记录数量
       if (newUndoHistory.length > maxUndoHistory) {
         newUndoHistory.removeAt(0);
@@ -202,7 +206,7 @@ class VersionSessionManager {
     final newRedoHistory = List<MapItem>.from(currentState.redoHistory);
     if (currentState.modifiedData != null) {
       newRedoHistory.add(currentState.modifiedData!);
-      
+
       // 限制重做历史记录数量
       if (newRedoHistory.length > maxUndoHistory) {
         newRedoHistory.removeAt(0);
@@ -233,7 +237,7 @@ class VersionSessionManager {
     final newUndoHistory = List<MapItem>.from(currentState.undoHistory);
     if (currentState.modifiedData != null) {
       newUndoHistory.add(currentState.modifiedData!);
-      
+
       // 限制撤销历史记录数量
       if (newUndoHistory.length > maxUndoHistory) {
         newUndoHistory.removeAt(0);
@@ -269,29 +273,57 @@ class VersionSessionManager {
     _sessionStates.clear();
     _currentVersionId = null;
   }
+
+  /// 保存会话状态到本地存储
   /// 保存会话状态到本地存储
   Future<void> saveToStorage() async {
     try {
+      final stopwatch = Stopwatch()..start();
+
       final prefs = await SharedPreferences.getInstance();
-      final sessionData = {
+      final prefsTime = stopwatch.elapsedMicroseconds;
+
+      // 在后台线程进行JSON编码
+      final sessionJson = await compute(_encodeSessionData, {
         'mapTitle': mapTitle,
         'currentVersionId': _currentVersionId,
         'sessionStates': _sessionStates.map(
           (key, value) => MapEntry(key, value.toJson()),
         ),
         'savedAt': DateTime.now().toIso8601String(),
-      };
+      });
 
-      final sessionJson = json.encode(sessionData);
+      final dataTime = stopwatch.elapsedMicroseconds;
+
+      final jsonTime = stopwatch.elapsedMicroseconds;
+
       await prefs.setString('version_session_$mapTitle', sessionJson);
-      
+
+      final saveTime = stopwatch.elapsedMicroseconds;
+
+      stopwatch.stop();
+
       // 只在debug模式下打印详细日志
       if (kDebugMode) {
+        final jsonSize = utf8.encode(sessionJson).length;
         debugPrint('版本会话状态已保存 [地图: $mapTitle]');
+        debugPrint('性能统计:');
+        debugPrint('  获取SharedPreferences: ${prefsTime}μs');
+        debugPrint('  构建数据结构: ${dataTime - prefsTime}μs');
+        debugPrint('  JSON编码: ${jsonTime - dataTime}μs');
+        debugPrint('  本地存储: ${saveTime - jsonTime}μs');
+        debugPrint('  总耗时: ${saveTime}μs');
+        debugPrint('  JSON大小: ${(jsonSize / 1024).toStringAsFixed(2)} KB');
+        debugPrint('  版本数量: ${_sessionStates.length}');
       }
     } catch (e) {
       debugPrint('保存版本会话状态失败: $e');
     }
+  }
+
+  // 顶层函数，用于compute
+  String _encodeSessionData(Map<String, dynamic> data) {
+    return json.encode(data);
   }
 
   /// 从本地存储加载会话状态
@@ -299,13 +331,14 @@ class VersionSessionManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       final sessionJson = prefs.getString('version_session_$mapTitle');
-      
+
       if (sessionJson != null) {
         final sessionData = json.decode(sessionJson) as Map<String, dynamic>;
-        
+
         _currentVersionId = sessionData['currentVersionId'] as String?;
-        
-        final sessionStatesData = sessionData['sessionStates'] as Map<String, dynamic>?;
+
+        final sessionStatesData =
+            sessionData['sessionStates'] as Map<String, dynamic>?;
         if (sessionStatesData != null) {
           _sessionStates.clear();
           for (final entry in sessionStatesData.entries) {
@@ -318,7 +351,7 @@ class VersionSessionManager {
             }
           }
         }
-        
+
         debugPrint('版本会话状态已加载 [地图: $mapTitle, 版本数: ${_sessionStates.length}]');
       }
     } catch (e) {
@@ -330,17 +363,17 @@ class VersionSessionManager {
   void cleanupExpiredSessions({int expireDays = 7}) {
     final expireTime = DateTime.now().subtract(Duration(days: expireDays));
     final expiredVersions = <String>[];
-    
+
     for (final entry in _sessionStates.entries) {
       if (entry.value.lastModified.isBefore(expireTime)) {
         expiredVersions.add(entry.key);
       }
     }
-    
+
     for (final versionId in expiredVersions) {
       _sessionStates.remove(versionId);
     }
-    
+
     if (expiredVersions.isNotEmpty) {
       debugPrint('清理了 ${expiredVersions.length} 个过期的版本会话状态');
     }
@@ -349,7 +382,9 @@ class VersionSessionManager {
   /// 获取版本会话摘要信息
   String getSessionSummary() {
     final totalVersions = _sessionStates.length;
-    final unsavedCount = _sessionStates.values.where((state) => state.hasUnsavedChanges).length;
+    final unsavedCount = _sessionStates.values
+        .where((state) => state.hasUnsavedChanges)
+        .length;
     return '总版本: $totalVersions, 未保存: $unsavedCount, 当前: $_currentVersionId';
   }
 }
