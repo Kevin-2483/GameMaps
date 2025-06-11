@@ -1497,13 +1497,31 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     
     // 默认使用版本ID作为名称
     return '版本 $versionId';
-  }
-  /// 创建新版本
+  }  /// 创建新版本
   void _createVersion(String name) async {
     if (_versionManager == null || _currentMap == null) return;
     
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
+    
+    // 关键修复：在创建新版本和切换之前，先保存当前版本的会话状态
+    if (_versionSessionManager != null) {
+      final currentVersionId = _versionManager!.currentVersionId;
+      
+      // 更新当前版本的会话数据
+      _versionSessionManager!.updateVersionData(
+        currentVersionId, 
+        _currentMap!, 
+        markAsChanged: _hasUnsavedVersionChanges
+      );
+      
+      // 保存当前撤销/重做历史到会话管理器
+      for (final undoItem in _undoHistory) {
+        _versionSessionManager!.addToUndoHistory(currentVersionId, undoItem);
+      }
+      
+      print('创建新版本前，当前版本会话状态已保存 [版本: $currentVersionId]');
+    }
     
     setState(() {
       final newVersion = _versionManager!.createVersion(name, _currentMap!);

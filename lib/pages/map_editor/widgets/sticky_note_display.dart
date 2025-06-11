@@ -194,7 +194,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 
   /// 构建调整大小手柄
   Widget _buildResizeHandles() {
-    const double handleSize = 8.0;
+    const double handleSize = 16.0;
     
     return Stack(
       children: [
