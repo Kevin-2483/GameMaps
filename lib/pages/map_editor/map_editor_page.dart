@@ -111,10 +111,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isLayerPanelAutoClose = true;
   bool _isLegendPanelAutoClose = true;
   bool _isStickyNotePanelAutoClose = true;
-
-  // 悬浮工具栏状态（用于窄屏）
-  bool _isFloatingToolbarVisible = false; // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
+  // 侧边栏折叠状态
+  bool _isSidebarCollapsed = false;
+  // 透明度预览状态
+  final Map<String, double> _previewOpacityValues = {};// 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
@@ -174,9 +174,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   /// 根据用户首选项更新界面布局
   void _updateLayoutFromPreferences(UserPreferencesProvider prefsProvider) {
-    final layout = prefsProvider.layout;
+    final layout = prefsProvider.layout;    setState(() {
+      // 更新侧边栏折叠状态
+      _isSidebarCollapsed = layout.panelCollapsedStates['sidebar'] ?? false;
 
-    setState(() {
       // 更新面板折叠状态
       _isDrawingToolbarCollapsed =
           layout.panelCollapsedStates['drawing'] ?? false;
@@ -1951,12 +1952,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<UserPreferencesProvider>(
+  Widget build(BuildContext context) {    return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         final l10n = AppLocalizations.of(context)!;
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isNarrowScreen = screenWidth < 800; // 判断是否为窄屏
 
         return PopScope(
           canPop: false, // 阻止默认的返回行为
@@ -2042,15 +2040,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                         )
                       : null,
                 ),
-              ),
-              body: _isLoading
+              ),              body: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Stack(
                       children: [
-                        // 主要内容
-                        isNarrowScreen
-                            ? _buildNarrowScreenLayout(userPrefsProvider)
-                            : _buildWideScreenLayout(userPrefsProvider),
+                        // 主要内容 - 使用统一的布局，支持侧边栏折叠
+                        _buildMainLayout(userPrefsProvider),
 
                         // 图层图例绑定抽屉覆盖层
                         if (_isLayerLegendBindingDrawerOpen &&
@@ -2191,37 +2186,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                          ),                      ],
                     ),
-              floatingActionButton: isNarrowScreen
-                  ? AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      child: FloatingActionButton.extended(
-                        onPressed: () {
-                          setState(() {
-                            _isFloatingToolbarVisible =
-                                !_isFloatingToolbarVisible;
-                          });
-                        },
-                        icon: AnimatedRotation(
-                          turns: _isFloatingToolbarVisible ? 0.5 : 0.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            _isFloatingToolbarVisible
-                                ? Icons.close
-                                : Icons.menu,
-                          ),
-                        ),
-                        label: Text(
-                          _isFloatingToolbarVisible ? '关闭工具栏' : '工具栏',
-                        ),
-                        tooltip: _isFloatingToolbarVisible ? '关闭工具栏' : '打开工具栏',
-                      ),
-                    )
-                  : null,
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.endFloat,
             ), // 关闭 PopScope 的 child 参数
           ),
         );
@@ -2652,130 +2618,84 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       ),
     );
-  }
-
-  /// 宽屏布局（传统横向布局）
-  Widget _buildWideScreenLayout(UserPreferencesProvider userPrefsProvider) {
+  }  /// 主布局（传统侧边栏）
+  Widget _buildMainLayout(UserPreferencesProvider userPrefsProvider) {
     final layout = userPrefsProvider.layout;
     final sidebarWidth = layout.sidebarWidth;
 
     return Row(
       children: [
-        // 左侧工具面板 - 移除 SingleChildScrollView，改为不可滚动的固定容器
-        SizedBox(
-          width: sidebarWidth,
-          height: MediaQuery.of(context).size.height - kToolbarHeight,
-          child: Column(children: _buildToolPanels(userPrefsProvider)),
-        ),
-
-        const VerticalDivider(),
-
-        // 右侧地图画布
-        Expanded(child: _buildMapCanvas()),
-      ],
-    );
-  }
-
-  /// 窄屏布局（悬浮工具栏）
-  Widget _buildNarrowScreenLayout(UserPreferencesProvider userPrefsProvider) {
-    return Stack(
-      children: [
-        // 地图画布占满全屏
-        _buildMapCanvas(),
-
-        // 半透明遮罩（当工具栏打开时）- 放在工具栏下层，铺满整个屏幕
-        if (_isFloatingToolbarVisible)
-          Positioned.fill(
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: _isFloatingToolbarVisible ? 1.0 : 0.0,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isFloatingToolbarVisible = false;
-                  });
-                },
-                child: Container(
-                  color: Colors.black.withAlpha((0.4 * 255).toInt()), // 稍微增加透明度
+        // 侧边栏区域
+        AnimatedContainer(
+          duration: Duration(
+            milliseconds: layout.enableAnimations ? layout.animationDuration : 0,
+          ),
+          curve: Curves.easeInOut,
+          width: _isSidebarCollapsed ? 40 : sidebarWidth + 40,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                right: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
                 ),
               ),
             ),
-          ),
-
-        // 悬浮工具栏 - 放在遮罩上层
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          top: 0,
-          bottom: 0,
-          left: _isFloatingToolbarVisible ? 0 : -300,
-          child: Container(
-            width: 300,
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.2 * 255).toInt()),
-                  blurRadius: 8,
-                  offset: const Offset(2, 0),
-                ),
-              ],
-            ),
-            child: Column(
+            child: Row(
               children: [
-                // 工具栏顶部拖拽条
+                // 侧边栏面板内容
+                if (!_isSidebarCollapsed)
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                      child: Column(children: _buildToolPanels(userPrefsProvider)),
+                    ),
+                  ),
+
+                // 折叠按钮区域
                 Container(
-                  height: 40,
+                  width: 40,
+                  height: double.infinity,
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withAlpha((0.1 * 255).toInt()),
-                    border: Border(
-                      bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                    border: _isSidebarCollapsed ? null : Border(
+                      left: BorderSide(
                         color: Theme.of(context).dividerColor,
-                        width: 0.5,
+                        width: 1,
                       ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.drag_handle,
-                        color: Theme.of(context).hintColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '工具栏',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).hintColor,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _isSidebarCollapsed = !_isSidebarCollapsed;
+                        });
+                        
+                        // 如果开启了状态保存，更新首选项
+                        if (userPrefsProvider.layout.autoRestorePanelStates) {
+                          userPrefsProvider.updateLayout(
+                            panelCollapsedStates: {
+                              ...userPrefsProvider.layout.panelCollapsedStates,
+                              'sidebar': _isSidebarCollapsed,
+                            },
+                          );
+                        }
+                      },
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _isSidebarCollapsed
+                              ? Icons.keyboard_arrow_right
+                              : Icons.keyboard_arrow_left,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 20,
                         ),
                       ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _isFloatingToolbarVisible = false;
-                          });
-                        },
-                        icon: const Icon(Icons.close),
-                        iconSize: 20,
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                  ),
-                ), // 工具面板内容
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: _buildToolPanels(userPrefsProvider),
                     ),
                   ),
                 ),
@@ -2783,10 +2703,22 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             ),
           ),
         ),
+
+        // 主要内容区域
+        Expanded(
+          child: _buildMapCanvasArea(),
+        ),
       ],
     );
   }
-
+  /// 构建地图画布区域
+  Widget _buildMapCanvasArea() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      child: _buildMapCanvas(),
+    );
+  }
   /// 构建地图画布组件
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
