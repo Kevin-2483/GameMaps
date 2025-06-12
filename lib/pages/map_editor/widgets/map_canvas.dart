@@ -18,6 +18,7 @@ import '../renderers/eraser_renderer.dart';
 import '../renderers/background_renderer.dart';
 // 导入绘制工具管理器
 import '../tools/drawing_tool_manager.dart';
+import '../tools/element_interaction_manager.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -162,11 +163,12 @@ class MapCanvas extends StatefulWidget {
 
 class MapCanvasState extends State<MapCanvas> {
   Rect? get currentSelectionRect => _selectionRect;
-
   final TransformationController _transformationController =
       TransformationController();
   // 绘制工具管理器
   late final DrawingToolManager _drawingToolManager;
+  // 元素交互管理器
+  late final ElementInteractionManager _elementInteractionManager;
 
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
@@ -207,12 +209,20 @@ class MapCanvasState extends State<MapCanvas> {
 
   @override
   void initState() {
-    super.initState();
-
-    // 初始化绘制工具管理器
+    super.initState();    // 初始化绘制工具管理器
     _drawingToolManager = DrawingToolManager(
       onLayerUpdated: widget.onLayerUpdated,
       context: context,
+    );
+
+    // 初始化元素交互管理器
+    _elementInteractionManager = ElementInteractionManager(
+      onLayerUpdated: widget.onLayerUpdated,
+      onStateChanged: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
 
     // 在组件初始化时预加载所有图层的图片
@@ -235,9 +245,11 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   @override
-  void dispose() {
-    // 清理绘制工具管理器
+  void dispose() {    // 清理绘制工具管理器
     _drawingToolManager.dispose();
+
+    // 清理元素交互管理器
+    _elementInteractionManager.reset();
 
     // 清理图片缓存
     for (final image in _imageCache.values) {
@@ -621,17 +633,8 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   } // 图例拖拽相关方法
-
   LegendItem? _draggingLegendItem;
   Offset? _dragStartOffset; // 记录拖拽开始时的偏移量
-
-  // 绘画元素拖拽和调整大小相关变量
-  String? _draggingElementId; // 当前拖拽的元素ID
-  Offset? _elementDragStartOffset; // 元素拖拽开始时的偏移量
-  String? _resizingElementId; // 当前调整大小的元素ID
-  ResizeHandle? _activeResizeHandle; // 当前活动的调整大小控制柄
-  Offset? _resizeStartPosition; // 调整大小开始时的位置
-  Rect? _originalElementBounds; // 元素原始边界
 
   // 元素交互手势处理方法  /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
@@ -971,23 +974,32 @@ class MapCanvasState extends State<MapCanvas> {
           context,
           listen: false,
         );
-        final handleSize = userPrefsProvider.tools.handleSize;
-
-        // 1a. 检查是否点击了选中元素的【调整大小控制柄】
-        final resizeHandle = _getHitResizeHandle(
+        final handleSize = userPrefsProvider.tools.handleSize;        // 1a. 检查是否点击了选中元素的【调整大小控制柄】
+        final resizeHandle = _elementInteractionManager.getHitResizeHandle(
           canvasPosition,
           selectedElement,
           handleSize: handleSize,
         );
         if (resizeHandle != null) {
-          _onResizeStart(widget.selectedElementId!, resizeHandle, details);
+          _elementInteractionManager.onResizeStart(
+            widget.selectedElementId!,
+            resizeHandle,
+            details,
+            widget.selectedLayer!,
+            _getCanvasPosition,
+          );
           return; // 开始调整大小，操作结束
         }
 
         // 1b. 如果不是控制柄，检查是否点击了选中元素的【主体区域】
         //     这里直接使用 _isPointInElement，它不考虑 zIndex，只判断点是否在该元素的几何形状内。
-        if (_isPointInElement(canvasPosition, selectedElement)) {
-          _onElementDragStart(widget.selectedElementId!, details);
+        if (_elementInteractionManager.isPointInElement(canvasPosition, selectedElement)) {
+          _elementInteractionManager.onElementDragStart(
+            widget.selectedElementId!,
+            details,
+            widget.selectedLayer!,
+            _getCanvasPosition,
+          );
           return; // 开始拖动选中的元素，操作结束
         }
         // 如果点击的不是选中元素的控制柄，也不是其主体区域，则继续往下走，
@@ -1015,10 +1027,14 @@ class MapCanvasState extends State<MapCanvas> {
         // _onElementDragStart(hitElementIdFromTop, details);
       } else {
         // 这个分支理论上不应该经常被走到，因为如果 hitElementIdFromTop 是 selectedElementId，
-        // 并且不是控制柄，那么上面的 _isPointInElement(canvasPosition, selectedElement) 应该返回 true 并已处理。
-        // 但如果因为某种原因（例如 _isPointInElement 的判断逻辑和元素实际绘制区域有细微差别）走到了这里，
+        // 并且不是控制柄，那么上面的 _isPointInElement(canvasPosition, selectedElement) 应该返回 true 并已处理。        // 但如果因为某种原因（例如 _isPointInElement 的判断逻辑和元素实际绘制区域有细微差别）走到了这里，
         // 那么意味着用户确实点击了已选中的元素（且它是最顶层），可以开始拖动。
-        _onElementDragStart(widget.selectedElementId!, details);
+        _elementInteractionManager.onElementDragStart(
+          widget.selectedElementId!,
+          details,
+          widget.selectedLayer!,
+          _getCanvasPosition,
+        );
         return;
       }
     } else {
@@ -1027,38 +1043,50 @@ class MapCanvasState extends State<MapCanvas> {
       _startSelectionDrag(canvasPosition);
     }
   }
-
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
     if (_draggingLegendItem != null) {
       // 正在拖拽图例
       _onLegendDragUpdate(_draggingLegendItem!, details);
-    } else if (_resizingElementId != null) {
+    } else if (_elementInteractionManager.isResizing) {
       // 正在调整大小
-      _onResizeUpdate(_resizingElementId!, details);
-    } else if (_draggingElementId != null) {
+      _elementInteractionManager.onResizeUpdate(
+        _elementInteractionManager.resizingElementId!,
+        details,
+        widget.selectedLayer!,
+        _getCanvasPosition,
+      );
+    } else if (_elementInteractionManager.isDragging) {
       // 正在拖拽元素
-      _onElementDragUpdate(_draggingElementId!, details);
+      _elementInteractionManager.onElementDragUpdate(
+        _elementInteractionManager.draggingElementId!,
+        details,
+        widget.selectedLayer!,
+        _getCanvasPosition,
+      );
     } else {
       // 更新选区
       _updateSelectionDrag(details);
     }
   }
-
   /// 处理元素交互的拖拽结束事件
   void _onElementInteractionPanEnd(DragEndDetails details) {
     if (_draggingLegendItem != null) {
       // 结束拖拽图例
       final item = _draggingLegendItem!;
       _onLegendDragEnd(item, details);
-    } else if (_resizingElementId != null) {
+    } else if (_elementInteractionManager.isResizing) {
       // 结束调整大小
-      final elementId = _resizingElementId!;
-      _onResizeEnd(elementId, details);
-    } else if (_draggingElementId != null) {
+      _elementInteractionManager.onResizeEnd(
+        _elementInteractionManager.resizingElementId!,
+        details,
+      );
+    } else if (_elementInteractionManager.isDragging) {
       // 结束拖拽元素
-      final elementId = _draggingElementId!;
-      _onElementDragEnd(elementId, details);
+      _elementInteractionManager.onElementDragEnd(
+        _elementInteractionManager.draggingElementId!,
+        details,
+      );
     } else {
       // 完成选区创建
       _endSelectionDrag();
@@ -1515,461 +1543,11 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   // 绘画元素选择和操作相关方法
-
   /// 检测点击位置是否命中某个绘画元素
   String? _getHitElement(Offset canvasPosition) {
-    if (widget.selectedLayer == null ||
-        widget.selectedLayer!.elements.isEmpty) {
-      return null;
-    }
-
-    // 按z值倒序检查，确保优先选择上层元素
-    final sortedElements = List<MapDrawingElement>.from(
-      widget.selectedLayer!.elements,
-    )..sort((a, b) => b.zIndex.compareTo(a.zIndex));
-
-    for (final element in sortedElements) {
-      if (_isPointInElement(canvasPosition, element)) {
-        return element.id;
-      }
-    }
-    return null;
+    return _elementInteractionManager.getHitElement(canvasPosition, widget.selectedLayer);
   }
 
-  /// 检查点是否在指定元素内
-  bool _isPointInElement(Offset canvasPosition, MapDrawingElement element) {
-    final size = const Size(kCanvasWidth, kCanvasHeight);
-
-    switch (element.type) {
-      case DrawingElementType.text:
-        if (element.points.isEmpty) return false;
-        final textPosition = Offset(
-          element.points[0].dx * size.width,
-          element.points[0].dy * size.height,
-        );
-        // 为文本创建一个点击区域
-        final hitArea = Rect.fromCenter(
-          center: textPosition,
-          width: 100, // 假设文本宽度
-          height: element.fontSize ?? 16.0,
-        );
-        return hitArea.contains(canvasPosition);
-
-      case DrawingElementType.freeDrawing:
-        // 检查点是否靠近自由绘制路径
-        for (final point in element.points) {
-          final screenPoint = Offset(
-            point.dx * size.width,
-            point.dy * size.height,
-          );
-          if ((screenPoint - canvasPosition).distance < 10) {
-            return true;
-          }
-        }
-        return false;
-
-      default:
-        // 其他元素基于矩形边界检测
-        if (element.points.length < 2) return false;
-        final start = Offset(
-          element.points[0].dx * size.width,
-          element.points[0].dy * size.height,
-        );
-        final end = Offset(
-          element.points[1].dx * size.width,
-          element.points[1].dy * size.height,
-        );
-        final rect = Rect.fromPoints(start, end);
-        return rect.contains(canvasPosition);
-    }
-  }
-
-  /// 处理绘画元素的拖拽开始
-  void _onElementDragStart(String elementId, DragStartDetails details) {
-    _draggingElementId = elementId; // 计算拖拽开始时的偏移量
-    final canvasPosition = _getCanvasPosition(details.localPosition);
-    final element = widget.selectedLayer!.elements
-        .where((e) => e.id == elementId)
-        .first;
-
-    // 计算元素中心位置
-    Offset elementCenter;
-    if (element.type == DrawingElementType.text) {
-      elementCenter = Offset(
-        element.points[0].dx * kCanvasWidth,
-        element.points[0].dy * kCanvasHeight,
-      );
-    } else if (element.points.length >= 2) {
-      final start = Offset(
-        element.points[0].dx * kCanvasWidth,
-        element.points[0].dy * kCanvasHeight,
-      );
-      final end = Offset(
-        element.points[1].dx * kCanvasWidth,
-        element.points[1].dy * kCanvasHeight,
-      );
-      elementCenter = Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
-    } else {
-      return;
-    }
-
-    _elementDragStartOffset = Offset(
-      canvasPosition.dx - elementCenter.dx,
-      canvasPosition.dy - elementCenter.dy,
-    );
-
-    setState(() {
-      // 触发重绘以显示拖拽状态
-    });
-  }
-
-  /// 处理绘画元素的拖拽更新
-  void _onElementDragUpdate(String elementId, DragUpdateDetails details) {
-    if (_draggingElementId != elementId || _elementDragStartOffset == null) {
-      return;
-    }
-
-    final canvasPosition = _getCanvasPosition(details.localPosition);
-    final adjustedPosition = Offset(
-      canvasPosition.dx - _elementDragStartOffset!.dx,
-      canvasPosition.dy - _elementDragStartOffset!.dy,
-    );
-
-    // 更新元素位置
-    _updateElementPosition(elementId, adjustedPosition);
-  }
-
-  /// 处理绘画元素的拖拽结束
-  void _onElementDragEnd(String elementId, DragEndDetails details) {
-    _draggingElementId = null;
-    _elementDragStartOffset = null;
-
-    setState(() {
-      // 触发重绘以清除拖拽状态
-    });
-  }
-
-  /// 更新元素位置
-  void _updateElementPosition(String elementId, Offset newCenter) {
-    if (widget.selectedLayer == null) return;
-
-    final elementIndex = widget.selectedLayer!.elements.indexWhere(
-      (e) => e.id == elementId,
-    );
-    if (elementIndex == -1) return;
-
-    final element = widget.selectedLayer!.elements[elementIndex];
-    final updatedElements = List<MapDrawingElement>.from(
-      widget.selectedLayer!.elements,
-    );
-
-    // 转换为标准化坐标
-    final normalizedCenter = Offset(
-      (newCenter.dx / kCanvasWidth).clamp(0.0, 1.0),
-      (newCenter.dy / kCanvasHeight).clamp(0.0, 1.0),
-    );
-
-    MapDrawingElement updatedElement;
-
-    if (element.type == DrawingElementType.text) {
-      // 文本元素只有一个点
-      updatedElement = element.copyWith(points: [normalizedCenter]);
-    } else if (element.points.length >= 2) {
-      // 计算当前元素的尺寸
-      final currentStart = element.points[0];
-      final currentEnd = element.points[1];
-      final width = (currentEnd.dx - currentStart.dx).abs();
-      final height = (currentEnd.dy - currentStart.dy).abs();
-
-      // 保持尺寸，更新位置
-      final newStart = Offset(
-        normalizedCenter.dx - width / 2,
-        normalizedCenter.dy - height / 2,
-      );
-      final newEnd = Offset(
-        normalizedCenter.dx + width / 2,
-        normalizedCenter.dy + height / 2,
-      );
-      updatedElement = element.copyWith(points: [newStart, newEnd]);
-    } else {
-      return;
-    }
-
-    updatedElements[elementIndex] = updatedElement;
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: updatedElements,
-    );
-
-    widget.onLayerUpdated(updatedLayer);
-  }
-
-  /// 获取调整大小控制柄的矩形区域
-  static List<Rect> getResizeHandles(
-    MapDrawingElement element, {
-    double? handleSize,
-  }) {
-    if (element.points.length < 2) return [];
-
-    final size = const Size(kCanvasWidth, kCanvasHeight);
-    final start = Offset(
-      element.points[0].dx * size.width,
-      element.points[0].dy * size.height,
-    );
-    final end = Offset(
-      element.points[1].dx * size.width,
-      element.points[1].dy * size.height,
-    );
-    final rect = Rect.fromPoints(start, end);
-
-    final effectiveHandleSize = handleSize ?? 8.0;
-    final handles = <Rect>[]; // 四个角的控制柄
-    handles.add(
-      Rect.fromCenter(
-        center: rect.topLeft,
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: rect.topRight,
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: rect.bottomLeft,
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: rect.bottomRight,
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-
-    // 边中点的控制柄
-    handles.add(
-      Rect.fromCenter(
-        center: Offset(rect.center.dx, rect.top),
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: Offset(rect.center.dx, rect.bottom),
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: Offset(rect.left, rect.center.dy),
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-    handles.add(
-      Rect.fromCenter(
-        center: Offset(rect.right, rect.center.dy),
-        width: effectiveHandleSize,
-        height: effectiveHandleSize,
-      ),
-    );
-
-    return handles;
-  }
-
-  /// 检测点击位置命中哪个调整大小控制柄
-  ResizeHandle? _getHitResizeHandle(
-    Offset canvasPosition,
-    MapDrawingElement element, {
-    double? handleSize,
-  }) {
-    final handles = MapCanvasState.getResizeHandles(
-      element,
-      handleSize: handleSize,
-    );
-
-    for (int i = 0; i < handles.length; i++) {
-      if (handles[i].contains(canvasPosition)) {
-        return ResizeHandle.values[i];
-      }
-    }
-    return null;
-  }
-
-  /// 处理调整大小的开始
-  void _onResizeStart(
-    String elementId,
-    ResizeHandle handle,
-    DragStartDetails details,
-  ) {
-    _resizingElementId = elementId;
-    _activeResizeHandle = handle;
-    _resizeStartPosition = _getCanvasPosition(details.localPosition);
-    final element = widget.selectedLayer!.elements
-        .where((e) => e.id == elementId)
-        .first;
-    if (element.points.length >= 2) {
-      final size = const Size(kCanvasWidth, kCanvasHeight);
-      final start = Offset(
-        element.points[0].dx * size.width,
-        element.points[0].dy * size.height,
-      );
-      final end = Offset(
-        element.points[1].dx * size.width,
-        element.points[1].dy * size.height,
-      );
-      _originalElementBounds = Rect.fromPoints(start, end);
-    }
-
-    setState(() {
-      // 触发重绘以显示调整大小状态
-    });
-  }
-
-  /// 处理调整大小的更新
-  void _onResizeUpdate(String elementId, DragUpdateDetails details) {
-    if (_resizingElementId != elementId ||
-        _activeResizeHandle == null ||
-        _resizeStartPosition == null ||
-        _originalElementBounds == null) {
-      return;
-    }
-
-    final currentPosition = _getCanvasPosition(details.localPosition);
-    final delta = currentPosition - _resizeStartPosition!;
-
-    // 根据控制柄类型计算新的边界
-    Rect newBounds = _calculateNewBounds(
-      _originalElementBounds!,
-      _activeResizeHandle!,
-      delta,
-    );
-
-    // 更新元素大小
-    _updateElementSize(elementId, newBounds);
-  }
-
-  /// 处理调整大小的结束
-  void _onResizeEnd(String elementId, DragEndDetails details) {
-    _resizingElementId = null;
-    _activeResizeHandle = null;
-    _resizeStartPosition = null;
-    _originalElementBounds = null;
-
-    setState(() {
-      // 触发重绘以清除调整大小状态
-    });
-  }
-
-  /// 根据控制柄和拖拽偏移计算新边界
-  Rect _calculateNewBounds(
-    Rect originalBounds,
-    ResizeHandle handle,
-    Offset delta,
-  ) {
-    double left = originalBounds.left;
-    double top = originalBounds.top;
-    double right = originalBounds.right;
-    double bottom = originalBounds.bottom;
-
-    switch (handle) {
-      case ResizeHandle.topLeft:
-        left += delta.dx;
-        top += delta.dy;
-        break;
-      case ResizeHandle.topRight:
-        right += delta.dx;
-        top += delta.dy;
-        break;
-      case ResizeHandle.bottomLeft:
-        left += delta.dx;
-        bottom += delta.dy;
-        break;
-      case ResizeHandle.bottomRight:
-        right += delta.dx;
-        bottom += delta.dy;
-        break;
-      case ResizeHandle.topCenter:
-        top += delta.dy;
-        break;
-      case ResizeHandle.bottomCenter:
-        bottom += delta.dy;
-        break;
-      case ResizeHandle.centerLeft:
-        left += delta.dx;
-        break;
-      case ResizeHandle.centerRight:
-        right += delta.dx;
-        break;
-    }
-
-    // 确保最小尺寸
-    const minSize = 0.0;
-    if (right - left < minSize) {
-      if (handle == ResizeHandle.centerLeft ||
-          handle == ResizeHandle.topLeft ||
-          handle == ResizeHandle.bottomLeft) {
-        left = right - minSize;
-      } else {
-        right = left + minSize;
-      }
-    }
-    if (bottom - top < minSize) {
-      if (handle == ResizeHandle.topCenter ||
-          handle == ResizeHandle.topLeft ||
-          handle == ResizeHandle.topRight) {
-        top = bottom - minSize;
-      } else {
-        bottom = top + minSize;
-      }
-    }
-
-    return Rect.fromLTRB(left, top, right, bottom);
-  }
-
-  /// 更新元素大小
-  void _updateElementSize(String elementId, Rect newBounds) {
-    if (widget.selectedLayer == null) return;
-
-    final elementIndex = widget.selectedLayer!.elements.indexWhere(
-      (e) => e.id == elementId,
-    );
-    if (elementIndex == -1) return;
-
-    final element = widget.selectedLayer!.elements[elementIndex];
-    final updatedElements = List<MapDrawingElement>.from(
-      widget.selectedLayer!.elements,
-    );
-
-    // 转换为标准化坐标
-    final normalizedStart = Offset(
-      (newBounds.left / kCanvasWidth).clamp(0.0, 1.0),
-      (newBounds.top / kCanvasHeight).clamp(0.0, 1.0),
-    );
-    final normalizedEnd = Offset(
-      (newBounds.right / kCanvasWidth).clamp(0.0, 1.0),
-      (newBounds.bottom / kCanvasHeight).clamp(0.0, 1.0),
-    );
-    final updatedElement = element.copyWith(
-      points: [normalizedStart, normalizedEnd],
-    );
-
-    updatedElements[elementIndex] = updatedElement;
-
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: updatedElements,
-    );
-
-    widget.onLayerUpdated(updatedLayer);
-  }
 
   @override
   void didUpdateWidget(MapCanvas oldWidget) {
