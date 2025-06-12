@@ -3,6 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../widgets/map_canvas.dart';
 
+enum ResizeHandle {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+  topCenter,
+  bottomCenter,
+  centerLeft,
+  centerRight,
+}
+
 /// 绘画元素交互管理器
 /// 负责处理元素的拖拽、调整大小、碰撞检测等交互逻辑
 class ElementInteractionManager {

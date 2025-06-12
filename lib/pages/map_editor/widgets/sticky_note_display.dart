@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../../../models/sticky_note.dart';
 
+/// 便签点击类型枚举
+enum StickyNoteHitType {
+  titleBar,     // 标题栏（用于拖拽便签）
+  resizeHandle, // 调整大小手柄
+}
+
+
+
 /// 便签显示组件
 /// 用于在画布上渲染可交互的便签
 class StickyNoteDisplay extends StatefulWidget {
@@ -23,13 +31,6 @@ class StickyNoteDisplay extends StatefulWidget {
 }
 
 class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
-  bool _isDragging = false;
-  bool _isResizing = false;
-  Offset? _dragStartPosition;
-  Offset? _resizeStartPosition;
-  Size? _resizeStartSize;
-  Offset? _dragStartNotePosition; // 记录拖拽开始时便签的位置
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -58,55 +59,49 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
       ),
     );
   }
-
   /// 构建标题栏
   Widget _buildTitleBar() {
-    return GestureDetector(
-      onPanStart: widget.isPreviewMode ? null : _onTitleBarDragStart,
-      onPanUpdate: widget.isPreviewMode ? null : _onTitleBarDragUpdate,
-      onPanEnd: widget.isPreviewMode ? null : _onTitleBarDragEnd,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: widget.note.titleBarColor,
-          borderRadius: widget.note.isCollapsed
-              ? BorderRadius.circular(8)
-              : const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
-                ),
-        ),
-        child: Row(
-          children: [
-            // 标题文本
-            Expanded(
-              child: Text(
-                widget.note.title,
-                style: TextStyle(
-                  color: widget.note.textColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: widget.note.titleBarColor,
+        borderRadius: widget.note.isCollapsed
+            ? BorderRadius.circular(8)
+            : const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+      ),
+      child: Row(
+        children: [
+          // 标题文本
+          Expanded(
+            child: Text(
+              widget.note.title,
+              style: TextStyle(
+                color: widget.note.textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // 折叠/展开按钮
+          if (!widget.isPreviewMode)
+            GestureDetector(
+              onTap: _toggleCollapse,
+              child: Icon(
+                widget.note.isCollapsed
+                    ? Icons.expand_more
+                    : Icons.expand_less,
+                size: 16,
+                color: widget.note.textColor,
               ),
             ),
-
-            // 折叠/展开按钮
-            if (!widget.isPreviewMode)
-              GestureDetector(
-                onTap: _toggleCollapse,
-                child: Icon(
-                  widget.note.isCollapsed
-                      ? Icons.expand_more
-                      : Icons.expand_less,
-                  size: 16,
-                  color: widget.note.textColor,
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -152,8 +147,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         ),
       ),
     );
-  }
-  /// 构建调整大小手柄
+  }  /// 构建调整大小手柄
   Widget _buildResizeHandles() {
     const double handleSize = 16.0;
 
@@ -163,113 +157,19 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         Positioned(
           right: -4,
           bottom: -4,
-          child: GestureDetector(
-            onPanStart: _onResizeStart,
-            onPanUpdate: _onResizeUpdate,
-            onPanEnd: _onResizeEnd,
-            child: Container(
-              width: handleSize,
-              height: handleSize,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white, width: 1),
-              ),
+          child: Container(
+            width: handleSize,
+            height: handleSize,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.white, width: 1),
             ),
           ),
         ),
       ],
     );
-  }
-
-  /// 处理标题栏拖拽开始
-  void _onTitleBarDragStart(DragStartDetails details) {
-    _isDragging = true;
-    _dragStartPosition = details.localPosition;
-    _dragStartNotePosition = widget.note.position; // 记录开始位置
-  }
-
-  /// 处理标题栏拖拽更新
-  void _onTitleBarDragUpdate(DragUpdateDetails details) {
-    if (!_isDragging ||
-        _dragStartPosition == null ||
-        _dragStartNotePosition == null)
-      return;
-
-    // 计算拖动偏移量
-    final delta = details.localPosition - _dragStartPosition!;
-
-    // 获取画布尺寸（与 MapCanvas 中的常量保持一致）
-    const canvasSize = Size(1600, 1600);
-
-    // 将像素偏移量转换为相对坐标偏移量
-    final relativeDelta = Offset(
-      delta.dx / canvasSize.width,
-      delta.dy / canvasSize.height,
-    );
-
-    // 计算新的相对位置（基于拖拽开始时的位置）
-    final newPosition = Offset(
-      (_dragStartNotePosition!.dx + relativeDelta.dx).clamp(
-        0.0,
-        1.0 - widget.note.size.width,
-      ),
-      (_dragStartNotePosition!.dy + relativeDelta.dy).clamp(
-        0.0,
-        1.0 - widget.note.size.height,
-      ),
-    );
-
-    _updateNotePosition(newPosition);
-  }
-
-  /// 处理标题栏拖拽结束
-  void _onTitleBarDragEnd(DragEndDetails details) {
-    _isDragging = false;
-    _dragStartPosition = null;
-    _dragStartNotePosition = null;
-  }
-
-  /// 处理调整大小开始
-  void _onResizeStart(DragStartDetails details) {
-    _isResizing = true;
-    _resizeStartPosition = details.localPosition;
-    _resizeStartSize = widget.note.size;
-  }
-
-  /// 处理调整大小更新
-  void _onResizeUpdate(DragUpdateDetails details) {
-    if (!_isResizing ||
-        _resizeStartPosition == null ||
-        _resizeStartSize == null)
-      return;
-
-    // 计算大小变化
-    final delta = details.localPosition - _resizeStartPosition!;
-    const canvasSize = Size(1600, 1600);
-
-    final newSize = Size(
-      (_resizeStartSize!.width + delta.dx / canvasSize.width).clamp(
-        0.05,
-        0.5,
-      ), // 最小5%，最大50%
-      (_resizeStartSize!.height + delta.dy / canvasSize.height).clamp(
-        0.05,
-        0.5,
-      ),
-    );
-
-    _updateNoteSize(newSize);
-  }
-
-  /// 处理调整大小结束
-  void _onResizeEnd(DragEndDetails details) {
-    _isResizing = false;
-    _resizeStartPosition = null;
-    _resizeStartSize = null;
-  }
-
-  /// 切换折叠状态
+  }  /// 切换折叠状态
   void _toggleCollapse() {
     final updatedNote = widget.note.copyWith(
       isCollapsed: !widget.note.isCollapsed,
@@ -277,23 +177,245 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
     );
     widget.onNoteUpdated?.call(updatedNote);
   }
+}
 
-  /// 更新便签位置
-  void _updateNotePosition(Offset newPosition) {
-    final updatedNote = widget.note.copyWith(
+/// 便签手势检测工具类
+/// 供 MapCanvas 使用的静态方法
+class StickyNoteGestureHelper {
+  /// 检测点击位置是否命中便签的特定区域
+  /// 
+  /// [canvasPosition] 相对于画布的点击位置
+  /// [note] 便签对象
+  /// [canvasSize] 画布尺寸
+  /// 
+  /// 返回命中的区域类型，如果没有命中特定区域则返回 null
+  static StickyNoteHitType? getStickyNoteHitType(
+    Offset canvasPosition,
+    StickyNote note,
+    Size canvasSize,
+  ) {
+    // 转换便签的相对坐标到画布坐标
+    final notePosition = Offset(
+      note.position.dx * canvasSize.width,
+      note.position.dy * canvasSize.height,
+    );
+    final noteSize = Size(
+      note.size.width * canvasSize.width,
+      note.size.height * canvasSize.height,
+    );
+
+    // 创建便签的矩形区域
+    final noteRect = Rect.fromLTWH(
+      notePosition.dx,
+      notePosition.dy,
+      noteSize.width,
+      noteSize.height,
+    );
+
+    // 检查点击位置是否在便签区域内
+    if (!noteRect.contains(canvasPosition)) {
+      return null;
+    }
+
+    // 计算相对于便签的本地坐标
+    final localPosition = Offset(
+      canvasPosition.dx - notePosition.dx,
+      canvasPosition.dy - notePosition.dy,
+    );
+
+    // 检查是否点击了调整大小手柄（只有在便签被选中且未折叠时才有）
+    if (!note.isCollapsed) {
+      const double handleSize = 16.0;
+      final handleRect = Rect.fromLTWH(
+        noteSize.width - 4 - handleSize,
+        noteSize.height - 4 - handleSize,
+        handleSize + 8, // 增加点击区域
+        handleSize + 8,
+      );
+
+      if (handleRect.contains(localPosition)) {
+        return StickyNoteHitType.resizeHandle;
+      }
+    }
+
+    // 检查是否点击了标题栏
+    const double titleBarHeight = 28.0; // 标题栏高度（包括 padding）
+    final titleBarRect = Rect.fromLTWH(
+      0,
+      0,
+      noteSize.width,
+      titleBarHeight,
+    );
+
+    if (titleBarRect.contains(localPosition)) {
+      return StickyNoteHitType.titleBar;
+    }
+
+    // 点击了便签的其他区域，不返回特定类型
+    return null;
+  }
+
+  /// 处理便签拖拽开始
+  /// 
+  /// [note] 要拖拽的便签
+  /// [hitType] 命中的区域类型
+  /// [details] 拖拽开始的详细信息
+  /// [getCanvasPosition] 将本地坐标转换为画布坐标的函数
+  /// [onNoteUpdated] 便签更新回调
+  static StickyNoteDragState? handleStickyNotePanStart(
+    StickyNote note,
+    StickyNoteHitType hitType,
+    DragStartDetails details,
+    Offset Function(Offset) getCanvasPosition,
+    Function(StickyNote) onNoteUpdated,
+  ) {
+    final canvasPosition = getCanvasPosition(details.localPosition);
+    
+    switch (hitType) {
+      case StickyNoteHitType.titleBar:
+        return StickyNoteDragState(
+          type: StickyNoteDragType.move,
+          note: note,
+          startPosition: canvasPosition,
+          startNotePosition: note.position,
+          onNoteUpdated: onNoteUpdated,
+        );
+        
+      case StickyNoteHitType.resizeHandle:
+        return StickyNoteDragState(
+          type: StickyNoteDragType.resize,
+          note: note,
+          startPosition: canvasPosition,
+          startNoteSize: note.size,
+          onNoteUpdated: onNoteUpdated,
+        );
+    }
+  }
+
+  /// 处理便签拖拽更新
+  static void handleStickyNotePanUpdate(
+    StickyNoteDragState dragState,
+    DragUpdateDetails details,
+    Offset Function(Offset) getCanvasPosition,
+    Size canvasSize,
+  ) {
+    final currentPosition = getCanvasPosition(details.localPosition);
+    
+    switch (dragState.type) {
+      case StickyNoteDragType.move:
+        _handleMoveUpdate(dragState, currentPosition, canvasSize);
+        break;
+        
+      case StickyNoteDragType.resize:
+        _handleResizeUpdate(dragState, currentPosition, canvasSize);
+        break;
+    }
+  }
+
+  /// 处理便签拖拽结束
+  static void handleStickyNotePanEnd(
+    StickyNoteDragState dragState,
+    DragEndDetails details,
+  ) {
+    // 拖拽结束，清理状态
+    // 所有更新都已经在 update 过程中完成
+  }
+
+  // 私有方法：处理移动更新
+  static void _handleMoveUpdate(
+    StickyNoteDragState dragState,
+    Offset currentPosition,
+    Size canvasSize,
+  ) {
+    if (dragState.startPosition == null || dragState.startNotePosition == null) {
+      return;
+    }
+
+    // 计算拖动偏移量
+    final delta = currentPosition - dragState.startPosition!;
+
+    // 将像素偏移量转换为相对坐标偏移量
+    final relativeDelta = Offset(
+      delta.dx / canvasSize.width,
+      delta.dy / canvasSize.height,
+    );
+
+    // 计算新的相对位置
+    final newPosition = Offset(
+      (dragState.startNotePosition!.dx + relativeDelta.dx).clamp(
+        0.0,
+        1.0 - dragState.note.size.width,
+      ),
+      (dragState.startNotePosition!.dy + relativeDelta.dy).clamp(
+        0.0,
+        1.0 - dragState.note.size.height,
+      ),
+    );
+
+    // 更新便签位置
+    final updatedNote = dragState.note.copyWith(
       position: newPosition,
       updatedAt: DateTime.now(),
     );
-    widget.onNoteUpdated?.call(updatedNote);
+    dragState.onNoteUpdated(updatedNote);
   }
 
-  /// 更新便签大小
-  void _updateNoteSize(Size newSize) {
-    final updatedNote = widget.note.copyWith(
+  // 私有方法：处理调整大小更新
+  static void _handleResizeUpdate(
+    StickyNoteDragState dragState,
+    Offset currentPosition,
+    Size canvasSize,
+  ) {
+    if (dragState.startPosition == null || dragState.startNoteSize == null) {
+      return;
+    }
+
+    // 计算大小变化
+    final delta = currentPosition - dragState.startPosition!;
+
+    // 转换为相对坐标变化
+    final newSize = Size(
+      (dragState.startNoteSize!.width + delta.dx / canvasSize.width).clamp(
+        0.05, // 最小5%
+        0.5,  // 最大50%
+      ),
+      (dragState.startNoteSize!.height + delta.dy / canvasSize.height).clamp(
+        0.05,
+        0.5,
+      ),
+    );
+
+    // 更新便签大小
+    final updatedNote = dragState.note.copyWith(
       size: newSize,
       updatedAt: DateTime.now(),
     );
-    widget.onNoteUpdated?.call(updatedNote);
+    dragState.onNoteUpdated(updatedNote);
   }
+}
+
+/// 便签拖拽类型枚举
+enum StickyNoteDragType {
+  move,   // 移动便签
+  resize, // 调整大小
+}
+
+/// 便签拖拽状态类
+class StickyNoteDragState {
+  final StickyNoteDragType type;
+  final StickyNote note;
+  final Offset? startPosition;
+  final Offset? startNotePosition; // 移动时使用
+  final Size? startNoteSize;       // 调整大小时使用
+  final Function(StickyNote) onNoteUpdated;
+
+  StickyNoteDragState({
+    required this.type,
+    required this.note,
+    this.startPosition,
+    this.startNotePosition,
+    this.startNoteSize,
+    required this.onNoteUpdated,
+  });
 }
 

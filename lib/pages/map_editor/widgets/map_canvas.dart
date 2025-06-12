@@ -24,18 +24,6 @@ import '../tools/element_interaction_manager.dart';
 const double kCanvasWidth = 1600.0;
 const double kCanvasHeight = 1600.0;
 
-/// 调整大小控制柄枚举
-enum ResizeHandle {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-  topCenter,
-  bottomCenter,
-  centerLeft,
-  centerRight,
-}
-
 /// 绘制预览数据
 class DrawingPreviewData {
   final Offset start;
@@ -209,7 +197,7 @@ class MapCanvasState extends State<MapCanvas> {
 
   @override
   void initState() {
-    super.initState();    // 初始化绘制工具管理器
+    super.initState(); // 初始化绘制工具管理器
     _drawingToolManager = DrawingToolManager(
       onLayerUpdated: widget.onLayerUpdated,
       context: context,
@@ -245,7 +233,8 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   @override
-  void dispose() {    // 清理绘制工具管理器
+  void dispose() {
+    // 清理绘制工具管理器
     _drawingToolManager.dispose();
 
     // 清理元素交互管理器
@@ -391,8 +380,7 @@ class MapCanvasState extends State<MapCanvas> {
                         onPanStart: _onElementInteractionPanStart,
                         onPanUpdate: _onElementInteractionPanUpdate,
                         onPanEnd: _onElementInteractionPanEnd,
-                        behavior: HitTestBehavior
-                            .deferToChild, // 改为deferToChild，让便签优先处理手势
+                        behavior: HitTestBehavior.translucent,
                       ),
                     ),
                 ],
@@ -519,15 +507,11 @@ class MapCanvasState extends State<MapCanvas> {
       height: size.height,
       child: Opacity(
         opacity: effectiveOpacity,
-        child: GestureDetector(
-          // 添加手势检测器包装便签，确保能接收到手势
-          behavior: HitTestBehavior.opaque,
-          child: StickyNoteDisplay(
-            note: note,
-            isSelected: widget.selectedStickyNote?.id == note.id,
-            isPreviewMode: widget.isPreviewMode,
-            onNoteUpdated: widget.onStickyNoteUpdated,
-          ),
+        child: StickyNoteDisplay(
+          note: note,
+          isSelected: widget.selectedStickyNote?.id == note.id,
+          isPreviewMode: widget.isPreviewMode,
+          onNoteUpdated: widget.onStickyNoteUpdated,
         ),
       ),
     );
@@ -633,6 +617,7 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   } // 图例拖拽相关方法
+
   LegendItem? _draggingLegendItem;
   Offset? _dragStartOffset; // 记录拖拽开始时的偏移量
 
@@ -940,7 +925,9 @@ class MapCanvasState extends State<MapCanvas> {
       }
     }
     return null;
-  }
+  } // 便签拖拽状态
+
+  StickyNoteDragState? _stickyNoteDragState;
 
   void _onElementInteractionPanStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
@@ -948,7 +935,28 @@ class MapCanvasState extends State<MapCanvas> {
     // ---：优先检测便签交互 ---
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
-      // 如果点击了便签，不处理其他交互，让便签自己处理手势
+      // 检查是否点击了便签的标题栏或调整柄
+      final stickyNoteHitResult = StickyNoteGestureHelper.getStickyNoteHitType(
+        canvasPosition,
+        hitStickyNote,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
+        // 处理便签特定区域的手势
+        _stickyNoteDragState = StickyNoteGestureHelper.handleStickyNotePanStart(
+          hitStickyNote,
+          stickyNoteHitResult,
+          details,
+          _getCanvasPosition,
+          widget.onStickyNoteUpdated!,
+        );
+        return;
+      }
+      // 如果点击了便签但不是特定区域，选中便签但不处理拖拽
+      if (widget.selectedStickyNote?.id != hitStickyNote.id) {
+        // 选中便签（通过回调通知上层）
+        // TODO: 需要添加选中便签的回调
+      }
       return;
     }
 
@@ -974,7 +982,8 @@ class MapCanvasState extends State<MapCanvas> {
           context,
           listen: false,
         );
-        final handleSize = userPrefsProvider.tools.handleSize;        // 1a. 检查是否点击了选中元素的【调整大小控制柄】
+        final handleSize =
+            userPrefsProvider.tools.handleSize; // 1a. 检查是否点击了选中元素的【调整大小控制柄】
         final resizeHandle = _elementInteractionManager.getHitResizeHandle(
           canvasPosition,
           selectedElement,
@@ -993,7 +1002,10 @@ class MapCanvasState extends State<MapCanvas> {
 
         // 1b. 如果不是控制柄，检查是否点击了选中元素的【主体区域】
         //     这里直接使用 _isPointInElement，它不考虑 zIndex，只判断点是否在该元素的几何形状内。
-        if (_elementInteractionManager.isPointInElement(canvasPosition, selectedElement)) {
+        if (_elementInteractionManager.isPointInElement(
+          canvasPosition,
+          selectedElement,
+        )) {
           _elementInteractionManager.onElementDragStart(
             widget.selectedElementId!,
             details,
@@ -1043,9 +1055,18 @@ class MapCanvasState extends State<MapCanvas> {
       _startSelectionDrag(canvasPosition);
     }
   }
+
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
-    if (_draggingLegendItem != null) {
+    if (_stickyNoteDragState != null) {
+      // 正在拖拽便签
+      StickyNoteGestureHelper.handleStickyNotePanUpdate(
+        _stickyNoteDragState!,
+        details,
+        _getCanvasPosition,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+    } else if (_draggingLegendItem != null) {
       // 正在拖拽图例
       _onLegendDragUpdate(_draggingLegendItem!, details);
     } else if (_elementInteractionManager.isResizing) {
@@ -1069,9 +1090,17 @@ class MapCanvasState extends State<MapCanvas> {
       _updateSelectionDrag(details);
     }
   }
+
   /// 处理元素交互的拖拽结束事件
   void _onElementInteractionPanEnd(DragEndDetails details) {
-    if (_draggingLegendItem != null) {
+    if (_stickyNoteDragState != null) {
+      // 结束拖拽便签
+      StickyNoteGestureHelper.handleStickyNotePanEnd(
+        _stickyNoteDragState!,
+        details,
+      );
+      _stickyNoteDragState = null;
+    } else if (_draggingLegendItem != null) {
       // 结束拖拽图例
       final item = _draggingLegendItem!;
       _onLegendDragEnd(item, details);
@@ -1545,9 +1574,11 @@ class MapCanvasState extends State<MapCanvas> {
   // 绘画元素选择和操作相关方法
   /// 检测点击位置是否命中某个绘画元素
   String? _getHitElement(Offset canvasPosition) {
-    return _elementInteractionManager.getHitElement(canvasPosition, widget.selectedLayer);
+    return _elementInteractionManager.getHitElement(
+      canvasPosition,
+      widget.selectedLayer,
+    );
   }
-
 
   @override
   void didUpdateWidget(MapCanvas oldWidget) {
