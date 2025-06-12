@@ -20,62 +20,107 @@ class VfsMapServiceImpl implements VfsMapService {
   final Map<String, MapItem> _mapCache = {};
   final Map<String, List<MapLayer>> _layerCache = {};
   final Map<String, String> _assetHashIndex = {};
-  
+
   VfsMapServiceImpl({
     required VfsStorageService storageService,
     String databaseName = 'r6box',
     String mapsCollection = 'maps',
-  })  : _storageService = storageService,
-        _databaseName = databaseName,
-        _mapsCollection = mapsCollection;
+  }) : _storageService = storageService,
+       _databaseName = databaseName,
+       _mapsCollection = mapsCollection;
 
   // 路径构建方法 - 使用基于标题的文件名
   String _getMapPath(String mapTitle) {
     final sanitizedTitle = FilenameSanitizer.sanitize(mapTitle);
     return '$sanitizedTitle.mapdata';
   }
-  
-  String _getMapMetaPath(String mapTitle) => '${_getMapPath(mapTitle)}/meta.json';
-  String _getMapLocalizationPath(String mapTitle) => '${_getMapPath(mapTitle)}/localization.json';
-  String _getMapCoverPath(String mapTitle) => '${_getMapPath(mapTitle)}/cover.png';
-  String _getLayersPath(String mapTitle, [String version = 'default']) => '${_getMapPath(mapTitle)}/data/$version/layers';
-  String _getLayerPath(String mapTitle, String layerId, [String version = 'default']) => '${_getLayersPath(mapTitle, version)}/$layerId';
-  String _getLayerConfigPath(String mapTitle, String layerId, [String version = 'default']) => '${_getLayerPath(mapTitle, layerId, version)}/config.json';
-  String _getElementsPath(String mapTitle, String layerId, [String version = 'default']) => '${_getLayerPath(mapTitle, layerId, version)}/elements';
-  String _getElementPath(String mapTitle, String layerId, String elementId, [String version = 'default']) => '${_getLayersPath(mapTitle, version)}/$layerId/elements/$elementId.json';
-  String _getLegendsPath(String mapTitle, [String version = 'default']) => '${_getMapPath(mapTitle)}/data/$version/legends';
-  String _getLegendGroupPath(String mapTitle, String groupId, [String version = 'default']) => '${_getLegendsPath(mapTitle, version)}/$groupId';
-  String _getLegendGroupConfigPath(String mapTitle, String groupId, [String version = 'default']) => '${_getLegendGroupPath(mapTitle, groupId, version)}/config.json';
-  String _getLegendItemsPath(String mapTitle, String groupId, [String version = 'default']) => '${_getLegendGroupPath(mapTitle, groupId, version)}/items';
-  String _getLegendItemPath(String mapTitle, String groupId, String itemId, [String version = 'default']) => '${_getLegendItemsPath(mapTitle, groupId, version)}/$itemId.json';
-  
+
+  String _getMapMetaPath(String mapTitle) =>
+      '${_getMapPath(mapTitle)}/meta.json';
+  String _getMapLocalizationPath(String mapTitle) =>
+      '${_getMapPath(mapTitle)}/localization.json';
+  String _getMapCoverPath(String mapTitle) =>
+      '${_getMapPath(mapTitle)}/cover.png';
+  String _getLayersPath(String mapTitle, [String version = 'default']) =>
+      '${_getMapPath(mapTitle)}/data/$version/layers';
+  String _getLayerPath(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) => '${_getLayersPath(mapTitle, version)}/$layerId';
+  String _getLayerConfigPath(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) => '${_getLayerPath(mapTitle, layerId, version)}/config.json';
+  String _getElementsPath(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) => '${_getLayerPath(mapTitle, layerId, version)}/elements';
+  String _getElementPath(
+    String mapTitle,
+    String layerId,
+    String elementId, [
+    String version = 'default',
+  ]) =>
+      '${_getLayersPath(mapTitle, version)}/$layerId/elements/$elementId.json';
+  String _getLegendsPath(String mapTitle, [String version = 'default']) =>
+      '${_getMapPath(mapTitle)}/data/$version/legends';
+  String _getLegendGroupPath(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) => '${_getLegendsPath(mapTitle, version)}/$groupId';
+  String _getLegendGroupConfigPath(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) => '${_getLegendGroupPath(mapTitle, groupId, version)}/config.json';
+  String _getLegendItemsPath(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) => '${_getLegendGroupPath(mapTitle, groupId, version)}/items';
+  String _getLegendItemPath(
+    String mapTitle,
+    String groupId,
+    String itemId, [
+    String version = 'default',
+  ]) => '${_getLegendItemsPath(mapTitle, groupId, version)}/$itemId.json';
+
   // 版本元数据路径
-  String _getVersionMetadataPath(String mapTitle) => '${_getMapPath(mapTitle)}/versions_metadata.json';
+  String _getVersionMetadataPath(String mapTitle) =>
+      '${_getMapPath(mapTitle)}/versions_metadata.json';
 
   // 资产管理路径构建
   String _getAssetsPath(String mapTitle) => '${_getMapPath(mapTitle)}/assets';
-  String _getAssetPath(String mapTitle, String filename) => '${_getAssetsPath(mapTitle)}/$filename';
+  String _getAssetPath(String mapTitle, String filename) =>
+      '${_getAssetsPath(mapTitle)}/$filename';
 
   // VFS路径构建
-  String _buildVfsPath(String path) => VfsProtocol.buildPath(_databaseName, _mapsCollection, path);
+  String _buildVfsPath(String path) =>
+      VfsProtocol.buildPath(_databaseName, _mapsCollection, path);
 
   @override
   Future<List<MapItem>> getAllMaps() async {
     try {
       final files = await _storageService.listDirectory(_buildVfsPath(''));
       final maps = <MapItem>[];
-      
+
       for (final file in files) {
         if (file.isDirectory && file.name.endsWith('.mapdata')) {
           // 从文件名提取标题
           final mapTitle = file.name.replaceAll('.mapdata', '');
-          final map = await getMapByTitle(FilenameSanitizer.desanitize(mapTitle));
+          final map = await getMapByTitle(
+            FilenameSanitizer.desanitize(mapTitle),
+          );
           if (map != null) {
             maps.add(map);
           }
         }
       }
-      
+
       return maps;
     } catch (e) {
       debugPrint('获取所有地图失败: $e');
@@ -92,7 +137,7 @@ class VfsMapServiceImpl implements VfsMapService {
       if (map != null) {
         return map;
       }
-      
+
       // 如果找不到，可能是数字ID，在这种情况下我们无法处理
       debugPrint('无法通过ID查找地图，VFS系统使用基于标题的存储: $id');
       return null;
@@ -112,19 +157,20 @@ class VfsMapServiceImpl implements VfsMapService {
 
       final metaPath = _buildVfsPath(_getMapMetaPath(title));
       final metaData = await _storageService.readFile(metaPath);
-      
+
       if (metaData == null) {
         return null;
       }
 
-      final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
-      
+      final metaJson =
+          jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+
       // 加载图层数据
       final layers = await getMapLayers(title);
-      
+
       // 加载图例组数据
       final legendGroups = await getMapLegendGroups(title);
-      
+
       // 加载封面图片
       VfsFileContent? coverData;
       try {
@@ -159,29 +205,29 @@ class VfsMapServiceImpl implements VfsMapService {
     try {
       // 删除旧的data和assets目录，为新数据腾出空间
       await _deleteOldDataAndAssets(map.title);
-      
+
       // 保存元数据
       await _saveMapMeta(map.title, map);
-      
-      // 保存封面图片      
+
+      // 保存封面图片
       if (map.imageData != null && map.imageData!.isNotEmpty) {
         await _saveMapCover(map.title, map.imageData!);
       }
-      
+
       // 保存图层数据
       for (final layer in map.layers) {
         await saveLayer(map.title, layer);
       }
-      
+
       // 保存图例组数据
       for (final group in map.legendGroups) {
         await saveLegendGroup(map.title, group);
       }
-      
+
       // 清除缓存
       _mapCache.remove(map.title);
       _layerCache.remove(map.title);
-      
+
       return map.title; // 返回标题作为标识符
     } catch (e) {
       debugPrint('保存地图失败 [${map.title}]: $e');
@@ -194,7 +240,7 @@ class VfsMapServiceImpl implements VfsMapService {
     try {
       final mapPath = _buildVfsPath(_getMapPath(mapTitle));
       await _storageService.delete(mapPath);
-      
+
       // 清除缓存
       _mapCache.remove(mapTitle);
       _layerCache.remove(mapTitle);
@@ -213,7 +259,9 @@ class VfsMapServiceImpl implements VfsMapService {
   // 私有方法：保存地图元数据
   Future<void> _saveMapMeta(String mapTitle, MapItem map) async {
     final metaData = {
-      'id': map.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      'id':
+          map.id?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       'title': map.title,
       'version': map.version,
       'createdAt': map.createdAt.toIso8601String(),
@@ -244,7 +292,7 @@ class VfsMapServiceImpl implements VfsMapService {
         await _storageService.delete(dataPath, recursive: true);
         debugPrint('已递归删除旧的data目录及其所有内容: $dataPath');
       }
-      
+
       // 删除assets目录（递归删除所有子文件和子目录）
       final assetsPath = _buildVfsPath(_getAssetsPath(mapTitle));
       final assetsExists = await _storageService.exists(assetsPath);
@@ -259,14 +307,17 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<List<MapLayer>> getMapLayers(String mapTitle, [String version = 'default']) async {
+  Future<List<MapLayer>> getMapLayers(
+    String mapTitle, [
+    String version = 'default',
+  ]) async {
     try {
       // 检查缓存
       final cacheKey = '$mapTitle:$version';
       if (_layerCache.containsKey(cacheKey)) {
         return _layerCache[cacheKey]!;
       }
-      
+
       final layersPath = _buildVfsPath(_getLayersPath(mapTitle, version));
       final files = await _storageService.listDirectory(layersPath);
       final layers = <MapLayer>[];
@@ -282,7 +333,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
       // 按order排序
       layers.sort((a, b) => a.order.compareTo(b.order));
-      
+
       // 缓存结果
       _layerCache[cacheKey] = layers;
       return layers;
@@ -293,20 +344,27 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<MapLayer?> getLayerById(String mapTitle, String layerId, [String version = 'default']) async {
+  Future<MapLayer?> getLayerById(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) async {
     try {
-      final configPath = _buildVfsPath(_getLayerConfigPath(mapTitle, layerId, version));
+      final configPath = _buildVfsPath(
+        _getLayerConfigPath(mapTitle, layerId, version),
+      );
       final configData = await _storageService.readFile(configPath);
-      
+
       if (configData == null) {
         return null;
       }
-      
-      final configJson = jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
-      
+
+      final configJson =
+          jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
+
       // 加载图层的绘制元素
       final elements = await getLayerElements(mapTitle, layerId, version);
-      
+
       // 加载图层背景图片数据（如果存在）
       Uint8List? imageData;
       if (configJson['imageData'] != null) {
@@ -330,7 +388,7 @@ class VfsMapServiceImpl implements VfsMapService {
           imageFit = BoxFit.contain; // 默认值
         }
       }
-      
+
       return MapLayer(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
@@ -355,7 +413,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> saveLayer(String mapTitle, MapLayer layer, [String version = 'default']) async {
+  Future<void> saveLayer(
+    String mapTitle,
+    MapLayer layer, [
+    String version = 'default',
+  ]) async {
     try {
       // 保存图层配置，包括背景图片数据处理
       final Map<String, dynamic> configData = {
@@ -379,7 +441,9 @@ class VfsMapServiceImpl implements VfsMapService {
           'size': layer.imageData!.length,
           'mimeType': 'image/png',
         };
-        debugPrint('图层背景图已保存到资产系统，哈希: $hash (${layer.imageData!.length} bytes)');
+        debugPrint(
+          '图层背景图已保存到资产系统，哈希: $hash (${layer.imageData!.length} bytes)',
+        );
       }
 
       // 添加其他图层属性
@@ -391,7 +455,9 @@ class VfsMapServiceImpl implements VfsMapService {
       configData['imageScale'] = layer.imageScale;
       configData['isLinkedToNext'] = layer.isLinkedToNext;
 
-      final configPath = _buildVfsPath(_getLayerConfigPath(mapTitle, layer.id, version));
+      final configPath = _buildVfsPath(
+        _getLayerConfigPath(mapTitle, layer.id, version),
+      );
       final configJson = jsonEncode(configData);
       await _storageService.writeFile(configPath, utf8.encode(configJson));
 
@@ -410,11 +476,17 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> deleteLayer(String mapTitle, String layerId, [String version = 'default']) async {
+  Future<void> deleteLayer(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) async {
     try {
-      final layerPath = _buildVfsPath(_getLayerPath(mapTitle, layerId, version));
+      final layerPath = _buildVfsPath(
+        _getLayerPath(mapTitle, layerId, version),
+      );
       await _storageService.delete(layerPath);
-      
+
       // 清除缓存
       final cacheKey = '$mapTitle:$version';
       _layerCache.remove(cacheKey);
@@ -425,7 +497,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> updateLayerOrder(String mapTitle, List<String> layerIds, [String version = 'default']) async {
+  Future<void> updateLayerOrder(
+    String mapTitle,
+    List<String> layerIds, [
+    String version = 'default',
+  ]) async {
     // 重新排序图层
     for (int i = 0; i < layerIds.length; i++) {
       final layer = await getLayerById(mapTitle, layerIds[i], version);
@@ -437,16 +513,27 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<List<MapDrawingElement>> getLayerElements(String mapTitle, String layerId, [String version = 'default']) async {
-    try {      
-      final elementsPath = _buildVfsPath(_getElementsPath(mapTitle, layerId, version));
+  Future<List<MapDrawingElement>> getLayerElements(
+    String mapTitle,
+    String layerId, [
+    String version = 'default',
+  ]) async {
+    try {
+      final elementsPath = _buildVfsPath(
+        _getElementsPath(mapTitle, layerId, version),
+      );
       final files = await _storageService.listDirectory(elementsPath);
       final elements = <MapDrawingElement>[];
 
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final elementId = file.name.replaceAll('.json', '');
-          final element = await getElementById(mapTitle, layerId, elementId, version);
+          final element = await getElementById(
+            mapTitle,
+            layerId,
+            elementId,
+            version,
+          );
           if (element != null) {
             elements.add(element);
           }
@@ -461,32 +548,42 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<MapDrawingElement?> getElementById(String mapTitle, String layerId, String elementId, [String version = 'default']) async {
+  Future<MapDrawingElement?> getElementById(
+    String mapTitle,
+    String layerId,
+    String elementId, [
+    String version = 'default',
+  ]) async {
     try {
-      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, elementId, version));
+      final elementPath = _buildVfsPath(
+        _getElementPath(mapTitle, layerId, elementId, version),
+      );
       final elementData = await _storageService.readFile(elementPath);
-      
+
       if (elementData == null) {
         return null;
       }
 
-      final elementJson = jsonDecode(utf8.decode(elementData.data)) as Map<String, dynamic>;
-      
+      final elementJson =
+          jsonDecode(utf8.decode(elementData.data)) as Map<String, dynamic>;
+
       // 从JSON加载元素
       MapDrawingElement element = MapDrawingElement.fromJson(elementJson);
-      
+
       // 如果元素有图像哈希引用，从资产系统加载图片数据
       if (element.imageHash != null && element.imageHash!.isNotEmpty) {
         final imageData = await getAsset(mapTitle, element.imageHash!);
         if (imageData != null) {
           // 将资产数据恢复到元素的imageData字段
           element = element.copyWith(imageData: imageData);
-          debugPrint('已从资产系统加载图像数据，哈希: ${element.imageHash} (${imageData.length} bytes)');
+          debugPrint(
+            '已从资产系统加载图像数据，哈希: ${element.imageHash} (${imageData.length} bytes)',
+          );
         } else {
           debugPrint('警告：无法从资产系统加载图像，哈希: ${element.imageHash}');
         }
       }
-      
+
       return element;
     } catch (e) {
       debugPrint('加载绘制元素失败 [$mapTitle/$layerId/$elementId:$version]: $e');
@@ -495,26 +592,35 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> saveElement(String mapTitle, String layerId, MapDrawingElement element, [String version = 'default']) async {
+  Future<void> saveElement(
+    String mapTitle,
+    String layerId,
+    MapDrawingElement element, [
+    String version = 'default',
+  ]) async {
     try {
       // 创建用于保存的元素副本
       MapDrawingElement elementToSave = element;
-      
+
       // 如果元素包含图像数据，保存到资产系统并使用哈希引用
       if (element.imageData != null && element.imageData!.isNotEmpty) {
         // 保存图像到资产系统并获取哈希
         final hash = await saveAsset(mapTitle, element.imageData!, 'image/png');
-        debugPrint('图像已保存到地图资产系统，哈希: $hash (${element.imageData!.length} bytes)');
-        
+        debugPrint(
+          '图像已保存到地图资产系统，哈希: $hash (${element.imageData!.length} bytes)',
+        );
+
         // 创建使用哈希引用而不是直接数据的元素
         elementToSave = element.copyWith(
           imageHash: hash,
           clearImageData: true, // 清除直接图像数据
         );
       }
-      
+
       // 保存修改后的元素JSON（包含哈希引用而非直接数据）
-      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, element.id, version));
+      final elementPath = _buildVfsPath(
+        _getElementPath(mapTitle, layerId, element.id, version),
+      );
       final elementJson = jsonEncode(elementToSave.toJson());
       await _storageService.writeFile(elementPath, utf8.encode(elementJson));
     } catch (e) {
@@ -524,9 +630,16 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> deleteElement(String mapTitle, String layerId, String elementId, [String version = 'default']) async {
+  Future<void> deleteElement(
+    String mapTitle,
+    String layerId,
+    String elementId, [
+    String version = 'default',
+  ]) async {
     try {
-      final elementPath = _buildVfsPath(_getElementPath(mapTitle, layerId, elementId, version));
+      final elementPath = _buildVfsPath(
+        _getElementPath(mapTitle, layerId, elementId, version),
+      );
       await _storageService.delete(elementPath);
     } catch (e) {
       debugPrint('删除绘制元素失败 [$mapTitle/$layerId/$elementId:$version]: $e');
@@ -535,10 +648,20 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> updateElementsOrder(String mapTitle, String layerId, List<String> elementIds, [String version = 'default']) async {
+  Future<void> updateElementsOrder(
+    String mapTitle,
+    String layerId,
+    List<String> elementIds, [
+    String version = 'default',
+  ]) async {
     // 重新排序绘制元素
     for (int i = 0; i < elementIds.length; i++) {
-      final element = await getElementById(mapTitle, layerId, elementIds[i], version);
+      final element = await getElementById(
+        mapTitle,
+        layerId,
+        elementIds[i],
+        version,
+      );
       if (element != null) {
         // MapDrawingElement copyWith 方法中没有order 参数，这里直接保存
         await saveElement(mapTitle, layerId, element, version);
@@ -547,8 +670,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<List<LegendGroup>> getMapLegendGroups(String mapTitle, [String version = 'default']) async {
-    try {      
+  Future<List<LegendGroup>> getMapLegendGroups(
+    String mapTitle, [
+    String version = 'default',
+  ]) async {
+    try {
       final legendsPath = _buildVfsPath(_getLegendsPath(mapTitle, version));
       final files = await _storageService.listDirectory(legendsPath);
       final groups = <LegendGroup>[];
@@ -570,20 +696,27 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<LegendGroup?> getLegendGroupById(String mapTitle, String groupId, [String version = 'default']) async {
+  Future<LegendGroup?> getLegendGroupById(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) async {
     try {
-      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapTitle, groupId, version));
+      final configPath = _buildVfsPath(
+        _getLegendGroupConfigPath(mapTitle, groupId, version),
+      );
       final configData = await _storageService.readFile(configPath);
-      
+
       if (configData == null) {
         return null;
       }
 
-      final configJson = jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
-      
+      final configJson =
+          jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
+
       // 加载图例项
       final items = await getLegendGroupItems(mapTitle, groupId, version);
-        
+
       return LegendGroup(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
@@ -600,7 +733,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> saveLegendGroup(String mapTitle, LegendGroup group, [String version = 'default']) async {
+  Future<void> saveLegendGroup(
+    String mapTitle,
+    LegendGroup group, [
+    String version = 'default',
+  ]) async {
     try {
       // 保存图例组配置
       final configData = {
@@ -612,7 +749,9 @@ class VfsMapServiceImpl implements VfsMapService {
         'updatedAt': group.updatedAt.toIso8601String(),
       };
 
-      final configPath = _buildVfsPath(_getLegendGroupConfigPath(mapTitle, group.id, version));
+      final configPath = _buildVfsPath(
+        _getLegendGroupConfigPath(mapTitle, group.id, version),
+      );
       final configJson = jsonEncode(configData);
       await _storageService.writeFile(configPath, utf8.encode(configJson));
 
@@ -627,9 +766,15 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> deleteLegendGroup(String mapTitle, String groupId, [String version = 'default']) async {
+  Future<void> deleteLegendGroup(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) async {
     try {
-      final groupPath = _buildVfsPath(_getLegendGroupPath(mapTitle, groupId, version));
+      final groupPath = _buildVfsPath(
+        _getLegendGroupPath(mapTitle, groupId, version),
+      );
       await _storageService.delete(groupPath);
     } catch (e) {
       debugPrint('删除图例组失败[$mapTitle/$groupId:$version]: $e');
@@ -638,16 +783,27 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<List<LegendItem>> getLegendGroupItems(String mapTitle, String groupId, [String version = 'default']) async {
-    try {      
-      final itemsPath = _buildVfsPath(_getLegendItemsPath(mapTitle, groupId, version));
+  Future<List<LegendItem>> getLegendGroupItems(
+    String mapTitle,
+    String groupId, [
+    String version = 'default',
+  ]) async {
+    try {
+      final itemsPath = _buildVfsPath(
+        _getLegendItemsPath(mapTitle, groupId, version),
+      );
       final files = await _storageService.listDirectory(itemsPath);
       final items = <LegendItem>[];
 
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final itemId = file.name.replaceAll('.json', '');
-          final item = await getLegendItemById(mapTitle, groupId, itemId, version);
+          final item = await getLegendItemById(
+            mapTitle,
+            groupId,
+            itemId,
+            version,
+          );
           if (item != null) {
             items.add(item);
           }
@@ -662,16 +818,24 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<LegendItem?> getLegendItemById(String mapTitle, String groupId, String itemId, [String version = 'default']) async {
+  Future<LegendItem?> getLegendItemById(
+    String mapTitle,
+    String groupId,
+    String itemId, [
+    String version = 'default',
+  ]) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, itemId, version));
+      final itemPath = _buildVfsPath(
+        _getLegendItemPath(mapTitle, groupId, itemId, version),
+      );
       final itemData = await _storageService.readFile(itemPath);
-      
+
       if (itemData == null) {
         return null;
       }
 
-      final itemJson = jsonDecode(utf8.decode(itemData.data)) as Map<String, dynamic>;
+      final itemJson =
+          jsonDecode(utf8.decode(itemData.data)) as Map<String, dynamic>;
       return LegendItem.fromJson(itemJson);
     } catch (e) {
       debugPrint('加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
@@ -680,9 +844,16 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> saveLegendItem(String mapTitle, String groupId, LegendItem item, [String version = 'default']) async {
+  Future<void> saveLegendItem(
+    String mapTitle,
+    String groupId,
+    LegendItem item, [
+    String version = 'default',
+  ]) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, item.id.toString(), version));
+      final itemPath = _buildVfsPath(
+        _getLegendItemPath(mapTitle, groupId, item.id.toString(), version),
+      );
       final itemJson = jsonEncode(item.toJson());
       await _storageService.writeFile(itemPath, utf8.encode(itemJson));
     } catch (e) {
@@ -692,9 +863,16 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> deleteLegendItem(String mapTitle, String groupId, String itemId, [String version = 'default']) async {
+  Future<void> deleteLegendItem(
+    String mapTitle,
+    String groupId,
+    String itemId, [
+    String version = 'default',
+  ]) async {
     try {
-      final itemPath = _buildVfsPath(_getLegendItemPath(mapTitle, groupId, itemId, version));
+      final itemPath = _buildVfsPath(
+        _getLegendItemPath(mapTitle, groupId, itemId, version),
+      );
       await _storageService.delete(itemPath);
     } catch (e) {
       debugPrint('删除图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
@@ -709,27 +887,35 @@ class VfsMapServiceImpl implements VfsMapService {
       final dataPath = _buildVfsPath('${_getMapPath(mapTitle)}/data');
       final files = await _storageService.listDirectory(dataPath);
       final versions = <String>[];
-      
+
       for (final file in files) {
         if (file.isDirectory) {
           versions.add(file.name);
         }
       }
-      
+
       return versions;
     } catch (e) {
       debugPrint('获取地图版本失败 [$mapTitle]: $e');
       return [];
     }
-  }  @override
-  Future<void> createMapVersion(String mapTitle, String version, [String? sourceVersion]) async {
+  }
+
+  @override
+  Future<void> createMapVersion(
+    String mapTitle,
+    String version, [
+    String? sourceVersion,
+  ]) async {
     try {
       if (await mapVersionExists(mapTitle, version)) {
         throw Exception('版本已存在: $version');
       }
-        // 如果 sourceVersion 为 null，创建空的版本目录
+      // 如果 sourceVersion 为 null，创建空的版本目录
       if (sourceVersion == null) {
-        final versionPath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$version');
+        final versionPath = _buildVfsPath(
+          '${_getMapPath(mapTitle)}/data/$version',
+        );
         await _storageService.createDirectory(versionPath);
         debugPrint('创建空版本目录: $version');
       } else {
@@ -749,8 +935,10 @@ class VfsMapServiceImpl implements VfsMapService {
       if (version == 'default') {
         throw Exception('无法删除默认版本');
       }
-      
-      final versionPath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$version');
+
+      final versionPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/data/$version',
+      );
       await _storageService.delete(versionPath, recursive: true);
     } catch (e) {
       debugPrint('删除地图版本失败 [$mapTitle:$version]: $e');
@@ -761,7 +949,9 @@ class VfsMapServiceImpl implements VfsMapService {
   @override
   Future<bool> mapVersionExists(String mapTitle, String version) async {
     try {
-      final versionPath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$version');
+      final versionPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/data/$version',
+      );
       return await _storageService.exists(versionPath);
     } catch (e) {
       return false;
@@ -769,11 +959,19 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> copyVersionData(String mapTitle, String sourceVersion, String targetVersion) async {
+  Future<void> copyVersionData(
+    String mapTitle,
+    String sourceVersion,
+    String targetVersion,
+  ) async {
     try {
-      final sourcePath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$sourceVersion');
-      final targetPath = _buildVfsPath('${_getMapPath(mapTitle)}/data/$targetVersion');
-      
+      final sourcePath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/data/$sourceVersion',
+      );
+      final targetPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/data/$targetVersion',
+      );
+
       // 递归复制整个版本目录
       await _copyDirectory(sourcePath, targetPath);
     } catch (e) {
@@ -784,33 +982,43 @@ class VfsMapServiceImpl implements VfsMapService {
 
   // 版本元数据管理实现
   @override
-  Future<void> saveVersionMetadata(String mapTitle, String versionId, String versionName, {DateTime? createdAt, DateTime? updatedAt}) async {
+  Future<void> saveVersionMetadata(
+    String mapTitle,
+    String versionId,
+    String versionName, {
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) async {
     try {
-      final metadataPath = _buildVfsPath('${_getMapPath(mapTitle)}/versions_metadata.json');
-      
+      final metadataPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/versions_metadata.json',
+      );
+
       // 读取现有元数据
       Map<String, dynamic> metadata = {};
       try {
         final existingData = await _storageService.readFile(metadataPath);
         if (existingData != null) {
-          metadata = jsonDecode(utf8.decode(existingData.data)) as Map<String, dynamic>;
+          metadata =
+              jsonDecode(utf8.decode(existingData.data))
+                  as Map<String, dynamic>;
         }
       } catch (e) {
         // 文件不存在或解析失败，使用空元数据
         debugPrint('读取版本元数据失败，将创建新文件: $e');
       }
-      
+
       final now = DateTime.now();
       metadata[versionId] = {
         'name': versionName,
         'createdAt': (createdAt ?? now).toIso8601String(),
         'updatedAt': (updatedAt ?? now).toIso8601String(),
       };
-      
+
       // 保存更新后的元数据
       final metadataJson = jsonEncode(metadata);
       await _storageService.writeFile(metadataPath, utf8.encode(metadataJson));
-      
+
       debugPrint('保存版本元数据成功 [$mapTitle:$versionId -> $versionName]');
     } catch (e) {
       debugPrint('保存版本元数据失败 [$mapTitle:$versionId]: $e');
@@ -821,14 +1029,17 @@ class VfsMapServiceImpl implements VfsMapService {
   @override
   Future<String?> getVersionName(String mapTitle, String versionId) async {
     try {
-      final metadataPath = _buildVfsPath('${_getMapPath(mapTitle)}/versions_metadata.json');
+      final metadataPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/versions_metadata.json',
+      );
       final data = await _storageService.readFile(metadataPath);
-      
+
       if (data == null) return null;
-      
-      final metadata = jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
+
+      final metadata =
+          jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
       final versionInfo = metadata[versionId] as Map<String, dynamic>?;
-      
+
       return versionInfo?['name'] as String?;
     } catch (e) {
       debugPrint('获取版本名称失败 [$mapTitle:$versionId]: $e');
@@ -839,19 +1050,22 @@ class VfsMapServiceImpl implements VfsMapService {
   @override
   Future<Map<String, String>> getAllVersionNames(String mapTitle) async {
     try {
-      final metadataPath = _buildVfsPath('${_getMapPath(mapTitle)}/versions_metadata.json');
+      final metadataPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/versions_metadata.json',
+      );
       final data = await _storageService.readFile(metadataPath);
-      
+
       if (data == null) return {};
-      
-      final metadata = jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
+
+      final metadata =
+          jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
       final versionNames = <String, String>{};
-      
+
       for (final entry in metadata.entries) {
         final versionInfo = entry.value as Map<String, dynamic>;
         versionNames[entry.key] = versionInfo['name'] as String;
       }
-      
+
       return versionNames;
     } catch (e) {
       debugPrint('获取所有版本名称失败 [$mapTitle]: $e');
@@ -862,31 +1076,38 @@ class VfsMapServiceImpl implements VfsMapService {
   @override
   Future<void> deleteVersionMetadata(String mapTitle, String versionId) async {
     try {
-      final metadataPath = _buildVfsPath('${_getMapPath(mapTitle)}/versions_metadata.json');
+      final metadataPath = _buildVfsPath(
+        '${_getMapPath(mapTitle)}/versions_metadata.json',
+      );
       final data = await _storageService.readFile(metadataPath);
-      
+
       if (data == null) return;
-      
-      final metadata = jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
+
+      final metadata =
+          jsonDecode(utf8.decode(data.data)) as Map<String, dynamic>;
       metadata.remove(versionId);
-      
+
       // 保存更新后的元数据
       final metadataJson = jsonEncode(metadata);
       await _storageService.writeFile(metadataPath, utf8.encode(metadataJson));
-      
+
       debugPrint('删除版本元数据成功 [$mapTitle:$versionId]');
     } catch (e) {
       debugPrint('删除版本元数据失败 [$mapTitle:$versionId]: $e');
       rethrow;
     }
   }
-  
+
   @override
-  Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType) async {
+  Future<String> saveAsset(
+    String mapTitle,
+    Uint8List data,
+    String? mimeType,
+  ) async {
     try {
       // 计算SHA-256哈希
       final hash = sha256.convert(data).toString();
-      
+
       // 确定文件扩展名
       String extension = '';
       if (mimeType != null) {
@@ -904,12 +1125,12 @@ class VfsMapServiceImpl implements VfsMapService {
             extension = '';
         }
       }
-      
+
       final filename = '$hash$extension';
-      
+
       // 使用每个地图独立的资产存储
       final assetPath = _buildVfsPath(_getAssetPath(mapTitle, filename));
-      
+
       // 检查相同哈希的文件是否已在此地图中存在，如果存在则无需重复保存
       final existingData = await _storageService.readFile(assetPath);
       if (existingData == null) {
@@ -919,10 +1140,10 @@ class VfsMapServiceImpl implements VfsMapService {
       } else {
         debugPrint('图像资产已在地图 [$mapTitle] 中存在，跳过保存: $filename');
       }
-      
+
       // 更新哈希索引
       _assetHashIndex[hash] = filename;
-      
+
       return hash;
     } catch (e) {
       debugPrint('保存资产失败: $e');
@@ -936,7 +1157,7 @@ class VfsMapServiceImpl implements VfsMapService {
       // 从指定地图的资产目录查找
       final assetPath = _buildVfsPath(_getAssetPath(mapTitle, '$hash.png'));
       VfsFileContent? fileContent = await _storageService.readFile(assetPath);
-      
+
       if (fileContent == null) {
         // 尝试其他扩展名
         for (final ext in ['.jpg', '.svg', '']) {
@@ -945,7 +1166,7 @@ class VfsMapServiceImpl implements VfsMapService {
           if (fileContent != null) break;
         }
       }
-      
+
       return fileContent?.data;
     } catch (e) {
       debugPrint('获取资产失败 [$mapTitle/$hash]: $e');
@@ -965,7 +1186,7 @@ class VfsMapServiceImpl implements VfsMapService {
           // 忽略文件不存在的错误
         }
       }
-      
+
       _assetHashIndex.remove(hash);
     } catch (e) {
       debugPrint('删除资产失败 [$mapTitle/$hash]: $e');
@@ -990,12 +1211,14 @@ class VfsMapServiceImpl implements VfsMapService {
     try {
       final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle));
       final localizationData = await _storageService.readFile(localizationPath);
-      
+
       if (localizationData == null) {
         return {};
       }
 
-      final localizationJson = jsonDecode(utf8.decode(localizationData.data)) as Map<String, dynamic>;
+      final localizationJson =
+          jsonDecode(utf8.decode(localizationData.data))
+              as Map<String, dynamic>;
       return Map<String, String>.from(localizationJson);
     } catch (e) {
       debugPrint('获取地图本地化失败[$mapTitle]: $e');
@@ -1004,11 +1227,17 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> saveMapLocalizations(String mapTitle, Map<String, String> localizations) async {
+  Future<void> saveMapLocalizations(
+    String mapTitle,
+    Map<String, String> localizations,
+  ) async {
     try {
       final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle));
       final localizationJson = jsonEncode(localizations);
-      await _storageService.writeFile(localizationPath, utf8.encode(localizationJson));
+      await _storageService.writeFile(
+        localizationPath,
+        utf8.encode(localizationJson),
+      );
     } catch (e) {
       debugPrint('保存地图本地化失败[$mapTitle]: $e');
       rethrow;
@@ -1035,11 +1264,11 @@ class VfsMapServiceImpl implements VfsMapService {
 
     int totalElements = 0;
     int totalLegendItems = 0;
-    
+
     for (final layer in map.layers) {
       totalElements += layer.elements.length;
     }
-    
+
     for (final group in map.legendGroups) {
       totalLegendItems += group.legendItems.length;
     }
@@ -1061,6 +1290,7 @@ class VfsMapServiceImpl implements VfsMapService {
     // TODO: 实现地图完整性验证
     // 检查文件结构完整性、引用完整性等
   }
+
   /// 递归复制目录及其所有内容
   Future<void> _copyDirectory(String sourcePath, String targetPath) async {
     try {
@@ -1076,11 +1306,11 @@ class VfsMapServiceImpl implements VfsMapService {
 
       // 列出源目录中的所有内容
       final items = await _storageService.listDirectory(sourcePath);
-      
+
       for (final item in items) {
         final itemSourcePath = '$sourcePath/${item.name}';
         final itemTargetPath = '$targetPath/${item.name}';
-        
+
         if (item.isDirectory) {
           // 递归复制子目录
           await _copyDirectory(itemSourcePath, itemTargetPath);
@@ -1089,7 +1319,7 @@ class VfsMapServiceImpl implements VfsMapService {
           await _storageService.copy(itemSourcePath, itemTargetPath);
         }
       }
-      
+
       debugPrint('目录复制完成: $sourcePath -> $targetPath');
     } catch (e) {
       debugPrint('复制目录失败 [$sourcePath -> $targetPath]: $e');

@@ -56,7 +56,8 @@ class BuildConfigGenerator {
       );
       buildParams.add(
         '--dart-define=ENABLE_MAP_ATLAS_PAGE=${pages.contains('MapAtlasPage')}',
-      );      buildParams.add(
+      );
+      buildParams.add(
         '--dart-define=ENABLE_LEGEND_MANAGER_PAGE=${pages.contains('LegendManagerPage')}',
       );
       buildParams.add(

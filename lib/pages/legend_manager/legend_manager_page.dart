@@ -36,6 +36,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     super.initState();
     _loadLegends();
   }
+
   Future<void> _loadLegends() async {
     setState(() => _isLoading = true);
     try {

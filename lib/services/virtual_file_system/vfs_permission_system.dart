@@ -188,7 +188,7 @@ class VfsPermissionManager {
   VfsPermissionManager._internal();
   final VfsStorageService _storage = VfsStorageService();
   final Map<String, VfsPermissionMask> _permissionCache = {};
-  
+
   // 添加初始化状态标记，避免重复初始化
   bool _isInitialized = false;
 
@@ -201,7 +201,7 @@ class VfsPermissionManager {
       debugPrint('VFS权限系统已初始化，跳过重复初始化');
       return;
     }
-    
+
     debugPrint('Initializing VFS Permission System...');
 
     // 设置系统保护路径的权限

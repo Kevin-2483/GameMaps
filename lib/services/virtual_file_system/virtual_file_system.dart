@@ -14,12 +14,11 @@ class VirtualFileSystem {
   final VfsStorageService _storage = VfsStorageService();
   final VfsPermissionManager _permissionManager = VfsPermissionManager();
   final Map<String, VfsMount> _mounts = {};
-  
+
   // 添加初始化状态标记，避免重复初始化
   bool _isInitialized = false;
 
   /// 初始化虚拟文件系统
-
 
   /// 挂载虚拟文件系统
   void mount(String database, String collection, {VfsMount? mount}) {

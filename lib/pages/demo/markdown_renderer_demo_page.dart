@@ -25,7 +25,7 @@ class MarkdownRendererDemoPage extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
-            
+
             Text(
               '现在支持三种不同的使用模式：',
               style: Theme.of(context).textTheme.bodyLarge,
@@ -40,7 +40,7 @@ class MarkdownRendererDemoPage extends StatelessWidget {
               icon: Icons.open_in_new,
               onTap: () => _showWindowDemo(context),
             ),
-            
+
             const SizedBox(height: 16),
 
             // 页面模式演示
@@ -51,7 +51,7 @@ class MarkdownRendererDemoPage extends StatelessWidget {
               icon: Icons.fullscreen,
               onTap: () => _showPageDemo(context),
             ),
-            
+
             const SizedBox(height: 16),
 
             // 嵌入模式演示
@@ -81,9 +81,8 @@ class MarkdownRendererDemoPage extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           '使用说明',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -121,10 +120,7 @@ class MarkdownRendererDemoPage extends StatelessWidget {
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(description),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: onTap,
@@ -136,7 +132,7 @@ class MarkdownRendererDemoPage extends StatelessWidget {
   void _showWindowDemo(BuildContext context) {
     // 使用测试文档
     const testVfsPath = 'indexeddb://r6box/fs/docs/VFS_MARKDOWN_TEST.md';
-    
+
     VfsMarkdownViewerWindow.show(
       context,
       vfsPath: testVfsPath,
@@ -146,8 +142,9 @@ class MarkdownRendererDemoPage extends StatelessWidget {
 
   /// 演示页面模式
   void _showPageDemo(BuildContext context) {
-    const testVfsPath = 'indexeddb://r6box/fs/docs/VFS_MARKDOWN_RENDERER_USAGE.md';
-    
+    const testVfsPath =
+        'indexeddb://r6box/fs/docs/VFS_MARKDOWN_RENDERER_USAGE.md';
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => VfsMarkdownViewerPage(
@@ -160,11 +157,9 @@ class MarkdownRendererDemoPage extends StatelessWidget {
 
   /// 演示嵌入模式
   void _showEmbeddedDemo(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => _EmbeddedModeDemo(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => _EmbeddedModeDemo()));
   }
 }
 
@@ -184,7 +179,9 @@ class _EmbeddedModeDemo extends StatelessWidget {
           // 左侧面板
           Container(
             width: 250,
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
             child: Column(
               children: [
                 Padding(
@@ -222,15 +219,13 @@ class _EmbeddedModeDemo extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // 右侧 Markdown 渲染器
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  left: BorderSide(color: Theme.of(context).dividerColor),
                 ),
               ),
               child: VfsMarkdownRenderer(

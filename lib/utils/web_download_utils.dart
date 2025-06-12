@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 // 条件导入：Web平台使用dart:html实现，其他平台使用存根实现
-import 'web_download_helper_stub.dart' if (dart.library.html) 'web_download_helper.dart';
+import 'web_download_helper_stub.dart'
+    if (dart.library.html) 'web_download_helper.dart';
 
 /// Web平台文件下载工具类
 /// 提供Web平台兼容的文件下载功能
@@ -10,7 +11,7 @@ class WebDownloadUtils {
   static bool get isWebPlatform => kIsWeb;
 
   /// 下载单个文件到Web浏览器
-  /// 
+  ///
   /// [fileName] 文件名
   /// [data] 文件数据
   /// [mimeType] MIME类型，默认为 'application/octet-stream'
@@ -31,7 +32,7 @@ class WebDownloadUtils {
   }
 
   /// 下载压缩包到Web浏览器
-  /// 
+  ///
   /// [fileName] 压缩包文件名
   /// [zipData] 压缩包数据
   static Future<void> downloadZipFile(
@@ -54,7 +55,7 @@ class WebDownloadUtils {
   }
 
   /// 批量下载文件（作为单独的文件下载）
-  /// 
+  ///
   /// [files] 要下载的文件列表，每个元素包含文件名和数据
   static Future<void> downloadMultipleFiles(
     List<Map<String, dynamic>> files,
@@ -66,7 +67,8 @@ class WebDownloadUtils {
     for (final file in files) {
       final fileName = file['name'] as String;
       final data = file['data'] as Uint8List;
-      final mimeType = file['mimeType'] as String? ?? 'application/octet-stream';
+      final mimeType =
+          file['mimeType'] as String? ?? 'application/octet-stream';
 
       try {
         await downloadFile(fileName, data, mimeType: mimeType);
@@ -85,16 +87,13 @@ class WebDownloadUtils {
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '_')
         .trim();
-    
+
     // 确保文件名不为空
     return sanitized.isEmpty ? 'download' : sanitized;
   }
 
   /// 生成带时间戳的文件名
-  static String generateTimestampedFileName(
-    String baseName,
-    String extension,
-  ) {
+  static String generateTimestampedFileName(String baseName, String extension) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final sanitizedBaseName = sanitizeFileName(baseName);
     return '${sanitizedBaseName}_$timestamp.$extension';

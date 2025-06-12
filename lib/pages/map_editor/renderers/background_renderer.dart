@@ -87,13 +87,41 @@ class BackgroundRenderer {
     const double gapLength = 4.0;
 
     // 绘制上边
-    _drawDashedLine(canvas, rect.topLeft, rect.topRight, paint, dashLength, gapLength);
+    _drawDashedLine(
+      canvas,
+      rect.topLeft,
+      rect.topRight,
+      paint,
+      dashLength,
+      gapLength,
+    );
     // 绘制右边
-    _drawDashedLine(canvas, rect.topRight, rect.bottomRight, paint, dashLength, gapLength);
+    _drawDashedLine(
+      canvas,
+      rect.topRight,
+      rect.bottomRight,
+      paint,
+      dashLength,
+      gapLength,
+    );
     // 绘制下边
-    _drawDashedLine(canvas, rect.bottomRight, rect.bottomLeft, paint, dashLength, gapLength);
+    _drawDashedLine(
+      canvas,
+      rect.bottomRight,
+      rect.bottomLeft,
+      paint,
+      dashLength,
+      gapLength,
+    );
     // 绘制左边
-    _drawDashedLine(canvas, rect.bottomLeft, rect.topLeft, paint, dashLength, gapLength);
+    _drawDashedLine(
+      canvas,
+      rect.bottomLeft,
+      rect.topLeft,
+      paint,
+      dashLength,
+      gapLength,
+    );
   }
 
   /// 绘制虚线
@@ -107,20 +135,23 @@ class BackgroundRenderer {
   ) {
     final double distance = (end - start).distance;
     final Offset direction = (end - start) / distance;
-    
+
     double currentDistance = 0;
     bool shouldDraw = true;
-    
+
     while (currentDistance < distance) {
       final double segmentLength = shouldDraw ? dashLength : gapLength;
-      final double nextDistance = (currentDistance + segmentLength).clamp(0.0, distance);
-      
+      final double nextDistance = (currentDistance + segmentLength).clamp(
+        0.0,
+        distance,
+      );
+
       if (shouldDraw) {
         final Offset segmentStart = start + direction * currentDistance;
         final Offset segmentEnd = start + direction * nextDistance;
         canvas.drawLine(segmentStart, segmentEnd, paint);
       }
-      
+
       currentDistance = nextDistance;
       shouldDraw = !shouldDraw;
     }

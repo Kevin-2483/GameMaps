@@ -11,24 +11,41 @@ import 'media_kit_video_player.dart';
 class VideoProcessor {
   /// 视频标签名
   static const String videoTag = 'video';
-  
+
   /// VFS视频支持的格式
   static const List<String> supportedFormats = [
-    'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'
+    'mp4',
+    'webm',
+    'ogg',
+    'mov',
+    'avi',
+    'mkv',
+    'm4v',
   ];
+
   /// 检查文本是否包含视频标签
   static bool containsVideo(String text) {
-    final result = text.contains(RegExp(r'<video[^>]*>|!\[.*\]\(.*\.(mp4|webm|ogg|mov|avi|mkv|m4v)\)', 
-        caseSensitive: false));
-    print('🎥 VideoProcessor.containsVideo: text长度=${text.length}, 包含视频=$result');
+    final result = text.contains(
+      RegExp(
+        r'<video[^>]*>|!\[.*\]\(.*\.(mp4|webm|ogg|mov|avi|mkv|m4v)\)',
+        caseSensitive: false,
+      ),
+    );
+    print(
+      '🎥 VideoProcessor.containsVideo: text长度=${text.length}, 包含视频=$result',
+    );
     return result;
-  }  /// 创建视频节点生成器
+  }
+
+  /// 创建视频节点生成器
   static SpanNodeGeneratorWithTag createGenerator() {
     print('🎥 VideoProcessor: 创建视频生成器');
     return SpanNodeGeneratorWithTag(
       tag: videoTag,
       generator: (e, config, visitor) {
-        print('🎥 VideoProcessor: 生成VideoNode - tag: ${e.tag}, attributes: ${e.attributes}, textContent: ${e.textContent}');
+        print(
+          '🎥 VideoProcessor: 生成VideoNode - tag: ${e.tag}, attributes: ${e.attributes}, textContent: ${e.textContent}',
+        );
         return VideoNode(e.attributes, e.textContent);
       },
     );
@@ -54,24 +71,28 @@ class VideoProcessor {
     stats['hasVideo'] = true;
 
     // 统计HTML video标签
-    final videoTagPattern = RegExp(r'''<video[^>]*src=["\']([^"\']*)["\'][^>]*>''', 
-        caseSensitive: false);
+    final videoTagPattern = RegExp(
+      r'''<video[^>]*src=["\']([^"\']*)["\'][^>]*>''',
+      caseSensitive: false,
+    );
     final videoMatches = videoTagPattern.allMatches(content);
-    
+
     // 统计Markdown视频语法 ![](video.mp4)
-    final markdownVideoPattern = RegExp(r'!\[.*\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)', 
-        caseSensitive: false);
+    final markdownVideoPattern = RegExp(
+      r'!\[.*\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)',
+      caseSensitive: false,
+    );
     final markdownMatches = markdownVideoPattern.allMatches(content);
 
     final videos = <String>[];
-    
+
     for (final match in videoMatches) {
       final src = match.group(1);
       if (src != null && src.isNotEmpty) {
         videos.add(src);
       }
     }
-    
+
     for (final match in markdownMatches) {
       final src = match.group(1);
       if (src != null && src.isNotEmpty) {
@@ -84,32 +105,35 @@ class VideoProcessor {
 
     return stats;
   }
+
   /// 转换Markdown图片语法为视频（如果是视频文件）
   static String convertMarkdownVideos(String content) {
     print('🎥 VideoProcessor.convertMarkdownVideos: 开始转换');
     // 将Markdown图片语法中的视频文件转换为video标签
-    final pattern = RegExp(r'!\[(.*?)\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)', 
-        caseSensitive: false);
-    
+    final pattern = RegExp(
+      r'!\[(.*?)\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)',
+      caseSensitive: false,
+    );
+
     final result = content.replaceAllMapped(pattern, (match) {
       final alt = match.group(1) ?? '';
       final src = match.group(2) ?? '';
       print('🎥 VideoProcessor.convertMarkdownVideos: 转换 $src');
-      
+
       // 构建video标签
       final controls = 'controls';
-      final width = alt.contains('width:') 
+      final width = alt.contains('width:')
           ? alt.replaceAll(RegExp(r'.*width:(\d+).*'), r'width="$1"')
           : '';
-      final height = alt.contains('height:') 
+      final height = alt.contains('height:')
           ? alt.replaceAll(RegExp(r'.*height:(\d+).*'), r'height="$1"')
           : '';
-      
+
       final videoTag = '<video src="$src" $controls $width $height></video>';
       print('🎥 VideoProcessor.convertMarkdownVideos: 生成标签 $videoTag');
       return videoTag;
     });
-    
+
     print('🎥 VideoProcessor.convertMarkdownVideos: 转换完成');
     return result;
   }
@@ -120,17 +144,17 @@ class VideoProcessor {
 class VideoNodeConfig implements WidgetConfig {
   @override
   String get tag => VideoProcessor.videoTag;
-  
+
   final bool isDarkTheme;
   final void Function(String)? onVideoTap;
   final Widget Function(String, String, dynamic)? errorBuilder;
-  
+
   const VideoNodeConfig({
     this.isDarkTheme = false,
     this.onVideoTap,
     this.errorBuilder,
   });
-  
+
   static const VideoNodeConfig light = VideoNodeConfig(isDarkTheme: false);
   static const VideoNodeConfig dark = VideoNodeConfig(isDarkTheme: true);
 }
@@ -141,15 +165,17 @@ class VideoNode extends SpanNode {
   final String textContent;
 
   VideoNode(this.attributes, this.textContent) {
-    print('🎥 VideoNode: 创建节点 - attributes: $attributes, textContent: $textContent');
+    print(
+      '🎥 VideoNode: 创建节点 - attributes: $attributes, textContent: $textContent',
+    );
   }
   @override
   InlineSpan build() {
     print('🎥 VideoNode.build: 开始构建 - src: ${attributes['src']}');
-    
+
     double? width;
     double? height;
-    
+
     if (attributes['width'] != null) {
       try {
         width = double.parse(attributes['width']!);
@@ -157,7 +183,7 @@ class VideoNode extends SpanNode {
         // 忽略解析错误
       }
     }
-    
+
     if (attributes['height'] != null) {
       try {
         height = double.parse(attributes['height']!);
@@ -165,26 +191,23 @@ class VideoNode extends SpanNode {
         // 忽略解析错误
       }
     }
-    
+
     final src = attributes['src'] ?? '';
     final autoplay = attributes.containsKey('autoplay');
     final loop = attributes.containsKey('loop');
-    final muted = attributes.containsKey('muted');      final config = MediaKitVideoConfig(
+    final muted = attributes.containsKey('muted');
+    final config = MediaKitVideoConfig(
       autoPlay: autoplay,
       looping: loop,
       aspectRatio: width != null && height != null ? width / height : null,
       maxWidth: width ?? 800,
       maxHeight: height ?? 450,
     );
-    
+
     print('🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)');
-    
+
     return WidgetSpan(
-      child: MediaKitVideoPlayer(
-        url: src,
-        config: config,
-        muted: muted,
-      ),
+      child: MediaKitVideoPlayer(url: src, config: config, muted: muted),
     );
   }
 }
@@ -208,7 +231,7 @@ extension VideoConfigExtension on MarkdownConfig {
         onVideoTap: onLinkTap,
         errorBuilder: imageErrorBuilder,
       ),
-      
+
       // 视频文本处理配置
       PConfig(
         textStyle: TextStyle(
@@ -217,7 +240,7 @@ extension VideoConfigExtension on MarkdownConfig {
           height: 1.6,
         ),
       ),
-      
+
       // 视频链接处理 - 保留VFS协议支持
       LinkConfig(
         style: TextStyle(
@@ -226,18 +249,18 @@ extension VideoConfigExtension on MarkdownConfig {
         ),
         onTap: onLinkTap,
       ),
-      
+
       // 图片配置 - 支持VFS协议图片
       if (imageBuilder != null)
-        ImgConfig(
-          builder: imageBuilder,
-          errorBuilder: imageErrorBuilder,
-        ),
+        ImgConfig(builder: imageBuilder, errorBuilder: imageErrorBuilder),
     ];
 
     // 基础配置 - 如果提供了 baseConfig，使用它；否则使用默认配置
-    final base = baseConfig ?? 
-        (isDarkTheme ? MarkdownConfig.darkConfig : MarkdownConfig.defaultConfig);    // 基于现有配置创建新配置，添加视频支持
+    final base =
+        baseConfig ??
+        (isDarkTheme
+            ? MarkdownConfig.darkConfig
+            : MarkdownConfig.defaultConfig); // 基于现有配置创建新配置，添加视频支持
     return base.copy(configs: configs);
   }
 }
@@ -251,33 +274,42 @@ class VideoSyntax extends m.InlineSyntax {
   bool onMatch(m.InlineParser parser, Match match) {
     final input = match.input;
     final matchValue = input.substring(match.start, match.end);
-    
+
     print('🎥 VideoSyntax.onMatch: 匹配到视频标签 - $matchValue');
-    
+
     // 解析video标签属性
     final attributes = <String, String>{};
-    
+
     // 提取src属性
-    final srcPattern = RegExp(r'''src=["\']([^"\']*)["\']''', caseSensitive: false);
+    final srcPattern = RegExp(
+      r'''src=["\']([^"\']*)["\']''',
+      caseSensitive: false,
+    );
     final srcMatch = srcPattern.firstMatch(matchValue);
     if (srcMatch != null) {
       attributes['src'] = srcMatch.group(1)!;
     }
-    
+
     // 提取width属性
-    final widthPattern = RegExp(r'''width=["\']?(\d+)["\']?''', caseSensitive: false);
+    final widthPattern = RegExp(
+      r'''width=["\']?(\d+)["\']?''',
+      caseSensitive: false,
+    );
     final widthMatch = widthPattern.firstMatch(matchValue);
     if (widthMatch != null) {
       attributes['width'] = widthMatch.group(1)!;
     }
-    
-    // 提取height属性  
-    final heightPattern = RegExp(r'''height=["\']?(\d+)["\']?''', caseSensitive: false);
+
+    // 提取height属性
+    final heightPattern = RegExp(
+      r'''height=["\']?(\d+)["\']?''',
+      caseSensitive: false,
+    );
     final heightMatch = heightPattern.firstMatch(matchValue);
     if (heightMatch != null) {
       attributes['height'] = heightMatch.group(1)!;
     }
-    
+
     // 检查布尔属性
     if (matchValue.contains('controls')) {
       attributes['controls'] = 'true';
@@ -291,13 +323,15 @@ class VideoSyntax extends m.InlineSyntax {
     if (matchValue.contains('muted')) {
       attributes['muted'] = 'true';
     }
-    
+
     // 创建视频元素
     final element = m.Element.text(VideoProcessor.videoTag, matchValue);
     element.attributes.addAll(attributes);
-    
-    print('🎥 VideoSyntax.onMatch: 创建视频元素 - tag: ${element.tag}, attributes: ${element.attributes}');
-    
+
+    print(
+      '🎥 VideoSyntax.onMatch: 创建视频元素 - tag: ${element.tag}, attributes: ${element.attributes}',
+    );
+
     parser.addNode(element);
     return true;
   }

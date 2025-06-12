@@ -209,7 +209,9 @@ class _LayerPanelState extends State<LayerPanel> {
     }
 
     return groups;
-  }  @override
+  }
+
+  @override
   Widget build(BuildContext context) {
     return widget.layers.isEmpty
         ? const Center(

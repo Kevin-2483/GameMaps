@@ -55,6 +55,7 @@ class MapItem {
   factory MapItem.fromJson(Map<String, dynamic> json) =>
       _$MapItemFromJson(json);
   Map<String, dynamic> toJson() => _$MapItemToJson(this);
+
   /// 从数据库记录创建 MapItem
   factory MapItem.fromDatabase(Map<String, dynamic> map) {
     // 解析图层、图例组和便签数据
@@ -102,7 +103,8 @@ class MapItem {
         print('解析便签数据失败: $e');
         // 如果解析失败，继续使用空列表
       }
-    }    return MapItem(
+    }
+    return MapItem(
       id: map['id'] as int?,
       title: map['title'] as String,
       imageData: map['image_data'] as Uint8List?,
@@ -114,6 +116,7 @@ class MapItem {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
   }
+
   /// 转换为数据库记录
   Map<String, dynamic> toDatabase() {
     return {
@@ -125,13 +128,12 @@ class MapItem {
       'legend_groups': json.encode(
         legendGroups.map((e) => e.toJson()).toList(),
       ),
-      'sticky_notes': json.encode(
-        stickyNotes.map((e) => e.toJson()).toList(),
-      ),
+      'sticky_notes': json.encode(stickyNotes.map((e) => e.toJson()).toList()),
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
+
   /// 创建副本
   MapItem copyWith({
     int? id,

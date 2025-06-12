@@ -8,27 +8,27 @@ import '../../services/virtual_file_system/vfs_protocol.dart';
 class VfsFileOpenConfig {
   /// 窗口位置（相对于屏幕的偏移）
   final Offset? position;
-  
+
   /// 窗口大小比例
   final double widthRatio;
   final double heightRatio;
-  
+
   /// 最小和最大尺寸
   final Size? minSize;
   final Size? maxSize;
-  
+
   /// 是否可拖拽
   final bool draggable;
-  
+
   /// 是否可调整大小
   final bool resizable;
-  
+
   /// 是否允许点击遮罩关闭
   final bool barrierDismissible;
-  
+
   /// 自定义窗口标题
   final String? customTitle;
-  
+
   /// 自定义副标题
   final String? customSubtitle;
 
@@ -53,6 +53,7 @@ class VfsFileOpenConfig {
     resizable: true,
     barrierDismissible: true,
   );
+
   /// 为文本查看器创建默认配置
   static const VfsFileOpenConfig forText = VfsFileOpenConfig(
     widthRatio: 0.8,
@@ -105,7 +106,8 @@ enum VfsFileType {
 
 /// VFS文件打开服务
 class VfsFileOpenerService {
-  static final VfsFileOpenerService _instance = VfsFileOpenerService._internal();
+  static final VfsFileOpenerService _instance =
+      VfsFileOpenerService._internal();
   factory VfsFileOpenerService() => _instance;
   VfsFileOpenerService._internal();
 
@@ -118,7 +120,12 @@ class VfsFileOpenerService {
   }) async {
     try {
       final service = VfsFileOpenerService();
-      await service._openFile(context, vfsPath, config: config, fileInfo: fileInfo);
+      await service._openFile(
+        context,
+        vfsPath,
+        config: config,
+        fileInfo: fileInfo,
+      );
     } catch (e) {
       _showErrorDialog(context, '打开文件失败', e.toString());
     }
@@ -133,7 +140,8 @@ class VfsFileOpenerService {
   }) async {
     final fileType = _getFileType(vfsPath);
     final defaultConfig = _getDefaultConfig(fileType);
-    final finalConfig = config ?? defaultConfig;    switch (fileType) {
+    final finalConfig = config ?? defaultConfig;
+    switch (fileType) {
       case VfsFileType.image:
         await _openImageFile(context, vfsPath, finalConfig, fileInfo);
         break;
@@ -163,6 +171,7 @@ class VfsFileOpenerService {
       config: config,
     );
   }
+
   /// 打开文本文件
   Future<void> _openTextFile(
     BuildContext context,
@@ -196,7 +205,7 @@ class VfsFileOpenerService {
   /// 获取文件类型
   VfsFileType _getFileType(String vfsPath) {
     final extension = vfsPath.split('.').last.toLowerCase();
-    
+
     switch (extension) {
       case 'png':
       case 'jpg':
@@ -206,44 +215,45 @@ class VfsFileOpenerService {
       case 'webp':
       case 'svg':
         return VfsFileType.image;
-      
+
       case 'txt':
       case 'log':
       case 'csv':
         return VfsFileType.text;
-      
+
       case 'json':
         return VfsFileType.json;
-      
+
       case 'md':
       case 'markdown':
         return VfsFileType.markdown;
-      
+
       case 'pdf':
         return VfsFileType.pdf;
-      
+
       case 'mp4':
       case 'avi':
       case 'mov':
       case 'wmv':
         return VfsFileType.video;
-      
+
       case 'mp3':
       case 'wav':
       case 'flac':
       case 'aac':
         return VfsFileType.audio;
-      
+
       case 'zip':
       case 'rar':
       case '7z':
       case 'tar':
         return VfsFileType.archive;
-      
+
       default:
         return VfsFileType.unknown;
     }
   }
+
   /// 获取默认配置
   VfsFileOpenConfig _getDefaultConfig(VfsFileType fileType) {
     switch (fileType) {
@@ -267,7 +277,7 @@ class VfsFileOpenerService {
   ) {
     final fileName = vfsPath.split('/').last;
     final extension = fileName.split('.').last.toLowerCase();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -278,7 +288,8 @@ class VfsFileOpenerService {
           children: [
             Text('文件名: $fileName'),
             Text('文件类型: .$extension'),
-            const SizedBox(height: 16),            const Text('当前支持的文件类型:'),
+            const SizedBox(height: 16),
+            const Text('当前支持的文件类型:'),
             const Text('• 图片: png, jpg, jpeg, gif, bmp, webp, svg'),
             const Text('• 文本: txt, log, csv, json'),
             const Text('• Markdown: md, markdown'),
@@ -295,7 +306,11 @@ class VfsFileOpenerService {
   }
 
   /// 显示错误对话框
-  static void _showErrorDialog(BuildContext context, String title, String message) {
+  static void _showErrorDialog(
+    BuildContext context,
+    String title,
+    String message,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -320,6 +335,11 @@ extension VfsFileOpenerExtensions on BuildContext {
     VfsFileOpenConfig? config,
     VfsFileInfo? fileInfo,
   }) {
-    return VfsFileOpenerService.openFile(this, vfsPath, config: config, fileInfo: fileInfo);
+    return VfsFileOpenerService.openFile(
+      this,
+      vfsPath,
+      config: config,
+      fileInfo: fileInfo,
+    );
   }
 }

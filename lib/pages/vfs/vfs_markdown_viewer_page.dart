@@ -47,7 +47,8 @@ class _VfsMarkdownViewerPageContent extends StatefulWidget {
       _VfsMarkdownViewerPageContentState();
 }
 
-class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageContent> {
+class _VfsMarkdownViewerPageContentState
+    extends State<_VfsMarkdownViewerPageContent> {
   bool _isLoading = false;
 
   @override
@@ -78,6 +79,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
       ),
     );
   }
+
   /// 构建应用栏
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -93,7 +95,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
           onPressed: _toggleFullscreen,
           tooltip: '全屏模式',
         ),
-        
+
         // 更多选项
         PopupMenuButton<String>(
           onSelected: _handleMenuAction,
@@ -111,21 +113,13 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
             const PopupMenuItem(
               value: 'share',
               child: Row(
-                children: [
-                  Icon(Icons.share),
-                  SizedBox(width: 8),
-                  Text('分享'),
-                ],
+                children: [Icon(Icons.share), SizedBox(width: 8), Text('分享')],
               ),
             ),
             const PopupMenuItem(
               value: 'info',
               child: Row(
-                children: [
-                  Icon(Icons.info),
-                  SizedBox(width: 8),
-                  Text('文件信息'),
-                ],
+                children: [Icon(Icons.info), SizedBox(width: 8), Text('文件信息')],
               ),
             ),
           ],
@@ -148,7 +142,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
         children: [
           // 文件路径面包屑
           Expanded(child: _buildBreadcrumb()),
-          
+
           // 加载指示器
           if (_isLoading) ...[
             const SizedBox(width: 16),
@@ -172,7 +166,8 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
         style: Theme.of(context).textTheme.bodySmall,
         overflow: TextOverflow.ellipsis,
       );
-    }    return Row(
+    }
+    return Row(
       children: [
         Icon(
           Icons.storage,
@@ -180,10 +175,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
           color: Theme.of(context).textTheme.bodySmall?.color,
         ),
         const SizedBox(width: 4),
-        Text(
-          vfsPath.database,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(vfsPath.database, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(width: 4),
         Icon(
           Icons.chevron_right,
@@ -197,10 +189,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
           color: Theme.of(context).textTheme.bodySmall?.color,
         ),
         const SizedBox(width: 4),
-        Text(
-          vfsPath.collection,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(vfsPath.collection, style: Theme.of(context).textTheme.bodySmall),
         if (vfsPath.segments.isNotEmpty) ...[
           const SizedBox(width: 4),
           Icon(
@@ -230,9 +219,9 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
         onPressed: widget.onClose ?? () => Navigator.of(context).pop(),
         tooltip: '返回',
       ),
-      
+
       const SizedBox(width: 8),
-      
+
       // 在窗口中打开
       IconButton(
         icon: const Icon(Icons.open_in_new),
@@ -247,7 +236,8 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
     if (widget.fileInfo != null) {
       return widget.fileInfo!.name;
     }
-    return widget.vfsPath.split('/').last;  }
+    return widget.vfsPath.split('/').last;
+  }
 
   /// 处理菜单动作
   void _handleMenuAction(String action) {
@@ -272,25 +262,25 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
     //   vfsPath: widget.vfsPath,
     //   fileInfo: widget.fileInfo,
     // );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('在窗口中打开功能需要导入窗口组件')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('在窗口中打开功能需要导入窗口组件')));
   }
 
   /// 分享文件
   void _shareFile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('分享功能开发中...')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('分享功能开发中...')));
   }
 
   /// 显示文件信息
   void _showFileInfo() {
     if (widget.fileInfo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('文件信息不可用')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('文件信息不可用')));
       return;
     }
 
@@ -335,10 +325,7 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontFamily: 'monospace'),
-            ),
+            child: Text(value, style: const TextStyle(fontFamily: 'monospace')),
           ),
         ],
       ),
@@ -348,9 +335,9 @@ class _VfsMarkdownViewerPageContentState extends State<_VfsMarkdownViewerPageCon
   /// 切换全屏模式
   void _toggleFullscreen() {
     // 这里可以实现全屏逻辑
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('全屏模式开发中...')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('全屏模式开发中...')));
   }
 
   /// 处理错误

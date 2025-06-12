@@ -10,30 +10,38 @@ import 'video_processor.dart';
 /// 基于markdown_widget的HTML扩展支持
 class HtmlProcessor {
   /// HTML标签正则表达式
-  static final RegExp htmlRep = RegExp(r'<[^>]*>', multiLine: true, caseSensitive: true);
-  
+  static final RegExp htmlRep = RegExp(
+    r'<[^>]*>',
+    multiLine: true,
+    caseSensitive: true,
+  );
+
   /// 表格标签正则表达式
-  static final RegExp tableRep = RegExp(r'<table[^>]*>', multiLine: true, caseSensitive: true);
+  static final RegExp tableRep = RegExp(
+    r'<table[^>]*>',
+    multiLine: true,
+    caseSensitive: true,
+  );
 
   /// 将HTML节点转换为Markdown节点
   /// 解决了markdown包中HTML处理的问题
   /// 参考: https://github.com/dart-lang/markdown/issues/284#event-3216258013
   static void htmlToMarkdown(h.Node? node, int deep, List<m.Node> mNodes) {
     if (node == null) return;
-    
+
     if (node is h.Text) {
       mNodes.add(m.Text(node.text));
     } else if (node is h.Element) {
       final tag = node.localName;
       List<m.Node> children = [];
-      
+
       // 递归处理子节点
       for (final child in node.children) {
         htmlToMarkdown(child, deep + 1, children);
       }
-      
+
       m.Element element;
-      
+
       // 特殊处理媒体标签
       if (tag == MarkdownTag.img.name || tag == 'video' || tag == 'audio') {
         element = HtmlElement(tag!, children, node.text);
@@ -42,10 +50,11 @@ class HtmlProcessor {
         element = HtmlElement(tag!, children, node.text);
         element.attributes.addAll(node.attributes.cast());
       }
-      
+
       mNodes.add(element);
     }
   }
+
   /// 解析Markdown Text节点中的HTML内容为SpanNode
   static List<SpanNode> parseHtml(
     m.Text node, {
@@ -53,31 +62,35 @@ class HtmlProcessor {
     WidgetVisitor? visitor,
     TextStyle? parentStyle,
   }) {
-    print('🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: ${node.textContent.substring(0, node.textContent.length > 100 ? 100 : node.textContent.length)}...');
-    
+    print(
+      '🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: ${node.textContent.substring(0, node.textContent.length > 100 ? 100 : node.textContent.length)}...',
+    );
+
     try {
       final text = node.textContent.replaceAll(
-          visitor?.splitRegExp ?? WidgetVisitor.defaultSplitRegExp, '');
-      
+        visitor?.splitRegExp ?? WidgetVisitor.defaultSplitRegExp,
+        '',
+      );
+
       // 如果不包含HTML标签，直接返回文本节点
       if (!text.contains(htmlRep)) {
         print('🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点');
         return [TextNode(text: node.text)];
       }
-      
+
       print('🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析');
-      
+
       // 解析HTML片段
       h.DocumentFragment document = parseFragment(text);
-      
+
       print('🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}');
-      
+
       // 使用HTML转SpanNode访问器处理
       final result = HtmlToSpanVisitor(
-        visitor: visitor, 
+        visitor: visitor,
         parentStyle: parentStyle,
       ).toVisit(document.nodes.toList());
-      
+
       print('🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}');
       return result;
     } catch (e) {
@@ -101,18 +114,51 @@ class HtmlProcessor {
   static String stripHtmlTags(String html) {
     return html.replaceAll(htmlRep, '');
   }
+
   /// 获取支持的HTML标签列表
   static List<String> getSupportedTags() {
     return [
-      'p', 'div', 'span', 'br', 'hr',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'strong', 'b', 'em', 'i', 'u', 's', 'del', 'ins',
-      'a', 'img', 'video', 'audio',
-      'ul', 'ol', 'li',
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'blockquote', 'pre', 'code',
-      'details', 'summary',
-      'mark', 'small', 'sub', 'sup',
+      'p',
+      'div',
+      'span',
+      'br',
+      'hr',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'strong',
+      'b',
+      'em',
+      'i',
+      'u',
+      's',
+      'del',
+      'ins',
+      'a',
+      'img',
+      'video',
+      'audio',
+      'ul',
+      'ol',
+      'li',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
+      'blockquote',
+      'pre',
+      'code',
+      'details',
+      'summary',
+      'mark',
+      'small',
+      'sub',
+      'sup',
     ];
   }
 
@@ -120,40 +166,40 @@ class HtmlProcessor {
   /// 这个方法会将一些HTML标签转换为对应的Markdown语法
   static String convertHtmlToMarkdown(String content) {
     if (!containsHtml(content)) return content;
-    
+
     try {
       final document = HtmlUtils.safeParseFragment(content);
       if (document == null) return content;
-      
+
       // 转换HTML标签为Markdown等价形式
       var result = content;
-      
+
       // 转换标题标签
       result = _convertHeadings(result);
-      
+
       // 转换格式化标签
       result = _convertFormatting(result);
-      
+
       // 转换链接标签
       result = _convertLinks(result);
-      
+
       // 转换列表标签
       result = _convertLists(result);
-      
+
       // 转换表格标签
       result = _convertTables(result);
-      
+
       // 转换引用块
       result = _convertBlockquotes(result);
-        // 转换代码块
+      // 转换代码块
       result = _convertCodeBlocks(result);
-      
+
       // 转换视频标签
       result = _convertVideoTags(result);
-      
+
       // 转换段落标签
       result = _convertParagraphs(result);
-      
+
       return result;
     } catch (e) {
       print('HTML转Markdown失败: $e');
@@ -165,8 +211,12 @@ class HtmlProcessor {
   static String _convertHeadings(String html) {
     // 转换 <h1> 到 <h6>
     for (int i = 1; i <= 6; i++) {
-      final pattern = RegExp(r'<h' + i.toString() + r'[^>]*>(.*?)</h' + i.toString() + r'>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
+      final pattern = RegExp(
+        r'<h' + i.toString() + r'[^>]*>(.*?)</h' + i.toString() + r'>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      );
       html = html.replaceAllMapped(pattern, (match) {
         final content = match.group(1) ?? '';
         final prefix = '#' * i;
@@ -180,24 +230,48 @@ class HtmlProcessor {
   static String _convertFormatting(String html) {
     // 粗体
     html = html.replaceAllMapped(
-        RegExp(r'<(b|strong)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '**${match.group(2)}**');
-    
+      RegExp(
+        r'<(b|strong)[^>]*>(.*?)</\1>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '**${match.group(2)}**',
+    );
+
     // 斜体
     html = html.replaceAllMapped(
-        RegExp(r'<(i|em)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '*${match.group(2)}*');
-    
+      RegExp(
+        r'<(i|em)[^>]*>(.*?)</\1>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '*${match.group(2)}*',
+    );
+
     // 行内代码
     html = html.replaceAllMapped(
-        RegExp(r'<code[^>]*>(.*?)</code>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '`${match.group(1)}`');
-    
+      RegExp(
+        r'<code[^>]*>(.*?)</code>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '`${match.group(1)}`',
+    );
+
     // 删除线
     html = html.replaceAllMapped(
-        RegExp(r'<(s|del|strike)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '~~${match.group(2)}~~');
-    
+      RegExp(
+        r'<(s|del|strike)[^>]*>(.*?)</\1>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '~~${match.group(2)}~~',
+    );
+
     return html;
   }
 
@@ -205,14 +279,19 @@ class HtmlProcessor {
   static String _convertLinks(String html) {
     // 转换 <a href="url">text</a> 为 [text](url)
     html = html.replaceAllMapped(
-        RegExp(r"""<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>""", 
-    caseSensitive: false, multiLine: true, dotAll: true),
-        (match) {
-          final url = match.group(1) ?? '';
-          final text = match.group(2) ?? '';
-          return '[$text]($url)';
-        });
-    
+      RegExp(
+        r"""<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>""",
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) {
+        final url = match.group(1) ?? '';
+        final text = match.group(2) ?? '';
+        return '[$text]($url)';
+      },
+    );
+
     return html;
   }
 
@@ -220,36 +299,45 @@ class HtmlProcessor {
   static String _convertLists(String html) {
     // 转换无序列表
     html = _convertUnorderedLists(html);
-    
+
     // 转换有序列表
     html = _convertOrderedLists(html);
-    
+
     return html;
   }
+
   /// 转换无序列表
   static String _convertUnorderedLists(String html) {
     // 匹配完整的 <ul> 标签，使用非贪婪匹配避免嵌套问题
-    final ulPattern = RegExp(r'<ul[^>]*>(.*?)</ul>', 
-        caseSensitive: false, multiLine: true, dotAll: true);
-    
+    final ulPattern = RegExp(
+      r'<ul[^>]*>(.*?)</ul>',
+      caseSensitive: false,
+      multiLine: true,
+      dotAll: true,
+    );
+
     // 多次处理以处理嵌套列表，从内到外
     String result = html;
     int maxIterations = 5; // 限制迭代次数避免无限循环
     int iteration = 0;
-    
+
     while (result.contains('<ul>') && iteration < maxIterations) {
       bool hasChanges = false;
       result = result.replaceAllMapped(ulPattern, (match) {
         String listContent = match.group(1) ?? '';
-        
+
         // 只处理不包含嵌套<ul>的列表（从最内层开始）
         if (!listContent.contains('<ul>') && !listContent.contains('<ol>')) {
           hasChanges = true;
-          
+
           // 提取所有 <li> 项
-          final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
-              caseSensitive: false, multiLine: true, dotAll: true);
-          
+          final liPattern = RegExp(
+            r'<li[^>]*>(.*?)</li>',
+            caseSensitive: false,
+            multiLine: true,
+            dotAll: true,
+          );
+
           final items = <String>[];
           listContent.replaceAllMapped(liPattern, (liMatch) {
             String itemContent = liMatch.group(1)?.trim() ?? '';
@@ -258,44 +346,52 @@ class HtmlProcessor {
             items.add('- $itemContent');
             return '';
           });
-          
+
           return '\n${items.join('\n')}\n';
         }
-        
+
         return match.group(0) ?? ''; // 保持原样
       });
-      
+
       if (!hasChanges) break;
       iteration++;
     }
-    
+
     return result;
   }
 
   /// 转换有序列表
   static String _convertOrderedLists(String html) {
     // 匹配完整的 <ol> 标签，使用非贪婪匹配避免嵌套问题
-    final olPattern = RegExp(r'<ol[^>]*>(.*?)</ol>', 
-        caseSensitive: false, multiLine: true, dotAll: true);
-    
+    final olPattern = RegExp(
+      r'<ol[^>]*>(.*?)</ol>',
+      caseSensitive: false,
+      multiLine: true,
+      dotAll: true,
+    );
+
     // 多次处理以处理嵌套列表，从内到外
     String result = html;
     int maxIterations = 5; // 限制迭代次数避免无限循环
     int iteration = 0;
-    
+
     while (result.contains('<ol>') && iteration < maxIterations) {
       bool hasChanges = false;
       result = result.replaceAllMapped(olPattern, (match) {
         String listContent = match.group(1) ?? '';
-        
+
         // 只处理不包含嵌套<ol>的列表（从最内层开始）
         if (!listContent.contains('<ul>') && !listContent.contains('<ol>')) {
           hasChanges = true;
-          
+
           // 提取所有 <li> 项
-          final liPattern = RegExp(r'<li[^>]*>(.*?)</li>', 
-              caseSensitive: false, multiLine: true, dotAll: true);
-          
+          final liPattern = RegExp(
+            r'<li[^>]*>(.*?)</li>',
+            caseSensitive: false,
+            multiLine: true,
+            dotAll: true,
+          );
+
           final items = <String>[];
           int index = 1;
           listContent.replaceAllMapped(liPattern, (liMatch) {
@@ -306,78 +402,108 @@ class HtmlProcessor {
             index++;
             return '';
           });
-          
+
           return '\n${items.join('\n')}\n';
         }
-        
+
         return match.group(0) ?? ''; // 保持原样
       });
-      
+
       if (!hasChanges) break;
       iteration++;
     }
-    
+
     return result;
   }
-  
+
   /// 清理HTML标签但保留基本格式
   static String _cleanHtmlTags(String content) {
     // 保留一些基本的格式标签
     content = content.replaceAllMapped(
-        RegExp(r'<(b|strong)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '**${match.group(2)}**');
-    
+      RegExp(
+        r'<(b|strong)[^>]*>(.*?)</\1>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '**${match.group(2)}**',
+    );
+
     content = content.replaceAllMapped(
-        RegExp(r'<(i|em)[^>]*>(.*?)</\1>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '*${match.group(2)}*');
-    
+      RegExp(
+        r'<(i|em)[^>]*>(.*?)</\1>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '*${match.group(2)}*',
+    );
+
     content = content.replaceAllMapped(
-        RegExp(r'<code[^>]*>(.*?)</code>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '`${match.group(1)}`');
-    
+      RegExp(
+        r'<code[^>]*>(.*?)</code>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '`${match.group(1)}`',
+    );
+
     // 移除其他HTML标签
     content = content.replaceAll(RegExp(r'<[^>]*>'), '');
-    
+
     // 清理多余的空白字符
     content = content.replaceAll(RegExp(r'\s+'), ' ').trim();
-    
+
     return content;
   }
 
   /// 转换表格标签
   static String _convertTables(String html) {
     // 匹配完整的 <table> 标签
-    final tablePattern = RegExp(r'<table[^>]*>(.*?)</table>', 
-        caseSensitive: false, multiLine: true, dotAll: true);
-    
+    final tablePattern = RegExp(
+      r'<table[^>]*>(.*?)</table>',
+      caseSensitive: false,
+      multiLine: true,
+      dotAll: true,
+    );
+
     html = html.replaceAllMapped(tablePattern, (match) {
       String tableContent = match.group(1) ?? '';
-      
+
       // 提取表头
-      final theadPattern = RegExp(r'<thead[^>]*>(.*?)</thead>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
+      final theadPattern = RegExp(
+        r'<thead[^>]*>(.*?)</thead>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      );
       String? headerContent;
       tableContent = tableContent.replaceAllMapped(theadPattern, (theadMatch) {
         headerContent = theadMatch.group(1);
         return '';
       });
-      
+
       // 提取表体
-      final tbodyPattern = RegExp(r'<tbody[^>]*>(.*?)</tbody>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
+      final tbodyPattern = RegExp(
+        r'<tbody[^>]*>(.*?)</tbody>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      );
       String? bodyContent;
       tableContent = tableContent.replaceAllMapped(tbodyPattern, (tbodyMatch) {
         bodyContent = tbodyMatch.group(1);
         return '';
       });
-      
+
       // 如果没有显式的tbody，使用整个表格内容
       if (bodyContent == null) {
         bodyContent = tableContent;
       }
-      
+
       final rows = <String>[];
-      
+
       // 处理表头
       if (headerContent != null) {
         final headerRow = _convertTableRow(headerContent!, true);
@@ -388,11 +514,15 @@ class HtmlProcessor {
           rows.add('|${List.filled(separatorCells, ' --- ').join('|')}|');
         }
       }
-      
+
       // 处理表体行
-      final trPattern = RegExp(r'<tr[^>]*>(.*?)</tr>', 
-          caseSensitive: false, multiLine: true, dotAll: true);
-      
+      final trPattern = RegExp(
+        r'<tr[^>]*>(.*?)</tr>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      );
+
       bodyContent!.replaceAllMapped(trPattern, (trMatch) {
         final rowContent = trMatch.group(1) ?? '';
         final row = _convertTableRow(rowContent, false);
@@ -401,26 +531,36 @@ class HtmlProcessor {
         }
         return '';
       });
-      
+
       return rows.isEmpty ? '' : '\n${rows.join('\n')}\n';
     });
-    
+
     return html;
   }
 
   /// 转换表格行
   static String _convertTableRow(String rowContent, bool isHeader) {
-    final cellPattern = isHeader 
-        ? RegExp(r'<th[^>]*>(.*?)</th>', caseSensitive: false, multiLine: true, dotAll: true)
-        : RegExp(r'<td[^>]*>(.*?)</td>', caseSensitive: false, multiLine: true, dotAll: true);
-    
+    final cellPattern = isHeader
+        ? RegExp(
+            r'<th[^>]*>(.*?)</th>',
+            caseSensitive: false,
+            multiLine: true,
+            dotAll: true,
+          )
+        : RegExp(
+            r'<td[^>]*>(.*?)</td>',
+            caseSensitive: false,
+            multiLine: true,
+            dotAll: true,
+          );
+
     final cells = <String>[];
     rowContent.replaceAllMapped(cellPattern, (cellMatch) {
       final cellContent = cellMatch.group(1)?.trim() ?? '';
       cells.add(' $cellContent ');
       return '';
     });
-    
+
     return cells.isEmpty ? '' : '|${cells.join('|')}|';
   }
 
@@ -428,21 +568,31 @@ class HtmlProcessor {
   static String _convertBlockquotes(String html) {
     // 转换 <blockquote> 为 > 引用格式
     html = html.replaceAllMapped(
-        RegExp(r'<blockquote[^>]*>(.*?)</blockquote>', 
-            caseSensitive: false, multiLine: true, dotAll: true),
-        (match) {
-          String content = match.group(1)?.trim() ?? '';
-          
-          // 移除内部的段落标签
-          content = content.replaceAll(RegExp(r'</?p[^>]*>', caseSensitive: false), '');
-          
-          // 为每行添加 > 前缀
-          final lines = content.split('\n');
-          final quotedLines = lines.map((line) => '> ${line.trim()}').where((line) => line.trim() != '>');
-          
-          return '\n${quotedLines.join('\n')}\n';
-        });
-    
+      RegExp(
+        r'<blockquote[^>]*>(.*?)</blockquote>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) {
+        String content = match.group(1)?.trim() ?? '';
+
+        // 移除内部的段落标签
+        content = content.replaceAll(
+          RegExp(r'</?p[^>]*>', caseSensitive: false),
+          '',
+        );
+
+        // 为每行添加 > 前缀
+        final lines = content.split('\n');
+        final quotedLines = lines
+            .map((line) => '> ${line.trim()}')
+            .where((line) => line.trim() != '>');
+
+        return '\n${quotedLines.join('\n')}\n';
+      },
+    );
+
     return html;
   }
 
@@ -450,19 +600,25 @@ class HtmlProcessor {
   static String _convertCodeBlocks(String html) {
     // 转换 <pre><code> 为 ``` 代码块
     html = html.replaceAllMapped(
-        RegExp(r'<pre[^>]*><code[^>]*>(.*?)</code></pre>', 
-            caseSensitive: false, multiLine: true, dotAll: true),
-        (match) {
-          String code = match.group(1) ?? '';
-          
-          // 解码HTML实体
-          code = _decodeHtmlEntities(code);
-          
-          return '\n```\n$code\n```\n';
-        });
-    
+      RegExp(
+        r'<pre[^>]*><code[^>]*>(.*?)</code></pre>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) {
+        String code = match.group(1) ?? '';
+
+        // 解码HTML实体
+        code = _decodeHtmlEntities(code);
+
+        return '\n```\n$code\n```\n';
+      },
+    );
+
     return html;
   }
+
   /// 解码常见的HTML实体
   static String _decodeHtmlEntities(String text) {
     return text
@@ -478,12 +634,18 @@ class HtmlProcessor {
   static String _convertParagraphs(String html) {
     // 简单的段落转换
     html = html.replaceAllMapped(
-        RegExp(r'<p[^>]*>(.*?)</p>', caseSensitive: false, multiLine: true, dotAll: true),
-        (match) => '\n${match.group(1)}\n');
-    
+      RegExp(
+        r'<p[^>]*>(.*?)</p>',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      ),
+      (match) => '\n${match.group(1)}\n',
+    );
+
     // 换行标签
     html = html.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
-    
+
     return html;
   }
 
@@ -491,17 +653,24 @@ class HtmlProcessor {
   static String _convertVideoTags(String html) {
     // 保留视频标签，让后续的视频处理器处理
     // 这里我们可以做一些基本的格式化
-    final videoPattern = RegExp(r'<video([^>]*)>(.*?)</video>', 
-        caseSensitive: false, multiLine: true, dotAll: true);
-    
+    final videoPattern = RegExp(
+      r'<video([^>]*)>(.*?)</video>',
+      caseSensitive: false,
+      multiLine: true,
+      dotAll: true,
+    );
+
     html = html.replaceAllMapped(videoPattern, (match) {
       final attributes = match.group(1) ?? '';
       final content = match.group(2) ?? '';
-      
+
       // 提取src属性
-      final srcPattern = RegExp(r'''src=["\']([^"\']*)["\']''', caseSensitive: false);
+      final srcPattern = RegExp(
+        r'''src=["\']([^"\']*)["\']''',
+        caseSensitive: false,
+      );
       final srcMatch = srcPattern.firstMatch(attributes);
-      
+
       if (srcMatch != null) {
         // 保持video标签格式，确保有controls属性
         var cleanAttributes = attributes;
@@ -510,10 +679,10 @@ class HtmlProcessor {
         }
         return '<video$cleanAttributes>$content</video>';
       }
-      
+
       return match.group(0) ?? '';
     });
-    
+
     return html;
   }
 }
@@ -526,7 +695,7 @@ class HtmlElement extends m.Element {
 
   /// 构造函数
   HtmlElement(String tag, List<m.Node>? children, this.textContent)
-      : super(tag, children);
+    : super(tag, children);
 
   /// 获取元素的纯文本内容
   String get plainText => textContent;
@@ -534,10 +703,28 @@ class HtmlElement extends m.Element {
   /// 判断是否为块级元素
   bool get isBlockElement {
     const blockTags = {
-      'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'blockquote', 'pre', 'ul', 'ol', 'li',
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'details', 'summary', 'hr'
+      'div',
+      'p',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'blockquote',
+      'pre',
+      'ul',
+      'ol',
+      'li',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
+      'details',
+      'summary',
+      'hr',
     };
     return blockTags.contains(tag.toLowerCase());
   }
@@ -551,28 +738,26 @@ class HtmlElement extends m.Element {
 class HtmlToSpanVisitor extends TreeVisitor {
   /// 结果span节点列表
   final List<SpanNode> _spans = [];
-  
+
   /// span节点栈，用于处理嵌套结构
   final List<SpanNode> _spansStack = [];
-  
+
   /// Widget访问器
   final WidgetVisitor visitor;
-  
+
   /// 父级文本样式
   final TextStyle parentStyle;
 
   /// 构造函数
-  HtmlToSpanVisitor({
-    WidgetVisitor? visitor, 
-    TextStyle? parentStyle,
-  }) : this.visitor = visitor ?? WidgetVisitor(),
-        this.parentStyle = parentStyle ?? const TextStyle();
+  HtmlToSpanVisitor({WidgetVisitor? visitor, TextStyle? parentStyle})
+    : this.visitor = visitor ?? WidgetVisitor(),
+      this.parentStyle = parentStyle ?? const TextStyle();
 
   /// 访问HTML节点列表并转换为SpanNode列表
   List<SpanNode> toVisit(List<h.Node> nodes) {
     _spans.clear();
     _spansStack.clear();
-    
+
     for (final node in nodes) {
       final emptyNode = ConcreteElementNode(style: parentStyle);
       _spans.add(emptyNode);
@@ -580,7 +765,7 @@ class HtmlToSpanVisitor extends TreeVisitor {
       visit(node);
       _spansStack.removeLast();
     }
-    
+
     final result = List.of(_spans);
     _spans.clear();
     _spansStack.clear();
@@ -594,11 +779,15 @@ class HtmlToSpanVisitor extends TreeVisitor {
       final textNode = TextNode(text: node.text);
       last.accept(textNode);
     }
-  }  @override
+  }
+
+  @override
   void visitElement(h.Element node) {
     final localName = node.localName ?? '';
-    print('🔧 HtmlToSpanVisitor.visitElement: 处理标签 - $localName, attributes: ${node.attributes}');
-    
+    print(
+      '🔧 HtmlToSpanVisitor.visitElement: 处理标签 - $localName, attributes: ${node.attributes}',
+    );
+
     // 特殊处理video标签 - 直接创建VideoNode
     if (localName == 'video') {
       print('🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode');
@@ -610,47 +799,51 @@ class HtmlToSpanVisitor extends TreeVisitor {
       }
       return; // video标签不需要处理子节点
     }
-    
+
     // 创建对应的markdown元素
     final mdElement = m.Element(localName, []);
     mdElement.attributes.addAll(node.attributes.cast());
-    
+
     // 通过visitor获取对应的SpanNode
     SpanNode spanNode = visitor.getNodeByElement(mdElement, visitor.config);
-    
+
     // 如果不是ElementNode，包装成ElementNode
     if (spanNode is! ElementNode) {
       final wrapper = ConcreteElementNode(tag: localName, style: parentStyle);
       wrapper.accept(spanNode);
       spanNode = wrapper;
     }
-    
+
     // 添加到父节点
     final last = _spansStack.last;
     if (last is ElementNode) {
       last.accept(spanNode);
     }
-    
+
     // 处理子节点
     _spansStack.add(spanNode);
     for (var child in node.nodes.toList(growable: false)) {
       visit(child);
     }
     _spansStack.removeLast();
-  }  /// 创建VideoNode
+  }
+
+  /// 创建VideoNode
   SpanNode _createVideoNode(h.Element videoElement) {
     final attributes = <String, String>{};
-    
+
     // 正确处理attributes - html包的Element.attributes是LinkedHashMap<Object, String>
     for (final entry in videoElement.attributes.entries) {
       attributes[entry.key.toString()] = entry.value;
     }
-    
+
     // 提取text content
     final textContent = videoElement.text;
-    
-    print('🎥 HtmlToSpanVisitor._createVideoNode: attributes: $attributes, textContent: $textContent');
-    
+
+    print(
+      '🎥 HtmlToSpanVisitor._createVideoNode: attributes: $attributes, textContent: $textContent',
+    );
+
     // 创建VideoNode实例
     return VideoNode(attributes, textContent);
   }
@@ -678,7 +871,7 @@ extension HtmlConfigExtension on MarkdownConfig {
           height: 1.6,
         ),
       ),
-      
+
       // HTML链接处理 - 保留VFS协议支持
       LinkConfig(
         style: TextStyle(
@@ -687,57 +880,61 @@ extension HtmlConfigExtension on MarkdownConfig {
         ),
         onTap: onLinkTap, // 使用传入的链接处理器
       ),
-      
+
       // HTML图片处理 - 保留VFS协议支持
       ImgConfig(
-        builder: imageBuilder ?? (url, attributes) {
-          // 默认的网络图片处理逻辑
-          return Image.network(
-            url,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  border: Border.all(color: Colors.red.shade200),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.broken_image, color: Colors.red.shade400),
-                    const SizedBox(width: 8),
-                    Text(
-                      '图片加载失败',
-                      style: TextStyle(color: Colors.red.shade600),
+        builder:
+            imageBuilder ??
+            (url, attributes) {
+              // 默认的网络图片处理逻辑
+              return Image.network(
+                url,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      border: Border.all(color: Colors.red.shade200),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.broken_image, color: Colors.red.shade400),
+                        const SizedBox(width: 8),
+                        Text(
+                          '图片加载失败',
+                          style: TextStyle(color: Colors.red.shade600),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
-        errorBuilder: imageErrorBuilder ?? (url, alt, error) => Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.red.shade50,
-            border: Border.all(color: Colors.red.shade200),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.broken_image, color: Colors.red.shade400),
-              const SizedBox(width: 8),
-              Text(
-                '图片加载失败: $error',
-                style: TextStyle(color: Colors.red.shade600),
+        errorBuilder:
+            imageErrorBuilder ??
+            (url, alt, error) => Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                border: Border.all(color: Colors.red.shade200),
+                borderRadius: BorderRadius.circular(4),
               ),
-            ],
-          ),
-        ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.broken_image, color: Colors.red.shade400),
+                  const SizedBox(width: 8),
+                  Text(
+                    '图片加载失败: $error',
+                    style: TextStyle(color: Colors.red.shade600),
+                  ),
+                ],
+              ),
+            ),
       ),
-      
+
       // 添加标题配置
       H1Config(
         style: TextStyle(
@@ -808,8 +1005,12 @@ extension HtmlConfigExtension on MarkdownConfig {
       // 行内代码配置
       CodeConfig(
         style: TextStyle(
-          color: isDarkTheme ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
-          backgroundColor: isDarkTheme ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+          color: isDarkTheme
+              ? const Color(0xFFE6E6E6)
+              : const Color(0xFF333333),
+          backgroundColor: isDarkTheme
+              ? const Color(0xFF2D2D2D)
+              : const Color(0xFFF8F8F8),
           fontFamily: 'Courier',
           fontSize: 14,
         ),
@@ -862,7 +1063,7 @@ extension HtmlConfigExtension on MarkdownConfig {
           size: 20,
           color: isDarkTheme ? Colors.white : Colors.black87,
         ),
-      ),      // 表格配置
+      ), // 表格配置
       TableConfig(
         wrapper: (table) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -884,7 +1085,7 @@ extension HtmlConfigExtension on MarkdownConfig {
           color: isDarkTheme ? Colors.grey.shade800 : Colors.grey.shade200,
         ),
       ),
-      
+
       // 如果是深色主题，添加深色配置
       if (isDarkTheme) ...[
         HrConfig.darkConfig,
@@ -899,12 +1100,12 @@ extension HtmlConfigExtension on MarkdownConfig {
         BlockquoteConfig.darkConfig,
       ],
     ];
-    
+
     // 如果提供了基础配置，基于它创建新配置
     if (baseConfig != null) {
       return baseConfig.copy(configs: configs);
     }
-    
+
     // 否则创建新的配置
     return MarkdownConfig(configs: configs);
   }
@@ -914,10 +1115,7 @@ extension HtmlConfigExtension on MarkdownConfig {
     switch (depth % 3) {
       case 0:
         // 第一层：实心圆点
-        return BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-        );
+        return BoxDecoration(shape: BoxShape.circle, color: color);
       case 1:
         // 第二层：空心圆点
         return BoxDecoration(
@@ -948,7 +1146,7 @@ class HtmlUtils {
   static List<String> extractLinks(String html) {
     final document = safeParseFragment(html);
     if (document == null) return [];
-    
+
     final links = <String>[];
     document.querySelectorAll('a[href]').forEach((element) {
       final href = element.attributes['href'];
@@ -956,14 +1154,15 @@ class HtmlUtils {
         links.add(href);
       }
     });
-    
+
     return links;
   }
+
   /// 提取HTML中的所有图片URL
   static List<String> extractImages(String html) {
     final document = safeParseFragment(html);
     if (document == null) return [];
-    
+
     final images = <String>[];
     document.querySelectorAll('img[src]').forEach((element) {
       final src = element.attributes['src'];
@@ -971,7 +1170,7 @@ class HtmlUtils {
         images.add(src);
       }
     });
-    
+
     return images;
   }
 
@@ -979,7 +1178,7 @@ class HtmlUtils {
   static List<String> extractVideos(String html) {
     final document = safeParseFragment(html);
     if (document == null) return [];
-    
+
     final videos = <String>[];
     document.querySelectorAll('video[src]').forEach((element) {
       final src = element.attributes['src'];
@@ -987,7 +1186,7 @@ class HtmlUtils {
         videos.add(src);
       }
     });
-    
+
     // 也检查source标签
     document.querySelectorAll('video source[src]').forEach((element) {
       final src = element.attributes['src'];
@@ -995,7 +1194,7 @@ class HtmlUtils {
         videos.add(src);
       }
     });
-    
+
     return videos;
   }
 
@@ -1003,17 +1202,17 @@ class HtmlUtils {
   static String sanitizeHtml(String html) {
     final document = safeParseFragment(html);
     if (document == null) return html;
-    
+
     // 移除脚本标签
     document.querySelectorAll('script').forEach((element) {
       element.remove();
     });
-    
+
     // 移除样式标签
     document.querySelectorAll('style').forEach((element) {
       element.remove();
     });
-    
+
     // 移除事件处理属性
     document.querySelectorAll('*').forEach((element) {
       final attributesToRemove = <String>[];
@@ -1026,7 +1225,7 @@ class HtmlUtils {
         element.attributes.remove(attr);
       }
     });
-    
+
     return document.outerHtml;
   }
 }

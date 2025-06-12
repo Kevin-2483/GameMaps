@@ -19,10 +19,10 @@ class VfsMapDataMigrator {
   Future<void> migrateMapItem(MapItem mapItem) async {
     try {
       debugPrint('开始迁移地图: ${mapItem.title}');
-      
+
       // 保存地图数据到VFS
       final mapId = await _vfsService.saveMap(mapItem);
-      
+
       debugPrint('地图迁移完成: ${mapItem.title} -> $mapId');
     } catch (e) {
       debugPrint('地图迁移失败: ${mapItem.title} - $e');
@@ -33,7 +33,7 @@ class VfsMapDataMigrator {
   /// 批量迁移地图列表
   Future<MigrationResult> migrateAllMaps(List<MapItem> maps) async {
     final result = MigrationResult();
-    
+
     for (final map in maps) {
       try {
         await migrateMapItem(map);
@@ -45,7 +45,7 @@ class VfsMapDataMigrator {
         debugPrint('跳过迁移失败的地图: ${map.title}');
       }
     }
-    
+
     return result;
   }
 
@@ -53,24 +53,26 @@ class VfsMapDataMigrator {
   Future<bool> verifyMigration(List<MapItem> originalMaps) async {
     try {
       final vfsMaps = await _vfsService.getAllMaps();
-      
+
       if (vfsMaps.length != originalMaps.length) {
-        debugPrint('迁移验证失败: 地图数量不匹配 (原始: ${originalMaps.length}, VFS: ${vfsMaps.length})');
+        debugPrint(
+          '迁移验证失败: 地图数量不匹配 (原始: ${originalMaps.length}, VFS: ${vfsMaps.length})',
+        );
         return false;
       }
-      
+
       for (final originalMap in originalMaps) {
         final vfsMap = vfsMaps.firstWhere(
           (map) => map.title == originalMap.title,
           orElse: () => throw StateError('找不到地图: ${originalMap.title}'),
         );
-        
+
         if (!_mapsEqual(originalMap, vfsMap)) {
           debugPrint('迁移验证失败: 地图数据不匹配 - ${originalMap.title}');
           return false;
         }
       }
-      
+
       debugPrint('迁移验证成功: 所有地图数据完整');
       return true;
     } catch (e) {
@@ -82,9 +84,9 @@ class VfsMapDataMigrator {
   /// 比较两个地图是否相等（忽略ID）
   bool _mapsEqual(MapItem map1, MapItem map2) {
     return map1.title == map2.title &&
-           map1.version == map2.version &&
-           map1.layers.length == map2.layers.length &&
-           map1.legendGroups.length == map2.legendGroups.length;
+        map1.version == map2.version &&
+        map1.layers.length == map2.layers.length &&
+        map1.legendGroups.length == map2.legendGroups.length;
     // 这里可以添加更详细的比较逻辑
   }
 
@@ -93,7 +95,9 @@ class VfsMapDataMigrator {
     try {
       final maps = await _vfsService.getAllMaps();
       for (final map in maps) {
-        final mapId = map.id?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
+        final mapId =
+            map.id?.toString() ??
+            DateTime.now().millisecondsSinceEpoch.toString();
         await _vfsService.deleteMap(mapId);
       }
       debugPrint('VFS数据清理完成');

@@ -73,10 +73,11 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     }
 
     return Column(
-      children: [        // 添加便签按钮
+      children: [
+        // 添加便签按钮
         if (!widget.isPreviewMode) _buildAddButton(),
         const SizedBox(height: 8),
-          // 便签列表
+        // 便签列表
         Expanded(
           child: widget.isPreviewMode
               ? ListView.builder(
@@ -92,13 +93,13 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                   onReorder: (int oldIndex, int newIndex) {
                     widget.onStickyNotesReordered(oldIndex, newIndex);
                   },
-            buildDefaultDragHandles: false,
-            padding: const EdgeInsets.all(8),
-            itemBuilder: (context, index) {
-              final note = widget.stickyNotes[index];
-              return _buildStickyNoteItem(context, note, index);
-            },
-          ),
+                  buildDefaultDragHandles: false,
+                  padding: const EdgeInsets.all(8),
+                  itemBuilder: (context, index) {
+                    final note = widget.stickyNotes[index];
+                    return _buildStickyNoteItem(context, note, index);
+                  },
+                ),
         ),
       ],
     );
@@ -122,15 +123,21 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   }
 
   /// 构建便签项
-  Widget _buildStickyNoteItem(BuildContext context, StickyNote note, int index) {
+  Widget _buildStickyNoteItem(
+    BuildContext context,
+    StickyNote note,
+    int index,
+  ) {
     final isSelected = widget.selectedStickyNote?.id == note.id;
 
     return Container(
       key: ValueKey(note.id),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected 
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+        color: isSelected
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : null,
         borderRadius: BorderRadius.circular(8),
         border: isSelected
@@ -138,9 +145,15 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
             : null,
       ),
       child: GestureDetector(
-        onSecondaryTapDown: widget.isPreviewMode ? null : (details) {
-          _showStickyNoteContextMenu(context, note, details.globalPosition);
-        },
+        onSecondaryTapDown: widget.isPreviewMode
+            ? null
+            : (details) {
+                _showStickyNoteContextMenu(
+                  context,
+                  note,
+                  details.globalPosition,
+                );
+              },
         child: InkWell(
           onTap: () => _handleStickyNoteSelection(note),
           borderRadius: BorderRadius.circular(8),
@@ -168,17 +181,21 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                     // 可见性按钮
                     IconButton(
                       icon: Icon(
-                        note.isVisible ? Icons.visibility : Icons.visibility_off,
+                        note.isVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         size: 18,
                         color: note.isVisible ? null : Colors.grey,
                       ),
-                      onPressed: widget.isPreviewMode ? null : () {
-                        final updatedNote = note.copyWith(
-                          isVisible: !note.isVisible,
-                          updatedAt: DateTime.now(),
-                        );
-                        widget.onStickyNoteUpdated(updatedNote);
-                      },
+                      onPressed: widget.isPreviewMode
+                          ? null
+                          : () {
+                              final updatedNote = note.copyWith(
+                                isVisible: !note.isVisible,
+                                updatedAt: DateTime.now(),
+                              );
+                              widget.onStickyNoteUpdated(updatedNote);
+                            },
                       constraints: const BoxConstraints(),
                       padding: EdgeInsets.zero,
                       tooltip: '',
@@ -244,16 +261,15 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: note.backgroundColor.withAlpha((0.3 * 255).toInt()),
+                      color: note.backgroundColor.withAlpha(
+                        (0.3 * 255).toInt(),
+                      ),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Text(
                       note.content,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: note.textColor,
-                      ),
+                      style: TextStyle(fontSize: 12, color: note.textColor),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -325,8 +341,12 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                   min: 0.0,
                   max: 1.0,
                   divisions: 20,
-                  onChanged: widget.isPreviewMode ? null : (opacity) => _handleOpacityChange(note, opacity),
-                  onChangeEnd: widget.isPreviewMode ? null : (opacity) => _handleOpacityChangeEnd(note, opacity),
+                  onChanged: widget.isPreviewMode
+                      ? null
+                      : (opacity) => _handleOpacityChange(note, opacity),
+                  onChangeEnd: widget.isPreviewMode
+                      ? null
+                      : (opacity) => _handleOpacityChangeEnd(note, opacity),
                 ),
               ),
               const SizedBox(width: 3),
@@ -372,7 +392,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     // 设置新的定时器，延迟保存
     _opacityTimers[note.id] = Timer(const Duration(milliseconds: 300), () {
       final finalOpacity = _tempOpacityValues[note.id] ?? opacity;
-      
+
       // 更新实际数据
       final updatedNote = note.copyWith(
         opacity: finalOpacity,
@@ -401,7 +421,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                   note.backgroundImageData != null ? Icons.edit : Icons.upload,
                   size: 20,
                 ),
-                title: Text(note.backgroundImageData != null ? '更换背景图片' : '上传背景图片'),
+                title: Text(
+                  note.backgroundImageData != null ? '更换背景图片' : '上传背景图片',
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _handleImageUpload(note);
@@ -480,7 +502,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // 背景图片透明度
             Text('背景图片透明度: ${(note.backgroundImageOpacity * 100).round()}%'),
             Slider(
@@ -532,7 +554,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         // 根据背景色自动调整标题栏和文字颜色
         final titleBarColor = _adjustColorBrightness(selectedColor, -0.2);
         final textColor = _getContrastColor(selectedColor);
-        
+
         final updatedNote = note.copyWith(
           backgroundColor: selectedColor,
           titleBarColor: titleBarColor,
@@ -612,7 +634,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           value: 'collapse',
           child: Row(
             children: [
-              Icon(note.isCollapsed ? Icons.expand_more : Icons.expand_less, size: 16),
+              Icon(
+                note.isCollapsed ? Icons.expand_more : Icons.expand_less,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Text(note.isCollapsed ? '展开便签' : '折叠便签'),
             ],
@@ -649,7 +674,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         _moveToTop(note);
         break;
     }
-  }  /// 复制便签
+  }
+
+  /// 复制便签
   void _duplicateStickyNote(StickyNote note) {
     // TODO: 当前接口设计限制，复制功能需要在上层组件中实现
     // 这里先显示提示信息，实际复制逻辑需要在MapItem级别处理
@@ -671,7 +698,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     final maxZIndex = widget.stickyNotes
         .map((n) => n.zIndex)
         .fold(0, (prev, current) => prev > current ? prev : current);
-    
+
     final updatedNote = note.copyWith(
       zIndex: maxZIndex + 1,
       updatedAt: DateTime.now(),

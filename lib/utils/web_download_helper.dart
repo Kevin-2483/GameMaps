@@ -6,7 +6,7 @@ import 'dart:typed_data';
 /// 使用HTML5的download API实现文件下载
 class WebDownloadHelper {
   /// 下载文件到浏览器
-  /// 
+  ///
   /// [fileName] 文件名
   /// [data] 文件数据
   /// [mimeType] MIME类型
@@ -18,23 +18,22 @@ class WebDownloadHelper {
     try {
       // 创建Blob对象
       final blob = html.Blob([data], mimeType);
-      
+
       // 创建下载URL
       final url = html.Url.createObjectUrlFromBlob(blob);
-      
+
       // 创建隐藏的anchor元素
       final anchor = html.AnchorElement(href: url)
         ..setAttribute('download', fileName)
         ..style.display = 'none';
-      
+
       // 添加到DOM并触发点击
       html.document.body?.children.add(anchor);
       anchor.click();
-      
+
       // 清理：移除元素并释放URL
       html.document.body?.children.remove(anchor);
       html.Url.revokeObjectUrl(url);
-      
     } catch (e) {
       throw Exception('Web文件下载失败: $e');
     }

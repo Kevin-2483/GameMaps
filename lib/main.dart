@@ -33,12 +33,12 @@ void main() async {
 
   // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
-    // Initialize VFS system
+  // Initialize VFS system
   try {
     final vfsInitializer = VfsDatabaseInitializer();
     await vfsInitializer.initializeApplicationVfs();
     debugPrint('VFS系统初始化成功');
-    
+
     // Initialize legend service to ensure proper mounting
     // final legendService = LegendCompatibilityService();
     // await legendService.initialize();

@@ -71,7 +71,7 @@ class EraserRenderer {
           eraser,
           size,
         );
-        // print(doesEraserAffectElement);        
+        // print(doesEraserAffectElement);
         if (doesEraserAffectElement) {
           // *** 修改在这里：调用 getFinalEraserPath 并传入 triangleCut ***
           final Path singleEraserPath = getFinalEraserPath(
@@ -186,7 +186,8 @@ class EraserRenderer {
         }
 
         // 如果有三角形切割或曲率，需要更精确的检测
-        if (eraserCurvature > 0.0 || eraserTriangleCut != TriangleCutType.none) {
+        if (eraserCurvature > 0.0 ||
+            eraserTriangleCut != TriangleCutType.none) {
           // 检查元素矩形的四个角点是否有任何一个在橡皮擦的最终形状内
           final corners = [
             elementRect.topLeft,

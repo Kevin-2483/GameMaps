@@ -30,7 +30,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
   Offset? _resizeStartPosition;
   Size? _resizeStartSize;
   Offset? _dragStartNotePosition; // 记录拖拽开始时便签的位置
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -52,7 +52,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         children: [
           // 标题栏
           _buildTitleBar(),
-          
+
           // 内容区域（如果未折叠）
           if (!widget.note.isCollapsed) _buildContentArea(),
         ],
@@ -93,7 +93,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            
+
             // 折叠/展开按钮
             if (!widget.isPreviewMode)
               GestureDetector(
@@ -122,15 +122,16 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
           children: [
             // 背景图片（如果有）
             if (widget.note.hasBackgroundImage) _buildBackgroundImage(),
-            
+
             // 绘画元素
             if (widget.note.hasElements) _buildDrawingElements(),
-            
+
             // 文本内容
             if (widget.note.content.isNotEmpty) _buildTextContent(),
-            
+
             // 调整大小手柄
-            if (widget.isSelected && !widget.isPreviewMode) _buildResizeHandles(),
+            if (widget.isSelected && !widget.isPreviewMode)
+              _buildResizeHandles(),
           ],
         ),
       ),
@@ -168,9 +169,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 
     return Positioned.fill(
       child: CustomPaint(
-        painter: _StickyNoteElementsPainter(
-          elements: widget.note.elements,
-        ),
+        painter: _StickyNoteElementsPainter(elements: widget.note.elements),
       ),
     );
   }
@@ -195,7 +194,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
   /// 构建调整大小手柄
   Widget _buildResizeHandles() {
     const double handleSize = 16.0;
-    
+
     return Stack(
       children: [
         // 右下角调整手柄
@@ -220,35 +219,48 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
       ],
     );
   }
+
   /// 处理标题栏拖拽开始
   void _onTitleBarDragStart(DragStartDetails details) {
     _isDragging = true;
     _dragStartPosition = details.localPosition;
     _dragStartNotePosition = widget.note.position; // 记录开始位置
-  }  /// 处理标题栏拖拽更新
+  }
+
+  /// 处理标题栏拖拽更新
   void _onTitleBarDragUpdate(DragUpdateDetails details) {
-    if (!_isDragging || _dragStartPosition == null || _dragStartNotePosition == null) return;
+    if (!_isDragging ||
+        _dragStartPosition == null ||
+        _dragStartNotePosition == null)
+      return;
 
     // 计算拖动偏移量
     final delta = details.localPosition - _dragStartPosition!;
-    
+
     // 获取画布尺寸（与 MapCanvas 中的常量保持一致）
     const canvasSize = Size(1600, 1600);
-    
+
     // 将像素偏移量转换为相对坐标偏移量
     final relativeDelta = Offset(
       delta.dx / canvasSize.width,
       delta.dy / canvasSize.height,
     );
-    
+
     // 计算新的相对位置（基于拖拽开始时的位置）
     final newPosition = Offset(
-      (_dragStartNotePosition!.dx + relativeDelta.dx).clamp(0.0, 1.0 - widget.note.size.width),
-      (_dragStartNotePosition!.dy + relativeDelta.dy).clamp(0.0, 1.0 - widget.note.size.height),
+      (_dragStartNotePosition!.dx + relativeDelta.dx).clamp(
+        0.0,
+        1.0 - widget.note.size.width,
+      ),
+      (_dragStartNotePosition!.dy + relativeDelta.dy).clamp(
+        0.0,
+        1.0 - widget.note.size.height,
+      ),
     );
 
     _updateNotePosition(newPosition);
   }
+
   /// 处理标题栏拖拽结束
   void _onTitleBarDragEnd(DragEndDetails details) {
     _isDragging = false;
@@ -265,15 +277,24 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 
   /// 处理调整大小更新
   void _onResizeUpdate(DragUpdateDetails details) {
-    if (!_isResizing || _resizeStartPosition == null || _resizeStartSize == null) return;
+    if (!_isResizing ||
+        _resizeStartPosition == null ||
+        _resizeStartSize == null)
+      return;
 
     // 计算大小变化
     final delta = details.localPosition - _resizeStartPosition!;
     const canvasSize = Size(1600, 1600);
-    
+
     final newSize = Size(
-      (_resizeStartSize!.width + delta.dx / canvasSize.width).clamp(0.05, 0.5), // 最小5%，最大50%
-      (_resizeStartSize!.height + delta.dy / canvasSize.height).clamp(0.05, 0.5),
+      (_resizeStartSize!.width + delta.dx / canvasSize.width).clamp(
+        0.05,
+        0.5,
+      ), // 最小5%，最大50%
+      (_resizeStartSize!.height + delta.dy / canvasSize.height).clamp(
+        0.05,
+        0.5,
+      ),
     );
 
     _updateNoteSize(newSize);
@@ -318,9 +339,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 class _StickyNoteElementsPainter extends CustomPainter {
   final List<MapDrawingElement> elements;
 
-  _StickyNoteElementsPainter({
-    required this.elements,
-  });
+  _StickyNoteElementsPainter({required this.elements});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -370,7 +389,7 @@ class _StickyNoteElementsPainter extends CustomPainter {
           final rect = Rect.fromPoints(points[0], points[1]);
           canvas.drawRect(rect, paint);
         }
-        break;      // Note: circle and hollowCircle are not available in DrawingElementType enum
+        break; // Note: circle and hollowCircle are not available in DrawingElementType enum
       // These can be added if needed in the future
 
       case DrawingElementType.freeDrawing:

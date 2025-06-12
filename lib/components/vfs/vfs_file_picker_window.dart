@@ -743,6 +743,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       });
     }
   }
+
   /// 显示文件元数据
   Future<void> _showFileMetadata(VfsFileInfo file) async {
     await VfsFileMetadataDialog.show(context, file);
@@ -751,11 +752,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 打开文件
   Future<void> _openFile(VfsFileInfo file) async {
     try {
-      await VfsFileOpenerService.openFile(
-        context,
-        file.path,
-        fileInfo: file,
-      );
+      await VfsFileOpenerService.openFile(context, file.path, fileInfo: file);
     } catch (e) {
       _showErrorSnackBar('打开文件失败: $e');
       // 如果文件打开失败，回退到显示文件元数据
@@ -873,6 +870,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _showErrorSnackBar('导航失败: $e');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final isSelectionMode = widget.onFilesSelected != null;
@@ -1717,7 +1715,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       itemCount: files.length,
       itemBuilder: (context, index) {
         final file = files[index];
-        final isSelected = _selectedFiles.contains(file.path);        return ContextMenuWrapper(
+        final isSelected = _selectedFiles.contains(file.path);
+        return ContextMenuWrapper(
           menuBuilder: (context) => _buildFileContextMenu(file),
           child: _FileListItem(
             file: file,
@@ -1824,7 +1823,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   })
                 : null,
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,            onTap: () {
+            getFileIcon: _getFileIcon,
+            onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
@@ -1888,7 +1888,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 ? file.name
                 : '$_currentPath/${file.name}';
             _navigateToPath(newPath);
-          },        )
+          },
+        )
       else ...[
         // 在浏览模式下显示"打开"选项，在选择模式下显示"查看详情"
         if (widget.onFilesSelected == null)

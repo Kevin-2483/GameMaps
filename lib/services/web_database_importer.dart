@@ -38,6 +38,7 @@ class WebDatabaseImporter {
   static Future<void> importFromJson(Map<String, dynamic> data) async {
     await _importData(data);
   }
+
   /// 导入数据到数据库
   static Future<void> _importData(Map<String, dynamic> data) async {
     final mapService = VfsMapServiceFactory.createMapDatabaseService();
@@ -85,7 +86,8 @@ class WebDatabaseImporter {
 
   /// 创建示例数据（当没有导出数据时使用）
   static Future<void> _createSampleData() async {
-    print('WebDatabaseImporter: 创建示例数据');    final mapService = VfsMapServiceFactory.createMapDatabaseService();
+    print('WebDatabaseImporter: 创建示例数据');
+    final mapService = VfsMapServiceFactory.createMapDatabaseService();
 
     // 创建示例地图
     final sampleMap = MapItem(

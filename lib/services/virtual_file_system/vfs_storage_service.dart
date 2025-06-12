@@ -324,6 +324,7 @@ class VfsStorageService {
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
+
   /// 移动/重命名文件或目录
   Future<bool> move(String fromPath, String toPath) async {
     final fromVfsPath = VfsProtocol.parsePath(fromPath);
@@ -366,7 +367,8 @@ class VfsStorageService {
 
       if (sourceExists.isEmpty) {
         return false;
-      }      final isDirectory = sourceExists.first['is_directory'] as int == 1;
+      }
+      final isDirectory = sourceExists.first['is_directory'] as int == 1;
 
       if (isDirectory) {
         // 移动目录：获取所有需要移动的文件和目录
@@ -400,14 +402,14 @@ class VfsStorageService {
             // 这是子文件/目录，需要更新路径前缀
             if (fromVfsPath.path.isEmpty) {
               // 从根目录移动
-              newPath = toVfsPath.path.isEmpty 
-                  ? oldPath 
+              newPath = toVfsPath.path.isEmpty
+                  ? oldPath
                   : '${toVfsPath.path}/$oldPath';
             } else {
               // 从非根目录移动
               final relativePath = oldPath.substring(fromPrefix.length);
-              newPath = toVfsPath.path.isEmpty 
-                  ? relativePath 
+              newPath = toVfsPath.path.isEmpty
+                  ? relativePath
                   : '${toVfsPath.path}/$relativePath';
             }
             newFileName = newPath.split('/').last;
@@ -806,23 +808,23 @@ class VfsStorageService {
     if (sourcePath.isEmpty) {
       return false;
     }
-    
+
     // 如果目标路径为空（根目录），不是循环移动
     if (destinationPath.isEmpty) {
       return false;
     }
-    
+
     // 检查目标路径是否等于源路径
     if (destinationPath == sourcePath) {
       return true;
     }
-    
+
     // 检查目标路径是否在源路径内部
     // 例如：源路径 "folder1"，目标路径 "folder1/subfolder"
     if (destinationPath.startsWith('$sourcePath/')) {
       return true;
     }
-    
+
     return false;
   }
 }

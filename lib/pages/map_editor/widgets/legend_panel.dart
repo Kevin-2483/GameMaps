@@ -20,7 +20,8 @@ class LegendPanel extends StatelessWidget {
     required this.onLegendGroupDeleted,
     required this.onLegendGroupAdded,
     this.onLegendGroupTapped,
-  });  @override
+  });
+  @override
   Widget build(BuildContext context) {
     return legendGroups.isEmpty
         ? const Center(
@@ -33,10 +34,7 @@ class LegendPanel extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: legendGroups.length,
             itemBuilder: (context, index) {
-              return _buildLegendGroupCard(
-                context,
-                legendGroups[index],
-              );
+              return _buildLegendGroupCard(context, legendGroups[index]);
             },
           );
   }

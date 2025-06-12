@@ -15,7 +15,7 @@ class DrawingToolManager {
   List<Offset> _freeDrawingPath = [];
 
   // 绘制预览通知器
-  final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier = 
+  final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier =
       ValueNotifier(null);
   // 画布尺寸常量 - 与 map_canvas.dart 中的常量保持一致
   static const double kCanvasWidth = 1600.0;
@@ -25,14 +25,11 @@ class DrawingToolManager {
   Function(MapLayer)? onLayerUpdated;
   BuildContext? context;
 
-  DrawingToolManager({
-    this.onLayerUpdated,
-    this.context,
-  });
+  DrawingToolManager({this.onLayerUpdated, this.context});
   // Getters
-  ValueNotifier<DrawingPreviewData?> get drawingPreviewNotifier => 
+  ValueNotifier<DrawingPreviewData?> get drawingPreviewNotifier =>
       _drawingPreviewNotifier;
-  
+
   bool get isDrawing => _isDrawing;
   List<Offset> get freeDrawingPath => _freeDrawingPath;
   Offset? get currentDrawingStart => _currentDrawingStart;
@@ -93,7 +90,7 @@ class DrawingToolManager {
     // 自由绘制路径处理
     if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath.add(_currentDrawingEnd!);
-      
+
       // 对于自由绘制，使用路径信息更新预览
       _drawingPreviewNotifier.value = DrawingPreviewData(
         start: _freeDrawingPath.first,
@@ -203,8 +200,8 @@ class DrawingToolManager {
     final maxZIndex = selectedLayer.elements.isEmpty
         ? 0
         : selectedLayer.elements
-            .map((e) => e.zIndex)
-            .reduce((a, b) => a > b ? a : b);
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
 
     // 创建一个橡皮擦元素，用于遮挡下方的绘制元素
     final eraserElement = MapDrawingElement(
@@ -248,8 +245,8 @@ class DrawingToolManager {
     final maxZIndex = selectedLayer.elements.isEmpty
         ? 0
         : selectedLayer.elements
-            .map((e) => e.zIndex)
-            .reduce((a, b) => a > b ? a : b);
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
 
     // 创建自由绘制元素
     final element = MapDrawingElement(
@@ -294,8 +291,8 @@ class DrawingToolManager {
     final maxZIndex = selectedLayer.elements.isEmpty
         ? 0
         : selectedLayer.elements
-            .map((e) => e.zIndex)
-            .reduce((a, b) => a > b ? a : b);
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
 
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -421,8 +418,8 @@ class DrawingToolManager {
     final maxZIndex = selectedLayer.elements.isEmpty
         ? 0
         : selectedLayer.elements
-            .map((e) => e.zIndex)
-            .reduce((a, b) => a > b ? a : b);
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
 
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -460,13 +457,6 @@ class DrawingToolManager {
     _drawingPreviewNotifier.value = null; // 清除预览
   }
 
-  /// 获取相对于画布的正确坐标
-  Offset _getCanvasPosition(Offset localPosition) {
-    // localPosition 已经是相对于画布容器的坐标
-    // 对于绘制操作，需要限制在画布范围内
-    // 对于拖拽操作，不应该限制以避免偏移量计算错误
-    return localPosition;
-  }
   /// 专门用于绘制操作的坐标获取，会进行边界限制
   Offset _getClampedCanvasPosition(Offset localPosition) {
     final clampedX = localPosition.dx.clamp(0.0, kCanvasWidth);
@@ -483,10 +473,9 @@ class DrawingToolManager {
   /// 检查是否正在进行特定类型的绘制
   bool isDrawingType(DrawingElementType type) {
     final previewData = _drawingPreviewNotifier.value;
-    return _isDrawing && 
-           previewData != null && 
-           previewData.elementType == type;
+    return _isDrawing && previewData != null && previewData.elementType == type;
   }
+
   /// 获取当前绘制的预览数据
   DrawingPreviewData? getCurrentPreviewData() {
     return _drawingPreviewNotifier.value;

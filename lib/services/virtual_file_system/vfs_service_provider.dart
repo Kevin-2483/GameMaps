@@ -16,7 +16,6 @@ class VfsServiceProvider {
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final VfsStorageService _storage = VfsStorageService();
 
-
   /// 为组件注册专用存储空间
   void registerComponent(String componentName, {bool readOnly = false}) {
     _vfs.mount(
@@ -423,6 +422,7 @@ class VfsServiceProvider {
     final path = 'indexeddb://r6box/$collection/$dirPath';
     await _vfs.createDirectory(path, inheritancePolicy: inheritancePolicy);
   }
+
   /// 列出目录内容（带权限过滤）
   Future<List<VfsFileInfo>> listFilesWithPermissions(
     String collection, [

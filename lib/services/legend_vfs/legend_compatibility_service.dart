@@ -8,13 +8,14 @@ import 'legend_vfs_service.dart';
 /// 图例存储兼容性服务
 /// 提供与传统数据库服务相同的接口，但内部使用VFS存储
 class LegendCompatibilityService {
-  static final LegendCompatibilityService _instance = LegendCompatibilityService._internal();
+  static final LegendCompatibilityService _instance =
+      LegendCompatibilityService._internal();
   factory LegendCompatibilityService() => _instance;
   LegendCompatibilityService._internal();
-  
+
   final LegendVfsService _vfsService = LegendVfsService();
   bool _initialized = false;
-  
+
   /// 初始化服务
   // Future<void> initialize() async {
   //   if (!_initialized) {
@@ -26,7 +27,7 @@ class LegendCompatibilityService {
   /// 添加图例 (检查标题重复)
   Future<int> insertLegend(LegendItem legend) async {
     // await initialize();
-    
+
     // 检查是否已存在相同标题的图例
     final existing = await getLegendByTitle(legend.title);
     if (existing != null) {
@@ -42,7 +43,7 @@ class LegendCompatibilityService {
 
     // 不存在重复标题，直接插入
     await _vfsService.saveLegend(legend);
-    
+
     // 生成一个虚拟ID（基于标题哈希）
     return legend.title.hashCode.abs();
   }
@@ -58,31 +59,31 @@ class LegendCompatibilityService {
   Future<List<LegendItem>> getAllLegends() async {
     // await initialize();
     final legends = await _vfsService.getAllLegends();
-    
+
     // 为每个图例生成虚拟ID（基于标题哈希）
-    return legends.map((legend) => legend.copyWith(
-      id: legend.title.hashCode.abs(),
-    )).toList();
+    return legends
+        .map((legend) => legend.copyWith(id: legend.title.hashCode.abs()))
+        .toList();
   }
 
   /// 根据ID获取图例 (ID是基于标题的哈希值)
   Future<LegendItem?> getLegendById(int id) async {
     // await initialize();
     final legends = await getAllLegends();
-    
+
     for (final legend in legends) {
       if (legend.id == id) {
         return legend;
       }
     }
-    
+
     return null;
   }
 
   /// 更新图例
   Future<void> updateLegend(LegendItem legend) async {
     // await initialize();
-    
+
     // 使用更新的时间戳
     final updatedLegend = legend.copyWith(updatedAt: DateTime.now());
     await _vfsService.saveLegend(updatedLegend);
@@ -91,7 +92,7 @@ class LegendCompatibilityService {
   /// 删除图例
   Future<void> deleteLegend(int id) async {
     // await initialize();
-    
+
     // 根据ID找到对应的标题
     final legend = await getLegendById(id);
     if (legend != null) {
@@ -103,11 +104,11 @@ class LegendCompatibilityService {
   Future<LegendItem?> getLegendByTitle(String title) async {
     // await initialize();
     final legend = await _vfsService.getLegend(title);
-    
+
     if (legend != null) {
       return legend.copyWith(id: title.hashCode.abs());
     }
-    
+
     return null;
   }
 
@@ -133,7 +134,7 @@ class LegendCompatibilityService {
   Future<String?> exportDatabase({int? customVersion}) async {
     try {
       // await initialize();
-      
+
       // 获取所有图例，确保包含图像数据
       final legends = await getAllLegends();
       final dbVersion = customVersion ?? await getDatabaseVersion();
@@ -172,7 +173,7 @@ class LegendCompatibilityService {
   Future<bool> importDatabase() async {
     try {
       // await initialize();
-      
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
@@ -206,10 +207,10 @@ class LegendCompatibilityService {
   /// 获取存储统计信息
   Future<Map<String, dynamic>> getStorageStats() async {
     // await initialize();
-    
+
     final vfsInfo = await _vfsService.getStorageInfo();
     final legends = await getAllLegends();
-    
+
     // 计算总存储大小
     int totalImageSize = 0;
     for (final legend in legends) {
@@ -217,11 +218,13 @@ class LegendCompatibilityService {
         totalImageSize += legend.imageData!.length;
       }
     }
-    
+
     return {
       ...vfsInfo,
       'totalImageSize': totalImageSize,
-      'averageImageSize': legends.isNotEmpty ? totalImageSize / legends.length : 0,
+      'averageImageSize': legends.isNotEmpty
+          ? totalImageSize / legends.length
+          : 0,
       'legendsWithImages': legends.where((l) => l.hasImageData).length,
     };
   }
@@ -229,32 +232,34 @@ class LegendCompatibilityService {
   /// 验证数据完整性
   Future<Map<String, dynamic>> verifyDataIntegrity() async {
     // await initialize();
-    
+
     final legends = await getAllLegends();
     int validCount = 0;
     int invalidCount = 0;
     List<String> issues = [];
-    
+
     for (final legend in legends) {
       bool isValid = true;
-      
+
       // 检查必要字段
       if (legend.title.isEmpty) {
         issues.add('图例标题为空');
         isValid = false;
       }
-      
-      if (legend.centerX < 0 || legend.centerX > 1 || 
-          legend.centerY < 0 || legend.centerY > 1) {
+
+      if (legend.centerX < 0 ||
+          legend.centerX > 1 ||
+          legend.centerY < 0 ||
+          legend.centerY > 1) {
         issues.add('图例 "${legend.title}" 中心点坐标无效');
         isValid = false;
       }
-      
+
       if (legend.version <= 0) {
         issues.add('图例 "${legend.title}" 版本号无效');
         isValid = false;
       }
-      
+
       // 检查是否能重新加载
       try {
         final reloaded = await _vfsService.getLegend(legend.title);
@@ -266,14 +271,14 @@ class LegendCompatibilityService {
         issues.add('图例 "${legend.title}" 加载错误: $e');
         isValid = false;
       }
-      
+
       if (isValid) {
         validCount++;
       } else {
         invalidCount++;
       }
     }
-    
+
     return {
       'total': legends.length,
       'valid': validCount,

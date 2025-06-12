@@ -13,7 +13,7 @@ class VfsMapCacheManager {
   final Map<String, List<MapLayer>> _layerCache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
   final Duration _cacheExpiry = const Duration(minutes: 30);
-  
+
   /// 获取缓存的地图
   MapItem? getCachedMap(String mapId) {
     if (_isCacheExpired(mapId)) {
@@ -75,7 +75,9 @@ class VfsMapCacheManager {
       'layerCacheSize': _layerCache.length,
       'totalCacheEntries': _cacheTimestamps.length,
       'expiredEntries': _cacheTimestamps.values
-          .where((timestamp) => DateTime.now().difference(timestamp) > _cacheExpiry)
+          .where(
+            (timestamp) => DateTime.now().difference(timestamp) > _cacheExpiry,
+          )
           .length,
     };
   }
@@ -97,24 +99,23 @@ class VfsMapIntegrityValidator {
   /// 验证地图完整性
   Future<ValidationResult> validateMap(String mapId) async {
     final result = ValidationResult(mapId);
-    
+
     try {
       // 1. 验证元数据文件存在
       await _validateMetaFile(mapId, result);
-      
+
       // 2. 验证图层结构
       await _validateLayerStructure(mapId, result);
-      
+
       // 3. 验证图例组结构
       await _validateLegendStructure(mapId, result);
-      
+
       // 4. 验证资产引用
       await _validateAssetReferences(mapId, result);
-      
     } catch (e) {
       result.addError('验证过程出错: $e');
     }
-    
+
     return result;
   }
 
@@ -124,16 +125,22 @@ class VfsMapIntegrityValidator {
       _mapsCollection,
       '$mapId.mapdata/meta.json',
     );
-    
+
     final metaData = await _storageService.readFile(metaPath);
     if (metaData == null) {
       result.addError('元数据文件不存在: meta.json');
       return;
     }
-      try {
+    try {
       final metaJson = jsonDecode(utf8.decode(metaData as List<int>));
-      final requiredFields = ['id', 'title', 'version', 'createdAt', 'updatedAt'];
-      
+      final requiredFields = [
+        'id',
+        'title',
+        'version',
+        'createdAt',
+        'updatedAt',
+      ];
+
       for (final field in requiredFields) {
         if (!metaJson.containsKey(field)) {
           result.addWarning('元数据缺少必需字段: $field');
@@ -144,15 +151,24 @@ class VfsMapIntegrityValidator {
     }
   }
 
-  Future<void> _validateLayerStructure(String mapId, ValidationResult result) async {
+  Future<void> _validateLayerStructure(
+    String mapId,
+    ValidationResult result,
+  ) async {
     // TODO: 实现图层结构验证
   }
 
-  Future<void> _validateLegendStructure(String mapId, ValidationResult result) async {
+  Future<void> _validateLegendStructure(
+    String mapId,
+    ValidationResult result,
+  ) async {
     // TODO: 实现图例结构验证
   }
 
-  Future<void> _validateAssetReferences(String mapId, ValidationResult result) async {
+  Future<void> _validateAssetReferences(
+    String mapId,
+    ValidationResult result,
+  ) async {
     // TODO: 实现资产引用验证
   }
 }
@@ -162,15 +178,15 @@ class ValidationResult {
   final String mapId;
   final List<String> errors = [];
   final List<String> warnings = [];
-  
+
   ValidationResult(this.mapId);
-  
+
   void addError(String error) => errors.add(error);
   void addWarning(String warning) => warnings.add(warning);
-  
+
   bool get isValid => errors.isEmpty;
   bool get hasWarnings => warnings.isNotEmpty;
-  
+
   @override
   String toString() {
     return 'ValidationResult(mapId: $mapId, errors: ${errors.length}, warnings: ${warnings.length})';
@@ -192,22 +208,25 @@ class VfsMapBackupService {
       final map = await _mapService.getMapById(mapId);
       if (map == null) {
         throw Exception('地图不存在: $mapId');
-      }      // 导出地图数据为JSON
+      } // 导出地图数据为JSON
       final backupData = {
         'version': '1.0.0',
         'mapId': mapId,
         'createdAt': DateTime.now().toIso8601String(),
         'map': map.toJson(),
-      };      // 使用存储服务保存备份数据
+      }; // 使用存储服务保存备份数据
       final backupJson = jsonEncode(backupData);
       // TODO: 实现保存逻辑 - 可以使用 _storageService 或文件系统API
       // await _storageService.writeFile(backupPath, utf8.encode(backupJson));
-      debugPrint('地图备份创建完成: $mapId -> $backupPath (${backupJson.length} bytes)');
+      debugPrint(
+        '地图备份创建完成: $mapId -> $backupPath (${backupJson.length} bytes)',
+      );
     } catch (e) {
       debugPrint('创建地图备份失败: $e');
       rethrow;
     }
   }
+
   /// 从备份恢复地图
   Future<void> restoreFromBackup(String backupPath, String newMapId) async {
     try {
@@ -232,17 +251,18 @@ class VfsMapBackupService {
       // 收集所有引用的资产
       final assetHashes = <String>{};
       // TODO: 扫描地图中的所有资产引用
-        // 创建自包含的地图包
+      // 创建自包含的地图包
       final bundle = <String, dynamic>{
         'version': '1.0.0',
         'map': map.toJson(),
         'assets': <String, String>{}, // 资产数据的Base64编码
-      };      // 添加资产数据
+      }; // 添加资产数据
       final assets = bundle['assets'] as Map<String, String>;
       for (final hash in assetHashes) {
         final assetData = await _mapService.getAsset(map.title, hash);
         if (assetData != null) {
-          assets[hash] = base64Encode(assetData);        }
+          assets[hash] = base64Encode(assetData);
+        }
       }
 
       debugPrint('地图包导出完成: $mapId -> $exportPath');

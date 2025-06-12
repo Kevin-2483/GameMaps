@@ -78,8 +78,10 @@ class _MapEditorContent extends StatefulWidget {
 class _MapEditorContentState extends State<_MapEditorContent> {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
-  final MapDatabaseService _mapDatabaseService = VfsMapServiceFactory.createMapDatabaseService();
-  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService();
+  final MapDatabaseService _mapDatabaseService =
+      VfsMapServiceFactory.createMapDatabaseService();
+  final VfsMapService _vfsMapService =
+      VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
@@ -94,7 +96,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
   TriangleCutType _selectedTriangleCut = TriangleCutType.none; // 默认无三角形切割
   String? _selectedElementId; // 当前选中的元素ID
-  
+
   // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
   bool _isLayerPanelCollapsed = false;
@@ -134,7 +136,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   String? _initialSelectedLegendItemId; // 初始选中的图例项ID  // 撤销/重做历史记录管理
   final List<MapItem> _undoHistory = [];
   final List<MapItem> _redoHistory = [];
-    // 版本管理
+  // 版本管理
   MapVersionManager? _versionManager;
   VersionSessionManager? _versionSessionManager;
   bool _hasUnsavedVersionChanges = false;
@@ -143,12 +145,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final provider = context.read<UserPreferencesProvider>();
     return provider.mapEditor.undoHistoryLimit;
   }
+
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
-
 
   @override
   void initState() {
@@ -188,6 +190,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
     });
   }
+
   Future<void> _initializeMap() async {
     setState(() => _isLoading = true);
     try {
@@ -195,16 +198,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       if (widget.mapItem != null) {
         _currentMap = widget.mapItem!;
       } else if (widget.mapTitle != null) {
-        final loadedMap = await _mapDatabaseService.getMapByTitle(widget.mapTitle!);
+        final loadedMap = await _mapDatabaseService.getMapByTitle(
+          widget.mapTitle!,
+        );
         if (loadedMap == null) {
           throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
         }
-        _currentMap = loadedMap;      } else {
+        _currentMap = loadedMap;
+      } else {
         throw Exception('mapItem 和 mapTitle 都为空');
-      }      // 初始化版本管理器
+      } // 初始化版本管理器
       final mapTitle = _currentMap!.title;
       _versionManager = MapVersionManager(mapTitle: mapTitle);
-      
+
       // 初始化版本数据
       await _initializeVersions();
 
@@ -226,6 +232,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       setState(() => _isLoading = false);
     }
   }
+
   /// 预加载所有图层的图片
   /// 在地图初始化完成后调用，确保所有图片区域元素立即显示而不是显示蓝色"解码中"占位符
   void _preloadAllLayerImages() {
@@ -239,7 +246,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     });
   }
 
-  // 撤销历史记录管理方法  
+  // 撤销历史记录管理方法
   void _saveToUndoHistory() {
     if (_currentMap == null) return;
 
@@ -252,26 +259,28 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 创建地图的深拷贝，避免引用问题
     final deepCopiedMap = _currentMap!.copyWith(
       layers: _currentMap!.layers.map((layer) => layer.copyWith()).toList(),
-      legendGroups: _currentMap!.legendGroups.map((group) => group.copyWith()).toList(),
+      legendGroups: _currentMap!.legendGroups
+          .map((group) => group.copyWith())
+          .toList(),
     );
-    
+
     // 保存当前状态到撤销历史
     _undoHistory.add(deepCopiedMap);
-    
+
     // 同时保存到版本会话管理器
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       _versionSessionManager!.addToUndoHistory(currentVersionId, deepCopiedMap);
     }
-    
+
     // 清空重做历史，因为新的操作会使重做历史失效
     _redoHistory.clear();
     // 限制历史记录数量
     if (_undoHistory.length > _maxUndoHistory) {
       _undoHistory.removeAt(0);
     }
-
   }
+
   void _undo() {
     if (_undoHistory.isEmpty || _currentMap == null) return;
 
@@ -279,7 +288,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final undoResult = _versionSessionManager!.undo(currentVersionId);
-      
+
       if (undoResult != null) {
         setState(() {
           // 将当前状态保存到重做历史
@@ -292,7 +301,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
           // 使用会话管理器返回的撤销结果
           _currentMap = undoResult;
-          
+
           // 同步本地撤销历史
           if (_undoHistory.isNotEmpty) {
             _undoHistory.removeLast();
@@ -318,7 +327,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           //：更新显示顺序以触发MapCanvas重建和缓存清理
           _updateDisplayOrderAfterLayerChange();
         });
-        
+
         //：强制触发图片缓存清理和重新预加载
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -371,6 +380,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
+
   void _redo() {
     if (_redoHistory.isEmpty || _currentMap == null) return;
 
@@ -378,7 +388,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final redoResult = _versionSessionManager!.redo(currentVersionId);
-      
+
       if (redoResult != null) {
         setState(() {
           // 将当前状态保存到撤销历史
@@ -391,7 +401,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
           // 使用会话管理器返回的重做结果
           _currentMap = redoResult;
-          
+
           // 同步本地重做历史
           if (_redoHistory.isNotEmpty) {
             _redoHistory.removeLast();
@@ -416,7 +426,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           //：更新显示顺序以触发MapCanvas重建和缓存清理
           _updateDisplayOrderAfterLayerChange();
         });
-        
+
         //：强制触发图片缓存清理和重新预加载
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -467,27 +477,33 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
+
   bool get _canUndo {
     // 优先检查版本会话管理器的撤销历史
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
-      final undoHistory = _versionSessionManager!.getUndoHistory(currentVersionId);
+      final undoHistory = _versionSessionManager!.getUndoHistory(
+        currentVersionId,
+      );
       return undoHistory.isNotEmpty;
     }
     // 备用：检查本地撤销历史
     return _undoHistory.isNotEmpty;
   }
-  
+
   bool get _canRedo {
     // 优先检查版本会话管理器的重做历史
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
-      final redoHistory = _versionSessionManager!.getRedoHistory(currentVersionId);
+      final redoHistory = _versionSessionManager!.getRedoHistory(
+        currentVersionId,
+      );
       return redoHistory.isNotEmpty;
     }
     // 备用：检查本地重做历史
     return _redoHistory.isNotEmpty;
   }
+
   // 删除指定图层中的绘制元素
   void _deleteElement(String elementId) {
     if (_selectedLayer == null) return;
@@ -621,7 +637,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         // 更新显示顺序
         _updateDisplayOrderAfterLayerChange();
       }
-    });  }
+    });
+  }
+
   void _onLayerSelected(MapLayer layer) {
     setState(() {
       _selectedLayer = layer;
@@ -804,6 +822,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool get _hasNoLayerSelected {
     return _selectedLayer == null && _selectedLayerGroup == null;
   }
+
   List<MapLayer> get _layersForDisplay {
     if (_displayOrderLayers.isEmpty && _currentMap != null) {
       // 如果显示顺序列表为空，初始化为正常顺序
@@ -812,7 +831,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
     return _displayOrderLayers;
   }
-  // 修改所有涉及图层更新的方法，确保同步更新显示顺序  
+
+  // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
 
@@ -836,8 +856,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _updateDisplayOrderAfterLayerChange();
       }
     });
-
-    
   }
 
   void _reorderLayers(int oldIndex, int newIndex) {
@@ -1093,7 +1111,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           .toList();
       _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
     });
-  }  void _updateLegendGroup(LegendGroup updatedGroup) {
+  }
+
+  void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
@@ -1108,20 +1128,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
       }
     });
+  } // 处理透明度预览
 
-  }// 处理透明度预览
   void _handleOpacityPreview(String layerId, double opacity) {
     // 只更新预览状态，不触发完整重绘
     _previewOpacityValues[layerId] = opacity;
 
-    
     // 使用优化的setState，避免全量重绘
     if (mounted) {
       setState(() {
         // 只更新透明度预览值
       });
     }
-  }// 显示图层图例绑定抽屉
+  } // 显示图层图例绑定抽屉
 
   void _showLayerLegendBindingDrawer(
     MapLayer layer,
@@ -1236,6 +1255,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           : legendItemId; // 空字符串表示取消选中
     });
   }
+
   // 处理绘制工具预览
   void _handleDrawingToolPreview(DrawingElementType? tool) {
     setState(() {
@@ -1292,6 +1312,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _imageBufferFit = BoxFit.contain;
     });
   }
+
   Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
 
@@ -1319,7 +1340,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       // 尝试序列化数据以检查是否有格式问题
       final databaseData = updatedMap.toDatabase();
       print('数据库数据准备完成，字段数量: ${databaseData.keys.length}');
-      
+
       // 如果有版本管理器，需要保存所有版本的数据
       if (_versionManager != null) {
         // 首先更新当前版本的数据
@@ -1329,14 +1350,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         // 保存所有版本的数据到持久存储
         await _saveAllVersionsToStorage();
         print('所有版本数据已保存到持久存储');
-        
+
         _hasUnsavedVersionChanges = false;
       } else {
         // 没有版本管理器时，直接保存当前地图
         await _mapDatabaseService.updateMap(updatedMap);
         print('单版本地图保存完成');
       }
-      
+
       print('地图保存成功完成');
       _showSuccessSnackBar('地图保存成功');
 
@@ -1351,32 +1372,34 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       setState(() => _isLoading = false);
     }
   }
+
   // 版本管理相关方法  /// 初始化版本管理
   Future<void> _initializeVersions() async {
     if (_versionManager == null || _currentMap == null) return;
-    
+
     try {
       // 初始化版本会话管理器
       _versionSessionManager = VersionSessionManager(
         mapTitle: _currentMap!.title,
         maxUndoHistory: _maxUndoHistory,
       );
-      
+
       // 确保默认版本存在并包含当前地图数据
       _versionManager!.initializeDefault();
       _versionManager!.updateVersionData('default', _currentMap!);
-      
+
       // 初始化默认版本的会话状态
       _versionSessionManager!.initializeVersionSession('default', _currentMap!);
-      
+
       print('版本管理已初始化，默认版本已设置');
-      
+
       // 加载已保存的版本
       await _loadExistingVersions();
-      
+
       // 如果有之前的当前版本，恢复到该版本
       final lastCurrentVersion = _versionSessionManager!.currentVersionId;
-      if (lastCurrentVersion != null && _versionManager!.hasVersion(lastCurrentVersion)) {
+      if (lastCurrentVersion != null &&
+          _versionManager!.hasVersion(lastCurrentVersion)) {
         _restoreVersionSession(lastCurrentVersion);
       }
     } catch (e) {
@@ -1392,52 +1415,60 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     try {
       final mapTitle = _currentMap!.title;
       print('开始加载现有版本 [地图: $mapTitle]');
-      
+
       // 获取VFS中存储的所有版本
       final storedVersions = await _vfsMapService.getMapVersions(mapTitle);
       print('在存储中找到版本: $storedVersions');
-      
+
       for (final versionId in storedVersions) {
         if (versionId == 'default') {
           // 默认版本已经在初始化时处理，跳过
           continue;
         }
-        
+
         try {
           print('加载版本数据: $versionId');
-          
+
           // 加载图层数据
           final layers = await _vfsMapService.getMapLayers(mapTitle, versionId);
-          
-          // 加载图例组数据  
-          final legendGroups = await _vfsMapService.getMapLegendGroups(mapTitle, versionId);
-          
+
+          // 加载图例组数据
+          final legendGroups = await _vfsMapService.getMapLegendGroups(
+            mapTitle,
+            versionId,
+          );
+
           // 构建版本的地图数据
           final versionMapData = _currentMap!.copyWith(
             layers: layers,
             legendGroups: legendGroups,
             updatedAt: DateTime.now(),
-          );          // 创建版本并添加到版本管理器
-          final displayName = await _getVersionDisplayName(versionId); // 生成友好的显示名称
+          ); // 创建版本并添加到版本管理器
+          final displayName = await _getVersionDisplayName(
+            versionId,
+          ); // 生成友好的显示名称
           final version = _versionManager!.createVersionFromData(
             versionId,
             displayName,
             versionMapData,
           );
-          
+
           // 为新加载的版本初始化会话状态
           if (_versionSessionManager != null) {
-            _versionSessionManager!.initializeVersionSession(versionId, versionMapData);
+            _versionSessionManager!.initializeVersionSession(
+              versionId,
+              versionMapData,
+            );
           }
-          
+
           print('成功加载版本: ${version.name} (ID: ${version.id})');
         } catch (e) {
           print('加载版本 $versionId 失败: $e');
         }
       }
-      
+
       print('版本加载完成，总共 ${_versionManager!.versions.length} 个版本');
-      
+
       // 刷新UI显示版本列表
       if (mounted) {
         setState(() {
@@ -1448,16 +1479,20 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       print('加载现有版本失败: $e');
     }
   }
+
   /// 为版本ID生成友好的显示名称
   Future<String> _getVersionDisplayName(String versionId) async {
     if (versionId == 'default') {
       return '默认版本';
     }
-    
+
     if (_currentMap != null) {
       try {
         // 优先尝试从版本元数据获取存储的名称
-        final storedName = await _vfsMapService.getVersionName(_currentMap!.title, versionId);
+        final storedName = await _vfsMapService.getVersionName(
+          _currentMap!.title,
+          versionId,
+        );
         if (storedName != null && storedName.isNotEmpty) {
           return storedName;
         }
@@ -1465,7 +1500,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         print('获取版本名称失败 [$versionId]: $e');
       }
     }
-    
+
     // 如果没有存储的名称，尝试从时间戳格式的版本ID提取时间
     if (versionId.startsWith('version_')) {
       final timestampStr = versionId.replaceFirst('version_', '');
@@ -1475,48 +1510,50 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         return '版本 ${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
       }
     }
-    
+
     // 默认使用版本ID作为名称
     return '版本 $versionId';
-  }  /// 创建新版本
+  }
+
+  /// 创建新版本
   void _createVersion(String name) async {
     if (_versionManager == null || _currentMap == null) return;
-    
+
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
-    
+
     // 关键修复：在创建新版本和切换之前，先保存当前版本的会话状态
     if (_versionSessionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
-      
+
       // 更新当前版本的会话数据
       _versionSessionManager!.updateVersionData(
-        currentVersionId, 
-        _currentMap!, 
-        markAsChanged: _hasUnsavedVersionChanges
+        currentVersionId,
+        _currentMap!,
+        markAsChanged: _hasUnsavedVersionChanges,
       );
-      
+
       // 保存当前撤销/重做历史到会话管理器
       for (final undoItem in _undoHistory) {
         _versionSessionManager!.addToUndoHistory(currentVersionId, undoItem);
       }
-      
+
       print('创建新版本前，当前版本会话状态已保存 [版本: $currentVersionId]');
     }
-    
+
     setState(() {
       final newVersion = _versionManager!.createVersion(name, _currentMap!);
       _versionManager!.switchToVersion(newVersion.id);
       _hasUnsavedVersionChanges = false; // 新版本创建时数据已保存到内存
     });
-    
+
     // 保存版本名称到VFS元数据
     try {
       final currentVersion = _versionManager!.currentVersion;
       if (currentVersion != null) {
         await _vfsMapService.saveVersionMetadata(
-          _currentMap!.title, 
-          currentVersion.id, 
+          _currentMap!.title,
+          currentVersion.id,
           currentVersion.name,
           createdAt: currentVersion.createdAt,
           updatedAt: currentVersion.updatedAt,
@@ -1527,46 +1564,50 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       print('保存版本元数据失败: $e');
       // 不影响主流程，只是记录错误
     }
-    
+
     print('新版本已创建: ${_versionManager!.currentVersionId}');
     _showSuccessSnackBar('版本 "$name" 已创建');
-  }/// 切换版本
+  }
+
+  /// 切换版本
   void _switchVersion(String versionId) {
-    if (_versionManager == null || versionId == _versionManager!.currentVersionId) {
+    if (_versionManager == null ||
+        versionId == _versionManager!.currentVersionId) {
       return;
     }
-    
+
     // 保存当前版本的会话状态
     if (_versionSessionManager != null && _currentMap != null) {
       final currentVersionId = _versionManager!.currentVersionId;
-      
+
       // 更新当前版本的会话数据
       _versionSessionManager!.updateVersionData(
-        currentVersionId, 
-        _currentMap!, 
-        markAsChanged: _hasUnsavedVersionChanges
+        currentVersionId,
+        _currentMap!,
+        markAsChanged: _hasUnsavedVersionChanges,
       );
-      
+
       // 保存当前撤销/重做历史到会话管理器
       for (final undoItem in _undoHistory) {
         _versionSessionManager!.addToUndoHistory(currentVersionId, undoItem);
       }
-      
+
       print('当前版本会话状态已保存 [版本: $currentVersionId]');
     }
-    
+
     // 恢复目标版本的会话状态
     _restoreVersionSession(versionId);
-    
-    
+
     _showSuccessSnackBar('已切换到版本 "${_versionManager!.currentVersion?.name}"');
-  }/// 删除版本
+  }
+
+  /// 删除版本
   Future<void> _deleteVersion(String versionId) async {
     if (_versionManager == null || _currentMap == null) return;
-    
+
     final version = _versionManager!.getVersion(versionId);
     if (version == null) return;
-    
+
     try {
       // 如果要删除的是当前版本，需要先切换到另一个版本
       if (versionId == _versionManager!.currentVersionId) {
@@ -1574,41 +1615,45 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         final availableVersions = _versionManager!.versions
             .where((v) => v.id != versionId)
             .toList();
-        
+
         if (availableVersions.isEmpty) {
           _showErrorSnackBar('无法删除：这是唯一的版本');
           return;
         }
-        
+
         // 优先切换到默认版本，如果默认版本就是要删除的版本，则切换到第一个可用版本
         final targetVersion = availableVersions.firstWhere(
           (v) => v.id == 'default',
           orElse: () => availableVersions.first,
         );
-        
+
         print('正在切换到版本 "${targetVersion.name}" 以便删除当前版本');
         _versionManager!.switchToVersion(targetVersion.id);
-        
+
         // 更新UI显示新的当前版本数据
-        final targetVersionData = _versionManager!.getVersionData(targetVersion.id);
+        final targetVersionData = _versionManager!.getVersionData(
+          targetVersion.id,
+        );
         if (targetVersionData != null) {
           setState(() {
             _currentMap = targetVersionData;
             _hasUnsavedVersionChanges = false;
-            
+
             // 重置选择状态
-            _selectedLayer = _currentMap!.layers.isNotEmpty ? _currentMap!.layers.first : null;
+            _selectedLayer = _currentMap!.layers.isNotEmpty
+                ? _currentMap!.layers.first
+                : null;
             _selectedLayerGroup = null;
             _selectedElementId = null;
-            
+
             // 更新显示顺序
             _updateDisplayOrderAfterLayerChange();
           });
         }
       }
-        // 删除VFS存储中的版本数据和元数据
+      // 删除VFS存储中的版本数据和元数据
       print('开始删除版本 "${version.name}" 的存储数据...');
-      
+
       // 1. 删除VFS中的版本数据
       try {
         await _vfsMapService.deleteMapVersion(_currentMap!.title, versionId);
@@ -1617,22 +1662,25 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         print('删除VFS版本数据失败: $e');
         // 如果删除VFS数据失败，仍然继续删除元数据
       }
-      
+
       // 2. 删除版本元数据
       try {
-        await _vfsMapService.deleteVersionMetadata(_currentMap!.title, versionId);
+        await _vfsMapService.deleteVersionMetadata(
+          _currentMap!.title,
+          versionId,
+        );
         print('版本元数据删除成功: $versionId');
       } catch (e) {
         print('删除版本元数据失败: $e');
         // 元数据删除失败不影响主流程
       }
-      
+
       // 3. 删除版本会话状态
       if (_versionSessionManager != null) {
         _versionSessionManager!.removeVersionSession(versionId);
         print('版本会话状态已清除: $versionId');
       }
-      
+
       // 4. 最后从内存中删除版本
       if (_versionManager!.deleteVersion(versionId)) {
         setState(() {
@@ -1659,23 +1707,30 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     try {
       final mapTitle = _currentMap!.title;
       print('开始保存所有版本到持久存储 [地图: $mapTitle]');
-      
+
       // 获取所有版本
       final versions = _versionManager!.versions;
       print('找到 ${versions.length} 个版本需要保存');
-      
+
       for (final version in versions) {
         final versionData = version.mapData;
         if (versionData != null) {
           print('保存版本 "${version.name}" (ID: ${version.id}) 到持久存储');
-          
+
           // 为每个版本创建VFS存储的版本目录
           if (version.id != 'default') {
             // 非默认版本需要先确保版本目录存在
-            final versionExists = await _vfsMapService.mapVersionExists(mapTitle, version.id);
+            final versionExists = await _vfsMapService.mapVersionExists(
+              mapTitle,
+              version.id,
+            );
             if (!versionExists) {
               print('创建新版本目录: ${version.id}');
-              await _vfsMapService.createMapVersion(mapTitle, version.id, 'default');
+              await _vfsMapService.createMapVersion(
+                mapTitle,
+                version.id,
+                'default',
+              );
             }
           }
           // 只在第一个版本时保存基础地图元数据
@@ -1683,23 +1738,23 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             // 对于默认版本，只保存地图的基础元数据
             await _vfsMapService.updateMapMeta(mapTitle, versionData);
           }
-          
+
           // 保存图层数据到对应版本
           for (final layer in versionData.layers) {
             await _vfsMapService.saveLayer(mapTitle, layer, version.id);
           }
-          
+
           // 保存图例组数据到对应版本
           for (final group in versionData.legendGroups) {
             await _vfsMapService.saveLegendGroup(mapTitle, group, version.id);
           }
-          
+
           print('版本 "${version.name}" 保存完成');
         } else {
           print('版本 "${version.name}" 没有地图数据，跳过');
         }
       }
-      
+
       print('所有版本数据已成功保存到持久存储');
     } catch (e, stackTrace) {
       print('保存所有版本到持久存储时发生错误: $e');
@@ -1731,11 +1786,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
     }
   }
+
   // 退出确认对话框
   Future<bool> _showExitConfirmDialog() async {
     // 无论是否有未保存的更改，都先保存会话状态
 
-    
     if (!_hasUnsavedChanges || widget.isPreviewMode || kIsWeb) {
       return true; // 如果没有未保存更改或在预览模式，直接允许退出
     }
@@ -1769,14 +1824,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     return result ?? false;
-  }// 处理工具栏自动关闭逻辑
+  } // 处理工具栏自动关闭逻辑
 
   void _handlePanelToggle(String panelType) {
     // 记录哪些面板状态发生了变化
     Set<String> changedPanels = {panelType};
 
     setState(() {
-      switch (panelType) {        case 'drawing':
+      switch (panelType) {
+        case 'drawing':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
@@ -1807,7 +1863,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             changedPanels.add('stickyNote');
           }
           _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
-          break;case 'legend':
+          break;
+        case 'legend':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
@@ -1843,11 +1900,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     });
   }
 
-    /// 构建图层面板的副标题
+  /// 构建图层面板的副标题
   String _buildLayerPanelSubtitle() {
     final hasSelectedLayer = _selectedLayer != null;
-    final hasSelectedGroup = _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
-    
+    final hasSelectedGroup =
+        _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
+
     if (hasSelectedLayer && hasSelectedGroup) {
       // 既选中图层又选中图层组
       return '图层: ${_selectedLayer!.name} | 组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}';
@@ -1872,14 +1930,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
         case 'layer':
           _isLayerPanelAutoClose = value;
-          break;        case 'legend':
+          break;
+        case 'legend':
           _isLegendPanelAutoClose = value;
           break;
         case 'stickyNote':
           _isStickyNotePanelAutoClose = value;
           break;
       }
-    });    // 保存到用户首选项
+    }); // 保存到用户首选项
     if (mounted) {
       final prefsProvider = context.read<UserPreferencesProvider>();
       prefsProvider.updateLayout(
@@ -1911,9 +1970,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           },
           child: Focus(
             autofocus: true,
-            onKey: _handleKeyEvent,            child: Scaffold(
+            onKey: _handleKeyEvent,
+            child: Scaffold(
               appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(kToolbarHeight + 50), // 增加高度以容纳版本标签栏
+                preferredSize: const Size.fromHeight(
+                  kToolbarHeight + 50,
+                ), // 增加高度以容纳版本标签栏
                 child: AppBar(
                   title: Text(
                     widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor,
@@ -1942,7 +2004,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                               children: [
                                 Text('标题: ${_currentMap?.title ?? "未知"}'),
                                 Text('版本: v${_currentMap?.version ?? "0"}'),
-                                Text('图层数量: ${_currentMap?.layers.length ?? 0}'),
+                                Text(
+                                  '图层数量: ${_currentMap?.layers.length ?? 0}',
+                                ),
                                 Text(
                                   '图例组数量: ${_currentMap?.legendGroups.length ?? 0}',
                                 ),
@@ -1964,19 +2028,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       tooltip: '地图信息',
                     ),
                   ],
-                  bottom: _versionManager != null 
-                    ? PreferredSize(
-                        preferredSize: const Size.fromHeight(50),
-                        child: VersionTabBar(
-                          versions: _versionManager!.versions,
-                          currentVersionId: _versionManager!.currentVersionId,
-                          onVersionSelected: _switchVersion,
-                          onVersionCreated: _createVersion,
-                          onVersionDeleted: _deleteVersion,
-                          isPreviewMode: widget.isPreviewMode,
-                        ),
-                      )
-                    : null,
+                  bottom: _versionManager != null
+                      ? PreferredSize(
+                          preferredSize: const Size.fromHeight(50),
+                          child: VersionTabBar(
+                            versions: _versionManager!.versions,
+                            currentVersionId: _versionManager!.currentVersionId,
+                            onVersionSelected: _switchVersion,
+                            onVersionCreated: _createVersion,
+                            onVersionDeleted: _deleteVersion,
+                            isPreviewMode: widget.isPreviewMode,
+                          ),
+                        )
+                      : null,
                 ),
               ),
               body: _isLoading
@@ -2174,7 +2238,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _buildCollapsiblePanel(
         title: '绘制工具',
         icon: Icons.brush,
-        isCollapsed: _isDrawingToolbarCollapsed,        onToggleCollapsed: () => _handlePanelToggle('drawing'),
+        isCollapsed: _isDrawingToolbarCollapsed,
+        onToggleCollapsed: () => _handlePanelToggle('drawing'),
         autoCloseEnabled: _isDrawingToolbarAutoClose,
         onAutoCloseToggled: (value) => _handleAutoCloseToggle('drawing', value),
         compactMode: layout.compactMode,
@@ -2251,7 +2316,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     onZIndexInspectorRequested: _showZIndexInspector,
                     // 图片缓冲区相关参数
                     imageBufferData: _imageBufferData,
-                    imageBufferFit: _imageBufferFit,                    
+                    imageBufferFit: _imageBufferFit,
                     onImageBufferUpdated: _handleImageBufferUpdated,
                     onImageBufferFitChanged: _handleImageBufferFitChanged,
                     onImageBufferCleared: _handleImageBufferCleared,
@@ -2395,7 +2460,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 isPreviewMode: widget.isPreviewMode,
                 onLegendGroupUpdated: _updateLegendGroup,
                 onLegendGroupDeleted: _deleteLegendGroup,
-                onLegendGroupAdded: _addLegendGroup,                onLegendGroupTapped: _showLegendGroupManagementDrawer,
+                onLegendGroupAdded: _addLegendGroup,
+                onLegendGroupTapped: _showLegendGroupManagementDrawer,
               ),
       ),
     );
@@ -2408,7 +2474,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         isCollapsed: _isStickyNotePanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('stickyNote'),
         autoCloseEnabled: _isStickyNotePanelAutoClose,
-        onAutoCloseToggled: (value) => _handleAutoCloseToggle('stickyNote', value),
+        onAutoCloseToggled: (value) =>
+            _handleAutoCloseToggle('stickyNote', value),
         compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
@@ -2436,7 +2503,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     return panels;
-  }  Widget _buildCollapsiblePanel({
+  }
+
+  Widget _buildCollapsiblePanel({
     required String title,
     required IconData icon,
     required bool isCollapsed,
@@ -2508,7 +2577,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           ),
         ),
       );
-    }    return Expanded(
+    }
+    return Expanded(
       child: Card(
         margin: EdgeInsets.all(isNarrowScreen ? 2 : 4), // 窄屏时减小边距
         child: Column(
@@ -2573,18 +2643,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     // 动作按钮
                     if (actions != null) ...actions,
                     const Icon(Icons.expand_less, size: 20),
-                  ],                ),
+                  ],
+                ),
               ),
-            ),            // 内容
-            if (child != null)
-              Expanded(
-                child: child,
-              ),
+            ), // 内容
+            if (child != null) Expanded(child: child),
           ],
         ),
       ),
     );
   }
+
   /// 宽屏布局（传统横向布局）
   Widget _buildWideScreenLayout(UserPreferencesProvider userPrefsProvider) {
     final layout = userPrefsProvider.layout;
@@ -2762,11 +2831,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
               .read<UserPreferencesProvider>()
               .mapEditor
               .zoomSensitivity,
-          shouldDisableDrawingTools: _shouldDisableDrawingTools,          // 添加图片缓冲区数据
+          shouldDisableDrawingTools: _shouldDisableDrawingTools, // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
           displayOrderLayers: _layersForDisplay, //：传递显示顺序
-            // 添加便签相关参数
+          // 添加便签相关参数
           selectedStickyNote: _selectedStickyNote,
           previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
           onStickyNoteUpdated: _updateStickyNote,
@@ -2929,33 +2998,35 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     if (_versionSessionManager == null || _versionManager == null) {
       return;
     }
-    
+
     // 切换到指定版本
     _versionManager!.switchToVersion(versionId);
     _versionSessionManager!.switchToVersion(versionId);
-    
+
     // 获取版本会话状态
     final sessionState = _versionSessionManager!.getSessionState(versionId);
     if (sessionState?.modifiedData != null) {
       setState(() {
         _currentMap = sessionState!.modifiedData!;
         _hasUnsavedVersionChanges = sessionState.hasUnsavedChanges;
-        
+
         // 恢复撤销/重做历史
         _undoHistory.clear();
         _undoHistory.addAll(sessionState.undoHistory);
         _redoHistory.clear();
         _redoHistory.addAll(sessionState.redoHistory);
-        
+
         // 重置选择状态
-        _selectedLayer = _currentMap!.layers.isNotEmpty ? _currentMap!.layers.first : null;
+        _selectedLayer = _currentMap!.layers.isNotEmpty
+            ? _currentMap!.layers.first
+            : null;
         _selectedLayerGroup = null;
         _selectedElementId = null;
-        
+
         // 更新显示顺序
         _updateDisplayOrderAfterLayerChange();
       });
-      
+
       print('已恢复版本 "$versionId" 的会话状态');
     } else {
       // 如果没有会话数据，从版本管理器获取数据
@@ -2964,35 +3035,37 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         setState(() {
           _currentMap = versionData;
           _hasUnsavedVersionChanges = false;
-          
+
           // 清空撤销/重做历史
           _undoHistory.clear();
           _redoHistory.clear();
-          
+
           // 重置选择状态
-          _selectedLayer = _currentMap!.layers.isNotEmpty ? _currentMap!.layers.first : null;
+          _selectedLayer = _currentMap!.layers.isNotEmpty
+              ? _currentMap!.layers.first
+              : null;
           _selectedLayerGroup = null;
           _selectedElementId = null;
-          
+
           // 更新显示顺序
           _updateDisplayOrderAfterLayerChange();
         });
-        
+
         print('已切换到版本 "$versionId"（无会话状态）');
       }
     }
   }
-
 
   // 便签管理方法
   void _addNewStickyNote() {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
-    _saveToUndoHistory();    final newNote = StickyNote(
+    _saveToUndoHistory();
+    final newNote = StickyNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: '新便签 ${_currentMap!.stickyNotes.length + 1}',
-      position: const Offset(0.1, 0.1), // 相对位置 (10%, 10%)      
+      position: const Offset(0.1, 0.1), // 相对位置 (10%, 10%)
       size: const Size(0.2, 0.15), // 相对大小 (20%宽, 15%高)
       opacity: 1.0,
       backgroundColor: Colors.yellow.shade100,
@@ -3008,7 +3081,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
       _selectedStickyNote = newNote;
     });
-  }  void _updateStickyNote(StickyNote updatedNote) {
+  }
+
+  void _updateStickyNote(StickyNote updatedNote) {
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史（只在非预览模式下）
@@ -3020,9 +3095,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
       if (noteIndex != -1) {
         final updatedNotes = List<StickyNote>.from(_currentMap!.stickyNotes);
-        updatedNotes[noteIndex] = updatedNote.copyWith(updatedAt: DateTime.now());
+        updatedNotes[noteIndex] = updatedNote.copyWith(
+          updatedAt: DateTime.now(),
+        );
         _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
-        
+
         // 如果当前选中的是这个便签，更新选中状态
         if (_selectedStickyNote?.id == updatedNote.id) {
           _selectedStickyNote = updatedNotes[noteIndex];
@@ -3042,7 +3119,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           .where((n) => n.id != note.id)
           .toList();
       _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
-      
+
       // 如果删除的是当前选中的便签，清除选中状态
       if (_selectedStickyNote?.id == note.id) {
         _selectedStickyNote = null;
@@ -3051,10 +3128,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   }
 
   void _reorderStickyNotes(int oldIndex, int newIndex) {
-    if (_currentMap == null || 
-        oldIndex < 0 || 
+    if (_currentMap == null ||
+        oldIndex < 0 ||
         oldIndex >= _currentMap!.stickyNotes.length ||
-        newIndex < 0 || 
+        newIndex < 0 ||
         newIndex >= _currentMap!.stickyNotes.length ||
         oldIndex == newIndex) {
       return;
@@ -3069,16 +3146,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       notes.insert(newIndex, item);
       _currentMap = _currentMap!.copyWith(stickyNotes: notes);
     });
-  }  /// 防抖自动保存
+  }
 
-
+  /// 防抖自动保存
 
   /// 处理便签透明度预览
   void _handleStickyNoteOpacityPreview(String noteId, double opacity) {
     // 只更新预览状态，不触发完整重绘
     _previewStickyNoteOpacityValues[noteId] = opacity;
 
-    
     // 使用优化的setState，只更新必要的部分
     if (mounted) {
       setState(() {

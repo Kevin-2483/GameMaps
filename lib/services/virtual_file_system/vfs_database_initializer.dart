@@ -89,8 +89,6 @@ class VfsDatabaseInitializer {
     }
   }
 
-  
-
   /// 初始化应用数据库和挂载点
   Future<void> _initializeApplicationDatabases() async {
     try {

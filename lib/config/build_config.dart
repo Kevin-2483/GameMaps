@@ -11,6 +11,7 @@ class BuildTimeConfig {
 
   /// 默认平台检测
   static const String _defaultPlatform = kIsWeb ? 'Web' : 'Unknown';
+
   /// 从环境变量获取启用的页面列表
   static const List<String> enabledPages = [
     if (bool.fromEnvironment('ENABLE_HOME_PAGE', defaultValue: true))
@@ -26,7 +27,10 @@ class BuildTimeConfig {
       'MapAtlasPage',
     if (bool.fromEnvironment('ENABLE_LEGEND_MANAGER_PAGE', defaultValue: true))
       'LegendManagerPage',
-    if (bool.fromEnvironment('ENABLE_VFS_FILE_MANAGER_PAGE', defaultValue: true))
+    if (bool.fromEnvironment(
+      'ENABLE_VFS_FILE_MANAGER_PAGE',
+      defaultValue: true,
+    ))
       'VfsFileManagerPage',
     if (bool.fromEnvironment('ENABLE_FULLSCREEN_TEST_PAGE', defaultValue: true))
       'FullscreenTestPage',

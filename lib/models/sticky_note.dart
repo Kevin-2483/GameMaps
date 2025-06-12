@@ -104,10 +104,15 @@ class StickyNote {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       titleBarColor: titleBarColor ?? this.titleBarColor,
       textColor: textColor ?? this.textColor,
-      backgroundImageData: clearBackgroundImageData ? null : (backgroundImageData ?? this.backgroundImageData),
-      backgroundImageHash: clearBackgroundImageHash ? null : (backgroundImageHash ?? this.backgroundImageHash),
+      backgroundImageData: clearBackgroundImageData
+          ? null
+          : (backgroundImageData ?? this.backgroundImageData),
+      backgroundImageHash: clearBackgroundImageHash
+          ? null
+          : (backgroundImageHash ?? this.backgroundImageHash),
       backgroundImageFit: backgroundImageFit ?? this.backgroundImageFit,
-      backgroundImageOpacity: backgroundImageOpacity ?? this.backgroundImageOpacity,
+      backgroundImageOpacity:
+          backgroundImageOpacity ?? this.backgroundImageOpacity,
       elements: elements ?? this.elements,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -118,36 +123,26 @@ class StickyNote {
   StickyNote addElement(MapDrawingElement element) {
     final newElements = List<MapDrawingElement>.from(elements);
     newElements.add(element);
-    return copyWith(
-      elements: newElements,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(elements: newElements, updatedAt: DateTime.now());
   }
 
   /// 移除绘画元素
   StickyNote removeElement(String elementId) {
     final newElements = elements.where((e) => e.id != elementId).toList();
-    return copyWith(
-      elements: newElements,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(elements: newElements, updatedAt: DateTime.now());
   }
 
   /// 更新绘画元素
   StickyNote updateElement(String elementId, MapDrawingElement newElement) {
-    final newElements = elements.map((e) => e.id == elementId ? newElement : e).toList();
-    return copyWith(
-      elements: newElements,
-      updatedAt: DateTime.now(),
-    );
+    final newElements = elements
+        .map((e) => e.id == elementId ? newElement : e)
+        .toList();
+    return copyWith(elements: newElements, updatedAt: DateTime.now());
   }
 
   /// 清空所有绘画元素
   StickyNote clearElements() {
-    return copyWith(
-      elements: [],
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(elements: [], updatedAt: DateTime.now());
   }
 
   /// 获取指定类型的绘画元素
@@ -156,8 +151,10 @@ class StickyNote {
   }
 
   /// 检查是否有绘画元素
-  bool get hasElements => elements.isNotEmpty;  /// 检查是否有背景图片
-  bool get hasBackgroundImage => 
+  bool get hasElements => elements.isNotEmpty;
+
+  /// 检查是否有背景图片
+  bool get hasBackgroundImage =>
       (backgroundImageData != null && backgroundImageData!.isNotEmpty) ||
       (backgroundImageHash != null && backgroundImageHash!.isNotEmpty);
 }

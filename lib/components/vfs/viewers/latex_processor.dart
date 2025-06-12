@@ -7,7 +7,7 @@ import 'package:markdown/markdown.dart' as m;
 class LatexProcessor {
   /// LaTeX标签名称
   static const String latexTag = 'latex';
-  
+
   /// LaTeX语法正则表达式
   /// 匹配 $$....$$ (块级公式) 和 $....$ (行内公式)
   static final RegExp latexRegExp = RegExp(r'(\$\$[\s\S]+\$\$)|(\$.+?\$)');
@@ -26,7 +26,8 @@ class LatexProcessor {
   static SpanNodeGeneratorWithTag createGenerator() {
     return SpanNodeGeneratorWithTag(
       tag: latexTag,
-      generator: (e, config, visitor) => LatexNode(e.attributes, e.textContent, config),
+      generator: (e, config, visitor) =>
+          LatexNode(e.attributes, e.textContent, config),
     );
   }
 }
@@ -44,7 +45,7 @@ class LatexSyntax extends m.InlineSyntax {
     bool isInline = true;
     const blockSyntax = '\$\$';
     const inlineSyntax = '\$';
-    
+
     if (matchValue.startsWith(blockSyntax) &&
         matchValue.endsWith(blockSyntax) &&
         (matchValue != blockSyntax)) {
@@ -57,7 +58,7 @@ class LatexSyntax extends m.InlineSyntax {
       // 行内公式
       content = matchValue.substring(1, matchValue.length - 1);
     }
-    
+
     // 创建LaTeX元素
     m.Element el = m.Element.text(LatexProcessor.latexTag, matchValue);
     el.attributes['content'] = content;
@@ -81,21 +82,19 @@ class LatexNode extends SpanNode {
     final content = attributes['content'] ?? '';
     final isInline = attributes['isInline'] == 'true';
     final style = parentStyle ?? config.p.textStyle;
-    
+
     // 如果内容为空，返回原始文本
     if (content.isEmpty) return TextSpan(style: style, text: textContent);
-    
+
     // 获取主题信息
     final isDark = _isDarkMode(style);
-    
+
     try {
       // 创建LaTeX渲染组件
       final latex = Math.tex(
         content,
         mathStyle: MathStyle.text,
-        textStyle: style.copyWith(
-          color: isDark ? Colors.white : Colors.black,
-        ),
+        textStyle: style.copyWith(color: isDark ? Colors.white : Colors.black),
         textScaleFactor: 1,
         onErrorFallback: (error) {
           return Text(
@@ -128,7 +127,7 @@ class LatexNode extends SpanNode {
   bool _isDarkMode(TextStyle style) {
     final color = style.color;
     if (color == null) return false;
-    
+
     // 简单的亮度判断
     final brightness = color.computeLuminance();
     return brightness > 0.5; // 亮色文字通常在暗色背景上
@@ -140,11 +139,11 @@ class LatexNode extends SpanNode {
 class LatexConfig implements WidgetConfig {
   @override
   String get tag => LatexProcessor.latexTag;
-  
+
   final bool isDarkTheme;
-  
+
   const LatexConfig({this.isDarkTheme = false});
-  
+
   static const LatexConfig light = LatexConfig(isDarkTheme: false);
   static const LatexConfig dark = LatexConfig(isDarkTheme: true);
 }
@@ -162,7 +161,7 @@ class LatexConfigExtension {
     final configs = <WidgetConfig>[
       // 添加LaTeX配置
       LatexConfig(isDarkTheme: isDarkTheme),
-      
+
       // 段落文本配置
       PConfig(
         textStyle: TextStyle(
@@ -230,10 +229,11 @@ class LatexConfigExtension {
             decoration: TextDecoration.underline,
           ),
           onTap: onLinkTap,
-        ),      // 图片配置
+        ), // 图片配置
       if (imageBuilder != null)
         ImgConfig(
-          builder: (url, attributes) => imageBuilder(url, attributes['alt'] ?? ''),
+          builder: (url, attributes) =>
+              imageBuilder(url, attributes['alt'] ?? ''),
           errorBuilder: imageErrorBuilder != null
               ? (url, alt, error) => imageErrorBuilder(url, alt, error)
               : null,
@@ -259,8 +259,12 @@ class LatexConfigExtension {
       // 行内代码配置
       CodeConfig(
         style: TextStyle(
-          color: isDarkTheme ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
-          backgroundColor: isDarkTheme ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+          color: isDarkTheme
+              ? const Color(0xFFE6E6E6)
+              : const Color(0xFF333333),
+          backgroundColor: isDarkTheme
+              ? const Color(0xFF2D2D2D)
+              : const Color(0xFFF8F8F8),
           fontFamily: 'Courier',
           fontSize: 14,
         ),
@@ -286,11 +290,7 @@ class LatexConfigExtension {
               child: SelectionContainer.disabled(
                 child: Text(
                   '${index + 1}.',
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 16,
-                    height: 1.6,
-                  ),
+                  style: TextStyle(color: color, fontSize: 16, height: 1.6),
                 ),
               ),
             );
@@ -331,10 +331,7 @@ class LatexConfigExtension {
     switch (depth % 3) {
       case 0:
         // 第一层：实心圆点
-        return BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-        );
+        return BoxDecoration(shape: BoxShape.circle, color: color);
       case 1:
         // 第二层：空心圆点
         return BoxDecoration(
@@ -354,7 +351,7 @@ class LatexUtils {
   /// 验证LaTeX语法是否有效
   static bool isValidLatex(String latex) {
     if (latex.isEmpty) return false;
-    
+
     try {
       // 简单的语法检查
       // 检查括号是否匹配
@@ -377,7 +374,7 @@ class LatexUtils {
   static List<String> extractLatexExpressions(String text) {
     final expressions = <String>[];
     final matches = LatexProcessor.latexRegExp.allMatches(text);
-    
+
     for (final match in matches) {
       final fullMatch = match.group(0) ?? '';
       if (fullMatch.startsWith('\$\$') && fullMatch.endsWith('\$\$')) {
@@ -388,17 +385,21 @@ class LatexUtils {
         expressions.add(fullMatch.substring(1, fullMatch.length - 1));
       }
     }
-    
+
     return expressions;
   }
 
   /// 获取LaTeX统计信息
   static Map<String, dynamic> getLatexStats(String text) {
     final expressions = extractLatexExpressions(text);
-    final inlineCount = expressions.where((expr) => 
-        text.contains('\$$expr\$') && !text.contains('\$\$$expr\$\$')).length;
+    final inlineCount = expressions
+        .where(
+          (expr) =>
+              text.contains('\$$expr\$') && !text.contains('\$\$$expr\$\$'),
+        )
+        .length;
     final blockCount = expressions.length - inlineCount;
-    
+
     return {
       'hasLatex': expressions.isNotEmpty,
       'totalCount': expressions.length,

@@ -175,11 +175,7 @@ class HighlightRenderer {
     double? handleSize,
   }) {
     // 获取所有调整手柄的位置
-    final handles = getResizeHandles(
-      element,
-      size,
-      handleSize: handleSize,
-    );
+    final handles = getResizeHandles(element, size, handleSize: handleSize);
 
     if (handles.isEmpty) return;
 

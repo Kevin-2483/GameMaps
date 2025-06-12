@@ -22,37 +22,34 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
               icon: const Icon(Icons.window),
               label: const Text('简单窗口'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             ElevatedButton.icon(
               onPressed: () => _showSettingsWindow(context),
               icon: const Icon(Icons.settings),
               label: const Text('设置窗口'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             ElevatedButton.icon(
               onPressed: () => _showDraggableWindow(context),
               icon: const Icon(Icons.open_with),
               label: const Text('可拖拽窗口'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             ElevatedButton.icon(
               onPressed: () => _showFileManagerWindow(context),
               icon: const Icon(Icons.folder),
               label: const Text('文件管理器风格'),
             ),
-            
+
             const SizedBox(height: 24),
-            
-            const Text(
-              '点击按钮体验不同类型的浮动窗口',
-              style: TextStyle(color: Colors.grey),
-            ),
+
+            const Text('点击按钮体验不同类型的浮动窗口', style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),
@@ -152,18 +149,18 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('刷新文件列表')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('刷新文件列表')));
             },
             tooltip: '刷新',
           ),
           IconButton(
             icon: const Icon(Icons.view_list),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('切换视图')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('切换视图')));
             },
             tooltip: '视图',
           ),
@@ -194,12 +191,24 @@ class _SettingsContentState extends State<_SettingsContent> {
           Expanded(
             child: ListView(
               children: [
-                _buildSwitchTile('推送通知', Icons.notifications, _notifications,
-                    (value) => setState(() => _notifications = value)),
-                _buildSwitchTile('深色模式', Icons.dark_mode, _darkMode,
-                    (value) => setState(() => _darkMode = value)),
-                _buildSwitchTile('自动保存', Icons.save, _autoSave,
-                    (value) => setState(() => _autoSave = value)),
+                _buildSwitchTile(
+                  '推送通知',
+                  Icons.notifications,
+                  _notifications,
+                  (value) => setState(() => _notifications = value),
+                ),
+                _buildSwitchTile(
+                  '深色模式',
+                  Icons.dark_mode,
+                  _darkMode,
+                  (value) => setState(() => _darkMode = value),
+                ),
+                _buildSwitchTile(
+                  '自动保存',
+                  Icons.save,
+                  _autoSave,
+                  (value) => setState(() => _autoSave = value),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   '音量: ${_volume.round()}%',
@@ -260,9 +269,7 @@ class _FileManagerContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.grey[100],
-            border: Border(
-              bottom: BorderSide(color: Colors.grey[300]!),
-            ),
+            border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
           ),
           child: Row(
             children: [
@@ -271,16 +278,13 @@ class _FileManagerContent extends StatelessWidget {
               Expanded(
                 child: Text(
                   '/ 根目录 / 文档 / 项目文件',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
               ),
             ],
           ),
         ),
-        
+
         // 文件列表
         Expanded(
           child: ListView.builder(
@@ -307,22 +311,17 @@ class _FileManagerContent extends StatelessWidget {
             },
           ),
         ),
-        
+
         // 底部操作栏
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Colors.grey[300]!),
-            ),
+            border: Border(top: BorderSide(color: Colors.grey[300]!)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton(
-                onPressed: () {},
-                child: const Text('新建文件夹'),
-              ),
+              OutlinedButton(onPressed: () {}, child: const Text('新建文件夹')),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -338,18 +337,8 @@ class _FileManagerContent extends StatelessWidget {
 
 // 示例文件数据
 final List<Map<String, dynamic>> _sampleFiles = [
-  {
-    'name': '文档',
-    'isDirectory': true,
-    'size': '',
-    'date': '2024-01-15',
-  },
-  {
-    'name': '图片',
-    'isDirectory': true,
-    'size': '',
-    'date': '2024-01-14',
-  },
+  {'name': '文档', 'isDirectory': true, 'size': '', 'date': '2024-01-15'},
+  {'name': '图片', 'isDirectory': true, 'size': '', 'date': '2024-01-14'},
   {
     'name': 'readme.txt',
     'isDirectory': false,
@@ -368,10 +357,5 @@ final List<Map<String, dynamic>> _sampleFiles = [
     'size': '15.6 KB',
     'date': '2024-01-11',
   },
-  {
-    'name': 'assets',
-    'isDirectory': true,
-    'size': '',
-    'date': '2024-01-10',
-  },
+  {'name': 'assets', 'isDirectory': true, 'size': '', 'date': '2024-01-10'},
 ];

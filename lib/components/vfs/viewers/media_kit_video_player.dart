@@ -87,7 +87,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
     try {
       // 打开视频文件
       await _player.open(Media(widget.url));
-      
+
       setState(() {
         _isInitialized = true;
       });
@@ -109,7 +109,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
     try {
       final vfsService = VfsServiceProvider();
       final fileContent = await vfsService.vfs.readFile(widget.url);
-      
+
       if (fileContent == null) {
         throw Exception('VFS视频文件不存在');
       }
@@ -142,7 +142,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
   /// 构建视频播放器
   Widget _buildVideoPlayer() {
     final config = widget.config;
-    
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: config?.maxWidth ?? 800,

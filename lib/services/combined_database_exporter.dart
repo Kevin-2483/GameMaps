@@ -18,8 +18,10 @@ class CombinedDatabaseExporter {
   factory CombinedDatabaseExporter() => _instance;
   CombinedDatabaseExporter._internal();
 
-  final MapDatabaseService _mapService = VfsMapServiceFactory.createMapDatabaseService();
-  final LegendCompatibilityService _legendService = LegendCompatibilityService();
+  final MapDatabaseService _mapService =
+      VfsMapServiceFactory.createMapDatabaseService();
+  final LegendCompatibilityService _legendService =
+      LegendCompatibilityService();
   final MapLocalizationService _localizationService = MapLocalizationService();
 
   /// 导出数据库数据为单个JSON文件

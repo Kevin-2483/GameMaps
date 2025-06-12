@@ -71,10 +71,12 @@ class WebDatabasePreloader {
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
     return base64Decode(base64String);
   }
+
   /// 直接插入示例地图（绕过Web只读限制）
   static Future<void> _insertSampleMapDirectly(MapItem mapItem) async {
     try {
-      final database = await VfsMapServiceFactory.createMapDatabaseService().database;
+      final database =
+          await VfsMapServiceFactory.createMapDatabaseService().database;
       final data = mapItem.toDatabase();
 
       await database.insert(
@@ -89,8 +91,10 @@ class WebDatabasePreloader {
 
   /// 清理示例数据（仅用于开发调试）
   static Future<void> clearSampleData() async {
-    if (!kIsWeb) return;    try {
-      final database = await VfsMapServiceFactory.createMapDatabaseService().database;
+    if (!kIsWeb) return;
+    try {
+      final database =
+          await VfsMapServiceFactory.createMapDatabaseService().database;
       await database.delete(
         'maps',
         where: 'title = ?',

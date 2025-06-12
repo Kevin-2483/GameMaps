@@ -2,57 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// 调整大小手柄类型
-enum _ResizeHandle {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
+enum _ResizeHandle { topLeft, topRight, bottomLeft, bottomRight }
 
 /// 浮动窗口组件，模仿VFS文件选择器的设计风格
 /// 提供统一的浮动窗口外观和行为
 class FloatingWindow extends StatefulWidget {
   /// 窗口标题
   final String title;
-  
+
   /// 窗口图标
   final IconData? icon;
-  
+
   /// 窗口内容
   final Widget child;
-  
+
   /// 关闭回调
   final VoidCallback? onClose;
-  
+
   /// 窗口大小比例 (相对于屏幕大小)
   final double widthRatio;
   final double heightRatio;
-  
+
   /// 最小和最大尺寸限制
   final Size? minSize;
   final Size? maxSize;
-  
+
   /// 是否可拖拽移动
   final bool draggable;
-  
+
   /// 是否可调整大小
   final bool resizable;
-  
+
   /// 自定义头部操作按钮
   final List<Widget>? headerActions;
-  
+
   /// 头部副标题
   final String? subtitle;
-  
+
   /// 是否显示关闭按钮
   final bool showCloseButton;
-  
+
   /// 背景遮罩颜色
   final Color? barrierColor;
-  
+
   /// 窗口圆角半径
   final double borderRadius;
-  
+
   /// 阴影配置
   final List<BoxShadow>? shadows;
 
@@ -141,25 +136,27 @@ class _FloatingWindowState extends State<FloatingWindow> {
         _initializeSize();
       }
     });
-  }  void _initializeSize() {
+  }
+
+  void _initializeSize() {
     final screenSize = MediaQuery.of(context).size;
     double width = screenSize.width * widget.widthRatio;
     double height = screenSize.height * widget.heightRatio;
-    
+
     // 应用最小和最大尺寸限制
     if (widget.minSize != null) {
       width = width.clamp(widget.minSize!.width, double.infinity);
       height = height.clamp(widget.minSize!.height, double.infinity);
     }
-    
+
     if (widget.maxSize != null) {
       width = width.clamp(0, widget.maxSize!.width);
       height = height.clamp(0, widget.maxSize!.height);
     }
-    
+
     _currentWidth = width;
     _currentHeight = height;
-    
+
     // 设置窗口初始位置为屏幕中心
     if (widget.draggable) {
       _position = Offset(
@@ -167,9 +164,10 @@ class _FloatingWindowState extends State<FloatingWindow> {
         (screenSize.height - height) / 2,
       );
     }
-    
+
     setState(() {});
   }
+
   @override
   Widget build(BuildContext context) {
     // 如果尺寸还未初始化，显示加载指示器
@@ -189,24 +187,25 @@ class _FloatingWindowState extends State<FloatingWindow> {
       windowContent = Center(child: windowContent);
     }
 
-    return Material(
-      color: Colors.transparent,
-      child: windowContent,
-    );
-  }  Widget _buildWindowContent() {
+    return Material(color: Colors.transparent, child: windowContent);
+  }
+
+  Widget _buildWindowContent() {
     Widget content = Container(
       width: _currentWidth!,
       height: _currentHeight!,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(widget.borderRadius),
-        boxShadow: widget.shadows ?? [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
+        boxShadow:
+            widget.shadows ??
+            [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
       ),
       child: Column(
         children: [
@@ -218,12 +217,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
 
     // 如果可以调整大小，添加调整大小手柄
     if (widget.resizable) {
-      content = Stack(
-        children: [
-          content,
-          ..._buildResizeHandles(),
-        ],
-      );
+      content = Stack(children: [content, ..._buildResizeHandles()]);
     }
 
     return content;
@@ -232,14 +226,11 @@ class _FloatingWindowState extends State<FloatingWindow> {
   Widget _buildDraggableWindow(Widget child) {
     return Stack(
       children: [
-        Positioned(
-          left: _position.dx,
-          top: _position.dy,
-          child: child,
-        ),
+        Positioned(left: _position.dx, top: _position.dy, child: child),
       ],
     );
   }
+
   Widget _buildHeader() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -272,10 +263,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
                   -_currentWidth! + 100, // 允许部分窗口移出屏幕
                   screenSize.width - 100,
                 ),
-                _position.dy.clamp(
-                  -50,
-                  screenSize.height - 100,
-                ),
+                _position.dy.clamp(-50, screenSize.height - 100),
               );
             });
           }
@@ -285,40 +273,50 @@ class _FloatingWindowState extends State<FloatingWindow> {
         },
         child: headerContent,
       );
-    }    return headerContent;
+    }
+    return headerContent;
   }
 
   /// 构建调整大小手柄
   List<Widget> _buildResizeHandles() {
     const handleSize = 16.0;
-    
+
     return [
       // 左上角
-      _buildResizeHandle(_ResizeHandle.topLeft, handleSize, 
-        top: -handleSize / 2, 
+      _buildResizeHandle(
+        _ResizeHandle.topLeft,
+        handleSize,
+        top: -handleSize / 2,
         left: -handleSize / 2,
         cursor: SystemMouseCursors.resizeUpLeft,
       ),
       // 右上角
-      _buildResizeHandle(_ResizeHandle.topRight, handleSize,
+      _buildResizeHandle(
+        _ResizeHandle.topRight,
+        handleSize,
         top: -handleSize / 2,
         right: -handleSize / 2,
         cursor: SystemMouseCursors.resizeUpRight,
       ),
       // 左下角
-      _buildResizeHandle(_ResizeHandle.bottomLeft, handleSize,
+      _buildResizeHandle(
+        _ResizeHandle.bottomLeft,
+        handleSize,
         bottom: -handleSize / 2,
         left: -handleSize / 2,
         cursor: SystemMouseCursors.resizeDownLeft,
       ),
       // 右下角
-      _buildResizeHandle(_ResizeHandle.bottomRight, handleSize,
+      _buildResizeHandle(
+        _ResizeHandle.bottomRight,
+        handleSize,
         bottom: -handleSize / 2,
         right: -handleSize / 2,
         cursor: SystemMouseCursors.resizeDownRight,
       ),
     ];
   }
+
   /// 构建单个调整大小手柄
   Widget _buildResizeHandle(
     _ResizeHandle handle,
@@ -404,14 +402,8 @@ class _FloatingWindowState extends State<FloatingWindow> {
 
     // 确保窗口不会超出屏幕边界
     newPosition = Offset(
-      newPosition.dx.clamp(
-        -newWidth + 100,
-        screenSize.width - 100,
-      ),
-      newPosition.dy.clamp(
-        -50,
-        screenSize.height - 100,
-      ),
+      newPosition.dx.clamp(-newWidth + 100, screenSize.width - 100),
+      newPosition.dy.clamp(-50, screenSize.height - 100),
     );
 
     setState(() {
@@ -420,6 +412,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
       _position = newPosition;
     });
   }
+
   Widget _buildHeaderContent() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -428,11 +421,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
       children: [
         // 图标和标题
         if (widget.icon != null) ...[
-          Icon(
-            widget.icon,
-            color: colorScheme.primary,
-            size: 28,
-          ),
+          Icon(widget.icon, color: colorScheme.primary, size: 28),
           const SizedBox(width: 12),
         ],
         Expanded(
@@ -458,13 +447,13 @@ class _FloatingWindowState extends State<FloatingWindow> {
             ],
           ),
         ),
-        
+
         // 自定义操作按钮
         if (widget.headerActions != null) ...[
           ...widget.headerActions!,
           const SizedBox(width: 8),
         ],
-        
+
         // 关闭按钮
         if (widget.showCloseButton)
           IconButton(
@@ -505,6 +494,7 @@ class FloatingWindowBuilder {
     _icon = icon;
     return this;
   }
+
   FloatingWindowBuilder child(Widget child) {
     _child = child;
     return this;
@@ -603,12 +593,7 @@ extension FloatingWindowExtensions on BuildContext {
     IconData? icon,
     VoidCallback? onClose,
   }) {
-    return FloatingWindow.show<T>(
-      this,
-      title: title,
-      child: child,
-      icon: icon,
-    );
+    return FloatingWindow.show<T>(this, title: title, child: child, icon: icon);
   }
 
   /// 获取浮动窗口构建器

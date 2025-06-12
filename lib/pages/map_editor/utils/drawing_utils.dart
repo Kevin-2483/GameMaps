@@ -179,12 +179,14 @@ void drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
   const arrowAngle = 0.5;
 
   final direction = (end - start).direction;
-  final arrowPoint1 = end +
+  final arrowPoint1 =
+      end +
       Offset(
         arrowLength * -1 * math.cos(direction - arrowAngle),
         arrowLength * -1 * math.sin(direction - arrowAngle),
       );
-  final arrowPoint2 = end +
+  final arrowPoint2 =
+      end +
       Offset(
         arrowLength * -1 * math.cos(direction + arrowAngle),
         arrowLength * -1 * math.sin(direction + arrowAngle),
@@ -443,17 +445,35 @@ void drawDashedRect(
   double? dashSpace,
 ]) {
   final actualDashSpace = dashSpace ?? dashWidth * 0.6;
-  
+
   final path = Path();
 
   // 顶边
   addDashedLine(path, rect.topLeft, rect.topRight, dashWidth, actualDashSpace);
   // 右边
-  addDashedLine(path, rect.topRight, rect.bottomRight, dashWidth, actualDashSpace);
+  addDashedLine(
+    path,
+    rect.topRight,
+    rect.bottomRight,
+    dashWidth,
+    actualDashSpace,
+  );
   // 底边
-  addDashedLine(path, rect.bottomRight, rect.bottomLeft, dashWidth, actualDashSpace);
+  addDashedLine(
+    path,
+    rect.bottomRight,
+    rect.bottomLeft,
+    dashWidth,
+    actualDashSpace,
+  );
   // 左边
-  addDashedLine(path, rect.bottomLeft, rect.topLeft, dashWidth, actualDashSpace);
+  addDashedLine(
+    path,
+    rect.bottomLeft,
+    rect.topLeft,
+    dashWidth,
+    actualDashSpace,
+  );
 
   canvas.drawPath(path, paint);
 }
@@ -481,7 +501,7 @@ void addDashedLine(
     if (isDash) {
       final segmentStart = start + unitVector * currentDistance;
       final segmentEndPoint = start + unitVector * segmentEnd;
-      
+
       path.moveTo(segmentStart.dx, segmentStart.dy);
       path.lineTo(segmentEndPoint.dx, segmentEndPoint.dy);
     }

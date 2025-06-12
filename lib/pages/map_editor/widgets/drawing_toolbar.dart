@@ -420,6 +420,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         return '工具';
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.isEditMode) return const SizedBox.shrink();
@@ -430,344 +431,352 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          // Drawing tools
-          const Text(
-            '工具',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          Consumer<UserPreferencesProvider>(
-            builder: (context, userPrefs, child) {
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: userPrefs.tools.toolbarLayout.map((toolName) {
-                  final toolType = _getDrawingElementType(toolName);
-                  if (toolType == null) return const SizedBox.shrink();
-
-                  return _buildToolButton(
-                    context,
-                    icon: _getToolIcon(toolName),
-                    tooltip: _getToolTooltip(toolName),
-                    tool: toolType,
-                  );
-                }).toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Undo/Redo buttons
-          if (widget.onUndo != null || widget.onRedo != null)
-            Row(
-              children: [
-                if (widget.onUndo != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: widget.canUndo ? widget.onUndo : null,
-                      icon: const Icon(Icons.undo),
-                      label: const Text('撤销'),
-                    ),
-                  ),
-                if (widget.onUndo != null && widget.onRedo != null)
-                  const SizedBox(width: 8),
-                if (widget.onRedo != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: widget.canRedo ? widget.onRedo : null,
-                      icon: const Icon(Icons.redo),
-                      label: const Text('重做'),
-                    ),
-                  ),
-              ],
+            // Drawing tools
+            const Text(
+              '工具',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            Consumer<UserPreferencesProvider>(
+              builder: (context, userPrefs, child) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: userPrefs.tools.toolbarLayout.map((toolName) {
+                    final toolType = _getDrawingElementType(toolName);
+                    if (toolType == null) return const SizedBox.shrink();
 
-          // Recent colors section
-          Consumer<UserPreferencesProvider>(
-            builder: (context, userPrefs, child) {
-              final recentColors = userPrefs.tools.recentColors;
-              if (recentColors.isNotEmpty) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '最近使用',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: recentColors.map((colorValue) {
-                        final color = Color(colorValue);
-                        return _buildColorButton(color);
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                    return _buildToolButton(
+                      context,
+                      icon: _getToolIcon(toolName),
+                      tooltip: _getToolTooltip(toolName),
+                      tool: toolType,
+                    );
+                  }).toList(),
                 );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+              },
+            ),
+            const SizedBox(height: 16),
 
-          // Color picker
-          const Text(
-            '颜色',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildColorButton(Colors.black),
-              _buildColorButton(Colors.red),
-              _buildColorButton(Colors.blue),
-              _buildColorButton(Colors.green),
-              _buildColorButton(Colors.orange),
-              _buildColorButton(Colors.purple),
-              _buildColorButton(Colors.brown),
-              _buildColorButton(Colors.grey),
-              _buildColorButton(Colors.yellow),
-              _buildColorButton(Colors.cyan),
-              _buildColorButton(Colors.pink),
-              // 更多颜色按钮
-              _buildMoreColorsButton(),
-            ],
-          ),
-
-          // Custom colors section
-          Consumer<UserPreferencesProvider>(
-            builder: (context, userPrefs, child) {
-              final customColors = userPrefs.tools.customColors;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Undo/Redo buttons
+            if (widget.onUndo != null || widget.onRedo != null)
+              Row(
                 children: [
-                  const SizedBox(height: 16),
-                  const Text(
-                    '自定义颜色',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  if (customColors.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: customColors.map((colorValue) {
-                        final color = Color(colorValue);
-                        return _buildCustomColorButton(color, userPrefs);
-                      }).toList(),
-                    )
-                  else
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
+                  if (widget.onUndo != null)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: widget.canUndo ? widget.onUndo : null,
+                        icon: const Icon(Icons.undo),
+                        label: const Text('撤销'),
                       ),
-                      child: Text(
-                        '点击调色盘按钮添加自定义颜色',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
+                    ),
+                  if (widget.onUndo != null && widget.onRedo != null)
+                    const SizedBox(width: 8),
+                  if (widget.onRedo != null)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: widget.canRedo ? widget.onRedo : null,
+                        icon: const Icon(Icons.redo),
+                        label: const Text('重做'),
                       ),
                     ),
                 ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
+              ),
+            const SizedBox(height: 16),
 
-          // Favorite stroke widths section
-          Consumer<UserPreferencesProvider>(
-            builder: (context, userPrefs, child) {
-              final favoriteStrokeWidths = userPrefs.tools.favoriteStrokeWidths;
-              if (favoriteStrokeWidths.isNotEmpty) {
+            // Recent colors section
+            Consumer<UserPreferencesProvider>(
+              builder: (context, userPrefs, child) {
+                final recentColors = userPrefs.tools.recentColors;
+                if (recentColors.isNotEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '最近使用',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: recentColors.map((colorValue) {
+                          final color = Color(colorValue);
+                          return _buildColorButton(color);
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            // Color picker
+            const Text(
+              '颜色',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildColorButton(Colors.black),
+                _buildColorButton(Colors.red),
+                _buildColorButton(Colors.blue),
+                _buildColorButton(Colors.green),
+                _buildColorButton(Colors.orange),
+                _buildColorButton(Colors.purple),
+                _buildColorButton(Colors.brown),
+                _buildColorButton(Colors.grey),
+                _buildColorButton(Colors.yellow),
+                _buildColorButton(Colors.cyan),
+                _buildColorButton(Colors.pink),
+                // 更多颜色按钮
+                _buildMoreColorsButton(),
+              ],
+            ),
+
+            // Custom colors section
+            Consumer<UserPreferencesProvider>(
+              builder: (context, userPrefs, child) {
+                final customColors = userPrefs.tools.customColors;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 16),
                     const Text(
-                      '常用线条宽度',
+                      '自定义颜色',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: favoriteStrokeWidths.map((width) {
-                        return _buildStrokeWidthButton(width);
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ), // Stroke width
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '线条粗细',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              IconButton(
-                onPressed: () => _showStrokeWidthManager(context),
-                icon: const Icon(Icons.settings, size: 18),
-                tooltip: '管理常用线条宽度',
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                padding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Slider(
-                  value: _effectiveStrokeWidth,
-                  min: 1.0,
-                  max: 50.0,
-                  divisions: 49,
-                  label: _effectiveStrokeWidth.round().toString(),
-                  onChanged: (value) {
-                    _handleStrokeWidthChange(value);
-                  },
-                ),
-              ),
-              Text('${_effectiveStrokeWidth.round()}px'),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Pattern density (only show for pattern tools)
-          if (_shouldShowDensityControl()) ...[
-            const SizedBox(height: 8),
-            const Text(
-              '图案密度',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Slider(
-                    value: _effectiveDensity,
-                    min: 1.0,
-                    max: 8.0,
-                    divisions: 14,
-                    label: _effectiveDensity.toStringAsFixed(1),
-                    onChanged: _handleDensityChange,
-                  ),
-                ),
-                Text('${_effectiveDensity.toStringAsFixed(1)}x'),
-              ],
-            ),
-          ],
-
-          // Curvature control (for rectangular selections)
-          if (_shouldShowCurvatureControl()) ...[
-            const SizedBox(height: 8),
-            const Text(
-              '弧度',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Slider(
-                    value: _effectiveCurvature,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 20,
-                    label: '${(_effectiveCurvature * 100).round()}%',
-                    onChanged: _handleCurvatureChange,
-                  ),
-                ),
-                Text('${(_effectiveCurvature * 100).round()}%'),
-              ],
-            ),
-          ], // Triangle cut control (for rectangular selections)
-          if (_shouldShowTriangleCutControl()) ...[
-            const SizedBox(height: 8),
-            const Text(
-              '对角线切割',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Slider(
-                        value: _effectiveTriangleCut.index.toDouble(),
-                        min: 0.0,
-                        max: 4.0,
-                        divisions: 4,
-                        label: _getTriangleCutLabel(_effectiveTriangleCut),
-                        onChanged: (value) => _handleTriangleCutChange(
-                          TriangleCutType.values[value.round()],
+                    if (customColors.isNotEmpty)
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: customColors.map((colorValue) {
+                          final color = Color(colorValue);
+                          return _buildCustomColorButton(color, userPrefs);
+                        }).toList(),
+                      )
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '点击调色盘按钮添加自定义颜色',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
                   ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Favorite stroke widths section
+            Consumer<UserPreferencesProvider>(
+              builder: (context, userPrefs, child) {
+                final favoriteStrokeWidths =
+                    userPrefs.tools.favoriteStrokeWidths;
+                if (favoriteStrokeWidths.isNotEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '常用线条宽度',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: favoriteStrokeWidths.map((width) {
+                          return _buildStrokeWidthButton(width);
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ), // Stroke width
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '线条粗细',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
-                Text(
-                  _getTriangleCutLabel(_effectiveTriangleCut),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                IconButton(
+                  onPressed: () => _showStrokeWidthManager(context),
+                  icon: const Icon(Icons.settings, size: 18),
+                  tooltip: '管理常用线条宽度',
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
+                  padding: EdgeInsets.zero,
                 ),
               ],
             ),
-          ],
-
-          // Image Area tool specific controls
-          if (_effectiveTool == DrawingElementType.imageArea) ...[
-            const SizedBox(height: 16),
-            _buildImageAreaControls(),
-          ],
-
-          // Clear selection button
-          if (_effectiveTool != null)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _handleToolSelection(null),
-                child: const Text('取消选择'),
-              ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _effectiveStrokeWidth,
+                    min: 1.0,
+                    max: 50.0,
+                    divisions: 49,
+                    label: _effectiveStrokeWidth.round().toString(),
+                    onChanged: (value) {
+                      _handleStrokeWidthChange(value);
+                    },
+                  ),
+                ),
+                Text('${_effectiveStrokeWidth.round()}px'),
+              ],
             ),
+            const SizedBox(height: 8),
 
-          const SizedBox(height: 16),
+            // Pattern density (only show for pattern tools)
+            if (_shouldShowDensityControl()) ...[
+              const SizedBox(height: 8),
+              const Text(
+                '图案密度',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Slider(
+                      value: _effectiveDensity,
+                      min: 1.0,
+                      max: 8.0,
+                      divisions: 14,
+                      label: _effectiveDensity.toStringAsFixed(1),
+                      onChanged: _handleDensityChange,
+                    ),
+                  ),
+                  Text('${_effectiveDensity.toStringAsFixed(1)}x'),
+                ],
+              ),
+            ],
 
-          // Z层级检视器按钮
-          if (widget.selectedLayer != null &&
-              widget.onZIndexInspectorRequested != null)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: widget.onZIndexInspectorRequested,
-                icon: const Icon(Icons.layers),
-                label: Text(
-                  'Z层级检视器 (${widget.selectedLayer!.elements.length})',
+            // Curvature control (for rectangular selections)
+            if (_shouldShowCurvatureControl()) ...[
+              const SizedBox(height: 8),
+              const Text(
+                '弧度',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Slider(
+                      value: _effectiveCurvature,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 20,
+                      label: '${(_effectiveCurvature * 100).round()}%',
+                      onChanged: _handleCurvatureChange,
+                    ),
+                  ),
+                  Text('${(_effectiveCurvature * 100).round()}%'),
+                ],
+              ),
+            ], // Triangle cut control (for rectangular selections)
+            if (_shouldShowTriangleCutControl()) ...[
+              const SizedBox(height: 8),
+              const Text(
+                '对角线切割',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: _effectiveTriangleCut.index.toDouble(),
+                          min: 0.0,
+                          max: 4.0,
+                          divisions: 4,
+                          label: _getTriangleCutLabel(_effectiveTriangleCut),
+                          onChanged: (value) => _handleTriangleCutChange(
+                            TriangleCutType.values[value.round()],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    _getTriangleCutLabel(_effectiveTriangleCut),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
+
+            // Image Area tool specific controls
+            if (_effectiveTool == DrawingElementType.imageArea) ...[
+              const SizedBox(height: 16),
+              _buildImageAreaControls(),
+            ],
+
+            // Clear selection button
+            if (_effectiveTool != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => _handleToolSelection(null),
+                  child: const Text('取消选择'),
                 ),
               ),
-            ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Z层级检视器按钮
+            if (widget.selectedLayer != null &&
+                widget.onZIndexInspectorRequested != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: widget.onZIndexInspectorRequested,
+                  icon: const Icon(Icons.layers),
+                  label: Text(
+                    'Z层级检视器 (${widget.selectedLayer!.elements.length})',
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),);
+    );
   }
 
   Widget _buildToolButton(

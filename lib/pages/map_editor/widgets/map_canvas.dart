@@ -67,9 +67,6 @@ class DrawingPreviewData {
 
 // --- 重构后的 _drawCurvedRectangle 函数 ---
 
-
-
-
 /// 辅助类：用于管理分层元素
 class _LayeredElement {
   final int order;
@@ -168,18 +165,18 @@ class MapCanvasState extends State<MapCanvas> {
 
   final TransformationController _transformationController =
       TransformationController();
-    // 绘制工具管理器
+  // 绘制工具管理器
   late final DrawingToolManager _drawingToolManager;
-  
+
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
-  final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片  
+  final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片
   Rect? _selectionRect; // 当前选区矩形
   final ValueNotifier<Rect?> _selectionNotifier = ValueNotifier(null);
   // 选区拖动相关变量
   Offset? _selectionStartPosition;
   bool _isCreatingSelection = false;
-  
+
   // 监听图片缓冲区变化
   Uint8List? _lastImageBufferData;
   ui.Image? _imageBufferCachedImage;
@@ -190,7 +187,7 @@ class MapCanvasState extends State<MapCanvas> {
 
   // Add this GlobalKey
   final GlobalKey _canvasGlobalKey = GlobalKey();
-  
+
   DrawingElementType? get _effectiveDrawingTool {
     if (widget.shouldDisableDrawingTools) {
       return null;
@@ -211,13 +208,13 @@ class MapCanvasState extends State<MapCanvas> {
   @override
   void initState() {
     super.initState();
-    
+
     // 初始化绘制工具管理器
     _drawingToolManager = DrawingToolManager(
       onLayerUpdated: widget.onLayerUpdated,
       context: context,
     );
-    
+
     // 在组件初始化时预加载所有图层的图片
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _preloadAllLayerImages();
@@ -241,7 +238,7 @@ class MapCanvasState extends State<MapCanvas> {
   void dispose() {
     // 清理绘制工具管理器
     _drawingToolManager.dispose();
-    
+
     // 清理图片缓存
     for (final image in _imageCache.values) {
       image.dispose();
@@ -297,9 +294,10 @@ class MapCanvasState extends State<MapCanvas> {
                           ),
                         ),
                         // 按层级顺序渲染所有元素
-                        ..._buildLayeredElements(),                        // Current drawing preview
+                        ..._buildLayeredElements(), // Current drawing preview
                         ValueListenableBuilder<DrawingPreviewData?>(
-                          valueListenable: _drawingToolManager.drawingPreviewNotifier,
+                          valueListenable:
+                              _drawingToolManager.drawingPreviewNotifier,
                           builder: (context, previewData, child) {
                             if (previewData == null) {
                               return const SizedBox.shrink();
@@ -318,7 +316,8 @@ class MapCanvasState extends State<MapCanvas> {
                                 freeDrawingPath: previewData.freeDrawingPath,
                                 selectedElementId: widget.selectedElementId,
                               ),
-                            );                          },
+                            );
+                          },
                         ),
                         // 选区层
                         ValueListenableBuilder<Rect?>(
@@ -342,7 +341,8 @@ class MapCanvasState extends State<MapCanvas> {
                       left: 0,
                       top: 0,
                       width: kCanvasWidth,
-                      height: kCanvasHeight,                      child: _effectiveDrawingTool == DrawingElementType.text
+                      height: kCanvasHeight,
+                      child: _effectiveDrawingTool == DrawingElementType.text
                           ? GestureDetector(
                               // 文本工具使用点击手势
                               onTapDown: (details) {
@@ -617,8 +617,9 @@ class MapCanvasState extends State<MapCanvas> {
               ),
             ),
           ),
-        ),),
-      );
+        ),
+      ),
+    );
   } // 图例拖拽相关方法
 
   LegendItem? _draggingLegendItem;
@@ -1275,7 +1276,9 @@ class MapCanvasState extends State<MapCanvas> {
         break;
       }
     }
-  }  void _onDrawingStart(DragStartDetails details) {
+  }
+
+  void _onDrawingStart(DragStartDetails details) {
     _drawingToolManager.onDrawingStart(
       details,
       _effectiveDrawingTool,
@@ -1285,7 +1288,9 @@ class MapCanvasState extends State<MapCanvas> {
       _effectiveCurvature,
       _effectiveTriangleCut,
     );
-  }  void _onDrawingUpdate(DragUpdateDetails details) {
+  }
+
+  void _onDrawingUpdate(DragUpdateDetails details) {
     _drawingToolManager.onDrawingUpdate(
       details,
       _effectiveDrawingTool,
@@ -1304,6 +1309,7 @@ class MapCanvasState extends State<MapCanvas> {
     // 对于拖拽操作，不应该限制以避免偏移量计算错误
     return localPosition;
   }
+
   void _onDrawingEnd(DragEndDetails details) {
     _drawingToolManager.onDrawingEnd(
       details,
@@ -1316,7 +1322,9 @@ class MapCanvasState extends State<MapCanvas> {
       widget.selectedLayer,
       widget.imageBufferData,
       widget.imageBufferFit,
-    );  }
+    );
+  }
+
   /// 构建按层级排序的所有元素（支持增量更新）
   List<Widget> _buildLayeredElements() {
     print('=== 开始构建图层元素 (增量更新模式) ===');
@@ -1614,6 +1622,7 @@ class MapCanvasState extends State<MapCanvas> {
       // 触发重绘以显示拖拽状态
     });
   }
+
   /// 处理绘画元素的拖拽更新
   void _onElementDragUpdate(String elementId, DragUpdateDetails details) {
     if (_draggingElementId != elementId || _elementDragStartOffset == null) {
@@ -1826,7 +1835,8 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   /// 处理调整大小的更新
-  void _onResizeUpdate(String elementId, DragUpdateDetails details) {    if (_resizingElementId != elementId ||
+  void _onResizeUpdate(String elementId, DragUpdateDetails details) {
+    if (_resizingElementId != elementId ||
         _activeResizeHandle == null ||
         _resizeStartPosition == null ||
         _originalElementBounds == null) {
@@ -2001,7 +2011,6 @@ class MapCanvasState extends State<MapCanvas> {
   /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
   void _checkAndCleanOrphanedImageCache() {
     if (widget.mapItem.layers.isEmpty) {
-     
       _clearAllImageCache();
       return;
     }
@@ -2215,7 +2224,7 @@ class _LayerPainter extends CustomPainter {
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
-      }      // 使用裁剪来实现选择性遮挡
+      } // 使用裁剪来实现选择性遮挡
       EraserRenderer.drawElementWithEraserMask(
         canvas,
         element,
@@ -2242,9 +2251,6 @@ class _LayerPainter extends CustomPainter {
       }
     }
   }
-
-
-
 
   /// 检查矩形是否与橡皮擦形状重叠
   /// 检查矩形是否与橡皮擦形状重叠
@@ -2284,14 +2290,6 @@ class _LayerPainter extends CustomPainter {
 
   //   return false;
   // }
-
-
-
-
-
-
-
-
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
@@ -2338,6 +2336,7 @@ class _CurrentDrawingPainter extends CustomPainter {
       selectedElementId: selectedElementId,
     );
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }

@@ -39,7 +39,8 @@ class _MapAtlasContent extends StatefulWidget {
 
 class _MapAtlasContentState extends State<_MapAtlasContent>
     with MapLocalizationMixin {
-  final VfsMapService _vfsMapService = VfsMapServiceFactory.createVfsMapService();
+  final VfsMapService _vfsMapService =
+      VfsMapServiceFactory.createVfsMapService();
   final VfsStorageService _storageService = VfsStorageService();
   List<MapItemSummary> _maps = [];
   bool _isLoading = true;
@@ -49,49 +50,60 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   void initState() {
     super.initState();
     _loadMaps();
-  }  Future<void> _loadMaps() async {
+  }
+
+  Future<void> _loadMaps() async {
     setState(() => _isLoading = true);
     try {
       // 直接使用VFS列出所有.mapdata文件夹
-      final files = await _storageService.listDirectory('indexeddb://r6box/maps/');
+      final files = await _storageService.listDirectory(
+        'indexeddb://r6box/maps/',
+      );
       final maps = <MapItemSummary>[];
-      
+
       for (final file in files) {
         if (file.isDirectory && file.name.endsWith('.mapdata')) {
           try {
             // 从文件名提取地图标题
             final mapTitle = file.name.replaceAll('.mapdata', '');
             final decodedTitle = Uri.decodeComponent(mapTitle);
-            
+
             // 读取元数据
             final metaPath = 'indexeddb://r6box/maps/${file.name}/meta.json';
             final metaExists = await _storageService.exists(metaPath);
-            
+
             if (metaExists) {
               final metaFile = await _storageService.readFile(metaPath);
               if (metaFile != null) {
                 // 解码JSON元数据
                 final metaJson = utf8.decode(metaFile.data);
                 final metaData = jsonDecode(metaJson) as Map<String, dynamic>;
-                
+
                 // 读取封面图片
                 Uint8List? coverImage;
-                final coverPath = 'indexeddb://r6box/maps/${file.name}/cover.png';
+                final coverPath =
+                    'indexeddb://r6box/maps/${file.name}/cover.png';
                 if (await _storageService.exists(coverPath)) {
                   final coverFile = await _storageService.readFile(coverPath);
                   coverImage = coverFile?.data;
                 }
-                
+
                 // 创建MapItemSummary，使用地图标题作为ID的哈希值以兼容现有接口
                 final mapSummary = MapItemSummary(
                   id: decodedTitle.hashCode, // 使用标题哈希作为ID
                   title: decodedTitle,
                   imageData: coverImage,
                   version: (metaData['version'] as num?)?.toInt() ?? 1,
-                  createdAt: DateTime.parse(metaData['created_at'] as String? ?? DateTime.now().toIso8601String()),
-                  updatedAt: DateTime.parse(metaData['updated_at'] as String? ?? DateTime.now().toIso8601String()),
+                  createdAt: DateTime.parse(
+                    metaData['created_at'] as String? ??
+                        DateTime.now().toIso8601String(),
+                  ),
+                  updatedAt: DateTime.parse(
+                    metaData['updated_at'] as String? ??
+                        DateTime.now().toIso8601String(),
+                  ),
                 );
-                
+
                 maps.add(mapSummary);
               }
             }
@@ -132,6 +144,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
+
   Future<void> _addMap() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -259,13 +272,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ],
         );
       },
-    );    if (confirmed == true) {
+    );
+    if (confirmed == true) {
       try {
         // 使用VFS直接删除整个地图目录，使用与VFS服务一致的文件名清理方式
         final sanitizedTitle = FilenameSanitizer.sanitize(map.title);
         final encodedTitle = Uri.encodeComponent(sanitizedTitle);
         final mapDirectoryPath = 'indexeddb://r6box/maps/$encodedTitle.mapdata';
-        
+
         await _storageService.delete(mapDirectoryPath, recursive: true);
         await _loadMaps();
         _showSuccessSnackBar(l10n.mapDeletedSuccessfully);
@@ -289,6 +303,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
     }
   }
+
   void _openMapEditor(String mapTitle) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -408,7 +423,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   return _MapCard(
                     map: map,
                     localizedTitle: _localizedTitles[map.title] ?? map.title,
-                    onDelete: () {                  if (kIsWeb) {
+                    onDelete: () {
+                      if (kIsWeb) {
                         WebReadOnlyDialog.show(context, '删除地图');
                       } else {
                         _deleteMap(map);

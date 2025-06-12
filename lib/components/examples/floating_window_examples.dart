@@ -8,9 +8,7 @@ class FloatingWindowExamples extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('浮动窗口示例'),
-      ),
+      appBar: AppBar(title: const Text('浮动窗口示例')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -23,9 +21,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '最简单的浮动窗口，包含标题和内容',
               onPressed: () => _showBasicFloatingWindow(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 带图标和副标题的浮动窗口
             _buildExampleCard(
               context,
@@ -33,9 +31,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '包含图标、主标题和副标题的浮动窗口',
               onPressed: () => _showFloatingWindowWithIcon(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 自定义尺寸的浮动窗口
             _buildExampleCard(
               context,
@@ -43,9 +41,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '指定具体宽高比例的浮动窗口',
               onPressed: () => _showCustomSizeFloatingWindow(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 带操作按钮的浮动窗口
             _buildExampleCard(
               context,
@@ -53,9 +51,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '头部包含自定义操作按钮的浮动窗口',
               onPressed: () => _showFloatingWindowWithActions(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 可拖拽的浮动窗口
             _buildExampleCard(
               context,
@@ -63,9 +61,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '支持拖拽移动的浮动窗口',
               onPressed: () => _showDraggableFloatingWindow(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 使用构建器模式
             _buildExampleCard(
               context,
@@ -73,9 +71,9 @@ class FloatingWindowExamples extends StatelessWidget {
               description: '使用构建器模式创建复杂配置的浮动窗口',
               onPressed: () => _showFloatingWindowWithBuilder(context),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 使用扩展方法
             _buildExampleCard(
               context,
@@ -103,16 +101,16 @@ class FloatingWindowExamples extends StatelessWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 12),
             Align(
@@ -158,15 +156,9 @@ class FloatingWindowExamples extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: null,
-                  child: Text('取消'),
-                ),
+                TextButton(onPressed: null, child: Text('取消')),
                 SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: null,
-                  child: Text('确定'),
-                ),
+                ElevatedButton(onPressed: null, child: Text('确定')),
               ],
             ),
           ],
@@ -230,7 +222,7 @@ class FloatingWindowExamples extends StatelessWidget {
       context,
       title: '小型对话框',
       icon: Icons.info,
-      widthRatio: 0.6,  // 60%宽度
+      widthRatio: 0.6, // 60%宽度
       heightRatio: 0.4, // 40%高度
       minSize: const Size(400, 300), // 最小尺寸
       child: const Padding(
@@ -238,24 +230,14 @@ class FloatingWindowExamples extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 64,
-            ),
+            Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 16),
             Text(
               '操作成功',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text(
-              '您的操作已成功完成',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text('您的操作已成功完成', style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),
@@ -272,18 +254,18 @@ class FloatingWindowExamples extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('刷新操作')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('刷新操作')));
           },
           tooltip: '刷新',
         ),
         IconButton(
           icon: const Icon(Icons.settings),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('设置操作')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('设置操作')));
           },
           tooltip: '设置',
         ),
@@ -311,15 +293,9 @@ class FloatingWindowExamples extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                OutlinedButton(
-                  onPressed: () {},
-                  child: const Text('新建文件'),
-                ),
+                OutlinedButton(onPressed: () {}, child: const Text('新建文件')),
                 const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('上传'),
-                ),
+                ElevatedButton(onPressed: () {}, child: const Text('上传')),
               ],
             ),
           ],
@@ -390,9 +366,9 @@ class FloatingWindowExamples extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('帮助信息')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('帮助信息')));
             },
             tooltip: '帮助',
           ),
@@ -465,18 +441,11 @@ class FloatingWindowExamples extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.flash_on,
-              color: Colors.orange,
-              size: 64,
-            ),
+            Icon(Icons.flash_on, color: Colors.orange, size: 64),
             SizedBox(height: 16),
             Text(
               '快速创建',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(

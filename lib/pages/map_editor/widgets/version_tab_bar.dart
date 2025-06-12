@@ -27,10 +27,7 @@ class VersionTabBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
@@ -41,42 +38,48 @@ class VersionTabBar extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
-                children: versions.map((version) => _buildVersionTab(
-                  context,
-                  version,
-                  version.id == currentVersionId,
-                )).toList(),
+                children: versions
+                    .map(
+                      (version) => _buildVersionTab(
+                        context,
+                        version,
+                        version.id == currentVersionId,
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ),
-          
+
           // 添加版本按钮
-          if (!isPreviewMode)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: IconButton(
-                onPressed: () => _showCreateVersionDialog(context),
-                icon: const Icon(Icons.add, size: 20),
-                iconSize: 20,
-                constraints: const BoxConstraints(
-                  minWidth: 34,
-                  minHeight: 34,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                ),
-                tooltip: '创建新版本',
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: IconButton(
+              onPressed: () => _showCreateVersionDialog(context),
+              icon: const Icon(Icons.add, size: 20),
+              iconSize: 20,
+              constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                foregroundColor: Theme.of(context).colorScheme.primary,
               ),
+              tooltip: '创建新版本',
             ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVersionTab(BuildContext context, MapVersion version, bool isSelected) {
-    final isDeletable = version.id != 'default' && !isPreviewMode;
-    
+  Widget _buildVersionTab(
+    BuildContext context,
+    MapVersion version,
+    bool isSelected,
+  ) {
+    final isDeletable = version.id != 'default';
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
       child: Material(
@@ -96,10 +99,7 @@ class VersionTabBar extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                       width: 2,
                     )
-                  : Border.all(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
+                  : Border.all(color: Theme.of(context).dividerColor, width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -115,7 +115,7 @@ class VersionTabBar extends StatelessWidget {
                         : Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
-                
+
                 // 删除按钮
                 if (isDeletable) ...[
                   const SizedBox(width: 6),
@@ -147,7 +147,7 @@ class VersionTabBar extends StatelessWidget {
 
   void _showCreateVersionDialog(BuildContext context) {
     final nameController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

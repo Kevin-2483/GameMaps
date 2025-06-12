@@ -17,22 +17,22 @@ import 'video_processor.dart';
 class MarkdownRendererConfig {
   /// 是否显示工具栏
   final bool showToolbar;
-  
+
   /// 是否显示状态栏
   final bool showStatusBar;
-  
+
   /// 是否允许编辑模式
   final bool allowEdit;
-  
+
   /// 自定义工具栏按钮
   final List<Widget>? customToolbarActions;
-  
+
   /// 自定义状态栏内容
   final Widget? customStatusBar;
-  
+
   /// 工具栏样式
   final BoxDecoration? toolbarDecoration;
-  
+
   /// 状态栏样式
   final BoxDecoration? statusBarDecoration;
 
@@ -112,7 +112,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   VfsFileInfo? _fileInfo;
   // 显示配置
   bool _isDarkTheme = false;
-  bool _showToc = false;  double _contentScale = 1.0;
+  bool _showToc = false;
+  double _contentScale = 1.0;
   bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
   bool _enableLatexRendering = true; // 是否启用LaTeX渲染支持
   bool _enableVideoRendering = true; // 是否启用视频渲染支持
@@ -128,6 +129,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     _tocController.dispose();
     super.dispose();
   }
+
   /// 加载Markdown文件
   Future<void> _loadMarkdownFile() async {
     setState(() {
@@ -144,20 +146,22 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         } catch (e) {
           // 如果UTF-8解码失败，尝试使用Latin-1
           textContent = latin1.decode(fileContent.data);
-        }        // 如果启用HTML渲染，预处理HTML内容
+        } // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
           print('🔧 _loadMarkdownFile: 预处理HTML内容');
           textContent = _preprocessHtmlContent(textContent);
         }
 
         // 如果启用LaTeX渲染，预处理LaTeX内容
-        if (_enableLatexRendering && LatexProcessor.containsLatex(textContent)) {
+        if (_enableLatexRendering &&
+            LatexProcessor.containsLatex(textContent)) {
           print('🔧 _loadMarkdownFile: 预处理LaTeX内容');
           textContent = _preprocessLatexContent(textContent);
         }
 
         // 如果启用视频渲染，预处理视频内容
-        if (_enableVideoRendering && VideoProcessor.containsVideo(textContent)) {
+        if (_enableVideoRendering &&
+            VideoProcessor.containsVideo(textContent)) {
           print('🎥 _loadMarkdownFile: 预处理视频内容');
           textContent = _preprocessVideoContent(textContent);
         }
@@ -167,7 +171,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           _fileInfo = widget.fileInfo;
           _isLoading = false;
         });
-        
+
         // 通知加载完成
         widget.onLoaded?.call();
       } else {
@@ -197,7 +201,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         // 内容区域
         Expanded(child: _buildContent()),
         // 状态栏
-        if (widget.config.showStatusBar) 
+        if (widget.config.showStatusBar)
           widget.config.customStatusBar ?? _buildStatusBar(),
       ],
     );
@@ -207,16 +211,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   Widget _buildToolbar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: widget.config.toolbarDecoration ?? BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-      ),
+      decoration:
+          widget.config.toolbarDecoration ??
+          BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Theme.of(context).dividerColor),
+            ),
+          ),
       child: Row(
         children: [
           // 基础控制按钮
           ..._buildBasicControls(),
-          
+
           // 缩放控制
           const SizedBox(width: 16),
           ..._buildZoomControls(),
@@ -233,6 +239,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     );
   }
+
   /// 构建基础控制按钮
   List<Widget> _buildBasicControls() {
     return [
@@ -252,26 +259,28 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
       ),
 
-      const SizedBox(width: 16),      // HTML渲染切换
+      const SizedBox(width: 16), // HTML渲染切换
       IconButton(
         onPressed: _toggleHtmlRendering,
         icon: Icon(_enableHtmlRendering ? Icons.code : Icons.code_off),
         tooltip: _enableHtmlRendering ? '禁用HTML渲染' : '启用HTML渲染',
         style: IconButton.styleFrom(
-          foregroundColor: _enableHtmlRendering 
-              ? Theme.of(context).colorScheme.primary 
+          foregroundColor: _enableHtmlRendering
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
       ),
 
-      const SizedBox(width: 16),      // LaTeX渲染切换
+      const SizedBox(width: 16), // LaTeX渲染切换
       IconButton(
         onPressed: _toggleLatexRendering,
-        icon: Icon(_enableLatexRendering ? Icons.functions : Icons.functions_outlined),
+        icon: Icon(
+          _enableLatexRendering ? Icons.functions : Icons.functions_outlined,
+        ),
         tooltip: _enableLatexRendering ? '禁用LaTeX渲染' : '启用LaTeX渲染',
         style: IconButton.styleFrom(
-          foregroundColor: _enableLatexRendering 
-              ? Theme.of(context).colorScheme.primary 
+          foregroundColor: _enableLatexRendering
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
       ),
@@ -284,8 +293,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         icon: Icon(_enableVideoRendering ? Icons.videocam : Icons.videocam_off),
         tooltip: _enableVideoRendering ? '禁用视频渲染' : '启用视频渲染',
         style: IconButton.styleFrom(
-          foregroundColor: _enableVideoRendering 
-              ? Theme.of(context).colorScheme.primary 
+          foregroundColor: _enableVideoRendering
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
       ),
@@ -320,15 +329,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     ];
   }
+
   /// 构建动作按钮
-  List<Widget> _buildActionButtons() {    return [
+  List<Widget> _buildActionButtons() {
+    return [
       // HTML信息按钮（如果包含HTML）
       if (_containsHtml())
         IconButton(
           onPressed: _showHtmlInfo,
           icon: const Icon(Icons.info_outline),
           tooltip: 'HTML信息',
-        ),      // LaTeX信息按钮（如果包含LaTeX）
+        ), // LaTeX信息按钮（如果包含LaTeX）
       if (_containsLatex())
         IconButton(
           onPressed: _showLatexInfo,
@@ -440,43 +451,53 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         children: [
           Text(
             '目录',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(child: TocWidget(controller: _tocController)),
         ],
       ),
     );
-  }  /// 构建Markdown内容
+  }
+
+  /// 构建Markdown内容
   Widget _buildMarkdownContent() {
     print('🔧 _buildMarkdownContent: 开始构建');
-    print('🔧 _buildMarkdownContent: _enableVideoRendering = $_enableVideoRendering');
-    print('🔧 _buildMarkdownContent: _enableHtmlRendering = $_enableHtmlRendering');
-    print('🔧 _buildMarkdownContent: _enableLatexRendering = $_enableLatexRendering');
-    
+    print(
+      '🔧 _buildMarkdownContent: _enableVideoRendering = $_enableVideoRendering',
+    );
+    print(
+      '🔧 _buildMarkdownContent: _enableHtmlRendering = $_enableHtmlRendering',
+    );
+    print(
+      '🔧 _buildMarkdownContent: _enableLatexRendering = $_enableLatexRendering',
+    );
+
     final config = _buildMarkdownConfig();
-    
+
     // 创建自定义的MarkdownGenerator来支持多种扩展渲染
     MarkdownGenerator? markdownGenerator;
     final generators = <SpanNodeGeneratorWithTag>[];
     final inlineSyntaxList = <m.InlineSyntax>[];
-    
+
     // 添加LaTeX支持
     if (_enableLatexRendering) {
       inlineSyntaxList.add(LatexSyntax());
       generators.add(LatexProcessor.createGenerator());
-    }    // 添加视频支持
+    } // 添加视频支持
     if (_enableVideoRendering) {
       print('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
       inlineSyntaxList.add(VideoProcessor.createSyntax());
       generators.add(VideoProcessor.createGenerator());
     }
-    
+
     // 如果有任何自定义生成器或语法，创建MarkdownGenerator
     if (generators.isNotEmpty || inlineSyntaxList.isNotEmpty) {
-      print('🔧 _buildMarkdownContent: 创建MarkdownGenerator - generators: ${generators.length}, syntaxes: ${inlineSyntaxList.length}');
+      print(
+        '🔧 _buildMarkdownContent: 创建MarkdownGenerator - generators: ${generators.length}, syntaxes: ${inlineSyntaxList.length}',
+      );
       markdownGenerator = MarkdownGenerator(
         inlineSyntaxList: inlineSyntaxList,
         generators: generators,
@@ -488,7 +509,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       padding: const EdgeInsets.all(24),
       child: Transform.scale(
         scale: _contentScale,
-        alignment: Alignment.topLeft,        child: MarkdownWidget(
+        alignment: Alignment.topLeft,
+        child: MarkdownWidget(
           data: _markdownContent,
           config: config,
           tocController: _tocController,
@@ -496,12 +518,16 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
     );
-  }  /// 构建Markdown配置
+  }
+
+  /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
     final isDark = _isDarkTheme;
-    
+
     // 如果启用HTML和LaTeX渲染，使用混合配置
-    if (_enableHtmlRendering && _enableLatexRendering && _enableVideoRendering) {
+    if (_enableHtmlRendering &&
+        _enableLatexRendering &&
+        _enableVideoRendering) {
       return _createMixedRenderingConfig(isDark);
     }
     // 如果启用HTML和LaTeX渲染，使用混合配置
@@ -543,7 +569,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
     }
-    
+
     // 否则使用标准配置
     final baseConfig = isDark
         ? MarkdownConfig.darkConfig
@@ -647,7 +673,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         CodeConfig(
           style: TextStyle(
             color: isDark ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
-            backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+            backgroundColor: isDark
+                ? const Color(0xFF2D2D2D)
+                : const Color(0xFFF8F8F8),
             fontFamily: 'Courier',
             fontSize: 14,
           ),
@@ -673,11 +701,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 child: SelectionContainer.disabled(
                   child: Text(
                     '${index + 1}.',
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 16,
-                      height: 1.6,
-                    ),
+                    style: TextStyle(color: color, fontSize: 16, height: 1.6),
                   ),
                 ),
               );
@@ -710,19 +734,28 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ],
     );
   }
+
   /// 构建状态栏
-  Widget _buildStatusBar() {    final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
+  Widget _buildStatusBar() {
+    final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
-    final lineCount = _markdownContent.split('\n').length;    final htmlStats = _getHtmlStats();
+    final lineCount = _markdownContent.split('\n').length;
+    final htmlStats = _getHtmlStats();
     final latexStats = _getLatexStats();
     final videoStats = _getVideoStats();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: widget.config.statusBarDecoration ?? BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-      ),
+      decoration:
+          widget.config.statusBarDecoration ??
+          BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
+            border: Border(
+              top: BorderSide(color: Theme.of(context).dividerColor),
+            ),
+          ),
       child: Row(
         children: [
           Text('行数: $lineCount', style: Theme.of(context).textTheme.bodySmall),
@@ -730,18 +763,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           Text('字数: $wordCount', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(width: 16),
           Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
-            // 显示HTML信息
+          // 显示HTML信息
           if (htmlStats['hasHtml'] == true) ...[
             const SizedBox(width: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _enableHtmlRendering 
+                color: _enableHtmlRendering
                     ? Colors.green.withOpacity(0.2)
                     : Colors.orange.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: _enableHtmlRendering 
+                  color: _enableHtmlRendering
                       ? Colors.green.withOpacity(0.5)
                       : Colors.orange.withOpacity(0.5),
                 ),
@@ -758,21 +791,25 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   Text(
                     'HTML${_enableHtmlRendering ? '' : '(禁用)'}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                      color: _enableHtmlRendering
+                          ? Colors.green
+                          : Colors.orange,
                       fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-            if (htmlStats['linkCount'] != null && htmlStats['linkCount'] > 0) ...[
+            if (htmlStats['linkCount'] != null &&
+                htmlStats['linkCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
                 '链接: ${htmlStats['linkCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            if (htmlStats['imageCount'] != null && htmlStats['imageCount'] > 0) ...[
+            if (htmlStats['imageCount'] != null &&
+                htmlStats['imageCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
                 '图片: ${htmlStats['imageCount']}',
@@ -787,12 +824,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _enableLatexRendering 
+                color: _enableLatexRendering
                     ? Colors.blue.withOpacity(0.2)
                     : Colors.orange.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: _enableLatexRendering 
+                  color: _enableLatexRendering
                       ? Colors.blue.withOpacity(0.5)
                       : Colors.orange.withOpacity(0.5),
                 ),
@@ -801,7 +838,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _enableLatexRendering ? Icons.functions : Icons.functions_outlined,
+                    _enableLatexRendering
+                        ? Icons.functions
+                        : Icons.functions_outlined,
                     size: 12,
                     color: _enableLatexRendering ? Colors.blue : Colors.orange,
                   ),
@@ -809,20 +848,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   Text(
                     'LaTeX${_enableLatexRendering ? '' : '(禁用)'}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _enableLatexRendering ? Colors.blue : Colors.orange,
+                      color: _enableLatexRendering
+                          ? Colors.blue
+                          : Colors.orange,
                       fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-            if (latexStats['totalCount'] != null && latexStats['totalCount'] > 0) ...[
+            if (latexStats['totalCount'] != null &&
+                latexStats['totalCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
                 '公式: ${latexStats['totalCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            ],          ],
+            ],
+          ],
 
           // 显示视频信息
           if (videoStats['hasVideo'] == true) ...[
@@ -830,12 +873,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _enableVideoRendering 
+                color: _enableVideoRendering
                     ? Colors.purple.withOpacity(0.2)
                     : Colors.orange.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: _enableVideoRendering 
+                  color: _enableVideoRendering
                       ? Colors.purple.withOpacity(0.5)
                       : Colors.orange.withOpacity(0.5),
                 ),
@@ -846,20 +889,25 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   Icon(
                     _enableVideoRendering ? Icons.videocam : Icons.videocam_off,
                     size: 12,
-                    color: _enableVideoRendering ? Colors.purple : Colors.orange,
+                    color: _enableVideoRendering
+                        ? Colors.purple
+                        : Colors.orange,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '视频${_enableVideoRendering ? '' : '(禁用)'}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _enableVideoRendering ? Colors.purple : Colors.orange,
+                      color: _enableVideoRendering
+                          ? Colors.purple
+                          : Colors.orange,
                       fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-            if (videoStats['videoCount'] != null && videoStats['videoCount'] > 0) ...[
+            if (videoStats['videoCount'] != null &&
+                videoStats['videoCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
                 '视频: ${videoStats['videoCount']}',
@@ -945,8 +993,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         // 查找匹配的TOC项
         for (final toc in _tocController.tocList) {
           final headingSpan = toc.node.childrenSpan;
-          final headingText = headingSpan.toPlainText().replaceAll(RegExp(r'[#\s]+'), '');
-          
+          final headingText = headingSpan.toPlainText().replaceAll(
+            RegExp(r'[#\s]+'),
+            '',
+          );
+
           // 尝试匹配标题文本
           if (headingText.toLowerCase().contains(searchText.toLowerCase())) {
             _tocController.jumpToIndex(toc.widgetIndex);
@@ -960,7 +1011,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           }
         }
       }
-      
+
       // 如果TOC中没找到，显示未找到提示
       _showErrorSnackBar('未找到锚点: $searchText');
     } catch (e) {
@@ -973,10 +1024,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     try {
       // 获取当前文件的目录路径
       final currentDir = _getCurrentDirectory();
-      
+
       // 解析相对路径为绝对VFS路径
       final absolutePath = _resolveRelativePath(currentDir, relativePath);
-      
+
       // 使用VFS文件打开服务打开文件
       await VfsFileOpenerService.openFile(context, absolutePath);
     } catch (e) {
@@ -1141,6 +1192,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       _showToc = !_showToc;
     });
   }
+
   /// 切换主题
   void _toggleTheme() {
     setState(() {
@@ -1201,10 +1253,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         duration: const Duration(seconds: 3),
       ),
     );
-  }  /// 显示HTML信息对话框
+  }
+
+  /// 显示HTML信息对话框
   void _showHtmlInfo() {
     final htmlStats = _getHtmlStats();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1228,8 +1282,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   child: Row(
                     children: [
                       Icon(
-                        _enableHtmlRendering ? Icons.check_circle : Icons.cancel,
-                        color: _enableHtmlRendering ? Colors.green : Colors.orange,
+                        _enableHtmlRendering
+                            ? Icons.check_circle
+                            : Icons.cancel,
+                        color: _enableHtmlRendering
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -1241,9 +1299,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                           ),
                           Text(
                             _enableHtmlRendering ? '已启用' : '已禁用',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: _enableHtmlRendering ? Colors.green : Colors.orange,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: _enableHtmlRendering
+                                      ? Colors.green
+                                      : Colors.orange,
+                                ),
                           ),
                         ],
                       ),
@@ -1264,13 +1325,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
               // HTML内容统计
               if (htmlStats['hasHtml'] == true) ...[
-                Text(
-                  'HTML内容统计',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text('HTML内容统计', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
-                
-                if (htmlStats['linkCount'] != null && htmlStats['linkCount'] > 0) ...[
+
+                if (htmlStats['linkCount'] != null &&
+                    htmlStats['linkCount'] > 0) ...[
                   Row(
                     children: [
                       const Icon(Icons.link, size: 16),
@@ -1280,8 +1339,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   ),
                   const SizedBox(height: 4),
                 ],
-                
-                if (htmlStats['imageCount'] != null && htmlStats['imageCount'] > 0) ...[
+
+                if (htmlStats['imageCount'] != null &&
+                    htmlStats['imageCount'] > 0) ...[
                   Row(
                     children: [
                       const Icon(Icons.image, size: 16),
@@ -1307,13 +1367,16 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                       spacing: 4,
                       runSpacing: 4,
                       children: HtmlProcessor.getSupportedTags()
-                          .map((tag) => Chip(
-                                label: Text(
-                                  '<$tag>',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ))
+                          .map(
+                            (tag) => Chip(
+                              label: Text(
+                                '<$tag>',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -1328,13 +1391,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             child: const Text('关闭'),
           ),
         ],
-      ),    );
+      ),
+    );
   }
 
   /// 显示LaTeX信息对话框
   void _showLatexInfo() {
     final latexStats = _getLatexStats();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1358,8 +1422,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   child: Row(
                     children: [
                       Icon(
-                        _enableLatexRendering ? Icons.check_circle : Icons.cancel,
-                        color: _enableLatexRendering ? Colors.green : Colors.orange,
+                        _enableLatexRendering
+                            ? Icons.check_circle
+                            : Icons.cancel,
+                        color: _enableLatexRendering
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -1371,9 +1439,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                           ),
                           Text(
                             _enableLatexRendering ? '已启用' : '已禁用',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: _enableLatexRendering ? Colors.green : Colors.orange,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: _enableLatexRendering
+                                      ? Colors.green
+                                      : Colors.orange,
+                                ),
                           ),
                         ],
                       ),
@@ -1390,7 +1461,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 ),
               ),
 
-              const SizedBox(height: 16),              // LaTeX统计信息
+              const SizedBox(height: 16), // LaTeX统计信息
               if (latexStats['hasLatex'] == true) ...[
                 Text(
                   'LaTeX公式统计',
@@ -1432,9 +1503,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                             const Text('总计'),
                             Text(
                               '${latexStats['totalCount']}个',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -1481,20 +1551,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (vfsPath == null || vfsPath.segments.isEmpty) {
       return '';
     }
-    
+
     // 获取文件所在目录的路径（移除文件名）
     if (vfsPath.segments.length > 1) {
-      final dirSegments = vfsPath.segments.sublist(0, vfsPath.segments.length - 1);
+      final dirSegments = vfsPath.segments.sublist(
+        0,
+        vfsPath.segments.length - 1,
+      );
       return dirSegments.join('/');
     }
-    
+
     return '';
   }
 
   /// 解析相对路径为绝对路径
   String _resolveRelativePath(String currentDir, String relativePath) {
     // 如果是绝对路径，直接返回
-    if (relativePath.startsWith('/') || relativePath.startsWith('indexeddb://')) {
+    if (relativePath.startsWith('/') ||
+        relativePath.startsWith('indexeddb://')) {
       return relativePath;
     }
 
@@ -1521,7 +1595,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
     // 构建最终路径
     final finalRelativePath = currentParts.join('/');
-    
+
     // 使用VfsProtocol构建完整的VFS路径
     return VfsProtocol.buildPath(
       currentVfsPath.database,
@@ -1535,10 +1609,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     switch (depth % 3) {
       case 0:
         // 第一层：实心圆点
-        return BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-        );
+        return BoxDecoration(shape: BoxShape.circle, color: color);
       case 1:
         // 第二层：空心圆点
         return BoxDecoration(
@@ -1551,6 +1622,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         return BoxDecoration(color: color);
     }
   }
+
   /// 格式化文件大小
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -1567,7 +1639,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     try {
       // 首先清理不安全的HTML内容
       final sanitizedContent = HtmlUtils.sanitizeHtml(content);
-      
+
       if (_enableHtmlRendering) {
         // 如果启用HTML渲染，可以选择性转换一些HTML为Markdown
         // 同时保留复杂的HTML结构（如表格）给markdown_widget处理
@@ -1587,16 +1659,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   bool _containsHtml() {
     return HtmlProcessor.containsHtml(_markdownContent);
   }
+
   /// 获取HTML统计信息
   Map<String, dynamic> _getHtmlStats() {
     if (!_containsHtml()) {
       return {'hasHtml': false};
     }
-    
+
     try {
       final links = HtmlUtils.extractLinks(_markdownContent);
       final images = HtmlUtils.extractImages(_markdownContent);
-      
+
       return {
         'hasHtml': true,
         'linkCount': links.length,
@@ -1611,7 +1684,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   }
 
   // ========== LaTeX处理方法 ==========
-  
+
   /// 预处理LaTeX内容
   String _preprocessLatexContent(String content) {
     try {
@@ -1635,13 +1708,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       RegExp(r'\$\$(.*?)\$\$', multiLine: true, dotAll: true),
       (match) => match.group(1) ?? '',
     );
-    
+
     // 移除行内LaTeX语法 $...$
     content = content.replaceAllMapped(
       RegExp(r'\$([^$]+)\$'),
       (match) => match.group(1) ?? '',
     );
-    
+
     return content;
   }
 
@@ -1654,6 +1727,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   Map<String, dynamic> _getLatexStats() {
     return LatexUtils.getLatexStats(_markdownContent);
   }
+
   /// 切换LaTeX渲染
   void _toggleLatexRendering() {
     setState(() {
@@ -1671,6 +1745,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 重新加载内容以应用视频渲染设置
     _loadMarkdownFile();
   }
+
   /// 预处理视频内容
   String _preprocessVideoContent(String content) {
     print('🎥 _preprocessVideoContent: 开始处理');
@@ -1678,7 +1753,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       print('🎥 _preprocessVideoContent: 视频渲染已禁用');
       return content;
     }
-    
+
     final result = VideoProcessor.convertMarkdownVideos(content);
     print('🎥 _preprocessVideoContent: 转换完成');
     return result;
@@ -1686,7 +1761,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 检查内容是否包含视频
   bool _containsVideo() {
-    return _enableVideoRendering && VideoProcessor.containsVideo(_markdownContent);
+    return _enableVideoRendering &&
+        VideoProcessor.containsVideo(_markdownContent);
   }
 
   /// 获取视频统计信息
@@ -1700,7 +1776,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   /// 显示视频信息对话框
   void _showVideoInfo() {
     final videoStats = _getVideoStats();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1722,26 +1798,32 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                     child: Column(
                       children: (videoStats['videos'] as List<String>)
                           .take(10)
-                          .map((video) => Container(
-                                padding: const EdgeInsets.all(8),
-                                margin: const EdgeInsets.only(bottom: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceVariant,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.videocam, size: 16),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        video.length > 50 ? '${video.substring(0, 50)}...' : video,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
+                          .map(
+                            (video) => Container(
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.videocam, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      video.length > 50
+                                          ? '${video.substring(0, 50)}...'
+                                          : video,
+                                      style: const TextStyle(fontSize: 12),
                                     ),
-                                  ],
-                                ),
-                              ))
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -1769,13 +1851,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       ),
     );
   }
+
   /// 创建混合渲染配置（支持HTML、LaTeX和视频）
   MarkdownConfig _createMixedRenderingConfig(bool isDark) {
     // 创建基础配置
     final baseConfig = isDark
         ? MarkdownConfig.darkConfig
         : MarkdownConfig.defaultConfig;
-    
+
     // 合并HTML、LaTeX和视频的配置
     final configs = <WidgetConfig>[
       // 段落文本配置 - 确保在黑暗模式下文本可见
@@ -1874,7 +1957,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       CodeConfig(
         style: TextStyle(
           color: isDark ? const Color(0xFFE6E6E6) : const Color(0xFF333333),
-          backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF8F8F8),
+          backgroundColor: isDark
+              ? const Color(0xFF2D2D2D)
+              : const Color(0xFFF8F8F8),
           fontFamily: 'Courier',
           fontSize: 14,
         ),
@@ -1900,11 +1985,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               child: SelectionContainer.disabled(
                 child: Text(
                   '${index + 1}.',
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 16,
-                    height: 1.6,
-                  ),
+                  style: TextStyle(color: color, fontSize: 16, height: 1.6),
                 ),
               ),
             );
@@ -1934,23 +2015,26 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           color: isDark ? Colors.white : Colors.black87,
         ),
       ),
-    ];    // 如果启用LaTeX渲染，添加LaTeX配置
+    ]; // 如果启用LaTeX渲染，添加LaTeX配置
     if (_enableLatexRendering) {
       configs.add(LatexConfig(isDarkTheme: isDark));
     }
 
     // 如果启用视频渲染，添加视频配置
     if (_enableVideoRendering) {
-      configs.add(VideoNodeConfig(
-        isDarkTheme: isDark,
-        onVideoTap: _onLinkTap,
-        errorBuilder: (url, alt, error) => _buildImageError(url, error.toString()),
-      ));
+      configs.add(
+        VideoNodeConfig(
+          isDarkTheme: isDark,
+          onVideoTap: _onLinkTap,
+          errorBuilder: (url, alt, error) =>
+              _buildImageError(url, error.toString()),
+        ),
+      );
     }
 
     // 创建配置
     var config = baseConfig.copy(configs: configs);
-    
+
     return config;
   }
 }

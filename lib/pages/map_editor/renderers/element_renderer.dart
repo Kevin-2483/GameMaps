@@ -197,16 +197,10 @@ class ElementRenderer {
         );
         canvas.clipPath(finalPath);
       } else if (needsCurvatureClip) {
-        final Path curvedPath = createSuperellipsePath(
-          rect,
-          element.curvature,
-        );
+        final Path curvedPath = createSuperellipsePath(rect, element.curvature);
         canvas.clipPath(curvedPath);
       } else if (needsTriangleClip) {
-        final Path trianglePath = createTrianglePath(
-          rect,
-          element.triangleCut,
-        );
+        final Path trianglePath = createTrianglePath(rect, element.triangleCut);
         canvas.clipPath(trianglePath);
       }
     }
@@ -215,7 +209,8 @@ class ElementRenderer {
     if (element.imageData != null) {
       // 1. 优先使用元素自己的图片数据
       final cachedImage = imageCache?[element.id];
-      if (cachedImage != null) {        drawCachedImage(
+      if (cachedImage != null) {
+        drawCachedImage(
           canvas,
           cachedImage,
           rect,
@@ -244,6 +239,7 @@ class ElementRenderer {
       canvas.restore();
     }
   }
+
   /// 绘制缓存的图片
   static void drawCachedImage(
     Canvas canvas,
@@ -251,7 +247,10 @@ class ElementRenderer {
     Rect rect,
     BoxFit fit,
   ) {
-    final Size sourceSize = Size(image.width.toDouble(), image.height.toDouble());
+    final Size sourceSize = Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
     final Size destinationSize = rect.size;
 
     // 计算图片在目标矩形中的实际绘制区域
@@ -334,10 +333,7 @@ class ElementRenderer {
     final textPainter = TextPainter(
       text: TextSpan(
         text: '加载中...',
-        style: TextStyle(
-          color: Colors.blue.withOpacity(0.7),
-          fontSize: 12.0,
-        ),
+        style: TextStyle(color: Colors.blue.withOpacity(0.7), fontSize: 12.0),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -345,10 +341,7 @@ class ElementRenderer {
     textPainter.layout();
     textPainter.paint(
       canvas,
-      Offset(
-        center.dx - textPainter.width / 2,
-        center.dy + iconSize / 2 + 4,
-      ),
+      Offset(center.dx - textPainter.width / 2, center.dy + iconSize / 2 + 4),
     );
   }
 }

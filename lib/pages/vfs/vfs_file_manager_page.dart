@@ -512,18 +512,16 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       });
     }
   }
+
   /// 显示文件元数据
   Future<void> _showFileMetadata(VfsFileInfo file) async {
     await VfsFileMetadataDialog.show(context, file);
   }
+
   /// 打开文件
   Future<void> _openFile(VfsFileInfo file) async {
     try {
-      await VfsFileOpenerService.openFile(
-        context,
-        file.path,
-        fileInfo: file,
-      );
+      await VfsFileOpenerService.openFile(context, file.path, fileInfo: file);
     } catch (e) {
       _showErrorSnackBar('打开文件失败: $e');
       // 如果文件打开失败，回退到显示文件元数据
@@ -1444,7 +1442,8 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         final file = files[index];
         final isSelected = _selectedFiles.contains(file.path);
         return ContextMenuWrapper(
-          menuBuilder: (context) => _buildFileContextMenu(file),          child: _FileListItem(
+          menuBuilder: (context) => _buildFileContextMenu(file),
+          child: _FileListItem(
             file: file,
             isSelected: isSelected,
             isCutToClipboard:
@@ -1530,7 +1529,8 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
               }
             }),
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,            onTap: () {
+            getFileIcon: _getFileIcon,
+            onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
@@ -1576,7 +1576,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           _selectedFiles.clear();
         });
       });
-    }    // 显示单文件上下文菜单
+    } // 显示单文件上下文菜单
     return [
       if (file.isDirectory)
         ContextMenuItem(
@@ -1613,11 +1613,12 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         label: '剪切',
         icon: Icons.cut,
         onTap: () => _cutFiles([file]),
-      ),      if (_clipboardFiles.isNotEmpty)
+      ),
+      if (_clipboardFiles.isNotEmpty)
         ContextMenuItem(label: '粘贴', icon: Icons.paste, onTap: _pasteFiles),
-      
+
       const ContextMenuItem.divider(),
-      
+
       // ZIP解压选项（仅对ZIP文件显示）
       if (_isZipFile(file))
         ContextMenuItem(
@@ -1625,7 +1626,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           icon: Icons.folder_zip,
           onTap: () => _extractZipFile(file),
         ),
-      
+
       // 下载选项
       ContextMenuItem(
         label: '下载',
@@ -2903,7 +2904,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     if (_selectedDatabase == null || _selectedCollection == null) {
       _showErrorSnackBar('请先选择数据库和集合');
       return;
-    }    try {      // 使用VfsFileManagerWindow.showFilePicker选择解压目标路径
+    }
+    try {
+      // 使用VfsFileManagerWindow.showFilePicker选择解压目标路径
       final selectedPath = await VfsFileManagerWindow.showFilePicker(
         context,
         initialDatabase: _selectedDatabase,
@@ -2948,18 +2951,21 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       for (final archiveFile in archive) {
         if (archiveFile.isFile) {
           // 构建目标文件路径（相对路径）
-          final targetPath = targetBasePath.isEmpty 
-              ? archiveFile.name 
+          final targetPath = targetBasePath.isEmpty
+              ? archiveFile.name
               : '$targetBasePath/${archiveFile.name}';
 
           // 确保目标目录存在
-          final parentPath = targetPath.contains('/') 
+          final parentPath = targetPath.contains('/')
               ? targetPath.substring(0, targetPath.lastIndexOf('/'))
               : '';
-          
+
           if (parentPath.isNotEmpty) {
             try {
-              await _vfsService.createDirectory(_selectedCollection!, parentPath);
+              await _vfsService.createDirectory(
+                _selectedCollection!,
+                parentPath,
+              );
             } catch (e) {
               // 目录可能已存在，忽略错误
             }
@@ -3133,7 +3139,8 @@ class _FileListItemState extends State<_FileListItem> {
             ),
           ),
         ),
-      ),);
+      ),
+    );
   }
 }
 
@@ -3267,6 +3274,7 @@ class _FileGridItemState extends State<_FileGridItem> {
             ),
           ),
         ),
-      ),);
+      ),
+    );
   }
 }

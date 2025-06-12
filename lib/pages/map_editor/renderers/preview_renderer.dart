@@ -137,10 +137,7 @@ class PreviewRenderer {
         freeDrawingPath != null) {
       // 对于自由绘制，使用路径点
       points = freeDrawingPath
-          .map(
-            (point) =>
-                Offset(point.dx / size.width, point.dy / size.height),
-          )
+          .map((point) => Offset(point.dx / size.width, point.dy / size.height))
           .toList();
     } else {
       // 对于其他绘制类型，使用开始和结束点

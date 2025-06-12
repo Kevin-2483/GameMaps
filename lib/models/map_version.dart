@@ -84,8 +84,9 @@ class MapVersionManager {
   MapVersionManager({required this.mapTitle});
 
   /// 获取所有版本
-  List<MapVersion> get versions => _versions.values.toList()
-    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  List<MapVersion> get versions =>
+      _versions.values.toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
   /// 获取当前版本ID
   String get currentVersionId => _currentVersionId;
@@ -97,17 +98,24 @@ class MapVersionManager {
   void addVersion(MapVersion version) {
     _versions[version.id] = version;
   }
+
   /// 从数据创建版本（用于加载已存在的版本）
-  MapVersion createVersionFromData(String versionId, String name, MapItem mapData) {
+  MapVersion createVersionFromData(
+    String versionId,
+    String name,
+    MapItem mapData,
+  ) {
     final now = DateTime.now();
-    
+
     // 创建地图数据的深拷贝，避免引用问题
     final deepCopiedMapData = mapData.copyWith(
       layers: mapData.layers.map((layer) => layer.copyWith()).toList(),
-      legendGroups: mapData.legendGroups.map((group) => group.copyWith()).toList(),
+      legendGroups: mapData.legendGroups
+          .map((group) => group.copyWith())
+          .toList(),
       updatedAt: now,
     );
-    
+
     final version = MapVersion(
       id: versionId,
       name: name,
@@ -115,26 +123,30 @@ class MapVersionManager {
       updatedAt: now,
       mapData: deepCopiedMapData,
     );
-    
+
     _versions[versionId] = version;
     return version;
-  }/// 创建新版本
+  }
+
+  /// 创建新版本
   MapVersion createVersion(String name, MapItem currentMapData) {
     final now = DateTime.now();
-    
+
     // 使用清理后的版本名称作为版本ID
     String versionId = _sanitizeVersionName(name);
-    
+
     // 确保版本ID唯一
     versionId = _ensureUniqueVersionId(versionId);
-    
+
     // 创建地图数据的深拷贝，避免引用问题
     final deepCopiedMapData = currentMapData.copyWith(
       layers: currentMapData.layers.map((layer) => layer.copyWith()).toList(),
-      legendGroups: currentMapData.legendGroups.map((group) => group.copyWith()).toList(),
+      legendGroups: currentMapData.legendGroups
+          .map((group) => group.copyWith())
+          .toList(),
       updatedAt: now,
     );
-    
+
     final version = MapVersion(
       id: versionId,
       name: name,
@@ -142,7 +154,7 @@ class MapVersionManager {
       updatedAt: now,
       mapData: deepCopiedMapData,
     );
-    
+
     _versions[versionId] = version;
     return version;
   }
@@ -152,7 +164,7 @@ class MapVersionManager {
     if (name.isEmpty) {
       return 'untitled_version';
     }
-    
+
     String sanitized = name
         // 替换不安全的字符为下划线
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
@@ -164,12 +176,12 @@ class MapVersionManager {
         .replaceAll(RegExp(r'^[._]+|[._]+$'), '')
         // 限制长度
         .substring(0, name.length > 50 ? 50 : name.length);
-    
+
     // 如果处理后为空，使用默认名称
     if (sanitized.isEmpty) {
       return 'untitled_version';
     }
-    
+
     return sanitized;
   }
 
@@ -178,14 +190,14 @@ class MapVersionManager {
     if (!_versions.containsKey(baseId)) {
       return baseId;
     }
-    
+
     int counter = 1;
     String uniqueId;
     do {
       uniqueId = '${baseId}_$counter';
       counter++;
     } while (_versions.containsKey(uniqueId));
-    
+
     return uniqueId;
   }
 
@@ -195,6 +207,7 @@ class MapVersionManager {
       _currentVersionId = versionId;
     }
   }
+
   /// 获取版本信息
   MapVersion? getVersion(String versionId) {
     return _versions[versionId];
@@ -204,10 +217,10 @@ class MapVersionManager {
   bool deleteVersion(String versionId) {
     // 不能删除默认版本
     if (versionId == 'default') return false;
-    
+
     // 不能删除当前版本
     if (versionId == _currentVersionId) return false;
-    
+
     return _versions.remove(versionId) != null;
   }
 
@@ -215,6 +228,7 @@ class MapVersionManager {
   bool hasVersion(String versionId) {
     return _versions.containsKey(versionId);
   }
+
   /// 更新版本数据
   void updateVersionData(String versionId, MapItem mapData) {
     final version = _versions[versionId];
@@ -222,10 +236,12 @@ class MapVersionManager {
       // 创建地图数据的深拷贝，避免引用问题
       final deepCopiedMapData = mapData.copyWith(
         layers: mapData.layers.map((layer) => layer.copyWith()).toList(),
-        legendGroups: mapData.legendGroups.map((group) => group.copyWith()).toList(),
+        legendGroups: mapData.legendGroups
+            .map((group) => group.copyWith())
+            .toList(),
         updatedAt: DateTime.now(),
       );
-      
+
       _versions[versionId] = version.copyWith(
         mapData: deepCopiedMapData,
         updatedAt: DateTime.now(),
@@ -242,7 +258,7 @@ class MapVersionManager {
   void clear() {
     _versions.clear();
     _currentVersionId = 'default';
-    
+
     // 重新添加默认版本
     final now = DateTime.now();
     _versions['default'] = MapVersion(

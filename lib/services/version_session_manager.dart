@@ -1,8 +1,6 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/map_item.dart';
-
 
 /// 版本会话状态
 class VersionSessionState {
@@ -273,7 +271,6 @@ class VersionSessionManager {
     _sessionStates.clear();
     _currentVersionId = null;
   }
-
 
   /// 清理过期的会话状态（超过指定天数的状态）
   void cleanupExpiredSessions({int expireDays = 7}) {

@@ -68,12 +68,12 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
       );
 
       final mapId = await _mapService.insertMap(sampleMap);
-      
+
       setState(() {
         _statusMessage = '成功创建示例地图 (ID: $mapId)';
         _isLoading = false;
       });
-      
+
       // 重新加载地图列表
       await _loadMaps();
     } catch (e) {
@@ -98,12 +98,12 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
 
     try {
       await _mapService.deleteMap(map.id!);
-      
+
       setState(() {
         _statusMessage = '成功删除地图 "${map.title}"';
         _isLoading = false;
       });
-      
+
       // 重新加载地图列表
       await _loadMaps();
     } catch (e) {
@@ -135,6 +135,7 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
     );
     return result ?? false;
   }
+
   /// 生成示例图像数据
   Uint8List _generateSampleImageData() {
     // 简单的占位图像数据
@@ -150,9 +151,9 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
 
     try {
       final exportPath = await _mapService.exportDatabase();
-      
+
       setState(() {
-        _statusMessage = exportPath != null 
+        _statusMessage = exportPath != null
             ? '成功导出地图数据到: $exportPath'
             : '导出操作被取消';
         _isLoading = false;
@@ -169,7 +170,9 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('VFS地图存储示例${VfsMapServiceFactory.isUsingVfsStorage ? ' (VFS模式)' : ' (传统模式)'}'),
+        title: Text(
+          'VFS地图存储示例${VfsMapServiceFactory.isUsingVfsStorage ? ' (VFS模式)' : ' (传统模式)'}',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -199,7 +202,7 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
                 ),
                 const SizedBox(height: 4),
                 Text('状态: $_statusMessage'),
-                if (_isLoading) 
+                if (_isLoading)
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: LinearProgressIndicator(),
@@ -207,7 +210,7 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
               ],
             ),
           ),
-          
+
           // 地图列表
           Expanded(
             child: _maps.isEmpty
@@ -226,7 +229,10 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
                     itemBuilder: (context, index) {
                       final map = _maps[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
                         child: ListTile(
                           leading: Container(
                             width: 48,
@@ -242,7 +248,9 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('版本: ${map.version}'),
-                              Text('图层: ${map.layers.length} | 图例组: ${map.legendGroups.length}'),
+                              Text(
+                                '图层: ${map.layers.length} | 图例组: ${map.legendGroups.length}',
+                              ),
                               Text('创建时间: ${_formatDateTime(map.createdAt)}'),
                             ],
                           ),
@@ -258,7 +266,10 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
                               const PopupMenuItem(
                                 value: 'delete',
                                 child: ListTile(
-                                  leading: Icon(Icons.delete, color: Colors.red),
+                                  leading: Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
                                   title: Text('删除'),
                                 ),
                               ),
@@ -287,7 +298,7 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   @override

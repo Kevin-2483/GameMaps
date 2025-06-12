@@ -10,7 +10,8 @@ class ConfigValidator {
     'Android',
     'iOS',
     'Web',
-  ];  static const List<String> _validPages = [
+  ];
+  static const List<String> _validPages = [
     'HomePage',
     'SettingsPage',
     'UserPreferencesPage',

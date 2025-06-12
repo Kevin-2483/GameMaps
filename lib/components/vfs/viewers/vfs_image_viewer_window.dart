@@ -259,7 +259,8 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           ],
         ),
       );
-    }    return GestureDetector(
+    }
+    return GestureDetector(
       onTap: _toggleControls,
       onDoubleTap: _toggleActualSize,
       child: InteractiveViewer(
@@ -309,6 +310,7 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
       ),
     );
   }
+
   /// 获取当前缩放比例
   double _getCurrentScale() {
     return _transformationController.value.getMaxScaleOnAxis();
