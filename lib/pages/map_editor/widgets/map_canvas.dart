@@ -11,7 +11,11 @@ import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
 import 'sticky_note_display.dart'; // 导入便签显示组件
-import '../utils/drawing_utils.dart'; // 导入绘制工具函数
+// 导入渲染器
+import '../renderers/highlight_renderer.dart';
+import '../renderers/preview_renderer.dart';
+import '../renderers/eraser_renderer.dart';
+import '../renderers/background_renderer.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -54,29 +58,15 @@ class DrawingPreviewData {
   });
 }
 
+// 这些工具函数已经移动到单独的渲染器文件中
+
 // 这些工具函数已经移动到 drawing_utils.dart 中
 // 现在保留包装函数以便于调用
 
 // --- 重构后的 _drawCurvedRectangle 函数 ---
-/// 绘制弧度矩形（从圆角矩形到椭圆的渐变）
-void _drawCurvedRectangle(
-  Canvas canvas,
-  Rect rect,
-  Paint paint,
-  double curvature,
-) {
-  drawCurvedRectangle(canvas, rect, paint, curvature);
-}
 
-void _drawCurvedTrianglePath(
-  Canvas canvas,
-  Rect rect,
-  Paint paint,
-  double curvature,
-  TriangleCutType triangleCut,
-) {
-  drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
-}
+
+
 
 /// 辅助类：用于管理分层元素
 class _LayeredElement {
@@ -2443,20 +2433,11 @@ class _SelectionPainter extends CustomPainter {
   final Rect? selectionRect;
 
   _SelectionPainter(this.selectionRect);
-
   @override
   void paint(Canvas canvas, Size size) {
     if (selectionRect == null) return;
 
-    // 绘制选区边框
-    final borderPaint = Paint()
-      ..color = Colors.blue.withAlpha((0.8 * 255).toInt())
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-
-    // 绘制虚线边框
-    drawDashedRect(canvas, selectionRect!, borderPaint, 5.0, 3.0);
+    BackgroundRenderer.drawSelection(canvas, selectionRect!);
   }
 
   @override
@@ -2501,18 +2482,25 @@ class _LayerPainter extends CustomPainter {
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
-      }
-
-      // 使用裁剪来实现选择性遮挡
-      _drawElementWithEraserMask(canvas, element, eraserElements, size);
+      }      // 使用裁剪来实现选择性遮挡
+      EraserRenderer.drawElementWithEraserMask(
+        canvas,
+        element,
+        eraserElements,
+        size,
+        imageCache: imageCache,
+        imageBufferCachedImage: imageBufferCachedImage,
+        currentImageBufferData: currentImageBufferData,
+        imageBufferFit: imageBufferFit,
+      );
     } // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
     if (selectedElementId != null) {
       final selectedElement = sortedElements
           .where((e) => e.id == selectedElementId)
           .firstOrNull;
       if (selectedElement != null) {
-        _drawRainbowHighlight(canvas, selectedElement, size);
-        _drawResizeHandles(
+        HighlightRenderer.drawRainbowHighlight(canvas, selectedElement, size);
+        HighlightRenderer.drawResizeHandles(
           canvas,
           selectedElement,
           size,
@@ -2522,370 +2510,7 @@ class _LayerPainter extends CustomPainter {
     }
   }
 
-  // 根据元素类型直接显示内容
-  void _drawRainbowHighlight(
-    Canvas canvas,
-    MapDrawingElement element,
-    Size size,
-  ) {
-    // 首先获取元素的坐标
-    if (element.points.isEmpty) return;
 
-    // 彩虹色渐变效果（用于填充文本或形状）
-    final rainbowColors = [
-      Colors.red,
-      Colors.orange,
-      Colors.yellow,
-      Colors.green,
-      Colors.blue,
-      Colors.indigo,
-      Colors.purple,
-    ];
-
-    // 获取当前时间以创建动画效果
-    final now = DateTime.now().millisecondsSinceEpoch / 1000;
-    final animOffset = now % 1.0; // 0.0 - 1.0 之间循环变化
-
-    // 根据元素类型绘制不同的内容
-    switch (element.type) {
-      case DrawingElementType.text:
-        // 文本元素
-        if (element.text == null || element.text!.isEmpty) return;
-
-        final position = Offset(
-          element.points[0].dx * size.width,
-          element.points[0].dy * size.height,
-        );
-
-        // 创建彩虹渐变文本
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: element.text!,
-            style: TextStyle(
-              fontSize: element.fontSize ?? 16.0,
-              fontWeight: FontWeight.bold,
-              foreground: Paint()
-                ..shader = LinearGradient(
-                  colors: rainbowColors,
-                  transform: GradientRotation(animOffset * math.pi * 2),
-                ).createShader(Rect.fromLTWH(0, 0, 300, 50)),
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        );
-
-        textPainter.layout();
-        textPainter.paint(canvas, position);
-        break;
-
-      case DrawingElementType.freeDrawing:
-        // 自由绘制路径
-        if (element.points.length < 2) return;
-
-        final path = Path();
-        final screenPoints = element.points
-            .map(
-              (point) => Offset(point.dx * size.width, point.dy * size.height),
-            )
-            .toList();
-
-        path.moveTo(screenPoints[0].dx, screenPoints[0].dy);
-        for (int i = 1; i < screenPoints.length; i++) {
-          path.lineTo(screenPoints[i].dx, screenPoints[i].dy);
-        }
-
-        // 彩虹渐变画笔
-        final paint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = element.strokeWidth + 2
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round
-          ..shader = LinearGradient(
-            colors: rainbowColors,
-            transform: GradientRotation(animOffset * math.pi * 2),
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-        canvas.drawPath(path, paint);
-        break;
-
-      default:
-        // 其他基于两点的元素
-        if (element.points.length < 2) return;
-
-        final start = Offset(
-          element.points[0].dx * size.width,
-          element.points[0].dy * size.height,
-        );
-
-        final end = Offset(
-          element.points[1].dx * size.width,
-          element.points[1].dy * size.height,
-        );
-
-        // 彩虹渐变画笔
-        final paint = Paint()
-          ..strokeWidth = element.strokeWidth + 2
-          ..shader = LinearGradient(
-            colors: rainbowColors,
-            transform: GradientRotation(animOffset * math.pi * 2),
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-        // 根据不同的绘制类型绘制不同的形状
-        switch (element.type) {
-          case DrawingElementType.line:
-            paint.style = PaintingStyle.stroke;
-            canvas.drawLine(start, end, paint);
-            break;
-          case DrawingElementType.dashedLine:
-            paint.style = PaintingStyle.stroke;
-            drawDashedLine(canvas, start, end, paint, element.density);
-            break;
-
-          case DrawingElementType.arrow:
-            paint.style = PaintingStyle.stroke;
-            drawArrow(canvas, start, end, paint);
-            break;
-          case DrawingElementType.rectangle:
-            paint.style = PaintingStyle.fill;
-            final rect = Rect.fromPoints(start, end);
-            canvas.drawRect(rect, paint);
-            break;
-
-          case DrawingElementType.hollowRectangle:
-            paint.style = PaintingStyle.stroke;
-            final rect = Rect.fromPoints(start, end);
-            canvas.drawRect(rect, paint);
-            break;
-          case DrawingElementType.diagonalLines:
-            paint.style = PaintingStyle.stroke;
-            drawDiagonalPattern(canvas, start, end, paint, element.density);
-            break;
-
-          case DrawingElementType.crossLines:
-            paint.style = PaintingStyle.stroke;
-            drawCrossPattern(canvas, start, end, paint, element.density);
-            break;
-
-          case DrawingElementType.dotGrid:
-            paint.style = PaintingStyle.fill;
-            drawDotGrid(canvas, start, end, paint, element.density);
-            break;
-
-          default:
-            // 默认绘制一个边框
-            paint.style = PaintingStyle.stroke;
-            final rect = Rect.fromPoints(start, end);
-            canvas.drawRect(rect, paint);
-            break;
-        }
-        break;
-    }
-  }
-
-  void _drawResizeHandles(
-    Canvas canvas,
-    MapDrawingElement element,
-    Size size, {
-    double? handleSize,
-  }) {
-    // 获取所有调整手柄的位置
-    final handles = MapCanvasState.getResizeHandles(
-      element,
-      handleSize: handleSize,
-    );
-
-    if (handles.isEmpty) return;
-
-    // 外边框画笔（白色边框）
-    final borderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-
-    // 内部填充画笔（蓝色）
-    final fillPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-
-    // 使用动态大小计算圆形半径
-    final effectiveHandleSize = handleSize ?? 8.0;
-    final radius = effectiveHandleSize / 4.0; // 控制柄内圆半径为控制柄大小的1/4
-    final borderRadius = radius + 0.5;
-
-    // 绘制每个控制柄为圆形
-    for (final handle in handles) {
-      final center = handle.center;
-
-      // 白色边框圆（稍大）
-      canvas.drawCircle(center, borderRadius, borderPaint);
-
-      // 蓝色填充圆（略小）
-      canvas.drawCircle(center, radius, fillPaint);
-    }
-  }
-  void _drawElementWithEraserMask(
-    Canvas canvas,
-    MapDrawingElement element,
-    List<MapDrawingElement> eraserElements,
-    Size size,
-  ) {
-    // 找到影响当前元素的橡皮擦（z值更高的）
-    final affectingErasers = eraserElements
-        .where((eraser) => eraser.zIndex > element.zIndex)
-        .toList();
-
-    if (affectingErasers.isEmpty) {
-      // 没有橡皮擦影响，直接绘制
-      _drawElement(canvas, element, size);
-      return;
-    }
-
-    // 保存canvas状态
-    canvas.save();
-
-    // 创建裁剪路径，初始为整个画布区域，然后从中排除所有相关橡皮擦区域
-    Path clipPath = Path();
-    clipPath.addRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-    ); // 添加整个画布区域作为基础
-
-    // 减去所有影响当前元素的橡皮擦区域
-    for (final eraser in affectingErasers) {
-      // 确保橡皮擦元素有足够的点来定义一个矩形
-      // 并且橡皮擦类型是 eraser (如果你的 MapDrawingElement 有 type 属性来区分普通元素和橡皮擦)
-      if (eraser.points.length >=
-          2 /* && eraser.type == DrawingElementType.eraser */ ) {
-        // 转换橡皮擦坐标到屏幕坐标
-        final eraserStart = Offset(
-          eraser.points[0].dx * size.width,
-          eraser.points[0].dy * size.height,
-        );
-        final eraserEnd = Offset(
-          eraser.points[1].dx * size.width,
-          eraser.points[1].dy * size.height,
-        );
-        final eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
-
-        // 检查橡皮擦是否与当前元素重叠 (这个函数对于性能很重要)
-        // 确保 _doesEraserAffectElement 内部也使用了考虑 triangleCut 的碰撞检测逻辑
-        final doesEraserAffectElement = _doesEraserAffectElement(
-          element,
-          eraser,
-          size,
-        );
-        // print(doesEraserAffectElement);        
-        if (doesEraserAffectElement) {
-          // *** 修改在这里：调用 getFinalEraserPath 并传入 triangleCut ***
-          final Path singleEraserPath = getFinalEraserPath(
-            eraserRect,
-            eraser.curvature,
-            eraser.triangleCut, // 使用橡皮擦元素的 triangleCut 属性
-          );
-
-          // 从允许绘制的区域中减去这个橡皮擦的路径
-          clipPath = Path.combine(
-            PathOperation.difference,
-            clipPath,
-            singleEraserPath,
-          );
-        }
-      }
-    }
-
-    // 应用计算好的裁剪路径
-    // 后续的绘制操作将只在 clipPath 定义的区域内可见
-    canvas.clipPath(clipPath);
-
-    // 在裁剪后的区域内绘制元素
-    _drawElement(canvas, element, size);
-
-    // 恢复canvas状态
-    canvas.restore();
-  }
-
-  // 检查橡皮擦是否影响元素
-  bool _doesEraserAffectElement(
-    MapDrawingElement element,
-    MapDrawingElement eraser,
-    Size size,
-  ) {
-    // 基础检查
-    if (element.points.isEmpty || eraser.points.length < 2) return false;
-
-    // 获取橡皮擦的基础信息
-    final eraserStart = Offset(
-      eraser.points[0].dx * size.width,
-      eraser.points[0].dy * size.height,
-    );
-    final eraserEnd = Offset(
-      eraser.points[1].dx * size.width,
-      eraser.points[1].dy * size.height,
-    );
-    final Rect eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
-    final double eraserCurvature = eraser.curvature;
-    final TriangleCutType eraserTriangleCut = eraser.triangleCut; // 获取橡皮擦的切割类型
-    // print(eraserTriangleCut);
-
-    // 根据元素类型进行判断
-    switch (element.type) {
-      case DrawingElementType.text:
-        if (element.points.isNotEmpty) {
-          final textPosition = Offset(
-            element.points[0].dx * size.width,
-            element.points[0].dy * size.height,
-          );
-          return isPointInFinalEraserShape(
-            textPosition,
-            eraserRect,
-            eraserCurvature,
-            eraserTriangleCut,
-          );
-        }
-        return false;
-
-      case DrawingElementType.freeDrawing:
-        for (final pointModel in element.points) {
-          // 假设 element.points 是 Offset 列表
-          final screenPoint = Offset(
-            pointModel.dx * size.width,
-            pointModel.dy * size.height,
-          );
-          if (isPointInFinalEraserShape(
-            screenPoint,
-            eraserRect,
-            eraserCurvature,
-            eraserTriangleCut,
-          )) {
-            return true;
-          }
-        }
-        return false;
-
-      default: // 其他被视为矩形的元素类型
-        if (element.points.length < 2) return false;
-        final elementStart = Offset(
-          element.points[0].dx * size.width,
-          element.points[0].dy * size.height,
-        );
-        final elementEnd = Offset(
-          element.points[1].dx * size.width,
-          element.points[1].dy * size.height,
-        );
-        final Rect elementRect = Rect.fromPoints(elementStart, elementEnd);
-
-        // // 如果橡皮擦是完整的基础矩形（无曲率也无切割），则使用最简单的矩形重叠判断
-        // if (eraserCurvature <= 0.0) {
-
-        // }
-
-        // // 否则，使用更新后的、能处理复杂橡皮擦形状的重叠判断函数
-        // return _isRectOverlappingEraserShape(
-        //   elementRect,
-        //   eraserRect,
-        //   eraserCurvature,
-        // );
-        return eraserRect.overlaps(elementRect);
-    }
-  }
 
 
   /// 检查矩形是否与橡皮擦形状重叠
@@ -2927,365 +2552,10 @@ class _LayerPainter extends CustomPainter {
   //   return false;
   // }
 
-  void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
-    final paint = Paint()
-      ..color = element.color
-      ..strokeWidth = element.strokeWidth
-      ..style = PaintingStyle.stroke;
 
-    // Convert normalized coordinates to screen coordinates
-    final points = element.points
-        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
-        .toList();
 
-    // 特殊处理：文本元素只需要一个点，自由绘制可能有多个点
-    if (element.type == DrawingElementType.text) {
-      if (points.isEmpty) return;
-      drawText(canvas, element, size);
-      return;
-    }
 
-    if (element.type == DrawingElementType.freeDrawing) {
-      if (points.isEmpty) return;
-      drawFreeDrawingPath(canvas, element, paint, size);
-      return;
-    }
 
-    // 其他绘制类型需要至少两个点
-    if (points.length < 2) return;
-
-    final start = points[0];
-    final end = points[1];
-    final rect = Rect.fromPoints(start, end); // 检查是否需要应用三角形切割
-    final needsTriangleClip =
-        element.triangleCut != TriangleCutType.none &&
-        isTriangleCutApplicable(element.type);
-
-    if (needsTriangleClip) {
-      // 保存画布状态并应用三角形裁剪
-      canvas.save();
-      final trianglePath = createTrianglePath(rect, element.triangleCut);
-      canvas.clipPath(trianglePath);
-    }
-
-    switch (element.type) {
-      case DrawingElementType.line:
-        canvas.drawLine(start, end, paint);
-        break;
-      case DrawingElementType.dashedLine:
-        drawDashedLine(canvas, start, end, paint, element.density);
-        break;
-
-      case DrawingElementType.imageArea:
-        _drawImageArea(canvas, element, size);
-        break;
-
-      case DrawingElementType.arrow:
-        drawArrow(canvas, start, end, paint);
-        break;
-      case DrawingElementType.rectangle:
-        paint.style = PaintingStyle.fill;
-        if (element.curvature > 0.0) {
-          _drawCurvedRectangle(canvas, rect, paint, element.curvature);
-        } else {
-          canvas.drawRect(rect, paint);
-        }
-        break;
-
-      case DrawingElementType.hollowRectangle:
-        paint.style = PaintingStyle.stroke;
-        if (element.curvature > 0.0) {
-          _drawCurvedRectangle(canvas, rect, paint, element.curvature);
-        } else {
-          canvas.drawRect(rect, paint);
-        }
-        break;
-      case DrawingElementType.diagonalLines:
-        if (element.curvature > 0.0) {
-          drawCurvedDiagonalPattern(
-            canvas,
-            rect,
-            paint,
-            element.density,
-            element.curvature,
-          );
-        } else {
-          drawDiagonalPattern(canvas, start, end, paint, element.density);
-        }
-        break;
-
-      case DrawingElementType.crossLines:
-        if (element.curvature > 0.0) {
-          drawCurvedCrossPattern(
-            canvas,
-            rect,
-            paint,
-            element.density,
-            element.curvature,
-          );
-        } else {
-          drawCrossPattern(canvas, start, end, paint, element.density);
-        }
-        break;
-
-      case DrawingElementType.dotGrid:
-        if (element.curvature > 0.0) {
-          drawCurvedDotGrid(
-            canvas,
-            rect,
-            paint,
-            element.density,
-            element.curvature,
-          );
-        } else {
-          drawDotGrid(canvas, start, end, paint, element.density);
-        }
-        break;
-
-      case DrawingElementType.freeDrawing:
-        // 已在上面处理
-        break;
-
-      case DrawingElementType.text:
-        // 已在上面处理
-        break;
-
-      case DrawingElementType.eraser:
-        // 橡皮擦不需要绘制，它只是删除元素
-        break;
-    }
-
-    if (needsTriangleClip) {
-      // 恢复画布状态
-      canvas.restore();
-    }
-  }
-
-  void _drawImageArea(Canvas canvas, MapDrawingElement element, Size size) {
-    if (element.points.length < 2) return;
-
-    final start = Offset(
-      element.points[0].dx * size.width,
-      element.points[0].dy * size.height,
-    );
-    final end = Offset(
-      element.points[1].dx * size.width,
-      element.points[1].dy * size.height,
-    );
-    final rect = Rect.fromPoints(start, end);
-
-    // 检查是否需要应用裁剪
-    final needsTriangleClip = element.triangleCut != TriangleCutType.none;
-    final needsCurvatureClip = element.curvature > 0.0;
-
-    if (needsTriangleClip || needsCurvatureClip) {
-      canvas.save();
-
-      if (needsCurvatureClip && needsTriangleClip) {
-        final Path finalPath = getFinalEraserPath(
-          rect,
-          element.curvature,
-          element.triangleCut,
-        );
-        canvas.clipPath(finalPath);
-      } else if (needsCurvatureClip) {
-        final Path curvedPath = createSuperellipsePath(
-          rect,
-          element.curvature,
-        );
-        canvas.clipPath(curvedPath);
-      } else if (needsTriangleClip) {
-        final Path trianglePath = createTrianglePath(
-          rect,
-          element.triangleCut,
-        );
-        canvas.clipPath(trianglePath);
-      }
-    }
-
-    // 绘制图片内容
-    if (element.imageData != null) {
-      // 1. 优先使用元素自己的图片数据
-      final cachedImage = imageCache[element.id];
-      if (cachedImage != null) {
-        _drawCachedImage(
-          canvas,
-          cachedImage,
-          rect,
-          element.imageFit ?? BoxFit.contain,
-        );
-      } else {
-        // 图片还在解码中，显示加载占位符
-        _drawImageLoadingPlaceholder(
-          canvas,
-          rect,
-          element.imageFit ?? BoxFit.contain,
-        );
-      }
-    } else if (currentImageBufferData != null) {
-      // 2. 如果元素没有图片数据，但图片缓冲区有数据，使用缓冲区的图片
-      if (imageBufferCachedImage != null) {
-        _drawCachedImage(canvas, imageBufferCachedImage!, rect, imageBufferFit);
-      } else {
-        // 缓冲区图片还在解码中
-        _drawImageBufferLoadingPlaceholder(canvas, rect);
-      }
-    } else {
-      // 3. 没有任何图片数据，显示空白占位符
-      drawImageEmptyPlaceholder(
-        canvas,
-        rect,
-        element.imageFit ?? BoxFit.contain,
-      );
-    }
-
-    if (needsTriangleClip || needsCurvatureClip) {
-      canvas.restore();
-    }
-  }
-
-  /// 绘制缓存的图片
-  void _drawCachedImage(Canvas canvas, ui.Image image, Rect rect, BoxFit fit) {
-    final Size imageSize = Size(
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
-    final FittedSizes fittedSizes = applyBoxFit(fit, imageSize, rect.size);
-
-    final Size destinationSize = fittedSizes.destination;
-    final Size sourceSize = fittedSizes.source;
-
-    // 计算居中位置
-    final Rect destinationRect = Rect.fromLTWH(
-      rect.left + (rect.width - destinationSize.width) / 2,
-      rect.top + (rect.height - destinationSize.height) / 2,
-      destinationSize.width,
-      destinationSize.height,
-    );
-
-    // 计算源矩形
-    final Rect sourceRect = Rect.fromLTWH(
-      (imageSize.width - sourceSize.width) / 2,
-      (imageSize.height - sourceSize.height) / 2,
-      sourceSize.width,
-      sourceSize.height,
-    );
-
-    // 绘制图片
-    canvas.drawImageRect(image, sourceRect, destinationRect, Paint());
-  }
-
-  /// 绘制图片缓冲区加载占位符
-  void _drawImageBufferLoadingPlaceholder(Canvas canvas, Rect rect) {
-    // 半透明背景
-    final backgroundPaint = Paint()
-      ..color = Colors.green.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(rect, backgroundPaint);
-
-    // 边框
-    final borderPaint = Paint()
-      ..color = Colors.green.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawRect(rect, borderPaint);
-
-    // 加载图标
-    final iconSize = math.min(rect.width, rect.height) * 0.2;
-    final center = rect.center;
-
-    final iconPaint = Paint()
-      ..color = Colors.green.withOpacity(0.7)
-      ..style = PaintingStyle.fill;
-
-    // 简单的加载图标 (圆形)
-    canvas.drawCircle(center, iconSize / 2, iconPaint);
-
-    // 绘制提示文本
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '缓冲区图片解码中...',
-        style: TextStyle(
-          color: Colors.green.shade700,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
-    );
-  }
-
-  /// 绘制图片加载状态的占位符
-  void _drawImageLoadingPlaceholder(
-    Canvas canvas,
-    Rect rect,
-    BoxFit fit, // 修正：这里应该是 BoxFit，不是 Uint8List
-  ) {
-    // 半透明背景
-    final backgroundPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(rect, backgroundPaint);
-
-    // 边框
-    final borderPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawRect(rect, borderPaint);
-
-    // 加载图标
-    final iconSize = math.min(rect.width, rect.height) * 0.2;
-    final center = rect.center;
-
-    final iconPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
-      ..style = PaintingStyle.fill;
-
-    // 简单的加载图标 (圆形)
-    canvas.drawCircle(center, iconSize / 2, iconPaint);
-
-    // 绘制提示文本
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '图片解码中...',
-        style: TextStyle(
-          color: Colors.blue.shade700,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(rect.center.dx - textPainter.width / 2, rect.center.dy + iconSize),
-    );
-
-    // 绘制图片适应方式提示
-    final fitText = getBoxFitDisplayName(fit);
-    final fitTextPainter = TextPainter(
-      text: TextSpan(
-        text: '适应: $fitText',
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 8),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    fitTextPainter.layout();
-    fitTextPainter.paint(
-      canvas,
-      Offset(
-        rect.center.dx - fitTextPainter.width / 2,
-        rect.center.dy + iconSize + textPainter.height + 2,
-      ),
-    );
-  }
 
 
 
@@ -3318,163 +2588,22 @@ class _CurrentDrawingPainter extends CustomPainter {
     this.freeDrawingPath,
     this.selectedElementId,
   });
-
   @override
   void paint(Canvas canvas, Size size) {
-    // 橡皮擦特殊预览
-    if (elementType == DrawingElementType.eraser) {
-      final rect = Rect.fromPoints(start, end);
-      final paint = Paint()
-        ..color = Colors.red.withAlpha((0.3 * 255).toInt())
-        ..style = PaintingStyle.fill;
-
-      switch ((curvature > 0.0, triangleCut != TriangleCutType.none)) {
-        case (true, true):
-          _drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
-          break;
-        case (true, false):
-          _drawCurvedRectangle(canvas, rect, paint, curvature);
-          break;
-        case (false, true):
-          _drawCurvedTrianglePath(canvas, rect, paint, curvature, triangleCut);
-          break;
-        case (false, false):
-          canvas.drawRect(rect, paint);
-          break;
-      }
-
-      // 绘制边框
-      final borderPaint = Paint()
-        ..color = Colors.red.withAlpha((0.8 * 255).toInt())
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
-
-      switch ((curvature > 0.0, triangleCut != TriangleCutType.none)) {
-        case (true, true):
-          _drawCurvedTrianglePath(
-            canvas,
-            rect,
-            borderPaint,
-            curvature,
-            triangleCut,
-          );
-          break;
-        case (true, false):
-          _drawCurvedRectangle(canvas, rect, borderPaint, curvature);
-          break;
-        case (false, true):
-          _drawCurvedTrianglePath(
-            canvas,
-            rect,
-            borderPaint,
-            curvature,
-            triangleCut,
-          );
-          break;
-        case (false, false):
-          canvas.drawRect(rect, borderPaint);
-          break;
-      }
-      return;
-    }
-
-    // 自由绘制特殊预览
-    if (elementType == DrawingElementType.freeDrawing &&
-        freeDrawingPath != null &&
-        freeDrawingPath!.isNotEmpty) {
-      final paint = Paint()
-        ..color = color.withAlpha((0.7 * 255).toInt())
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-
-      final path = Path();
-      path.moveTo(freeDrawingPath![0].dx, freeDrawingPath![0].dy);
-      for (int i = 1; i < freeDrawingPath!.length; i++) {
-        path.lineTo(freeDrawingPath![i].dx, freeDrawingPath![i].dy);
-      }
-      canvas.drawPath(path, paint);
-      return;
-    }
-
-    // 文本工具特殊预览 - 显示一个小方块指示放置位置
-    if (elementType == DrawingElementType.text) {
-      final paint = Paint()
-        ..color = color.withAlpha((0.7 * 255).toInt())
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
-
-      // 在文本位置绘制一个小方块作为预览
-      final rect = Rect.fromCenter(center: start, width: 20, height: 20);
-      canvas.drawRect(rect, paint);
-      // 绘制文本预览提示
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: "点击添加文本",
-          style: TextStyle(
-            color: color.withAlpha((0.7 * 255).toInt()),
-            fontSize: 12.0,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          start.dx - textPainter.width / 2,
-          start.dy - textPainter.height / 2,
-        ),
-      );
-      return;
-    }
-
-    // 使用固定的画布尺寸来确保坐标转换的一致性
-    List<Offset> points;
-    if (elementType == DrawingElementType.freeDrawing &&
-        freeDrawingPath != null) {
-      // 对于自由绘制，使用路径点
-      points = freeDrawingPath!
-          .map(
-            (point) =>
-                Offset(point.dx / kCanvasWidth, point.dy / kCanvasHeight),
-          )
-          .toList();
-    } else {
-      // 对于其他绘制类型，使用开始和结束点
-      points = [
-        Offset(start.dx / kCanvasWidth, start.dy / kCanvasHeight),
-        Offset(end.dx / kCanvasWidth, end.dy / kCanvasHeight),
-      ];
-    }
-    final element = MapDrawingElement(
-      id: 'preview',
-      type: elementType,
-      points: points,
-      color: color.withAlpha((0.7 * 255).toInt()),
+    PreviewRenderer.drawCurrentDrawing(
+      canvas,
+      size,
+      start: start,
+      end: end,
+      elementType: elementType,
+      color: color,
       strokeWidth: strokeWidth,
       density: density,
-      curvature: curvature, // 使用实际的曲率值进行预览
-      triangleCut: triangleCut, // 使用实际的三角形切割值进行预览
-      createdAt: DateTime.now(),
-    );
-    final layerPainter = _LayerPainter(
-      layer: MapLayer(
-        id: 'preview',
-        name: 'Preview',
-        elements: [element],
-        isVisible: true,
-        opacity: 0.7,
-        order: 0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      isEditMode: true,
+      curvature: curvature,
+      triangleCut: triangleCut,
+      freeDrawingPath: freeDrawingPath,
       selectedElementId: selectedElementId,
-      imageCache: const {}, // 添加必需的 imageCache 参数，预览时使用空缓存
     );
-    layerPainter.paint(canvas, size);
   }
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
@@ -3485,59 +2614,11 @@ class _BackgroundPatternPainter extends CustomPainter {
   final BackgroundPattern pattern;
 
   _BackgroundPatternPainter(this.pattern);
-
   @override
   void paint(Canvas canvas, Size size) {
-    switch (pattern) {
-      case BackgroundPattern.blank:
-        // 空白背景，不绘制任何图案
-        break;
-      case BackgroundPattern.grid:
-        _drawGrid(canvas, size);
-        break;
-      case BackgroundPattern.checkerboard:
-        _drawCheckerboard(canvas, size);
-        break;
-    }
+    BackgroundRenderer.drawBackgroundPattern(canvas, size, pattern);
   }
 
-  void _drawGrid(Canvas canvas, Size size) {
-    const double gridSize = 20.0;
-    final Paint gridPaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-
-    // 绘制垂直线
-    for (double x = 0; x <= size.width; x += gridSize) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-
-    // 绘制水平线
-    for (double y = 0; y <= size.height; y += gridSize) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-  }
-
-  void _drawCheckerboard(Canvas canvas, Size size) {
-    const double squareSize = 20.0;
-    final Paint lightPaint = Paint()..color = Colors.grey.shade100;
-    final Paint darkPaint = Paint()..color = Colors.grey.shade200;
-
-    for (double x = 0; x < size.width; x += squareSize) {
-      for (double y = 0; y < size.height; y += squareSize) {
-        final isEvenRow = (y / squareSize).floor() % 2 == 0;
-        final isEvenCol = (x / squareSize).floor() % 2 == 0;
-        final isLightSquare =
-            (isEvenRow && isEvenCol) || (!isEvenRow && !isEvenCol);
-
-        canvas.drawRect(
-          Rect.fromLTWH(x, y, squareSize, squareSize),
-          isLightSquare ? lightPaint : darkPaint,
-        );
-      }
-    }
-  }
   @override
   bool shouldRepaint(_BackgroundPatternPainter oldDelegate) {
     return oldDelegate.pattern != pattern;
