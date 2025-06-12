@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
 import 'user_preferences_migration_service.dart';
+import 'user_preferences_migration_service.dart';
 
 /// 用户偏好设置服务
 /// 使用SQLite数据库存储，替代SharedPreferences以提升性能
@@ -16,32 +17,47 @@ class UserPreferencesService {
       UserPreferencesDatabaseService();
   final UserPreferencesMigrationService _migrationService =
       UserPreferencesMigrationService();
-  
-  UserPreferences? _currentPreferences;
+    UserPreferences? _currentPreferences;
+  bool _initialized = false;
 
   /// 初始化服务
   Future<void> initialize() async {
-    // 检查并执行数据迁移
-    if (await _migrationService.needsMigration()) {
-      if (kDebugMode) {
-        print('检测到旧数据，开始迁移...');
-      }
-      
-      final migrationSuccess = await _migrationService.performMigration();
-      if (migrationSuccess) {
-        if (kDebugMode) {
-          print('数据迁移成功');
-        }
-        // 可选：清理旧数据（保留一段时间以防需要回滚）
-        // await _migrationService.cleanupLegacyData();
-      } else {
-        if (kDebugMode) {
-          print('数据迁移失败，将使用默认设置');
-        }
-      }
+    if (_initialized) {
+      return; // 避免重复初始化
     }
-    
-    await _loadCurrentUser();
+
+    try {
+      // 只在真正需要时执行迁移
+      if (await _migrationService.needsMigration()) {
+        if (kDebugMode) {
+          print('执行用户偏好设置数据迁移...');
+        }
+        
+        final migrationSuccess = await _migrationService.performMigration();
+        if (migrationSuccess) {
+          if (kDebugMode) {
+            print('数据迁移完成');
+          }
+          // 迁移成功后可选择清理旧数据
+          // await _migrationService.cleanupLegacyData();
+        }
+      }
+
+      // 加载当前用户
+      await _loadCurrentUser();
+      _initialized = true;
+      
+      if (kDebugMode) {
+        print('用户偏好设置服务初始化完成');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('用户偏好设置服务初始化失败: $e');
+      }
+      // 即使迁移失败，也要继续初始化服务
+      await _loadCurrentUser();
+      _initialized = true;
+    }
   }
 
   /// 获取当前用户偏好设置

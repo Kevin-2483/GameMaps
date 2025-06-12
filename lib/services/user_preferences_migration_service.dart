@@ -19,14 +19,41 @@ class UserPreferencesMigrationService {
   static const String _legacyUserProfilesKey = 'user_profiles';
   static const String _legacyCurrentUserKey = 'current_user_id';
   static const String _migrationCompleteKey = 'preferences_migration_complete';
+  
+  /// 控制是否启用迁移功能（可以通过配置禁用）
+  static const bool _migrationEnabled = true;
 
-  /// 检查是否需要迁移
+  /// 快速检查是否需要迁移（使用缓存标记）
+  static bool? _migrationChecked;
+  static bool _needsMigration = false;
+
+  /// 静态方法快速检查是否已完成迁移
+  static Future<bool> isMigrationComplete() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_migrationCompleteKey) == true;
+    } catch (e) {
+      return false;
+    }
+  }
   Future<bool> needsMigration() async {
+    // 如果迁移功能被禁用，直接返回false
+    if (!_migrationEnabled) {
+      return false;
+    }
+
+    // 如果已经检查过，直接返回缓存结果
+    if (_migrationChecked != null) {
+      return _needsMigration;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       
-      // 如果已经迁移过，返回false
+      // 如果已经迁移过，标记为不需要迁移
       if (prefs.getBool(_migrationCompleteKey) == true) {
+        _migrationChecked = true;
+        _needsMigration = false;
         return false;
       }
 
@@ -34,11 +61,20 @@ class UserPreferencesMigrationService {
       final hasLegacyData = prefs.containsKey(_legacyPreferencesKey) ||
                            prefs.containsKey(_legacyUserProfilesKey);
       
+      _migrationChecked = true;
+      _needsMigration = hasLegacyData;
+      
+      if (kDebugMode && hasLegacyData) {
+        print('检测到需要迁移的旧数据');
+      }
+      
       return hasLegacyData;
     } catch (e) {
       if (kDebugMode) {
         print('检查迁移状态失败: $e');
       }
+      _migrationChecked = true;
+      _needsMigration = false;
       return false;
     }
   }
