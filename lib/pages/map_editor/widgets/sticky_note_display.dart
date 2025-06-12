@@ -310,14 +310,42 @@ class StickyNoteGestureHelper {
         break;
     }
   }
-
   /// 处理便签拖拽结束
   static void handleStickyNotePanEnd(
     StickyNoteDragState dragState,
     DragEndDetails details,
+    Offset Function(Offset) getCanvasPosition,
+    Size canvasSize,
+    List<StickyNote> allStickyNotes,
+    Function(List<StickyNote>) onStickyNotesReordered,
   ) {
-    // 拖拽结束，清理状态
-    // 所有更新都已经在 update 过程中完成
+    // 如果不是移动操作，直接返回
+    if (dragState.type != StickyNoteDragType.move) {
+      return;
+    }
+    
+    // 获取拖拽结束时的画布位置
+    final endPosition = getCanvasPosition(details.localPosition);
+    
+    // 查找拖拽结束位置是否命中了其他便签的标题栏
+    final targetNote = _findTargetStickyNote(
+      endPosition, 
+      dragState.note, 
+      allStickyNotes, 
+      canvasSize
+    );
+    
+    if (targetNote != null) {
+      // 执行层级重排
+      final reorderedNotes = _reorderStickyNotes(
+        dragState.note, 
+        targetNote, 
+        allStickyNotes
+      );
+      
+      // 通知上层更新便签列表
+      onStickyNotesReordered(reorderedNotes);
+    }
   }
 
   // 私有方法：处理移动更新
@@ -390,6 +418,96 @@ class StickyNoteGestureHelper {
       updatedAt: DateTime.now(),
     );
     dragState.onNoteUpdated(updatedNote);
+  }
+
+  // 私有方法：查找目标便签
+  static StickyNote? _findTargetStickyNote(
+    Offset endPosition,
+    StickyNote draggedNote,
+    List<StickyNote> allStickyNotes,
+    Size canvasSize,
+  ) {
+    // 按照Z值倒序检查所有可见的便签（优先检查上层便签）
+    final sortedStickyNotes = List<StickyNote>.from(allStickyNotes)
+      ..sort((a, b) => b.zIndex.compareTo(a.zIndex));
+
+    for (final note in sortedStickyNotes) {
+      // 跳过自己和不可见的便签
+      if (!note.isVisible || note.id == draggedNote.id) continue;
+
+      // 转换相对坐标到画布坐标
+      final notePosition = Offset(
+        note.position.dx * canvasSize.width,
+        note.position.dy * canvasSize.height,
+      );
+      final noteSize = Size(
+        note.size.width * canvasSize.width,
+        note.size.height * canvasSize.height,
+      );
+
+      // 检查是否命中了标题栏
+      const double titleBarHeight = 28.0; // 标题栏高度
+      final titleBarRect = Rect.fromLTWH(
+        notePosition.dx,
+        notePosition.dy,
+        noteSize.width,
+        titleBarHeight,
+      );
+
+      if (titleBarRect.contains(endPosition)) {
+        return note;
+      }
+    }
+    return null;
+  }
+
+  // 私有方法：重排便签层级
+  static List<StickyNote> _reorderStickyNotes(
+    StickyNote draggedNote,
+    StickyNote targetNote,
+    List<StickyNote> allStickyNotes,
+  ) {
+    final result = List<StickyNote>.from(allStickyNotes);
+    final draggedIndex = result.indexWhere((note) => note.id == draggedNote.id);
+    final targetIndex = result.indexWhere((note) => note.id == targetNote.id);
+    
+    if (draggedIndex == -1 || targetIndex == -1) {
+      return result; // 如果找不到便签，返回原列表
+    }
+    
+    final draggedOriginalZ = draggedNote.zIndex;
+    final targetZ = targetNote.zIndex;
+    final newDraggedZ = targetZ + 1; // 放在目标便签的上层
+    
+    for (int i = 0; i < result.length; i++) {
+      final note = result[i];
+      
+      if (note.id == draggedNote.id) {
+        // 更新被拖拽便签的z值
+        result[i] = note.copyWith(
+          zIndex: newDraggedZ,
+          updatedAt: DateTime.now(),
+        );
+      } else if (draggedOriginalZ < targetZ) {
+        // 原本z值低，目标及以下的便签z值减一
+        if (note.zIndex <= targetZ && note.zIndex > draggedOriginalZ) {
+          result[i] = note.copyWith(
+            zIndex: note.zIndex - 1,
+            updatedAt: DateTime.now(),
+          );
+        }
+      } else if (draggedOriginalZ > targetZ) {
+        // 原本z值高，比目标z值大的z值加一
+        if (note.zIndex > targetZ && note.zIndex < draggedOriginalZ) {
+          result[i] = note.copyWith(
+            zIndex: note.zIndex + 1,
+            updatedAt: DateTime.now(),
+          );
+        }
+      }
+    }
+    
+    return result;
   }
 }
 

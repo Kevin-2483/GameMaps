@@ -2810,6 +2810,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
           onStickyNoteUpdated: _updateStickyNote,
           onStickyNoteSelected: _selectStickyNote,
+          onStickyNotesReordered: _reorderStickyNotesByDrag,
         );
       },
     );
@@ -3097,7 +3098,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
-
   void _reorderStickyNotes(int oldIndex, int newIndex) {
     if (_currentMap == null ||
         oldIndex < 0 ||
@@ -3116,6 +3116,26 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       final item = notes.removeAt(oldIndex);
       notes.insert(newIndex, item);
       _currentMap = _currentMap!.copyWith(stickyNotes: notes);
+    });
+  }
+
+  /// 处理拖拽便签重排序（通过z-index调整）
+  void _reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
+    if (_currentMap == null) return;
+
+    // 保存当前状态到撤销历史
+    _saveToUndoHistory();
+
+    setState(() {
+      _currentMap = _currentMap!.copyWith(stickyNotes: reorderedNotes);
+      
+      // 如果当前选中的便签在重排序后发生了变化，更新选中状态
+      if (_selectedStickyNote != null) {
+        _selectedStickyNote = reorderedNotes.firstWhere(
+          (note) => note.id == _selectedStickyNote!.id,
+          orElse: () => _selectedStickyNote!,
+        );
+      }
     });
   }
 

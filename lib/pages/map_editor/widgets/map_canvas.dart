@@ -99,12 +99,12 @@ class MapCanvas extends StatefulWidget {
   // 添加图片缓冲区相关参数
   final Uint8List? imageBufferData; // 图片缓冲区数据
   final BoxFit imageBufferFit; // 图片适应方式
-  final List<MapLayer>? displayOrderLayers; //：优先显示顺序的图层列表
-  // 便签相关参数
+  final List<MapLayer>? displayOrderLayers; //：优先显示顺序的图层列表  // 便签相关参数
   final StickyNote? selectedStickyNote; // 当前选中的便签
   final Map<String, double> previewStickyNoteOpacityValues; // 便签透明度预览值
   final Function(StickyNote)? onStickyNoteUpdated; // 便签更新回调
   final Function(StickyNote?)? onStickyNoteSelected; // 便签选中回调
+  final Function(List<StickyNote>)? onStickyNotesReordered; // 便签重排回调
 
   const MapCanvas({
     super.key,
@@ -143,6 +143,7 @@ class MapCanvas extends StatefulWidget {
     this.previewStickyNoteOpacityValues = const {},
     this.onStickyNoteUpdated,
     this.onStickyNoteSelected,
+    this.onStickyNotesReordered,
   });
 
   @override
@@ -1101,14 +1102,18 @@ class MapCanvasState extends State<MapCanvas> {
       _updateSelectionDrag(details);
     }
   }
-
   /// 处理元素交互的拖拽结束事件
   void _onElementInteractionPanEnd(DragEndDetails details) {
-    if (_stickyNoteDragState != null) {
-      // 结束拖拽便签
+    if (_stickyNoteDragState != null) {      // 结束拖拽便签
       StickyNoteGestureHelper.handleStickyNotePanEnd(
         _stickyNoteDragState!,
         details,
+        _getCanvasPosition,
+        const Size(kCanvasWidth, kCanvasHeight),
+        widget.mapItem.stickyNotes,
+        (reorderedNotes) {
+          widget.onStickyNotesReordered?.call(reorderedNotes);
+        },
       );
       _stickyNoteDragState = null;
     } else if (_draggingLegendItem != null) {
@@ -1518,11 +1523,9 @@ class MapCanvasState extends State<MapCanvas> {
       print(
         '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}',
       );
-      print('是否选中: $isSelectedNote');
-
-      // 便签在图层和图例之上显示，使用较高的渲染顺序
-      final renderOrder =
-          sortedLayers.length + noteIndex + 100; // +100确保在图层和图例之上
+      print('是否选中: $isSelectedNote');      // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
+      // 使用 1000000 + noteIndex 确保便签始终在所有其他元素之上
+      final renderOrder = 1000000 + noteIndex;
 
       print(
         '添加便签元素 - renderOrder=$renderOrder (原zIndex=${note.zIndex}), selected=$isSelectedNote',
@@ -1552,10 +1555,17 @@ class MapCanvasState extends State<MapCanvas> {
       print(
         '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
       );
-    }
-
-    // 按 renderOrder 排序，选中的元素排在最后（显示在最上层）
+    }    // 按 renderOrder 排序，但便签始终在最上层
     allElements.sort((a, b) {
+      // 检查是否是便签元素
+      final aIsStickyNote = a.widget.runtimeType.toString().contains('StickyNoteWidget') || a.order >= 1000000;
+      final bIsStickyNote = b.widget.runtimeType.toString().contains('StickyNoteWidget') || b.order >= 1000000;
+      
+      // 便签始终在非便签元素之上
+      if (aIsStickyNote && !bIsStickyNote) return 1;
+      if (!aIsStickyNote && bIsStickyNote) return -1;
+      
+      // 如果都是便签，或都不是便签，则按选中状态和renderOrder排序
       if (a.isSelected && !b.isSelected) return 1;
       if (!a.isSelected && b.isSelected) return -1;
       return a.order.compareTo(b.order);
