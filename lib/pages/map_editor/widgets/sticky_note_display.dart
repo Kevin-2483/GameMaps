@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../../../models/sticky_note.dart';
-import '../../../models/map_layer.dart';
 
 /// 便签显示组件
 /// 用于在画布上渲染可交互的便签
@@ -123,12 +122,6 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
             // 背景图片（如果有）
             if (widget.note.hasBackgroundImage) _buildBackgroundImage(),
 
-            // 绘画元素
-            if (widget.note.hasElements) _buildDrawingElements(),
-
-            // 文本内容
-            if (widget.note.content.isNotEmpty) _buildTextContent(),
-
             // 调整大小手柄
             if (widget.isSelected && !widget.isPreviewMode)
               _buildResizeHandles(),
@@ -160,37 +153,6 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
       ),
     );
   }
-
-  /// 构建绘画元素
-  Widget _buildDrawingElements() {
-    if (widget.note.elements.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Positioned.fill(
-      child: CustomPaint(
-        painter: _StickyNoteElementsPainter(elements: widget.note.elements),
-      ),
-    );
-  }
-
-  /// 构建文本内容
-  Widget _buildTextContent() {
-    return Positioned.fill(
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        child: Text(
-          widget.note.content,
-          style: TextStyle(
-            color: widget.note.textColor.withOpacity(0.8),
-            fontSize: 10,
-          ),
-          maxLines: null,
-        ),
-      ),
-    );
-  }
-
   /// 构建调整大小手柄
   Widget _buildResizeHandles() {
     const double handleSize = 16.0;
@@ -335,100 +297,3 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
   }
 }
 
-/// 便签绘画元素画笔
-class _StickyNoteElementsPainter extends CustomPainter {
-  final List<MapDrawingElement> elements;
-
-  _StickyNoteElementsPainter({required this.elements});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 按 z 值排序元素
-    final sortedElements = List<MapDrawingElement>.from(elements)
-      ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
-
-    for (final element in sortedElements) {
-      _drawElement(canvas, element, size);
-    }
-  }
-
-  /// 绘制单个元素
-  void _drawElement(Canvas canvas, MapDrawingElement element, Size size) {
-    if (element.points.isEmpty) return;
-
-    final paint = Paint()
-      ..color = element.color
-      ..strokeWidth = element.strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // 转换相对坐标到实际坐标
-    final points = element.points
-        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
-        .toList();
-
-    switch (element.type) {
-      case DrawingElementType.line:
-        if (points.length >= 2) {
-          canvas.drawLine(points[0], points[1], paint);
-        }
-        break;
-
-      case DrawingElementType.rectangle:
-        if (points.length >= 2) {
-          paint.style = PaintingStyle.fill;
-          final rect = Rect.fromPoints(points[0], points[1]);
-          canvas.drawRect(rect, paint);
-        }
-        break;
-
-      case DrawingElementType.hollowRectangle:
-        if (points.length >= 2) {
-          paint.style = PaintingStyle.stroke;
-          final rect = Rect.fromPoints(points[0], points[1]);
-          canvas.drawRect(rect, paint);
-        }
-        break; // Note: circle and hollowCircle are not available in DrawingElementType enum
-      // These can be added if needed in the future
-
-      case DrawingElementType.freeDrawing:
-        if (points.length >= 2) {
-          final path = Path();
-          path.moveTo(points[0].dx, points[0].dy);
-          for (int i = 1; i < points.length; i++) {
-            path.lineTo(points[i].dx, points[i].dy);
-          }
-          canvas.drawPath(path, paint);
-        }
-        break;
-
-      case DrawingElementType.text:
-        if (element.text != null && element.text!.isNotEmpty) {
-          final textPainter = TextPainter(
-            text: TextSpan(
-              text: element.text!,
-              style: TextStyle(
-                color: element.color,
-                fontSize: (element.fontSize ?? 16.0) * 0.8, // 便签中的文字稍小
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-            textDirection: TextDirection.ltr,
-          );
-          textPainter.layout();
-          textPainter.paint(canvas, points[0]);
-        }
-        break;
-
-      default:
-        // 其他类型的绘制元素可以根据需要添加
-        break;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _StickyNoteElementsPainter oldDelegate) {
-    return oldDelegate.elements != elements;
-  }
-}
