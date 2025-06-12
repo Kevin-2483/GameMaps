@@ -483,7 +483,6 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
-
   /// 构建便签组件
   Widget _buildStickyNoteWidget(StickyNote note) {
     if (!note.isVisible) return const SizedBox.shrink();
@@ -498,14 +497,16 @@ class MapCanvasState extends State<MapCanvas> {
       note.position.dy * kCanvasHeight,
     );
     final size = Size(
-      note.size.width * kCanvasWidth,
-      note.size.height * kCanvasHeight,
-    );
+      note.size.width * kCanvasWidth,      note.size.height * kCanvasHeight,
+    );      // 如果便签被选中，使用选中状态的高度，否则使用默认高度
+    final double titleBarHeight = (widget.selectedStickyNote?.id == note.id) ? 40.0 : 36.0; // 标题栏高度：选中时34px，未选中时40px
+    final effectiveHeight = note.isCollapsed ? titleBarHeight : size.height;
+    
     return Positioned(
       left: position.dx,
       top: position.dy,
       width: size.width,
-      height: size.height,
+      height: effectiveHeight,
       child: Opacity(
         opacity: effectiveOpacity,
         child: StickyNoteDisplay(
@@ -627,6 +628,22 @@ class MapCanvasState extends State<MapCanvas> {
     final canvasPosition = _getCanvasPosition(details.localPosition);    // 优先检测便签点击
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
+      // 检查是否点击了便签的特定区域
+      final stickyNoteHitResult = StickyNoteGestureHelper.getStickyNoteHitType(
+        canvasPosition,
+        hitStickyNote,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );        // 如果点击了折叠按钮，直接处理折叠操作
+      if (stickyNoteHitResult == StickyNoteHitType.collapseButton && 
+          widget.onStickyNoteUpdated != null) {
+        final updatedNote = hitStickyNote.copyWith(
+          isCollapsed: !hitStickyNote.isCollapsed,
+          updatedAt: DateTime.now(),
+        );
+        widget.onStickyNoteUpdated!(updatedNote);
+        return;
+      }
+      
       // 处理便签点击选中逻辑
       if (widget.selectedStickyNote?.id != hitStickyNote.id) {
         // 选中便签
@@ -946,8 +963,7 @@ class MapCanvasState extends State<MapCanvas> {
         canvasPosition,
         hitStickyNote,
         const Size(kCanvasWidth, kCanvasHeight),
-      );
-      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
+      );      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
         // 处理便签特定区域的手势
         _stickyNoteDragState = StickyNoteGestureHelper.handleStickyNotePanStart(
           hitStickyNote,
@@ -956,8 +972,11 @@ class MapCanvasState extends State<MapCanvas> {
           _getCanvasPosition,
           widget.onStickyNoteUpdated!,
         );
+        
+        // 如果是折叠按钮，handleStickyNotePanStart会返回null并直接处理折叠
+        // 这种情况下我们不需要启动拖拽，直接返回
         return;
-      }      // 如果点击了便签但不是特定区域，选中便签但不处理拖拽
+      }// 如果点击了便签但不是特定区域，选中便签但不处理拖拽
       if (widget.selectedStickyNote?.id != hitStickyNote.id) {
         // 选中便签（通过回调通知上层）
         widget.onStickyNoteSelected?.call(hitStickyNote);

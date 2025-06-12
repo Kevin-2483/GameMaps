@@ -4,8 +4,9 @@ import '../../../models/sticky_note.dart';
 
 /// 便签点击类型枚举
 enum StickyNoteHitType {
-  titleBar,     // 标题栏（用于拖拽便签）
-  resizeHandle, // 调整大小手柄
+  titleBar,      // 标题栏（用于拖拽便签）
+  resizeHandle,  // 调整大小手柄
+  collapseButton, // 折叠/展开按钮
 }
 
 
@@ -57,19 +58,20 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
         ],
       ),
     );
-  }
-  /// 构建标题栏
+  }  /// 构建标题栏
   Widget _buildTitleBar() {
-    return Container(
+    // 当便签被选中时，边框会占用2px，所以标题栏圆角需要相应调整
+    final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
+      return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: widget.note.titleBarColor,
         borderRadius: widget.note.isCollapsed
-            ? BorderRadius.circular(8)
-            : const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+            ? BorderRadius.circular(cornerRadius)
+            : BorderRadius.only(
+                topLeft: Radius.circular(cornerRadius),
+                topRight: Radius.circular(cornerRadius),
               ),
       ),
       child: Row(
@@ -86,31 +88,41 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          ),
-
-          // 折叠/展开按钮
+          ),          // 折叠/展开按钮
           if (!widget.isPreviewMode)
             GestureDetector(
               onTap: _toggleCollapse,
-              child: Icon(
-                widget.note.isCollapsed
-                    ? Icons.expand_more
-                    : Icons.expand_less,
-                size: 16,
-                color: widget.note.textColor,
+              behavior: HitTestBehavior.opaque, // 确保按钮区域可以接收点击
+              child: Container(
+                padding: const EdgeInsets.all(4), // 增加点击区域
+                child: Icon(
+                  widget.note.isCollapsed
+                      ? Icons.expand_more
+                      : Icons.expand_less,
+                  size: 16,
+                  color: widget.note.textColor,
+                ),
               ),
             ),
         ],
       ),
     );
   }
-
   /// 构建内容区域
   Widget _buildContentArea() {
+    // 当便签被选中时，边框会占用2px，所以内容区域圆角需要相应调整
+    final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
+    
     return Expanded(
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(cornerRadius),
+            bottomRight: Radius.circular(cornerRadius),
+          ),
+        ),
         child: Stack(
           children: [
             // 背景图片（如果有）
@@ -124,29 +136,32 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
       ),
     );
   }
-
   /// 构建背景图片
   Widget _buildBackgroundImage() {
     if (widget.note.backgroundImageData == null) {
       return const SizedBox.shrink();
     }
 
+    // 当便签被选中时，边框会占用2px，所以背景图片圆角需要相应调整
+    final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
+
     return Positioned.fill(
       child: Opacity(
         opacity: widget.note.backgroundImageOpacity,
         child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(8),
-            bottomRight: Radius.circular(8),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(cornerRadius),
+            bottomRight: Radius.circular(cornerRadius),
           ),
           child: Image.memory(
             widget.note.backgroundImageData!,
             fit: widget.note.backgroundImageFit,
           ),
-        ),
-      ),
+        ),      ),
     );
-  }  /// 构建调整大小手柄
+  }
+
+  /// 构建调整大小手柄
   Widget _buildResizeHandles() {
     const double handleSize = 16.0;
 
@@ -165,8 +180,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
               border: Border.all(color: Colors.white, width: 1),
             ),
           ),
-        ),
-      ],
+        ),      ],
     );
   }  /// 切换折叠状态
   void _toggleCollapse() {
@@ -235,10 +249,8 @@ class StickyNoteGestureHelper {
       if (handleRect.contains(localPosition)) {
         return StickyNoteHitType.resizeHandle;
       }
-    }
-
-    // 检查是否点击了标题栏
-    const double titleBarHeight = 28.0; // 标题栏高度（包括 padding）
+    }    // 检查是否点击了标题栏
+    const double titleBarHeight = 30.0; // 标题栏高度：padding(12px) + 内容(~18px) = ~30px
     final titleBarRect = Rect.fromLTWH(
       0,
       0,
@@ -247,6 +259,17 @@ class StickyNoteGestureHelper {
     );
 
     if (titleBarRect.contains(localPosition)) {
+      // 在标题栏内，进一步检查是否点击了折叠按钮
+      const double collapseButtonSize = 24.0; // 折叠按钮区域大小（包括padding）
+      final collapseButtonRect = Rect.fromLTWH(
+        noteSize.width - collapseButtonSize, // 右对齐
+        0,
+        collapseButtonSize,
+        titleBarHeight,
+      );      if (collapseButtonRect.contains(localPosition)) {
+        return StickyNoteHitType.collapseButton;
+      }
+      
       return StickyNoteHitType.titleBar;
     }
 
@@ -260,7 +283,7 @@ class StickyNoteGestureHelper {
   /// [hitType] 命中的区域类型
   /// [details] 拖拽开始的详细信息
   /// [getCanvasPosition] 将本地坐标转换为画布坐标的函数
-  /// [onNoteUpdated] 便签更新回调
+  /// [onNoteUpdated] 便签更新回调  
   static StickyNoteDragState? handleStickyNotePanStart(
     StickyNote note,
     StickyNoteHitType hitType,
@@ -269,8 +292,7 @@ class StickyNoteGestureHelper {
     Function(StickyNote) onNoteUpdated,
   ) {
     final canvasPosition = getCanvasPosition(details.localPosition);
-    
-    switch (hitType) {
+      switch (hitType) {
       case StickyNoteHitType.titleBar:
         return StickyNoteDragState(
           type: StickyNoteDragType.move,
@@ -288,6 +310,11 @@ class StickyNoteGestureHelper {
           startNoteSize: note.size,
           onNoteUpdated: onNoteUpdated,
         );
+        
+      case StickyNoteHitType.collapseButton:
+        // 对于折叠按钮，我们不启动拖拽
+        // 折叠操作应该在 TapDown 事件中处理
+        return null; // 不返回拖拽状态
     }
   }
 
@@ -443,10 +470,8 @@ class StickyNoteGestureHelper {
       final noteSize = Size(
         note.size.width * canvasSize.width,
         note.size.height * canvasSize.height,
-      );
-
-      // 检查是否命中了标题栏
-      const double titleBarHeight = 28.0; // 标题栏高度
+      );      // 检查是否命中了标题栏
+      const double titleBarHeight = 30.0; // 标题栏高度
       final titleBarRect = Rect.fromLTWH(
         notePosition.dx,
         notePosition.dy,
