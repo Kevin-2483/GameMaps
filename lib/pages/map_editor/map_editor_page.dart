@@ -2499,11 +2499,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             onPressed: _addNewStickyNote,
             tooltip: layout.showTooltips ? '添加便签' : null,
           ),
-        ],
-        child: _isStickyNotePanelCollapsed
+        ],        child: _isStickyNotePanelCollapsed
             ? null
             : StickyNotePanel(
                 stickyNotes: _currentMap?.stickyNotes ?? [],
+                selectedStickyNote: _selectedStickyNote,
                 isPreviewMode: widget.isPreviewMode,
                 onStickyNoteUpdated: _updateStickyNote,
                 onStickyNoteDeleted: _deleteStickyNote,
@@ -2805,11 +2805,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           shouldDisableDrawingTools: _shouldDisableDrawingTools, // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
-          displayOrderLayers: _layersForDisplay, //：传递显示顺序
-          // 添加便签相关参数
+          displayOrderLayers: _layersForDisplay, //：传递显示顺序          // 添加便签相关参数
           selectedStickyNote: _selectedStickyNote,
           previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
           onStickyNoteUpdated: _updateStickyNote,
+          onStickyNoteSelected: _selectStickyNote,
         );
       },
     );

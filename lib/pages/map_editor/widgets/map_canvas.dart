@@ -100,11 +100,11 @@ class MapCanvas extends StatefulWidget {
   final Uint8List? imageBufferData; // 图片缓冲区数据
   final BoxFit imageBufferFit; // 图片适应方式
   final List<MapLayer>? displayOrderLayers; //：优先显示顺序的图层列表
-
   // 便签相关参数
   final StickyNote? selectedStickyNote; // 当前选中的便签
   final Map<String, double> previewStickyNoteOpacityValues; // 便签透明度预览值
   final Function(StickyNote)? onStickyNoteUpdated; // 便签更新回调
+  final Function(StickyNote?)? onStickyNoteSelected; // 便签选中回调
 
   const MapCanvas({
     super.key,
@@ -138,11 +138,11 @@ class MapCanvas extends StatefulWidget {
 
     // 添加图片缓冲区参数
     this.imageBufferData,
-    this.imageBufferFit = BoxFit.contain,
-    // 便签相关参数
+    this.imageBufferFit = BoxFit.contain,    // 便签相关参数
     this.selectedStickyNote,
     this.previewStickyNoteOpacityValues = const {},
     this.onStickyNoteUpdated,
+    this.onStickyNoteSelected,
   });
 
   @override
@@ -623,12 +623,17 @@ class MapCanvasState extends State<MapCanvas> {
 
   // 元素交互手势处理方法  /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
-
-    // 优先检测便签点击
+    final canvasPosition = _getCanvasPosition(details.localPosition);    // 优先检测便签点击
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
-      // 如果点击了便签，不处理其他交互，让便签自己处理点击
+      // 处理便签点击选中逻辑
+      if (widget.selectedStickyNote?.id != hitStickyNote.id) {
+        // 选中便签
+        widget.onStickyNoteSelected?.call(hitStickyNote);
+      } else {
+        // 如果点击的是已选中的便签，取消选中
+        widget.onStickyNoteSelected?.call(null);
+      }
       return;
     }
 
@@ -951,11 +956,13 @@ class MapCanvasState extends State<MapCanvas> {
           widget.onStickyNoteUpdated!,
         );
         return;
-      }
-      // 如果点击了便签但不是特定区域，选中便签但不处理拖拽
+      }      // 如果点击了便签但不是特定区域，选中便签但不处理拖拽
       if (widget.selectedStickyNote?.id != hitStickyNote.id) {
         // 选中便签（通过回调通知上层）
-        // TODO: 需要添加选中便签的回调
+        widget.onStickyNoteSelected?.call(hitStickyNote);
+      } else {
+        // 如果点击的是已选中的便签，取消选中
+        widget.onStickyNoteSelected?.call(null);
       }
       return;
     }
@@ -1048,10 +1055,14 @@ class MapCanvasState extends State<MapCanvas> {
           _getCanvasPosition,
         );
         return;
-      }
-    } else {
+      }    } else {
       // 点击了空白区域
-      // 例如: widget.onDeselectElement();
+      // 取消选中便签
+      if (widget.selectedStickyNote != null) {
+        widget.onStickyNoteSelected?.call(null);
+      }
+      // 取消选中元素
+      widget.onElementSelected(null);
       _startSelectionDrag(canvasPosition);
     }
   }

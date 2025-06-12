@@ -7,9 +7,8 @@ import 'dart:async';
 
 class StickyNotePanel extends StatefulWidget {
   final List<StickyNote> stickyNotes;
-  final StickyNote? selectedStickyNote;
-  final bool isPreviewMode;
-  final Function(StickyNote) onStickyNoteSelected;
+  final StickyNote? selectedStickyNote;  final bool isPreviewMode;
+  final Function(StickyNote?) onStickyNoteSelected;
   final Function(StickyNote) onStickyNoteUpdated;
   final Function(StickyNote) onStickyNoteDeleted;
   final VoidCallback onStickyNoteAdded;
@@ -128,21 +127,19 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     StickyNote note,
     int index,
   ) {
-    final isSelected = widget.selectedStickyNote?.id == note.id;
-
-    return Container(
+    final isSelected = widget.selectedStickyNote?.id == note.id;    return Container(
       key: ValueKey(note.id),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isSelected
             ? Theme.of(
                 context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+              ).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
             : null,
         borderRadius: BorderRadius.circular(8),
         border: isSelected
-            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
-            : null,
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
+            : Border.all(color: Colors.grey.shade300, width: 1),
       ),
       child: GestureDetector(
         onSecondaryTapDown: widget.isPreviewMode
@@ -359,15 +356,12 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         ],
       ),
     );
-  }
-
-  /// 处理便签选择
+  }  /// 处理便签选择
   void _handleStickyNoteSelection(StickyNote note) {
     // 检查当前点击的便签是否已经被选中
     if (widget.selectedStickyNote?.id == note.id) {
-      // 如果已经选中，可以取消选择或保持选中状态（根据需求）
-      // 这里选择保持选中状态，便于编辑
-      return;
+      // 如果已经选中，取消选择
+      widget.onStickyNoteSelected(null);
     } else {
       // 如果未选中，则选择该便签
       widget.onStickyNoteSelected(note);

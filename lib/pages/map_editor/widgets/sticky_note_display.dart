@@ -30,8 +30,7 @@ class StickyNoteDisplay extends StatefulWidget {
   State<StickyNoteDisplay> createState() => _StickyNoteDisplayState();
 }
 
-class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
-  @override
+class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -39,7 +38,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         borderRadius: BorderRadius.circular(8),
         border: widget.isSelected
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
-            : Border.all(color: Colors.grey.shade300, width: 1),
+            : null, // 未选中时不渲染边框
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
