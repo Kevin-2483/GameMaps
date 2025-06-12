@@ -74,11 +74,10 @@ class LayoutSettingsSection extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
-            // 面板状态恢复设置
+            const SizedBox(height: 16),            // 面板状态恢复设置
             SwitchListTile(
               title: Text('保存面板状态变更'),
-              subtitle: Text('用户操作面板时自动保存状态到首选项'),
+              subtitle: Text('退出地图编辑器时自动保存面板折叠/展开状态'),
               value: layout.autoRestorePanelStates,
               onChanged: (value) =>
                   provider.updateLayout(autoRestorePanelStates: value),

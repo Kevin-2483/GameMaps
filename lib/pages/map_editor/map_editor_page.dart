@@ -145,12 +145,22 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final provider = context.read<UserPreferencesProvider>();
     return provider.mapEditor.undoHistoryLimit;
   }
-
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;
+  // 面板状态变更跟踪
+  bool _panelStatesChanged = false;
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
-  final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
+  final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态  @override
+  void dispose() {
+    // 在页面销毁时尝试保存面板状态（异步但不等待）
+    if (_panelStatesChanged && mounted) {
+      _savePanelStatesOnExit().catchError((e) {
+        print('在dispose中保存面板状态失败: $e');
+      });
+    }
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -1787,10 +1797,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
     }
   }
-
   // 退出确认对话框
   Future<bool> _showExitConfirmDialog() async {
-    // 无论是否有未保存的更改，都先保存会话状态
+    // 无论是否有未保存的更改，都先保存会话状态和面板状态
+    await _savePanelStatesOnExit();
 
     if (!_hasUnsavedChanges || widget.isPreviewMode || kIsWeb) {
       return true; // 如果没有未保存更改或在预览模式，直接允许退出
@@ -1805,17 +1815,23 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+          ),          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(true); // 先弹出对话框
+              if (mounted) {
+                await _savePanelStatesOnExit(); // 保存面板状态
+              }
+            },
             child: const Text('不保存退出'),
-          ),
-          ElevatedButton(
+          ),          ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop(false); // 先关闭对话框
               await _saveMap(); // 保存地图
-              if (mounted && !_hasUnsavedChanges) {
-                context.pop(); // 使用 go_router 的方式退出
+              if (mounted) {
+                await _savePanelStatesOnExit(); // 保存面板状态
+                if (!_hasUnsavedChanges && context.mounted) {
+                  context.pop(); // 使用 go_router 的方式退出
+                }
               }
             },
             child: const Text('保存并退出'),
@@ -1825,7 +1841,42 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     );
 
     return result ?? false;
-  } // 处理工具栏自动关闭逻辑
+  }
+  /// 在退出时保存面板状态
+  Future<void> _savePanelStatesOnExit() async {
+    if (!_panelStatesChanged || !mounted) {
+      return;
+    }
+
+    try {
+      final prefsProvider = context.read<UserPreferencesProvider>();
+      final layout = prefsProvider.layout;      // 只有当autoRestorePanelStates为true时才保存面板状态
+      if (layout.autoRestorePanelStates) {
+        await prefsProvider.updateLayout(
+          panelCollapsedStates: {
+            ...layout.panelCollapsedStates,
+            'sidebar': _isSidebarCollapsed,
+            'drawing': _isDrawingToolbarCollapsed,
+            'layer': _isLayerPanelCollapsed,
+            'legend': _isLegendPanelCollapsed,
+            'stickyNote': _isStickyNotePanelCollapsed,
+          },
+          panelAutoCloseStates: {
+            ...layout.panelAutoCloseStates,
+            'drawing': _isDrawingToolbarAutoClose,
+            'layer': _isLayerPanelAutoClose,
+            'legend': _isLegendPanelAutoClose,
+            'stickyNote': _isStickyNotePanelAutoClose,
+          },
+        );
+        
+        _panelStatesChanged = false;
+        print('面板状态已在退出时保存');
+      }
+    } catch (e) {
+      print('保存面板状态失败: $e');
+    }
+  }// 处理工具栏自动关闭逻辑
 
   void _handlePanelToggle(String panelType) {
     // 记录哪些面板状态发生了变化
@@ -1899,6 +1950,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
       }
     });
+    
+    // 标记面板状态有变化，但不立即保存
+    _panelStatesChanged = true;
   }
 
   /// 构建图层面板的副标题
@@ -1921,7 +1975,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       return '未选择图层';
     }
   }
-
   /// 处理自动关闭切换
   void _handleAutoCloseToggle(String panelType, bool value) {
     setState(() {
@@ -1939,16 +1992,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           _isStickyNotePanelAutoClose = value;
           break;
       }
-    }); // 保存到用户首选项
-    if (mounted) {
-      final prefsProvider = context.read<UserPreferencesProvider>();
-      prefsProvider.updateLayout(
-        panelAutoCloseStates: {
-          ...prefsProvider.layout.panelAutoCloseStates,
-          panelType: value,
-        },
-      );
-    }
+    });
+    
+    // 标记面板状态有变化，但不立即保存
+    _panelStatesChanged = true;
   }
 
   @override
@@ -2670,21 +2717,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                   ),
                   child: Material(
                     color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
+                    child: InkWell(                      onTap: () {
                         setState(() {
                           _isSidebarCollapsed = !_isSidebarCollapsed;
                         });
                         
-                        // 如果开启了状态保存，更新首选项
-                        if (userPrefsProvider.layout.autoRestorePanelStates) {
-                          userPrefsProvider.updateLayout(
-                            panelCollapsedStates: {
-                              ...userPrefsProvider.layout.panelCollapsedStates,
-                              'sidebar': _isSidebarCollapsed,
-                            },
-                          );
-                        }
+                        // 标记面板状态有变化，但不立即保存
+                        _panelStatesChanged = true;
                       },
                       child: Container(
                         alignment: Alignment.center,
