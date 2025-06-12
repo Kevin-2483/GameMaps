@@ -186,19 +186,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   void _updateLayoutFromPreferences(UserPreferencesProvider prefsProvider) {
     final layout = prefsProvider.layout;    setState(() {
       // 更新侧边栏折叠状态
-      _isSidebarCollapsed = layout.panelCollapsedStates['sidebar'] ?? false;
-
-      // 更新面板折叠状态
+      _isSidebarCollapsed = layout.panelCollapsedStates['sidebar'] ?? false;      // 更新面板折叠状态
       _isDrawingToolbarCollapsed =
           layout.panelCollapsedStates['drawing'] ?? false;
       _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
       _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;
+      _isStickyNotePanelCollapsed = layout.panelCollapsedStates['stickyNote'] ?? false;
 
       // 更新面板自动关闭状态
       _isDrawingToolbarAutoClose =
           layout.panelAutoCloseStates['drawing'] ?? true;
       _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
       _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
+      _isStickyNotePanelAutoClose = layout.panelAutoCloseStates['stickyNote'] ?? true;
     });
   }
 
