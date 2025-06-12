@@ -16,6 +16,8 @@ import '../renderers/highlight_renderer.dart';
 import '../renderers/preview_renderer.dart';
 import '../renderers/eraser_renderer.dart';
 import '../renderers/background_renderer.dart';
+// 导入绘制工具管理器
+import '../tools/drawing_tool_manager.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -166,237 +168,29 @@ class MapCanvasState extends State<MapCanvas> {
 
   final TransformationController _transformationController =
       TransformationController();
-  Offset? _currentDrawingStart;
-  Offset? _currentDrawingEnd;
-  bool _isDrawing = false;
+    // 绘制工具管理器
+  late final DrawingToolManager _drawingToolManager;
+  
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
-  final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片
+  final Map<String, Future<ui.Image?>> _imageDecodingFutures = {}; // 正在解码的图片  
   Rect? _selectionRect; // 当前选区矩形
   final ValueNotifier<Rect?> _selectionNotifier = ValueNotifier(null);
   // 选区拖动相关变量
   Offset? _selectionStartPosition;
   bool _isCreatingSelection = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // 在组件初始化时预加载所有图层的图片
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _preloadAllLayerImages();
-    });
-  }
-
+  
   // 监听图片缓冲区变化
   Uint8List? _lastImageBufferData;
   ui.Image? _imageBufferCachedImage;
 
-  @override
-  void didUpdateWidget(MapCanvas oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // 检查图片缓冲区是否发生变化
-    if (widget.imageBufferData != oldWidget.imageBufferData) {
-      _handleImageBufferChange();
-    }
-
-    // 检查图层元素是否有新的图片需要解码
-    if (oldWidget.selectedLayer != widget.selectedLayer) {
-      _preloadLayerImages();
-    }
-
-    //：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
-    if (oldWidget.mapItem != widget.mapItem) {
-      // 清理所有图片缓存，因为地图数据已经完全改变
-      _clearAllImageCache();
-      _preloadAllLayerImages();
-    } else {
-      // 检查图层元素是否发生变化（撤销/重做等操作）
-      _checkAndCleanOrphanedImageCache();
-    }
-  }
-
-  /// 清理所有图片缓存
-  void _clearAllImageCache() {
-    // 释放所有缓存的图片资源
-    for (final image in _imageCache.values) {
-      image.dispose();
-    }
-    _imageCache.clear();
-    _imageDecodingFutures.clear();
-
-    print('已清理所有图片缓存');
-  }
-
-  /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
-  void _checkAndCleanOrphanedImageCache() {
-    if (widget.mapItem.layers.isEmpty) {
-      _clearAllImageCache();
-      return;
-    }
-
-    // 收集所有当前存在的图片元素ID
-    final Set<String> currentElementIds = {};
-    for (final layer in widget.mapItem.layers) {
-      for (final element in layer.elements) {
-        if (element.type == DrawingElementType.imageArea &&
-            element.imageData != null) {
-          currentElementIds.add(element.id);
-        }
-      }
-    }
-
-    // 找出需要清理的缓存项（元素已删除）
-    final List<String> orphanedCacheKeys = [];
-    for (final cacheKey in _imageCache.keys) {
-      if (!currentElementIds.contains(cacheKey)) {
-        orphanedCacheKeys.add(cacheKey);
-      }
-    }
-
-    // 清理孤立的缓存项
-    for (final key in orphanedCacheKeys) {
-      final image = _imageCache.remove(key);
-      image?.dispose();
-      _imageDecodingFutures.remove(key);
-    }
-
-    if (orphanedCacheKeys.isNotEmpty) {
-      print('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
-
-      // 触发重绘以反映缓存清理的结果
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  /// 预加载图层中的图片元素
-  Future<void> _preloadLayerImages() async {
-    if (widget.selectedLayer == null) return;
-
-    for (final element in widget.selectedLayer!.elements) {
-      if (element.type == DrawingElementType.imageArea &&
-          element.imageData != null) {
-        await _getOrDecodeElementImage(element);
-      }
-    }
-  }
-
-  /// 预加载所有图层的图片元素
-  /// 在地图初始化时调用，确保所有图片立即显示
-  Future<void> _preloadAllLayerImages() async {
-    for (final layer in widget.mapItem.layers) {
-      for (final element in layer.elements) {
-        if (element.type == DrawingElementType.imageArea &&
-            element.imageData != null) {
-          await _getOrDecodeElementImage(element);
-        }
-      }
-    }
-  }
-
-  /// 获取或解码元素图片
-  Future<ui.Image?> _getOrDecodeElementImage(MapDrawingElement element) async {
-    final cacheKey = element.id;
-
-    // 如果已经缓存，直接返回
-    if (_imageCache.containsKey(cacheKey)) {
-      return _imageCache[cacheKey];
-    }
-
-    // 如果正在解码，返回正在进行的Future
-    if (_imageDecodingFutures.containsKey(cacheKey)) {
-      return _imageDecodingFutures[cacheKey];
-    }
-
-    // 开始新的解码过程
-    if (element.imageData != null) {
-      final decodingFuture = _decodeElementImage(element.imageData!, cacheKey);
-      _imageDecodingFutures[cacheKey] = decodingFuture;
-      return decodingFuture;
-    }
-
-    return null;
-  }
-
-  /// 解码元素图片
-  Future<ui.Image?> _decodeElementImage(
-    Uint8List imageData,
-    String cacheKey,
-  ) async {
-    try {
-      final codec = await ui.instantiateImageCodec(imageData);
-      final frame = await codec.getNextFrame();
-
-      // 缓存解码结果
-      _imageCache[cacheKey] = frame.image;
-      _imageDecodingFutures.remove(cacheKey);
-
-      // 触发重绘
-      if (mounted) {
-        setState(() {});
-      }
-
-      return frame.image;
-    } catch (e) {
-      print('Failed to decode image for element $cacheKey: $e');
-      _imageDecodingFutures.remove(cacheKey);
-      return null;
-    }
-  }
-
-  /// 处理图片缓冲区变化
-  void _handleImageBufferChange() {
-    // 如果图片缓冲区清空了
-    if (widget.imageBufferData == null) {
-      _imageBufferCachedImage?.dispose();
-      _imageBufferCachedImage = null;
-      _lastImageBufferData = null;
-      return;
-    }
-
-    // 如果图片数据没有变化，不需要重新解码
-    if (widget.imageBufferData == _lastImageBufferData) {
-      return;
-    }
-    _lastImageBufferData = widget.imageBufferData;
-
-    // 开始异步解码新图片
-    _decodeImageBuffer(widget.imageBufferData!);
-  }
-
-  /// 异步解码图片缓冲区
-  Future<ui.Image?> _decodeImageBuffer(Uint8List imageData) async {
-    try {
-      final codec = await ui.instantiateImageCodec(imageData);
-      final frame = await codec.getNextFrame();
-
-      // 释放旧的缓存图片
-      _imageBufferCachedImage?.dispose();
-      _imageBufferCachedImage = frame.image;
-
-      // 触发重绘
-      if (mounted) {
-        setState(() {});
-      }
-
-      return frame.image;
-    } catch (e) {
-      print('Failed to decode image buffer: $e');
-      return null;
-    }
-  }
-
-  // 自由绘制路径支持
-  List<Offset> _freeDrawingPath = [];
-
   // 绘制预览的 ValueNotifier，避免整个 widget 重绘
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier =
-      ValueNotifier(null); // 获取有效的绘制工具状态（预览值或实际值）
+      ValueNotifier(null);
 
   // Add this GlobalKey
   final GlobalKey _canvasGlobalKey = GlobalKey();
+  
   DrawingElementType? get _effectiveDrawingTool {
     if (widget.shouldDisableDrawingTools) {
       return null;
@@ -415,20 +209,19 @@ class MapCanvasState extends State<MapCanvas> {
       widget.previewTriangleCut ?? TriangleCutType.none;
 
   @override
-  void dispose() {
-    // 清理图片缓存
-    for (final image in _imageCache.values) {
-      image.dispose();
-    }
-    _imageCache.clear();
-    _imageDecodingFutures.clear();
-
-    _imageBufferCachedImage?.dispose();
-
-    _transformationController.dispose();
-    _drawingPreviewNotifier.dispose();
-    _selectionNotifier.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    
+    // 初始化绘制工具管理器
+    _drawingToolManager = DrawingToolManager(
+      onLayerUpdated: widget.onLayerUpdated,
+      context: context,
+    );
+    
+    // 在组件初始化时预加载所有图层的图片
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadAllLayerImages();
+    });
   }
 
   // 添加清除选区的方法
@@ -442,6 +235,26 @@ class MapCanvasState extends State<MapCanvas> {
       // 通知外部选区已清除
       widget.onSelectionCleared?.call();
     }
+  }
+
+  @override
+  void dispose() {
+    // 清理绘制工具管理器
+    _drawingToolManager.dispose();
+    
+    // 清理图片缓存
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
+    _imageDecodingFutures.clear();
+
+    _imageBufferCachedImage?.dispose();
+
+    _transformationController.dispose();
+    _drawingPreviewNotifier.dispose();
+    _selectionNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -484,10 +297,9 @@ class MapCanvasState extends State<MapCanvas> {
                           ),
                         ),
                         // 按层级顺序渲染所有元素
-                        ..._buildLayeredElements(),
-                        // Current drawing preview
+                        ..._buildLayeredElements(),                        // Current drawing preview
                         ValueListenableBuilder<DrawingPreviewData?>(
-                          valueListenable: _drawingPreviewNotifier,
+                          valueListenable: _drawingToolManager.drawingPreviewNotifier,
                           builder: (context, previewData, child) {
                             if (previewData == null) {
                               return const SizedBox.shrink();
@@ -506,15 +318,15 @@ class MapCanvasState extends State<MapCanvas> {
                                 freeDrawingPath: previewData.freeDrawingPath,
                                 selectedElementId: widget.selectedElementId,
                               ),
-                            );
-                          },
+                            );                          },
                         ),
                         // 选区层
                         ValueListenableBuilder<Rect?>(
                           valueListenable: _selectionNotifier,
                           builder: (context, selectionRect, child) {
-                            if (selectionRect == null)
+                            if (selectionRect == null) {
                               return const SizedBox.shrink();
+                            }
                             return CustomPaint(
                               painter: _SelectionPainter(selectionRect),
                               size: const Size(kCanvasWidth, kCanvasHeight),
@@ -530,15 +342,21 @@ class MapCanvasState extends State<MapCanvas> {
                       left: 0,
                       top: 0,
                       width: kCanvasWidth,
-                      height: kCanvasHeight,
-                      child: _effectiveDrawingTool == DrawingElementType.text
+                      height: kCanvasHeight,                      child: _effectiveDrawingTool == DrawingElementType.text
                           ? GestureDetector(
                               // 文本工具使用点击手势
                               onTapDown: (details) {
-                                _currentDrawingStart = _getCanvasPosition(
+                                final position = _getCanvasPosition(
                                   details.localPosition,
                                 );
-                                _showTextInputDialog();
+                                _drawingToolManager.showTextInputDialog(
+                                  position,
+                                  widget.selectedLayer!,
+                                  _effectiveColor,
+                                  _effectiveStrokeWidth,
+                                  _effectiveDensity,
+                                  _effectiveCurvature,
+                                );
                               },
                               behavior: HitTestBehavior.translucent,
                             )
@@ -799,9 +617,8 @@ class MapCanvasState extends State<MapCanvas> {
               ),
             ),
           ),
-        ),
-      ),
-    );
+        ),),
+      );
   } // 图例拖拽相关方法
 
   LegendItem? _draggingLegendItem;
@@ -1458,68 +1275,25 @@ class MapCanvasState extends State<MapCanvas> {
         break;
       }
     }
-  }
-
-  void _onDrawingStart(DragStartDetails details) {
-    if (_effectiveDrawingTool == null) return;
-
-    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
-    _currentDrawingStart = _getClampedCanvasPosition(details.localPosition);
-    _currentDrawingEnd = _currentDrawingStart;
-    _isDrawing = true;
-
-    // 初始化自由绘制路径
-    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _freeDrawingPath = [_currentDrawingStart!];
-    } // 只更新绘制预览，不触发整个 widget 重绘
-    _drawingPreviewNotifier.value = DrawingPreviewData(
-      start: _currentDrawingStart!,
-      end: _currentDrawingEnd!,
-      elementType: _effectiveDrawingTool!,
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      density: _effectiveDensity,
-      curvature: _effectiveCurvature,
-      triangleCut: _effectiveTriangleCut,
-      freeDrawingPath: _effectiveDrawingTool == DrawingElementType.freeDrawing
-          ? _freeDrawingPath
-          : null,
+  }  void _onDrawingStart(DragStartDetails details) {
+    _drawingToolManager.onDrawingStart(
+      details,
+      _effectiveDrawingTool,
+      _effectiveColor,
+      _effectiveStrokeWidth,
+      _effectiveDensity,
+      _effectiveCurvature,
+      _effectiveTriangleCut,
     );
-  }
-
-  void _onDrawingUpdate(DragUpdateDetails details) {
-    if (!_isDrawing) return;
-
-    // 获取相对于画布的坐标，对于绘制操作需要限制在画布范围内
-    _currentDrawingEnd = _getClampedCanvasPosition(
-      details.localPosition,
-    ); // 自由绘制路径处理
-    if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _freeDrawingPath.add(_currentDrawingEnd!); // 对于自由绘制，使用路径信息更新预览
-      _drawingPreviewNotifier.value = DrawingPreviewData(
-        start: _freeDrawingPath.first,
-        end: _freeDrawingPath.last,
-        elementType: _effectiveDrawingTool!,
-        color: _effectiveColor,
-        strokeWidth: _effectiveStrokeWidth,
-        density: _effectiveDensity,
-        curvature: _effectiveCurvature,
-        triangleCut: _effectiveTriangleCut,
-        freeDrawingPath: _freeDrawingPath,
-      );
-      return;
-    }
-    // 只更新绘制预览，不触发整个 widget 重绘
-    _drawingPreviewNotifier.value = DrawingPreviewData(
-      start: _currentDrawingStart!,
-      end: _currentDrawingEnd!,
-      elementType: _effectiveDrawingTool!,
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      density: _effectiveDensity,
-      curvature: _effectiveCurvature,
-      triangleCut: _effectiveTriangleCut,
-      freeDrawingPath: null,
+  }  void _onDrawingUpdate(DragUpdateDetails details) {
+    _drawingToolManager.onDrawingUpdate(
+      details,
+      _effectiveDrawingTool,
+      _effectiveColor,
+      _effectiveStrokeWidth,
+      _effectiveDensity,
+      _effectiveCurvature,
+      _effectiveTriangleCut,
     );
   }
 
@@ -1530,259 +1304,19 @@ class MapCanvasState extends State<MapCanvas> {
     // 对于拖拽操作，不应该限制以避免偏移量计算错误
     return localPosition;
   }
-
-  // 专门用于绘制操作的坐标获取，会进行边界限制
-  Offset _getClampedCanvasPosition(Offset localPosition) {
-    final clampedX = localPosition.dx.clamp(0.0, kCanvasWidth);
-    final clampedY = localPosition.dy.clamp(0.0, kCanvasHeight);
-    return Offset(clampedX, clampedY);
-  }
-
   void _onDrawingEnd(DragEndDetails details) {
-    if (!_isDrawing ||
-        _currentDrawingStart == null ||
-        _currentDrawingEnd == null ||
-        widget.selectedLayer == null) {
-      _isDrawing = false;
-      _currentDrawingStart = null;
-      _currentDrawingEnd = null;
-      _drawingPreviewNotifier.value = null; // 清除预览
-      return;
-    }
-
-    // Convert screen coordinates to normalized coordinates (0.0-1.0)
-    // 使用固定的画布尺寸，与绘制时保持一致
-    final normalizedStart = Offset(
-      _currentDrawingStart!.dx / kCanvasWidth,
-      _currentDrawingStart!.dy / kCanvasHeight,
-    );
-    final normalizedEnd = Offset(
-      _currentDrawingEnd!.dx / kCanvasWidth,
-      _currentDrawingEnd!.dy / kCanvasHeight,
-    ); // 处理橡皮擦功能
-    if (_effectiveDrawingTool == DrawingElementType.eraser) {
-      _handleEraserAction(normalizedStart, normalizedEnd);
-    } else if (_effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      _handleFreeDrawingEnd();
-    } else {
-      // 计算新元素的 z 值（比当前最大 z 值大 1）
-      final maxZIndex = widget.selectedLayer!.elements.isEmpty
-          ? 0
-          : widget.selectedLayer!.elements
-                .map((e) => e.zIndex)
-                .reduce(
-                  (a, b) => a > b ? a : b,
-                ); // Add the drawing element to the selected layer
-      final element = MapDrawingElement(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: _effectiveDrawingTool!,
-        points: [normalizedStart, normalizedEnd],
-        color: _effectiveColor,
-        strokeWidth: _effectiveStrokeWidth,
-        density: _effectiveDensity,
-        curvature: _effectiveCurvature,
-        triangleCut: _effectiveTriangleCut,
-        zIndex: maxZIndex + 1,
-        createdAt: DateTime.now(),
-        // 对于图片选区工具，将缓冲区数据复制到元素中，使其独立于缓冲区
-        imageData: _effectiveDrawingTool == DrawingElementType.imageArea
-            ? widget.imageBufferData
-            : null,
-        imageFit: _effectiveDrawingTool == DrawingElementType.imageArea
-            ? widget.imageBufferFit
-            : null,
-      );
-
-      final updatedLayer = widget.selectedLayer!.copyWith(
-        elements: [...widget.selectedLayer!.elements, element],
-        updatedAt: DateTime.now(),
-      );
-
-      widget.onLayerUpdated(updatedLayer);
-    }
-
-    // 清理绘制状态，不需要 setState
-    _isDrawing = false;
-    _currentDrawingStart = null;
-    _currentDrawingEnd = null;
-    _drawingPreviewNotifier.value = null; // 清除预览
-  } // 处理橡皮擦动作 - 使用 z 值方式
-
-  void _handleEraserAction(Offset normalizedStart, Offset normalizedEnd) {
-    // 计算橡皮擦的 z 值（比当前 z 值大 1）
-    final maxZIndex = widget.selectedLayer!.elements.isEmpty
-        ? 0
-        : widget.selectedLayer!.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
-    // 创建一个橡皮擦元素，用于遮挡下方的绘制元素
-    final eraserElement = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.eraser,
-      points: [normalizedStart, normalizedEnd],
-      color: Colors.transparent, // 橡皮擦本身是透明的
-      strokeWidth: 0.0,
-      curvature: _effectiveCurvature, // 保存曲率参数
-      triangleCut: _effectiveTriangleCut,
-      zIndex: maxZIndex + 1,
-      createdAt: DateTime.now(),
-    );
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: [...widget.selectedLayer!.elements, eraserElement],
-      updatedAt: DateTime.now(),
-    );
-
-    widget.onLayerUpdated(updatedLayer);
-  }
-
-  // 处理自由绘制完成
-  void _handleFreeDrawingEnd() {
-    if (_freeDrawingPath.isEmpty || widget.selectedLayer == null) return;
-
-    // 将路径点转换为标准化坐标
-    final normalizedPoints = _freeDrawingPath
-        .map(
-          (point) => Offset(point.dx / kCanvasWidth, point.dy / kCanvasHeight),
-        )
-        .toList();
-
-    // 计算新元素的 z 值
-    final maxZIndex = widget.selectedLayer!.elements.isEmpty
-        ? 0
-        : widget.selectedLayer!.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b); // 创建自由绘制元素
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.freeDrawing,
-      points: normalizedPoints,
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      density: _effectiveDensity,
-      curvature: _effectiveCurvature,
-      zIndex: maxZIndex + 1,
-      createdAt: DateTime.now(),
-    );
-
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: [...widget.selectedLayer!.elements, element],
-      updatedAt: DateTime.now(),
-    );
-
-    widget.onLayerUpdated(updatedLayer);
-
-    // 清空路径
-    _freeDrawingPath.clear();
-  }
-
-  void _showTextInputDialog() async {
-    final textController = TextEditingController();
-    final fontSize = ValueNotifier<double>(16.0);
-
-    // 保存文本位置，避免在对话框期间被清除
-    final textPosition = _currentDrawingStart;
-
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('添加文本'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: textController,
-              decoration: const InputDecoration(
-                labelText: '文本内容',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            ValueListenableBuilder<double>(
-              valueListenable: fontSize,
-              builder: (context, value, child) => Column(
-                children: [
-                  Text('字体大小: ${value.round()}px'),
-                  Slider(
-                    value: value,
-                    min: 10.0,
-                    max: 48.0,
-                    divisions: 19,
-                    onChanged: (newValue) => fontSize.value = newValue,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (textController.text.isNotEmpty) {
-                Navigator.of(context).pop({
-                  'text': textController.text,
-                  'fontSize': fontSize.value,
-                });
-              }
-            },
-            child: const Text('确定'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result['text'] != null && textPosition != null) {
-      _createTextElement(result['text'], result['fontSize'], textPosition);
-    }
-
-    // 重置绘制状态
-    _isDrawing = false;
-    _currentDrawingStart = null;
-    _currentDrawingEnd = null;
-    _drawingPreviewNotifier.value = null;
-  }
-
-  void _createTextElement(String text, double fontSize, Offset position) {
-    if (widget.selectedLayer == null) return;
-
-    final normalizedPosition = Offset(
-      position.dx / kCanvasWidth,
-      position.dy / kCanvasHeight,
-    );
-
-    final maxZIndex = widget.selectedLayer!.elements.isEmpty
-        ? 0
-        : widget.selectedLayer!.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.text,
-      points: [normalizedPosition],
-      color: _effectiveColor,
-      strokeWidth: _effectiveStrokeWidth,
-      density: _effectiveDensity,
-      curvature: _effectiveCurvature,
-      zIndex: maxZIndex + 1,
-      text: text,
-      fontSize: fontSize,
-      createdAt: DateTime.now(),
-    );
-
-    final updatedLayer = widget.selectedLayer!.copyWith(
-      elements: [...widget.selectedLayer!.elements, element],
-      updatedAt: DateTime.now(),
-    );
-
-    widget.onLayerUpdated(updatedLayer);
-  }
-
+    _drawingToolManager.onDrawingEnd(
+      details,
+      _effectiveDrawingTool,
+      _effectiveColor,
+      _effectiveStrokeWidth,
+      _effectiveDensity,
+      _effectiveCurvature,
+      _effectiveTriangleCut,
+      widget.selectedLayer,
+      widget.imageBufferData,
+      widget.imageBufferFit,
+    );  }
   /// 构建按层级排序的所有元素（支持增量更新）
   List<Widget> _buildLayeredElements() {
     print('=== 开始构建图层元素 (增量更新模式) ===');
@@ -2080,11 +1614,11 @@ class MapCanvasState extends State<MapCanvas> {
       // 触发重绘以显示拖拽状态
     });
   }
-
   /// 处理绘画元素的拖拽更新
   void _onElementDragUpdate(String elementId, DragUpdateDetails details) {
-    if (_draggingElementId != elementId || _elementDragStartOffset == null)
+    if (_draggingElementId != elementId || _elementDragStartOffset == null) {
       return;
+    }
 
     final canvasPosition = _getCanvasPosition(details.localPosition);
     final adjustedPosition = Offset(
@@ -2292,12 +1826,12 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   /// 处理调整大小的更新
-  void _onResizeUpdate(String elementId, DragUpdateDetails details) {
-    if (_resizingElementId != elementId ||
+  void _onResizeUpdate(String elementId, DragUpdateDetails details) {    if (_resizingElementId != elementId ||
         _activeResizeHandle == null ||
         _resizeStartPosition == null ||
-        _originalElementBounds == null)
+        _originalElementBounds == null) {
       return;
+    }
 
     final currentPosition = _getCanvasPosition(details.localPosition);
     final delta = currentPosition - _resizeStartPosition!;
@@ -2425,6 +1959,205 @@ class MapCanvasState extends State<MapCanvas> {
     );
 
     widget.onLayerUpdated(updatedLayer);
+  }
+
+  @override
+  void didUpdateWidget(MapCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 检查图片缓冲区是否发生变化
+    if (widget.imageBufferData != oldWidget.imageBufferData) {
+      _handleImageBufferChange();
+    }
+
+    // 检查图层元素是否有新的图片需要解码
+    if (oldWidget.selectedLayer != widget.selectedLayer) {
+      _preloadLayerImages();
+    }
+
+    //：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
+    if (oldWidget.mapItem != widget.mapItem) {
+      // 清理所有图片缓存，因为地图数据已经完全改变
+      _clearAllImageCache();
+      _preloadAllLayerImages();
+    } else {
+      // 检查图层元素是否发生变化（撤销/重做等操作）
+      _checkAndCleanOrphanedImageCache();
+    }
+  }
+
+  /// 清理所有图片缓存
+  void _clearAllImageCache() {
+    // 释放所有缓存的图片资源
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
+    _imageDecodingFutures.clear();
+
+    print('已清理所有图片缓存');
+  }
+
+  /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
+  void _checkAndCleanOrphanedImageCache() {
+    if (widget.mapItem.layers.isEmpty) {
+     
+      _clearAllImageCache();
+      return;
+    }
+
+    // 收集所有当前存在的图片元素ID
+    final Set<String> currentElementIds = {};
+    for (final layer in widget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null) {
+          currentElementIds.add(element.id);
+        }
+      }
+    }
+
+    // 找出需要清理的缓存项（元素已删除）
+    final List<String> orphanedCacheKeys = [];
+    for (final cacheKey in _imageCache.keys) {
+      if (!currentElementIds.contains(cacheKey)) {
+        orphanedCacheKeys.add(cacheKey);
+      }
+    }
+
+    // 清理孤立的缓存项
+    for (final key in orphanedCacheKeys) {
+      final image = _imageCache.remove(key);
+      image?.dispose();
+      _imageDecodingFutures.remove(key);
+    }
+
+    if (orphanedCacheKeys.isNotEmpty) {
+      print('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
+
+      // 触发重绘以反映缓存清理的结果
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  /// 预加载图层中的图片元素
+  Future<void> _preloadLayerImages() async {
+    if (widget.selectedLayer == null) return;
+
+    for (final element in widget.selectedLayer!.elements) {
+      if (element.type == DrawingElementType.imageArea &&
+          element.imageData != null) {
+        await _getOrDecodeElementImage(element);
+      }
+    }
+  }
+
+  /// 预加载所有图层的图片元素
+  /// 在地图初始化时调用，确保所有图片立即显示
+  Future<void> _preloadAllLayerImages() async {
+    for (final layer in widget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null) {
+          await _getOrDecodeElementImage(element);
+        }
+      }
+    }
+  }
+
+  /// 获取或解码元素图片
+  Future<ui.Image?> _getOrDecodeElementImage(MapDrawingElement element) async {
+    final cacheKey = element.id;
+
+    // 如果已经缓存，直接返回
+
+    if (_imageCache.containsKey(cacheKey)) {
+      return _imageCache[cacheKey];
+    }
+
+    // 如果正在解码，返回正在进行的Future
+    if (_imageDecodingFutures.containsKey(cacheKey)) {
+      return _imageDecodingFutures[cacheKey];
+    }
+
+    // 开始新的解码过程
+    if (element.imageData != null) {
+      final decodingFuture = _decodeElementImage(element.imageData!, cacheKey);
+      _imageDecodingFutures[cacheKey] = decodingFuture;
+      return decodingFuture;
+    }
+
+    return null;
+  }
+
+  /// 解码元素图片
+  Future<ui.Image?> _decodeElementImage(
+    Uint8List imageData,
+    String cacheKey,
+  ) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageData);
+      final frame = await codec.getNextFrame();
+
+      // 缓存解码结果
+      _imageCache[cacheKey] = frame.image;
+      _imageDecodingFutures.remove(cacheKey);
+
+      // 触发重绘
+      if (mounted) {
+        setState(() {});
+      }
+
+      return frame.image;
+    } catch (e) {
+      print('Failed to decode image for element $cacheKey: $e');
+      _imageDecodingFutures.remove(cacheKey);
+      return null;
+    }
+  }
+
+  /// 处理图片缓冲区变化
+  void _handleImageBufferChange() {
+    // 如果图片缓冲区清空了
+    if (widget.imageBufferData == null) {
+      _imageBufferCachedImage?.dispose();
+      _imageBufferCachedImage = null;
+      _lastImageBufferData = null;
+      return;
+    }
+
+    // 如果图片数据没有变化，不需要重新解码
+    if (widget.imageBufferData == _lastImageBufferData) {
+      return;
+    }
+    _lastImageBufferData = widget.imageBufferData;
+
+    // 开始异步解码新图片
+    _decodeImageBuffer(widget.imageBufferData!);
+  }
+
+  /// 异步解码图片缓冲区
+  Future<ui.Image?> _decodeImageBuffer(Uint8List imageData) async {
+    try {
+      final codec = await ui.instantiateImageCodec(imageData);
+      final frame = await codec.getNextFrame();
+
+      // 释放旧的缓存图片
+      _imageBufferCachedImage?.dispose();
+      _imageBufferCachedImage = frame.image;
+
+      // 触发重绘
+      if (mounted) {
+        setState(() {});
+      }
+
+      return frame.image;
+    } catch (e) {
+      print('Failed to decode image buffer: $e');
+      return null;
+    }
   }
 }
 
