@@ -353,10 +353,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('删除用户失败: ${e.toString()}');
     }
   }
-
   /// 获取所有用户
-  List<UserPreferences> getAllUsers() {
-    return _service.getAllUsers();
+  Future<List<UserPreferences>> getAllUsers() async {
+    return await _service.getAllUsersAsync();
   }
 
   /// 导出设置
