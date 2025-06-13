@@ -637,7 +637,6 @@ class DrawingToolManager {
 
     _clearStickyNoteDrawingState();
   }
-
   /// Convert canvas coordinates to sticky note local coordinates (0.0-1.0)
   Offset _convertCanvasToStickyNoteCoordinates(Offset canvasPosition, StickyNote stickyNote) {
     // Get sticky note bounds in canvas coordinates
@@ -650,13 +649,27 @@ class DrawingToolManager {
       stickyNote.size.height * kCanvasHeight,
     );
 
-    // Calculate relative position within sticky note (0.0-1.0)
-    final relativeX = (canvasPosition.dx - stickyNoteCanvasPosition.dx) / stickyNoteCanvasSize.width;
-    final relativeY = (canvasPosition.dy - stickyNoteCanvasPosition.dy) / stickyNoteCanvasSize.height;
+    // 计算标题栏高度和内容区域偏移（与预览渲染保持一致）
+    const double titleBarHeight = 30.0; // 标题栏固定高度
+    const double contentPadding = 8.0; // 内容区域的 padding
+    
+    // 计算内容区域的实际位置和大小（排除标题栏）
+    final contentAreaPosition = Offset(
+      stickyNoteCanvasPosition.dx + contentPadding,
+      stickyNoteCanvasPosition.dy + titleBarHeight + contentPadding,
+    );
+    final contentAreaSize = Size(
+      stickyNoteCanvasSize.width - (contentPadding * 2),
+      stickyNoteCanvasSize.height - titleBarHeight - (contentPadding * 2),
+    );
 
-    // Allow drawing beyond sticky note boundaries with max canvas size
-    final maxRelativeX = kCanvasWidth / stickyNoteCanvasSize.width;
-    final maxRelativeY = kCanvasHeight / stickyNoteCanvasSize.height;
+    // Calculate relative position within content area (0.0-1.0)
+    final relativeX = (canvasPosition.dx - contentAreaPosition.dx) / contentAreaSize.width;
+    final relativeY = (canvasPosition.dy - contentAreaPosition.dy) / contentAreaSize.height;
+
+    // Allow drawing beyond content area boundaries with max canvas size
+    final maxRelativeX = kCanvasWidth / contentAreaSize.width;
+    final maxRelativeY = kCanvasHeight / contentAreaSize.height;
 
     return Offset(
       relativeX.clamp(-1.0, maxRelativeX),

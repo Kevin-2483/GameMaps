@@ -1374,10 +1374,9 @@ class MapCanvasState extends State<MapCanvas> {
   }
   void _onDrawingStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
-    // Check if drawing on a selected sticky note
+      // Check if drawing on a selected sticky note
     if (widget.selectedStickyNote != null && widget.onStickyNoteUpdated != null) {
-      // Check if the drawing position is within the selected sticky note bounds
+      // Check if the drawing position is within the selected sticky note's content area
       final stickyNote = widget.selectedStickyNote!;
       final stickyNotePosition = Offset(
         stickyNote.position.dx * kCanvasWidth,
@@ -1387,16 +1386,19 @@ class MapCanvasState extends State<MapCanvas> {
         stickyNote.size.height * kCanvasHeight,
       );
       
-      // Allow drawing on selected sticky note with extended canvas
-      final maxDrawingRect = Rect.fromLTWH(
-        stickyNotePosition.dx,
-        stickyNotePosition.dy,
-        stickyNoteSize.width,
-        stickyNoteSize.height,
+      // 计算内容区域的边界（排除标题栏和padding）
+      const double titleBarHeight = 30.0; // 标题栏固定高度
+      const double contentPadding = 8.0; // 内容区域的 padding
+      
+      final contentAreaRect = Rect.fromLTWH(
+        stickyNotePosition.dx + contentPadding,
+        stickyNotePosition.dy + titleBarHeight + contentPadding,
+        stickyNoteSize.width - (contentPadding * 2),
+        stickyNoteSize.height - titleBarHeight - (contentPadding * 2),
       );
       
-      if (maxDrawingRect.contains(canvasPosition)) {
-        // Drawing on sticky note
+      if (contentAreaRect.contains(canvasPosition)) {
+        // Drawing on sticky note content area
         _drawingToolManager.onStickyNoteDrawingStart(
           details,
           stickyNote,
@@ -2062,7 +2064,6 @@ class _CurrentDrawingPainter extends CustomPainter {
       );
     }
   }
-
   void _drawOnStickyNote(Canvas canvas, Size size) {
     final stickyNote = targetStickyNote!;
     
@@ -2076,6 +2077,20 @@ class _CurrentDrawingPainter extends CustomPainter {
       stickyNote.size.height * size.height,
     );
     
+    // 计算标题栏高度（与 map_canvas.dart 中的一致）
+    const double titleBarHeight = 36.0; // 标题栏固定高度
+    const double contentPadding = 10.0; // 内容区域的 padding
+    
+    // 计算内容区域的实际位置和大小（排除标题栏）
+    final contentAreaPosition = Offset(
+      stickyNoteCanvasPosition.dx + contentPadding,
+      stickyNoteCanvasPosition.dy + titleBarHeight + contentPadding,
+    );
+    final contentAreaSize = Size(
+      stickyNoteCanvasSize.width - (contentPadding * 2),
+      stickyNoteCanvasSize.height - titleBarHeight - (contentPadding * 2),
+    );
+    
     // Transform drawing coordinates from sticky note local space to canvas space
     late Offset canvasStart;
     late Offset canvasEnd;
@@ -2084,20 +2099,20 @@ class _CurrentDrawingPainter extends CustomPainter {
     if (freeDrawingPath != null && freeDrawingPath!.isNotEmpty) {
       canvasFreeDrawingPath = freeDrawingPath!.map((localPoint) {
         return Offset(
-          stickyNoteCanvasPosition.dx + localPoint.dx * stickyNoteCanvasSize.width,
-          stickyNoteCanvasPosition.dy + localPoint.dy * stickyNoteCanvasSize.height,
+          contentAreaPosition.dx + localPoint.dx * contentAreaSize.width,
+          contentAreaPosition.dy + localPoint.dy * contentAreaSize.height,
         );
       }).toList();
       canvasStart = canvasFreeDrawingPath.first;
       canvasEnd = canvasFreeDrawingPath.last;
     } else {
       canvasStart = Offset(
-        stickyNoteCanvasPosition.dx + start.dx * stickyNoteCanvasSize.width,
-        stickyNoteCanvasPosition.dy + start.dy * stickyNoteCanvasSize.height,
+        contentAreaPosition.dx + start.dx * contentAreaSize.width,
+        contentAreaPosition.dy + start.dy * contentAreaSize.height,
       );
       canvasEnd = Offset(
-        stickyNoteCanvasPosition.dx + end.dx * stickyNoteCanvasSize.width,
-        stickyNoteCanvasPosition.dy + end.dy * stickyNoteCanvasSize.height,
+        contentAreaPosition.dx + end.dx * contentAreaSize.width,
+        contentAreaPosition.dy + end.dy * contentAreaSize.height,
       );
     }
     
