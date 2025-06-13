@@ -7,7 +7,8 @@ import 'dart:async';
 
 class StickyNotePanel extends StatefulWidget {
   final List<StickyNote> stickyNotes;
-  final StickyNote? selectedStickyNote;  final bool isPreviewMode;
+  final StickyNote? selectedStickyNote;
+  final bool isPreviewMode;
   final Function(StickyNote?) onStickyNoteSelected;
   final Function(StickyNote) onStickyNoteUpdated;
   final Function(StickyNote) onStickyNoteDeleted;
@@ -127,7 +128,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     StickyNote note,
     int index,
   ) {
-    final isSelected = widget.selectedStickyNote?.id == note.id;    return Container(
+    final isSelected = widget.selectedStickyNote?.id == note.id;
+    return Container(
       key: ValueKey(note.id),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -356,7 +358,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         ],
       ),
     );
-  }  /// 处理便签选择
+  }
+
+  /// 处理便签选择
   void _handleStickyNoteSelection(StickyNote note) {
     // 检查当前点击的便签是否已经被选中
     if (widget.selectedStickyNote?.id == note.id) {

@@ -114,7 +114,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
   // 透明度预览状态
-  final Map<String, double> _previewOpacityValues = {};// 绘制工具预览状态
+  final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
   Color? _previewColor;
   double? _previewStrokeWidth;
@@ -145,13 +145,15 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     final provider = context.read<UserPreferencesProvider>();
     return provider.mapEditor.undoHistoryLimit;
   }
+
   // 数据变更跟踪
   bool _hasUnsavedChanges = false;
   // 面板状态变更跟踪
   bool _panelStatesChanged = false;
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
-  final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态  @override
+  final Map<String, double> _previewStickyNoteOpacityValues =
+      {}; // 便签透明度预览状态  @override
   void dispose() {
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
@@ -184,21 +186,25 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
   /// 根据用户首选项更新界面布局
   void _updateLayoutFromPreferences(UserPreferencesProvider prefsProvider) {
-    final layout = prefsProvider.layout;    setState(() {
+    final layout = prefsProvider.layout;
+    setState(() {
       // 更新侧边栏折叠状态
-      _isSidebarCollapsed = layout.panelCollapsedStates['sidebar'] ?? false;      // 更新面板折叠状态
+      _isSidebarCollapsed =
+          layout.panelCollapsedStates['sidebar'] ?? false; // 更新面板折叠状态
       _isDrawingToolbarCollapsed =
           layout.panelCollapsedStates['drawing'] ?? false;
       _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
       _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;
-      _isStickyNotePanelCollapsed = layout.panelCollapsedStates['stickyNote'] ?? false;
+      _isStickyNotePanelCollapsed =
+          layout.panelCollapsedStates['stickyNote'] ?? false;
 
       // 更新面板自动关闭状态
       _isDrawingToolbarAutoClose =
           layout.panelAutoCloseStates['drawing'] ?? true;
       _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
       _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
-      _isStickyNotePanelAutoClose = layout.panelAutoCloseStates['stickyNote'] ?? true;
+      _isStickyNotePanelAutoClose =
+          layout.panelAutoCloseStates['stickyNote'] ?? true;
     });
   }
 
@@ -822,7 +828,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedElementId = null; // 清除选中的元素
     });
     print('绘制工具已禁用');
-  }  /// 检查绘制工具是否应该被禁用
+  }
+
+  /// 检查绘制工具是否应该被禁用
   bool get _shouldDisableDrawingTools {
     // 如果选中了便签，绘制工具应该启用
     if (_selectedStickyNote != null) {
@@ -836,9 +844,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 如果既没有选中图层也没有选中便签，绘制工具应该禁用
     return true;
   }
+
   /// 检查是否没有任何图层选择
   bool get _hasNoLayerSelected {
-    return _selectedLayer == null && _selectedLayerGroup == null && _selectedStickyNote == null;
+    return _selectedLayer == null &&
+        _selectedLayerGroup == null &&
+        _selectedStickyNote == null;
   }
 
   List<MapLayer> get _layersForDisplay {
@@ -1804,6 +1815,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       );
     }
   }
+
   // 退出确认对话框
   Future<bool> _showExitConfirmDialog() async {
     // 无论是否有未保存的更改，都先保存会话状态和面板状态
@@ -1822,7 +1834,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('取消'),
-          ),          TextButton(
+          ),
+          TextButton(
             onPressed: () async {
               Navigator.of(context).pop(true); // 先弹出对话框
               if (mounted) {
@@ -1830,7 +1843,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
               }
             },
             child: const Text('不保存退出'),
-          ),          ElevatedButton(
+          ),
+          ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop(false); // 先关闭对话框
               await _saveMap(); // 保存地图
@@ -1849,6 +1863,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     return result ?? false;
   }
+
   /// 在退出时保存面板状态
   Future<void> _savePanelStatesOnExit() async {
     if (!_panelStatesChanged || !mounted) {
@@ -1857,7 +1872,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     try {
       final prefsProvider = context.read<UserPreferencesProvider>();
-      final layout = prefsProvider.layout;      // 只有当autoRestorePanelStates为true时才保存面板状态
+      final layout =
+          prefsProvider.layout; // 只有当autoRestorePanelStates为true时才保存面板状态
       if (layout.autoRestorePanelStates) {
         await prefsProvider.updateLayout(
           panelCollapsedStates: {
@@ -1876,14 +1892,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             'stickyNote': _isStickyNotePanelAutoClose,
           },
         );
-        
+
         _panelStatesChanged = false;
         print('面板状态已在退出时保存');
       }
     } catch (e) {
       print('保存面板状态失败: $e');
     }
-  }// 处理工具栏自动关闭逻辑
+  } // 处理工具栏自动关闭逻辑
 
   void _handlePanelToggle(String panelType) {
     // 记录哪些面板状态发生了变化
@@ -1957,7 +1973,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
       }
     });
-    
+
     // 标记面板状态有变化，但不立即保存
     _panelStatesChanged = true;
   }
@@ -1982,6 +1998,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       return '未选择图层';
     }
   }
+
   /// 处理自动关闭切换
   void _handleAutoCloseToggle(String panelType, bool value) {
     setState(() {
@@ -2000,13 +2017,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
       }
     });
-    
+
     // 标记面板状态有变化，但不立即保存
     _panelStatesChanged = true;
   }
 
   @override
-  Widget build(BuildContext context) {    return Consumer<UserPreferencesProvider>(
+  Widget build(BuildContext context) {
+    return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         final l10n = AppLocalizations.of(context)!;
 
@@ -2094,7 +2112,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                         )
                       : null,
                 ),
-              ),              body: _isLoading
+              ),
+              body: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Stack(
                       children: [
@@ -2240,7 +2259,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                 ),
                               ),
                             ),
-                          ),                      ],
+                          ),
+                      ],
                     ),
             ), // 关闭 PopScope 的 child 参数
           ),
@@ -2265,7 +2285,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
-        enableAnimations: layout.enableAnimations,        // 修改禁用状态提示逻辑
+        enableAnimations: layout.enableAnimations, // 修改禁用状态提示逻辑
         collapsedSubtitle: _hasNoLayerSelected && _selectedStickyNote == null
             ? '需要选择图层或便签才能使用绘制工具'
             : _selectedStickyNote != null
@@ -2287,7 +2307,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     selectedDensity: _selectedDensity,
                     selectedCurvature: _selectedCurvature,
                     selectedTriangleCut: _selectedTriangleCut,
-                    isEditMode: true,                    onToolSelected: (tool) {
+                    isEditMode: true,
+                    onToolSelected: (tool) {
                       if (!_shouldDisableDrawingTools) {
                         setState(() => _selectedDrawingTool = tool);
                       }
@@ -2340,7 +2361,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     onImageBufferUpdated: _handleImageBufferUpdated,
                     onImageBufferFitChanged: _handleImageBufferFitChanged,
                     onImageBufferCleared: _handleImageBufferCleared,
-                  ),                  // 修改禁用蒙板逻辑
+                  ), // 修改禁用蒙板逻辑
                   if (_shouldDisableDrawingTools)
                     Positioned.fill(
                       child: Container(
@@ -2490,7 +2511,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             onPressed: _addNewStickyNote,
             tooltip: layout.showTooltips ? '添加便签' : null,
           ),
-        ],        child: _isStickyNotePanelCollapsed
+        ],
+        child: _isStickyNotePanelCollapsed
             ? null
             : StickyNotePanel(
                 stickyNotes: _currentMap?.stickyNotes ?? [],
@@ -2656,7 +2678,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
       ),
     );
-  }  /// 主布局（传统侧边栏）
+  }
+
+  /// 主布局（传统侧边栏）
   Widget _buildMainLayout(UserPreferencesProvider userPrefsProvider) {
     final layout = userPrefsProvider.layout;
     final sidebarWidth = layout.sidebarWidth;
@@ -2666,7 +2690,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         // 侧边栏区域
         AnimatedContainer(
           duration: Duration(
-            milliseconds: layout.enableAnimations ? layout.animationDuration : 0,
+            milliseconds: layout.enableAnimations
+                ? layout.animationDuration
+                : 0,
           ),
           curve: Curves.easeInOut,
           width: _isSidebarCollapsed ? 40 : sidebarWidth + 40,
@@ -2689,7 +2715,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                       ),
-                      child: Column(children: _buildToolPanels(userPrefsProvider)),
+                      child: Column(
+                        children: _buildToolPanels(userPrefsProvider),
+                      ),
                     ),
                   ),
 
@@ -2698,21 +2726,26 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                   width: 40,
                   height: double.infinity,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                    border: _isSidebarCollapsed ? null : Border(
-                      left: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
-                      ),
-                    ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.9),
+                    border: _isSidebarCollapsed
+                        ? null
+                        : Border(
+                            left: BorderSide(
+                              color: Theme.of(context).dividerColor,
+                              width: 1,
+                            ),
+                          ),
                   ),
                   child: Material(
                     color: Colors.transparent,
-                    child: InkWell(                      onTap: () {
+                    child: InkWell(
+                      onTap: () {
                         setState(() {
                           _isSidebarCollapsed = !_isSidebarCollapsed;
                         });
-                        
+
                         // 标记面板状态有变化，但不立即保存
                         _panelStatesChanged = true;
                       },
@@ -2735,12 +2768,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ),
 
         // 主要内容区域
-        Expanded(
-          child: _buildMapCanvasArea(),
-        ),
+        Expanded(child: _buildMapCanvasArea()),
       ],
     );
   }
+
   /// 构建地图画布区域
   Widget _buildMapCanvasArea() {
     return Container(
@@ -2749,6 +2781,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       child: _buildMapCanvas(),
     );
   }
+
   /// 构建地图画布组件
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
@@ -3089,6 +3122,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
+
   void _reorderStickyNotes(int oldIndex, int newIndex) {
     if (_currentMap == null ||
         oldIndex < 0 ||
@@ -3119,7 +3153,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
 
     setState(() {
       _currentMap = _currentMap!.copyWith(stickyNotes: reorderedNotes);
-      
+
       // 如果当前选中的便签在重排序后发生了变化，更新选中状态
       if (_selectedStickyNote != null) {
         _selectedStickyNote = reorderedNotes.firstWhere(

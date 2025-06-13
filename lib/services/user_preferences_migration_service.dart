@@ -12,14 +12,14 @@ class UserPreferencesMigrationService {
   factory UserPreferencesMigrationService() => _instance;
   UserPreferencesMigrationService._internal();
 
-  final UserPreferencesDatabaseService _dbService = 
+  final UserPreferencesDatabaseService _dbService =
       UserPreferencesDatabaseService();
 
   static const String _legacyPreferencesKey = 'user_preferences';
   static const String _legacyUserProfilesKey = 'user_profiles';
   static const String _legacyCurrentUserKey = 'current_user_id';
   static const String _migrationCompleteKey = 'preferences_migration_complete';
-  
+
   /// 控制是否启用迁移功能（可以通过配置禁用）
   static const bool _migrationEnabled = true;
 
@@ -36,6 +36,7 @@ class UserPreferencesMigrationService {
       return false;
     }
   }
+
   Future<bool> needsMigration() async {
     // 如果迁移功能被禁用，直接返回false
     if (!_migrationEnabled) {
@@ -49,7 +50,7 @@ class UserPreferencesMigrationService {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // 如果已经迁移过，标记为不需要迁移
       if (prefs.getBool(_migrationCompleteKey) == true) {
         _migrationChecked = true;
@@ -58,16 +59,17 @@ class UserPreferencesMigrationService {
       }
 
       // 检查是否有旧数据
-      final hasLegacyData = prefs.containsKey(_legacyPreferencesKey) ||
-                           prefs.containsKey(_legacyUserProfilesKey);
-      
+      final hasLegacyData =
+          prefs.containsKey(_legacyPreferencesKey) ||
+          prefs.containsKey(_legacyUserProfilesKey);
+
       _migrationChecked = true;
       _needsMigration = hasLegacyData;
-      
+
       if (kDebugMode && hasLegacyData) {
         print('检测到需要迁移的旧数据');
       }
-      
+
       return hasLegacyData;
     } catch (e) {
       if (kDebugMode) {
@@ -83,7 +85,7 @@ class UserPreferencesMigrationService {
   Future<bool> performMigration() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // 如果已经迁移过，跳过
       if (prefs.getBool(_migrationCompleteKey) == true) {
         if (kDebugMode) {
@@ -98,16 +100,17 @@ class UserPreferencesMigrationService {
       final userProfilesJson = prefs.getString(_legacyUserProfilesKey);
       if (userProfilesJson != null) {
         try {
-          final profilesData = jsonDecode(userProfilesJson) as Map<String, dynamic>;
-          
+          final profilesData =
+              jsonDecode(userProfilesJson) as Map<String, dynamic>;
+
           for (final entry in profilesData.entries) {
             final preferencesData = entry.value as Map<String, dynamic>;
             final preferences = UserPreferences.fromJson(preferencesData);
-            
+
             // 保存到数据库
             await _dbService.savePreferences(preferences);
             migratedUsersCount++;
-            
+
             if (kDebugMode) {
               print('迁移用户配置: ${preferences.displayName}');
             }
@@ -123,9 +126,10 @@ class UserPreferencesMigrationService {
       final legacyPreferencesJson = prefs.getString(_legacyPreferencesKey);
       if (legacyPreferencesJson != null && migratedUsersCount == 0) {
         try {
-          final json = jsonDecode(legacyPreferencesJson) as Map<String, dynamic>;
+          final json =
+              jsonDecode(legacyPreferencesJson) as Map<String, dynamic>;
           final preferences = UserPreferences.fromJson(json);
-          
+
           // 如果没有用户ID，生成一个
           if (preferences.userId == null) {
             final updatedPreferences = preferences.copyWith(
@@ -135,9 +139,9 @@ class UserPreferencesMigrationService {
           } else {
             await _dbService.savePreferences(preferences);
           }
-          
+
           migratedUsersCount++;
-          
+
           if (kDebugMode) {
             print('迁移传统用户偏好设置: ${preferences.displayName}');
           }
@@ -162,7 +166,7 @@ class UserPreferencesMigrationService {
 
       // 标记迁移完成
       await prefs.setBool(_migrationCompleteKey, true);
-      
+
       if (kDebugMode) {
         print('用户偏好设置迁移完成，迁移了 $migratedUsersCount 个用户');
       }
@@ -180,12 +184,12 @@ class UserPreferencesMigrationService {
   Future<void> cleanupLegacyData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // 删除旧的数据
       await prefs.remove(_legacyPreferencesKey);
       await prefs.remove(_legacyUserProfilesKey);
       await prefs.remove(_legacyCurrentUserKey);
-      
+
       if (kDebugMode) {
         print('旧数据清理完成');
       }
@@ -201,7 +205,7 @@ class UserPreferencesMigrationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_migrationCompleteKey);
-      
+
       if (kDebugMode) {
         print('迁移状态已重置');
       }
@@ -217,7 +221,7 @@ class UserPreferencesMigrationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final dbStats = await _dbService.getStorageStats();
-      
+
       return {
         'migrationComplete': prefs.getBool(_migrationCompleteKey) ?? false,
         'hasLegacyPreferences': prefs.containsKey(_legacyPreferencesKey),

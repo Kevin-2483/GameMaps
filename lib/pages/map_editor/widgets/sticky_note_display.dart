@@ -6,12 +6,10 @@ import '../renderers/element_renderer.dart';
 
 /// 便签点击类型枚举
 enum StickyNoteHitType {
-  titleBar,      // 标题栏（用于拖拽便签）
-  resizeHandle,  // 调整大小手柄
+  titleBar, // 标题栏（用于拖拽便签）
+  resizeHandle, // 调整大小手柄
   collapseButton, // 折叠/展开按钮
 }
-
-
 
 /// 便签显示组件
 /// 用于在画布上渲染可交互的便签
@@ -33,7 +31,8 @@ class StickyNoteDisplay extends StatefulWidget {
   State<StickyNoteDisplay> createState() => _StickyNoteDisplayState();
 }
 
-class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
+class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -60,11 +59,13 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
         ],
       ),
     );
-  }  /// 构建标题栏
+  }
+
+  /// 构建标题栏
   Widget _buildTitleBar() {
     // 当便签被选中时，边框会占用2px，所以标题栏圆角需要相应调整
     final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
-      return Container(
+    return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
@@ -90,7 +91,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          ),          // 折叠/展开按钮
+          ), // 折叠/展开按钮
           if (!widget.isPreviewMode)
             GestureDetector(
               onTap: _toggleCollapse,
@@ -109,11 +110,13 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
         ],
       ),
     );
-  }  /// 构建内容区域
+  }
+
+  /// 构建内容区域
   Widget _buildContentArea() {
     // 当便签被选中时，边框会占用2px，所以内容区域圆角需要相应调整
     final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
-    
+
     return Expanded(
       child: Container(
         width: double.infinity,
@@ -131,7 +134,8 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
                   style: BorderStyle.solid,
                 )
               : null,
-        ),        child: Stack(
+        ),
+        child: Stack(
           children: [
             // 背景图片（如果有）
             if (widget.note.hasBackgroundImage) _buildBackgroundImage(),
@@ -142,17 +146,19 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             // 调整大小手柄
             if (widget.isSelected && !widget.isPreviewMode)
               _buildResizeHandles(),
-              
+
             // 绘制区域提示（当选中且无内容时显示）
-            if (widget.isSelected && 
-                !widget.isPreviewMode && 
-                widget.note.elements.isEmpty && 
+            if (widget.isSelected &&
+                !widget.isPreviewMode &&
+                widget.note.elements.isEmpty &&
                 !widget.note.hasBackgroundImage)
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -161,14 +167,18 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
                       Icon(
                         Icons.brush,
                         size: 32,
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.6),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '可在此区域绘制',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -181,6 +191,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
       ),
     );
   }
+
   /// 构建背景图片
   Widget _buildBackgroundImage() {
     if (widget.note.backgroundImageData == null) {
@@ -202,8 +213,10 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             widget.note.backgroundImageData!,
             fit: widget.note.backgroundImageFit,
           ),
-        ),      ),
-    );  }
+        ),
+      ),
+    );
+  }
 
   /// 构建便签绘制元素
   Widget _buildDrawingElements() {
@@ -236,9 +249,12 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
               border: Border.all(color: Colors.white, width: 1),
             ),
           ),
-        ),      ],
+        ),
+      ],
     );
-  }  /// 切换折叠状态
+  }
+
+  /// 切换折叠状态
   void _toggleCollapse() {
     final updatedNote = widget.note.copyWith(
       isCollapsed: !widget.note.isCollapsed,
@@ -252,11 +268,11 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
 /// 供 MapCanvas 使用的静态方法
 class StickyNoteGestureHelper {
   /// 检测点击位置是否命中便签的特定区域
-  /// 
+  ///
   /// [canvasPosition] 相对于画布的点击位置
   /// [note] 便签对象
   /// [canvasSize] 画布尺寸
-  /// 
+  ///
   /// 返回命中的区域类型，如果没有命中特定区域则返回 null
   static StickyNoteHitType? getStickyNoteHitType(
     Offset canvasPosition,
@@ -305,14 +321,10 @@ class StickyNoteGestureHelper {
       if (handleRect.contains(localPosition)) {
         return StickyNoteHitType.resizeHandle;
       }
-    }    // 检查是否点击了标题栏
-    const double titleBarHeight = 30.0; // 标题栏高度：padding(12px) + 内容(~18px) = ~30px
-    final titleBarRect = Rect.fromLTWH(
-      0,
-      0,
-      noteSize.width,
-      titleBarHeight,
-    );
+    } // 检查是否点击了标题栏
+    const double titleBarHeight =
+        30.0; // 标题栏高度：padding(12px) + 内容(~18px) = ~30px
+    final titleBarRect = Rect.fromLTWH(0, 0, noteSize.width, titleBarHeight);
 
     if (titleBarRect.contains(localPosition)) {
       // 在标题栏内，进一步检查是否点击了折叠按钮
@@ -322,10 +334,11 @@ class StickyNoteGestureHelper {
         0,
         collapseButtonSize,
         titleBarHeight,
-      );      if (collapseButtonRect.contains(localPosition)) {
+      );
+      if (collapseButtonRect.contains(localPosition)) {
         return StickyNoteHitType.collapseButton;
       }
-      
+
       return StickyNoteHitType.titleBar;
     }
 
@@ -334,12 +347,12 @@ class StickyNoteGestureHelper {
   }
 
   /// 处理便签拖拽开始
-  /// 
+  ///
   /// [note] 要拖拽的便签
   /// [hitType] 命中的区域类型
   /// [details] 拖拽开始的详细信息
   /// [getCanvasPosition] 将本地坐标转换为画布坐标的函数
-  /// [onNoteUpdated] 便签更新回调  
+  /// [onNoteUpdated] 便签更新回调
   static StickyNoteDragState? handleStickyNotePanStart(
     StickyNote note,
     StickyNoteHitType hitType,
@@ -348,7 +361,7 @@ class StickyNoteGestureHelper {
     Function(StickyNote) onNoteUpdated,
   ) {
     final canvasPosition = getCanvasPosition(details.localPosition);
-      switch (hitType) {
+    switch (hitType) {
       case StickyNoteHitType.titleBar:
         return StickyNoteDragState(
           type: StickyNoteDragType.move,
@@ -357,7 +370,7 @@ class StickyNoteGestureHelper {
           startNotePosition: note.position,
           onNoteUpdated: onNoteUpdated,
         );
-        
+
       case StickyNoteHitType.resizeHandle:
         return StickyNoteDragState(
           type: StickyNoteDragType.resize,
@@ -366,7 +379,7 @@ class StickyNoteGestureHelper {
           startNoteSize: note.size,
           onNoteUpdated: onNoteUpdated,
         );
-        
+
       case StickyNoteHitType.collapseButton:
         // 对于折叠按钮，我们不启动拖拽
         // 折叠操作应该在 TapDown 事件中处理
@@ -382,17 +395,18 @@ class StickyNoteGestureHelper {
     Size canvasSize,
   ) {
     final currentPosition = getCanvasPosition(details.localPosition);
-    
+
     switch (dragState.type) {
       case StickyNoteDragType.move:
         _handleMoveUpdate(dragState, currentPosition, canvasSize);
         break;
-        
+
       case StickyNoteDragType.resize:
         _handleResizeUpdate(dragState, currentPosition, canvasSize);
         break;
     }
   }
+
   /// 处理便签拖拽结束
   static void handleStickyNotePanEnd(
     StickyNoteDragState dragState,
@@ -406,26 +420,26 @@ class StickyNoteGestureHelper {
     if (dragState.type != StickyNoteDragType.move) {
       return;
     }
-    
+
     // 获取拖拽结束时的画布位置
     final endPosition = getCanvasPosition(details.localPosition);
-    
+
     // 查找拖拽结束位置是否命中了其他便签的标题栏
     final targetNote = _findTargetStickyNote(
-      endPosition, 
-      dragState.note, 
-      allStickyNotes, 
-      canvasSize
+      endPosition,
+      dragState.note,
+      allStickyNotes,
+      canvasSize,
     );
-    
+
     if (targetNote != null) {
       // 执行层级重排
       final reorderedNotes = _reorderStickyNotes(
-        dragState.note, 
-        targetNote, 
-        allStickyNotes
+        dragState.note,
+        targetNote,
+        allStickyNotes,
       );
-      
+
       // 通知上层更新便签列表
       onStickyNotesReordered(reorderedNotes);
     }
@@ -437,7 +451,8 @@ class StickyNoteGestureHelper {
     Offset currentPosition,
     Size canvasSize,
   ) {
-    if (dragState.startPosition == null || dragState.startNotePosition == null) {
+    if (dragState.startPosition == null ||
+        dragState.startNotePosition == null) {
       return;
     }
 
@@ -487,7 +502,7 @@ class StickyNoteGestureHelper {
     final newSize = Size(
       (dragState.startNoteSize!.width + delta.dx / canvasSize.width).clamp(
         0.05, // 最小5%
-        0.5,  // 最大50%
+        0.5, // 最大50%
       ),
       (dragState.startNoteSize!.height + delta.dy / canvasSize.height).clamp(
         0.05,
@@ -526,7 +541,7 @@ class StickyNoteGestureHelper {
       final noteSize = Size(
         note.size.width * canvasSize.width,
         note.size.height * canvasSize.height,
-      );      // 检查是否命中了标题栏
+      ); // 检查是否命中了标题栏
       const double titleBarHeight = 30.0; // 标题栏高度
       final titleBarRect = Rect.fromLTWH(
         notePosition.dx,
@@ -551,18 +566,18 @@ class StickyNoteGestureHelper {
     final result = List<StickyNote>.from(allStickyNotes);
     final draggedIndex = result.indexWhere((note) => note.id == draggedNote.id);
     final targetIndex = result.indexWhere((note) => note.id == targetNote.id);
-    
+
     if (draggedIndex == -1 || targetIndex == -1) {
       return result; // 如果找不到便签，返回原列表
     }
-    
+
     final draggedOriginalZ = draggedNote.zIndex;
     final targetZ = targetNote.zIndex;
     final newDraggedZ = targetZ + 1; // 放在目标便签的上层
-    
+
     for (int i = 0; i < result.length; i++) {
       final note = result[i];
-      
+
       if (note.id == draggedNote.id) {
         // 更新被拖拽便签的z值
         result[i] = note.copyWith(
@@ -587,14 +602,14 @@ class StickyNoteGestureHelper {
         }
       }
     }
-    
+
     return result;
   }
 }
 
 /// 便签拖拽类型枚举
 enum StickyNoteDragType {
-  move,   // 移动便签
+  move, // 移动便签
   resize, // 调整大小
 }
 
@@ -604,7 +619,7 @@ class StickyNoteDragState {
   final StickyNote note;
   final Offset? startPosition;
   final Offset? startNotePosition; // 移动时使用
-  final Size? startNoteSize;       // 调整大小时使用
+  final Size? startNoteSize; // 调整大小时使用
   final Function(StickyNote) onNoteUpdated;
   StickyNoteDragState({
     required this.type,
@@ -622,10 +637,8 @@ class _StickyNoteDrawingPainter extends CustomPainter {
   final List<MapDrawingElement> elements;
   final bool isSelected;
 
-  _StickyNoteDrawingPainter({
-    required this.elements,
-    required this.isSelected,
-  });  @override
+  _StickyNoteDrawingPainter({required this.elements, required this.isSelected});
+  @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
 
@@ -645,11 +658,7 @@ class _StickyNoteDrawingPainter extends CustomPainter {
       }
 
       // 绘制元素
-      ElementRenderer.drawElement(
-        canvas,
-        element,
-        size,
-      );
+      ElementRenderer.drawElement(canvas, element, size);
     }
 
     // 恢复画布状态
@@ -658,7 +667,7 @@ class _StickyNoteDrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StickyNoteDrawingPainter oldDelegate) {
-    return oldDelegate.elements != elements || oldDelegate.isSelected != isSelected;
+    return oldDelegate.elements != elements ||
+        oldDelegate.isSelected != isSelected;
   }
 }
-

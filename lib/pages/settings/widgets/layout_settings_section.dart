@@ -74,7 +74,7 @@ class LayoutSettingsSection extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),            // 面板状态恢复设置
+            const SizedBox(height: 16), // 面板状态恢复设置
             SwitchListTile(
               title: Text('保存面板状态变更'),
               subtitle: Text('退出地图编辑器时自动保存面板折叠/展开状态'),
@@ -164,7 +164,9 @@ class LayoutSettingsSection extends StatelessWidget {
         ),
       ),
     );
-  }  String _getPanelDisplayName(String panelKey) {
+  }
+
+  String _getPanelDisplayName(String panelKey) {
     switch (panelKey) {
       case 'drawing':
         return '绘图面板';

@@ -26,13 +26,13 @@ class MockUserPreferences {
     'updatedAt': updatedAt.toIso8601String(),
   };
 
-  factory MockUserPreferences.fromJson(Map<String, dynamic> json) => 
-    MockUserPreferences(
-      userId: json['userId'],
-      displayName: json['displayName'],
-      settings: json['settings'],
-      updatedAt: DateTime.parse(json['updatedAt']),
-    );
+  factory MockUserPreferences.fromJson(Map<String, dynamic> json) =>
+      MockUserPreferences(
+        userId: json['userId'],
+        displayName: json['displayName'],
+        settings: json['settings'],
+        updatedAt: DateTime.parse(json['updatedAt']),
+      );
 
   static MockUserPreferences createMock(int index) {
     return MockUserPreferences(
@@ -62,18 +62,21 @@ class UserPreferencesPerformanceBenchmark {
 
     await _testSharedPreferencesPerformance();
     await _testDatabasePerformance();
-    
+
     print('\n=== 测试完成 ===');
   }
 
   /// 测试 SharedPreferences 性能
   static Future<void> _testSharedPreferencesPerformance() async {
     print('📊 测试 SharedPreferences 性能...');
-    
+
     final prefs = await SharedPreferences.getInstance();
-    
+
     // 清理之前的测试数据
-    final keys = prefs.getKeys().where((k) => k.startsWith('test_user_')).toList();
+    final keys = prefs
+        .getKeys()
+        .where((k) => k.startsWith('test_user_'))
+        .toList();
     for (final key in keys) {
       await prefs.remove(key);
     }
@@ -183,7 +186,9 @@ class UserPreferencesPerformanceBenchmark {
           userId: row['user_id'] as String,
           displayName: row['display_name'] as String,
           settings: jsonDecode(row['settings_json'] as String),
-          updatedAt: DateTime.fromMillisecondsSinceEpoch(row['updated_at'] as int),
+          updatedAt: DateTime.fromMillisecondsSinceEpoch(
+            row['updated_at'] as int,
+          ),
         );
         loadedUsers.add(user);
       }
@@ -215,7 +220,6 @@ class UserPreferencesPerformanceBenchmark {
       print('    - 读取 $userCount 个用户: ${readTime}ms');
       print('    - 更新 $userCount 个用户: ${updateTime}ms');
       print('    - 总时间: ${writeTime + readTime + updateTime}ms');
-
     } finally {
       await db.close();
       // 清理测试数据库

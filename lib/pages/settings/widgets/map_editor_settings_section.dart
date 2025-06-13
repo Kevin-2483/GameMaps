@@ -79,7 +79,7 @@ class MapEditorSettingsSection extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),            // 缩放敏感度
+            const SizedBox(height: 8), // 缩放敏感度
             ListTile(
               title: Text('缩放敏感度'),
               subtitle: Slider(
@@ -112,10 +112,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                   ),
                   Text(
                     '控制画布内容与容器边缘的距离：${mapEditor.canvasBoundaryMargin.round()}px',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),

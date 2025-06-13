@@ -140,7 +140,7 @@ class MapCanvas extends StatefulWidget {
 
     // 添加图片缓冲区参数
     this.imageBufferData,
-    this.imageBufferFit = BoxFit.contain,    // 便签相关参数
+    this.imageBufferFit = BoxFit.contain, // 便签相关参数
     this.selectedStickyNote,
     this.previewStickyNoteOpacityValues = const {},
     this.onStickyNoteUpdated,
@@ -257,6 +257,7 @@ class MapCanvasState extends State<MapCanvas> {
     _selectionNotifier.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     // 从用户首选项获取画布边距设置
@@ -492,6 +493,7 @@ class MapCanvasState extends State<MapCanvas> {
       ),
     );
   }
+
   /// 构建便签组件
   Widget _buildStickyNoteWidget(StickyNote note) {
     if (!note.isVisible) return const SizedBox.shrink();
@@ -506,11 +508,14 @@ class MapCanvasState extends State<MapCanvas> {
       note.position.dy * kCanvasHeight,
     );
     final size = Size(
-      note.size.width * kCanvasWidth,      note.size.height * kCanvasHeight,
-    );      // 如果便签被选中，使用选中状态的高度，否则使用默认高度
-    final double titleBarHeight = (widget.selectedStickyNote?.id == note.id) ? 40.0 : 36.0; // 标题栏高度：选中时34px，未选中时40px
+      note.size.width * kCanvasWidth,
+      note.size.height * kCanvasHeight,
+    ); // 如果便签被选中，使用选中状态的高度，否则使用默认高度
+    final double titleBarHeight = (widget.selectedStickyNote?.id == note.id)
+        ? 40.0
+        : 36.0; // 标题栏高度：选中时34px，未选中时40px
     final effectiveHeight = note.isCollapsed ? titleBarHeight : size.height;
-    
+
     return Positioned(
       left: position.dx,
       top: position.dy,
@@ -634,7 +639,9 @@ class MapCanvasState extends State<MapCanvas> {
 
   // 元素交互手势处理方法  /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);    // 优先检测便签点击
+    final canvasPosition = _getCanvasPosition(
+      details.localPosition,
+    ); // 优先检测便签点击
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
       // 检查是否点击了便签的特定区域
@@ -642,8 +649,8 @@ class MapCanvasState extends State<MapCanvas> {
         canvasPosition,
         hitStickyNote,
         const Size(kCanvasWidth, kCanvasHeight),
-      );        // 如果点击了折叠按钮，直接处理折叠操作
-      if (stickyNoteHitResult == StickyNoteHitType.collapseButton && 
+      ); // 如果点击了折叠按钮，直接处理折叠操作
+      if (stickyNoteHitResult == StickyNoteHitType.collapseButton &&
           widget.onStickyNoteUpdated != null) {
         final updatedNote = hitStickyNote.copyWith(
           isCollapsed: !hitStickyNote.isCollapsed,
@@ -652,7 +659,7 @@ class MapCanvasState extends State<MapCanvas> {
         widget.onStickyNoteUpdated!(updatedNote);
         return;
       }
-      
+
       // 处理便签点击选中逻辑
       if (widget.selectedStickyNote?.id != hitStickyNote.id) {
         // 选中便签
@@ -972,7 +979,8 @@ class MapCanvasState extends State<MapCanvas> {
         canvasPosition,
         hitStickyNote,
         const Size(kCanvasWidth, kCanvasHeight),
-      );      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
+      );
+      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
         // 处理便签特定区域的手势
         _stickyNoteDragState = StickyNoteGestureHelper.handleStickyNotePanStart(
           hitStickyNote,
@@ -981,11 +989,11 @@ class MapCanvasState extends State<MapCanvas> {
           _getCanvasPosition,
           widget.onStickyNoteUpdated!,
         );
-        
+
         // 如果是折叠按钮，handleStickyNotePanStart会返回null并直接处理折叠
         // 这种情况下我们不需要启动拖拽，直接返回
         return;
-      }// 如果点击了便签但不是特定区域，选中便签但不处理拖拽
+      } // 如果点击了便签但不是特定区域，选中便签但不处理拖拽
       if (widget.selectedStickyNote?.id != hitStickyNote.id) {
         // 选中便签（通过回调通知上层）
         widget.onStickyNoteSelected?.call(hitStickyNote);
@@ -1084,7 +1092,8 @@ class MapCanvasState extends State<MapCanvas> {
           _getCanvasPosition,
         );
         return;
-      }    } else {
+      }
+    } else {
       // 点击了空白区域
       // 取消选中便签
       if (widget.selectedStickyNote != null) {
@@ -1130,9 +1139,11 @@ class MapCanvasState extends State<MapCanvas> {
       _updateSelectionDrag(details);
     }
   }
+
   /// 处理元素交互的拖拽结束事件
   void _onElementInteractionPanEnd(DragEndDetails details) {
-    if (_stickyNoteDragState != null) {      // 结束拖拽便签
+    if (_stickyNoteDragState != null) {
+      // 结束拖拽便签
       StickyNoteGestureHelper.handleStickyNotePanEnd(
         _stickyNoteDragState!,
         details,
@@ -1377,31 +1388,35 @@ class MapCanvasState extends State<MapCanvas> {
         break;
       }
     }
-  }  void _onDrawingStart(DragStartDetails details) {
+  }
+
+  void _onDrawingStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-      // Check if drawing on a selected sticky note
-    if (widget.selectedStickyNote != null && widget.onStickyNoteUpdated != null) {
+    // Check if drawing on a selected sticky note
+    if (widget.selectedStickyNote != null &&
+        widget.onStickyNoteUpdated != null) {
       // Check if the drawing position is within the selected sticky note's content area
       final stickyNote = widget.selectedStickyNote!;
       final stickyNotePosition = Offset(
         stickyNote.position.dx * kCanvasWidth,
         stickyNote.position.dy * kCanvasHeight,
-      );      final stickyNoteSize = Size(
+      );
+      final stickyNoteSize = Size(
         stickyNote.size.width * kCanvasWidth,
         stickyNote.size.height * kCanvasHeight,
       );
-      
+
       // 计算内容区域的边界（排除标题栏和padding）
       const double titleBarHeight = 36.0; // 标题栏固定高度
       const double contentPadding = 10.0; // 内容区域的 padding
-      
+
       final contentAreaRect = Rect.fromLTWH(
         stickyNotePosition.dx + contentPadding,
         stickyNotePosition.dy + titleBarHeight + contentPadding,
         stickyNoteSize.width - (contentPadding * 2),
         stickyNoteSize.height - titleBarHeight - (contentPadding * 2),
       );
-      
+
       if (contentAreaRect.contains(canvasPosition)) {
         // Drawing on sticky note content area
         _drawingToolManager.onStickyNoteDrawingStart(
@@ -1421,7 +1436,7 @@ class MapCanvasState extends State<MapCanvas> {
         return;
       }
     }
-    
+
     // Normal layer drawing (only if a layer is selected)
     if (widget.selectedLayer != null) {
       _drawingToolManager.onDrawingStart(
@@ -1435,6 +1450,7 @@ class MapCanvasState extends State<MapCanvas> {
       );
     }
   }
+
   void _onDrawingUpdate(DragUpdateDetails details) {
     // Check if drawing on sticky note
     if (_drawingToolManager.currentDrawingStickyNote != null) {
@@ -1468,6 +1484,7 @@ class MapCanvasState extends State<MapCanvas> {
     // 对于拖拽操作，不应该限制以避免偏移量计算错误
     return localPosition;
   }
+
   void _onDrawingEnd(DragEndDetails details) {
     // Check if drawing on sticky note
     if (_drawingToolManager.currentDrawingStickyNote != null) {
@@ -1623,7 +1640,7 @@ class MapCanvasState extends State<MapCanvas> {
       print(
         '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}',
       );
-      print('是否选中: $isSelectedNote');      // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
+      print('是否选中: $isSelectedNote'); // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
       // 使用 1000000 + noteIndex 确保便签始终在所有其他元素之上
       final renderOrder = 1000000 + noteIndex;
 
@@ -1655,16 +1672,20 @@ class MapCanvasState extends State<MapCanvas> {
       print(
         '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
       );
-    }    // 按 renderOrder 排序，但便签始终在最上层
+    } // 按 renderOrder 排序，但便签始终在最上层
     allElements.sort((a, b) {
       // 检查是否是便签元素
-      final aIsStickyNote = a.widget.runtimeType.toString().contains('StickyNoteWidget') || a.order >= 1000000;
-      final bIsStickyNote = b.widget.runtimeType.toString().contains('StickyNoteWidget') || b.order >= 1000000;
-      
+      final aIsStickyNote =
+          a.widget.runtimeType.toString().contains('StickyNoteWidget') ||
+          a.order >= 1000000;
+      final bIsStickyNote =
+          b.widget.runtimeType.toString().contains('StickyNoteWidget') ||
+          b.order >= 1000000;
+
       // 便签始终在非便签元素之上
       if (aIsStickyNote && !bIsStickyNote) return 1;
       if (!aIsStickyNote && bIsStickyNote) return -1;
-      
+
       // 如果都是便签，或都不是便签，则按选中状态和renderOrder排序
       if (a.isSelected && !b.isSelected) return 1;
       if (!a.isSelected && b.isSelected) return -1;
@@ -2074,9 +2095,10 @@ class _CurrentDrawingPainter extends CustomPainter {
       );
     }
   }
+
   void _drawOnStickyNote(Canvas canvas, Size size) {
     final stickyNote = targetStickyNote!;
-    
+
     // Calculate sticky note bounds in canvas coordinates
     final stickyNoteCanvasPosition = Offset(
       stickyNote.position.dx * size.width,
@@ -2086,10 +2108,10 @@ class _CurrentDrawingPainter extends CustomPainter {
       stickyNote.size.width * size.width,
       stickyNote.size.height * size.height,
     );
-      // 计算标题栏高度（与 drawing_tool_manager.dart 中的一致）
+    // 计算标题栏高度（与 drawing_tool_manager.dart 中的一致）
     const double titleBarHeight = 36.0; // 标题栏固定高度
     const double contentPadding = 10.0; // 内容区域的 padding
-    
+
     // 计算内容区域的实际位置和大小（排除标题栏）
     final contentAreaPosition = Offset(
       stickyNoteCanvasPosition.dx + contentPadding,
@@ -2099,12 +2121,12 @@ class _CurrentDrawingPainter extends CustomPainter {
       stickyNoteCanvasSize.width - (contentPadding * 2),
       stickyNoteCanvasSize.height - titleBarHeight - (contentPadding * 2),
     );
-    
+
     // Transform drawing coordinates from sticky note local space to canvas space
     late Offset canvasStart;
     late Offset canvasEnd;
     List<Offset>? canvasFreeDrawingPath;
-    
+
     if (freeDrawingPath != null && freeDrawingPath!.isNotEmpty) {
       canvasFreeDrawingPath = freeDrawingPath!.map((localPoint) {
         return Offset(
@@ -2124,7 +2146,7 @@ class _CurrentDrawingPainter extends CustomPainter {
         contentAreaPosition.dy + end.dy * contentAreaSize.height,
       );
     }
-    
+
     // Draw preview using transformed coordinates
     PreviewRenderer.drawCurrentDrawing(
       canvas,

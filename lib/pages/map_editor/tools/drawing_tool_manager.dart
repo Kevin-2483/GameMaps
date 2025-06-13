@@ -36,7 +36,7 @@ class DrawingToolManager {
   bool get isDrawing => _isDrawing;
   List<Offset> get freeDrawingPath => _freeDrawingPath;
   Offset? get currentDrawingStart => _currentDrawingStart;
-  
+
   // Getters for sticky note drawing
   StickyNote? get currentDrawingStickyNote => _currentDrawingStickyNote;
 
@@ -512,13 +512,13 @@ class DrawingToolManager {
     if (effectiveDrawingTool == null) return;
 
     _currentDrawingStickyNote = targetStickyNote;
-    
+
     // Convert canvas position to sticky note local coordinates
     final stickyNotePosition = _convertCanvasToStickyNoteCoordinates(
-      details.localPosition, 
-      targetStickyNote
+      details.localPosition,
+      targetStickyNote,
     );
-    
+
     _currentDrawingStart = stickyNotePosition;
     _currentDrawingEnd = _currentDrawingStart;
     _isDrawing = true;
@@ -538,8 +538,8 @@ class DrawingToolManager {
       density: effectiveDensity,
       curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
-      freeDrawingPath: effectiveDrawingTool == DrawingElementType.freeDrawing 
-          ? List.from(_freeDrawingPath) 
+      freeDrawingPath: effectiveDrawingTool == DrawingElementType.freeDrawing
+          ? List.from(_freeDrawingPath)
           : null,
       targetStickyNote: targetStickyNote,
     );
@@ -555,21 +555,22 @@ class DrawingToolManager {
     double effectiveCurvature,
     TriangleCutType effectiveTriangleCut,
   ) {
-    if (!_isDrawing || 
-        _currentDrawingStickyNote == null || 
-        effectiveDrawingTool == null) return;
+    if (!_isDrawing ||
+        _currentDrawingStickyNote == null ||
+        effectiveDrawingTool == null)
+      return;
 
     // Convert canvas position to sticky note local coordinates
     final stickyNotePosition = _convertCanvasToStickyNoteCoordinates(
-      details.localPosition, 
-      _currentDrawingStickyNote!
+      details.localPosition,
+      _currentDrawingStickyNote!,
     );
-    
+
     _currentDrawingEnd = stickyNotePosition;
 
     if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
       _freeDrawingPath.add(stickyNotePosition);
-      
+
       _drawingPreviewNotifier.value = DrawingPreviewData(
         start: _currentDrawingStart!,
         end: _currentDrawingEnd!,
@@ -637,8 +638,12 @@ class DrawingToolManager {
 
     _clearStickyNoteDrawingState();
   }
+
   /// Convert canvas coordinates to sticky note local coordinates (0.0-1.0)
-  Offset _convertCanvasToStickyNoteCoordinates(Offset canvasPosition, StickyNote stickyNote) {
+  Offset _convertCanvasToStickyNoteCoordinates(
+    Offset canvasPosition,
+    StickyNote stickyNote,
+  ) {
     // Get sticky note bounds in canvas coordinates
     final stickyNoteCanvasPosition = Offset(
       stickyNote.position.dx * kCanvasWidth,
@@ -647,10 +652,10 @@ class DrawingToolManager {
     final stickyNoteCanvasSize = Size(
       stickyNote.size.width * kCanvasWidth,
       stickyNote.size.height * kCanvasHeight,
-    );    // 计算标题栏高度和内容区域偏移（与预览渲染保持一致）
+    ); // 计算标题栏高度和内容区域偏移（与预览渲染保持一致）
     const double titleBarHeight = 36.0; // 标题栏固定高度
     const double contentPadding = 10.0; // 内容区域的 padding
-    
+
     // 计算内容区域的实际位置和大小（排除标题栏）
     final contentAreaPosition = Offset(
       stickyNoteCanvasPosition.dx + contentPadding,
@@ -659,15 +664,14 @@ class DrawingToolManager {
     final contentAreaSize = Size(
       stickyNoteCanvasSize.width - (contentPadding * 2),
       stickyNoteCanvasSize.height - titleBarHeight - (contentPadding * 2),
-    );    // Calculate relative position within content area (0.0-1.0)
-    final relativeX = (canvasPosition.dx - contentAreaPosition.dx) / contentAreaSize.width;
-    final relativeY = (canvasPosition.dy - contentAreaPosition.dy) / contentAreaSize.height;
+    ); // Calculate relative position within content area (0.0-1.0)
+    final relativeX =
+        (canvasPosition.dx - contentAreaPosition.dx) / contentAreaSize.width;
+    final relativeY =
+        (canvasPosition.dy - contentAreaPosition.dy) / contentAreaSize.height;
 
     // 限制绘制只能在便签的内容区域内（0.0-1.0）
-    return Offset(
-      relativeX.clamp(0.0, 1.0),
-      relativeY.clamp(0.0, 1.0),
-    );
+    return Offset(relativeX.clamp(0.0, 1.0), relativeY.clamp(0.0, 1.0));
   }
 
   /// Create drawing element for sticky note
@@ -684,7 +688,9 @@ class DrawingToolManager {
     final stickyNote = _currentDrawingStickyNote!;
     final maxZIndex = stickyNote.elements.isEmpty
         ? 0
-        : stickyNote.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+        : stickyNote.elements
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
 
     List<Offset> points;
     if (elementType == DrawingElementType.freeDrawing) {

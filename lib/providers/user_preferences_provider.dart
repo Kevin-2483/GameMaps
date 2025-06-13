@@ -119,6 +119,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新主题设置失败: ${e.toString()}');
     }
   }
+
   /// 更新地图编辑器设置
   Future<void> updateMapEditor({
     int? undoHistoryLimit,
@@ -354,6 +355,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('删除用户失败: ${e.toString()}');
     }
   }
+
   /// 获取所有用户
   Future<List<UserPreferences>> getAllUsers() async {
     return await _service.getAllUsersAsync();

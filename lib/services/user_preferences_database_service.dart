@@ -64,7 +64,7 @@ class UserPreferencesDatabaseService {
         value TEXT NOT NULL,
         updated_at INTEGER NOT NULL
       )
-    ''');    // 插入默认元数据
+    '''); // 插入默认元数据
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.insert(_metadataTable, {
       'key': 'current_user_id',
@@ -90,12 +90,14 @@ class UserPreferencesDatabaseService {
       print('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
     }
   }
+
   /// 保存用户偏好设置
   Future<void> savePreferences(UserPreferences preferences) async {
     final db = await database;
-    
+
     // 确保用户ID存在
-    final userId = preferences.userId ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final userId =
+        preferences.userId ?? DateTime.now().millisecondsSinceEpoch.toString();
     final updatedPreferences = preferences.copyWith(
       userId: userId,
       updatedAt: DateTime.now(),
@@ -192,10 +194,7 @@ class UserPreferencesDatabaseService {
     final db = await database;
     await db.update(
       _metadataTable,
-      {
-        'value': userId,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'value': userId, 'updated_at': DateTime.now().millisecondsSinceEpoch},
       where: 'key = ?',
       whereArgs: ['current_user_id'],
     );
@@ -223,7 +222,7 @@ class UserPreferencesDatabaseService {
   /// 设置当前用户
   Future<void> setCurrentUser(String userId) async {
     await _setCurrentUserId(userId);
-    
+
     // 更新最后登录时间
     final db = await database;
     await db.update(
@@ -261,16 +260,16 @@ class UserPreferencesDatabaseService {
   /// 获取数据库统计信息
   Future<Map<String, dynamic>> getStorageStats() async {
     final db = await database;
-    
+
     // 获取用户数量
     final userCountResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM $_preferencesTable'
+      'SELECT COUNT(*) as count FROM $_preferencesTable',
     );
     final userCount = userCountResult.first['count'] as int;
 
     // 获取数据库文件大小（近似）
     final sizeResult = await db.rawQuery(
-      'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
+      'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()',
     );
     final dbSize = sizeResult.first['size'] as int;
 

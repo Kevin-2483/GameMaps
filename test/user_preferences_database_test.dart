@@ -62,7 +62,7 @@ void main() async {
 
       // 设置当前用户
       await service.setCurrentUser('user_1');
-      
+
       // 验证当前用户
       final currentUserId = await service.getCurrentUserId();
       expect(currentUserId, equals('user_1'));
@@ -93,7 +93,7 @@ void main() async {
       // 获取所有用户
       final allUsers = await service.getAllUsers();
       expect(allUsers.length, equals(3));
-      
+
       // 验证用户数据
       final userIds = allUsers.map((u) => u.userId).toSet();
       expect(userIds, contains('user_1'));
@@ -142,7 +142,9 @@ void main() async {
       await service.savePreferences(updatedPreferences);
 
       // 验证更新
-      final retrievedPreferences = await service.getPreferences('update_test_user');
+      final retrievedPreferences = await service.getPreferences(
+        'update_test_user',
+      );
       expect(retrievedPreferences?.displayName, equals('更新后的用户名'));
       expect(retrievedPreferences?.locale, equals('en_US'));
     });
@@ -173,7 +175,7 @@ Future<void> runPerformanceTests() async {
   databaseFactory = databaseFactoryFfi;
 
   final service = UserPreferencesDatabaseService();
-  
+
   try {
     await service.clearAllData();
 
@@ -211,7 +213,6 @@ Future<void> runPerformanceTests() async {
 
     stopwatch.stop();
     print('获取所有用户(${allUsers.length}个)耗时: ${stopwatch.elapsedMilliseconds}ms');
-
   } finally {
     await service.close();
   }
@@ -220,16 +221,16 @@ Future<void> runPerformanceTests() async {
 /// 主函数，用于直接运行测试
 Future<void> runTestsDirectly() async {
   print('开始用户偏好设置数据库服务测试...');
-  
+
   try {
     // 运行功能测试
     print('=== 功能测试 ===');
     main();
-    
+
     // 运行性能测试
     print('\n=== 性能测试 ===');
     await runPerformanceTests();
-    
+
     print('\n所有测试完成！');
   } catch (e) {
     print('测试过程中发生错误: $e');
