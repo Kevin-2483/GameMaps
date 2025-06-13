@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import '../../../models/map_layer.dart';
+import '../../../models/sticky_note.dart';
 import '../widgets/map_canvas.dart';
 
 /// 绘制工具管理器 - 负责管理所有绘制工具相关的操作
@@ -20,10 +21,12 @@ class DrawingToolManager {
   // 画布尺寸常量 - 与 map_canvas.dart 中的常量保持一致
   static const double kCanvasWidth = 1600.0;
   static const double kCanvasHeight = 1600.0;
-
   // 回调函数
   Function(MapLayer)? onLayerUpdated;
   BuildContext? context;
+
+  // Sticky note drawing support
+  StickyNote? _currentDrawingStickyNote;
 
   DrawingToolManager({this.onLayerUpdated, this.context});
   // Getters
@@ -33,6 +36,9 @@ class DrawingToolManager {
   bool get isDrawing => _isDrawing;
   List<Offset> get freeDrawingPath => _freeDrawingPath;
   Offset? get currentDrawingStart => _currentDrawingStart;
+  
+  // Getters for sticky note drawing
+  StickyNote? get currentDrawingStickyNote => _currentDrawingStickyNote;
 
   /// 1. 开始绘制
   void onDrawingStart(
@@ -489,5 +495,215 @@ class DrawingToolManager {
   /// 清理资源
   void dispose() {
     _drawingPreviewNotifier.dispose();
+  }
+
+  /// 8. 开始在便签上绘制
+  void onStickyNoteDrawingStart(
+    DragStartDetails details,
+    StickyNote targetStickyNote,
+    DrawingElementType? effectiveDrawingTool,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    TriangleCutType effectiveTriangleCut,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) {
+    if (effectiveDrawingTool == null) return;
+
+    _currentDrawingStickyNote = targetStickyNote;
+    
+    // Convert canvas position to sticky note local coordinates
+    final stickyNotePosition = _convertCanvasToStickyNoteCoordinates(
+      details.localPosition, 
+      targetStickyNote
+    );
+    
+    _currentDrawingStart = stickyNotePosition;
+    _currentDrawingEnd = _currentDrawingStart;
+    _isDrawing = true;
+
+    if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _freeDrawingPath.clear();
+      _freeDrawingPath.add(stickyNotePosition);
+    }
+
+    // Update preview for sticky note drawing
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: stickyNotePosition,
+      end: stickyNotePosition,
+      elementType: effectiveDrawingTool,
+      color: effectiveColor,
+      strokeWidth: effectiveStrokeWidth,
+      density: effectiveDensity,
+      curvature: effectiveCurvature,
+      triangleCut: effectiveTriangleCut,
+      freeDrawingPath: effectiveDrawingTool == DrawingElementType.freeDrawing 
+          ? List.from(_freeDrawingPath) 
+          : null,
+      targetStickyNote: targetStickyNote,
+    );
+  }
+
+  /// 9. 更新便签上的绘制
+  void onStickyNoteDrawingUpdate(
+    DragUpdateDetails details,
+    DrawingElementType? effectiveDrawingTool,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    TriangleCutType effectiveTriangleCut,
+  ) {
+    if (!_isDrawing || 
+        _currentDrawingStickyNote == null || 
+        effectiveDrawingTool == null) return;
+
+    // Convert canvas position to sticky note local coordinates
+    final stickyNotePosition = _convertCanvasToStickyNoteCoordinates(
+      details.localPosition, 
+      _currentDrawingStickyNote!
+    );
+    
+    _currentDrawingEnd = stickyNotePosition;
+
+    if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      _freeDrawingPath.add(stickyNotePosition);
+      
+      _drawingPreviewNotifier.value = DrawingPreviewData(
+        start: _currentDrawingStart!,
+        end: _currentDrawingEnd!,
+        elementType: effectiveDrawingTool,
+        color: effectiveColor,
+        strokeWidth: effectiveStrokeWidth,
+        density: effectiveDensity,
+        curvature: effectiveCurvature,
+        triangleCut: effectiveTriangleCut,
+        freeDrawingPath: List.from(_freeDrawingPath),
+        targetStickyNote: _currentDrawingStickyNote,
+      );
+      return;
+    }
+
+    _drawingPreviewNotifier.value = DrawingPreviewData(
+      start: _currentDrawingStart!,
+      end: _currentDrawingEnd!,
+      elementType: effectiveDrawingTool,
+      color: effectiveColor,
+      strokeWidth: effectiveStrokeWidth,
+      density: effectiveDensity,
+      curvature: effectiveCurvature,
+      triangleCut: effectiveTriangleCut,
+      freeDrawingPath: null,
+      targetStickyNote: _currentDrawingStickyNote,
+    );
+  }
+
+  /// 10. 结束便签上的绘制
+  void onStickyNoteDrawingEnd(
+    DragEndDetails details,
+    DrawingElementType? effectiveDrawingTool,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    TriangleCutType effectiveTriangleCut,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) {
+    if (!_isDrawing ||
+        _currentDrawingStickyNote == null ||
+        _currentDrawingStart == null ||
+        _currentDrawingEnd == null ||
+        effectiveDrawingTool == null) {
+      _clearStickyNoteDrawingState();
+      return;
+    }
+
+    // Create drawing element in sticky note coordinates (0.0-1.0)
+    final element = _createStickyNoteDrawingElement(
+      _currentDrawingStart!,
+      _currentDrawingEnd!,
+      effectiveDrawingTool,
+      effectiveColor,
+      effectiveStrokeWidth,
+      effectiveDensity,
+      effectiveCurvature,
+      effectiveTriangleCut,
+    );
+
+    // Add element to sticky note
+    final updatedStickyNote = _currentDrawingStickyNote!.addElement(element);
+    onStickyNoteUpdated(updatedStickyNote);
+
+    _clearStickyNoteDrawingState();
+  }
+
+  /// Convert canvas coordinates to sticky note local coordinates (0.0-1.0)
+  Offset _convertCanvasToStickyNoteCoordinates(Offset canvasPosition, StickyNote stickyNote) {
+    // Get sticky note bounds in canvas coordinates
+    final stickyNoteCanvasPosition = Offset(
+      stickyNote.position.dx * kCanvasWidth,
+      stickyNote.position.dy * kCanvasHeight,
+    );
+    final stickyNoteCanvasSize = Size(
+      stickyNote.size.width * kCanvasWidth,
+      stickyNote.size.height * kCanvasHeight,
+    );
+
+    // Calculate relative position within sticky note (0.0-1.0)
+    final relativeX = (canvasPosition.dx - stickyNoteCanvasPosition.dx) / stickyNoteCanvasSize.width;
+    final relativeY = (canvasPosition.dy - stickyNoteCanvasPosition.dy) / stickyNoteCanvasSize.height;
+
+    // Allow drawing beyond sticky note boundaries with max canvas size
+    final maxRelativeX = kCanvasWidth / stickyNoteCanvasSize.width;
+    final maxRelativeY = kCanvasHeight / stickyNoteCanvasSize.height;
+
+    return Offset(
+      relativeX.clamp(-1.0, maxRelativeX),
+      relativeY.clamp(-1.0, maxRelativeY),
+    );
+  }
+
+  /// Create drawing element for sticky note
+  MapDrawingElement _createStickyNoteDrawingElement(
+    Offset start,
+    Offset end,
+    DrawingElementType elementType,
+    Color color,
+    double strokeWidth,
+    double density,
+    double curvature,
+    TriangleCutType triangleCut,
+  ) {
+    final stickyNote = _currentDrawingStickyNote!;
+    final maxZIndex = stickyNote.elements.isEmpty
+        ? 0
+        : stickyNote.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
+
+    List<Offset> points;
+    if (elementType == DrawingElementType.freeDrawing) {
+      points = List.from(_freeDrawingPath);
+    } else {
+      points = [start, end];
+    }
+
+    return MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: elementType,
+      points: points,
+      color: color,
+      strokeWidth: strokeWidth,
+      density: density,
+      curvature: curvature,
+      triangleCut: triangleCut,
+      zIndex: maxZIndex + 1,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  /// 清理便签绘制状态
+  void _clearStickyNoteDrawingState() {
+    _currentDrawingStickyNote = null;
+    _clearDrawingState();
   }
 }

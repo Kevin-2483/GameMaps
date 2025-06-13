@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../../../models/sticky_note.dart';
+import '../../../models/map_layer.dart';
+import '../renderers/element_renderer.dart';
 
 /// 便签点击类型枚举
 enum StickyNoteHitType {
@@ -122,11 +124,13 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             bottomLeft: Radius.circular(cornerRadius),
             bottomRight: Radius.circular(cornerRadius),
           ),
-        ),
-        child: Stack(
+        ),        child: Stack(
           children: [
             // 背景图片（如果有）
             if (widget.note.hasBackgroundImage) _buildBackgroundImage(),
+
+            // 便签绘制元素层
+            if (widget.note.elements.isNotEmpty) _buildDrawingElements(),
 
             // 调整大小手柄
             if (widget.isSelected && !widget.isPreviewMode)
@@ -158,6 +162,17 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             fit: widget.note.backgroundImageFit,
           ),
         ),      ),
+    );  }
+
+  /// 构建便签绘制元素
+  Widget _buildDrawingElements() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: _StickyNoteDrawingPainter(
+          elements: widget.note.elements,
+          isSelected: widget.isSelected,
+        ),
+      ),
     );
   }
 
@@ -550,7 +565,6 @@ class StickyNoteDragState {
   final Offset? startNotePosition; // 移动时使用
   final Size? startNoteSize;       // 调整大小时使用
   final Function(StickyNote) onNoteUpdated;
-
   StickyNoteDragState({
     required this.type,
     required this.note,
@@ -559,5 +573,50 @@ class StickyNoteDragState {
     this.startNoteSize,
     required this.onNoteUpdated,
   });
+}
+
+/// 便签绘制元素画笔
+/// 用于在便签上渲染绘画元素
+class _StickyNoteDrawingPainter extends CustomPainter {
+  final List<MapDrawingElement> elements;
+  final bool isSelected;
+
+  _StickyNoteDrawingPainter({
+    required this.elements,
+    required this.isSelected,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (elements.isEmpty) return;
+
+    // 按 z 值排序元素
+    final sortedElements = List<MapDrawingElement>.from(elements)
+      ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
+
+    // 找到所有橡皮擦元素
+    final eraserElements = sortedElements
+        .where((e) => e.type == DrawingElementType.eraser)
+        .toList();
+
+    // 绘制所有常规元素
+    for (final element in sortedElements) {
+      if (element.type == DrawingElementType.eraser) {
+        continue; // 橡皮擦本身不绘制
+      }
+
+      // 绘制元素（需要考虑橡皮擦遮挡）
+      ElementRenderer.drawElement(
+        canvas,
+        element,
+        size,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StickyNoteDrawingPainter oldDelegate) {
+    return oldDelegate.elements != elements || oldDelegate.isSelected != isSelected;
+  }
 }
 
