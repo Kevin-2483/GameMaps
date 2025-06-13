@@ -109,8 +109,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
         ],
       ),
     );
-  }
-  /// 构建内容区域
+  }  /// 构建内容区域
   Widget _buildContentArea() {
     // 当便签被选中时，边框会占用2px，所以内容区域圆角需要相应调整
     final double cornerRadius = widget.isSelected ? 6.0 : 8.0;
@@ -124,6 +123,14 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             bottomLeft: Radius.circular(cornerRadius),
             bottomRight: Radius.circular(cornerRadius),
           ),
+          // 当选中便签且不在预览模式时，添加虚线边框提示可绘制区域
+          border: widget.isSelected && !widget.isPreviewMode
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  width: 1,
+                  style: BorderStyle.solid,
+                )
+              : null,
         ),        child: Stack(
           children: [
             // 背景图片（如果有）
@@ -135,6 +142,40 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {  @override
             // 调整大小手柄
             if (widget.isSelected && !widget.isPreviewMode)
               _buildResizeHandles(),
+              
+            // 绘制区域提示（当选中且无内容时显示）
+            if (widget.isSelected && 
+                !widget.isPreviewMode && 
+                widget.note.elements.isEmpty && 
+                !widget.note.hasBackgroundImage)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.brush,
+                        size: 32,
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '可在此区域绘制',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

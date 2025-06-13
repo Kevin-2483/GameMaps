@@ -1371,8 +1371,7 @@ class MapCanvasState extends State<MapCanvas> {
         break;
       }
     }
-  }
-  void _onDrawingStart(DragStartDetails details) {
+  }  void _onDrawingStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
       // Check if drawing on a selected sticky note
     if (widget.selectedStickyNote != null && widget.onStickyNoteUpdated != null) {
@@ -1411,19 +1410,24 @@ class MapCanvasState extends State<MapCanvas> {
           widget.onStickyNoteUpdated!,
         );
         return;
+      } else {
+        // 点击位置不在便签内容区域，阻止绘制
+        return;
       }
     }
     
-    // Normal layer drawing
-    _drawingToolManager.onDrawingStart(
-      details,
-      _effectiveDrawingTool,
-      _effectiveColor,
-      _effectiveStrokeWidth,
-      _effectiveDensity,
-      _effectiveCurvature,
-      _effectiveTriangleCut,
-    );
+    // Normal layer drawing (only if a layer is selected)
+    if (widget.selectedLayer != null) {
+      _drawingToolManager.onDrawingStart(
+        details,
+        _effectiveDrawingTool,
+        _effectiveColor,
+        _effectiveStrokeWidth,
+        _effectiveDensity,
+        _effectiveCurvature,
+        _effectiveTriangleCut,
+      );
+    }
   }
   void _onDrawingUpdate(DragUpdateDetails details) {
     // Check if drawing on sticky note

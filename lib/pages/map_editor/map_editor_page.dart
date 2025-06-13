@@ -822,16 +822,23 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedElementId = null; // 清除选中的元素
     });
     print('绘制工具已禁用');
-  }
-
-  /// 检查绘制工具是否应该被禁用
+  }  /// 检查绘制工具是否应该被禁用
   bool get _shouldDisableDrawingTools {
-    return _selectedLayer == null;
+    // 如果选中了便签，绘制工具应该启用
+    if (_selectedStickyNote != null) {
+      return false;
+    }
+    // 如果选中了具体的图层，绘制工具应该启用
+    if (_selectedLayer != null) {
+      return false;
+    }
+    // 如果只选择了图层组（没有选择具体图层），绘制工具应该禁用
+    // 如果既没有选中图层也没有选中便签，绘制工具应该禁用
+    return true;
   }
-
   /// 检查是否没有任何图层选择
   bool get _hasNoLayerSelected {
-    return _selectedLayer == null && _selectedLayerGroup == null;
+    return _selectedLayer == null && _selectedLayerGroup == null && _selectedStickyNote == null;
   }
 
   List<MapLayer> get _layersForDisplay {
@@ -2258,10 +2265,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
-        enableAnimations: layout.enableAnimations,
-        // 修改禁用状态提示逻辑
-        collapsedSubtitle: _hasNoLayerSelected
-            ? '需要选择图层才能使用绘制工具'
+        enableAnimations: layout.enableAnimations,        // 修改禁用状态提示逻辑
+        collapsedSubtitle: _hasNoLayerSelected && _selectedStickyNote == null
+            ? '需要选择图层或便签才能使用绘制工具'
+            : _selectedStickyNote != null
+            ? '绘制到便签: ${_selectedStickyNote!.title}'
             : _selectedLayer != null
             ? '绘制到: ${_selectedLayer!.name}'
             : _selectedLayerGroup != null
@@ -2279,8 +2287,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     selectedDensity: _selectedDensity,
                     selectedCurvature: _selectedCurvature,
                     selectedTriangleCut: _selectedTriangleCut,
-                    isEditMode: true,
-                    onToolSelected: (tool) {
+                    isEditMode: true,                    onToolSelected: (tool) {
                       if (!_shouldDisableDrawingTools) {
                         setState(() => _selectedDrawingTool = tool);
                       }
@@ -2333,9 +2340,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                     onImageBufferUpdated: _handleImageBufferUpdated,
                     onImageBufferFitChanged: _handleImageBufferFitChanged,
                     onImageBufferCleared: _handleImageBufferCleared,
-                  ),
-
-                  // 修改禁用蒙板逻辑
+                  ),                  // 修改禁用蒙板逻辑
                   if (_shouldDisableDrawingTools)
                     Positioned.fill(
                       child: Container(
@@ -2358,7 +2363,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                   horizontal: 24,
                                 ),
                                 child: Text(
-                                  '请先选择一个图层或图层组\n才能使用绘制工具',
+                                  '请先选择一个图层或便签\n才能使用绘制工具',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
