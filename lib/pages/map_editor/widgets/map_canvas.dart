@@ -673,13 +673,27 @@ class MapCanvasState extends State<MapCanvas> {
       return;
     }
 
-    final hitElementId = _getHitElement(canvasPosition);
-
     // 检查是否有选区，如果有则清除选区
     if (_selectionRect != null) {
       clearSelection();
       return; // 清除选区后直接返回，不进行其他操作
     }
+
+    // 检测图例点击
+    final hitLegendItem = _getHitLegendItem(canvasPosition);
+    if (hitLegendItem != null) {
+      // 没有选区，并且点击了图例，处理图例点击事件
+      if (_canSelectLegendItem(hitLegendItem)) {
+        // 图例可选择，触发点击事件
+        _onLegendTap(hitLegendItem);
+      } else {
+        // 图例不可选择，显示提示信息
+        _showLegendSelectionNotAllowedMessage(hitLegendItem);
+      }
+      return;
+    }
+
+    final hitElementId = _getHitElement(canvasPosition);
 
     // 只有当点击了当前选中的元素时才保持选中状态
     // 如果点击了其他地方或其他元素，则取消选择
@@ -1004,13 +1018,14 @@ class MapCanvasState extends State<MapCanvas> {
         widget.onStickyNoteSelected?.call(null);
       }
       return;
-    }
-
-    // ---：优先检测图例交互 ---
+    }    // ---：优先检测图例交互 ---
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null) {
-      // 如果点击了图例，启动图例拖拽，不继续处理元素交互
-      _onLegendDragStart(hitLegendItem, details);
+      // 检查图例是否已选中，只有选中的图例才能拖动
+      if (widget.selectedElementId == hitLegendItem.id) {
+        // 如果点击了已选中的图例，启动拖拽
+        _onLegendDragStart(hitLegendItem, details);
+      }
       return;
     }
 
@@ -1217,8 +1232,13 @@ class MapCanvasState extends State<MapCanvas> {
       }
     }
   }
-
   void _onLegendDragStart(LegendItem item, DragStartDetails details) {
+    // 在拖动前检查是否满足选中条件
+    if (!_canSelectLegendItem(item)) {
+      _showLegendSelectionNotAllowedMessage(item);
+      return;
+    }
+
     _draggingLegendItem = item;
 
     // 计算拖拽开始时的偏移量（点击位置相对于图例中心的偏移）
@@ -1399,7 +1419,6 @@ class MapCanvasState extends State<MapCanvas> {
     // 返回前几个可见的图层作为最高优先级图层
     return sortedLayers.where((layer) => layer.isVisible).take(3).toList();
   }
-
   /// 显示图例选择受限的消息
   void _showLegendSelectionNotAllowedMessage(LegendItem item) {
     // 查找包含此图例项的图例组
@@ -1417,9 +1436,9 @@ class MapCanvasState extends State<MapCanvas> {
 
     String message;
     if (!containingGroup.isVisible) {
-      message = '无法选择图例：图例组"${containingGroup.name}"当前不可见';
+      message = '无法操作图例：图例组"${containingGroup.name}"当前不可见';
     } else {
-      message = '无法选择图例：请先选择一个绑定了图例组"${containingGroup.name}"的图层';
+      message = '无法操作图例：请先选择一个绑定了图例组"${containingGroup.name}"的图层';
     }
 
     // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
