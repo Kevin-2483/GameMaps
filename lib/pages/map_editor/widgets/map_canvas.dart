@@ -1296,11 +1296,12 @@ class MapCanvasState extends State<MapCanvas> {
     // 双击图例项，触发双击回调
     widget.onLegendItemDoubleClicked.call(item);
   }
-
-  /// 检查是否可以选择图例项
-  /// 条件：
-  /// 1. 图例组必须可见
-  /// 2. 至少有一个绑定的图层被选中
+  /// 判断是否可以选择图例项
+  /// 灵活的选择条件：
+  /// 1. 图例组可见
+  /// 2. 如果有绑定图层被直接选中，允许选择
+  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择  
+  /// 4. 如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
   bool _canSelectLegendItem(LegendItem item) {
     // 查找包含此图例项的图例组
     LegendGroup? containingGroup;
@@ -1322,7 +1323,7 @@ class MapCanvasState extends State<MapCanvas> {
       return false;
     }
 
-    // 检查是否有绑定的图层被选中
+    // 获取绑定的图层
     final boundLayers = widget.mapItem.layers.where((layer) {
       return layer.legendGroupIds.contains(containingGroup!.id);
     }).toList();
@@ -1331,13 +1332,72 @@ class MapCanvasState extends State<MapCanvas> {
       return true; // 如果没有绑定图层，允许选择
     }
 
-    // 检查绑定的图层中是否有被选中的
-    if (widget.selectedLayer == null) {
-      return false; // 没有选中任何图层
+    // 条件2：检查绑定的图层中是否有被直接选中的
+    if (widget.selectedLayer != null) {
+      if (boundLayers.any((layer) => layer.id == widget.selectedLayer!.id)) {
+        return true;
+      }
     }
 
-    // 检查当前选中的图层是否绑定了此图例组
-    return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
+    // 条件3：检查选中的图层组是否包含绑定图层
+    if (widget.selectedLayer != null || _getSelectedLayerGroup().isNotEmpty) {
+      final selectedGroup = _getSelectedLayerGroup();
+      if (selectedGroup.isNotEmpty) {
+        // 检查选中的图层组中是否包含绑定图层
+        final selectedGroupIds = selectedGroup.map((l) => l.id).toSet();
+        final boundLayerIds = boundLayers.map((l) => l.id).toSet();
+        if (selectedGroupIds.intersection(boundLayerIds).isNotEmpty) {
+          return true;
+        }
+      }
+    }
+
+    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
+    if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
+      final highestPriorityLayers = _getHighestPriorityLayers();
+      if (highestPriorityLayers.isNotEmpty) {
+        final highestPriorityIds = highestPriorityLayers.map((l) => l.id).toSet();
+        final boundLayerIds = boundLayers.map((l) => l.id).toSet();
+        if (highestPriorityIds.intersection(boundLayerIds).isNotEmpty) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /// 获取选中的图层组
+  List<MapLayer> _getSelectedLayerGroup() {
+    // 由于MapCanvas没有直接访问图层组选择状态的接口，
+    // 这里返回基于显示顺序推断的最高优先级图层
+    return _getHighestPriorityLayers();
+  }
+
+  /// 获取最高优先级的图层组（基于显示顺序或其他逻辑）
+  List<MapLayer> _getHighestPriorityLayers() {
+    // 使用传入的显示顺序图层，如果没有则使用默认排序
+    final layersToUse = widget.displayOrderLayers ?? widget.mapItem.layers;
+    
+    if (layersToUse.isEmpty) {
+      return [];
+    }
+
+    // 如果有显示顺序列表，最后几个图层具有最高优先级（后绘制的在上层）
+    if (widget.displayOrderLayers != null && widget.displayOrderLayers!.isNotEmpty) {
+      final priorityLayers = widget.displayOrderLayers!.reversed
+          .where((layer) => layer.isVisible)
+          .take(3)
+          .toList();
+      return priorityLayers;
+    }
+
+    // 否则按 order 字段排序，获取最高优先级的图层
+    final sortedLayers = List<MapLayer>.from(layersToUse)
+      ..sort((a, b) => b.order.compareTo(a.order)); // 降序排列，最高优先级在前
+
+    // 返回前几个可见的图层作为最高优先级图层
+    return sortedLayers.where((layer) => layer.isVisible).take(3).toList();
   }
 
   /// 显示图例选择受限的消息

@@ -12,9 +12,10 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(LegendGroup) onLegendGroupUpdated;
   final bool isPreviewMode;
   final VoidCallback onClose; // 关闭回调
-  final Function(String)? onLegendItemSelected; // 图例项选中回调
+  final Function(String)? onLegendItemSelected; // 图例项选中回调  
   final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
   final MapLayer? selectedLayer; // 当前选中的图层
+  final List<MapLayer>? selectedLayerGroup; // 当前选中的图层组
   final String? initialSelectedLegendItemId; // 初始选中的图例项ID
   final String? selectedElementId; // 外部传入的选中元素ID，用于同步状态
 
@@ -28,6 +29,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onLegendItemSelected,
     this.allLayers,
     this.selectedLayer,
+    this.selectedLayerGroup,
     this.initialSelectedLegendItemId,
     this.selectedElementId,
   });
@@ -149,11 +151,12 @@ class _LegendGroupManagementDrawerState
     // 通知父组件选中状态变化，用于高亮显示地图上的图例项
     widget.onLegendItemSelected?.call(_selectedLegendItemId ?? '');
   }
-
-  /// 检查是否可以选择图例项
-  /// 条件：
-  /// 1. 图例组必须可见
-  /// 2. 至少有一个绑定的图层被选中
+  /// 判断是否可以选择图例项
+  /// 灵活的选择条件：
+  /// 1. 图例组可见
+  /// 2. 如果有绑定图层被直接选中，允许选择
+  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择  
+  /// 4. 如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
   bool _canSelectLegendItem() {
     // 检查图例组是否可见
     if (!_currentGroup.isVisible) {
@@ -165,18 +168,70 @@ class _LegendGroupManagementDrawerState
       return true;
     }
 
-    // 检查是否有绑定的图层被选中
+    // 获取绑定的图层
     final boundLayers = _getBoundLayers();
     if (boundLayers.isEmpty) {
       return true; // 如果没有绑定图层，允许选择
     }
 
-    // 检查绑定的图层中是否有被选中的
-    if (widget.selectedLayer == null) {
-      return false; // 没有选中任何图层
+    // 条件2：检查绑定的图层中是否有被直接选中的
+    if (widget.selectedLayer != null) {
+      if (boundLayers.any((layer) => layer.id == widget.selectedLayer!.id)) {
+        return true;
+      }
     }
 
-    return boundLayers.any((layer) => layer.id == widget.selectedLayer!.id);
+    // 条件3：检查选中的图层组是否包含绑定图层
+    if (widget.selectedLayer != null || 
+        (widget.allLayers != null && _getSelectedLayerGroup().isNotEmpty)) {
+      final selectedGroup = _getSelectedLayerGroup();
+      if (selectedGroup.isNotEmpty) {
+        // 检查选中的图层组中是否包含绑定图层
+        final selectedGroupIds = selectedGroup.map((l) => l.id).toSet();
+        final boundLayerIds = boundLayers.map((l) => l.id).toSet();
+        if (selectedGroupIds.intersection(boundLayerIds).isNotEmpty) {
+          return true;
+        }
+      }
+    }
+
+    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
+    if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
+      final highestPriorityLayers = _getHighestPriorityLayers();
+      if (highestPriorityLayers.isNotEmpty) {
+        final highestPriorityIds = highestPriorityLayers.map((l) => l.id).toSet();
+        final boundLayerIds = boundLayers.map((l) => l.id).toSet();
+        if (highestPriorityIds.intersection(boundLayerIds).isNotEmpty) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+  /// 获取选中的图层组
+  List<MapLayer> _getSelectedLayerGroup() {
+    // 使用传入的选中图层组信息
+    if (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty) {
+      return widget.selectedLayerGroup!;
+    }
+    
+    // 如果没有传入选中的图层组，返回基于显示顺序推断的最高优先级图层
+    return _getHighestPriorityLayers();
+  }
+
+  /// 获取最高优先级的图层组（基于显示顺序或其他逻辑）
+  List<MapLayer> _getHighestPriorityLayers() {
+    if (widget.allLayers == null || widget.allLayers!.isEmpty) {
+      return [];
+    }
+
+    // 按 order 字段排序，获取最高优先级的图层
+    final sortedLayers = List<MapLayer>.from(widget.allLayers!)
+      ..sort((a, b) => b.order.compareTo(a.order)); // 降序排列，最高优先级在前
+
+    // 返回前几个可见的图层作为最高优先级图层
+    return sortedLayers.where((layer) => layer.isVisible).take(3).toList();
   }
 
   /// 显示不允许选择的提示对话框
