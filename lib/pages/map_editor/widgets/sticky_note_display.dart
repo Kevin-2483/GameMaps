@@ -584,34 +584,35 @@ class _StickyNoteDrawingPainter extends CustomPainter {
   _StickyNoteDrawingPainter({
     required this.elements,
     required this.isSelected,
-  });
-
-  @override
+  });  @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
+
+    // 创建裁剪区域，确保绘制内容不超出便签内容区域
+    final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.save();
+    canvas.clipRect(clipRect);
 
     // 按 z 值排序元素
     final sortedElements = List<MapDrawingElement>.from(elements)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
 
-    // 找到所有橡皮擦元素
-    final eraserElements = sortedElements
-        .where((e) => e.type == DrawingElementType.eraser)
-        .toList();
-
-    // 绘制所有常规元素
+    // 绘制所有常规元素（排除橡皮擦）
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
       }
 
-      // 绘制元素（需要考虑橡皮擦遮挡）
+      // 绘制元素
       ElementRenderer.drawElement(
         canvas,
         element,
         size,
       );
     }
+
+    // 恢复画布状态
+    canvas.restore();
   }
 
   @override

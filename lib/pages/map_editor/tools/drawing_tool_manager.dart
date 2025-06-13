@@ -647,11 +647,9 @@ class DrawingToolManager {
     final stickyNoteCanvasSize = Size(
       stickyNote.size.width * kCanvasWidth,
       stickyNote.size.height * kCanvasHeight,
-    );
-
-    // 计算标题栏高度和内容区域偏移（与预览渲染保持一致）
-    const double titleBarHeight = 30.0; // 标题栏固定高度
-    const double contentPadding = 8.0; // 内容区域的 padding
+    );    // 计算标题栏高度和内容区域偏移（与预览渲染保持一致）
+    const double titleBarHeight = 36.0; // 标题栏固定高度
+    const double contentPadding = 10.0; // 内容区域的 padding
     
     // 计算内容区域的实际位置和大小（排除标题栏）
     final contentAreaPosition = Offset(
@@ -661,19 +659,14 @@ class DrawingToolManager {
     final contentAreaSize = Size(
       stickyNoteCanvasSize.width - (contentPadding * 2),
       stickyNoteCanvasSize.height - titleBarHeight - (contentPadding * 2),
-    );
-
-    // Calculate relative position within content area (0.0-1.0)
+    );    // Calculate relative position within content area (0.0-1.0)
     final relativeX = (canvasPosition.dx - contentAreaPosition.dx) / contentAreaSize.width;
     final relativeY = (canvasPosition.dy - contentAreaPosition.dy) / contentAreaSize.height;
 
-    // Allow drawing beyond content area boundaries with max canvas size
-    final maxRelativeX = kCanvasWidth / contentAreaSize.width;
-    final maxRelativeY = kCanvasHeight / contentAreaSize.height;
-
+    // 限制绘制只能在便签的内容区域内（0.0-1.0）
     return Offset(
-      relativeX.clamp(-1.0, maxRelativeX),
-      relativeY.clamp(-1.0, maxRelativeY),
+      relativeX.clamp(0.0, 1.0),
+      relativeY.clamp(0.0, 1.0),
     );
   }
 

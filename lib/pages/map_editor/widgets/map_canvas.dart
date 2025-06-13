@@ -1387,8 +1387,8 @@ class MapCanvasState extends State<MapCanvas> {
       );
       
       // 计算内容区域的边界（排除标题栏和padding）
-      const double titleBarHeight = 30.0; // 标题栏固定高度
-      const double contentPadding = 8.0; // 内容区域的 padding
+      const double titleBarHeight = 36.0; // 标题栏固定高度
+      const double contentPadding = 10.0; // 内容区域的 padding
       
       final contentAreaRect = Rect.fromLTWH(
         stickyNotePosition.dx + contentPadding,
@@ -2076,8 +2076,7 @@ class _CurrentDrawingPainter extends CustomPainter {
       stickyNote.size.width * size.width,
       stickyNote.size.height * size.height,
     );
-    
-    // 计算标题栏高度（与 map_canvas.dart 中的一致）
+      // 计算标题栏高度（与 drawing_tool_manager.dart 中的一致）
     const double titleBarHeight = 36.0; // 标题栏固定高度
     const double contentPadding = 10.0; // 内容区域的 padding
     
