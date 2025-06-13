@@ -257,9 +257,15 @@ class MapCanvasState extends State<MapCanvas> {
     _selectionNotifier.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
+    // 从用户首选项获取画布边距设置
+    final userPreferences = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
+    final canvasBoundaryMargin = userPreferences.mapEditor.canvasBoundaryMargin;
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -269,7 +275,7 @@ class MapCanvasState extends State<MapCanvas> {
         borderRadius: BorderRadius.circular(8),
         child: InteractiveViewer(
           transformationController: _transformationController,
-          boundaryMargin: const EdgeInsets.all(20),
+          boundaryMargin: EdgeInsets.all(canvasBoundaryMargin),
           minScale: 0.1,
           maxScale: 5.0,
           scaleFactor: 200.0 / widget.zoomSensitivity,

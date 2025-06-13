@@ -79,9 +79,7 @@ class MapEditorSettingsSection extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
-
-            // 缩放敏感度
+            const SizedBox(height: 8),            // 缩放敏感度
             ListTile(
               title: Text('缩放敏感度'),
               subtitle: Slider(
@@ -92,6 +90,34 @@ class MapEditorSettingsSection extends StatelessWidget {
                 label: '${mapEditor.zoomSensitivity.toStringAsFixed(1)}x',
                 onChanged: (value) =>
                     provider.updateMapEditor(zoomSensitivity: value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 画布边距
+            ListTile(
+              title: Text('画布边距'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    value: mapEditor.canvasBoundaryMargin,
+                    min: 20.0,
+                    max: 1200.0,
+                    divisions: 118, // (1200-20)/10 = 118
+                    label: '${mapEditor.canvasBoundaryMargin.round()}px',
+                    onChanged: (value) =>
+                        provider.updateMapEditor(canvasBoundaryMargin: value),
+                  ),
+                  Text(
+                    '控制画布内容与容器边缘的距离：${mapEditor.canvasBoundaryMargin.round()}px',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

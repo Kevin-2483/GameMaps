@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import 'user_preferences_migration_service.dart';
 
 /// 用户偏好设置服务
 /// 使用SQLite数据库存储，替代SharedPreferences以提升性能
+/// 包含防抖机制避免频繁保存
 class UserPreferencesService {
   static final UserPreferencesService _instance =
       UserPreferencesService._internal();
@@ -17,8 +19,20 @@ class UserPreferencesService {
       UserPreferencesDatabaseService();
   final UserPreferencesMigrationService _migrationService =
       UserPreferencesMigrationService();
-    UserPreferences? _currentPreferences;
+      
+  UserPreferences? _currentPreferences;
   bool _initialized = false;
+  
+  // 防抖相关变量
+  Timer? _debounceTimer;
+  UserPreferences? _pendingPreferences;
+  static const Duration _debounceDuration = Duration(milliseconds: 500); // 防抖延迟时间
+  final Set<String> _immediateKeys = {
+    'currentUser', 
+    'displayName', 
+    'avatarPath', 
+    'locale'
+  }; // 需要立即保存的关键配置
 
   /// 初始化服务
   Future<void> initialize() async {
@@ -77,24 +91,66 @@ class UserPreferencesService {
 
     return _currentPreferences!;
   }
-
-  /// 保存用户偏好设置
-  Future<void> savePreferences(UserPreferences preferences) async {
+  /// 保存用户偏好设置（带防抖机制）
+  Future<void> savePreferences(UserPreferences preferences, {bool immediate = false}) async {
     // 更新时间戳
     final updatedPreferences = preferences.copyWith(updatedAt: DateTime.now());
-
-    // 保存到数据库
-    await _dbService.savePreferences(updatedPreferences);
-
+    
     // 更新内存缓存
     _currentPreferences = updatedPreferences;
-
-    if (kDebugMode) {
-      print('用户偏好设置已保存: ${updatedPreferences.displayName}');
+    
+    if (immediate) {
+      // 立即保存，取消任何待处理的防抖保存
+      _debounceTimer?.cancel();
+      _pendingPreferences = null;
+      await _saveToDatabase(updatedPreferences);
+    } else {
+      // 使用防抖保存
+      await _debouncedSave(updatedPreferences);
     }
   }
-
-  /// 切换用户
+  
+  /// 防抖保存实现
+  Future<void> _debouncedSave(UserPreferences preferences) async {
+    _pendingPreferences = preferences;
+    
+    // 取消之前的定时器
+    _debounceTimer?.cancel();
+    
+    // 创建新的防抖定时器
+    _debounceTimer = Timer(_debounceDuration, () async {
+      if (_pendingPreferences != null) {
+        await _saveToDatabase(_pendingPreferences!);
+        _pendingPreferences = null;
+      }
+    });
+  }
+  
+  /// 实际保存到数据库的方法
+  Future<void> _saveToDatabase(UserPreferences preferences) async {
+    try {
+      await _dbService.savePreferences(preferences);
+      
+      if (kDebugMode) {
+        print('用户偏好设置已保存: ${preferences.displayName}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('保存用户偏好设置失败: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// 强制保存所有待处理的更改
+  Future<void> flushPendingChanges() async {
+    _debounceTimer?.cancel();
+    if (_pendingPreferences != null) {
+      await _saveToDatabase(_pendingPreferences!);
+      _pendingPreferences = null;
+    }
+  }
+  /// 切换用户（立即保存）
   Future<void> switchUser(String userId) async {
     final preferences = await _dbService.getPreferences(userId);
     if (preferences != null) {
@@ -102,11 +158,11 @@ class UserPreferencesService {
       _currentPreferences = preferences.copyWith(
         lastLoginAt: DateTime.now(),
       );
-      await savePreferences(_currentPreferences!);
+      await savePreferences(_currentPreferences!, immediate: true);
     }
   }
 
-  /// 创建新用户
+  /// 创建新用户（立即保存）
   Future<UserPreferences> createUser({
     required String displayName,
     String? avatarPath,
@@ -123,8 +179,7 @@ class UserPreferencesService {
 
     return preferences;
   }
-
-  /// 删除用户
+  /// 删除用户（立即保存）
   Future<void> deleteUser(String userId) async {
     await _dbService.deleteUser(userId);    // 如果删除的是当前用户，创建新的默认用户
     if (_currentPreferences?.userId == userId) {
@@ -133,7 +188,7 @@ class UserPreferencesService {
         await switchUser(allUsers.first.userId!);
       } else {
         _currentPreferences = UserPreferences.createDefault();
-        await savePreferences(_currentPreferences!);
+        await savePreferences(_currentPreferences!, immediate: true);
       }
     }
   }
@@ -172,7 +227,6 @@ class UserPreferencesService {
     final current = await getCurrentPreferences();
     await savePreferences(current.copyWith(tools: tools));
   }
-
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,
@@ -181,14 +235,16 @@ class UserPreferencesService {
     String? locale,
   }) async {
     final current = await getCurrentPreferences();
-    await savePreferences(
-      current.copyWith(
-        displayName: displayName,
-        avatarPath: avatarPath,
-        avatarData: avatarData,
-        locale: locale,
-      ),
+    final updated = current.copyWith(
+      displayName: displayName,
+      avatarPath: avatarPath,
+      avatarData: avatarData,
+      locale: locale,
     );
+    
+    // 用户基本信息变更立即保存
+    final immediate = displayName != null || avatarPath != null || locale != null;
+    await savePreferences(updated, immediate: immediate);
   }
 
   /// 添加最近使用的颜色
@@ -300,8 +356,7 @@ class UserPreferencesService {
     };
     return jsonEncode(exportData);
   }
-
-  /// 导入用户设置
+  /// 导入用户设置（立即保存）
   Future<void> importSettings(String jsonData) async {
     try {
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
@@ -316,7 +371,7 @@ class UserPreferencesService {
         updatedAt: DateTime.now(),
       );
 
-      await savePreferences(importedPreferences);
+      await savePreferences(importedPreferences, immediate: true);
     } catch (e) {
       if (kDebugMode) {
         print('导入设置失败: $e');
@@ -325,7 +380,7 @@ class UserPreferencesService {
     }
   }
 
-  /// 重置为默认设置
+  /// 重置为默认设置（立即保存）
   Future<void> resetToDefaults() async {
     final current = await getCurrentPreferences();
     final defaultPreferences = UserPreferences.createDefault(
@@ -333,7 +388,7 @@ class UserPreferencesService {
       displayName: current.displayName,
     ).copyWith(avatarPath: current.avatarPath, createdAt: current.createdAt);
 
-    await savePreferences(defaultPreferences);
+    await savePreferences(defaultPreferences, immediate: true);
   }
 
   /// 加载当前用户
@@ -357,9 +412,16 @@ class UserPreferencesService {
   Future<Map<String, dynamic>> getStorageStats() async {
     return await _dbService.getStorageStats();
   }
-
   /// 关闭服务
   Future<void> close() async {
+    // 保存所有待处理的更改
+    await flushPendingChanges();
+    
+    // 取消防抖定时器
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
+    _pendingPreferences = null;
+    
     await _dbService.close();
     _currentPreferences = null;
   }

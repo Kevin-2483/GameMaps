@@ -2373,20 +2373,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: _addNewLayer,
-                                icon: const Icon(Icons.add),
-                                label: const Text('添加新图层'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                  foregroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
-                                ),
-                              ),
                             ],
                           ),
                         ),

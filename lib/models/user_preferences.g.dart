@@ -75,6 +75,8 @@ MapEditorPreferences _$MapEditorPreferencesFromJson(
         json['backgroundPattern'],
       ) ??
       BackgroundPattern.checkerboard,
+  canvasBoundaryMargin:
+      (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
 );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
@@ -83,6 +85,7 @@ Map<String, dynamic> _$MapEditorPreferencesToJson(
   'undoHistoryLimit': instance.undoHistoryLimit,
   'zoomSensitivity': instance.zoomSensitivity,
   'backgroundPattern': _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
+  'canvasBoundaryMargin': instance.canvasBoundaryMargin,
 };
 
 const _$BackgroundPatternEnumMap = {

@@ -207,29 +207,34 @@ class MapEditorPreferences {
   /// 背景图案类型
   final BackgroundPattern backgroundPattern;
 
+  /// 画布边距大小
+  final double canvasBoundaryMargin;
+
   const MapEditorPreferences({
     this.undoHistoryLimit = 20,
     this.zoomSensitivity = 1.0,
     this.backgroundPattern = BackgroundPattern.checkerboard,
+    this.canvasBoundaryMargin = 200.0,
   });
-
   factory MapEditorPreferences.createDefault() {
     return const MapEditorPreferences(
       undoHistoryLimit: 20,
       zoomSensitivity: 1.0,
       backgroundPattern: BackgroundPattern.checkerboard,
+      canvasBoundaryMargin: 200.0,
     );
   }
-
   MapEditorPreferences copyWith({
     int? undoHistoryLimit,
     double? zoomSensitivity,
     BackgroundPattern? backgroundPattern,
+    double? canvasBoundaryMargin,
   }) {
     return MapEditorPreferences(
       undoHistoryLimit: undoHistoryLimit ?? this.undoHistoryLimit,
       zoomSensitivity: zoomSensitivity ?? this.zoomSensitivity,
       backgroundPattern: backgroundPattern ?? this.backgroundPattern,
+      canvasBoundaryMargin: canvasBoundaryMargin ?? this.canvasBoundaryMargin,
     );
   }
 

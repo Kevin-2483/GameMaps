@@ -119,12 +119,12 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新主题设置失败: ${e.toString()}');
     }
   }
-
   /// 更新地图编辑器设置
   Future<void> updateMapEditor({
     int? undoHistoryLimit,
     double? zoomSensitivity,
     BackgroundPattern? backgroundPattern,
+    double? canvasBoundaryMargin,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -133,6 +133,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         undoHistoryLimit: undoHistoryLimit,
         zoomSensitivity: zoomSensitivity,
         backgroundPattern: backgroundPattern,
+        canvasBoundaryMargin: canvasBoundaryMargin,
       );
 
       await _service.updateMapEditor(updatedMapEditor);
