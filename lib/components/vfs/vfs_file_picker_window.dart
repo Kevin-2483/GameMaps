@@ -437,7 +437,6 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   bool _shouldApplyFiltering() {
     return widget.onFilesSelected != null;
   }
-
   /// 根据选择模式和限制条件过滤文件
   List<VfsFileInfo> _filterFiles(List<VfsFileInfo> files) {
     if (widget.onFilesSelected == null) {
@@ -449,8 +448,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     for (final file in files) {
       bool shouldInclude = true;
 
-      // 如果不允许选择目录，过滤掉目录
-      if (file.isDirectory && widget.allowDirectorySelection == false) {
+      // 在仅文件模式下，文件夹仍然显示（用于导航），但不能被选中
+      // 只有在明确禁止选择目录时才过滤掉目录
+      if (file.isDirectory && 
+          widget.allowDirectorySelection == false && 
+          widget.selectionType != SelectionType.filesOnly) {
         shouldInclude = false;
       }
 
@@ -560,16 +562,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       restrictions.add('支持多选');
     } else {
       restrictions.add('仅单选');
-    }
-
-    // 添加选择类型限制（优先使用新的 SelectionType）
+    }    // 添加选择类型限制（优先使用新的 SelectionType）
     switch (widget.selectionType) {
       case SelectionType.filesOnly:
         if (widget.allowedExtensions != null &&
             widget.allowedExtensions!.isNotEmpty) {
-          restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')})');
+          restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')}) • 文件夹可导航');
         } else {
-          restrictions.add('仅文件');
+          restrictions.add('仅文件 • 文件夹可导航');
         }
         break;
       case SelectionType.directoriesOnly:
@@ -1723,22 +1723,29 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             isSelected: isSelected,
             isCutToClipboard:
                 _isCutOperation &&
-                _clipboardFiles.any((f) => f.path == file.path),
-            canBeSelected: _canSelectFile(file),
+                _clipboardFiles.any((f) => f.path == file.path),            canBeSelected: _canSelectFile(file),
             onTap: () {
               if (_selectedFiles.isNotEmpty) {
+                // 如果有已选择的文件，优先处理选择逻辑
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
+                // 文件夹总是可以导航，无论选择模式如何
                 final newPath = _currentPath.isEmpty
                     ? file.name
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                // 在浏览模式下打开文件，在选择模式下显示元数据
+                // 对于文件，根据模式决定行为
                 if (widget.onFilesSelected == null) {
+                  // 浏览模式：打开文件
                   _openFile(file);
                 } else {
-                  _showFileMetadata(file);
+                  // 选择模式：如果可以选择则选择，否则显示元数据
+                  if (_canSelectFile(file)) {
+                    _toggleFileSelection(file);
+                  } else {
+                    _showFileMetadata(file);
+                  }
                 }
               }
             },
@@ -1823,21 +1830,28 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   })
                 : null,
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,
-            onTap: () {
+            getFileIcon: _getFileIcon,            onTap: () {
               if (_selectedFiles.isNotEmpty) {
+                // 如果有已选择的文件，优先处理选择逻辑
                 _toggleFileSelection(file);
               } else if (file.isDirectory) {
+                // 文件夹总是可以导航，无论选择模式如何
                 final newPath = _currentPath.isEmpty
                     ? file.name
                     : '$_currentPath/${file.name}';
                 _navigateToPath(newPath);
               } else {
-                // 在浏览模式下打开文件，在选择模式下显示元数据
+                // 对于文件，根据模式决定行为
                 if (widget.onFilesSelected == null) {
+                  // 浏览模式：打开文件
                   _openFile(file);
                 } else {
-                  _showFileMetadata(file);
+                  // 选择模式：如果可以选择则选择，否则显示元数据
+                  if (_canSelectFile(file)) {
+                    _toggleFileSelection(file);
+                  } else {
+                    _showFileMetadata(file);
+                  }
                 }
               }
             },
@@ -3257,18 +3271,16 @@ class _FileListItemState extends State<_FileListItem> {
   Widget build(BuildContext context) {
     final opacity = widget.isCutToClipboard
         ? 0.5
-        : (!widget.canBeSelected ? 0.6 : 1.0);
-
-    return Opacity(
+        : (!widget.canBeSelected ? 0.6 : 1.0);    return Opacity(
       opacity: opacity,
       child: MouseRegion(
-        cursor: widget.canBeSelected
+        cursor: widget.canBeSelected || widget.file.isDirectory
             ? SystemMouseCursors.click
             : SystemMouseCursors.forbidden,
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: widget.canBeSelected ? widget.onTap : null,
+          onTap: widget.canBeSelected || widget.file.isDirectory ? widget.onTap : null,
           onLongPress: widget.canBeSelected ? widget.onLongPress : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -3412,22 +3424,20 @@ class _FileGridItemState extends State<_FileGridItem> {
       opacity = 0.5;
     } else if (!widget.canBeSelected) {
       opacity = 0.6;
-    }
-
-    return Opacity(
+    }    return Opacity(
       opacity: opacity,
       child: MouseRegion(
-        cursor: widget.canBeSelected
+        cursor: widget.canBeSelected || widget.file.isDirectory
             ? SystemMouseCursors.click
             : SystemMouseCursors.forbidden,
-        onEnter: widget.canBeSelected
+        onEnter: widget.canBeSelected || widget.file.isDirectory
             ? (_) => setState(() => _isHovered = true)
             : null,
-        onExit: widget.canBeSelected
+        onExit: widget.canBeSelected || widget.file.isDirectory
             ? (_) => setState(() => _isHovered = false)
             : null,
         child: GestureDetector(
-          onTap: widget.canBeSelected ? widget.onTap : null,
+          onTap: widget.canBeSelected || widget.file.isDirectory ? widget.onTap : null,
           onLongPress: widget.canBeSelected ? widget.onLongPress : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),

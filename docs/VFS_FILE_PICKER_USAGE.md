@@ -47,6 +47,12 @@ final selectedFile = await VfsFileManagerWindow.showFilePicker(
 );
 ```
 
+**重要：** 在"仅文件模式"下：
+- 📁 **文件夹显示但不能被选中**：文件夹仍然会在列表中显示，用于导航
+- 🖱️ **点击文件夹可导航**：用户可以点击文件夹进入子目录
+- ✅ **只有文件可以被选中**：只有符合条件的文件可以被选择确认
+- 💡 **提示信息清晰**：界面会显示 "仅文件 • 文件夹可导航" 的提示
+
 ### 单选目录
 
 ```dart
@@ -132,3 +138,55 @@ final extractPath = await VfsFileManagerWindow.showFilePicker(
 ### 调试提示
 
 使用浏览器开发者工具查看控制台输出，文件选择器会输出详细的调试信息。
+
+## "仅文件模式" 设计详解
+
+### 设计原理
+
+在 `SelectionType.filesOnly` 模式下，VFS文件选择器采用了"**显示但不可选**"的设计原则：
+
+1. **显示所有内容**：文件夹和文件都会在界面中显示
+2. **区分可选性**：只有文件可以被选中，文件夹不能被选中
+3. **保持导航性**：文件夹仍然可以被点击进行目录导航
+4. **视觉区分**：不可选择的文件夹会有不同的视觉样式
+
+### 技术实现
+
+```dart
+// 文件过滤：在仅文件模式下文件夹仍然显示
+List<VfsFileInfo> _filterFiles(List<VfsFileInfo> files) {
+  // 仅文件模式下，文件夹保留用于导航
+  // 只过滤不符合扩展名要求的文件
+}
+
+// 选择检查：文件夹在仅文件模式下不可选
+bool _canSelectFile(VfsFileInfo file) {
+  if (widget.selectionType == SelectionType.filesOnly) {
+    return !file.isDirectory; // 文件夹不可选
+  }
+}
+
+// 点击处理：文件夹总是可以导航
+onTap: () {
+  if (file.isDirectory) {
+    // 文件夹总是可以导航，无论选择模式
+    _navigateToPath(newPath);
+  } else if (_canSelectFile(file)) {
+    // 文件根据选择规则处理
+    _toggleFileSelection(file);
+  }
+}
+```
+
+### 用户体验
+
+1. **直观性**：用户可以看到完整的目录结构
+2. **一致性**：导航行为在所有模式下保持一致
+3. **提示性**：界面提示 "仅文件 • 文件夹可导航"
+4. **防误操作**：不可选择的项目有视觉区分
+
+### 适用场景
+
+- 选择配置文件、数据文件等特定类型文件
+- 需要在复杂目录结构中导航寻找文件
+- 批量选择同类型文件进行处理
