@@ -1389,10 +1389,10 @@ class MapCanvasState extends State<MapCanvas> {
       
       // Allow drawing on selected sticky note with extended canvas
       final maxDrawingRect = Rect.fromLTWH(
-        stickyNotePosition.dx - kCanvasWidth * 0.5,
-        stickyNotePosition.dy - kCanvasHeight * 0.5,
-        stickyNoteSize.width + kCanvasWidth,
-        stickyNoteSize.height + kCanvasHeight,
+        stickyNotePosition.dx,
+        stickyNotePosition.dy,
+        stickyNoteSize.width,
+        stickyNoteSize.height,
       );
       
       if (maxDrawingRect.contains(canvasPosition)) {
