@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
+import '../../../components/vfs/vfs_file_picker_window.dart';
+import '../../../services/vfs/vfs_file_opener_service.dart';
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -625,7 +628,6 @@ class _LegendGroupManagementDrawerState
                     onChanged: (value) =>
                         _updateLegendItem(item.copyWith(rotation: value)),
                   ),
-
                   const SizedBox(height: 8),
 
                   // 透明度控制
@@ -638,6 +640,85 @@ class _LegendGroupManagementDrawerState
                     displayValue: '${(item.opacity * 100).round()}%',
                     onChanged: (value) =>
                         _updateLegendItem(item.copyWith(opacity: value)),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // URL编辑字段
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '链接设置',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: '图例链接 (可选)',
+                            hintText: '输入网络链接或选择VFS文件',
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (item.url != null && item.url!.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.open_in_new,
+                                      size: 16,
+                                    ),
+                                    tooltip: '打开链接',
+                                    onPressed: () => _openUrl(item.url!),
+                                  ),
+                                IconButton(
+                                  icon: const Icon(Icons.folder, size: 16),
+                                  tooltip: '选择VFS文件',
+                                  onPressed: () async {
+                                    final selectedFile =
+                                        await _showVfsFilePicker();
+                                    if (selectedFile != null) {
+                                      _updateLegendItem(
+                                        item.copyWith(url: selectedFile),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          controller: TextEditingController(
+                            text: item.url ?? '',
+                          ),
+                          onChanged: (value) {
+                            _updateLegendItem(
+                              item.copyWith(
+                                url: value.trim().isEmpty ? null : value.trim(),
+                              ),
+                            );
+                          },
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
@@ -787,6 +868,8 @@ class _LegendGroupManagementDrawerState
     double positionY = (baseY + offsetY).clamp(0.1, 0.9);
     double size = 1.0;
     double rotation = 0.0;
+    String url = ''; // 图例链接URL
+    final urlController = TextEditingController(text: url);
 
     showDialog(
       context: context,
@@ -794,7 +877,7 @@ class _LegendGroupManagementDrawerState
         builder: (context, setState) => AlertDialog(
           title: const Text('添加图例'),
           content: SizedBox(
-            width: 300,
+            width: 350,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -815,6 +898,34 @@ class _LegendGroupManagementDrawerState
                   },
                 ),
                 const SizedBox(height: 16),
+
+                // URL输入字段
+                TextField(
+                  controller: urlController,
+                  decoration: InputDecoration(
+                    labelText: '图例链接 (可选)',
+                    hintText: '输入网络链接或选择VFS文件',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.folder),
+                      tooltip: '选择VFS文件',
+                      onPressed: () async {
+                        final selectedFile = await _showVfsFilePicker();
+                        if (selectedFile != null) {
+                          setState(() {
+                            url = selectedFile;
+                            urlController.text = selectedFile;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  onChanged: (value) {
+                    url = value;
+                  },
+                ),
+                const SizedBox(height: 16),
+
                 Row(
                   children: [
                     Expanded(
@@ -903,6 +1014,7 @@ class _LegendGroupManagementDrawerState
                         position: Offset(positionX, positionY),
                         size: size,
                         rotation: rotation,
+                        url: url.trim().isEmpty ? null : url.trim(), // 添加URL字段
                         createdAt: DateTime.now(),
                       );
 
@@ -1054,5 +1166,51 @@ class _LegendGroupManagementDrawerState
     } else {
       return '启用后，根据绑定图层的可见性自动控制图例组显示/隐藏（共 $totalLayersCount 个图层）';
     }
+  }
+
+  /// 显示VFS文件选择器
+  Future<String?> _showVfsFilePicker() async {
+    try {
+      final selectedFile = await VfsFileManagerWindow.showFilePicker(
+        context,
+        allowDirectorySelection: false,
+        selectionType: SelectionType.filesOnly,
+      );
+      return selectedFile;
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('文件选择失败: $e')));
+      return null;
+    }
+  }
+
+  /// 打开URL链接
+  Future<void> _openUrl(String url) async {
+    try {
+      if (url.startsWith('indexeddb://')) {
+        // VFS协议链接，使用VFS文件打开服务
+        await VfsFileOpenerService.openFile(context, url);
+      } else if (url.startsWith('http://') || url.startsWith('https://')) {
+        // 网络链接，使用系统默认浏览器
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          _showErrorMessage('无法打开链接: $url');
+        }
+      } else {
+        _showErrorMessage('不支持的链接格式: $url');
+      }
+    } catch (e) {
+      _showErrorMessage('打开链接失败: $e');
+    }
+  }
+
+  /// 显示错误消息
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }

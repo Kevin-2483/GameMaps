@@ -4,12 +4,14 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/sticky_note.dart'; // 导入便签模型
 import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
+import '../../../services/vfs/vfs_file_opener_service.dart';
 import 'sticky_note_display.dart'; // 导入便签显示组件
 // 导入渲染器
 import '../renderers/highlight_renderer.dart';
@@ -1268,7 +1270,6 @@ class MapCanvasState extends State<MapCanvas> {
     // 保存更改到撤销历史
     // 这里可以通过回调通知主页面保存状态
   }
-
   void _onLegendTap(LegendItem item) {
     // 在选中前检查是否满足条件
     if (!_canSelectLegendItem(item)) {
@@ -1278,6 +1279,11 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 选中图例项，高亮显示
     widget.onLegendItemSelected.call(item.id);
+    
+    // 如果图例项有URL链接，打开链接
+    if (item.url != null && item.url!.isNotEmpty) {
+      _openLegendUrl(item.url!);
+    }
   }
 
   void _onLegendDoubleTap(LegendItem item) {
@@ -1357,6 +1363,40 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 3),        behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  /// 打开图例URL链接
+  Future<void> _openLegendUrl(String url) async {
+    try {
+      if (url.startsWith('indexeddb://')) {
+        // VFS协议链接，使用VFS文件打开服务
+        await VfsFileOpenerService.openFile(context, url);
+      } else if (url.startsWith('http://') || url.startsWith('https://')) {
+        // 网络链接，使用系统默认浏览器
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          _showUrlErrorMessage('无法打开链接: $url');
+        }
+      } else {
+        _showUrlErrorMessage('不支持的链接格式: $url');
+      }
+    } catch (e) {
+      _showUrlErrorMessage('打开链接失败: $e');
+    }
+  }
+
+  /// 显示URL错误消息
+  void _showUrlErrorMessage(String message) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

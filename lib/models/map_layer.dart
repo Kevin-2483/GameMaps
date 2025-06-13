@@ -252,6 +252,7 @@ class LegendItem {
   final double rotation; // 旋转角度
   final double opacity; // 透明度 0.0-1.0
   final bool isVisible;
+  final String? url; // 图例链接URL，支持网络链接和VFS协议链接
   final DateTime createdAt;
   const LegendItem({
     required this.id,
@@ -261,13 +262,13 @@ class LegendItem {
     this.rotation = 0.0,
     this.opacity = 1.0,
     this.isVisible = true,
+    this.url,
     required this.createdAt,
   });
 
   factory LegendItem.fromJson(Map<String, dynamic> json) =>
       _$LegendItemFromJson(json);
-  Map<String, dynamic> toJson() => _$LegendItemToJson(this);
-  LegendItem copyWith({
+  Map<String, dynamic> toJson() => _$LegendItemToJson(this);  LegendItem copyWith({
     String? id,
     String? legendId,
     Offset? position,
@@ -275,6 +276,7 @@ class LegendItem {
     double? rotation,
     double? opacity,
     bool? isVisible,
+    String? url,
     DateTime? createdAt,
   }) {
     return LegendItem(
@@ -285,6 +287,7 @@ class LegendItem {
       rotation: rotation ?? this.rotation,
       opacity: opacity ?? this.opacity,
       isVisible: isVisible ?? this.isVisible,
+      url: url ?? this.url,
       createdAt: createdAt ?? this.createdAt,
     );
   }

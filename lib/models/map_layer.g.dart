@@ -156,6 +156,7 @@ LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
   rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
   opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
   isVisible: json['isVisible'] as bool? ?? true,
+  url: json['url'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
@@ -168,5 +169,6 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'rotation': instance.rotation,
       'opacity': instance.opacity,
       'isVisible': instance.isVisible,
+      'url': instance.url,
       'createdAt': instance.createdAt.toIso8601String(),
     };
