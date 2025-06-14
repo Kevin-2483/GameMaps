@@ -205,6 +205,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('响应式系统初始化失败: $e');
     }
   }
+
   /// 设置响应式监听器
   void _setupReactiveListeners() {
     // 监听地图数据变化
@@ -218,7 +219,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               layers: state.layers,
               legendGroups: state.legendGroups,
             );
-            
+
             // 同步更新选中图层的引用，确保引用最新的图层对象
             if (_selectedLayer != null) {
               final selectedLayerId = _selectedLayer!.id;
@@ -226,7 +227,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   .where((layer) => layer.id == selectedLayerId)
                   .firstOrNull;
             }
-            
+
             // 同步更新选中图层组的引用
             if (_selectedLayerGroup != null) {
               final updatedGroup = <MapLayer>[];
@@ -239,7 +240,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               }
               _selectedLayerGroup = updatedGroup;
             }
-            
+
             // 更新显示顺序
             _updateDisplayOrderAfterLayerChange();
           });
@@ -418,6 +419,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _undoHistory.removeAt(0);
     }
   }
+
   void _undo() {
     if (_currentMap == null) return;
 
@@ -429,107 +431,108 @@ class _MapEditorContentState extends State<_MapEditorContent>
         return;
       }
     } catch (e) {
-      debugPrint('响应式系统撤销失败，回退到传统方式: $e');
+      debugPrint('响应式系统撤销失败: $e');
     }
 
-    // 如果响应式系统无法撤销，回退到版本会话管理器
-    if (_versionSessionManager != null && _versionManager != null) {
-      final currentVersionId = _versionManager!.currentVersionId;
-      final undoResult = _versionSessionManager!.undo(currentVersionId);
+    // // 如果响应式系统无法撤销，回退到版本会话管理器
+    // if (_versionSessionManager != null && _versionManager != null) {
+    //   final currentVersionId = _versionManager!.currentVersionId;
+    //   final undoResult = _versionSessionManager!.undo(currentVersionId);
 
-      if (undoResult != null) {
-        setState(() {
-          // 将当前状态保存到重做历史
-          _redoHistory.add(_currentMap!.copyWith());
+    //   if (undoResult != null) {
+    //     setState(() {
+    //       // 将当前状态保存到重做历史
+    //       _redoHistory.add(_currentMap!.copyWith());
 
-          // 限制重做历史记录数量
-          if (_redoHistory.length > _maxUndoHistory) {
-            _redoHistory.removeAt(0);
-          }
+    //       // 限制重做历史记录数量
+    //       if (_redoHistory.length > _maxUndoHistory) {
+    //         _redoHistory.removeAt(0);
+    //       }
 
-          // 使用会话管理器返回的撤销结果
-          _currentMap = undoResult;
+    //       // 使用会话管理器返回的撤销结果
+    //       _currentMap = undoResult;
 
-          // 同步本地撤销历史
-          if (_undoHistory.isNotEmpty) {
-            _undoHistory.removeLast();
-          }
+    //       // 同步本地撤销历史
+    //       if (_undoHistory.isNotEmpty) {
+    //         _undoHistory.removeLast();
+    //       }
 
-          // 撤销操作也算作修改，除非回到初始状态
-          _hasUnsavedChanges = _undoHistory.isNotEmpty;
-          _hasUnsavedVersionChanges = true;
+    //       // 撤销操作也算作修改，除非回到初始状态
+    //       _hasUnsavedChanges = _undoHistory.isNotEmpty;
+    //       _hasUnsavedVersionChanges = true;
 
-          // 更新选中图层，确保引用正确
-          if (_selectedLayer != null) {
-            final selectedLayerId = _selectedLayer!.id;
-            _selectedLayer = _currentMap!.layers
-                .where((layer) => layer.id == selectedLayerId)
-                .firstOrNull;
+    //       // 更新选中图层，确保引用正确
+    //       if (_selectedLayer != null) {
+    //         final selectedLayerId = _selectedLayer!.id;
+    //         _selectedLayer = _currentMap!.layers
+    //             .where((layer) => layer.id == selectedLayerId)
+    //             .firstOrNull;
 
-            // 如果原选中图层不存在，选择第一个图层
-            if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-              _selectedLayer = _currentMap!.layers.first;
-            }
-          }
+    //         // 如果原选中图层不存在，选择第一个图层
+    //         if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+    //           _selectedLayer = _currentMap!.layers.first;
+    //         }
+    //       }
 
-          //：更新显示顺序以触发MapCanvas重建和缓存清理
-          _updateDisplayOrderAfterLayerChange();
-        });
+    //       //：更新显示顺序以触发MapCanvas重建和缓存清理
+    //       _updateDisplayOrderAfterLayerChange();
+    //     });
 
-        //：强制触发图片缓存清理和重新预加载
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-            setState(() {});
-          }
-        });
-        return;
-      }
-    }
+    //     //：强制触发图片缓存清理和重新预加载
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       if (mounted) {
+    //         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+    //         setState(() {});
+    //       }
+    //     });
+    //     return;
+    //   }
+    // }
 
-    // 最后的备用方案：传统撤销逻辑
-    if (_undoHistory.isEmpty) return;
+    // // 最后的备用方案：传统撤销逻辑
+    // if (_undoHistory.isEmpty) return;
 
-    setState(() {
-      // 将当前状态保存到重做历史
-      _redoHistory.add(_currentMap!.copyWith());
+    // setState(() {
+    //   // 将当前状态保存到重做历史
+    //   _redoHistory.add(_currentMap!.copyWith());
 
-      // 限制重做历史记录数量
-      if (_redoHistory.length > _maxUndoHistory) {
-        _redoHistory.removeAt(0);
-      }
+    //   // 限制重做历史记录数量
+    //   if (_redoHistory.length > _maxUndoHistory) {
+    //     _redoHistory.removeAt(0);
+    //   }
 
-      _currentMap = _undoHistory.removeLast();
+    //   _currentMap = _undoHistory.removeLast();
 
-      // 撤销操作也算作修改，除非回到初始状态
-      _hasUnsavedChanges = _undoHistory.isNotEmpty;
-      _hasUnsavedVersionChanges = true;
+    //   // 撤销操作也算作修改，除非回到初始状态
+    //   _hasUnsavedChanges = _undoHistory.isNotEmpty;
+    //   _hasUnsavedVersionChanges = true;
 
-      // 更新选中图层，确保引用正确
-      if (_selectedLayer != null) {
-        final selectedLayerId = _selectedLayer!.id;
-        _selectedLayer = _currentMap!.layers
-            .where((layer) => layer.id == selectedLayerId)
-            .firstOrNull;
+    //   // 更新选中图层，确保引用正确
+    //   if (_selectedLayer != null) {
+    //     final selectedLayerId = _selectedLayer!.id;
+    //     _selectedLayer = _currentMap!.layers
+    //         .where((layer) => layer.id == selectedLayerId)
+    //         .firstOrNull;
 
-        // 如果原选中图层不存在，选择第一个图层
-        if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-          _selectedLayer = _currentMap!.layers.first;
-        }
-      }
+    //     // 如果原选中图层不存在，选择第一个图层
+    //     if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+    //       _selectedLayer = _currentMap!.layers.first;
+    //     }
+    //   }
 
-      //：更新显示顺序以触发MapCanvas重建和缓存清理
-      _updateDisplayOrderAfterLayerChange();
-    });
+    //   //：更新显示顺序以触发MapCanvas重建和缓存清理
+    //   _updateDisplayOrderAfterLayerChange();
+    // });
 
     //：强制触发图片缓存清理和重新预加载
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-        setState(() {});
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (mounted) {
+    //     // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+    //     setState(() {});
+    //   }
+    // });
   }
+
   void _redo() {
     if (_currentMap == null) return;
 
@@ -541,124 +544,128 @@ class _MapEditorContentState extends State<_MapEditorContent>
         return;
       }
     } catch (e) {
-      debugPrint('响应式系统重做失败，回退到传统方式: $e');
+      debugPrint('响应式系统重做失败: $e');
     }
 
-    // 如果响应式系统无法重做，回退到版本会话管理器
-    if (_versionSessionManager != null && _versionManager != null) {
-      final currentVersionId = _versionManager!.currentVersionId;
-      final redoResult = _versionSessionManager!.redo(currentVersionId);
+    // // 如果响应式系统无法重做，回退到版本会话管理器
+    // if (_versionSessionManager != null && _versionManager != null) {
+    //   final currentVersionId = _versionManager!.currentVersionId;
+    //   final redoResult = _versionSessionManager!.redo(currentVersionId);
 
-      if (redoResult != null) {
-        setState(() {
-          // 将当前状态保存到撤销历史
-          _undoHistory.add(_currentMap!.copyWith());
+    //   if (redoResult != null) {
+    //     setState(() {
+    //       // 将当前状态保存到撤销历史
+    //       _undoHistory.add(_currentMap!.copyWith());
 
-          // 限制撤销历史记录数量
-          if (_undoHistory.length > _maxUndoHistory) {
-            _undoHistory.removeAt(0);
-          }
+    //       // 限制撤销历史记录数量
+    //       if (_undoHistory.length > _maxUndoHistory) {
+    //         _undoHistory.removeAt(0);
+    //       }
 
-          // 使用会话管理器返回的重做结果
-          _currentMap = redoResult;
+    //       // 使用会话管理器返回的重做结果
+    //       _currentMap = redoResult;
 
-          // 同步本地重做历史
-          if (_redoHistory.isNotEmpty) {
-            _redoHistory.removeLast();
-          }
+    //       // 同步本地重做历史
+    //       if (_redoHistory.isNotEmpty) {
+    //         _redoHistory.removeLast();
+    //       }
 
-          _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
-          _hasUnsavedVersionChanges = true;
+    //       _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
+    //       _hasUnsavedVersionChanges = true;
 
-          // 更新选中图层，确保引用正确
-          if (_selectedLayer != null) {
-            final selectedLayerId = _selectedLayer!.id;
-            _selectedLayer = _currentMap!.layers
-                .where((layer) => layer.id == selectedLayerId)
-                .firstOrNull;
+    //       // 更新选中图层，确保引用正确
+    //       if (_selectedLayer != null) {
+    //         final selectedLayerId = _selectedLayer!.id;
+    //         _selectedLayer = _currentMap!.layers
+    //             .where((layer) => layer.id == selectedLayerId)
+    //             .firstOrNull;
 
-            // 如果原选中图层不存在，选择第一个图层
-            if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-              _selectedLayer = _currentMap!.layers.first;
-            }
-          }
+    //         // 如果原选中图层不存在，选择第一个图层
+    //         if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+    //           _selectedLayer = _currentMap!.layers.first;
+    //         }
+    //       }
 
-          //：更新显示顺序以触发MapCanvas重建和缓存清理
-          _updateDisplayOrderAfterLayerChange();
-        });
+    //       //：更新显示顺序以触发MapCanvas重建和缓存清理
+    //       _updateDisplayOrderAfterLayerChange();
+    //     });
 
-        //：强制触发图片缓存清理和重新预加载
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-            setState(() {});
-          }
-        });
-        return;
-      }
-    }
+    //     //：强制触发图片缓存清理和重新预加载
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       if (mounted) {
+    //         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+    //         setState(() {});
+    //       }
+    //     });
+    //     return;
+    //   }
+    // }
 
-    // 最后的备用方案：传统重做逻辑
-    if (_redoHistory.isEmpty) return;
+    // // 最后的备用方案：传统重做逻辑
+    // if (_redoHistory.isEmpty) return;
 
-    setState(() {
-      // 将当前状态保存到撤销历史
-      _undoHistory.add(_currentMap!.copyWith());
+    // setState(() {
+    //   // 将当前状态保存到撤销历史
+    //   _undoHistory.add(_currentMap!.copyWith());
 
-      // 限制撤销历史记录数量
-      if (_undoHistory.length > _maxUndoHistory) {
-        _undoHistory.removeAt(0);
-      }
+    //   // 限制撤销历史记录数量
+    //   if (_undoHistory.length > _maxUndoHistory) {
+    //     _undoHistory.removeAt(0);
+    //   }
 
-      _currentMap = _redoHistory.removeLast();
-      _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
-      _hasUnsavedVersionChanges = true;
+    //   _currentMap = _redoHistory.removeLast();
+    //   _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
+    //   _hasUnsavedVersionChanges = true;
 
-      // 更新选中图层，确保引用正确
-      if (_selectedLayer != null) {
-        final selectedLayerId = _selectedLayer!.id;
-        _selectedLayer = _currentMap!.layers
-            .where((layer) => layer.id == selectedLayerId)
-            .firstOrNull;
+    //   // 更新选中图层，确保引用正确
+    //   if (_selectedLayer != null) {
+    //     final selectedLayerId = _selectedLayer!.id;
+    //     _selectedLayer = _currentMap!.layers
+    //         .where((layer) => layer.id == selectedLayerId)
+    //         .firstOrNull;
 
-        // 如果原选中图层不存在，选择第一个图层
-        if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-          _selectedLayer = _currentMap!.layers.first;
-        }
-      }
+    //     // 如果原选中图层不存在，选择第一个图层
+    //     if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
+    //       _selectedLayer = _currentMap!.layers.first;
+    //     }
+    //   }
 
-      //：更新显示顺序以触发MapCanvas重建和缓存清理
-      _updateDisplayOrderAfterLayerChange();
-    });
+    //   //：更新显示顺序以触发MapCanvas重建和缓存清理
+    //   _updateDisplayOrderAfterLayerChange();
+    // });
 
-    //：强制触发图片缓存清理和重新预加载
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-        setState(() {});
-      }
-    });
+    // //：强制触发图片缓存清理和重新预加载
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (mounted) {
+    //     // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
+    //     setState(() {});
+    //   }
+    // });
   }
+
   bool get _canUndo {
     // 优先检查响应式系统的撤销能力
     try {
       if (canUndoReactive) {
         return true;
+      } else {
+        return false;
       }
     } catch (e) {
       debugPrint('检查响应式系统撤销能力失败: $e');
+      return false;
     }
 
-    // 次优先：检查版本会话管理器的撤销历史
-    if (_versionSessionManager != null && _versionManager != null) {
-      final currentVersionId = _versionManager!.currentVersionId;
-      final undoHistory = _versionSessionManager!.getUndoHistory(
-        currentVersionId,
-      );
-      return undoHistory.isNotEmpty;
-    }
-    // 最后备用：检查本地撤销历史
-    return _undoHistory.isNotEmpty;
+    // // 次优先：检查版本会话管理器的撤销历史
+    // if (_versionSessionManager != null && _versionManager != null) {
+    //   final currentVersionId = _versionManager!.currentVersionId;
+    //   final undoHistory = _versionSessionManager!.getUndoHistory(
+    //     currentVersionId,
+    //   );
+    //   return undoHistory.isNotEmpty;
+    // }
+    // // 最后备用：检查本地撤销历史
+    // return _undoHistory.isNotEmpty;
   }
 
   bool get _canRedo {
@@ -666,24 +673,28 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       if (canRedoReactive) {
         return true;
+      } else {
+        return false;
       }
     } catch (e) {
       debugPrint('检查响应式系统重做能力失败: $e');
+      return false;
     }
 
-    // 次优先：检查版本会话管理器的重做历史
-    if (_versionSessionManager != null && _versionManager != null) {
-      final currentVersionId = _versionManager!.currentVersionId;
-      final redoHistory = _versionSessionManager!.getRedoHistory(
-        currentVersionId,
-      );
-      return redoHistory.isNotEmpty;
-    }
-    // 最后备用：检查本地重做历史
-    return _redoHistory.isNotEmpty;
+    // // 次优先：检查版本会话管理器的重做历史
+    // if (_versionSessionManager != null && _versionManager != null) {
+    //   final currentVersionId = _versionManager!.currentVersionId;
+    //   final redoHistory = _versionSessionManager!.getRedoHistory(
+    //     currentVersionId,
+    //   );
+    //   return redoHistory.isNotEmpty;
+    // }
+    // // 最后备用：检查本地重做历史
+    // return _redoHistory.isNotEmpty;
   }
 
   // 删除指定图层中的绘制元素
+  // TODO: 考虑使用响应式系统
   void _deleteElement(String elementId) {
     if (_selectedLayer == null) return;
 
@@ -737,6 +748,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
   }
 
+  // TODO: 考虑使用响应式系统
   void _addDefaultLayer() {
     if (_currentMap == null) return;
 
@@ -760,6 +772,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null) return;
 
     // 保存当前状态到撤销历史
+    // TODO: 考虑使用响应式系统
     _saveToUndoHistory();
 
     final newLayer = MapLayer(
@@ -780,17 +793,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
       debugPrint('使用响应式系统添加图层: ${newLayer.name}');
     } catch (e) {
-      debugPrint('响应式系统添加失败，回退到传统方式: $e');
-      // 回退到传统方式
-      setState(() {
-        _currentMap = _currentMap!.copyWith(
-          layers: [..._currentMap!.layers, newLayer],
-        );
-        _selectedLayer = newLayer;
+      debugPrint('响应式系统添加失败: $e');
+      // // 回退到传统方式
+      // setState(() {
+      //   _currentMap = _currentMap!.copyWith(
+      //     layers: [..._currentMap!.layers, newLayer],
+      //   );
+      //   _selectedLayer = newLayer;
 
-        // 更新显示顺序
-        _updateDisplayOrderAfterLayerChange();
-      });
+      //   // 更新显示顺序
+      //   _updateDisplayOrderAfterLayerChange();
+      // });
     }
   }
 
@@ -798,6 +811,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null || _currentMap!.layers.length <= 1) return;
 
     // 保存当前状态到撤销历史
+    // TODO: 考虑使用响应式系统
     _saveToUndoHistory();
 
     // 尝试使用响应式系统
@@ -839,46 +853,47 @@ class _MapEditorContentState extends State<_MapEditorContent>
         }
       });
     } catch (e) {
-      debugPrint('响应式系统删除失败，回退到传统方式: $e');
+      debugPrint('响应式系统删除失败: $e');
       // 回退到传统方式
-      _deleteLayerTraditional(layer);
+      // _deleteLayerTraditional(layer);
     }
   }
 
-  /// 传统的图层删除方式（作为备用）
-  void _deleteLayerTraditional(MapLayer layer) {
-    setState(() {
-      final updatedLayers = _currentMap!.layers
-          .where((l) => l.id != layer.id)
-          .toList();
-      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+  // /// 传统的图层删除方式（作为备用）
+  // void _deleteLayerTraditional(MapLayer layer) {
+  //   setState(() {
+  //     final updatedLayers = _currentMap!.layers
+  //         .where((l) => l.id != layer.id)
+  //         .toList();
+  //     _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
-      if (_selectedLayer?.id == layer.id) {
-        _selectedLayer = updatedLayers.isNotEmpty ? updatedLayers.first : null;
-      }
+  //     if (_selectedLayer?.id == layer.id) {
+  //       _selectedLayer = updatedLayers.isNotEmpty ? updatedLayers.first : null;
+  //     }
 
-      // 如果删除的图层在选中的组中，更新组选择
-      if (_selectedLayerGroup != null) {
-        final updatedGroup = _selectedLayerGroup!
-            .where((l) => l.id != layer.id)
-            .toList();
+  //     // 如果删除的图层在选中的组中，更新组选择
+  //     if (_selectedLayerGroup != null) {
+  //       final updatedGroup = _selectedLayerGroup!
+  //           .where((l) => l.id != layer.id)
+  //           .toList();
 
-        if (updatedGroup.isEmpty) {
-          // 如果组内所有图层都被删除，清除组选择
-          _selectedLayerGroup = null;
-          _restoreNormalLayerOrder();
-        } else {
-          // 更新组选择
-          _selectedLayerGroup = updatedGroup;
-          _prioritizeLayerGroup(updatedGroup);
-        }
-      } else {
-        // 更新显示顺序
-        _updateDisplayOrderAfterLayerChange();
-      }
-    });
-  }
+  //       if (updatedGroup.isEmpty) {
+  //         // 如果组内所有图层都被删除，清除组选择
+  //         _selectedLayerGroup = null;
+  //         _restoreNormalLayerOrder();
+  //       } else {
+  //         // 更新组选择
+  //         _selectedLayerGroup = updatedGroup;
+  //         _prioritizeLayerGroup(updatedGroup);
+  //       }
+  //     } else {
+  //       // 更新显示顺序
+  //       _updateDisplayOrderAfterLayerChange();
+  //     }
+  //   });
+  // }
 
+  //TODO: 考虑使用响应式系统
   void _onLayerSelected(MapLayer layer) {
     setState(() {
       _selectedLayer = layer;
@@ -892,6 +907,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _clearCanvasSelection();
   }
 
+  //TODO: 考虑使用响应式系统
   void _onLayerGroupSelected(List<MapLayer> group) {
     setState(() {
       // 修改：不清除单图层选择，允许同时选择
@@ -904,6 +920,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _clearCanvasSelection();
   }
 
+  //TODO: 考虑使用响应式系统
   // 添加清除画布选区的方法
   void _clearCanvasSelection() {
     // 通过 GlobalKey 直接调用 MapCanvas 的清除选区方法
@@ -982,6 +999,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   void _onSelectionCleared() {
     setState(() {
       _selectedLayer = null;
@@ -1084,10 +1102,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
+
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
 
     // 在修改前保存当前状态
+    //TODO: 考虑使用响应式系统
     _saveToUndoHistory();
 
     // 尝试使用响应式系统
@@ -1095,32 +1115,32 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updateLayerReactive(updatedLayer);
       debugPrint('使用响应式系统更新图层: ${updatedLayer.name}');
     } catch (e) {
-      debugPrint('响应式系统更新失败，回退到传统方式: $e');
-      // 回退到传统方式
-      _updateLayerTraditional(updatedLayer);
+      debugPrint('响应式系统更新失败: $e');
+      // // 回退到传统方式
+      // _updateLayerTraditional(updatedLayer);
     }
   }
 
-  /// 传统的图层更新方式（作为备用）
-  void _updateLayerTraditional(MapLayer updatedLayer) {
-    setState(() {
-      final layerIndex = _currentMap!.layers.indexWhere(
-        (l) => l.id == updatedLayer.id,
-      );
-      if (layerIndex != -1) {
-        final updatedLayers = List<MapLayer>.from(_currentMap!.layers);
-        updatedLayers[layerIndex] = updatedLayer;
-        _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+  // /// 传统的图层更新方式（作为备用）
+  // void _updateLayerTraditional(MapLayer updatedLayer) {
+  //   setState(() {
+  //     final layerIndex = _currentMap!.layers.indexWhere(
+  //       (l) => l.id == updatedLayer.id,
+  //     );
+  //     if (layerIndex != -1) {
+  //       final updatedLayers = List<MapLayer>.from(_currentMap!.layers);
+  //       updatedLayers[layerIndex] = updatedLayer;
+  //       _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
-        if (_selectedLayer?.id == updatedLayer.id) {
-          _selectedLayer = updatedLayer;
-        }
+  //       if (_selectedLayer?.id == updatedLayer.id) {
+  //         _selectedLayer = updatedLayer;
+  //       }
 
-        // 同步更新显示顺序列表
-        _updateDisplayOrderAfterLayerChange();
-      }
-    });
-  }
+  //       // 同步更新显示顺序列表
+  //       _updateDisplayOrderAfterLayerChange();
+  //     }
+  //   });
+  // }
 
   void _reorderLayers(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
@@ -1141,6 +1161,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     // 保存当前状态到撤销历史
+    //TODO: 考虑使用响应式系统
     _saveToUndoHistory();
 
     // 尝试使用响应式系统
@@ -1154,13 +1175,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
     } catch (e) {
-      debugPrint('响应式系统重排序失败，回退到传统方式: $e');
-      // 回退到传统方式
-      _reorderLayersTraditional(oldIndex, newIndex);
+      debugPrint('响应式系统重排序失败: $e');
+      // // 回退到传统方式
+      // _reorderLayersTraditional(oldIndex, newIndex);
     }
   }
 
   /// 重排序后更新图层选择状态
+  //TODO: 考虑使用响应式系统
   void _updateLayerSelectionAfterReorder(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
 
@@ -1194,68 +1216,68 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 传统的图层重排序方式（作为备用）
-  void _reorderLayersTraditional(int oldIndex, int newIndex) {
-    setState(() {
-      final layers = List<MapLayer>.from(_currentMap!.layers);
+  // void _reorderLayersTraditional(int oldIndex, int newIndex) {
+  //   setState(() {
+  //     final layers = List<MapLayer>.from(_currentMap!.layers);
 
-      // 记录移动前的链接状态，用于组内重排序时保持组的完整性
-      final movedLayer = layers[oldIndex];
-      final isGroupInternalMove = _isGroupInternalMove(
-        layers,
-        oldIndex,
-        newIndex,
-      );
+  //     // 记录移动前的链接状态，用于组内重排序时保持组的完整性
+  //     final movedLayer = layers[oldIndex];
+  //     final isGroupInternalMove = _isGroupInternalMove(
+  //       layers,
+  //       oldIndex,
+  //       newIndex,
+  //     );
 
-      print('是否为组内移动: $isGroupInternalMove');
+  //     print('是否为组内移动: $isGroupInternalMove');
 
-      // 执行重排序 - 不需要调整newIndex，直接使用
-      final item = layers.removeAt(oldIndex);
-      layers.insert(newIndex, item);
+  //     // 执行重排序 - 不需要调整newIndex，直接使用
+  //     final item = layers.removeAt(oldIndex);
+  //     layers.insert(newIndex, item);
 
-      print('重排序后图层名称: ${layers.map((l) => l.name).toList()}');
+  //     print('重排序后图层名称: ${layers.map((l) => l.name).toList()}');
 
-      // 重新分配order
-      for (int i = 0; i < layers.length; i++) {
-        layers[i] = layers[i].copyWith(order: i);
-      }
+  //     // 重新分配order
+  //     for (int i = 0; i < layers.length; i++) {
+  //       layers[i] = layers[i].copyWith(order: i);
+  //     }
 
-      // 如果是组内移动，需要特殊处理链接状态
-      if (isGroupInternalMove) {
-        _preserveGroupLinkingForInternalMove(layers, movedLayer, newIndex);
-      }
+  //     // 如果是组内移动，需要特殊处理链接状态
+  //     if (isGroupInternalMove) {
+  //       _preserveGroupLinkingForInternalMove(layers, movedLayer, newIndex);
+  //     }
 
-      _currentMap = _currentMap!.copyWith(layers: layers);
+  //     _currentMap = _currentMap!.copyWith(layers: layers);
 
-      print('更新后的_currentMap图层数量: ${_currentMap!.layers.length}');
-      print('=== _reorderLayers 结束 ===');
+  //     print('更新后的_currentMap图层数量: ${_currentMap!.layers.length}');
+  //     print('=== _reorderLayers 结束 ===');
 
-      // 更新选中图层的引用
-      if (_selectedLayer != null) {
-        final selectedLayerId = _selectedLayer!.id;
-        _selectedLayer = layers.firstWhere(
-          (layer) => layer.id == selectedLayerId,
-          orElse: () => _selectedLayer!,
-        );
-      }
+  //     // 更新选中图层的引用
+  //     if (_selectedLayer != null) {
+  //       final selectedLayerId = _selectedLayer!.id;
+  //       _selectedLayer = layers.firstWhere(
+  //         (layer) => layer.id == selectedLayerId,
+  //         orElse: () => _selectedLayer!,
+  //       );
+  //     }
 
-      // 如果有选中的图层组，更新组选择并重新应用优先显示
-      if (_selectedLayerGroup != null) {
-        final updatedGroup = <MapLayer>[];
-        for (final groupLayer in _selectedLayerGroup!) {
-          final updatedLayer = layers.firstWhere(
-            (layer) => layer.id == groupLayer.id,
-            orElse: () => groupLayer,
-          );
-          updatedGroup.add(updatedLayer);
-        }
-        _selectedLayerGroup = updatedGroup;
-        _prioritizeLayerGroup(updatedGroup);
-      } else {
-        // 更新显示顺序
-        _updateDisplayOrderAfterLayerChange();
-      }
-    });
-  }
+  //     // 如果有选中的图层组，更新组选择并重新应用优先显示
+  //     if (_selectedLayerGroup != null) {
+  //       final updatedGroup = <MapLayer>[];
+  //       for (final groupLayer in _selectedLayerGroup!) {
+  //         final updatedLayer = layers.firstWhere(
+  //           (layer) => layer.id == groupLayer.id,
+  //           orElse: () => groupLayer,
+  //         );
+  //         updatedGroup.add(updatedLayer);
+  //       }
+  //       _selectedLayerGroup = updatedGroup;
+  //       _prioritizeLayerGroup(updatedGroup);
+  //     } else {
+  //       // 更新显示顺序
+  //       _updateDisplayOrderAfterLayerChange();
+  //     }
+  //   });
+  // }
 
   /// 在图层变更后更新显示顺序
   void _updateDisplayOrderAfterLayerChange() {
@@ -1311,100 +1333,101 @@ class _MapEditorContentState extends State<_MapEditorContent>
         }
       });
     } catch (e) {
-      debugPrint('响应式系统批量更新失败，回退到传统方式: $e');
-      // 回退到传统方式
-      _updateLayersBatchTraditional(updatedLayers);
+      debugPrint('响应式系统批量更新失败: $e');
+      // // 回退到传统方式
+      // _updateLayersBatchTraditional(updatedLayers);
     }
   }
 
   /// 传统的批量图层更新方式（作为备用）
-  void _updateLayersBatchTraditional(List<MapLayer> updatedLayers) {
-    setState(() {
-      _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+  // void _updateLayersBatchTraditional(List<MapLayer> updatedLayers) {
+  //   setState(() {
+  //     _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
-      // 如果当前选中的图层也被更新了，同步更新选中图层的引用
-      if (_selectedLayer != null) {
-        final updatedSelectedLayer = updatedLayers.firstWhere(
-          (layer) => layer.id == _selectedLayer!.id,
-          orElse: () => _selectedLayer!,
-        );
-        _selectedLayer = updatedSelectedLayer;
-      }
+  //     // 如果当前选中的图层也被更新了，同步更新选中图层的引用
+  //     if (_selectedLayer != null) {
+  //       final updatedSelectedLayer = updatedLayers.firstWhere(
+  //         (layer) => layer.id == _selectedLayer!.id,
+  //         orElse: () => _selectedLayer!,
+  //       );
+  //       _selectedLayer = updatedSelectedLayer;
+  //     }
 
-      // 如果有选中的图层组，更新组选择
-      if (_selectedLayerGroup != null) {
-        final updatedGroup = <MapLayer>[];
-        for (final groupLayer in _selectedLayerGroup!) {
-          final updatedLayer = updatedLayers.firstWhere(
-            (layer) => layer.id == groupLayer.id,
-            orElse: () => groupLayer,
-          );
-          updatedGroup.add(updatedLayer);
-        }
-        _selectedLayerGroup = updatedGroup;
-        _prioritizeLayerGroup(updatedGroup);
-      } else {
-        // 更新显示顺序
-        _updateDisplayOrderAfterLayerChange();
-      }
-    });
-  }
+  //     // 如果有选中的图层组，更新组选择
+  //     if (_selectedLayerGroup != null) {
+  //       final updatedGroup = <MapLayer>[];
+  //       for (final groupLayer in _selectedLayerGroup!) {
+  //         final updatedLayer = updatedLayers.firstWhere(
+  //           (layer) => layer.id == groupLayer.id,
+  //           orElse: () => groupLayer,
+  //         );
+  //         updatedGroup.add(updatedLayer);
+  //       }
+  //       _selectedLayerGroup = updatedGroup;
+  //       _prioritizeLayerGroup(updatedGroup);
+  //     } else {
+  //       // 更新显示顺序
+  //       _updateDisplayOrderAfterLayerChange();
+  //     }
+  //   });
+  // }
 
   /// 为组内移动保持组的链接完整性
-  void _preserveGroupLinkingForInternalMove(
-    List<MapLayer> layers,
-    MapLayer movedLayer,
-    int newIndex,
-  ) {
-    print('保持组内链接完整性');
+  // void _preserveGroupLinkingForInternalMove(
+  //   List<MapLayer> layers,
+  //   MapLayer movedLayer,
+  //   int newIndex,
+  // ) {
+  //   print('保持组内链接完整性');
 
-    // 重新找到移动后的组边界
-    int groupStart = _findGroupStart(layers, newIndex);
-    int groupEnd = _findGroupEnd(layers, newIndex);
+  //   // 重新找到移动后的组边界
+  //   int groupStart = _findGroupStart(layers, newIndex);
+  //   int groupEnd = _findGroupEnd(layers, newIndex);
 
-    print('组边界: start=$groupStart, end=$groupEnd, newIndex=$newIndex');
+  //   print('组边界: start=$groupStart, end=$groupEnd, newIndex=$newIndex');
 
-    // 确保组内所有图层（除了最后一个）都保持链接状态
-    for (int i = groupStart; i < groupEnd; i++) {
-      if (!layers[i].isLinkedToNext) {
-        print('修复图层 ${layers[i].name} 的链接状态');
-        layers[i] = layers[i].copyWith(
-          isLinkedToNext: true,
-          updatedAt: DateTime.now(),
-        );
-      }
-    }
+  //   // 确保组内所有图层（除了最后一个）都保持链接状态
+  //   for (int i = groupStart; i < groupEnd; i++) {
+  //     if (!layers[i].isLinkedToNext) {
+  //       print('修复图层 ${layers[i].name} 的链接状态');
+  //       layers[i] = layers[i].copyWith(
+  //         isLinkedToNext: true,
+  //         updatedAt: DateTime.now(),
+  //       );
+  //     }
+  //   }
 
-    // 确保组的最后一个图层不链接到组外
-    if (groupEnd < layers.length - 1 && layers[groupEnd].isLinkedToNext) {
-      // 检查下一个图层是否应该在同一组中
-      bool shouldLinkToNext = false;
-      if (groupEnd + 1 < layers.length) {
-        // 这里可以添加更复杂的逻辑来判断是否应该保持链接
-        // 暂时保持简单：组内移动不改变与组外图层的链接关系
-        shouldLinkToNext = layers[groupEnd].isLinkedToNext;
-      }
+  //   // 确保组的最后一个图层不链接到组外
+  //   if (groupEnd < layers.length - 1 && layers[groupEnd].isLinkedToNext) {
+  //     // 检查下一个图层是否应该在同一组中
+  //     bool shouldLinkToNext = false;
+  //     if (groupEnd + 1 < layers.length) {
+  //       // 这里可以添加更复杂的逻辑来判断是否应该保持链接
+  //       // 暂时保持简单：组内移动不改变与组外图层的链接关系
+  //       shouldLinkToNext = layers[groupEnd].isLinkedToNext;
+  //     }
 
-      if (!shouldLinkToNext) {
-        print('断开组最后图层 ${layers[groupEnd].name} 的链接');
-        layers[groupEnd] = layers[groupEnd].copyWith(
-          isLinkedToNext: false,
-          updatedAt: DateTime.now(),
-        );
-      }
-    }
-  }
+  //     if (!shouldLinkToNext) {
+  //       print('断开组最后图层 ${layers[groupEnd].name} 的链接');
+  //       layers[groupEnd] = layers[groupEnd].copyWith(
+  //         isLinkedToNext: false,
+  //         updatedAt: DateTime.now(),
+  //       );
+  //     }
+  //   }
+  // }
 
   /// 检查是否为组内移动
-  bool _isGroupInternalMove(List<MapLayer> layers, int oldIndex, int newIndex) {
-    // 找到oldIndex所在的组
-    int groupStart = _findGroupStart(layers, oldIndex);
-    int groupEnd = _findGroupEnd(layers, oldIndex);
+  // bool _isGroupInternalMove(List<MapLayer> layers, int oldIndex, int newIndex) {
+  //   // 找到oldIndex所在的组
+  //   int groupStart = _findGroupStart(layers, oldIndex);
+  //   int groupEnd = _findGroupEnd(layers, oldIndex);
 
-    // 检查newIndex是否在同一个组内
-    return newIndex >= groupStart && newIndex <= groupEnd;
-  }
+  //   // 检查newIndex是否在同一个组内
+  //   return newIndex >= groupStart && newIndex <= groupEnd;
+  // }
 
+  // TODO: 考虑使用响应式系统
   void _addLegendGroup() {
     if (_currentMap == null) return;
 
@@ -1425,38 +1448,39 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
-  /// 查找组的开始位置
-  int _findGroupStart(List<MapLayer> layers, int index) {
-    int start = index;
+  // /// 查找组的开始位置
+  // int _findGroupStart(List<MapLayer> layers, int index) {
+  //   int start = index;
 
-    // 向前查找组的开始
-    while (start > 0) {
-      if (layers[start - 1].isLinkedToNext) {
-        start--;
-      } else {
-        break;
-      }
-    }
+  //   // 向前查找组的开始
+  //   while (start > 0) {
+  //     if (layers[start - 1].isLinkedToNext) {
+  //       start--;
+  //     } else {
+  //       break;
+  //     }
+  //   }
 
-    return start;
-  }
+  //   return start;
+  // }
 
   /// 查找组的结束位置
-  int _findGroupEnd(List<MapLayer> layers, int index) {
-    int end = index;
+  // int _findGroupEnd(List<MapLayer> layers, int index) {
+  //   int end = index;
 
-    // 向后查找组的结束
-    while (end < layers.length - 1) {
-      if (layers[end].isLinkedToNext) {
-        end++;
-      } else {
-        break;
-      }
-    }
+  //   // 向后查找组的结束
+  //   while (end < layers.length - 1) {
+  //     if (layers[end].isLinkedToNext) {
+  //       end++;
+  //     } else {
+  //       break;
+  //     }
+  //   }
 
-    return end;
-  }
+  //   return end;
+  // }
 
+  //TODO: 考虑使用响应式系统
   void _deleteLegendGroup(LegendGroup group) {
     if (_currentMap == null) return;
 
@@ -1471,6 +1495,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
@@ -1671,6 +1696,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
 
@@ -1732,6 +1758,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   // 版本管理相关方法  /// 初始化版本管理
+  //TODO: 考虑使用响应式系统
   Future<void> _initializeVersions() async {
     if (_versionManager == null || _currentMap == null) return;
 
@@ -1767,6 +1794,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 加载已存在的版本
+  ///  //TODO: 考虑使用响应式系统
   Future<void> _loadExistingVersions() async {
     if (_versionManager == null || _currentMap == null) return;
 
@@ -1839,6 +1867,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 为版本ID生成友好的显示名称
+  //TODO: 考虑使用响应式系统
   Future<String> _getVersionDisplayName(String versionId) async {
     if (versionId == 'default') {
       return '默认版本';
@@ -1874,6 +1903,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 创建新版本
+  //TODO: 考虑使用响应式系统
   void _createVersion(String name) async {
     if (_versionManager == null || _currentMap == null) return;
 
@@ -1960,6 +1990,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 删除版本
+  //TODO: 考虑使用响应式系统
   Future<void> _deleteVersion(String versionId) async {
     if (_versionManager == null || _currentMap == null) return;
 
@@ -2056,6 +2087,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 保存所有版本数据到持久存储
+  //TODO: 考虑使用响应式系统
   Future<void> _saveAllVersionsToStorage() async {
     if (_versionManager == null || _currentMap == null) {
       print('版本管理器或当前地图为空，跳过保存所有版本');
@@ -3410,6 +3442,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 恢复版本会话状态
+  //TODO: 考虑使用响应式系统
   void _restoreVersionSession(String versionId) {
     if (_versionSessionManager == null || _versionManager == null) {
       return;
@@ -3473,6 +3506,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   // 便签管理方法
+  //TODO: 考虑使用响应式系统
   void _addNewStickyNote() {
     if (_currentMap == null) return;
 
@@ -3499,6 +3533,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   void _updateStickyNote(StickyNote updatedNote) {
     if (_currentMap == null) return;
 
@@ -3524,6 +3559,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   void _deleteStickyNote(StickyNote note) {
     if (_currentMap == null) return;
 
@@ -3543,6 +3579,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
+  //TODO: 考虑使用响应式系统
   void _reorderStickyNotes(int oldIndex, int newIndex) {
     if (_currentMap == null ||
         oldIndex < 0 ||
@@ -3565,6 +3602,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 处理拖拽便签重排序（通过z-index调整）
+  //TODO: 考虑使用响应式系统
   void _reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
     if (_currentMap == null) return;
 
@@ -3600,6 +3638,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   // 选中便签
+  //TODO: 考虑使用响应式系统
   void _selectStickyNote(StickyNote? note) {
     setState(() {
       _selectedStickyNote = note;
@@ -3610,12 +3649,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_useReactiveScripts) {
       // 直接使用响应式脚本管理器创建脚本
       _showReactiveScriptDialog();
-    } else {
-      // 使用传统脚本对话框
-      showDialog(
-        context: context,
-        builder: (context) => _ScriptEditDialog(scriptManager: _scriptManager),
-      );
     }
   }
 
