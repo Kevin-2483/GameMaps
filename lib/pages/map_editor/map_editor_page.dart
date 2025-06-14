@@ -418,11 +418,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _undoHistory.removeAt(0);
     }
   }
-
   void _undo() {
-    if (_undoHistory.isEmpty || _currentMap == null) return;
+    if (_currentMap == null) return;
 
-    // 如果有版本会话管理器，使用它的撤销功能
+    // 优先尝试使用响应式系统的撤销功能
+    try {
+      if (canUndoReactive) {
+        undoReactive();
+        debugPrint('使用响应式系统撤销');
+        return;
+      }
+    } catch (e) {
+      debugPrint('响应式系统撤销失败，回退到传统方式: $e');
+    }
+
+    // 如果响应式系统无法撤销，回退到版本会话管理器
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final undoResult = _versionSessionManager!.undo(currentVersionId);
@@ -477,7 +487,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     }
 
-    // 原有的撤销逻辑（作为备用）
+    // 最后的备用方案：传统撤销逻辑
+    if (_undoHistory.isEmpty) return;
+
     setState(() {
       // 将当前状态保存到重做历史
       _redoHistory.add(_currentMap!.copyWith());
@@ -518,11 +530,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     });
   }
-
   void _redo() {
-    if (_redoHistory.isEmpty || _currentMap == null) return;
+    if (_currentMap == null) return;
 
-    // 如果有版本会话管理器，使用它的重做功能
+    // 优先尝试使用响应式系统的重做功能
+    try {
+      if (canRedoReactive) {
+        redoReactive();
+        debugPrint('使用响应式系统重做');
+        return;
+      }
+    } catch (e) {
+      debugPrint('响应式系统重做失败，回退到传统方式: $e');
+    }
+
+    // 如果响应式系统无法重做，回退到版本会话管理器
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final redoResult = _versionSessionManager!.redo(currentVersionId);
@@ -576,7 +598,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     }
 
-    // 原有的重做逻辑（作为备用）
+    // 最后的备用方案：传统重做逻辑
+    if (_redoHistory.isEmpty) return;
+
     setState(() {
       // 将当前状态保存到撤销历史
       _undoHistory.add(_currentMap!.copyWith());
@@ -615,9 +639,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     });
   }
-
   bool get _canUndo {
-    // 优先检查版本会话管理器的撤销历史
+    // 优先检查响应式系统的撤销能力
+    try {
+      if (canUndoReactive) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('检查响应式系统撤销能力失败: $e');
+    }
+
+    // 次优先：检查版本会话管理器的撤销历史
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final undoHistory = _versionSessionManager!.getUndoHistory(
@@ -625,12 +657,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
       return undoHistory.isNotEmpty;
     }
-    // 备用：检查本地撤销历史
+    // 最后备用：检查本地撤销历史
     return _undoHistory.isNotEmpty;
   }
 
   bool get _canRedo {
-    // 优先检查版本会话管理器的重做历史
+    // 优先检查响应式系统的重做能力
+    try {
+      if (canRedoReactive) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('检查响应式系统重做能力失败: $e');
+    }
+
+    // 次优先：检查版本会话管理器的重做历史
     if (_versionSessionManager != null && _versionManager != null) {
       final currentVersionId = _versionManager!.currentVersionId;
       final redoHistory = _versionSessionManager!.getRedoHistory(
@@ -638,7 +679,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
       return redoHistory.isNotEmpty;
     }
-    // 备用：检查本地重做历史
+    // 最后备用：检查本地重做历史
     return _redoHistory.isNotEmpty;
   }
 

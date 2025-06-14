@@ -368,7 +368,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 更新绘制元素
   Future<void> _onUpdateDrawingElement(
     UpdateDrawingElement event,
@@ -392,7 +391,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return layer;
     }).toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: updatedLayers,
       lastModified: DateTime.now(),
     );
@@ -400,7 +406,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 添加绘制元素
   Future<void> _onAddDrawingElement(
     AddDrawingElement event,
@@ -422,7 +427,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return layer;
     }).toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: updatedLayers,
       lastModified: DateTime.now(),
     );
@@ -430,7 +442,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 删除绘制元素
   Future<void> _onDeleteDrawingElement(
     DeleteDrawingElement event,
@@ -454,7 +465,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return layer;
     }).toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: updatedLayers,
       lastModified: DateTime.now(),
     );
@@ -462,7 +480,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 批量更新绘制元素
   Future<void> _onUpdateDrawingElements(
     UpdateDrawingElements event,
@@ -483,7 +500,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return layer;
     }).toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: updatedLayers,
       lastModified: DateTime.now(),
     );
@@ -597,7 +621,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(nextState);
     _notifyDataChangeListeners(nextState);
   }
-
   /// 脚本引擎更新
   Future<void> _onScriptEngineUpdate(
     ScriptEngineUpdate event,
@@ -608,7 +631,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final currentState = state as MapDataLoaded;
     _saveToHistory(currentState);
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: event.updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: event.updatedLayers,
       lastModified: DateTime.now(),
       metadata: {
