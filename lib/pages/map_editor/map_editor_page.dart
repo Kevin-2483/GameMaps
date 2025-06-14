@@ -259,7 +259,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('响应式版本管理初始化失败: $e');
     }
   }
-
   /// 从VFS存储加载所有已存在的版本到响应式版本管理系统
   Future<void> _loadExistingVersionsFromVfs() async {
     if (_currentMap == null) return;
@@ -279,22 +278,25 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
       debugPrint('版本名称映射: $versionNames');
 
-      // 为每个版本创建响应式版本状态
+      // 为每个版本创建响应式版本状态并加载完整数据到会话
       for (final versionId in versionIds) {
         try {
           final versionName = versionNames[versionId] ?? versionId;
 
           // 检查版本是否已经在响应式系统中
           if (versionAdapter?.versionManager.versionExists(versionId) == true) {
-            debugPrint('版本 $versionId 已存在于响应式系统中，跳过');
+            debugPrint('版本 $versionId 已存在于响应式系统中，但需要确保数据已加载');
+            
+            // 检查是否已有会话数据，如果没有则加载
+            final existingState = versionAdapter?.versionManager.getVersionState(versionId);
+            if (existingState?.sessionData == null) {
+              await _loadVersionDataToSession(versionId, versionName);
+            }
             continue;
           }
 
-          // 初始化版本状态（不立即加载数据）
-          versionAdapter?.versionManager.initializeVersion(
-            versionId,
-            versionName: versionName,
-          );
+          // 加载版本完整数据到会话中
+          await _loadVersionDataToSession(versionId, versionName);
 
           debugPrint('已加载版本到响应式系统: $versionId ($versionName)');
         } catch (e) {
@@ -307,6 +309,42 @@ class _MapEditorContentState extends State<_MapEditorContent>
     } catch (e) {
       debugPrint('从VFS加载版本失败: $e');
       // 不抛出异常，允许系统继续工作
+    }
+  }
+
+  /// 加载指定版本的完整数据到会话中
+  Future<void> _loadVersionDataToSession(String versionId, String versionName) async {
+    if (_currentMap == null) return;
+
+    try {
+      debugPrint('开始加载版本数据到会话: $versionId');
+
+      // 从VFS加载该版本的完整数据
+      final versionLayers = await _vfsMapService.getMapLayers(_currentMap!.title, versionId);
+      final versionLegendGroups = await _vfsMapService.getMapLegendGroups(_currentMap!.title, versionId);
+      
+      // 构建该版本的完整MapItem数据
+      final versionMapData = _currentMap!.copyWith(
+        layers: versionLayers,
+        legendGroups: versionLegendGroups,
+        updatedAt: DateTime.now(),
+      );
+
+      // 初始化版本状态并设置会话数据
+      versionAdapter?.versionManager.initializeVersion(
+        versionId,
+        versionName: versionName,
+        initialData: versionMapData,
+      );
+
+      debugPrint('版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}');
+    } catch (e) {
+      // 如果加载失败，至少创建空的版本状态
+      debugPrint('加载版本 $versionId 数据失败，创建空版本状态: $e');
+      versionAdapter?.versionManager.initializeVersion(
+        versionId,
+        versionName: versionName,
+      );
     }
   }
 
