@@ -1,5 +1,12 @@
 // 红色线条统计脚本 - 最终版本（使用匿名函数避免冲突）
 
+// 外部函数声明
+external fun log(message);
+external fun print(message);
+external fun filterElements(filterFunc);
+external fun findTextElementsByContent(searchText);
+external fun updateTextContent(elementId, newText);
+
 log('=== 红色线条统计脚本开始 ===');
 
 // 使用匿名函数过滤红色线条，避免函数名冲突
@@ -10,9 +17,7 @@ var redLines = filterElements(fun(element) {
     var redColor = 4294901760; // 0xFFFF0000
     
     // 检查是否为线条类型
-    var isLine = (type == 'line' || type == 'dashedLine' || type == 'arrow' || type == 'freeDrawing');
-    
-    // 检查是否为红色
+    var isLine = (type == 'line' || type == 'dashedLine' || type == 'arrow' || type == 'freeDrawing');    // 检查是否为红色
     var isRed = (color == redColor);
     
     log('检查元素: type=' + type + ', color=' + color.toString() + ', isLine=' + isLine.toString() + ', isRed=' + isRed.toString());
@@ -39,8 +44,7 @@ var updateCount = 0;
 
 // 更新每个包含"num"的文本元素
 for (var i = 0; i < numTexts.length; i = i + 1) {
-    var textElement = numTexts[i];
-    var elementId = textElement['id'];
+    var textElement = numTexts[i];    var elementId = textElement['id'];
     var currentText = textElement['text'];
     
     log('处理文本元素: ' + elementId + ', 当前文本: "' + currentText + '"');
