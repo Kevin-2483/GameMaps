@@ -14,10 +14,13 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
   final Map<String, Timer> _runningTimers = {};
   final Map<String, StreamController> _animationControllers = {};
   bool _isInitialized = false;
+  
+  /// 脚本执行日志
+  final List<String> _executionLogs = [];
 
   /// 当前地图图层数据的访问器
   List<MapLayer>? _currentLayers;
-  Function(List<MapLayer>)? _onLayersChanged;  /// 初始化脚本引擎
+  Function(List<MapLayer>)? _onLayersChanged;/// 初始化脚本引擎
   Future<void> initialize() async {
     if (_isInitialized) return;
     
@@ -44,13 +47,23 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
   ) {
     _currentLayers = layers;
     _onLayersChanged = onLayersChanged;
-  }
-  /// 构建外部函数映射
+  }  /// 构建外部函数映射
   Map<String, Function> _buildExternalFunctions() {
     return {      // 基础函数
-      'print': ([dynamic message = '']) => debugPrint(message?.toString() ?? ''),
+      'print': ([dynamic message = '']) {
+        final msg = message?.toString() ?? '';
+        _executionLogs.add('[print] $msg');
+        debugPrint(msg);
+        return msg;
+      },
 
-      'log': ([dynamic message = '']) => debugPrint('[Script] ${message?.toString() ?? ''}'),
+      'log': ([dynamic message = '']) {
+        final msg = message?.toString() ?? '';
+        final logMsg = '[Script] $msg';
+        _executionLogs.add(logMsg);
+        debugPrint(logMsg);
+        return msg;
+      },
 
       // 数学函数
       'sin': (num x) => sin(x),
@@ -160,9 +173,7 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
 
       'moveElement': (String elementId, num deltaX, num deltaY) {
         return _moveElement(elementId, deltaX.toDouble(), deltaY.toDouble());
-      },
-
-      // 动画函数
+      },      // 动画函数
       'animate': (String elementId, String property, dynamic targetValue, num duration) {
         return _animateElement(elementId, property, targetValue, duration.toInt());
       },
@@ -170,10 +181,59 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
       'delay': (num milliseconds) async {
         await Future.delayed(Duration(milliseconds: milliseconds.toInt()));
       },
+
+      // 文本专用函数
+      'createTextElement': (String text, num fontSize, num x, num y) {
+        return _createTextElement(text, fontSize.toDouble(), x.toDouble(), y.toDouble());
+      },
+
+      'updateTextContent': (String elementId, String newText) {
+        return _updateElementProperty(elementId, 'text', newText);
+      },
+
+      'updateTextSize': (String elementId, num fontSize) {
+        return _updateElementProperty(elementId, 'fontSize', fontSize.toDouble());
+      },
+
+      'getTextElements': () {
+        final textElements = <Map<String, dynamic>>[];
+        if (_currentLayers != null) {
+          for (final layer in _currentLayers!) {
+            for (final element in layer.elements) {
+              if (element.type == DrawingElementType.text) {
+                final elementMap = _elementToMap(element);
+                elementMap['layerId'] = layer.id;
+                textElements.add(elementMap);
+              }
+            }
+          }
+        }
+        return textElements;
+      },
+
+      'findTextElementsByContent': (String searchText) {
+        final matchingElements = <Map<String, dynamic>>[];
+        if (_currentLayers != null) {
+          for (final layer in _currentLayers!) {
+            for (final element in layer.elements) {
+              if (element.type == DrawingElementType.text && 
+                  element.text != null && 
+                  element.text!.contains(searchText)) {
+                final elementMap = _elementToMap(element);
+                elementMap['layerId'] = layer.id;
+                matchingElements.add(elementMap);
+              }
+            }
+          }
+        }
+        return matchingElements;
+      },
     };
-  }
-  /// 执行脚本
+  }  /// 执行脚本
   Future<ScriptExecutionResult> executeScript(ScriptData script) async {
+    // 清空执行日志
+    _executionLogs.clear();
+    
     final stopwatch = Stopwatch()..start();
     
     try {
@@ -190,19 +250,48 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
       final result = _hetu!.eval(script.content);
       
       stopwatch.stop();
-      return ScriptExecutionResult(
+      
+      // 在结果中包含执行日志
+      final executionResult = ScriptExecutionResult(
         success: true,
         result: result,
         executionTime: stopwatch.elapsed,
       );
+      
+      // 打印执行日志到控制台
+      if (_executionLogs.isNotEmpty) {
+        debugPrint('=== 脚本执行日志 ===');
+        for (final log in _executionLogs) {
+          debugPrint(log);
+        }
+        debugPrint('=== 执行完成 ===');
+      }
+      
+      return executionResult;
     } catch (e) {
       stopwatch.stop();
+      
+      // 错误时也打印日志
+      if (_executionLogs.isNotEmpty) {
+        debugPrint('=== 脚本执行日志（错误前）===');
+        for (final log in _executionLogs) {
+          debugPrint(log);
+        }
+        debugPrint('=== 执行错误 ===');
+      }
+      debugPrint('脚本执行错误: $e');
+      
       return ScriptExecutionResult(
         success: false,
         error: e.toString(),
         executionTime: stopwatch.elapsed,
       );
     }
+  }
+  
+  /// 获取最近的执行日志
+  List<String> getExecutionLogs() {
+    return List.from(_executionLogs);
   }
 
   /// 停止脚本执行
@@ -307,9 +396,7 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
     }
 
     return updated;
-  }
-
-  /// 更新单个元素的属性
+  }  /// 更新单个元素的属性
   MapDrawingElement _updateElement(MapDrawingElement element, String property, dynamic value) {
     switch (property) {
       case 'color':
@@ -328,9 +415,60 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
         final color = element.color;
         final newColor = color.withOpacity((value as num).toDouble());
         return element.copyWith(color: newColor);
+      case 'text':
+        return element.copyWith(text: value?.toString());
+      case 'fontSize':
+        return element.copyWith(fontSize: (value as num).toDouble());
       default:
         return element;
     }
+  }
+
+  /// 创建文本元素
+  bool _createTextElement(String text, double fontSize, double x, double y) {
+    if (_currentLayers == null || _onLayersChanged == null) return false;
+
+    // 找到第一个可用的图层来添加文本元素
+    if (_currentLayers!.isEmpty) return false;
+
+    final targetLayer = _currentLayers!.first;
+    
+    // 计算新元素的 z 值
+    final maxZIndex = targetLayer.elements.isEmpty
+        ? 0
+        : targetLayer.elements
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
+
+    // 创建文本元素
+    final textElement = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.text,
+      points: [Offset(x.clamp(0.0, 1.0), y.clamp(0.0, 1.0))], // 确保坐标在有效范围内
+      color: Colors.black, // 默认黑色
+      strokeWidth: 1.0,
+      density: 1.0,
+      zIndex: maxZIndex + 1,
+      text: text,
+      fontSize: fontSize,
+      createdAt: DateTime.now(),
+    );
+
+    // 更新图层
+    final updatedLayers = _currentLayers!.map((layer) {
+      if (layer.id == targetLayer.id) {
+        return layer.copyWith(
+          elements: [...layer.elements, textElement],
+          updatedAt: DateTime.now(),
+        );
+      }
+      return layer;
+    }).toList();
+
+    _currentLayers = updatedLayers;
+    _onLayersChanged!(updatedLayers);
+    
+    return true;
   }
 
   /// 动画化元素属性
