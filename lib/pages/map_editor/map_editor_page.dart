@@ -83,11 +83,13 @@ class _MapEditorContent extends StatefulWidget {
   State<_MapEditorContent> createState() => _MapEditorContentState();
 }
 
-class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReactiveMixin {
+class _MapEditorContentState extends State<_MapEditorContent>
+    with MapEditorReactiveMixin {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService =
-      VfsMapServiceFactory.createMapDatabaseService();  final VfsMapService _vfsMapService =
+      VfsMapServiceFactory.createMapDatabaseService();
+  final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
   final ScriptManager _scriptManager = ScriptManager();
@@ -106,7 +108,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
   String? _selectedElementId; // 当前选中的元素ID
 
   // 工具栏折叠状态
-  bool _isDrawingToolbarCollapsed = false;  bool _isLayerPanelCollapsed = false;
+  bool _isDrawingToolbarCollapsed = false;
+  bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
   bool _isStickyNotePanelCollapsed = false;
   bool _isScriptPanelCollapsed = false;
@@ -117,7 +120,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
   bool _isDrawingToolbarAutoClose = true;
   bool _isLayerPanelAutoClose = true;
   bool _isLegendPanelAutoClose = true;
-  bool _isStickyNotePanelAutoClose = true;  bool _isScriptPanelAutoClose = true;
+  bool _isStickyNotePanelAutoClose = true;
+  bool _isScriptPanelAutoClose = true;
   // 响应式模式开关
   bool _useReactiveScripts = false;
   // 侧边栏折叠状态
@@ -170,12 +174,14 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
         print('在dispose中保存面板状态失败: $e');
       });
     }
-    
+
     // 释放响应式系统资源
     disposeReactiveIntegration();
-    
+
     super.dispose();
-  }@override
+  }
+
+  @override
   void initState() {
     super.initState();
     _initializeMap();
@@ -189,7 +195,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     try {
       await initializeReactiveSystem();
       debugPrint('响应式系统初始化完成');
-      
+
       // 如果已有地图数据，加载到响应式系统
       if (_currentMap != null) {
         await loadMapToReactiveSystem(_currentMap!);
@@ -199,7 +205,6 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       debugPrint('响应式系统初始化失败: $e');
     }
   }
-
   /// 设置响应式监听器
   void _setupReactiveListeners() {
     // 监听地图数据变化
@@ -208,34 +213,60 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
         // 同步更新传统状态
         if (mounted) {
           setState(() {
-            _currentMap = state.mapItem;
+            // 关键修复：需要同步 mapItem 中的图层数据
+            _currentMap = state.mapItem.copyWith(
+              layers: state.layers,
+              legendGroups: state.legendGroups,
+            );
+            
+            // 同步更新选中图层的引用，确保引用最新的图层对象
+            if (_selectedLayer != null) {
+              final selectedLayerId = _selectedLayer!.id;
+              _selectedLayer = state.layers
+                  .where((layer) => layer.id == selectedLayerId)
+                  .firstOrNull;
+            }
+            
+            // 同步更新选中图层组的引用
+            if (_selectedLayerGroup != null) {
+              final updatedGroup = <MapLayer>[];
+              for (final groupLayer in _selectedLayerGroup!) {
+                final updatedLayer = state.layers.firstWhere(
+                  (layer) => layer.id == groupLayer.id,
+                  orElse: () => groupLayer,
+                );
+                updatedGroup.add(updatedLayer);
+              }
+              _selectedLayerGroup = updatedGroup;
+            }
+            
             // 更新显示顺序
             _updateDisplayOrderAfterLayerChange();
           });
         }
       }
     });
-  }/// 初始化脚本管理器
+  }
+
+  /// 初始化脚本管理器
   void _initializeScriptManager() async {
     await _scriptManager.initialize(mapTitle: _currentMap?.title);
     // 设置地图数据访问器
     _updateScriptMapDataAccessor();
   }
+
   /// 更新脚本引擎的地图数据访问器
   void _updateScriptMapDataAccessor() {
     if (_currentMap != null) {
-      _scriptManager.setMapDataAccessor(
-        _currentMap!.layers,
-        (updatedLayers) {
-          // 当脚本修改图层数据时，更新地图
-          if (mounted) {
-            setState(() {
-              _currentMap = _currentMap!.copyWith(layers: updatedLayers);
-            });
-            _saveMap();
-          }
-        },
-      );
+      _scriptManager.setMapDataAccessor(_currentMap!.layers, (updatedLayers) {
+        // 当脚本修改图层数据时，更新地图
+        if (mounted) {
+          setState(() {
+            _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+          });
+          _saveMap();
+        }
+      });
     }
   }
 
@@ -262,9 +293,11 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       _isDrawingToolbarCollapsed =
           layout.panelCollapsedStates['drawing'] ?? false;
       _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
-      _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;      _isStickyNotePanelCollapsed =
+      _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;
+      _isStickyNotePanelCollapsed =
           layout.panelCollapsedStates['stickyNote'] ?? false;
-      _isScriptPanelCollapsed = layout.panelCollapsedStates['script'] ?? false;      // 更新面板自动关闭状态
+      _isScriptPanelCollapsed =
+          layout.panelCollapsedStates['script'] ?? false; // 更新面板自动关闭状态
       _isDrawingToolbarAutoClose =
           layout.panelAutoCloseStates['drawing'] ?? true;
       _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
@@ -307,9 +340,9 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       }
       // 保存初始状态到撤销历史
       // _saveToUndoHistory();      // 预加载所有图层的图片
-      _preloadAllLayerImages();      // 更新脚本管理器的地图数据访问器
+      _preloadAllLayerImages(); // 更新脚本管理器的地图数据访问器
       _updateScriptMapDataAccessor();
-      
+
       // 更新脚本管理器的地图标题
       if (_currentMap != null) {
         _scriptManager.setMapTitle(_currentMap!.title);
@@ -681,6 +714,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       _selectedLayer = defaultLayer;
     });
   }
+
   void _addNewLayer() {
     if (_currentMap == null) return;
 
@@ -718,6 +752,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       });
     }
   }
+
   void _deleteLayer(MapLayer layer) {
     if (_currentMap == null || _currentMap!.layers.length <= 1) return;
 
@@ -728,14 +763,18 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     try {
       deleteLayerReactive(layer.id);
       debugPrint('使用响应式系统删除图层: ${layer.name}');
-      
+
       // 更新UI状态
       setState(() {
         // 删除逻辑会通过响应式流处理，这里只需要更新选择状态
-        final remainingLayers = _currentMap!.layers.where((l) => l.id != layer.id).toList();
-        
+        final remainingLayers = _currentMap!.layers
+            .where((l) => l.id != layer.id)
+            .toList();
+
         if (_selectedLayer?.id == layer.id) {
-          _selectedLayer = remainingLayers.isNotEmpty ? remainingLayers.first : null;
+          _selectedLayer = remainingLayers.isNotEmpty
+              ? remainingLayers.first
+              : null;
         }
 
         // 如果删除的图层在选中的组中，更新组选择
@@ -1002,6 +1041,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     }
     return _displayOrderLayers;
   }
+
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
@@ -1040,6 +1080,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       }
     });
   }
+
   void _reorderLayers(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
 
@@ -1065,7 +1106,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     try {
       reorderLayersReactive(oldIndex, newIndex);
       debugPrint('使用响应式系统重排序图层: $oldIndex -> $newIndex');
-      
+
       // 更新UI状态（响应式流会处理数据更新）
       setState(() {
         // 更新选中图层的引用等UI状态
@@ -1081,9 +1122,9 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
   /// 重排序后更新图层选择状态
   void _updateLayerSelectionAfterReorder(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
-    
+
     final layers = _currentMap!.layers;
-    
+
     // 更新选中图层的引用
     if (_selectedLayer != null) {
       final selectedLayerId = _selectedLayer!.id;
@@ -1187,6 +1228,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       _restoreNormalLayerOrder();
     }
   }
+
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
     if (_currentMap == null) return;
@@ -1198,7 +1240,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     try {
       updateLayersReactive(updatedLayers);
       debugPrint('使用响应式系统批量更新 ${updatedLayers.length} 个图层');
-      
+
       // 更新UI状态
       setState(() {
         // 如果当前选中的图层也被更新了，同步更新选中图层的引用
@@ -2126,7 +2168,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
             ...layout.panelCollapsedStates,
             'sidebar': _isSidebarCollapsed,
             'drawing': _isDrawingToolbarCollapsed,
-            'layer': _isLayerPanelCollapsed,            'legend': _isLegendPanelCollapsed,
+            'layer': _isLayerPanelCollapsed,
+            'legend': _isLegendPanelCollapsed,
             'stickyNote': _isStickyNotePanelCollapsed,
             'script': _isScriptPanelCollapsed,
           },
@@ -2179,7 +2222,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
           if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
-          }          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+          }
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
             _isStickyNotePanelCollapsed = true;
             changedPanels.add('stickyNote');
           }
@@ -2198,7 +2242,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
             changedPanels.add('layer');
-          }          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+          }
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
             _isStickyNotePanelCollapsed = true;
             changedPanels.add('stickyNote');
           }
@@ -2217,14 +2262,16 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
             changedPanels.add('layer');
-          }          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
+          }
+          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
           }
           if (_isScriptPanelAutoClose && !_isScriptPanelCollapsed) {
             _isScriptPanelCollapsed = true;
             changedPanels.add('script');
-          }          _isStickyNotePanelCollapsed = !_isStickyNotePanelCollapsed;
+          }
+          _isStickyNotePanelCollapsed = !_isStickyNotePanelCollapsed;
           break;
         case 'script':
           // 如果其他面板开启了自动关闭，则关闭它们
@@ -2286,7 +2333,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
           break;
         case 'legend':
           _isLegendPanelAutoClose = value;
-          break;        case 'stickyNote':
+          break;
+        case 'stickyNote':
           _isStickyNotePanelAutoClose = value;
           break;
         case 'script':
@@ -2799,10 +2847,11 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
                 onStickyNoteDeleted: _deleteStickyNote,
                 onStickyNoteAdded: _addNewStickyNote,
                 onStickyNotesReordered: _reorderStickyNotes,
-                onOpacityPreview: _handleStickyNoteOpacityPreview,                onStickyNoteSelected: _selectStickyNote,
+                onOpacityPreview: _handleStickyNoteOpacityPreview,
+                onStickyNoteSelected: _selectStickyNote,
               ),
       ),
-    );    // 脚本管理面板
+    ); // 脚本管理面板
     panels.add(
       _buildCollapsiblePanel(
         title: '脚本管理',
@@ -2810,8 +2859,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
         isCollapsed: _isScriptPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('script'),
         autoCloseEnabled: _isScriptPanelAutoClose,
-        onAutoCloseToggled: (value) =>
-            _handleAutoCloseToggle('script', value),        compactMode: layout.compactMode,
+        onAutoCloseToggled: (value) => _handleAutoCloseToggle('script', value),
+        compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
@@ -2823,9 +2872,9 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
               icon: Icon(
                 _useReactiveScripts ? Icons.stream : Icons.code,
                 size: 18,
-                color: _useReactiveScripts 
-                  ? Theme.of(context).colorScheme.primary 
-                  : null,
+                color: _useReactiveScripts
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
               ),
               onPressed: () {
                 setState(() {
@@ -2843,16 +2892,16 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
         child: _isScriptPanelCollapsed
             ? null
             : _useReactiveScripts
-                // 使用响应式脚本面板
-                ? ReactiveScriptPanel(
-                    scriptManager: reactiveScriptManager,
-                    onNewScript: _showNewScriptDialog,
-                  )
-                // 使用传统脚本面板
-                : ChangeNotifierProvider.value(
-                    value: _scriptManager,
-                    child: ScriptPanel(onNewScript: _showNewScriptDialog),
-                  ),
+            // 使用响应式脚本面板
+            ? ReactiveScriptPanel(
+                scriptManager: reactiveScriptManager,
+                onNewScript: _showNewScriptDialog,
+              )
+            // 使用传统脚本面板
+            : ChangeNotifierProvider.value(
+                value: _scriptManager,
+                child: ScriptPanel(onNewScript: _showNewScriptDialog),
+              ),
       ),
     );
 
@@ -3153,7 +3202,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
           zoomSensitivity: context
               .read<UserPreferencesProvider>()
               .mapEditor
-              .zoomSensitivity,          shouldDisableDrawingTools: _shouldDisableDrawingTools,
+              .zoomSensitivity,
+          shouldDisableDrawingTools: _shouldDisableDrawingTools,
           // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
@@ -3513,7 +3563,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
     setState(() {
       _selectedStickyNote = note;
     });
-  }  // 脚本管理方法
+  } // 脚本管理方法
+
   void _showNewScriptDialog() {
     if (_useReactiveScripts) {
       // 直接使用响应式脚本管理器创建脚本
@@ -3522,9 +3573,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
       // 使用传统脚本对话框
       showDialog(
         context: context,
-        builder: (context) => _ScriptEditDialog(
-          scriptManager: _scriptManager,
-        ),
+        builder: (context) => _ScriptEditDialog(scriptManager: _scriptManager),
       );
     }
   }
@@ -3533,9 +3582,8 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
   void _showReactiveScriptDialog() {
     showDialog(
       context: context,
-      builder: (context) => _ReactiveScriptCreateDialog(
-        scriptManager: reactiveScriptManager,
-      ),
+      builder: (context) =>
+          _ReactiveScriptCreateDialog(scriptManager: reactiveScriptManager),
     );
   }
 }
@@ -3544,9 +3592,7 @@ class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReac
 class _ScriptEditDialog extends StatefulWidget {
   final ScriptManager scriptManager;
 
-  const _ScriptEditDialog({
-    required this.scriptManager,
-  });
+  const _ScriptEditDialog({required this.scriptManager});
 
   @override
   State<_ScriptEditDialog> createState() => _ScriptEditDialogState();
@@ -3623,19 +3669,16 @@ class _ScriptEditDialogState extends State<_ScriptEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
-        FilledButton(
-          onPressed: _saveScript,
-          child: const Text('保存'),
-        ),
+        FilledButton(onPressed: _saveScript, child: const Text('保存')),
       ],
     );
   }
 
   void _saveScript() {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入脚本名称')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
       return;
     }
 
@@ -3718,15 +3761,15 @@ log('总面积: ' + totalArea.toString());''';
 class _ReactiveScriptCreateDialog extends StatefulWidget {
   final ReactiveScriptManager scriptManager;
 
-  const _ReactiveScriptCreateDialog({
-    required this.scriptManager,
-  });
+  const _ReactiveScriptCreateDialog({required this.scriptManager});
 
   @override
-  State<_ReactiveScriptCreateDialog> createState() => _ReactiveScriptCreateDialogState();
+  State<_ReactiveScriptCreateDialog> createState() =>
+      _ReactiveScriptCreateDialogState();
 }
 
-class _ReactiveScriptCreateDialogState extends State<_ReactiveScriptCreateDialog> {
+class _ReactiveScriptCreateDialogState
+    extends State<_ReactiveScriptCreateDialog> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   ScriptType _selectedType = ScriptType.automation;
@@ -3767,7 +3810,9 @@ class _ReactiveScriptCreateDialogState extends State<_ReactiveScriptCreateDialog
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
@@ -3861,9 +3906,9 @@ class _ReactiveScriptCreateDialogState extends State<_ReactiveScriptCreateDialog
 
   void _saveScript() {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入脚本名称')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
       return;
     }
 
@@ -3882,17 +3927,13 @@ class _ReactiveScriptCreateDialogState extends State<_ReactiveScriptCreateDialog
 
     widget.scriptManager.addScript(script);
     Navigator.of(context).pop();
-    
+
     // 显示成功提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.white,
-              size: 16,
-            ),
+            Icon(Icons.check_circle, color: Colors.white, size: 16),
             const SizedBox(width: 8),
             Text('响应式脚本 "${script.name}" 创建成功'),
           ],
@@ -4037,5 +4078,5 @@ log('=== 响应式统计完成 ===');''';
       case ScriptType.statistics:
         return '统计';
     }
-}
+  }
 }

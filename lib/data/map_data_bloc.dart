@@ -153,7 +153,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       ));
     }
   }
-
   /// 更新图层
   Future<void> _onUpdateLayer(
     UpdateLayer event,
@@ -168,7 +167,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return layer.id == event.layer.id ? event.layer : layer;
     }).toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: updatedLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: updatedLayers,
       lastModified: DateTime.now(),
     );
@@ -176,7 +182,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 批量更新图层
   Future<void> _onUpdateLayers(
     UpdateLayers event,
@@ -187,7 +192,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final currentState = state as MapDataLoaded;
     _saveToHistory(currentState);
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: event.layers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: event.layers,
       lastModified: DateTime.now(),
     );
@@ -195,7 +207,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 添加图层
   Future<void> _onAddLayer(
     AddLayer event,
@@ -207,7 +218,15 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     _saveToHistory(currentState);
 
     final newLayers = [...currentState.layers, event.layer];
+    
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: newLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: newLayers,
       lastModified: DateTime.now(),
     );
@@ -215,7 +234,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 删除图层
   Future<void> _onDeleteLayer(
     DeleteLayer event,
@@ -230,7 +248,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         .where((layer) => layer.id != event.layerId)
         .toList();
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: newLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: newLayers,
       lastModified: DateTime.now(),
     );
@@ -238,7 +263,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
-
   /// 重新排序图层
   Future<void> _onReorderLayers(
     ReorderLayers event,
@@ -263,7 +287,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       );
     }
 
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: newLayers,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       layers: newLayers,
       lastModified: DateTime.now(),
     );
