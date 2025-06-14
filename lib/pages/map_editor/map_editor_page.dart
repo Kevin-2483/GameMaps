@@ -30,12 +30,11 @@ import '../../models/map_version.dart';
 import '../../services/version_session_manager.dart';
 import '../../services/script_manager_vfs.dart';
 import '../../models/script_data.dart';
-import 'widgets/script_panel.dart';
+// import 'widgets/script_panel.dart';
 import 'widgets/reactive_script_panel.dart';
 import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/reactive_script_manager.dart';
-
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -122,8 +121,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   bool _isLegendPanelAutoClose = true;
   bool _isStickyNotePanelAutoClose = true;
   bool _isScriptPanelAutoClose = true;
-  // 响应式模式开关
-  bool _useReactiveScripts = false;
+
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
   // 透明度预览状态
@@ -2939,24 +2937,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-          // 响应式模式切换开关
-          Tooltip(
-            message: _useReactiveScripts ? '切换到传统脚本管理' : '切换到响应式脚本管理',
-            child: IconButton(
-              icon: Icon(
-                _useReactiveScripts ? Icons.stream : Icons.code,
-                size: 18,
-                color: _useReactiveScripts
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-              ),
-              onPressed: () {
-                setState(() {
-                  _useReactiveScripts = !_useReactiveScripts;
-                });
-              },
-            ),
-          ),
           IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _showNewScriptDialog,
@@ -2965,16 +2945,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         ],
         child: _isScriptPanelCollapsed
             ? null
-            : _useReactiveScripts
-            // 使用响应式脚本面板
-            ? ReactiveScriptPanel(
+            : ReactiveScriptPanel(
                 scriptManager: reactiveScriptManager,
                 onNewScript: _showNewScriptDialog,
-              )
-            // 使用传统脚本面板
-            : ChangeNotifierProvider.value(
-                value: _scriptManager,
-                child: ScriptPanel(onNewScript: _showNewScriptDialog),
               ),
       ),
     );
@@ -3647,10 +3620,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   } // 脚本管理方法
 
   void _showNewScriptDialog() {
-    if (_useReactiveScripts) {
-      // 直接使用响应式脚本管理器创建脚本
-      _showReactiveScriptDialog();
-    }
+    _showReactiveScriptDialog();
   }
 
   /// 显示响应式脚本创建对话框
@@ -3660,175 +3630,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       builder: (context) =>
           _ReactiveScriptCreateDialog(scriptManager: reactiveScriptManager),
     );
-  }
-}
-
-/// 脚本编辑对话框
-class _ScriptEditDialog extends StatefulWidget {
-  final ScriptManager scriptManager;
-
-  const _ScriptEditDialog({required this.scriptManager});
-
-  @override
-  State<_ScriptEditDialog> createState() => _ScriptEditDialogState();
-}
-
-class _ScriptEditDialogState extends State<_ScriptEditDialog> {
-  late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
-  ScriptType _selectedType = ScriptType.automation;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _descriptionController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('新建脚本'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '脚本名称',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: '描述',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<ScriptType>(
-              value: _selectedType,
-              decoration: const InputDecoration(
-                labelText: '脚本类型',
-                border: OutlineInputBorder(),
-              ),
-              items: ScriptType.values.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(_getTypeDisplayName(type)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedType = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(onPressed: _saveScript, child: const Text('保存')),
-      ],
-    );
-  }
-
-  void _saveScript() {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
-      return;
-    }
-
-    final now = DateTime.now();
-    final script = ScriptData(
-      id: now.millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      type: _selectedType,
-      content: _getDefaultScriptContent(_selectedType),
-      parameters: {},
-      isEnabled: true,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    widget.scriptManager.addScript(script);
-    Navigator.of(context).pop();
-  }
-
-  String _getDefaultScriptContent(ScriptType type) {
-    switch (type) {
-      case ScriptType.automation:
-        return '''// 自动化脚本示例
-var layers = getLayers();
-log('共有 ' + layers.length.toString() + ' 个图层');
-
-// 遍历所有元素
-var elements = getAllElements();
-for (var element in elements) {
-    log('元素 ' + element['id'] + ' 类型: ' + element['type']);
-}''';
-      case ScriptType.animation:
-        return '''// 动画脚本示例
-var elements = getAllElements();
-if (elements.length > 0) {
-    var element = elements[0];
-    
-    // 动画改变颜色
-    animate(element['id'], 'color', 0xFF00FF00, 1000);
-    delay(1000);
-    
-    // 动画移动元素
-    moveElement(element['id'], 0.1, 0.1);
-}''';
-      case ScriptType.filter:
-        return '''// 过滤脚本示例
-var redElements = filterElements(fun(element) {
-    return element['color'] == 0xFFFF0000;
-});
-
-log('找到 ' + redElements.length.toString() + ' 个红色元素');''';
-      case ScriptType.statistics:
-        return '''// 统计脚本示例
-var totalElements = countElements();
-var rectangles = countElements('rectangle');
-var totalArea = calculateTotalArea();
-
-log('总元素数: ' + totalElements.toString());
-log('矩形数量: ' + rectangles.toString());
-log('总面积: ' + totalArea.toString());''';
-    }
-  }
-
-  String _getTypeDisplayName(ScriptType type) {
-    switch (type) {
-      case ScriptType.automation:
-        return '自动化';
-      case ScriptType.animation:
-        return '动画';
-      case ScriptType.filter:
-        return '过滤';
-      case ScriptType.statistics:
-        return '统计';
-    }
   }
 }
 
