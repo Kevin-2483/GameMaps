@@ -3,6 +3,7 @@ import '../services/reactive_version_manager.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
 import '../data/map_data_state.dart';
+import '../models/map_item.dart';
 import 'dart:async';
 
 /// 响应式版本管理适配器
@@ -37,34 +38,63 @@ class ReactiveVersionAdapter {
     // 监听版本管理器变化，同步到地图数据BLoC
     _versionManager.addListener(_onVersionManagerChanged);
   }
-
   /// 处理地图数据变化
   void _onMapDataChanged(MapDataState state) {
     if (_isUpdating) return; // 防止循环更新
     
     final activeVersionId = _versionManager.activeEditingVersionId;
-    if (activeVersionId == null) return;
+    if (activeVersionId == null) {
+      debugPrint('没有正在编辑的版本，跳过数据同步');
+      return;
+    }
 
     if (state is MapDataLoaded) {
+      // 检查数据是否真的有变化，避免无意义的更新
+      final currentVersionData = _versionManager.getVersionSessionData(activeVersionId);
+      final newMapItem = state.mapItem.copyWith(
+        layers: state.layers,
+        legendGroups: state.legendGroups,
+        updatedAt: DateTime.now(),
+      );
+      
+      // 如果数据没有实质性变化，不进行更新
+      if (currentVersionData != null && _isSameMapData(currentVersionData, newMapItem)) {
+        return;
+      }
+      
       _isUpdating = true;
       try {
-        // 同步地图数据到当前编辑版本
-        final updatedMapItem = state.mapItem.copyWith(
-          layers: state.layers,
-          legendGroups: state.legendGroups,
-          updatedAt: DateTime.now(),
-        );
-          _versionManager.updateVersionData(
+        _versionManager.updateVersionData(
           activeVersionId,
-          updatedMapItem,
+          newMapItem,
           markAsChanged: true,
         );
         
-        debugPrint('同步地图数据到版本 [$activeVersionId], 图层数: ${updatedMapItem.layers.length}');
+        debugPrint('同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}');
       } finally {
         _isUpdating = false;
       }
     }
+  }
+
+  /// 检查两个MapItem是否相同（避免无意义更新）
+  bool _isSameMapData(MapItem data1, MapItem data2) {
+    if (data1.layers.length != data2.layers.length) return false;
+    if (data1.legendGroups.length != data2.legendGroups.length) return false;
+    
+    // 简单检查图层ID和基本属性
+    for (int i = 0; i < data1.layers.length; i++) {
+      final layer1 = data1.layers[i];
+      final layer2 = data2.layers[i];
+      if (layer1.id != layer2.id || 
+          layer1.name != layer2.name || 
+          layer1.isVisible != layer2.isVisible ||
+          layer1.elements.length != layer2.elements.length) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   /// 处理版本管理器变化
@@ -73,31 +103,28 @@ class ReactiveVersionAdapter {
     
     // 这里可以添加版本切换时需要的额外处理逻辑
     debugPrint('版本管理器状态变化: ${_versionManager.getSessionSummary()}');
-  }
-
-  /// 切换到指定版本并加载其数据到BLoC
+  }  /// 切换到指定版本并加载其数据到BLoC
   Future<void> switchToVersionAndLoad(String versionId) async {
     if (!_versionManager.versionExists(versionId)) {
       throw ArgumentError('版本不存在: $versionId');
     }
 
+    debugPrint('开始切换版本: $versionId');
+    
     _isUpdating = true;
     try {
       // 1. 切换版本管理器的当前版本
       _versionManager.switchToVersion(versionId);
       
-      // 2. 开始编辑该版本
-      _versionManager.startEditingVersion(versionId);
-      
-      // 3. 获取版本的会话数据
+      // 2. 获取版本的会话数据
       final versionData = _versionManager.getVersionSessionData(versionId);
       
       if (versionData != null) {
-        // 4. 将版本数据加载到地图数据BLoC
+        // 3. 将版本数据加载到地图数据BLoC
         _mapDataBloc.add(InitializeMapData(mapItem: versionData));
-        debugPrint('切换并加载版本数据 [$versionId] 到响应式系统');
+        debugPrint('切换并加载版本数据 [$versionId] 到响应式系统，图层数: ${versionData.layers.length}');
       } else {
-        // 5. 如果没有会话数据，从VFS加载指定版本
+        // 4. 如果没有会话数据，从VFS加载指定版本
         _mapDataBloc.add(LoadMapData(
           mapTitle: _versionManager.mapTitle,
           version: versionId,
@@ -105,30 +132,84 @@ class ReactiveVersionAdapter {
         debugPrint('从VFS加载版本数据 [$versionId] 到响应式系统');
       }
       
+      // 5. 等待一个事件循环，确保BLoC状态更新完成
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // 6. 开始编辑该版本
+      _versionManager.startEditingVersion(versionId);
+      debugPrint('开始编辑版本 [$versionId]');
+      
     } finally {
+      // 延迟重置更新标志，确保数据加载完成
+      await Future.delayed(const Duration(milliseconds: 100));
       _isUpdating = false;
+      debugPrint('版本切换完成，重置更新标志 [$versionId]');
     }
-  }
-
-  /// 创建新版本并立即切换
+  }/// 创建新版本并立即切换
   Future<ReactiveVersionState> createVersionAndSwitch(
     String versionId, {
     required String versionName,
     String? sourceVersionId,
     Map<String, dynamic>? metadata,
   }) async {
-    // 1. 创建新版本
-    final newVersionState = _versionManager.createVersion(
-      versionId,
-      versionName: versionName,
-      sourceVersionId: sourceVersionId,
-      metadata: metadata,
-    );
+    debugPrint('开始创建新版本: $versionId, 源版本: $sourceVersionId');
+    
+    _isUpdating = true;
+    try {
+      // 1. 获取源数据作为新版本的初始数据
+      MapItem? initialData;
+      
+      if (sourceVersionId != null) {
+        // 从指定源版本获取数据
+        initialData = _versionManager.getVersionSessionData(sourceVersionId);
+        debugPrint('从源版本 [$sourceVersionId] 获取数据: ${initialData != null ? '成功(图层数: ${initialData.layers.length})' : '失败'}');
+      }
+      
+      // 如果没有源版本数据，使用当前BLoC的数据
+      if (initialData == null && _mapDataBloc.state is MapDataLoaded) {
+        final currentState = _mapDataBloc.state as MapDataLoaded;
+        initialData = currentState.mapItem.copyWith(
+          layers: List.from(currentState.layers), // 深度复制图层列表
+          legendGroups: List.from(currentState.legendGroups), // 深度复制图例组列表
+          updatedAt: DateTime.now(),
+        );
+        debugPrint('从当前BLoC状态获取数据: 图层数: ${initialData.layers.length}');
+      }
+      
+      // 2. 创建新版本（不传递initialData，避免重复设置）
+      final newVersionState = _versionManager.createVersion(
+        versionId,
+        versionName: versionName,
+        sourceVersionId: sourceVersionId,
+        metadata: metadata,
+      );
 
-    // 2. 切换到新版本并加载数据
-    await switchToVersionAndLoad(versionId);
+      // 3. 如果有初始数据，立即设置到新版本
+      if (initialData != null) {
+        _versionManager.updateVersionData(
+          versionId,
+          initialData,
+          markAsChanged: false, // 初始数据不标记为已修改
+        );
+        debugPrint('为新版本 [$versionId] 设置初始数据成功');
+      } else {
+        debugPrint('警告: 新版本 [$versionId] 没有初始数据');
+      }
 
-    return newVersionState;
+      // 4. 先重置更新标志，再切换版本
+      _isUpdating = false;
+      
+      // 5. 切换到新版本并加载数据
+      await switchToVersionAndLoad(versionId);
+
+      debugPrint('新版本创建并切换完成: $versionId');
+      return newVersionState;
+      
+    } catch (e) {
+      _isUpdating = false;
+      debugPrint('创建新版本失败 [$versionId]: $e');
+      rethrow;
+    }
   }
 
   /// 保存当前编辑版本的数据

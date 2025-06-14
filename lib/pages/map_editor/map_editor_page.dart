@@ -1993,13 +1993,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       // 生成唯一的版本ID
       final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
-
-      // 确保当前版本的数据已经同步到版本管理器
-      await saveCurrentVersion();
       
       debugPrint('创建版本前状态: 当前版本=$currentVersionId, 当前地图图层数=${_currentMap!.layers.length}');
 
-      // 使用响应式版本管理创建新版本
+      // 使用响应式版本管理创建新版本（从当前版本复制数据）
       final newVersionState = await createVersion(
         versionId,
         versionName: name,
@@ -2010,7 +2007,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
         debugPrint('新版本已创建: $versionId, 会话数据=${newVersionState.sessionData != null ? '有(图层数: ${newVersionState.sessionData!.layers.length})' : '无'}');
         
         setState(() {
-          // 新版本创建时重置状态，响应式系统会自动管理
+          // 新版本创建时重置选择状态
+          if (_currentMap != null && _currentMap!.layers.isNotEmpty) {
+            _selectedLayer = _currentMap!.layers.first;
+          } else {
+            _selectedLayer = null;
+          }
+          _selectedLayerGroup = null;
+          _selectedElementId = null;
+          
+          // 更新显示顺序
+          _updateDisplayOrderAfterLayerChange();
         });
 
         // 保存版本名称到VFS元数据
