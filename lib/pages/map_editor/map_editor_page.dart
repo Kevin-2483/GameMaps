@@ -35,7 +35,7 @@ import 'widgets/reactive_script_panel.dart';
 import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/reactive_script_manager.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -165,8 +165,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   bool _panelStatesChanged = false;
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
-  final Map<String, double> _previewStickyNoteOpacityValues =
-      {}; // 便签透明度预览状态  @override
+  final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
+
+  @override
   void dispose() {
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
