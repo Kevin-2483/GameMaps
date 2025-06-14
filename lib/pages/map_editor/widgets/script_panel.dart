@@ -337,28 +337,32 @@ class _ScriptPanelState extends State<ScriptPanel> {
         ],
       ),
     );
-  }
-
-  void _showNewScriptDialog() {
+  }  void _showNewScriptDialog() {
+    final scriptManager = context.read<script_service.ScriptManager>();
     showDialog(
       context: context,
       builder: (context) => _ScriptEditDialog(
-        type: _selectedType,        onSaved: (script) {
-          context.read<script_service.ScriptManager>().addScript(script);
+        type: _selectedType,
+        scriptManager: scriptManager,
+        onSaved: (script) {
+          scriptManager.addScript(script);
         },
       ),
     );
-  }
-  void _editScript(ScriptData script) {
+  }void _editScript(ScriptData script) {
+    final scriptManager = context.read<script_service.ScriptManager>();
     // 使用脚本编辑器窗口
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog.fullscreen(        child: ScriptEditorWindow(
+      builder: (context) => Dialog.fullscreen(
+        child: ScriptEditorWindow(
           script: script,
-          scriptManager: context.read<script_service.ScriptManager>(),
+          scriptManager: scriptManager,
           onClose: () {
-            Navigator.of(context).pop();
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
           },
         ),
       ),
@@ -446,10 +450,12 @@ class _ScriptPanelState extends State<ScriptPanel> {
 /// 脚本编辑对话框
 class _ScriptEditDialog extends StatefulWidget {
   final ScriptType type;
+  final script_service.ScriptManager scriptManager;
   final Function(ScriptData) onSaved;
 
   const _ScriptEditDialog({
     required this.type,
+    required this.scriptManager,
     required this.onSaved,
   });
 

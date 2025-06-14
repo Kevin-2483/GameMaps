@@ -86,9 +86,10 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
       _isDarkTheme = !_isDarkTheme;
     });
   }
-
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
+    
+    if (!mounted) return true;
     
     final result = await showDialog<bool>(
       context: context,
@@ -119,16 +120,16 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
     
     return result ?? false;
   }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
-        if (!didPop) {
+        if (!didPop && mounted) {
           final shouldPop = await _onWillPop();
           if (shouldPop && mounted) {
-            Navigator.of(context).pop();
+            // 通知父组件处理关闭逻辑
+            widget.onClose?.call();
           }
         }
       },
@@ -163,13 +164,12 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
               onPressed: _hasUnsavedChanges ? _saveScript : null,
               icon: const Icon(Icons.save),
               tooltip: '保存脚本',
-            ),
-            IconButton(
+            ),            IconButton(
               onPressed: () async {
                 final shouldClose = await _onWillPop();
                 if (shouldClose && mounted) {
+                  // 只调用 onClose 回调，由父组件处理导航
                   widget.onClose?.call();
-                  Navigator.of(context).pop();
                 }
               },
               icon: const Icon(Icons.close),
