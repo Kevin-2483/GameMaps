@@ -180,13 +180,12 @@ class ReactiveVersionManager extends ChangeNotifier {
   }) {
     if (_versionStates.containsKey(versionId)) {
       throw ArgumentError('版本已存在: $versionId');
-    }
-
-    MapItem? initialData;
+    }    MapItem? initialData;
     
     // 如果指定了源版本，复制其会话数据
     if (sourceVersionId != null && _versionStates.containsKey(sourceVersionId)) {
       initialData = _versionStates[sourceVersionId]?.sessionData;
+      debugPrint('从版本 $sourceVersionId 复制数据: ${initialData != null ? '有数据(图层数: ${initialData.layers.length})' : '无数据'}');
     }
 
     final state = initializeVersion(
@@ -281,11 +280,9 @@ class ReactiveVersionManager extends ChangeNotifier {
       sessionData: newData,
       hasUnsavedChanges: markAsChanged,
       lastModified: DateTime.now(),
-    );
+    );    _versionDataCache[versionId] = newData;
 
-    _versionDataCache[versionId] = newData;
-
-    debugPrint('更新版本会话数据 [$mapTitle/$versionId], 标记为${markAsChanged ? '已修改' : '未修改'}');
+    debugPrint('更新版本会话数据 [$mapTitle/$versionId], 标记为${markAsChanged ? '已修改' : '未修改'}, 图层数: ${newData.layers.length}');
     notifyListeners();
   }
   /// 更新版本层数据（专门用于图层操作）

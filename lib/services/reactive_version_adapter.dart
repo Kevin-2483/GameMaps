@@ -54,14 +54,13 @@ class ReactiveVersionAdapter {
           legendGroups: state.legendGroups,
           updatedAt: DateTime.now(),
         );
-        
-        _versionManager.updateVersionData(
+          _versionManager.updateVersionData(
           activeVersionId,
           updatedMapItem,
           markAsChanged: true,
         );
         
-        debugPrint('同步地图数据到版本 [$activeVersionId]');
+        debugPrint('同步地图数据到版本 [$activeVersionId], 图层数: ${updatedMapItem.layers.length}');
       } finally {
         _isUpdating = false;
       }
