@@ -28,6 +28,8 @@ import 'widgets/sticky_note_panel.dart';
 import '../../models/sticky_note.dart';
 import '../../models/map_version.dart';
 import '../../services/version_session_manager.dart';
+import '../../services/script_manager_vfs.dart';
+import 'widgets/script_panel.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -79,10 +81,10 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService =
-      VfsMapServiceFactory.createMapDatabaseService();
-  final VfsMapService _vfsMapService =
+      VfsMapServiceFactory.createMapDatabaseService();  final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
+  final ScriptManager _scriptManager = ScriptManager();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
@@ -98,19 +100,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   String? _selectedElementId; // 当前选中的元素ID
 
   // 工具栏折叠状态
-  bool _isDrawingToolbarCollapsed = false;
-  bool _isLayerPanelCollapsed = false;
+  bool _isDrawingToolbarCollapsed = false;  bool _isLayerPanelCollapsed = false;
   bool _isLegendPanelCollapsed = false;
   bool _isStickyNotePanelCollapsed = false;
+  bool _isScriptPanelCollapsed = false;
 
   //：图层组折叠状态
   Map<String, bool> _layerGroupCollapsedStates = {};
-
   // 自动关闭开关状态
   bool _isDrawingToolbarAutoClose = true;
   bool _isLayerPanelAutoClose = true;
   bool _isLegendPanelAutoClose = true;
   bool _isStickyNotePanelAutoClose = true;
+  bool _isScriptPanelAutoClose = true;
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
   // 透明度预览状态
@@ -163,12 +165,34 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
     super.dispose();
   }
-
   @override
   void initState() {
     super.initState();
     _initializeMap();
     _initializeLayoutFromPreferences();
+    _initializeScriptManager();
+  }  /// 初始化脚本管理器
+  void _initializeScriptManager() async {
+    await _scriptManager.initialize(mapTitle: _currentMap?.title);
+    // 设置地图数据访问器
+    _updateScriptMapDataAccessor();
+  }
+  /// 更新脚本引擎的地图数据访问器
+  void _updateScriptMapDataAccessor() {
+    if (_currentMap != null) {
+      _scriptManager.setMapDataAccessor(
+        _currentMap!.layers,
+        (updatedLayers) {
+          // 当脚本修改图层数据时，更新地图
+          if (mounted) {
+            setState(() {
+              _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+            });
+            _saveMap();
+          }
+        },
+      );
+    }
   }
 
   /// 从用户首选项初始化界面布局
@@ -194,9 +218,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isDrawingToolbarCollapsed =
           layout.panelCollapsedStates['drawing'] ?? false;
       _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
-      _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;
-      _isStickyNotePanelCollapsed =
+      _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;      _isStickyNotePanelCollapsed =
           layout.panelCollapsedStates['stickyNote'] ?? false;
+      _isScriptPanelCollapsed = layout.panelCollapsedStates['script'] ?? false;
 
       // 更新面板自动关闭状态
       _isDrawingToolbarAutoClose =
@@ -204,6 +228,8 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
       _isLegendPanelAutoClose = layout.panelAutoCloseStates['legend'] ?? true;
       _isStickyNotePanelAutoClose =
+          layout.panelAutoCloseStates['stickyNote'] ?? true;
+      _isScriptPanelAutoClose = layout.panelAutoCloseStates['script'] ?? true;
           layout.panelAutoCloseStates['stickyNote'] ?? true;
     });
   }
@@ -239,10 +265,14 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         _addDefaultLayer();
       }
       // 保存初始状态到撤销历史
-      // _saveToUndoHistory();
-
-      // 预加载所有图层的图片
-      _preloadAllLayerImages();
+      // _saveToUndoHistory();      // 预加载所有图层的图片
+      _preloadAllLayerImages();      // 更新脚本管理器的地图数据访问器
+      _updateScriptMapDataAccessor();
+      
+      // 更新脚本管理器的地图标题
+      if (_currentMap != null) {
+        _scriptManager.setMapTitle(_currentMap!.title);
+      }
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
     } finally {
@@ -1880,9 +1910,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             ...layout.panelCollapsedStates,
             'sidebar': _isSidebarCollapsed,
             'drawing': _isDrawingToolbarCollapsed,
-            'layer': _isLayerPanelCollapsed,
-            'legend': _isLegendPanelCollapsed,
+            'layer': _isLayerPanelCollapsed,            'legend': _isLegendPanelCollapsed,
             'stickyNote': _isStickyNotePanelCollapsed,
+            'script': _isScriptPanelCollapsed,
           },
           panelAutoCloseStates: {
             ...layout.panelAutoCloseStates,
@@ -1890,6 +1920,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             'layer': _isLayerPanelAutoClose,
             'legend': _isLegendPanelAutoClose,
             'stickyNote': _isStickyNotePanelAutoClose,
+            'script': _isScriptPanelAutoClose,
           },
         );
 
@@ -1932,10 +1963,13 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
-          }
-          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+          }          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
             _isStickyNotePanelCollapsed = true;
             changedPanels.add('stickyNote');
+          }
+          if (_isScriptPanelAutoClose && !_isScriptPanelCollapsed) {
+            _isScriptPanelCollapsed = true;
+            changedPanels.add('script');
           }
           _isLayerPanelCollapsed = !_isLayerPanelCollapsed;
           break;
@@ -1948,14 +1982,35 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
             _isLayerPanelCollapsed = true;
             changedPanels.add('layer');
-          }
-          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+          }          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
             _isStickyNotePanelCollapsed = true;
             changedPanels.add('stickyNote');
+          }
+          if (_isScriptPanelAutoClose && !_isScriptPanelCollapsed) {
+            _isScriptPanelCollapsed = true;
+            changedPanels.add('script');
           }
           _isLegendPanelCollapsed = !_isLegendPanelCollapsed;
           break;
         case 'stickyNote':
+          // 如果其他面板开启了自动关闭，则关闭它们
+          if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
+            _isDrawingToolbarCollapsed = true;
+            changedPanels.add('drawing');
+          }
+          if (_isLayerPanelAutoClose && !_isLayerPanelCollapsed) {
+            _isLayerPanelCollapsed = true;
+            changedPanels.add('layer');
+          }          if (_isLegendPanelAutoClose && !_isLegendPanelCollapsed) {
+            _isLegendPanelCollapsed = true;
+            changedPanels.add('legend');
+          }
+          if (_isScriptPanelAutoClose && !_isScriptPanelCollapsed) {
+            _isScriptPanelCollapsed = true;
+            changedPanels.add('script');
+          }          _isStickyNotePanelCollapsed = !_isStickyNotePanelCollapsed;
+          break;
+        case 'script':
           // 如果其他面板开启了自动关闭，则关闭它们
           if (_isDrawingToolbarAutoClose && !_isDrawingToolbarCollapsed) {
             _isDrawingToolbarCollapsed = true;
@@ -1969,7 +2024,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
             _isLegendPanelCollapsed = true;
             changedPanels.add('legend');
           }
-          _isStickyNotePanelCollapsed = !_isStickyNotePanelCollapsed;
+          if (_isStickyNotePanelAutoClose && !_isStickyNotePanelCollapsed) {
+            _isStickyNotePanelCollapsed = true;
+            changedPanels.add('stickyNote');
+          }
+          _isScriptPanelCollapsed = !_isScriptPanelCollapsed;
           break;
       }
     });
@@ -2011,9 +2070,11 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           break;
         case 'legend':
           _isLegendPanelAutoClose = value;
-          break;
-        case 'stickyNote':
+          break;        case 'stickyNote':
           _isStickyNotePanelAutoClose = value;
+          break;
+        case 'script':
+          _isScriptPanelAutoClose = value;
           break;
       }
     });
@@ -2522,8 +2583,30 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 onStickyNoteDeleted: _deleteStickyNote,
                 onStickyNoteAdded: _addNewStickyNote,
                 onStickyNotesReordered: _reorderStickyNotes,
-                onOpacityPreview: _handleStickyNoteOpacityPreview,
-                onStickyNoteSelected: _selectStickyNote,
+                onOpacityPreview: _handleStickyNoteOpacityPreview,                onStickyNoteSelected: _selectStickyNote,
+              ),
+      ),
+    );
+
+    // 脚本管理面板
+    panels.add(
+      _buildCollapsiblePanel(
+        title: '脚本管理',
+        icon: Icons.code,
+        isCollapsed: _isScriptPanelCollapsed,
+        onToggleCollapsed: () => _handlePanelToggle('script'),
+        autoCloseEnabled: _isScriptPanelAutoClose,
+        onAutoCloseToggled: (value) =>
+            _handleAutoCloseToggle('script', value),
+        compactMode: layout.compactMode,
+        showTooltips: layout.showTooltips,
+        animationDuration: layout.animationDuration,
+        enableAnimations: layout.enableAnimations,
+        child: _isScriptPanelCollapsed
+            ? null
+            : ChangeNotifierProvider.value(
+                value: _scriptManager,
+                child: const ScriptPanel(),
               ),
       ),
     );
