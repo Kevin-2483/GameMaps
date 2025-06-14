@@ -31,6 +31,11 @@ import '../../services/version_session_manager.dart';
 import '../../services/script_manager_vfs.dart';
 import '../../models/script_data.dart';
 import 'widgets/script_panel.dart';
+import 'widgets/reactive_script_panel.dart';
+import '../../data/map_editor_reactive_integration.dart';
+import '../../data/map_data_state.dart';
+import '../../data/reactive_script_manager.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -78,7 +83,7 @@ class _MapEditorContent extends StatefulWidget {
   State<_MapEditorContent> createState() => _MapEditorContentState();
 }
 
-class _MapEditorContentState extends State<_MapEditorContent> {
+class _MapEditorContentState extends State<_MapEditorContent> with MapEditorReactiveMixin {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final MapDatabaseService _mapDatabaseService =
@@ -112,8 +117,9 @@ class _MapEditorContentState extends State<_MapEditorContent> {
   bool _isDrawingToolbarAutoClose = true;
   bool _isLayerPanelAutoClose = true;
   bool _isLegendPanelAutoClose = true;
-  bool _isStickyNotePanelAutoClose = true;
-  bool _isScriptPanelAutoClose = true;
+  bool _isStickyNotePanelAutoClose = true;  bool _isScriptPanelAutoClose = true;
+  // 响应式模式开关
+  bool _useReactiveScripts = false;
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
   // 透明度预览状态
@@ -164,15 +170,52 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         print('在dispose中保存面板状态失败: $e');
       });
     }
+    
+    // 释放响应式系统资源
+    disposeReactiveIntegration();
+    
     super.dispose();
-  }
-  @override
+  }@override
   void initState() {
     super.initState();
     _initializeMap();
     _initializeLayoutFromPreferences();
     _initializeScriptManager();
-  }  /// 初始化脚本管理器
+    _initializeReactiveSystem();
+  }
+
+  /// 初始化响应式系统
+  void _initializeReactiveSystem() async {
+    try {
+      await initializeReactiveSystem();
+      debugPrint('响应式系统初始化完成');
+      
+      // 如果已有地图数据，加载到响应式系统
+      if (_currentMap != null) {
+        await loadMapToReactiveSystem(_currentMap!);
+        _setupReactiveListeners();
+      }
+    } catch (e) {
+      debugPrint('响应式系统初始化失败: $e');
+    }
+  }
+
+  /// 设置响应式监听器
+  void _setupReactiveListeners() {
+    // 监听地图数据变化
+    mapDataStream.listen((state) {
+      if (state is MapDataLoaded) {
+        // 同步更新传统状态
+        if (mounted) {
+          setState(() {
+            _currentMap = state.mapItem;
+            // 更新显示顺序
+            _updateDisplayOrderAfterLayerChange();
+          });
+        }
+      }
+    });
+  }/// 初始化脚本管理器
   void _initializeScriptManager() async {
     await _scriptManager.initialize(mapTitle: _currentMap?.title);
     // 设置地图数据访问器
@@ -271,10 +314,27 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       if (_currentMap != null) {
         _scriptManager.setMapTitle(_currentMap!.title);
       }
+
+      // 加载地图到响应式系统
+      if (_currentMap != null) {
+        await _loadMapToReactiveSystemSafely(_currentMap!);
+      }
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// 安全地加载地图到响应式系统
+  Future<void> _loadMapToReactiveSystemSafely(MapItem mapItem) async {
+    try {
+      await loadMapToReactiveSystem(mapItem);
+      _setupReactiveListeners();
+      debugPrint('地图已加载到响应式系统: ${mapItem.title}');
+    } catch (e) {
+      debugPrint('加载地图到响应式系统失败: $e');
+      // 响应式系统失败时，继续使用传统系统
     }
   }
 
@@ -621,7 +681,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _selectedLayer = defaultLayer;
     });
   }
-
   void _addNewLayer() {
     if (_currentMap == null) return;
 
@@ -636,23 +695,78 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       updatedAt: DateTime.now(),
     );
 
-    setState(() {
-      _currentMap = _currentMap!.copyWith(
-        layers: [..._currentMap!.layers, newLayer],
-      );
-      _selectedLayer = newLayer;
+    // 尝试使用响应式系统
+    try {
+      addLayerReactive(newLayer);
+      setState(() {
+        _selectedLayer = newLayer;
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      });
+      debugPrint('使用响应式系统添加图层: ${newLayer.name}');
+    } catch (e) {
+      debugPrint('响应式系统添加失败，回退到传统方式: $e');
+      // 回退到传统方式
+      setState(() {
+        _currentMap = _currentMap!.copyWith(
+          layers: [..._currentMap!.layers, newLayer],
+        );
+        _selectedLayer = newLayer;
 
-      // 更新显示顺序
-      _updateDisplayOrderAfterLayerChange();
-    });
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      });
+    }
   }
-
   void _deleteLayer(MapLayer layer) {
     if (_currentMap == null || _currentMap!.layers.length <= 1) return;
 
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
 
+    // 尝试使用响应式系统
+    try {
+      deleteLayerReactive(layer.id);
+      debugPrint('使用响应式系统删除图层: ${layer.name}');
+      
+      // 更新UI状态
+      setState(() {
+        // 删除逻辑会通过响应式流处理，这里只需要更新选择状态
+        final remainingLayers = _currentMap!.layers.where((l) => l.id != layer.id).toList();
+        
+        if (_selectedLayer?.id == layer.id) {
+          _selectedLayer = remainingLayers.isNotEmpty ? remainingLayers.first : null;
+        }
+
+        // 如果删除的图层在选中的组中，更新组选择
+        if (_selectedLayerGroup != null) {
+          final updatedGroup = _selectedLayerGroup!
+              .where((l) => l.id != layer.id)
+              .toList();
+
+          if (updatedGroup.isEmpty) {
+            // 如果组内所有图层都被删除，清除组选择
+            _selectedLayerGroup = null;
+            _restoreNormalLayerOrder();
+          } else {
+            // 更新组选择
+            _selectedLayerGroup = updatedGroup;
+            _prioritizeLayerGroup(updatedGroup);
+          }
+        } else {
+          // 更新显示顺序
+          _updateDisplayOrderAfterLayerChange();
+        }
+      });
+    } catch (e) {
+      debugPrint('响应式系统删除失败，回退到传统方式: $e');
+      // 回退到传统方式
+      _deleteLayerTraditional(layer);
+    }
+  }
+
+  /// 传统的图层删除方式（作为备用）
+  void _deleteLayerTraditional(MapLayer layer) {
     setState(() {
       final updatedLayers = _currentMap!.layers
           .where((l) => l.id != layer.id)
@@ -888,7 +1002,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     }
     return _displayOrderLayers;
   }
-
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
@@ -896,6 +1009,19 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
+    // 尝试使用响应式系统
+    try {
+      updateLayerReactive(updatedLayer);
+      debugPrint('使用响应式系统更新图层: ${updatedLayer.name}');
+    } catch (e) {
+      debugPrint('响应式系统更新失败，回退到传统方式: $e');
+      // 回退到传统方式
+      _updateLayerTraditional(updatedLayer);
+    }
+  }
+
+  /// 传统的图层更新方式（作为备用）
+  void _updateLayerTraditional(MapLayer updatedLayer) {
     setState(() {
       final layerIndex = _currentMap!.layers.indexWhere(
         (l) => l.id == updatedLayer.id,
@@ -914,7 +1040,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       }
     });
   }
-
   void _reorderLayers(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
 
@@ -936,6 +1061,58 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 保存当前状态到撤销历史
     _saveToUndoHistory();
 
+    // 尝试使用响应式系统
+    try {
+      reorderLayersReactive(oldIndex, newIndex);
+      debugPrint('使用响应式系统重排序图层: $oldIndex -> $newIndex');
+      
+      // 更新UI状态（响应式流会处理数据更新）
+      setState(() {
+        // 更新选中图层的引用等UI状态
+        _updateLayerSelectionAfterReorder(oldIndex, newIndex);
+      });
+    } catch (e) {
+      debugPrint('响应式系统重排序失败，回退到传统方式: $e');
+      // 回退到传统方式
+      _reorderLayersTraditional(oldIndex, newIndex);
+    }
+  }
+
+  /// 重排序后更新图层选择状态
+  void _updateLayerSelectionAfterReorder(int oldIndex, int newIndex) {
+    if (_currentMap == null) return;
+    
+    final layers = _currentMap!.layers;
+    
+    // 更新选中图层的引用
+    if (_selectedLayer != null) {
+      final selectedLayerId = _selectedLayer!.id;
+      _selectedLayer = layers.firstWhere(
+        (layer) => layer.id == selectedLayerId,
+        orElse: () => _selectedLayer!,
+      );
+    }
+
+    // 如果有选中的图层组，更新组选择并重新应用优先显示
+    if (_selectedLayerGroup != null) {
+      final updatedGroup = <MapLayer>[];
+      for (final groupLayer in _selectedLayerGroup!) {
+        final updatedLayer = layers.firstWhere(
+          (layer) => layer.id == groupLayer.id,
+          orElse: () => groupLayer,
+        );
+        updatedGroup.add(updatedLayer);
+      }
+      _selectedLayerGroup = updatedGroup;
+      _prioritizeLayerGroup(updatedGroup);
+    } else {
+      // 更新显示顺序
+      _updateDisplayOrderAfterLayerChange();
+    }
+  }
+
+  /// 传统的图层重排序方式（作为备用）
+  void _reorderLayersTraditional(int oldIndex, int newIndex) {
     setState(() {
       final layers = List<MapLayer>.from(_currentMap!.layers);
 
@@ -1010,7 +1187,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _restoreNormalLayerOrder();
     }
   }
-
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
     if (_currentMap == null) return;
@@ -1018,6 +1194,48 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     // 在修改前保存当前状态
     _saveToUndoHistory();
 
+    // 尝试使用响应式系统
+    try {
+      updateLayersReactive(updatedLayers);
+      debugPrint('使用响应式系统批量更新 ${updatedLayers.length} 个图层');
+      
+      // 更新UI状态
+      setState(() {
+        // 如果当前选中的图层也被更新了，同步更新选中图层的引用
+        if (_selectedLayer != null) {
+          final updatedSelectedLayer = updatedLayers.firstWhere(
+            (layer) => layer.id == _selectedLayer!.id,
+            orElse: () => _selectedLayer!,
+          );
+          _selectedLayer = updatedSelectedLayer;
+        }
+
+        // 如果有选中的图层组，更新组选择
+        if (_selectedLayerGroup != null) {
+          final updatedGroup = <MapLayer>[];
+          for (final groupLayer in _selectedLayerGroup!) {
+            final updatedLayer = updatedLayers.firstWhere(
+              (layer) => layer.id == groupLayer.id,
+              orElse: () => groupLayer,
+            );
+            updatedGroup.add(updatedLayer);
+          }
+          _selectedLayerGroup = updatedGroup;
+          _prioritizeLayerGroup(updatedGroup);
+        } else {
+          // 更新显示顺序
+          _updateDisplayOrderAfterLayerChange();
+        }
+      });
+    } catch (e) {
+      debugPrint('响应式系统批量更新失败，回退到传统方式: $e');
+      // 回退到传统方式
+      _updateLayersBatchTraditional(updatedLayers);
+    }
+  }
+
+  /// 传统的批量图层更新方式（作为备用）
+  void _updateLayersBatchTraditional(List<MapLayer> updatedLayers) {
     setState(() {
       _currentMap = _currentMap!.copyWith(layers: updatedLayers);
 
@@ -2584,9 +2802,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
                 onOpacityPreview: _handleStickyNoteOpacityPreview,                onStickyNoteSelected: _selectStickyNote,
               ),
       ),
-    );
-
-    // 脚本管理面板
+    );    // 脚本管理面板
     panels.add(
       _buildCollapsiblePanel(
         title: '脚本管理',
@@ -2600,6 +2816,24 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
+          // 响应式模式切换开关
+          Tooltip(
+            message: _useReactiveScripts ? '切换到传统脚本管理' : '切换到响应式脚本管理',
+            child: IconButton(
+              icon: Icon(
+                _useReactiveScripts ? Icons.stream : Icons.code,
+                size: 18,
+                color: _useReactiveScripts 
+                  ? Theme.of(context).colorScheme.primary 
+                  : null,
+              ),
+              onPressed: () {
+                setState(() {
+                  _useReactiveScripts = !_useReactiveScripts;
+                });
+              },
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _showNewScriptDialog,
@@ -2608,10 +2842,17 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         ],
         child: _isScriptPanelCollapsed
             ? null
-            : ChangeNotifierProvider.value(
-                value: _scriptManager,
-                child: ScriptPanel(onNewScript: _showNewScriptDialog),
-              ),
+            : _useReactiveScripts
+                // 使用响应式脚本面板
+                ? ReactiveScriptPanel(
+                    scriptManager: reactiveScriptManager,
+                    onNewScript: _showNewScriptDialog,
+                  )
+                // 使用传统脚本面板
+                : ChangeNotifierProvider.value(
+                    value: _scriptManager,
+                    child: ScriptPanel(onNewScript: _showNewScriptDialog),
+                  ),
       ),
     );
 
@@ -2912,11 +3153,12 @@ class _MapEditorContentState extends State<_MapEditorContent> {
           zoomSensitivity: context
               .read<UserPreferencesProvider>()
               .mapEditor
-              .zoomSensitivity,
-          shouldDisableDrawingTools: _shouldDisableDrawingTools, // 添加图片缓冲区数据
+              .zoomSensitivity,          shouldDisableDrawingTools: _shouldDisableDrawingTools,
+          // 添加图片缓冲区数据
           imageBufferData: _imageBufferData,
           imageBufferFit: _imageBufferFit,
-          displayOrderLayers: _layersForDisplay, //：传递显示顺序          // 添加便签相关参数
+          displayOrderLayers: _layersForDisplay, //：传递显示顺序
+          // 添加便签相关参数
           selectedStickyNote: _selectedStickyNote,
           previewStickyNoteOpacityValues: _previewStickyNoteOpacityValues,
           onStickyNoteUpdated: _updateStickyNote,
@@ -3271,14 +3513,28 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     setState(() {
       _selectedStickyNote = note;
     });
+  }  // 脚本管理方法
+  void _showNewScriptDialog() {
+    if (_useReactiveScripts) {
+      // 直接使用响应式脚本管理器创建脚本
+      _showReactiveScriptDialog();
+    } else {
+      // 使用传统脚本对话框
+      showDialog(
+        context: context,
+        builder: (context) => _ScriptEditDialog(
+          scriptManager: _scriptManager,
+        ),
+      );
+    }
   }
 
-  // 脚本管理方法
-  void _showNewScriptDialog() {
+  /// 显示响应式脚本创建对话框
+  void _showReactiveScriptDialog() {
     showDialog(
       context: context,
-      builder: (context) => _ScriptEditDialog(
-        scriptManager: _scriptManager,
+      builder: (context) => _ReactiveScriptCreateDialog(
+        scriptManager: reactiveScriptManager,
       ),
     );
   }
@@ -3456,4 +3712,330 @@ log('总面积: ' + totalArea.toString());''';
         return '统计';
     }
   }
+}
+
+/// 响应式脚本创建对话框
+class _ReactiveScriptCreateDialog extends StatefulWidget {
+  final ReactiveScriptManager scriptManager;
+
+  const _ReactiveScriptCreateDialog({
+    required this.scriptManager,
+  });
+
+  @override
+  State<_ReactiveScriptCreateDialog> createState() => _ReactiveScriptCreateDialogState();
+}
+
+class _ReactiveScriptCreateDialogState extends State<_ReactiveScriptCreateDialog> {
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+  ScriptType _selectedType = ScriptType.automation;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(
+            Icons.stream,
+            color: Theme.of(context).colorScheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          const Text('新建响应式脚本'),
+        ],
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '响应式脚本会自动响应地图数据变化，确保实时数据一致性',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: '脚本名称',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.edit),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: '描述',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.description),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<ScriptType>(
+              value: _selectedType,
+              decoration: const InputDecoration(
+                labelText: '脚本类型',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.category),
+              ),
+              items: ScriptType.values.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Row(
+                    children: [
+                      Icon(
+                        _getTypeIcon(type),
+                        size: 16,
+                        color: _getTypeColor(type),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(_getTypeDisplayName(type)),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value!;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton.icon(
+          onPressed: _saveScript,
+          icon: const Icon(Icons.save, size: 16),
+          label: const Text('创建脚本'),
+        ),
+      ],
+    );
+  }
+
+  void _saveScript() {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请输入脚本名称')),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final script = ScriptData(
+      id: now.millisecondsSinceEpoch.toString(),
+      name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      type: _selectedType,
+      content: _getDefaultScriptContent(_selectedType),
+      parameters: {},
+      isEnabled: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    widget.scriptManager.addScript(script);
+    Navigator.of(context).pop();
+    
+    // 显示成功提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Text('响应式脚本 "${script.name}" 创建成功'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  IconData _getTypeIcon(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return Icons.auto_mode;
+      case ScriptType.animation:
+        return Icons.animation;
+      case ScriptType.filter:
+        return Icons.filter_list;
+      case ScriptType.statistics:
+        return Icons.analytics;
+    }
+  }
+
+  Color _getTypeColor(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return Colors.blue;
+      case ScriptType.animation:
+        return Colors.green;
+      case ScriptType.filter:
+        return Colors.orange;
+      case ScriptType.statistics:
+        return Colors.purple;
+    }
+  }
+
+  String _getDefaultScriptContent(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return '''// 响应式自动化脚本示例
+// 此脚本会自动响应地图数据变化
+
+var layers = getLayers();
+log('响应式系统检测到 ' + layers.length.toString() + ' 个图层');
+
+// 遍历所有元素并执行自动化操作
+var elements = getAllElements();
+for (var element in elements) {
+    log('处理元素 ' + element['id'] + ' 类型: ' + element['type']);
+    
+    // 在响应式环境中，数据变化会自动触发此脚本
+    if (element['type'] == 'marker') {
+        // 自动处理标记元素
+        log('自动处理标记: ' + element['id']);
+    }
+}
+
+log('响应式自动化处理完成');''';
+      case ScriptType.animation:
+        return '''// 响应式动画脚本示例
+// 响应地图数据变化的动画效果
+
+var elements = getAllElements();
+if (elements.length > 0) {
+    log('响应式动画系统启动，元素数量: ' + elements.length.toString());
+    
+    for (var element in elements) {
+        // 响应式动画会根据数据变化自动调整
+        if (element['visible']) {
+            // 淡入动画
+            animate(element['id'], 'opacity', 1.0, 500);
+        } else {
+            // 淡出动画
+            animate(element['id'], 'opacity', 0.0, 500);
+        }
+    }
+}
+
+log('响应式动画脚本执行完成');''';
+      case ScriptType.filter:
+        return '''// 响应式过滤脚本示例
+// 自动响应数据变化的过滤逻辑
+
+var allElements = getAllElements();
+log('响应式过滤系统启动，总元素: ' + allElements.length.toString());
+
+// 响应式过滤会在数据变化时自动重新执行
+var visibleElements = filterElements(fun(element) {
+    // 根据实时数据状态进行过滤
+    return element['visible'] && element['opacity'] > 0.5;
+});
+
+var highlightedElements = filterElements(fun(element) {
+    return element['highlighted'] == true;
+});
+
+log('可见元素: ' + visibleElements.length.toString());
+log('高亮元素: ' + highlightedElements.length.toString());
+
+// 响应式过滤结果会自动同步到UI
+setFilteredElements(visibleElements);''';
+      case ScriptType.statistics:
+        return '''// 响应式统计脚本示例
+// 实时统计地图数据变化
+
+var totalElements = countElements();
+var rectangles = countElements('rectangle');
+var circles = countElements('circle');
+var markers = countElements('marker');
+
+log('=== 响应式统计报告 ===');
+log('总元素数: ' + totalElements.toString());
+log('矩形数量: ' + rectangles.toString());
+log('圆形数量: ' + circles.toString());
+log('标记数量: ' + markers.toString());
+
+// 计算实时面积和位置统计
+var totalArea = calculateTotalArea();
+var centerPoint = calculateCenterPoint();
+
+log('总面积: ' + totalArea.toString());
+log('中心点: (' + centerPoint['x'].toString() + ', ' + centerPoint['y'].toString() + ')');
+
+// 响应式统计会在数据变化时自动更新
+var layers = getLayers();
+for (var layer in layers) {
+    var layerElements = countElements(null, layer['id']);
+    log('图层 "' + layer['name'] + '": ' + layerElements.toString() + ' 个元素');
+}
+
+log('=== 响应式统计完成 ===');''';
+    }
+  }
+
+  String _getTypeDisplayName(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return '自动化';
+      case ScriptType.animation:
+        return '动画';
+      case ScriptType.filter:
+        return '过滤';
+      case ScriptType.statistics:
+        return '统计';
+    }
+}
 }
