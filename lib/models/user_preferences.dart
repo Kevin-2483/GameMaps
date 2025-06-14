@@ -280,14 +280,14 @@ class LayoutPreferences {
     this.animationDuration = 300,
     this.enableAnimations = true,
     this.autoRestorePanelStates = true,
-  });
-  factory LayoutPreferences.createDefault() {
+  });  factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
       panelCollapsedStates: {
         'drawing': false,
         'layer': false,
         'legend': false,
         'stickyNote': false,
+        'script': false,
         'sidebar': false,
       },
       panelAutoCloseStates: {
@@ -295,6 +295,7 @@ class LayoutPreferences {
         'layer': true,
         'legend': true,
         'stickyNote': true,
+        'script': true,
       },
       sidebarWidth: 300.0,
       compactMode: false,

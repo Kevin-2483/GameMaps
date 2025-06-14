@@ -6,7 +6,9 @@ import 'script_editor_window.dart';
 
 /// 脚本管理面板
 class ScriptPanel extends StatefulWidget {
-  const ScriptPanel({super.key});
+  final VoidCallback? onNewScript;
+  
+  const ScriptPanel({super.key, this.onNewScript});
 
   @override
   State<ScriptPanel> createState() => _ScriptPanelState();
@@ -15,7 +17,6 @@ class ScriptPanel extends StatefulWidget {
 class _ScriptPanelState extends State<ScriptPanel> {
   ScriptType _selectedType = ScriptType.automation;
   String? _selectedScriptId;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -29,50 +30,13 @@ class _ScriptPanelState extends State<ScriptPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
           _buildTypeSelector(),
           Expanded(child: _buildScriptList()),
           _buildActionBar(),
         ],
       ),
     );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.code,
-            size: 16,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '脚本管理',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: _showNewScriptDialog,
-            icon: const Icon(Icons.add),
-            iconSize: 16,
-            tooltip: '新建脚本',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeSelector() {
+  }  Widget _buildTypeSelector() {
     return Container(
       padding: const EdgeInsets.all(8),
       child: SegmentedButton<ScriptType>(
@@ -111,7 +75,7 @@ class _ScriptPanelState extends State<ScriptPanel> {
         ),
       ),
     );
-  }  Widget _buildScriptList() {
+  }Widget _buildScriptList() {
     return Consumer<script_service.ScriptManager>(
       builder: (context, scriptManager, child) {
         final scriptsByType = scriptManager.getScriptsByType();
@@ -134,10 +98,9 @@ class _ScriptPanelState extends State<ScriptPanel> {
                     color: Theme.of(context).colorScheme.outline,
                     fontSize: 12,
                   ),
-                ),
-                const SizedBox(height: 8),
+                ),                const SizedBox(height: 8),
                 FilledButton.tonal(
-                  onPressed: _showNewScriptDialog,
+                  onPressed: widget.onNewScript ?? _showNewScriptDialog,
                   child: const Text('创建脚本'),
                 ),
               ],

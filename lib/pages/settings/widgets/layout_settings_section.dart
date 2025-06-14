@@ -165,7 +165,6 @@ class LayoutSettingsSection extends StatelessWidget {
       ),
     );
   }
-
   String _getPanelDisplayName(String panelKey) {
     switch (panelKey) {
       case 'drawing':
@@ -176,6 +175,8 @@ class LayoutSettingsSection extends StatelessWidget {
         return '图例面板';
       case 'stickyNote':
         return '便签面板';
+      case 'script':
+        return '脚本面板';
       case 'sidebar':
         return '侧边栏';
       case 'properties':

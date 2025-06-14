@@ -29,6 +29,7 @@ import '../../models/sticky_note.dart';
 import '../../models/map_version.dart';
 import '../../services/version_session_manager.dart';
 import '../../services/script_manager_vfs.dart';
+import '../../models/script_data.dart';
 import 'widgets/script_panel.dart';
 
 class MapEditorPage extends BasePage {
@@ -220,9 +221,7 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isLayerPanelCollapsed = layout.panelCollapsedStates['layer'] ?? false;
       _isLegendPanelCollapsed = layout.panelCollapsedStates['legend'] ?? false;      _isStickyNotePanelCollapsed =
           layout.panelCollapsedStates['stickyNote'] ?? false;
-      _isScriptPanelCollapsed = layout.panelCollapsedStates['script'] ?? false;
-
-      // 更新面板自动关闭状态
+      _isScriptPanelCollapsed = layout.panelCollapsedStates['script'] ?? false;      // 更新面板自动关闭状态
       _isDrawingToolbarAutoClose =
           layout.panelAutoCloseStates['drawing'] ?? true;
       _isLayerPanelAutoClose = layout.panelAutoCloseStates['layer'] ?? true;
@@ -230,7 +229,6 @@ class _MapEditorContentState extends State<_MapEditorContent> {
       _isStickyNotePanelAutoClose =
           layout.panelAutoCloseStates['stickyNote'] ?? true;
       _isScriptPanelAutoClose = layout.panelAutoCloseStates['script'] ?? true;
-          layout.panelAutoCloseStates['stickyNote'] ?? true;
     });
   }
 
@@ -2597,16 +2595,22 @@ class _MapEditorContentState extends State<_MapEditorContent> {
         onToggleCollapsed: () => _handlePanelToggle('script'),
         autoCloseEnabled: _isScriptPanelAutoClose,
         onAutoCloseToggled: (value) =>
-            _handleAutoCloseToggle('script', value),
-        compactMode: layout.compactMode,
+            _handleAutoCloseToggle('script', value),        compactMode: layout.compactMode,
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: _showNewScriptDialog,
+            tooltip: layout.showTooltips ? '新建脚本' : null,
+          ),
+        ],
         child: _isScriptPanelCollapsed
             ? null
             : ChangeNotifierProvider.value(
                 value: _scriptManager,
-                child: const ScriptPanel(),
+                child: ScriptPanel(onNewScript: _showNewScriptDialog),
               ),
       ),
     );
@@ -3267,5 +3271,189 @@ class _MapEditorContentState extends State<_MapEditorContent> {
     setState(() {
       _selectedStickyNote = note;
     });
+  }
+
+  // 脚本管理方法
+  void _showNewScriptDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _ScriptEditDialog(
+        scriptManager: _scriptManager,
+      ),
+    );
+  }
+}
+
+/// 脚本编辑对话框
+class _ScriptEditDialog extends StatefulWidget {
+  final ScriptManager scriptManager;
+
+  const _ScriptEditDialog({
+    required this.scriptManager,
+  });
+
+  @override
+  State<_ScriptEditDialog> createState() => _ScriptEditDialogState();
+}
+
+class _ScriptEditDialogState extends State<_ScriptEditDialog> {
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+  ScriptType _selectedType = ScriptType.automation;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('新建脚本'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: '脚本名称',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: '描述',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<ScriptType>(
+              value: _selectedType,
+              decoration: const InputDecoration(
+                labelText: '脚本类型',
+                border: OutlineInputBorder(),
+              ),
+              items: ScriptType.values.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(_getTypeDisplayName(type)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value!;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _saveScript,
+          child: const Text('保存'),
+        ),
+      ],
+    );
+  }
+
+  void _saveScript() {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请输入脚本名称')),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final script = ScriptData(
+      id: now.millisecondsSinceEpoch.toString(),
+      name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      type: _selectedType,
+      content: _getDefaultScriptContent(_selectedType),
+      parameters: {},
+      isEnabled: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    widget.scriptManager.addScript(script);
+    Navigator.of(context).pop();
+  }
+
+  String _getDefaultScriptContent(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return '''// 自动化脚本示例
+var layers = getLayers();
+log('共有 ' + layers.length.toString() + ' 个图层');
+
+// 遍历所有元素
+var elements = getAllElements();
+for (var element in elements) {
+    log('元素 ' + element['id'] + ' 类型: ' + element['type']);
+}''';
+      case ScriptType.animation:
+        return '''// 动画脚本示例
+var elements = getAllElements();
+if (elements.length > 0) {
+    var element = elements[0];
+    
+    // 动画改变颜色
+    animate(element['id'], 'color', 0xFF00FF00, 1000);
+    delay(1000);
+    
+    // 动画移动元素
+    moveElement(element['id'], 0.1, 0.1);
+}''';
+      case ScriptType.filter:
+        return '''// 过滤脚本示例
+var redElements = filterElements(fun(element) {
+    return element['color'] == 0xFFFF0000;
+});
+
+log('找到 ' + redElements.length.toString() + ' 个红色元素');''';
+      case ScriptType.statistics:
+        return '''// 统计脚本示例
+var totalElements = countElements();
+var rectangles = countElements('rectangle');
+var totalArea = calculateTotalArea();
+
+log('总元素数: ' + totalElements.toString());
+log('矩形数量: ' + rectangles.toString());
+log('总面积: ' + totalArea.toString());''';
+    }
+  }
+
+  String _getTypeDisplayName(ScriptType type) {
+    switch (type) {
+      case ScriptType.automation:
+        return '自动化';
+      case ScriptType.animation:
+        return '动画';
+      case ScriptType.filter:
+        return '过滤';
+      case ScriptType.statistics:
+        return '统计';
+    }
   }
 }
