@@ -692,8 +692,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // return _redoHistory.isNotEmpty;
   }
 
-  // 删除指定图层中的绘制元素
-  // TODO: 考虑使用响应式系统
+  // 删除指定图层中的绘制元素（使用响应式系统重构）
   void _deleteElement(String elementId) {
     if (_selectedLayer == null) return;
 
@@ -704,34 +703,61 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     if (elementToDelete == null) return;
 
-    // 保存当前状态到撤销历史
-    _saveToUndoHistory();
+    // 尝试使用响应式系统删除元素
+    try {
+      deleteDrawingElementReactive(_selectedLayer!.id, elementId);
+      debugPrint('使用响应式系统删除绘制元素: ${_selectedLayer!.id}/$elementId');
 
-    // 创建新的元素列表，排除要删除的元素
-    final updatedElements = _selectedLayer!.elements
-        .where((element) => element.id != elementId)
-        .toList();
+      // 响应式系统会自动处理撤销历史和数据同步
+      // 无需手动调用 _saveToUndoHistory() 和 _updateLayer()
 
-    // 更新图层
-    final updatedLayer = _selectedLayer!.copyWith(
-      elements: updatedElements,
-      updatedAt: DateTime.now(),
-    );
+      //：如果删除的是图片元素，强制触发缓存清理
+      if (elementToDelete.type == DrawingElementType.imageArea) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
+      }
 
-    _updateLayer(updatedLayer);
-
-    //：如果删除的是图片元素，强制触发缓存清理
-    if (elementToDelete.type == DrawingElementType.imageArea) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+      // 显示删除成功消息
+      _showSuccessSnackBar('已删除绘制元素');
+    } catch (e) {
+      debugPrint('响应式系统删除元素失败: $e');
+      // _deleteElementTraditional(elementId, elementToDelete);
     }
-
-    // 显示删除成功消息
-    _showSuccessSnackBar('已删除绘制元素');
   }
+
+  /// 传统的元素删除方式（作为备用）
+  // void _deleteElementTraditional(String elementId, MapDrawingElement elementToDelete) {
+  //   // 保存当前状态到撤销历史
+  //   _saveToUndoHistory();
+
+  //   // 创建新的元素列表，排除要删除的元素
+  //   final updatedElements = _selectedLayer!.elements
+  //       .where((element) => element.id != elementId)
+  //       .toList();
+
+  //   // 更新图层
+  //   final updatedLayer = _selectedLayer!.copyWith(
+  //     elements: updatedElements,
+  //     updatedAt: DateTime.now(),
+  //   );
+
+  //   _updateLayer(updatedLayer);
+
+  //   //：如果删除的是图片元素，强制触发缓存清理
+  //   if (elementToDelete.type == DrawingElementType.imageArea) {
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       if (mounted) {
+  //         setState(() {});
+  //       }
+  //     });
+  //   }
+
+  //   // 显示删除成功消息
+  //   _showSuccessSnackBar('已删除绘制元素（传统模式）');
+  // }
 
   Future<void> _loadAvailableLegends() async {
     setState(() => _isLoading = true);
@@ -766,13 +792,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedLayer = defaultLayer;
     });
   }
-
   void _addNewLayer() {
     if (_currentMap == null) return;
-
-    // 保存当前状态到撤销历史
-    // TODO: 考虑使用响应式系统
-    _saveToUndoHistory();
 
     final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -782,38 +803,29 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updatedAt: DateTime.now(),
     );
 
-    // 尝试使用响应式系统
+    // 使用响应式系统添加图层
     try {
       addLayerReactive(newLayer);
+      debugPrint('使用响应式系统添加图层: ${newLayer.name}');
+      
+      // 更新UI状态
       setState(() {
         _selectedLayer = newLayer;
         // 更新显示顺序
         _updateDisplayOrderAfterLayerChange();
       });
-      debugPrint('使用响应式系统添加图层: ${newLayer.name}');
+      
+      // 显示成功消息
+      _showSuccessSnackBar('已添加图层 "${newLayer.name}"');
     } catch (e) {
-      debugPrint('响应式系统添加失败: $e');
-      // // 回退到传统方式
-      // setState(() {
-      //   _currentMap = _currentMap!.copyWith(
-      //     layers: [..._currentMap!.layers, newLayer],
-      //   );
-      //   _selectedLayer = newLayer;
-
-      //   // 更新显示顺序
-      //   _updateDisplayOrderAfterLayerChange();
-      // });
+      debugPrint('响应式系统添加图层失败: $e');
+      _showErrorSnackBar('添加图层失败: ${e.toString()}');
     }
   }
-
   void _deleteLayer(MapLayer layer) {
     if (_currentMap == null || _currentMap!.layers.length <= 1) return;
 
-    // 保存当前状态到撤销历史
-    // TODO: 考虑使用响应式系统
-    _saveToUndoHistory();
-
-    // 尝试使用响应式系统
+    // 使用响应式系统删除图层
     try {
       deleteLayerReactive(layer.id);
       debugPrint('使用响应式系统删除图层: ${layer.name}');
@@ -851,10 +863,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _updateDisplayOrderAfterLayerChange();
         }
       });
+
+      // 显示成功消息
+      _showSuccessSnackBar('已删除图层 "${layer.name}"');
     } catch (e) {
-      debugPrint('响应式系统删除失败: $e');
-      // 回退到传统方式
-      // _deleteLayerTraditional(layer);
+      debugPrint('响应式系统删除图层失败: $e');
+      _showErrorSnackBar('删除图层失败: ${e.toString()}');
     }
   }
 
@@ -1101,22 +1115,19 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   // 修改所有涉及图层更新的方法，确保同步更新显示顺序
-
   void _updateLayer(MapLayer updatedLayer) {
     if (_currentMap == null) return;
 
-    // 在修改前保存当前状态
-    //TODO: 考虑使用响应式系统
-    _saveToUndoHistory();
-
-    // 尝试使用响应式系统
+    // 使用响应式系统更新图层
     try {
       updateLayerReactive(updatedLayer);
       debugPrint('使用响应式系统更新图层: ${updatedLayer.name}');
+      
+      // 显示成功消息
+      _showSuccessSnackBar('已更新图层 "${updatedLayer.name}"');
     } catch (e) {
-      debugPrint('响应式系统更新失败: $e');
-      // // 回退到传统方式
-      // _updateLayerTraditional(updatedLayer);
+      debugPrint('响应式系统更新图层失败: $e');
+      _showErrorSnackBar('更新图层失败: ${e.toString()}');
     }
   }
 
@@ -1156,14 +1167,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         newIndex >= _currentMap!.layers.length ||
         oldIndex == newIndex) {
       print('索引无效，跳过重排序');
-      return;
-    }
+      return;    }
 
-    // 保存当前状态到撤销历史
-    //TODO: 考虑使用响应式系统
-    _saveToUndoHistory();
-
-    // 尝试使用响应式系统
+    // 使用响应式系统重排序图层
     try {
       reorderLayersReactive(oldIndex, newIndex);
       debugPrint('使用响应式系统重排序图层: $oldIndex -> $newIndex');
@@ -1173,10 +1179,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
         // 更新选中图层的引用等UI状态
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
+
+      // 显示成功消息
+      _showSuccessSnackBar('图层顺序已更新');
     } catch (e) {
-      debugPrint('响应式系统重排序失败: $e');
-      // // 回退到传统方式
-      // _reorderLayersTraditional(oldIndex, newIndex);
+      debugPrint('响应式系统重排序图层失败: $e');
+      _showErrorSnackBar('重排序图层失败: ${e.toString()}');
     }
   }
 
@@ -1290,15 +1298,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _restoreNormalLayerOrder();
     }
   }
-
   /// 批量更新图层
   void _updateLayersBatch(List<MapLayer> updatedLayers) {
     if (_currentMap == null) return;
 
-    // 在修改前保存当前状态
-    _saveToUndoHistory();
-
-    // 尝试使用响应式系统
+    // 使用响应式系统批量更新图层
     try {
       updateLayersReactive(updatedLayers);
       debugPrint('使用响应式系统批量更新 ${updatedLayers.length} 个图层');
@@ -1331,10 +1335,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _updateDisplayOrderAfterLayerChange();
         }
       });
+
+      // 显示成功消息
+      _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
     } catch (e) {
-      debugPrint('响应式系统批量更新失败: $e');
-      // // 回退到传统方式
-      // _updateLayersBatchTraditional(updatedLayers);
+      debugPrint('响应式系统批量更新图层失败: $e');
+      _showErrorSnackBar('批量更新图层失败: ${e.toString()}');
     }
   }
 
@@ -1425,13 +1431,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //   // 检查newIndex是否在同一个组内
   //   return newIndex >= groupStart && newIndex <= groupEnd;
   // }
-
-  // TODO: 考虑使用响应式系统
+  // 使用响应式系统添加图例组
   void _addLegendGroup() {
     if (_currentMap == null) return;
-
-    // 保存当前状态到撤销历史
-    _saveToUndoHistory();
 
     final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1440,11 +1442,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updatedAt: DateTime.now(),
     );
 
-    setState(() {
-      _currentMap = _currentMap!.copyWith(
-        legendGroups: [..._currentMap!.legendGroups, newGroup],
-      );
-    });
+    // 使用响应式系统添加图例组
+    try {
+      addLegendGroupReactive(newGroup);
+      debugPrint('使用响应式系统添加图例组: ${newGroup.name}');
+      
+      // 显示成功消息
+      _showSuccessSnackBar('已添加图例组 "${newGroup.name}"');
+    } catch (e) {
+      debugPrint('响应式系统添加图例组失败: $e');
+      _showErrorSnackBar('添加图例组失败: ${e.toString()}');
+    }
   }
 
   // /// 查找组的开始位置
@@ -1478,39 +1486,38 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   //   return end;
   // }
-
-  //TODO: 考虑使用响应式系统
+  // 使用响应式系统删除图例组
   void _deleteLegendGroup(LegendGroup group) {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史
-    _saveToUndoHistory();
-
-    setState(() {
-      final updatedGroups = _currentMap!.legendGroups
-          .where((g) => g.id != group.id)
-          .toList();
-      _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
-    });
+    // 使用响应式系统删除图例组
+    try {
+      deleteLegendGroupReactive(group.id);
+      debugPrint('使用响应式系统删除图例组: ${group.name}');
+      
+      // 显示成功消息
+      _showSuccessSnackBar('已删除图例组 "${group.name}"');
+    } catch (e) {
+      debugPrint('响应式系统删除图例组失败: $e');
+      _showErrorSnackBar('删除图例组失败: ${e.toString()}');
+    }
   }
-
-  //TODO: 考虑使用响应式系统
+  // 使用响应式系统更新图例组
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史（只在非预览模式下）
-    _saveToUndoHistory();
-    setState(() {
-      final groupIndex = _currentMap!.legendGroups.indexWhere(
-        (g) => g.id == updatedGroup.id,
-      );
-      if (groupIndex != -1) {
-        final updatedGroups = List<LegendGroup>.from(_currentMap!.legendGroups);
-        updatedGroups[groupIndex] = updatedGroup;
-        _currentMap = _currentMap!.copyWith(legendGroups: updatedGroups);
-      }
-    });
-  } // 处理透明度预览
+    // 使用响应式系统更新图例组
+    try {
+      updateLegendGroupReactive(updatedGroup);
+      debugPrint('使用响应式系统更新图例组: ${updatedGroup.name}');
+      
+      // 显示成功消息
+      _showSuccessSnackBar('已更新图例组 "${updatedGroup.name}"');
+    } catch (e) {
+      debugPrint('响应式系统更新图例组失败: $e');
+      _showErrorSnackBar('更新图例组失败: ${e.toString()}');
+    }
+  }// 处理透明度预览
 
   void _handleOpacityPreview(String layerId, double opacity) {
     // 只更新预览状态，不触发完整重绘
