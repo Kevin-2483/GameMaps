@@ -1859,8 +1859,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('开始保存响应式版本数据 [地图: ${baseMap.title}]');
     debugPrint('版本数量: ${allVersionStates.length}');
 
-    // 1. 首先保存当前编辑版本的数据到版本管理器
-    await saveCurrentVersion();    // 2. 为每个版本收集完整的地图数据并保存到VFS
     for (final versionState in allVersionStates) {
       final versionId = versionState.versionId;
       debugPrint('保存版本: $versionId (${versionState.versionName})');
