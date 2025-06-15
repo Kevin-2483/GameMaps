@@ -435,4 +435,54 @@ class UserPreferencesService {
     await _dbService.close();
     _currentPreferences = null;
   }
+
+  /// 添加自定义标签
+  Future<void> addCustomTag(String tag) async {
+    final current = await getCurrentPreferences();
+    final customTags = List<String>.from(current.tools.customTags);
+
+    // 避免重复添加
+    if (!customTags.contains(tag)) {
+      customTags.add(tag);
+
+      final updatedTools = current.tools.copyWith(customTags: customTags);
+      await updateTools(updatedTools);
+    }
+  }
+
+  /// 移除自定义标签
+  Future<void> removeCustomTag(String tag) async {
+    final current = await getCurrentPreferences();
+    final customTags = List<String>.from(current.tools.customTags);
+
+    if (customTags.remove(tag)) {
+      final updatedTools = current.tools.copyWith(customTags: customTags);
+      await updateTools(updatedTools);
+    }
+  }
+
+  /// 更新自定义标签列表
+  Future<void> updateCustomTags(List<String> tags) async {
+    final current = await getCurrentPreferences();
+    final updatedTools = current.tools.copyWith(customTags: tags);
+    await updateTools(updatedTools);
+  }
+
+  /// 添加最近使用的标签
+  Future<void> addRecentTag(String tag) async {
+    final current = await getCurrentPreferences();
+    final recentTags = List<String>.from(current.tools.recentTags);
+
+    // 移除已存在的标签
+    recentTags.remove(tag);
+    // 添加到开头
+    recentTags.insert(0, tag);
+    // 限制数量为10个
+    if (recentTags.length > 10) {
+      recentTags.removeRange(10, recentTags.length);
+    }
+
+    final updatedTools = current.tools.copyWith(recentTags: recentTags);
+    await updateTools(updatedTools);
+  }
 }

@@ -139,6 +139,16 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
+      customTags:
+          (json['customTags'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      recentTags:
+          (json['recentTags'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
@@ -150,4 +160,6 @@ Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
       'toolbarLayout': instance.toolbarLayout,
       'showAdvancedTools': instance.showAdvancedTools,
       'handleSize': instance.handleSize,
+      'customTags': instance.customTags,
+      'recentTags': instance.recentTags,
     };

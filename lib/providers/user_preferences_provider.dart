@@ -293,6 +293,50 @@ class UserPreferencesProvider extends ChangeNotifier {
     }
   }
 
+  /// 添加自定义标签
+  Future<void> addCustomTag(String tag) async {
+    try {
+      await _service.addCustomTag(tag);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('添加自定义标签失败: ${e.toString()}');
+    }
+  }
+
+  /// 移除自定义标签
+  Future<void> removeCustomTag(String tag) async {
+    try {
+      await _service.removeCustomTag(tag);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('移除自定义标签失败: ${e.toString()}');
+    }
+  }
+
+  /// 更新自定义标签列表
+  Future<void> updateCustomTags(List<String> tags) async {
+    try {
+      await _service.updateCustomTags(tags);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('更新自定义标签失败: ${e.toString()}');
+    }
+  }
+
+  /// 添加最近使用的标签
+  Future<void> addRecentTag(String tag) async {
+    try {
+      await _service.addRecentTag(tag);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('添加最近使用标签失败: ${e.toString()}');
+    }
+  }
+
   /// 更新面板状态
   Future<void> updatePanelState({
     required String panelType,

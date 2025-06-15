@@ -94,9 +94,7 @@ class ReactiveVersionAdapter {
   bool _isSameMapData(MapItem data1, MapItem data2) {
     if (data1.layers.length != data2.layers.length) return false;
     if (data1.legendGroups.length != data2.legendGroups.length) return false;
-    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;
-
-    // 简单检查图层ID和基本属性
+    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;    // 简单检查图层ID和基本属性
     for (int i = 0; i < data1.layers.length; i++) {
       final layer1 = data1.layers[i];
       final layer2 = data2.layers[i];
@@ -105,6 +103,44 @@ class ReactiveVersionAdapter {
           layer1.isVisible != layer2.isVisible ||
           layer1.elements.length != layer2.elements.length) {
         return false;
+      }
+
+      // 检查图层元素的详细变化（包括tags属性）
+      for (int j = 0; j < layer1.elements.length; j++) {
+        final element1 = layer1.elements[j];
+        final element2 = layer2.elements[j];
+        if (element1.id != element2.id ||
+            element1.type != element2.type ||
+            element1.color != element2.color ||
+            element1.strokeWidth != element2.strokeWidth ||
+            element1.density != element2.density ||
+            element1.curvature != element2.curvature ||
+            element1.triangleCut != element2.triangleCut ||
+            element1.zIndex != element2.zIndex ||
+            element1.text != element2.text ||
+            element1.fontSize != element2.fontSize ||
+            element1.points.length != element2.points.length ||            element1.tags?.length != element2.tags?.length) {
+          return false;
+        }
+
+        // 检查tags数组内容的变化
+        if (element1.tags != null && element2.tags != null) {
+          for (int k = 0; k < element1.tags!.length; k++) {
+            if (element1.tags![k] != element2.tags![k]) {
+              return false;
+            }
+          }
+        } else if (element1.tags != element2.tags) {
+          // 一个为null，另一个不为null
+          return false;
+        }
+
+        // 检查points数组的变化
+        for (int k = 0; k < element1.points.length; k++) {
+          if (element1.points[k] != element2.points[k]) {
+            return false;
+          }
+        }
       }
     }
 
@@ -136,19 +172,19 @@ class ReactiveVersionAdapter {
           return false;
         }
       }
-    }    // 简单检查便签ID和基本属性
+    } // 简单检查便签ID和基本属性
     for (int i = 0; i < data1.stickyNotes.length; i++) {
       final note1 = data1.stickyNotes[i];
-      final note2 = data2.stickyNotes[i];  // 修复：使用data2而不是data1
+      final note2 = data2.stickyNotes[i]; // 修复：使用data2而不是data1
       if (note1.id != note2.id ||
           note1.title != note2.title ||
           note1.content != note2.content ||
           note1.position != note2.position ||
-          note1.size != note2.size ||  // 添加尺寸比较
-          note1.opacity != note2.opacity ||  // 添加透明度比较
-          note1.isVisible != note2.isVisible ||  // 添加可见性比较
-          note1.isCollapsed != note2.isCollapsed ||  // 添加折叠状态比较
-          note1.zIndex != note2.zIndex ||  // 添加层级比较
+          note1.size != note2.size || // 添加尺寸比较
+          note1.opacity != note2.opacity || // 添加透明度比较
+          note1.isVisible != note2.isVisible || // 添加可见性比较
+          note1.isCollapsed != note2.isCollapsed || // 添加折叠状态比较
+          note1.zIndex != note2.zIndex || // 添加层级比较
           note1.elements.length != note2.elements.length) {
         // 添加绘画元素数量检查
         return false;

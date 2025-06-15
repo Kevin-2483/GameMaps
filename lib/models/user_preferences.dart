@@ -359,6 +359,12 @@ class ToolPreferences {
   /// 拖动控制柄大小
   final double handleSize;
 
+  /// 自定义标签列表
+  final List<String> customTags;
+
+  /// 最近使用的标签
+  final List<String> recentTags;
+
   const ToolPreferences({
     required this.recentColors,
     required this.customColors,
@@ -367,6 +373,8 @@ class ToolPreferences {
     required this.toolbarLayout,
     this.showAdvancedTools = false,
     this.handleSize = 8.0,
+    this.customTags = const [],
+    this.recentTags = const [],
   });
   factory ToolPreferences.createDefault() {
     return const ToolPreferences(
@@ -407,6 +415,20 @@ class ToolPreferences {
       ],
       showAdvancedTools: false,
       handleSize: 8.0,
+      customTags: [
+        '重要',
+        '紧急',
+        '完成',
+        '临时',
+        '备注',
+        '标记',
+        '高优先级',
+        '低优先级',
+        '计划',
+        '想法',
+        '参考',
+      ],
+      recentTags: [],
     );
   }
   ToolPreferences copyWith({
@@ -417,6 +439,8 @@ class ToolPreferences {
     List<String>? toolbarLayout,
     bool? showAdvancedTools,
     double? handleSize,
+    List<String>? customTags,
+    List<String>? recentTags,
   }) {
     return ToolPreferences(
       recentColors: recentColors ?? this.recentColors,
@@ -426,6 +450,8 @@ class ToolPreferences {
       toolbarLayout: toolbarLayout ?? this.toolbarLayout,
       showAdvancedTools: showAdvancedTools ?? this.showAdvancedTools,
       handleSize: handleSize ?? this.handleSize,
+      customTags: customTags ?? this.customTags,
+      recentTags: recentTags ?? this.recentTags,
     );
   }
 

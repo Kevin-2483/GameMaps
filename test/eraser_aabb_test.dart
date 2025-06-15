@@ -52,11 +52,11 @@ void main() {
 
       // 使用反射或友元类访问私有方法进行测试
       // 注意：这只是测试示例，实际实现中可能需要调整访问方式
-      
+
       // 期望重叠的元素返回 true
       // expect(EraserRenderer._doesEraserAffectElement(overlappingElement, eraser, canvasSize), true);
-      
-      // 期望不重叠的元素返回 false  
+
+      // 期望不重叠的元素返回 false
       // expect(EraserRenderer._doesEraserAffectElement(nonOverlappingElement, eraser, canvasSize), false);
     });
 
@@ -142,7 +142,7 @@ void main() {
 
       // 文本边界框（20x20）中心在 (50, 50)，应该与橡皮擦重叠
       // expect(EraserRenderer._doesEraserAffectElement(textInside, eraser, canvasSize), true);
-      
+
       // 文本边界框中心在 (80, 80)，应该与橡皮擦不重叠
       // expect(EraserRenderer._doesEraserAffectElement(textOutside, eraser, canvasSize), false);
     });

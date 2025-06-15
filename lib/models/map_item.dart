@@ -134,6 +134,7 @@ class MapItem {
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
+
   /// 创建副本
   MapItem copyWith({
     int? id,

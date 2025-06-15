@@ -599,6 +599,7 @@ class DrawingToolManager {
       targetStickyNote: _currentDrawingStickyNote,
     );
   }
+
   /// 10. 结束便签上的绘制
   void onStickyNoteDrawingEnd(
     DragEndDetails details,
@@ -632,9 +633,11 @@ class DrawingToolManager {
         effectiveCurvature,
         effectiveTriangleCut,
       );
-      
+
       // Add eraser element to sticky note
-      final updatedStickyNote = _currentDrawingStickyNote!.addElement(eraserElement);
+      final updatedStickyNote = _currentDrawingStickyNote!.addElement(
+        eraserElement,
+      );
       onStickyNoteUpdated(updatedStickyNote);
     } else if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
       // 自由绘制处理
@@ -645,8 +648,10 @@ class DrawingToolManager {
           effectiveDensity,
           effectiveCurvature,
         );
-        
-        final updatedStickyNote = _currentDrawingStickyNote!.addElement(freeDrawingElement);
+
+        final updatedStickyNote = _currentDrawingStickyNote!.addElement(
+          freeDrawingElement,
+        );
         onStickyNoteUpdated(updatedStickyNote);
         _freeDrawingPath.clear();
       }
@@ -705,6 +710,7 @@ class DrawingToolManager {
     // 限制绘制只能在便签的内容区域内（0.0-1.0）
     return Offset(relativeX.clamp(0.0, 1.0), relativeY.clamp(0.0, 1.0));
   }
+
   /// Create drawing element for sticky note
   MapDrawingElement _createStickyNoteDrawingElement(
     Offset start,

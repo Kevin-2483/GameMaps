@@ -52,13 +52,14 @@ class _ReactiveScriptEditorWindowState
   void _onTextChanged() {
     final currentContent = _codeController.text;
     final hasChanges = currentContent != _originalContent;
-    
+
     if (_hasUnsavedChanges != hasChanges) {
       setState(() {
         _hasUnsavedChanges = hasChanges;
       });
     }
   }
+
   @override
   void dispose() {
     _codeController.removeListener(_onTextChanged);
@@ -66,6 +67,7 @@ class _ReactiveScriptEditorWindowState
     _scrollController.dispose();
     super.dispose();
   }
+
   /// 保存脚本
   Future<void> _saveScript() async {
     try {
@@ -73,7 +75,7 @@ class _ReactiveScriptEditorWindowState
         widget.script.id,
         _codeController.text,
       );
-      
+
       // 保存成功后更新原始内容
       _originalContent = _codeController.text;
       setState(() {
@@ -92,7 +94,9 @@ class _ReactiveScriptEditorWindowState
         );
       }
     }
-  }  /// 跳转到文档末尾
+  }
+
+  /// 跳转到文档末尾
   void _scrollToEnd() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -169,7 +173,8 @@ class _ReactiveScriptEditorWindowState
             widget.onClose?.call();
           }
         }
-      },      child: Scaffold(
+      },
+      child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false, // 禁用默认的后退按钮
           title: Row(
@@ -253,7 +258,8 @@ class _ReactiveScriptEditorWindowState
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),                  const Spacer(),
+                    ),
+                  const Spacer(),
                   // 滚动控制按钮
                   IconButton(
                     onPressed: _scrollToTop,
@@ -264,7 +270,7 @@ class _ReactiveScriptEditorWindowState
                   IconButton(
                     onPressed: _scrollToEnd,
                     icon: const Icon(Icons.vertical_align_bottom),
-                    tooltip: '跳转到底部',  
+                    tooltip: '跳转到底部',
                     iconSize: 20,
                   ),
                   const SizedBox(width: 8),
@@ -284,7 +290,7 @@ class _ReactiveScriptEditorWindowState
                   ),
                 ],
               ),
-            ),            // 代码编辑器
+            ), // 代码编辑器
             Expanded(
               child: Container(
                 // 设置容器背景色与编辑器一致
@@ -298,10 +304,11 @@ class _ReactiveScriptEditorWindowState
                       // 计算需要的底部填充，使最后一行能够滚动到顶部
                       // 使用80%的高度作为底部填充，确保最后一行能滚动到可视区域顶部
                       final bottomPadding = constraints.maxHeight * 0.8;
-                      
+
                       return SingleChildScrollView(
                         controller: _scrollController,
-                        physics: const BouncingScrollPhysics(),                        child: Padding(
+                        physics: const BouncingScrollPhysics(),
+                        child: Padding(
                           padding: EdgeInsets.only(bottom: bottomPadding),
                           child: CodeField(
                             controller: _codeController,
@@ -310,7 +317,9 @@ class _ReactiveScriptEditorWindowState
                               fontSize: 14,
                               height: 1.5, // 增加行高以改善可读性
                             ),
-                            background: _isDarkTheme ? const Color(0xFF272822) : Colors.white,
+                            background: _isDarkTheme
+                                ? const Color(0xFF272822)
+                                : Colors.white,
                             gutterStyle: GutterStyle(
                               showLineNumbers: true,
                               showErrors: true,
@@ -323,7 +332,9 @@ class _ReactiveScriptEditorWindowState
                               textStyle: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12,
-                                color: _isDarkTheme ? Colors.grey[500] : Colors.grey[600],
+                                color: _isDarkTheme
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
                               ),
                             ),
                             wrap: false, // 禁用自动换行以支持水平滚动

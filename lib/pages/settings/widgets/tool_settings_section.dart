@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
+import '../../../components/common/tags_manager.dart';
 
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -324,6 +325,91 @@ class ToolSettingsSection extends StatelessWidget {
                     label: Text('重置工具设置'),
                   ),
                 ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // 自定义标签管理
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '自定义标签',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${tools.customTags.length} 个标签',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // 自定义标签预览
+            if (tools.customTags.isNotEmpty) ...[
+              Container(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: tools.customTags.length,
+                  itemBuilder: (context, index) {
+                    final tag = tools.customTags[index];
+                    return Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      child: Chip(
+                        label: Text(tag, style: const TextStyle(fontSize: 12)),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        deleteIcon: const Icon(Icons.close, size: 14),
+                        onDeleted: () => _removeCustomTag(provider, tag),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Center(
+                  child: Text(
+                    '暂无自定义标签',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // 自定义标签操作按钮
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _showTagsManager(context, provider),
+                  icon: const Icon(Icons.label),
+                  label: const Text('管理标签'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _addCustomTag(context, provider),
+                  icon: const Icon(Icons.add),
+                  label: const Text('添加标签'),
+                ),
+                const SizedBox(width: 8),
+                if (tools.customTags.isNotEmpty)
+                  OutlinedButton.icon(
+                    onPressed: () => _clearCustomTags(context, provider),
+                    icon: const Icon(Icons.clear_all),
+                    label: const Text('清空'),
+                  ),
               ],
             ),
           ],
@@ -677,6 +763,136 @@ class ToolSettingsSection extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // 自定义标签管理方法
+
+  /// 移除自定义标签
+  void _removeCustomTag(UserPreferencesProvider provider, String tag) {
+    provider.removeCustomTag(tag);
+  }
+
+  /// 显示标签管理器
+  void _showTagsManager(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) async {
+    await TagsManagerUtils.showCustomTagsManagerDialog(context, provider);
+  }
+
+  /// 添加自定义标签
+  void _addCustomTag(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddCustomTagDialog(provider: provider),
+    );
+  }
+
+  /// 清空自定义标签
+  void _clearCustomTags(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('清空自定义标签'),
+        content: const Text('确定要清空所有自定义标签吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.updateCustomTags([]);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('清空', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 添加自定义标签对话框
+class _AddCustomTagDialog extends StatefulWidget {
+  final UserPreferencesProvider provider;
+
+  const _AddCustomTagDialog({required this.provider});
+
+  @override
+  State<_AddCustomTagDialog> createState() => _AddCustomTagDialogState();
+}
+
+class _AddCustomTagDialogState extends State<_AddCustomTagDialog> {
+  final TextEditingController _controller = TextEditingController();
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _addTag() async {
+    final tag = _controller.text.trim();
+
+    // 验证标签
+    final error = TagsManagerUtils.defaultTagValidator(tag);
+    if (error != null) {
+      setState(() {
+        _errorText = error;
+      });
+      return;
+    }
+
+    // 检查是否已存在
+    if (widget.provider.tools.customTags.contains(tag)) {
+      setState(() {
+        _errorText = '标签已存在';
+      });
+      return;
+    }
+
+    // 添加标签
+    await widget.provider.addCustomTag(tag);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('添加自定义标签'),
+      content: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          labelText: '标签名称',
+          hintText: '输入标签名称',
+          border: const OutlineInputBorder(),
+          errorText: _errorText,
+        ),
+        onChanged: (value) {
+          if (_errorText != null) {
+            setState(() {
+              _errorText = null;
+            });
+          }
+        },
+        onSubmitted: (_) => _addTag(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        ElevatedButton(onPressed: _addTag, child: const Text('添加')),
+      ],
     );
   }
 }

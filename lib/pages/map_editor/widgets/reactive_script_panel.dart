@@ -296,7 +296,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     );
   }
 
-
   void _showNewScriptDialog() {
     showDialog(
       context: context,

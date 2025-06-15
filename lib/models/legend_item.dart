@@ -80,6 +80,7 @@ class LegendItem {
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
+
   /// 创建副本
   LegendItem copyWith({
     int? id,

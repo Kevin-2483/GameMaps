@@ -33,7 +33,7 @@ class StickyNote {
   final Uint8List? backgroundImageData; // 背景图片数据
   final String? backgroundImageHash; // VFS资产系统中的背景图像哈希引用
   @BoxFitConverter()
-  final BoxFit backgroundImageFit; // 背景图片适应方式  
+  final BoxFit backgroundImageFit; // 背景图片适应方式
   final double backgroundImageOpacity; // 背景图片透明度
   final List<MapDrawingElement> elements; // 便签上的绘画元素列表
   final List<String>? tags; // 标签列表，用于分类和筛选
@@ -113,7 +113,8 @@ class StickyNote {
           : (backgroundImageHash ?? this.backgroundImageHash),
       backgroundImageFit: backgroundImageFit ?? this.backgroundImageFit,
       backgroundImageOpacity:
-          backgroundImageOpacity ?? this.backgroundImageOpacity,      elements: elements ?? this.elements,
+          backgroundImageOpacity ?? this.backgroundImageOpacity,
+      elements: elements ?? this.elements,
       tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

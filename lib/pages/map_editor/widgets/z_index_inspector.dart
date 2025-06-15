@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../components/color_picker_dialog.dart';
+import '../../../providers/user_preferences_provider.dart';
 
 /// Z层级元素检视器 - 显示图层中的绘制元素并支持删除操作
 class ZIndexInspector extends StatelessWidget {
@@ -310,74 +312,134 @@ class ZIndexInspector extends StatelessWidget {
     final brightness = backgroundColor.computeLuminance();
     return brightness > 0.5 ? Colors.black : Colors.white;
   }
+
   /// 构建元素详细信息
   Widget _buildElementDetails(BuildContext context, MapDrawingElement element) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 基本信息
-        _buildDetailRow(context, '类型', _getElementTypeDisplayName(element.type)),
-        _buildDetailRow(context, 'Z层级', element.zIndex.toString(), 
-          element: element, propertyName: 'zIndex'),
+        _buildDetailRow(
+          context,
+          '类型',
+          _getElementTypeDisplayName(element.type),
+        ),
+        _buildDetailRow(
+          context,
+          'Z层级',
+          element.zIndex.toString(),
+          element: element,
+          propertyName: 'zIndex',
+        ),
         if (element.text != null && element.text!.isNotEmpty)
-          _buildDetailRow(context, '文本内容', element.text!,
-            element: element, propertyName: 'text'),
+          _buildDetailRow(
+            context,
+            '文本内容',
+            element.text!,
+            element: element,
+            propertyName: 'text',
+          ),
         if (element.fontSize != null)
-          _buildDetailRow(context, '字体大小', element.fontSize!.toStringAsFixed(1),
-            element: element, propertyName: 'fontSize'),
-        _buildDetailRow(context, '颜色',
+          _buildDetailRow(
+            context,
+            '字体大小',
+            element.fontSize!.toStringAsFixed(1),
+            element: element,
+            propertyName: 'fontSize',
+          ),
+        _buildDetailRow(
+          context,
+          '颜色',
           '#${element.color.value.toRadixString(16).toUpperCase()}',
-          element: element, propertyName: 'color'),
-        _buildDetailRow(context, '描边宽度', element.strokeWidth.toStringAsFixed(1),
-          element: element, propertyName: 'strokeWidth'),
+          element: element,
+          propertyName: 'color',
+        ),
+        _buildDetailRow(
+          context,
+          '描边宽度',
+          element.strokeWidth.toStringAsFixed(1),
+          element: element,
+          propertyName: 'strokeWidth',
+        ),
         if (element.rotation != 0)
-          _buildDetailRow(context, '旋转角度', '${element.rotation.toStringAsFixed(1)}°',
-            element: element, propertyName: 'rotation'),
+          _buildDetailRow(
+            context,
+            '旋转角度',
+            '${element.rotation.toStringAsFixed(1)}°',
+            element: element,
+            propertyName: 'rotation',
+          ),
         if (element.type != DrawingElementType.freeDrawing ||
             element.type != DrawingElementType.text ||
             element.type != DrawingElementType.imageArea ||
             element.type != DrawingElementType.line ||
             element.type != DrawingElementType.dashedLine ||
             element.type != DrawingElementType.arrow)
-          _buildDetailRow(context, '弧度', '${element.curvature}',
-            element: element, propertyName: 'curvature'),
+          _buildDetailRow(
+            context,
+            '弧度',
+            '${element.curvature}',
+            element: element,
+            propertyName: 'curvature',
+          ),
         if (element.type == DrawingElementType.dashedLine ||
             element.type == DrawingElementType.diagonalLines ||
             element.type == DrawingElementType.crossLines ||
             element.type == DrawingElementType.dotGrid)
-          _buildDetailRow(context, '密度', '${element.density}',
-            element: element, propertyName: 'density'),
+          _buildDetailRow(
+            context,
+            '密度',
+            '${element.density}',
+            element: element,
+            propertyName: 'density',
+          ),
         if (element.type == DrawingElementType.rectangle ||
             element.type == DrawingElementType.hollowRectangle ||
             element.type == DrawingElementType.diagonalLines ||
             element.type == DrawingElementType.crossLines ||
             element.type == DrawingElementType.dotGrid ||
             element.type == DrawingElementType.eraser)
-          _buildDetailRow(context, '三角分割', '${element.triangleCut}',
-            element: element, propertyName: 'triangleCut'),
-        // 标签管理区域
+          _buildDetailRow(
+            context,
+            '三角分割',
+            '${element.triangleCut}',
+            element: element,
+            propertyName: 'triangleCut',
+          ), // 标签管理区域
         const SizedBox(height: 8),
         const Divider(),
         const SizedBox(height: 8),
-        TagsManager(
-          tags: element.tags ?? [],
-          onTagsChanged: (newTags) {
-            if (onElementUpdated != null) {
-              final updatedElement = element.copyWith(tags: newTags);
-              onElementUpdated!(updatedElement);
-            }
+        Consumer<UserPreferencesProvider>(
+          builder: (context, userPrefsProvider, child) {
+            return TagsManager(
+              tags: element.tags ?? [],
+              onTagsChanged: (newTags) {
+                if (onElementUpdated != null) {
+                  final updatedElement = element.copyWith(tags: newTags);
+                  onElementUpdated!(updatedElement);
+                }
+              },
+              title: '元素标签',
+              hintText: '为元素添加标签',
+              maxTags: 10,
+              suggestedTags: TagsManagerUtils.getSuggestedTagsWithCustomTags(
+                userPrefsProvider.isInitialized ? userPrefsProvider : null,
+              ),
+              tagValidator: TagsManagerUtils.defaultTagValidator,
+              enablePreferencesIntegration: true,
+              autoSaveCustomTags: true,
+            );
           },
-          title: '元素标签',
-          hintText: '为元素添加标签',
-          maxTags: 10,
-          suggestedTags: _getElementSuggestedTags(element.type),
-          tagValidator: TagsManagerUtils.defaultTagValidator,
         ),
       ],
     );
   }
+
   /// 构建详细信息行 - 支持编辑
-  Widget _buildDetailRow(BuildContext context, String label, String value, {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, {
     MapDrawingElement? element,
     String? propertyName,
   }) {
@@ -392,7 +454,8 @@ class ZIndexInspector extends StatelessWidget {
               '$label:',
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
             ),
-          ),          Expanded(
+          ),
+          Expanded(
             child: element != null && propertyName != null
                 ? _buildEditableValue(context, element, propertyName, value)
                 : Text(value, style: const TextStyle(fontSize: 11)),
@@ -421,23 +484,23 @@ class ZIndexInspector extends StatelessWidget {
 
   /// 根据元素类型获取建议标签
   List<String> _getElementSuggestedTags(DrawingElementType type) {
-    final baseTags = ['重要', '标记', '临时', '完成', '草稿', '审核'];
+    final baseTags = ['重要', '标记', '临时', '完成'];
 
     switch (type) {
       case DrawingElementType.text:
-        return [...baseTags, '标题', '注释', '说明', '备注'];
+        return [...baseTags];
       case DrawingElementType.rectangle:
       case DrawingElementType.hollowRectangle:
-        return [...baseTags, '区域', '框架', '边界', '选择'];
+        return [...baseTags];
       case DrawingElementType.line:
       case DrawingElementType.dashedLine:
-        return [...baseTags, '连接', '分隔', '指示', '路径'];
+        return [...baseTags];
       case DrawingElementType.arrow:
-        return [...baseTags, '指向', '流程', '方向', '引导'];
+        return [...baseTags];
       case DrawingElementType.freeDrawing:
-        return [...baseTags, '手绘', '涂鸦', '标注', '强调'];
+        return [...baseTags];
       case DrawingElementType.imageArea:
-        return [...baseTags, '图片', '媒体', '素材', '参考'];
+        return [...baseTags];
       default:
         return baseTags;
     }
@@ -474,8 +537,15 @@ class ZIndexInspector extends StatelessWidget {
         ],
       ),
     );
-  }  /// 构建可编辑的属性值
-  Widget _buildEditableValue(BuildContext context, MapDrawingElement element, String propertyName, String displayValue) {
+  }
+
+  /// 构建可编辑的属性值
+  Widget _buildEditableValue(
+    BuildContext context,
+    MapDrawingElement element,
+    String propertyName,
+    String displayValue,
+  ) {
     return InkWell(
       onTap: () => _editProperty(context, element, propertyName),
       child: Container(
@@ -495,18 +565,19 @@ class ZIndexInspector extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(
-              Icons.edit,
-              size: 12,
-              color: Colors.blue,
-            ),
+            const Icon(Icons.edit, size: 12, color: Colors.blue),
           ],
         ),
       ),
     );
   }
+
   /// 编辑属性
-  void _editProperty(BuildContext context, MapDrawingElement element, String propertyName) {
+  void _editProperty(
+    BuildContext context,
+    MapDrawingElement element,
+    String propertyName,
+  ) {
     switch (propertyName) {
       case 'color':
         _editColor(context, element);
@@ -546,7 +617,7 @@ class ZIndexInspector extends StatelessWidget {
       title: '选择颜色',
       enableAlpha: true,
     );
-    
+
     if (color != null && onElementUpdated != null) {
       final updatedElement = element.copyWith(color: color);
       onElementUpdated!(updatedElement);
@@ -556,7 +627,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑Z层级
   void _editZIndex(BuildContext context, MapDrawingElement element) {
     final controller = TextEditingController(text: element.zIndex.toString());
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -594,7 +665,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑文本内容
   void _editText(BuildContext context, MapDrawingElement element) {
     final controller = TextEditingController(text: element.text ?? '');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -629,8 +700,10 @@ class ZIndexInspector extends StatelessWidget {
 
   /// 编辑字体大小
   void _editFontSize(BuildContext context, MapDrawingElement element) {
-    final controller = TextEditingController(text: element.fontSize?.toString() ?? '14.0');
-    
+    final controller = TextEditingController(
+      text: element.fontSize?.toString() ?? '14.0',
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -668,7 +741,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑描边宽度
   void _editStrokeWidth(BuildContext context, MapDrawingElement element) {
     double currentValue = element.strokeWidth;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -701,7 +774,9 @@ class ZIndexInspector extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (onElementUpdated != null) {
-                  final updatedElement = element.copyWith(strokeWidth: currentValue);
+                  final updatedElement = element.copyWith(
+                    strokeWidth: currentValue,
+                  );
                   onElementUpdated!(updatedElement);
                 }
                 Navigator.of(context).pop();
@@ -717,7 +792,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑旋转角度
   void _editRotation(BuildContext context, MapDrawingElement element) {
     double currentValue = element.rotation;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -750,7 +825,9 @@ class ZIndexInspector extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (onElementUpdated != null) {
-                  final updatedElement = element.copyWith(rotation: currentValue);
+                  final updatedElement = element.copyWith(
+                    rotation: currentValue,
+                  );
                   onElementUpdated!(updatedElement);
                 }
                 Navigator.of(context).pop();
@@ -766,7 +843,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑弧度
   void _editCurvature(BuildContext context, MapDrawingElement element) {
     double currentValue = element.curvature;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -799,7 +876,9 @@ class ZIndexInspector extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (onElementUpdated != null) {
-                  final updatedElement = element.copyWith(curvature: currentValue);
+                  final updatedElement = element.copyWith(
+                    curvature: currentValue,
+                  );
                   onElementUpdated!(updatedElement);
                 }
                 Navigator.of(context).pop();
@@ -815,7 +894,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑密度
   void _editDensity(BuildContext context, MapDrawingElement element) {
     double currentValue = element.density;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -848,7 +927,9 @@ class ZIndexInspector extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (onElementUpdated != null) {
-                  final updatedElement = element.copyWith(density: currentValue);
+                  final updatedElement = element.copyWith(
+                    density: currentValue,
+                  );
                   onElementUpdated!(updatedElement);
                 }
                 Navigator.of(context).pop();
@@ -864,7 +945,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 编辑三角分割
   void _editTriangleCut(BuildContext context, MapDrawingElement element) {
     TriangleCutType currentValue = element.triangleCut;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -880,7 +961,9 @@ class ZIndexInspector extends StatelessWidget {
                 if (value != null) {
                   currentValue = value;
                   if (onElementUpdated != null) {
-                    final updatedElement = element.copyWith(triangleCut: currentValue);
+                    final updatedElement = element.copyWith(
+                      triangleCut: currentValue,
+                    );
                     onElementUpdated!(updatedElement);
                   }
                   Navigator.of(context).pop();

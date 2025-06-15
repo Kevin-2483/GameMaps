@@ -7,7 +7,7 @@ import '../utils/drawing_utils.dart';
 import 'element_renderer.dart';
 
 /// 橡皮擦渲染器 - 负责处理橡皮擦遮挡效果的渲染逻辑
-/// 
+///
 /// 使用轴对齐矩形（AABB）重叠检测算法来简化重叠判断：
 /// - 将所有形状（包括三角切割和曲率参数）都简化为边界矩形
 /// - 使用统一的AABB算法进行重叠检测
@@ -113,6 +113,7 @@ class EraserRenderer {
     // 恢复canvas状态
     canvas.restore();
   }
+
   /// 检查橡皮擦是否影响元素 - 使用轴对齐矩形（AABB）重叠检测算法
   static bool _doesEraserAffectElement(
     MapDrawingElement element,
@@ -135,7 +136,7 @@ class EraserRenderer {
 
     // 根据元素类型获取元素的边界矩形（AABB）
     Rect elementRect;
-    
+
     switch (element.type) {
       case DrawingElementType.text:
         if (element.points.isEmpty) return false;
@@ -159,7 +160,7 @@ class EraserRenderer {
         double minY = double.infinity;
         double maxX = double.negativeInfinity;
         double maxY = double.negativeInfinity;
-        
+
         for (final point in element.points) {
           final screenPoint = Offset(
             point.dx * size.width,
@@ -170,7 +171,7 @@ class EraserRenderer {
           maxX = math.max(maxX, screenPoint.dx);
           maxY = math.max(maxY, screenPoint.dy);
         }
-        
+
         // 添加一些边距以确保检测到边缘情况
         const margin = 5.0;
         elementRect = Rect.fromLTRB(
@@ -198,12 +199,12 @@ class EraserRenderer {
     // 使用轴对齐矩形（AABB）重叠检测算法
     // 两个矩形重叠的条件：
     // 1. 橡皮擦的左边 < 元素的右边
-    // 2. 橡皮擦的右边 > 元素的左边  
+    // 2. 橡皮擦的右边 > 元素的左边
     // 3. 橡皮擦的上边 < 元素的下边
     // 4. 橡皮擦的下边 > 元素的上边
     return eraserRect.left < elementRect.right &&
-           eraserRect.right > elementRect.left &&
-           eraserRect.top < elementRect.bottom &&
-           eraserRect.bottom > elementRect.top;
+        eraserRect.right > elementRect.left &&
+        eraserRect.top < elementRect.bottom &&
+        eraserRect.bottom > elementRect.top;
   }
 }

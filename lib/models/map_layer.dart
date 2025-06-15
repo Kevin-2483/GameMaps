@@ -48,7 +48,8 @@ class MapLayer {
 
   factory MapLayer.fromJson(Map<String, dynamic> json) =>
       _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
+  MapLayer copyWith({
     String? id,
     String? name,
     int? order,
@@ -136,7 +137,8 @@ class MapDrawingElement {
   @BoxFitConverter()
   final BoxFit? imageFit; // 图片适应方式（用于图片选区）
   final List<String>? tags; // 标签列表，用于分类和筛选
-  final DateTime createdAt;  const MapDrawingElement({
+  final DateTime createdAt;
+  const MapDrawingElement({
     required this.id,
     required this.type,
     required this.points,
@@ -157,7 +159,8 @@ class MapDrawingElement {
   });
   factory MapDrawingElement.fromJson(Map<String, dynamic> json) =>
       _$MapDrawingElementFromJson(json);
-  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);  MapDrawingElement copyWith({
+  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
+  MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
     List<Offset>? points,
@@ -261,7 +264,8 @@ class LegendItem {
   final bool isVisible;
   final String? url; // 图例链接URL，支持网络链接和VFS协议链接
   final List<String>? tags; // 标签列表，用于分类和筛选
-  final DateTime createdAt;  const LegendItem({
+  final DateTime createdAt;
+  const LegendItem({
     required this.id,
     required this.legendId,
     required this.position,
@@ -276,7 +280,8 @@ class LegendItem {
 
   factory LegendItem.fromJson(Map<String, dynamic> json) =>
       _$LegendItemFromJson(json);
-  Map<String, dynamic> toJson() => _$LegendItemToJson(this);  LegendItem copyWith({
+  Map<String, dynamic> toJson() => _$LegendItemToJson(this);
+  LegendItem copyWith({
     String? id,
     String? legendId,
     Offset? position,

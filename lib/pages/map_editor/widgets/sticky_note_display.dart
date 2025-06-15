@@ -653,7 +653,8 @@ class _StickyNoteDrawingPainter extends CustomPainter {
   final List<MapDrawingElement> elements;
   final bool isSelected;
 
-  _StickyNoteDrawingPainter({required this.elements, required this.isSelected});  @override
+  _StickyNoteDrawingPainter({required this.elements, required this.isSelected});
+  @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
 
