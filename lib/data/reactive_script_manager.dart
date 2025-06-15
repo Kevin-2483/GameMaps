@@ -15,20 +15,22 @@ class ReactiveScriptManager extends ChangeNotifier {
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final MapDataBloc _mapDataBloc;
   late final ReactiveScriptEngine _reactiveEngine;
-  
+
   final List<ScriptData> _scripts = [];
   final Map<String, ScriptStatus> _scriptStatuses = {};
   final Map<String, ScriptExecutionResult> _lastResults = {};
-  
+
   String? _currentMapTitle;
   StreamSubscription<MapDataState>? _mapDataSubscription;
 
   List<ScriptData> get scripts => List.unmodifiable(_scripts);
-  Map<String, ScriptStatus> get scriptStatuses => Map.unmodifiable(_scriptStatuses);
-  Map<String, ScriptExecutionResult> get lastResults => Map.unmodifiable(_lastResults);
+  Map<String, ScriptStatus> get scriptStatuses =>
+      Map.unmodifiable(_scriptStatuses);
+  Map<String, ScriptExecutionResult> get lastResults =>
+      Map.unmodifiable(_lastResults);
 
   ReactiveScriptManager({required MapDataBloc mapDataBloc})
-      : _mapDataBloc = mapDataBloc {
+    : _mapDataBloc = mapDataBloc {
     _initializeReactiveEngine();
     _setupMapDataListener();
   }
@@ -63,12 +65,13 @@ class ReactiveScriptManager extends ChangeNotifier {
       _loadScriptsForCurrentMap();
     }
   }
+
   /// 初始化管理器
   Future<void> initialize({String? mapTitle}) async {
     debugPrint('初始化响应式脚本管理器，地图标题: $mapTitle');
-    
+
     await _reactiveEngine.initializeScriptEngine();
-    
+
     if (mapTitle != null) {
       _currentMapTitle = mapTitle;
       await _loadScriptsForCurrentMap();
@@ -78,20 +81,20 @@ class ReactiveScriptManager extends ChangeNotifier {
   /// 为当前地图加载脚本
   Future<void> _loadScriptsForCurrentMap() async {
     if (_currentMapTitle == null) return;
-    
+
     try {
       _scripts.clear();
       _scriptStatuses.clear();
-      
+
       // 先尝试读取脚本索引文件
       final indexPath = _getScriptIndexPath();
       final indexExists = await _vfs.exists(indexPath);
-      
+
       if (indexExists) {
         final indexData = await _vfs.readTextFile(indexPath);
         if (indexData != null) {
           final scriptIds = List<String>.from(json.decode(indexData));
-        
+
           // 逐个加载脚本文件
           for (final scriptId in scriptIds) {
             try {
@@ -99,7 +102,7 @@ class ReactiveScriptManager extends ChangeNotifier {
               final scriptData = await _vfs.readTextFile(scriptPath);
               if (scriptData != null) {
                 final script = ScriptData.fromJson(json.decode(scriptData));
-                
+
                 _scripts.add(script);
                 _scriptStatuses[script.id] = ScriptStatus.idle;
               }
@@ -109,7 +112,7 @@ class ReactiveScriptManager extends ChangeNotifier {
           }
         }
       }
-      
+
       debugPrint('为地图 $_currentMapTitle 加载了 ${_scripts.length} 个脚本');
       notifyListeners();
     } catch (e) {
@@ -140,6 +143,7 @@ class ReactiveScriptManager extends ChangeNotifier {
     }
     return 'indexeddb://r6box/maps/${_getMapPath(_currentMapTitle!)}/scripts';
   }
+
   /// 获取地图路径（处理特殊字符）- 使用与VFS地图服务相同的路径格式
   String _getMapPath(String mapTitle) {
     // 使用与VfsMapServiceImpl相同的文件名清理逻辑
@@ -193,13 +197,13 @@ class ReactiveScriptManager extends ChangeNotifier {
     if (_currentMapTitle == null) {
       throw Exception('Map title not set');
     }
-    
+
     _scripts.add(script);
     _scriptStatuses[script.id] = ScriptStatus.idle;
-    
+
     await _saveScript(script);
     await _saveScriptIndex();
-    
+
     debugPrint('添加脚本: ${script.name}');
     notifyListeners();
   }
@@ -210,7 +214,7 @@ class ReactiveScriptManager extends ChangeNotifier {
     if (index != -1) {
       final updatedScript = script.copyWith(updatedAt: DateTime.now());
       _scripts[index] = updatedScript;
-      
+
       await _saveScript(updatedScript);
       debugPrint('更新脚本: ${script.name}');
       notifyListeners();
@@ -223,10 +227,10 @@ class ReactiveScriptManager extends ChangeNotifier {
     _scriptStatuses.remove(scriptId);
     _lastResults.remove(scriptId);
     _reactiveEngine.stopScript(scriptId);
-    
+
     await _deleteScriptFile(scriptId);
     await _saveScriptIndex();
-    
+
     debugPrint('删除脚本: $scriptId');
     notifyListeners();
   }
@@ -249,7 +253,7 @@ class ReactiveScriptManager extends ChangeNotifier {
       debugPrint('执行脚本: ${script.name}');
       final result = await _reactiveEngine.executeScript(script);
       _lastResults[scriptId] = result;
-      
+
       if (result.success) {
         _scriptStatuses[scriptId] = ScriptStatus.idle;
         // 更新最后运行时间
@@ -276,7 +280,7 @@ class ReactiveScriptManager extends ChangeNotifier {
         error: e.toString(),
         executionTime: Duration.zero,
       );
-      
+
       // 更新错误信息
       final updatedScript = script.copyWith(
         lastError: e.toString(),
@@ -357,7 +361,7 @@ class ReactiveScriptManager extends ChangeNotifier {
     try {
       final scriptMap = json.decode(scriptJson) as Map<String, dynamic>;
       final script = ScriptData.fromJson(scriptMap);
-      
+
       // 生成新的ID和时间戳
       final importedScript = script.copyWith(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -376,11 +380,11 @@ class ReactiveScriptManager extends ChangeNotifier {
   /// 获取按类型分组的脚本
   Map<ScriptType, List<ScriptData>> getScriptsByType() {
     final grouped = <ScriptType, List<ScriptData>>{};
-    
+
     for (final type in ScriptType.values) {
       grouped[type] = _scripts.where((s) => s.type == type).toList();
     }
-    
+
     return grouped;
   }
 
@@ -423,21 +427,22 @@ class ReactiveScriptManager extends ChangeNotifier {
   void clearExecutionLogs() {
     _reactiveEngine.clearExecutionLogs();
   }
+
   /// 重置脚本引擎（用于地图编辑器重新进入时清理状态）
   Future<void> resetScriptEngine() async {
     debugPrint('重置响应式脚本引擎');
-    
+
     try {
       // 重新初始化脚本引擎，这会重新预定义外部函数
       await _reactiveEngine.scriptEngine.reinitialize();
-      
+
       // 清空所有脚本状态
       for (final scriptId in _scriptStatuses.keys) {
         _scriptStatuses[scriptId] = ScriptStatus.idle;
       }
       _lastResults.clear();
       notifyListeners();
-      
+
       debugPrint('脚本引擎重置完成');
     } catch (e) {
       debugPrint('脚本引擎重置失败: $e');
@@ -448,16 +453,16 @@ class ReactiveScriptManager extends ChangeNotifier {
   @override
   void dispose() {
     debugPrint('释放响应式脚本管理器资源');
-    
+
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;
-    
+
     _reactiveEngine.dispose();
-    
+
     _scripts.clear();
     _scriptStatuses.clear();
     _lastResults.clear();
-    
+
     super.dispose();
   }
 }

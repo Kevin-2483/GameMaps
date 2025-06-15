@@ -58,7 +58,8 @@ class ReactiveVersionState {
   factory ReactiveVersionState.fromJson(Map<String, dynamic> json) {
     return ReactiveVersionState(
       versionId: json['versionId'] as String,
-      versionName: json['versionName'] as String? ?? json['versionId'] as String,
+      versionName:
+          json['versionName'] as String? ?? json['versionId'] as String,
       sessionData: json['sessionData'] != null
           ? MapItem.fromJson(json['sessionData'] as Map<String, dynamic>)
           : null,
@@ -75,20 +76,21 @@ class ReactiveVersionState {
 /// 只处理会话状态，不涉及数据持久化
 class ReactiveVersionManager extends ChangeNotifier {
   final String mapTitle;
-  
+
   // 版本会话状态管理
   final Map<String, ReactiveVersionState> _versionStates = {};
   String? _currentVersionId;
   String? _activeEditingVersionId; // 当前正在编辑的版本
-  
+
   // 版本隔离的数据管理
   final Map<String, MapItem> _versionDataCache = {};
-  
+
   ReactiveVersionManager({required this.mapTitle});
 
   /// 获取所有版本状态
-  List<ReactiveVersionState> get allVersionStates => 
-      _versionStates.values.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  List<ReactiveVersionState> get allVersionStates =>
+      _versionStates.values.toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
   /// 获取当前版本ID
   String? get currentVersionId => _currentVersionId;
@@ -97,12 +99,14 @@ class ReactiveVersionManager extends ChangeNotifier {
   String? get activeEditingVersionId => _activeEditingVersionId;
 
   /// 获取当前版本状态
-  ReactiveVersionState? get currentVersionState => 
+  ReactiveVersionState? get currentVersionState =>
       _currentVersionId != null ? _versionStates[_currentVersionId] : null;
 
   /// 获取当前正在编辑的版本状态
   ReactiveVersionState? get activeEditingVersionState =>
-      _activeEditingVersionId != null ? _versionStates[_activeEditingVersionId] : null;
+      _activeEditingVersionId != null
+      ? _versionStates[_activeEditingVersionId]
+      : null;
 
   /// 获取指定版本的状态
   ReactiveVersionState? getVersionState(String versionId) {
@@ -111,7 +115,8 @@ class ReactiveVersionManager extends ChangeNotifier {
 
   /// 获取指定版本的会话数据
   MapItem? getVersionSessionData(String versionId) {
-    return _versionStates[versionId]?.sessionData ?? _versionDataCache[versionId];
+    return _versionStates[versionId]?.sessionData ??
+        _versionDataCache[versionId];
   }
 
   /// 检查版本是否存在
@@ -156,7 +161,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     );
 
     _versionStates[versionId] = state;
-    
+
     if (initialData != null) {
       _versionDataCache[versionId] = initialData;
     }
@@ -180,12 +185,16 @@ class ReactiveVersionManager extends ChangeNotifier {
   }) {
     if (_versionStates.containsKey(versionId)) {
       throw ArgumentError('版本已存在: $versionId');
-    }    MapItem? initialData;
-    
+    }
+    MapItem? initialData;
+
     // 如果指定了源版本，复制其会话数据
-    if (sourceVersionId != null && _versionStates.containsKey(sourceVersionId)) {
+    if (sourceVersionId != null &&
+        _versionStates.containsKey(sourceVersionId)) {
       initialData = _versionStates[sourceVersionId]?.sessionData;
-      debugPrint('从版本 $sourceVersionId 复制数据: ${initialData != null ? '有数据(图层数: ${initialData.layers.length})' : '无数据'}');
+      debugPrint(
+        '从版本 $sourceVersionId 复制数据: ${initialData != null ? '有数据(图层数: ${initialData.layers.length})' : '无数据'}',
+      );
     }
 
     final state = initializeVersion(
@@ -195,9 +204,11 @@ class ReactiveVersionManager extends ChangeNotifier {
       metadata: metadata,
     );
 
-    debugPrint('创建新版本会话 [$mapTitle/$versionId]: $versionName' +
-        (sourceVersionId != null ? ' (从 $sourceVersionId 复制)' : ''));
-    
+    debugPrint(
+      '创建新版本会话 [$mapTitle/$versionId]: $versionName' +
+          (sourceVersionId != null ? ' (从 $sourceVersionId 复制)' : ''),
+    );
+
     return state;
   }
 
@@ -217,8 +228,8 @@ class ReactiveVersionManager extends ChangeNotifier {
 
     // 如果删除的是当前版本，切换到其他版本
     if (_currentVersionId == versionId) {
-      _currentVersionId = _versionStates.keys.isNotEmpty 
-          ? _versionStates.keys.first 
+      _currentVersionId = _versionStates.keys.isNotEmpty
+          ? _versionStates.keys.first
           : null;
     }
 
@@ -280,11 +291,15 @@ class ReactiveVersionManager extends ChangeNotifier {
       sessionData: newData,
       hasUnsavedChanges: markAsChanged,
       lastModified: DateTime.now(),
-    );    _versionDataCache[versionId] = newData;
+    );
+    _versionDataCache[versionId] = newData;
 
-    debugPrint('更新版本会话数据 [$mapTitle/$versionId], 标记为${markAsChanged ? '已修改' : '未修改'}, 图层数: ${newData.layers.length}');
+    debugPrint(
+      '更新版本会话数据 [$mapTitle/$versionId], 标记为${markAsChanged ? '已修改' : '未修改'}, 图层数: ${newData.layers.length}',
+    );
     notifyListeners();
   }
+
   /// 更新版本层数据（专门用于图层操作）
   void updateVersionLayers(
     String versionId,
@@ -412,8 +427,9 @@ class ReactiveVersionManager extends ChangeNotifier {
       createdAt: DateTime.now(),
       lastModified: DateTime.now(),
       metadata: Map.from(sourceState.metadata),
-    );    _versionStates[newVersionId] = newState;
-    
+    );
+    _versionStates[newVersionId] = newState;
+
     final sourceSessionData = sourceState.sessionData;
     if (sourceSessionData != null) {
       _versionDataCache[newVersionId] = sourceSessionData;
@@ -430,10 +446,10 @@ class ReactiveVersionManager extends ChangeNotifier {
     final unsavedCount = _versionStates.values
         .where((state) => state.hasUnsavedChanges)
         .length;
-    final editingInfo = _activeEditingVersionId != null 
-        ? ', 编辑中: $_activeEditingVersionId' 
+    final editingInfo = _activeEditingVersionId != null
+        ? ', 编辑中: $_activeEditingVersionId'
         : '';
-    
+
     return '地图: $mapTitle, 版本: $totalVersions, 未保存: $unsavedCount, 当前: $_currentVersionId$editingInfo';
   }
 
@@ -463,22 +479,25 @@ class ReactiveVersionManager extends ChangeNotifier {
   /// 版本状态验证
   bool validateVersionStates() {
     bool isValid = true;
-    
+
     // 检查当前版本是否存在
-    if (_currentVersionId != null && !_versionStates.containsKey(_currentVersionId)) {
+    if (_currentVersionId != null &&
+        !_versionStates.containsKey(_currentVersionId)) {
       debugPrint('警告：当前版本ID无效: $_currentVersionId');
       isValid = false;
     }
 
     // 检查正在编辑的版本是否存在
-    if (_activeEditingVersionId != null && !_versionStates.containsKey(_activeEditingVersionId)) {
+    if (_activeEditingVersionId != null &&
+        !_versionStates.containsKey(_activeEditingVersionId)) {
       debugPrint('警告：正在编辑的版本ID无效: $_activeEditingVersionId');
       isValid = false;
     }
 
     // 检查数据缓存一致性
     for (final entry in _versionStates.entries) {
-      if (entry.value.sessionData != null && !_versionDataCache.containsKey(entry.key)) {
+      if (entry.value.sessionData != null &&
+          !_versionDataCache.containsKey(entry.key)) {
         debugPrint('警告：版本 ${entry.key} 的会话数据缓存丢失');
         isValid = false;
       }
@@ -496,12 +515,14 @@ class ReactiveVersionManager extends ChangeNotifier {
       'totalVersions': _versionStates.length,
       'versionsWithData': _versionDataCache.length,
       'unsavedVersions': unsavedVersions,
-      'versionStates': _versionStates.map((k, v) => MapEntry(k, {
-        'versionName': v.versionName,
-        'hasUnsavedChanges': v.hasUnsavedChanges,
-        'hasSessionData': v.sessionData != null,
-        'lastModified': v.lastModified.toIso8601String(),
-      })),
+      'versionStates': _versionStates.map(
+        (k, v) => MapEntry(k, {
+          'versionName': v.versionName,
+          'hasUnsavedChanges': v.hasUnsavedChanges,
+          'hasSessionData': v.sessionData != null,
+          'lastModified': v.lastModified.toIso8601String(),
+        }),
+      ),
     };
   }
 

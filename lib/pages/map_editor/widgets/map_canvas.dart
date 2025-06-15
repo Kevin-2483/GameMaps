@@ -236,6 +236,7 @@ class MapCanvasState extends State<MapCanvas> {
       widget.onSelectionCleared?.call();
     }
   }
+
   @override
   void dispose() {
     // 清理绘制工具管理器
@@ -1020,7 +1021,7 @@ class MapCanvasState extends State<MapCanvas> {
         widget.onStickyNoteSelected?.call(null);
       }
       return;
-    }    // ---：优先检测图例交互 ---
+    } // ---：优先检测图例交互 ---
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null) {
       // 检查图例是否已选中，只有选中的图例才能拖动
@@ -1234,6 +1235,7 @@ class MapCanvasState extends State<MapCanvas> {
       }
     }
   }
+
   void _onLegendDragStart(LegendItem item, DragStartDetails details) {
     // 在拖动前检查是否满足选中条件
     if (!_canSelectLegendItem(item)) {
@@ -1292,6 +1294,7 @@ class MapCanvasState extends State<MapCanvas> {
     // 保存更改到撤销历史
     // 这里可以通过回调通知主页面保存状态
   }
+
   void _onLegendTap(LegendItem item) {
     // 在选中前检查是否满足条件
     if (!_canSelectLegendItem(item)) {
@@ -1301,7 +1304,7 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 选中图例项，高亮显示
     widget.onLegendItemSelected.call(item.id);
-    
+
     // 如果图例项有URL链接，打开链接
     if (item.url != null && item.url!.isNotEmpty) {
       _openLegendUrl(item.url!);
@@ -1318,11 +1321,12 @@ class MapCanvasState extends State<MapCanvas> {
     // 双击图例项，触发双击回调
     widget.onLegendItemDoubleClicked.call(item);
   }
+
   /// 判断是否可以选择图例项
   /// 灵活的选择条件：
   /// 1. 图例组可见
   /// 2. 如果有绑定图层被直接选中，允许选择
-  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择  
+  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择
   /// 4. 如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
   bool _canSelectLegendItem(LegendItem item) {
     // 查找包含此图例项的图例组
@@ -1378,7 +1382,9 @@ class MapCanvasState extends State<MapCanvas> {
     if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
       final highestPriorityLayers = _getHighestPriorityLayers();
       if (highestPriorityLayers.isNotEmpty) {
-        final highestPriorityIds = highestPriorityLayers.map((l) => l.id).toSet();
+        final highestPriorityIds = highestPriorityLayers
+            .map((l) => l.id)
+            .toSet();
         final boundLayerIds = boundLayers.map((l) => l.id).toSet();
         if (highestPriorityIds.intersection(boundLayerIds).isNotEmpty) {
           return true;
@@ -1400,13 +1406,14 @@ class MapCanvasState extends State<MapCanvas> {
   List<MapLayer> _getHighestPriorityLayers() {
     // 使用传入的显示顺序图层，如果没有则使用默认排序
     final layersToUse = widget.displayOrderLayers ?? widget.mapItem.layers;
-    
+
     if (layersToUse.isEmpty) {
       return [];
     }
 
     // 如果有显示顺序列表，最后几个图层具有最高优先级（后绘制的在上层）
-    if (widget.displayOrderLayers != null && widget.displayOrderLayers!.isNotEmpty) {
+    if (widget.displayOrderLayers != null &&
+        widget.displayOrderLayers!.isNotEmpty) {
       final priorityLayers = widget.displayOrderLayers!.reversed
           .where((layer) => layer.isVisible)
           .take(3)
@@ -1421,6 +1428,7 @@ class MapCanvasState extends State<MapCanvas> {
     // 返回前几个可见的图层作为最高优先级图层
     return sortedLayers.where((layer) => layer.isVisible).take(3).toList();
   }
+
   /// 显示图例选择受限的消息
   void _showLegendSelectionNotAllowedMessage(LegendItem item) {
     // 查找包含此图例项的图例组
@@ -1448,7 +1456,8 @@ class MapCanvasState extends State<MapCanvas> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: const Duration(seconds: 3),        behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }

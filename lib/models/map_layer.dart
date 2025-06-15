@@ -268,7 +268,8 @@ class LegendItem {
 
   factory LegendItem.fromJson(Map<String, dynamic> json) =>
       _$LegendItemFromJson(json);
-  Map<String, dynamic> toJson() => _$LegendItemToJson(this);  LegendItem copyWith({
+  Map<String, dynamic> toJson() => _$LegendItemToJson(this);
+  LegendItem copyWith({
     String? id,
     String? legendId,
     Offset? position,

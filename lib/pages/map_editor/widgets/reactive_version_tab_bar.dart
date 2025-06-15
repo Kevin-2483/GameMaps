@@ -24,7 +24,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // 添加调试信息
     debugPrint('响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId');
-    
+
     return Container(
       height: 50,
       decoration: BoxDecoration(
@@ -41,7 +41,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
                 ? _buildEmptyVersions(context)
                 : _buildVersionTabs(context),
           ),
-          
+
           // 创建版本按钮
           if (!isPreviewMode)
             Padding(
@@ -60,10 +60,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
 
   Widget _buildEmptyVersions(BuildContext context) {
     return const Center(
-      child: Text(
-        '暂无版本',
-        style: TextStyle(color: Colors.grey),
-      ),
+      child: Text('暂无版本', style: TextStyle(color: Colors.grey)),
     );
   }
 
@@ -116,23 +113,21 @@ class ReactiveVersionTabBar extends StatelessWidget {
                   version.versionName,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     color: isSelected
                         ? Theme.of(context).colorScheme.onPrimaryContainer
                         : Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
-                
+
                 // 未保存更改指示器
                 if (version.hasUnsavedChanges) ...[
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.circle,
-                    size: 6,
-                    color: Colors.orange,
-                  ),
+                  Icon(Icons.circle, size: 6, color: Colors.orange),
                 ],
-                
+
                 // 删除按钮
                 if (isDeletable && !isPreviewMode) ...[
                   const SizedBox(width: 4),
@@ -159,7 +154,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
 
   void _showCreateVersionDialog(BuildContext context) {
     final TextEditingController controller = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -197,7 +192,10 @@ class ReactiveVersionTabBar extends StatelessWidget {
     );
   }
 
-  void _showDeleteVersionDialog(BuildContext context, ReactiveVersionState version) {
+  void _showDeleteVersionDialog(
+    BuildContext context,
+    ReactiveVersionState version,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

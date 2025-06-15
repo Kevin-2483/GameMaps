@@ -209,7 +209,10 @@ class StickyNote {
   }
 
   /// 辅助方法：比较两个绘画元素列表是否相等
-  bool _listsEqual(List<MapDrawingElement> list1, List<MapDrawingElement> list2) {
+  bool _listsEqual(
+    List<MapDrawingElement> list1,
+    List<MapDrawingElement> list2,
+  ) {
     if (list1.length != list2.length) return false;
     for (int i = 0; i < list1.length; i++) {
       if (list1[i] != list2[i]) return false;

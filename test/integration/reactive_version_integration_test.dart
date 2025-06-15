@@ -177,7 +177,11 @@ void main() {
         ],
       );
 
-      versionManager.updateVersionData('default', updatedMapItem, markAsChanged: true);
+      versionManager.updateVersionData(
+        'default',
+        updatedMapItem,
+        markAsChanged: true,
+      );
 
       // 应该检测到未保存的更改
       expect(versionManager.hasUnsavedChanges('default'), true);

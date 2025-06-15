@@ -12,7 +12,7 @@ import 'map_data_state.dart';
 class ReactiveScriptEngine {
   final ScriptEngine _scriptEngine;
   final MapDataBloc _mapDataBloc;
-  
+
   StreamSubscription<MapDataState>? _mapDataSubscription;
   bool _isListening = false;
 
@@ -27,12 +27,12 @@ class ReactiveScriptEngine {
   /// 初始化响应式连接
   void _initialize() {
     if (_isListening) return;
-    
+
     _isListening = true;
-    
+
     // 监听地图数据状态变化，实时更新脚本引擎的数据访问器
     _mapDataSubscription = _mapDataBloc.stream.listen(_onMapDataStateChanged);
-    
+
     // 如果当前已有数据，立即更新脚本引擎
     if (_mapDataBloc.state is MapDataLoaded) {
       _updateScriptEngineDataAccessor(_mapDataBloc.state as MapDataLoaded);
@@ -60,7 +60,7 @@ class ReactiveScriptEngine {
   /// 更新脚本引擎的地图数据访问器
   void _updateScriptEngineDataAccessor(MapDataLoaded mapData) {
     debugPrint('更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}');
-    
+
     _scriptEngine.setMapDataAccessor(
       mapData.layers,
       _onScriptEngineLayersChanged,
@@ -76,13 +76,15 @@ class ReactiveScriptEngine {
   /// 处理脚本引擎修改图层数据的回调
   void _onScriptEngineLayersChanged(List<MapLayer> updatedLayers) {
     debugPrint('脚本引擎修改了图层数据，更新图层数量: ${updatedLayers.length}');
-    
+
     // 通过Bloc事件更新地图数据，确保响应式流的一致性
-    _mapDataBloc.add(ScriptEngineUpdate(
-      updatedLayers: updatedLayers,
-      scriptId: 'script_engine_update',
-      description: '脚本引擎更新图层数据',
-    ));
+    _mapDataBloc.add(
+      ScriptEngineUpdate(
+        updatedLayers: updatedLayers,
+        scriptId: 'script_engine_update',
+        description: '脚本引擎更新图层数据',
+      ),
+    );
   }
 
   /// 执行脚本
@@ -95,7 +97,7 @@ class ReactiveScriptEngine {
 
       // 执行脚本
       final result = await _scriptEngine.executeScript(script);
-      
+
       debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
       if (!result.success) {
         debugPrint('脚本错误: ${result.error}');
@@ -121,6 +123,7 @@ class ReactiveScriptEngine {
   List<String> getExecutionLogs() {
     return _scriptEngine.getExecutionLogs();
   }
+
   /// 清空执行日志
   void clearExecutionLogs() {
     // ScriptEngine内部会在每次执行脚本时自动清空日志
@@ -182,14 +185,14 @@ class ReactiveScriptEngine {
   /// 释放资源
   void dispose() {
     debugPrint('释放响应式脚本引擎资源');
-    
+
     _isListening = false;
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;
-    
+
     // 从MapDataBloc中移除监听器
     _mapDataBloc.removeDataChangeListener(_onMapDataChanged);
-    
+
     // 清空脚本引擎数据访问器
     _clearScriptEngineDataAccessor();
   }

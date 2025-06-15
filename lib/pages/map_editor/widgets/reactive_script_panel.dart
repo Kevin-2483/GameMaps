@@ -8,7 +8,7 @@ import 'script_editor_window_reactive.dart';
 class ReactiveScriptPanel extends StatefulWidget {
   final ReactiveScriptManager scriptManager;
   final VoidCallback? onNewScript;
-  
+
   const ReactiveScriptPanel({
     super.key,
     required this.scriptManager,
@@ -117,7 +117,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                   label: const Text('创建脚本'),
                   style: FilledButton.styleFrom(
                     textStyle: const TextStyle(fontSize: 11),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],
@@ -139,21 +142,22 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
 
   Widget _buildScriptCard(ScriptData script) {
     final isSelected = _selectedScriptId == script.id;
-    final status = widget.scriptManager.scriptStatuses[script.id] ?? ScriptStatus.idle;
-    
+    final status =
+        widget.scriptManager.scriptStatuses[script.id] ?? ScriptStatus.idle;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isSelected 
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
           width: isSelected ? 2 : 1,
         ),
         color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-          : null,
+            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            : null,
       ),
       child: InkWell(
         onTap: () {
@@ -216,11 +220,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   Widget _buildStatusIcon(ScriptStatus status) {
     switch (status) {
       case ScriptStatus.idle:
-        return Icon(
-          Icons.circle,
-          size: 8,
-          color: Colors.grey.shade400,
-        );
+        return Icon(Icons.circle, size: 8, color: Colors.grey.shade400);
       case ScriptStatus.running:
         return Icon(
           Icons.play_circle,
@@ -315,7 +315,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
           const SizedBox(width: 8),
           Expanded(
             child: FilledButton.tonal(
-              onPressed: _selectedScriptId != null ? _exportSelectedScript : null,
+              onPressed: _selectedScriptId != null
+                  ? _exportSelectedScript
+                  : null,
               child: const Text('导出', style: TextStyle(fontSize: 11)),
             ),
           ),
@@ -402,24 +404,24 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
 
   void _showImportDialog() {
     // TODO: 实现导入功能
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('导入功能开发中')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('导入功能开发中')));
   }
 
   void _exportSelectedScript() {
     if (_selectedScriptId == null) return;
-    
+
     try {
       final scriptJson = widget.scriptManager.exportScript(_selectedScriptId!);
       // TODO: 实现导出到文件功能
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('导出功能开发中')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('导出功能开发中')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导出失败: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('导出失败: $e')));
     }
   }
 
@@ -499,7 +501,8 @@ class _ReactiveScriptEditDialog extends StatefulWidget {
   });
 
   @override
-  State<_ReactiveScriptEditDialog> createState() => _ReactiveScriptEditDialogState();
+  State<_ReactiveScriptEditDialog> createState() =>
+      _ReactiveScriptEditDialogState();
 }
 
 class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
@@ -574,19 +577,16 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
-        FilledButton(
-          onPressed: _saveScript,
-          child: const Text('保存'),
-        ),
+        FilledButton(onPressed: _saveScript, child: const Text('保存')),
       ],
     );
   }
 
   void _saveScript() {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入脚本名称')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
       return;
     }
 

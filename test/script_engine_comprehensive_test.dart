@@ -7,11 +7,12 @@ import '../lib/models/map_layer.dart';
 void main() {
   group('ScriptEngine Comprehensive Demo', () {
     late ScriptEngine scriptEngine;
-    late List<MapLayer> testLayers;    setUp(() async {
+    late List<MapLayer> testLayers;
+    setUp(() async {
       scriptEngine = ScriptEngine();
       scriptEngine.reset(); // 重置状态
       await scriptEngine.initialize();
-      
+
       final now = DateTime.now();
       testLayers = [
         MapLayer(
@@ -220,9 +221,9 @@ void main() {
       if (!result.success) {
         debugPrint('City analysis script failed: ${result.error}');
       }
-        expect(result.success, isTrue);
+      expect(result.success, isTrue);
       expect(result.result, isNotNull);
-      
+
       // hetu_script 返回的是 HTStruct，需要转换访问
       final analysis = result.result;
       // 由于是 HTStruct，我们通过打印来验证而不是直接访问
@@ -279,9 +280,9 @@ void main() {
       if (!result.success) {
         debugPrint('Element manipulation script failed: ${result.error}');
       }
-        expect(result.success, isTrue);
+      expect(result.success, isTrue);
       expect(result.result, isNotNull);
-      
+
       final operations = result.result;
       debugPrint('Manipulation result: $operations');
     });
@@ -361,9 +362,9 @@ void main() {
       if (!result.success) {
         debugPrint('Math calculations script failed: ${result.error}');
       }
-        expect(result.success, isTrue);
+      expect(result.success, isTrue);
       expect(result.result, isNotNull);
-      
+
       final calculations = result.result;
       debugPrint('Calculations result: $calculations');
     });

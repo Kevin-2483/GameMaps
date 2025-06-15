@@ -104,11 +104,7 @@ class MapDataError extends MapDataState {
   final dynamic error;
   final StackTrace? stackTrace;
 
-  const MapDataError({
-    required this.message,
-    this.error,
-    this.stackTrace,
-  });
+  const MapDataError({required this.message, this.error, this.stackTrace});
 
   @override
   List<Object?> get props => [message, error, stackTrace];
@@ -117,7 +113,7 @@ class MapDataError extends MapDataState {
 /// 保存中状态
 class MapDataSaving extends MapDataState {
   final MapDataLoaded currentData;
-  
+
   const MapDataSaving({required this.currentData});
 
   @override
@@ -129,10 +125,7 @@ class MapDataSaved extends MapDataState {
   final MapDataLoaded data;
   final DateTime savedAt;
 
-  const MapDataSaved({
-    required this.data,
-    required this.savedAt,
-  });
+  const MapDataSaved({required this.data, required this.savedAt});
 
   @override
   List<Object?> get props => [data, savedAt];

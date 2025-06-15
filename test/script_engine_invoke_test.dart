@@ -19,7 +19,7 @@ void main() {
 
     test('Should execute simple script', () async {
       await scriptEngine.initialize();
-      
+
       final now = DateTime.now();
       final testLayers = <MapLayer>[
         MapLayer(
@@ -43,10 +43,7 @@ void main() {
               text: '',
               fontSize: 14.0,
               createdAt: now,
-              points: [
-                const Offset(0, 0),
-                const Offset(100, 100),
-              ],
+              points: [const Offset(0, 0), const Offset(100, 100)],
             ),
           ],
         ),
@@ -54,7 +51,8 @@ void main() {
 
       scriptEngine.setMapDataAccessor(testLayers, (updatedLayers) {
         // 测试更新回调
-      });      final script = ScriptData(
+      });
+      final script = ScriptData(
         id: 'test-script',
         name: 'Test Script',
         type: ScriptType.automation,
@@ -66,7 +64,8 @@ void main() {
         parameters: {},
         createdAt: now,
         updatedAt: now,
-      );final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
         debugPrint('Script execution failed: ${result.error}');
       }
@@ -75,7 +74,7 @@ void main() {
 
     test('Should handle function calls in scripts', () async {
       await scriptEngine.initialize();
-      
+
       final now = DateTime.now();
       final testLayers = <MapLayer>[
         MapLayer(
@@ -121,7 +120,8 @@ void main() {
 
       scriptEngine.setMapDataAccessor(testLayers, (updatedLayers) {
         // 测试更新回调
-      });      final script = ScriptData(
+      });
+      final script = ScriptData(
         id: 'filter-test-script',
         name: 'Filter Test Script',
         type: ScriptType.filter,
@@ -138,7 +138,8 @@ void main() {
         parameters: {},
         createdAt: now,
         updatedAt: now,
-      );final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
         debugPrint('Filter script execution failed: ${result.error}');
       }

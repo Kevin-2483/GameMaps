@@ -280,7 +280,8 @@ class LayoutPreferences {
     this.animationDuration = 300,
     this.enableAnimations = true,
     this.autoRestorePanelStates = true,
-  });  factory LayoutPreferences.createDefault() {
+  });
+  factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
       panelCollapsedStates: {
         'drawing': false,

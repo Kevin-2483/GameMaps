@@ -165,6 +165,7 @@ class LayoutSettingsSection extends StatelessWidget {
       ),
     );
   }
+
   String _getPanelDisplayName(String panelKey) {
     switch (panelKey) {
       case 'drawing':

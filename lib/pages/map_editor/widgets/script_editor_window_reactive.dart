@@ -21,14 +21,16 @@ class ReactiveScriptEditorWindow extends StatefulWidget {
   });
 
   @override
-  State<ReactiveScriptEditorWindow> createState() => _ReactiveScriptEditorWindowState();
+  State<ReactiveScriptEditorWindow> createState() =>
+      _ReactiveScriptEditorWindowState();
 }
 
-class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow> {
+class _ReactiveScriptEditorWindowState
+    extends State<ReactiveScriptEditorWindow> {
   late CodeController _codeController;
   bool _isDarkTheme = true;
   bool _hasUnsavedChanges = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +38,7 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
       text: widget.script.content,
       language: dart,
     );
-    
+
     _codeController.addListener(() {
       if (!_hasUnsavedChanges) {
         setState(() {
@@ -62,22 +64,16 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
       setState(() {
         _hasUnsavedChanges = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('脚本已保存'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('脚本已保存'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -93,9 +89,9 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
   /// 处理窗口关闭
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
-    
+
     if (!mounted) return true;
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -122,7 +118,7 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
         ],
       ),
     );
-    
+
     return result ?? false;
   }
 
@@ -147,7 +143,10 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
               if (_hasUnsavedChanges) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange,
                     borderRadius: BorderRadius.circular(12),
@@ -190,10 +189,14 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.3),
                 border: Border(
                   bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.2),
                   ),
                 ),
               ),
@@ -237,7 +240,7 @@ class _ReactiveScriptEditorWindowState extends State<ReactiveScriptEditorWindow>
             // 代码编辑器
             Expanded(
               child: CodeTheme(
-                data: _isDarkTheme 
+                data: _isDarkTheme
                     ? CodeThemeData(styles: monokaiSublimeTheme)
                     : CodeThemeData(styles: githubTheme),
                 child: CodeField(

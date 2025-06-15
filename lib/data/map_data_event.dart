@@ -16,10 +16,7 @@ class LoadMapData extends MapDataEvent {
   final String mapTitle;
   final String? version;
 
-  const LoadMapData({
-    required this.mapTitle,
-    this.version = 'default',
-  });
+  const LoadMapData({required this.mapTitle, this.version = 'default'});
 
   @override
   List<Object?> get props => [mapTitle, version];
@@ -80,10 +77,7 @@ class ReorderLayers extends MapDataEvent {
   final int oldIndex;
   final int newIndex;
 
-  const ReorderLayers({
-    required this.oldIndex,
-    required this.newIndex,
-  });
+  const ReorderLayers({required this.oldIndex, required this.newIndex});
 
   @override
   List<Object?> get props => [oldIndex, newIndex];
@@ -124,10 +118,7 @@ class UpdateDrawingElement extends MapDataEvent {
   final String layerId;
   final MapDrawingElement element;
 
-  const UpdateDrawingElement({
-    required this.layerId,
-    required this.element,
-  });
+  const UpdateDrawingElement({required this.layerId, required this.element});
 
   @override
   List<Object?> get props => [layerId, element];
@@ -138,10 +129,7 @@ class AddDrawingElement extends MapDataEvent {
   final String layerId;
   final MapDrawingElement element;
 
-  const AddDrawingElement({
-    required this.layerId,
-    required this.element,
-  });
+  const AddDrawingElement({required this.layerId, required this.element});
 
   @override
   List<Object?> get props => [layerId, element];
@@ -152,10 +140,7 @@ class DeleteDrawingElement extends MapDataEvent {
   final String layerId;
   final String elementId;
 
-  const DeleteDrawingElement({
-    required this.layerId,
-    required this.elementId,
-  });
+  const DeleteDrawingElement({required this.layerId, required this.elementId});
 
   @override
   List<Object?> get props => [layerId, elementId];
@@ -166,10 +151,7 @@ class UpdateDrawingElements extends MapDataEvent {
   final String layerId;
   final List<MapDrawingElement> elements;
 
-  const UpdateDrawingElements({
-    required this.layerId,
-    required this.elements,
-  });
+  const UpdateDrawingElements({required this.layerId, required this.elements});
 
   @override
   List<Object?> get props => [layerId, elements];
@@ -231,10 +213,7 @@ class SetLayerVisibility extends MapDataEvent {
   final String layerId;
   final bool isVisible;
 
-  const SetLayerVisibility({
-    required this.layerId,
-    required this.isVisible,
-  });
+  const SetLayerVisibility({required this.layerId, required this.isVisible});
 
   @override
   List<Object?> get props => [layerId, isVisible];
@@ -245,10 +224,7 @@ class SetLayerOpacity extends MapDataEvent {
   final String layerId;
   final double opacity;
 
-  const SetLayerOpacity({
-    required this.layerId,
-    required this.opacity,
-  });
+  const SetLayerOpacity({required this.layerId, required this.opacity});
 
   @override
   List<Object?> get props => [layerId, opacity];
@@ -305,10 +281,7 @@ class ReorderStickyNotes extends MapDataEvent {
   final int oldIndex;
   final int newIndex;
 
-  const ReorderStickyNotes({
-    required this.oldIndex,
-    required this.newIndex,
-  });
+  const ReorderStickyNotes({required this.oldIndex, required this.newIndex});
 
   @override
   List<Object?> get props => [oldIndex, newIndex];

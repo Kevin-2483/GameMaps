@@ -95,7 +95,10 @@ class ScriptExecutionResult {
     this.result,
     required this.executionTime,
   });
-  static ScriptExecutionResult createSuccess(dynamic result, Duration executionTime) {
+  static ScriptExecutionResult createSuccess(
+    dynamic result,
+    Duration executionTime,
+  ) {
     return ScriptExecutionResult(
       success: true,
       result: result,
@@ -103,7 +106,10 @@ class ScriptExecutionResult {
     );
   }
 
-  static ScriptExecutionResult createFailure(String error, Duration executionTime) {
+  static ScriptExecutionResult createFailure(
+    String error,
+    Duration executionTime,
+  ) {
     return ScriptExecutionResult(
       success: false,
       error: error,

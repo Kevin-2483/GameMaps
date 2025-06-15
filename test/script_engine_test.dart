@@ -19,7 +19,7 @@ void main() {
 
     test('Should execute simple script', () async {
       await scriptEngine.initialize();
-        // 创建测试地图数据
+      // 创建测试地图数据
       final now = DateTime.now();
       final testLayers = <MapLayer>[
         MapLayer(
@@ -43,10 +43,7 @@ void main() {
               text: '',
               fontSize: 14.0,
               createdAt: now,
-              points: [
-                const Offset(0, 0),
-                const Offset(100, 100),
-              ],
+              points: [const Offset(0, 0), const Offset(100, 100)],
             ),
           ],
         ),
@@ -73,7 +70,7 @@ void main() {
 
     test('Should handle function calls in scripts', () async {
       await scriptEngine.initialize();
-      
+
       // 测试过滤函数调用
       final testLayers = [
         MapLayer(
@@ -138,7 +135,7 @@ void main() {
 
     test('Should handle external function declarations correctly', () async {
       await scriptEngine.initialize();
-      
+
       // 创建测试地图数据
       final now = DateTime.now();
       final testLayers = <MapLayer>[
@@ -201,7 +198,7 @@ print('Second script executed successfully');
 
     test('Should handle script engine reinitialization', () async {
       await scriptEngine.initialize();
-      
+
       // 创建测试地图数据
       final now = DateTime.now();
       final testLayers = <MapLayer>[

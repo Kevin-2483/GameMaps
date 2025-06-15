@@ -12,7 +12,7 @@ void main() {
     setUp(() async {
       scriptEngine = ScriptEngine();
       await scriptEngine.initialize();
-      
+
       final now = DateTime.now();
       testLayers = [
         MapLayer(
@@ -37,7 +37,8 @@ void main() {
               fontSize: 14.0,
               createdAt: now,
               points: [const Offset(0, 0), const Offset(100, 100)],
-            ),            MapDrawingElement(
+            ),
+            MapDrawingElement(
               id: 'line-1',
               type: DrawingElementType.line,
               color: Colors.blue,
@@ -131,7 +132,8 @@ void main() {
         parameters: {},
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      );      final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
         debugPrint('Filter test script execution failed: ${result.error}');
       }
@@ -143,7 +145,8 @@ void main() {
       final script = ScriptData(
         id: 'all-elements-test',
         name: 'All Elements Test',
-        type: ScriptType.automation,        content: '''
+        type: ScriptType.automation,
+        content: '''
         external fun getAllElements();
         
         var allElements = getAllElements();
@@ -158,9 +161,12 @@ void main() {
         parameters: {},
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      );      final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
-        debugPrint('All elements test script execution failed: ${result.error}');
+        debugPrint(
+          'All elements test script execution failed: ${result.error}',
+        );
       }
       expect(result.success, isTrue);
       expect(result.result, equals(3)); // 总共3个元素
@@ -181,7 +187,8 @@ void main() {
         parameters: {},
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      );      final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
         debugPrint('Area test script execution failed: ${result.error}');
       }
@@ -214,13 +221,14 @@ void main() {
         parameters: {},
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      );      final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
         debugPrint('Math test script execution failed: ${result.error}');
       }
       expect(result.success, isTrue);
       expect(result.result, isA<List>());
-      
+
       final results = result.result as List;
       expect(results[0], closeTo(1.0, 0.001)); // sin(π/2) ≈ 1
       expect(results[1], closeTo(1.0, 0.001)); // cos(0) = 1
@@ -245,9 +253,12 @@ void main() {
         parameters: {},
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      );      final result = await scriptEngine.executeScript(script);
+      );
+      final result = await scriptEngine.executeScript(script);
       if (!result.success) {
-        debugPrint('Layer access test script execution failed: ${result.error}');
+        debugPrint(
+          'Layer access test script execution failed: ${result.error}',
+        );
       }
       expect(result.success, isTrue);
       expect(result.result, equals(3)); // 2 + 1 = 3

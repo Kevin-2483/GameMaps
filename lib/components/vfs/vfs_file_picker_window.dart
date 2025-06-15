@@ -437,6 +437,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   bool _shouldApplyFiltering() {
     return widget.onFilesSelected != null;
   }
+
   /// 根据选择模式和限制条件过滤文件
   List<VfsFileInfo> _filterFiles(List<VfsFileInfo> files) {
     if (widget.onFilesSelected == null) {
@@ -450,8 +451,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       // 在仅文件模式下，文件夹仍然显示（用于导航），但不能被选中
       // 只有在明确禁止选择目录时才过滤掉目录
-      if (file.isDirectory && 
-          widget.allowDirectorySelection == false && 
+      if (file.isDirectory &&
+          widget.allowDirectorySelection == false &&
           widget.selectionType != SelectionType.filesOnly) {
         shouldInclude = false;
       }
@@ -562,12 +563,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       restrictions.add('支持多选');
     } else {
       restrictions.add('仅单选');
-    }    // 添加选择类型限制（优先使用新的 SelectionType）
+    } // 添加选择类型限制（优先使用新的 SelectionType）
     switch (widget.selectionType) {
       case SelectionType.filesOnly:
         if (widget.allowedExtensions != null &&
             widget.allowedExtensions!.isNotEmpty) {
-          restrictions.add('仅指定类型文件 (${widget.allowedExtensions!.join(', ')}) • 文件夹可导航');
+          restrictions.add(
+            '仅指定类型文件 (${widget.allowedExtensions!.join(', ')}) • 文件夹可导航',
+          );
         } else {
           restrictions.add('仅文件 • 文件夹可导航');
         }
@@ -1723,7 +1726,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             isSelected: isSelected,
             isCutToClipboard:
                 _isCutOperation &&
-                _clipboardFiles.any((f) => f.path == file.path),            canBeSelected: _canSelectFile(file),
+                _clipboardFiles.any((f) => f.path == file.path),
+            canBeSelected: _canSelectFile(file),
             onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 // 如果有已选择的文件，优先处理选择逻辑
@@ -1830,7 +1834,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   })
                 : null,
             formatFileSize: _formatFileSize,
-            getFileIcon: _getFileIcon,            onTap: () {
+            getFileIcon: _getFileIcon,
+            onTap: () {
               if (_selectedFiles.isNotEmpty) {
                 // 如果有已选择的文件，优先处理选择逻辑
                 _toggleFileSelection(file);
@@ -3271,7 +3276,8 @@ class _FileListItemState extends State<_FileListItem> {
   Widget build(BuildContext context) {
     final opacity = widget.isCutToClipboard
         ? 0.5
-        : (!widget.canBeSelected ? 0.6 : 1.0);    return Opacity(
+        : (!widget.canBeSelected ? 0.6 : 1.0);
+    return Opacity(
       opacity: opacity,
       child: MouseRegion(
         cursor: widget.canBeSelected || widget.file.isDirectory
@@ -3280,7 +3286,9 @@ class _FileListItemState extends State<_FileListItem> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: widget.canBeSelected || widget.file.isDirectory ? widget.onTap : null,
+          onTap: widget.canBeSelected || widget.file.isDirectory
+              ? widget.onTap
+              : null,
           onLongPress: widget.canBeSelected ? widget.onLongPress : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -3424,7 +3432,8 @@ class _FileGridItemState extends State<_FileGridItem> {
       opacity = 0.5;
     } else if (!widget.canBeSelected) {
       opacity = 0.6;
-    }    return Opacity(
+    }
+    return Opacity(
       opacity: opacity,
       child: MouseRegion(
         cursor: widget.canBeSelected || widget.file.isDirectory
@@ -3437,7 +3446,9 @@ class _FileGridItemState extends State<_FileGridItem> {
             ? (_) => setState(() => _isHovered = false)
             : null,
         child: GestureDetector(
-          onTap: widget.canBeSelected || widget.file.isDirectory ? widget.onTap : null,
+          onTap: widget.canBeSelected || widget.file.isDirectory
+              ? widget.onTap
+              : null,
           onLongPress: widget.canBeSelected ? widget.onLongPress : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),

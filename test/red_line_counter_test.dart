@@ -8,9 +8,9 @@ void main() {
   test('Red Line Counter Script Test', () async {
     final scriptEngine = ScriptEngine();
     await scriptEngine.initialize();
-    
+
     final now = DateTime.now();
-    
+
     // 创建测试数据，包含一些红色线条和带"num"的文本元素
     final testLayers = [
       MapLayer(
@@ -208,15 +208,17 @@ main();
     );
 
     final result = await scriptEngine.executeScript(script);
-    debugPrint('Script result: success=${result.success}, result=${result.result}, error=${result.error}');
-    
+    debugPrint(
+      'Script result: success=${result.success}, result=${result.result}, error=${result.error}',
+    );
+
     // 获取执行日志
     final logs = scriptEngine.getExecutionLogs();
     debugPrint('Execution logs (${logs.length} entries):');
     for (final log in logs) {
       debugPrint('  $log');
     }
-    
+
     expect(result.success, isTrue);
     // 应该找到2条红色线条
     // 应该更新2个文本元素

@@ -9,19 +9,23 @@ import '../utils/filename_sanitizer.dart';
 class ScriptManager extends ChangeNotifier {
   final VirtualFileSystem _vfs = VirtualFileSystem();
   final ScriptEngine _engine = ScriptEngine();
-  
+
   final List<ScriptData> _scripts = [];
   final Map<String, ScriptStatus> _scriptStatuses = {};
   final Map<String, ScriptExecutionResult> _lastResults = {};
-  
+
   String? _currentMapTitle; // 当前地图标题，用于构建脚本存储路径
 
   List<ScriptData> get scripts => List.unmodifiable(_scripts);
-  Map<String, ScriptStatus> get scriptStatuses => Map.unmodifiable(_scriptStatuses);
-  Map<String, ScriptExecutionResult> get lastResults => Map.unmodifiable(_lastResults);  /// 初始化管理器
+  Map<String, ScriptStatus> get scriptStatuses =>
+      Map.unmodifiable(_scriptStatuses);
+  Map<String, ScriptExecutionResult> get lastResults =>
+      Map.unmodifiable(_lastResults);
+
+  /// 初始化管理器
   Future<void> initialize({String? mapTitle}) async {
     _currentMapTitle = mapTitle;
-    
+
     await _engine.initialize();
     if (_currentMapTitle != null) {
       await loadScripts();
@@ -36,13 +40,16 @@ class ScriptManager extends ChangeNotifier {
       loadScripts();
     }
   }
+
   /// 获取脚本存储路径
   String _getScriptsPath() {
     if (_currentMapTitle == null) {
       throw Exception('Map title not set');
     }
     return 'indexeddb://r6box/maps/${_getMapPath(_currentMapTitle!)}/scripts';
-  }  /// 获取地图路径（处理特殊字符）- 使用与VFS地图服务相同的路径格式
+  }
+
+  /// 获取地图路径（处理特殊字符）- 使用与VFS地图服务相同的路径格式
   String _getMapPath(String mapTitle) {
     // 使用与VfsMapServiceImpl相同的文件名清理逻辑
     final sanitizedTitle = FilenameSanitizer.sanitize(mapTitle);
@@ -62,20 +69,20 @@ class ScriptManager extends ChangeNotifier {
   /// 从VFS存储加载脚本
   Future<void> loadScripts() async {
     if (_currentMapTitle == null) return;
-    
+
     try {
       _scripts.clear();
       _scriptStatuses.clear();
-      
+
       // 先尝试读取脚本索引文件
       final indexPath = _getScriptIndexPath();
       final indexExists = await _vfs.exists(indexPath);
-      
+
       if (indexExists) {
         final indexData = await _vfs.readTextFile(indexPath);
         if (indexData != null) {
           final scriptIds = List<String>.from(json.decode(indexData));
-        
+
           // 逐个加载脚本文件
           for (final scriptId in scriptIds) {
             try {
@@ -83,7 +90,7 @@ class ScriptManager extends ChangeNotifier {
               final scriptData = await _vfs.readTextFile(scriptPath);
               if (scriptData != null) {
                 final script = ScriptData.fromJson(json.decode(scriptData));
-                
+
                 _scripts.add(script);
                 _scriptStatuses[script.id] = ScriptStatus.idle;
               }
@@ -93,7 +100,7 @@ class ScriptManager extends ChangeNotifier {
           }
         }
       }
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load scripts: $e');
@@ -136,13 +143,13 @@ class ScriptManager extends ChangeNotifier {
     if (_currentMapTitle == null) {
       throw Exception('Map title not set');
     }
-    
+
     _scripts.add(script);
     _scriptStatuses[script.id] = ScriptStatus.idle;
-    
+
     await _saveScript(script);
     await _saveScriptIndex();
-    
+
     notifyListeners();
   }
 
@@ -152,7 +159,7 @@ class ScriptManager extends ChangeNotifier {
     if (index != -1) {
       final updatedScript = script.copyWith(updatedAt: DateTime.now());
       _scripts[index] = updatedScript;
-      
+
       await _saveScript(updatedScript);
       notifyListeners();
     }
@@ -164,10 +171,10 @@ class ScriptManager extends ChangeNotifier {
     _scriptStatuses.remove(scriptId);
     _lastResults.remove(scriptId);
     _engine.stopScript(scriptId);
-    
+
     await _deleteScriptFile(scriptId);
     await _saveScriptIndex();
-    
+
     notifyListeners();
   }
 
@@ -188,7 +195,7 @@ class ScriptManager extends ChangeNotifier {
     try {
       final result = await _engine.executeScript(script);
       _lastResults[scriptId] = result;
-      
+
       if (result.success) {
         _scriptStatuses[scriptId] = ScriptStatus.idle;
         // 更新最后运行时间
@@ -213,7 +220,7 @@ class ScriptManager extends ChangeNotifier {
         error: e.toString(),
         executionTime: Duration.zero,
       );
-      
+
       // 更新错误信息
       final updatedScript = script.copyWith(
         lastError: e.toString(),
@@ -290,7 +297,7 @@ class ScriptManager extends ChangeNotifier {
     try {
       final scriptMap = json.decode(scriptJson) as Map<String, dynamic>;
       final script = ScriptData.fromJson(scriptMap);
-      
+
       // 生成新的ID和时间戳
       final importedScript = script.copyWith(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -313,11 +320,11 @@ class ScriptManager extends ChangeNotifier {
   /// 获取按类型分组的脚本
   Map<ScriptType, List<ScriptData>> getScriptsByType() {
     final grouped = <ScriptType, List<ScriptData>>{};
-    
+
     for (final type in ScriptType.values) {
       grouped[type] = _scripts.where((s) => s.type == type).toList();
     }
-    
+
     return grouped;
   }
 

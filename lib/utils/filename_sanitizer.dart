@@ -12,7 +12,8 @@ class FilenameSanitizer {
   static String sanitize(String title) {
     if (title.isEmpty) {
       return 'untitled_map';
-    }    String sanitized = title
+    }
+    String sanitized = title
         // 替换不安全的字符为下划线
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         // 替换空格为下划线

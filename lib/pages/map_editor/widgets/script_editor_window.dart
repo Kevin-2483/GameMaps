@@ -35,7 +35,7 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
       text: widget.script.content,
       language: dart,
     );
-    
+
     _codeController.addListener(() {
       if (!_hasUnsavedChanges) {
         setState(() {
@@ -60,22 +60,16 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
       setState(() {
         _hasUnsavedChanges = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('脚本已保存'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('脚本已保存'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -86,11 +80,12 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
       _isDarkTheme = !_isDarkTheme;
     });
   }
+
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
-    
+
     if (!mounted) return true;
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -117,9 +112,10 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
         ],
       ),
     );
-    
+
     return result ?? false;
   }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -141,7 +137,10 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
               if (_hasUnsavedChanges) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange,
                     borderRadius: BorderRadius.circular(12),
@@ -164,7 +163,8 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
               onPressed: _hasUnsavedChanges ? _saveScript : null,
               icon: const Icon(Icons.save),
               tooltip: '保存脚本',
-            ),            IconButton(
+            ),
+            IconButton(
               onPressed: () async {
                 final shouldClose = await _onWillPop();
                 if (shouldClose && mounted) {
@@ -183,10 +183,14 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.3),
                 border: Border(
                   bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.2),
                   ),
                 ),
               ),
@@ -230,7 +234,7 @@ class _ScriptEditorWindowState extends State<ScriptEditorWindow> {
             // 代码编辑器
             Expanded(
               child: CodeTheme(
-                data: _isDarkTheme 
+                data: _isDarkTheme
                     ? CodeThemeData(styles: monokaiSublimeTheme)
                     : CodeThemeData(styles: githubTheme),
                 child: CodeField(

@@ -40,10 +40,7 @@ class _ReactiveVersionIntegrationExampleState
       );
 
       // 3. 初始化默认版本
-      await createVersion(
-        'default',
-        versionName: '默认版本',
-      );
+      await createVersion('default', versionName: '默认版本');
 
       setState(() {
         _statusMessage = '版本管理系统初始化完成';
@@ -87,8 +84,7 @@ class _ReactiveVersionIntegrationExampleState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('状态: $_statusMessage'),
-                if (currentVersionId != null) 
-                  Text('当前版本: $currentVersionId'),
+                if (currentVersionId != null) Text('当前版本: $currentVersionId'),
                 Text('未保存更改: ${hasUnsavedChanges ? '是' : '否'}'),
               ],
             ),
@@ -100,11 +96,14 @@ class _ReactiveVersionIntegrationExampleState
               itemCount: allVersionStates.length,
               itemBuilder: (context, index) {
                 final versionState = allVersionStates[index];
-                final isCurrentVersion = versionState.versionId == currentVersionId;
-                
+                final isCurrentVersion =
+                    versionState.versionId == currentVersionId;
+
                 return ListTile(
                   leading: Icon(
-                    isCurrentVersion ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    isCurrentVersion
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
                     color: isCurrentVersion ? Colors.blue : Colors.grey,
                   ),
                   title: Text(versionState.versionName),
@@ -112,7 +111,9 @@ class _ReactiveVersionIntegrationExampleState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('ID: ${versionState.versionId}'),
-                      Text('最后修改: ${versionState.lastModified.toString().substring(0, 19)}'),
+                      Text(
+                        '最后修改: ${versionState.lastModified.toString().substring(0, 19)}',
+                      ),
                       if (versionState.hasUnsavedChanges)
                         const Text(
                           '有未保存的更改',
@@ -126,13 +127,15 @@ class _ReactiveVersionIntegrationExampleState
                       if (!isCurrentVersion)
                         IconButton(
                           icon: const Icon(Icons.switch_account),
-                          onPressed: () => _switchToVersion(versionState.versionId),
+                          onPressed: () =>
+                              _switchToVersion(versionState.versionId),
                           tooltip: '切换到此版本',
                         ),
                       if (versionState.versionId != 'default')
                         IconButton(
                           icon: const Icon(Icons.delete),
-                          onPressed: () => _deleteVersion(versionState.versionId),
+                          onPressed: () =>
+                              _deleteVersion(versionState.versionId),
                           tooltip: '删除版本',
                         ),
                     ],
@@ -176,7 +179,7 @@ class _ReactiveVersionIntegrationExampleState
   /// 创建新版本
   void _createNewVersion() async {
     final TextEditingController controller = TextEditingController();
-    
+
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -204,7 +207,7 @@ class _ReactiveVersionIntegrationExampleState
     if (result != null && result.isNotEmpty) {
       try {
         final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
-        
+
         setState(() {
           _statusMessage = '正在创建版本...';
         });
@@ -296,7 +299,7 @@ class _ReactiveVersionIntegrationExampleState
   /// 显示调试信息
   void _showDebugInfo() {
     final debugInfo = versionAdapter?.getAdapterStatus();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -326,15 +329,15 @@ class _ReactiveVersionIntegrationExampleState
 }
 
 /// 在现有地图编辑器中集成的示例代码
-/// 
+///
 /// 使用方法：
-/// 
+///
 /// 1. 在地图编辑器页面中添加 ReactiveVersionMixin
 /// ```dart
-/// class _MapEditorPageState extends State<MapEditorPage> 
+/// class _MapEditorPageState extends State<MapEditorPage>
 ///     with MapEditorReactiveMixin, ReactiveVersionMixin {
 /// ```
-/// 
+///
 /// 2. 在初始化时设置版本管理
 /// ```dart
 /// @override
@@ -346,24 +349,24 @@ class _ReactiveVersionIntegrationExampleState
 ///   );
 /// }
 /// ```
-/// 
+///
 /// 3. 在需要的地方调用版本管理方法
 /// ```dart
 /// // 切换版本
 /// await switchVersion('version_id');
-/// 
+///
 /// // 创建版本
 /// await createVersion('new_version_id', versionName: '新版本');
-/// 
+///
 /// // 保存当前版本
 /// await saveCurrentVersion();
-/// 
+///
 /// // 检查未保存更改
 /// if (hasUnsavedChanges) {
 ///   // 提示用户有未保存的更改
 /// }
 /// ```
-/// 
+///
 /// 4. 在dispose时清理资源
 /// ```dart
 /// @override

@@ -7,6 +7,7 @@ import 'map_data_bloc.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
 import 'reactive_script_manager.dart';
+
 /// Timer类的导入（如果需要）
 import 'dart:async';
 
@@ -86,7 +87,9 @@ class MapEditorIntegrationAdapter {
   /// 设置图层可见性
   void setLayerVisibility(String layerId, bool isVisible) {
     debugPrint('设置图层可见性: $layerId = $isVisible');
-    _mapDataBloc.add(SetLayerVisibility(layerId: layerId, isVisible: isVisible));
+    _mapDataBloc.add(
+      SetLayerVisibility(layerId: layerId, isVisible: isVisible),
+    );
   }
 
   /// 设置图层透明度
@@ -132,13 +135,17 @@ class MapEditorIntegrationAdapter {
   /// 删除绘制元素
   void deleteDrawingElement(String layerId, String elementId) {
     debugPrint('删除绘制元素: $layerId/$elementId');
-    _mapDataBloc.add(DeleteDrawingElement(layerId: layerId, elementId: elementId));
+    _mapDataBloc.add(
+      DeleteDrawingElement(layerId: layerId, elementId: elementId),
+    );
   }
 
   /// 批量更新绘制元素
   void updateDrawingElements(String layerId, List<MapDrawingElement> elements) {
     debugPrint('批量更新绘制元素: $layerId, 数量: ${elements.length}');
-    _mapDataBloc.add(UpdateDrawingElements(layerId: layerId, elements: elements));
+    _mapDataBloc.add(
+      UpdateDrawingElements(layerId: layerId, elements: elements),
+    );
   }
 
   // ==================== 图例组操作 ====================
@@ -164,7 +171,9 @@ class MapEditorIntegrationAdapter {
   /// 设置图例组可见性
   void setLegendGroupVisibility(String groupId, bool isVisible) {
     debugPrint('设置图例组可见性: $groupId = $isVisible');
-    _mapDataBloc.add(SetLegendGroupVisibility(groupId: groupId, isVisible: isVisible));
+    _mapDataBloc.add(
+      SetLegendGroupVisibility(groupId: groupId, isVisible: isVisible),
+    );
   }
 
   /// 根据ID获取图例组
@@ -204,7 +213,9 @@ class MapEditorIntegrationAdapter {
   /// 重新排序便利贴
   void reorderStickyNotes(int oldIndex, int newIndex) {
     debugPrint('重新排序便利贴: $oldIndex -> $newIndex');
-    _mapDataBloc.add(ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex));
+    _mapDataBloc.add(
+      ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex),
+    );
   }
 
   /// 通过拖拽重新排序便利贴
@@ -212,6 +223,7 @@ class MapEditorIntegrationAdapter {
     debugPrint('通过拖拽重新排序便利贴，数量: ${reorderedNotes.length}');
     _mapDataBloc.add(ReorderStickyNotesByDrag(reorderedNotes: reorderedNotes));
   }
+
   /// 根据ID获取便利贴
   StickyNote? getStickyNoteById(String noteId) {
     final stickyNotes = _mapDataBloc.currentData?.mapItem.stickyNotes ?? [];
@@ -266,7 +278,7 @@ class MapEditorIntegrationAdapter {
       if (state is MapDataLoaded) {
         // 取消之前的自动保存计时器
         _autoSaveTimer?.cancel();
-        
+
         // 设置新的自动保存计时器
         _autoSaveTimer = Timer(delay, () {
           if (_mapDataBloc.state is MapDataLoaded) {
@@ -281,6 +293,7 @@ class MapEditorIntegrationAdapter {
 
   /// 获取脚本管理器
   ReactiveScriptManager get scriptManager => _scriptManager;
+
   /// 重置脚本引擎（当地图数据发生重大变更时调用）
   Future<void> resetScriptEngine() async {
     debugPrint('重置脚本引擎');

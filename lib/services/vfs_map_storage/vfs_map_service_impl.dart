@@ -92,7 +92,8 @@ class VfsMapServiceImpl implements VfsMapService {
 
   // 便签数据路径构建方法 - 在版本独立的文件夹下建立note文件夹
   String _getNotesPath(String mapTitle, [String version = 'default']) =>
-      '${_getMapPath(mapTitle)}/data/$version/notes';  String _getStickyNotePath(
+      '${_getMapPath(mapTitle)}/data/$version/notes';
+  String _getStickyNotePath(
     String mapTitle,
     String noteId, [
     String version = 'default',
@@ -168,7 +169,8 @@ class VfsMapServiceImpl implements VfsMapService {
       }
 
       final metaJson =
-          jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;      // 加载图层数据
+          jsonDecode(utf8.decode(metaData.data))
+              as Map<String, dynamic>; // 加载图层数据
       final layers = await getMapLayers(title);
 
       // 加载图例组数据
@@ -219,7 +221,7 @@ class VfsMapServiceImpl implements VfsMapService {
       // 保存封面图片
       if (map.imageData != null && map.imageData!.isNotEmpty) {
         await _saveMapCover(map.title, map.imageData!);
-      }      // 保存图层数据
+      } // 保存图层数据
       for (final layer in map.layers) {
         await saveLayer(map.title, layer);
       }
@@ -898,14 +900,16 @@ class VfsMapServiceImpl implements VfsMapService {
     try {
       final notesPath = _buildVfsPath(_getNotesPath(mapTitle, version));
       final files = await _storageService.listDirectory(notesPath);
-      
+
       final stickyNotes = <StickyNote>[];
       for (final file in files) {
         if (file.name.endsWith('.json') && !file.isDirectory) {
           final noteData = await _storageService.readFile(file.path);
           if (noteData != null) {
             try {
-              final noteJson = jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
+              final noteJson =
+                  jsonDecode(utf8.decode(noteData.data))
+                      as Map<String, dynamic>;
               final stickyNote = StickyNote.fromJson(noteJson);
               stickyNotes.add(stickyNote);
             } catch (e) {
@@ -914,7 +918,7 @@ class VfsMapServiceImpl implements VfsMapService {
           }
         }
       }
-      
+
       // 按创建时间排序
       stickyNotes.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       return stickyNotes;
@@ -935,7 +939,10 @@ class VfsMapServiceImpl implements VfsMapService {
         _getStickyNotePath(mapTitle, stickyNote.id, version),
       );
       final stickyNoteJson = jsonEncode(stickyNote.toJson());
-      await _storageService.writeFile(stickyNotePath, utf8.encode(stickyNoteJson));
+      await _storageService.writeFile(
+        stickyNotePath,
+        utf8.encode(stickyNoteJson),
+      );
       debugPrint('便签数据已保存 [$mapTitle/${stickyNote.id}:$version]');
     } catch (e) {
       debugPrint('保存便签数据失败 [$mapTitle/${stickyNote.id}:$version]: $e');
@@ -972,12 +979,13 @@ class VfsMapServiceImpl implements VfsMapService {
         _getStickyNotePath(mapTitle, stickyNoteId, version),
       );
       final noteData = await _storageService.readFile(stickyNotePath);
-      
+
       if (noteData == null) {
         return null;
       }
 
-      final noteJson = jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
+      final noteJson =
+          jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
       return StickyNote.fromJson(noteJson);
     } catch (e) {
       debugPrint('加载便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');

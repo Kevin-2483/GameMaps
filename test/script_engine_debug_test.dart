@@ -8,7 +8,7 @@ void main() {
   test('Script Engine Debug Test', () async {
     final scriptEngine = ScriptEngine();
     await scriptEngine.initialize();
-    
+
     final now = DateTime.now();
     final testLayers = [
       MapLayer(
@@ -43,7 +43,8 @@ void main() {
     final script = ScriptData(
       id: 'debug-script',
       name: 'Debug Script',
-      type: ScriptType.automation,      content: '''
+      type: ScriptType.automation,
+      content: '''
       external fun countElements();
       external fun print(message);
       
@@ -58,8 +59,10 @@ void main() {
     );
 
     final result = await scriptEngine.executeScript(script);
-    debugPrint('Script result: success=${result.success}, result=${result.result}, error=${result.error}');
-    
+    debugPrint(
+      'Script result: success=${result.success}, result=${result.result}, error=${result.error}',
+    );
+
     expect(result.success, isTrue);
     expect(result.result, equals(1));
   });

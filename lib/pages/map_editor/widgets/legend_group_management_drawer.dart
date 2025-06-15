@@ -12,7 +12,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(LegendGroup) onLegendGroupUpdated;
   final bool isPreviewMode;
   final VoidCallback onClose; // 关闭回调
-  final Function(String)? onLegendItemSelected; // 图例项选中回调  
+  final Function(String)? onLegendItemSelected; // 图例项选中回调
   final List<MapLayer>? allLayers; // 所有图层，用于智能隐藏功能
   final MapLayer? selectedLayer; // 当前选中的图层
   final List<MapLayer>? selectedLayerGroup; // 当前选中的图层组
@@ -151,11 +151,12 @@ class _LegendGroupManagementDrawerState
     // 通知父组件选中状态变化，用于高亮显示地图上的图例项
     widget.onLegendItemSelected?.call(_selectedLegendItemId ?? '');
   }
+
   /// 判断是否可以选择图例项
   /// 灵活的选择条件：
   /// 1. 图例组可见
   /// 2. 如果有绑定图层被直接选中，允许选择
-  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择  
+  /// 3. 如果没有绑定图层被直接选中，但选中的图层组包含绑定图层，允许选择
   /// 4. 如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
   bool _canSelectLegendItem() {
     // 检查图例组是否可见
@@ -182,7 +183,7 @@ class _LegendGroupManagementDrawerState
     }
 
     // 条件3：检查选中的图层组是否包含绑定图层
-    if (widget.selectedLayer != null || 
+    if (widget.selectedLayer != null ||
         (widget.allLayers != null && _getSelectedLayerGroup().isNotEmpty)) {
       final selectedGroup = _getSelectedLayerGroup();
       if (selectedGroup.isNotEmpty) {
@@ -199,7 +200,9 @@ class _LegendGroupManagementDrawerState
     if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
       final highestPriorityLayers = _getHighestPriorityLayers();
       if (highestPriorityLayers.isNotEmpty) {
-        final highestPriorityIds = highestPriorityLayers.map((l) => l.id).toSet();
+        final highestPriorityIds = highestPriorityLayers
+            .map((l) => l.id)
+            .toSet();
         final boundLayerIds = boundLayers.map((l) => l.id).toSet();
         if (highestPriorityIds.intersection(boundLayerIds).isNotEmpty) {
           return true;
@@ -209,13 +212,15 @@ class _LegendGroupManagementDrawerState
 
     return false;
   }
+
   /// 获取选中的图层组
   List<MapLayer> _getSelectedLayerGroup() {
     // 使用传入的选中图层组信息
-    if (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty) {
+    if (widget.selectedLayerGroup != null &&
+        widget.selectedLayerGroup!.isNotEmpty) {
       return widget.selectedLayerGroup!;
     }
-    
+
     // 如果没有传入选中的图层组，返回基于显示顺序推断的最高优先级图层
     return _getHighestPriorityLayers();
   }

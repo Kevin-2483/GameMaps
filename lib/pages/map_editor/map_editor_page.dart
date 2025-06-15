@@ -1403,8 +1403,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updateLayerReactive(updatedLayer);
       debugPrint('使用响应式系统更新图层: ${updatedLayer.name}');
 
-      // 显示成功消息
-      _showSuccessSnackBar('已更新图层 "${updatedLayer.name}"');
+      // // 显示成功消息
+      // _showSuccessSnackBar('已更新图层 "${updatedLayer.name}"');
     } catch (e) {
       debugPrint('响应式系统更新图层失败: $e');
       _showErrorSnackBar('更新图层失败: ${e.toString()}');
@@ -1461,8 +1461,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-      // 显示成功消息
-      _showSuccessSnackBar('图层顺序已更新');
+      // // 显示成功消息
+      // _showSuccessSnackBar('图层顺序已更新');
     } catch (e) {
       debugPrint('响应式系统重排序图层失败: $e');
       _showErrorSnackBar('重排序图层失败: ${e.toString()}');
@@ -1794,8 +1794,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updateLegendGroupReactive(updatedGroup);
       debugPrint('使用响应式系统更新图例组: ${updatedGroup.name}');
 
-      // 显示成功消息
-      _showSuccessSnackBar('已更新图例组 "${updatedGroup.name}"');
+      // // 显示成功消息
+      // _showSuccessSnackBar('已更新图例组 "${updatedGroup.name}"');
     } catch (e) {
       debugPrint('响应式系统更新图例组失败: $e');
       _showErrorSnackBar('更新图例组失败: ${e.toString()}');
