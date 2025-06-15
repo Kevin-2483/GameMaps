@@ -24,9 +24,8 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   final Set<Function(MapDataLoaded)> _dataChangeListeners = {};
 
   MapDataBloc({required VfsMapService mapService})
-      : _mapService = mapService,
-        super(const MapDataInitial()) {
-    
+    : _mapService = mapService,
+      super(const MapDataInitial()) {
     // 注册事件处理器
     on<LoadMapData>(_onLoadMapData);
     on<InitializeMapData>(_onInitializeMapData);
@@ -51,14 +50,13 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     on<SetLayerVisibility>(_onSetLayerVisibility);
     on<SetLayerOpacity>(_onSetLayerOpacity);
     on<SetLegendGroupVisibility>(_onSetLegendGroupVisibility);
-    
+
     // 便签事件处理器
     on<AddStickyNote>(_onAddStickyNote);
     on<UpdateStickyNote>(_onUpdateStickyNote);
     on<DeleteStickyNote>(_onDeleteStickyNote);
     on<ReorderStickyNotes>(_onReorderStickyNotes);
     on<ReorderStickyNotesByDrag>(_onReorderStickyNotesByDrag);
-
   }
 
   /// 添加数据变更监听器
@@ -98,7 +96,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       if (mapItem == null) {
         emit(const MapDataError(message: '地图不存在'));
         return;
-      }      // 加载图层数据
+      } // 加载图层数据
       final layers = await _mapService.getMapLayers(
         event.mapTitle,
         event.version ?? 'default',
@@ -133,13 +131,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       _clearHistory(); // 清空历史记录
       emit(loadedState);
       _notifyDataChangeListeners(loadedState);
-
     } catch (e, stackTrace) {
-      emit(MapDataError(
-        message: '加载地图数据失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      emit(
+        MapDataError(
+          message: '加载地图数据失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 
@@ -164,15 +163,17 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       _clearHistory();
       emit(loadedState);
       _notifyDataChangeListeners(loadedState);
-
     } catch (e, stackTrace) {
-      emit(MapDataError(
-        message: '初始化地图数据失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      emit(
+        MapDataError(
+          message: '初始化地图数据失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
+
   /// 更新图层
   Future<void> _onUpdateLayer(
     UpdateLayer event,
@@ -202,6 +203,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 批量更新图层
   Future<void> _onUpdateLayers(
     UpdateLayers event,
@@ -227,18 +229,16 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 添加图层
-  Future<void> _onAddLayer(
-    AddLayer event,
-    Emitter<MapDataState> emit,
-  ) async {
+  Future<void> _onAddLayer(AddLayer event, Emitter<MapDataState> emit) async {
     if (state is! MapDataLoaded) return;
 
     final currentState = state as MapDataLoaded;
     _saveToHistory(currentState);
 
     final newLayers = [...currentState.layers, event.layer];
-    
+
     // 同步更新mapItem中的图层数据
     final updatedMapItem = currentState.mapItem.copyWith(
       layers: newLayers,
@@ -254,6 +254,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 删除图层
   Future<void> _onDeleteLayer(
     DeleteLayer event,
@@ -283,6 +284,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 重新排序图层
   Future<void> _onReorderLayers(
     ReorderLayers event,
@@ -294,17 +296,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     _saveToHistory(currentState);
 
     final newLayers = List<MapLayer>.from(currentState.layers);
-    
+
     // 执行重排序
     final movedLayer = newLayers.removeAt(event.oldIndex);
     newLayers.insert(event.newIndex, movedLayer);
 
     // 重新分配order
     for (int i = 0; i < newLayers.length; i++) {
-      newLayers[i] = newLayers[i].copyWith(
-        order: i,
-        updatedAt: DateTime.now(),
-      );
+      newLayers[i] = newLayers[i].copyWith(order: i, updatedAt: DateTime.now());
     }
 
     // 同步更新mapItem中的图层数据
@@ -337,7 +336,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       return group.id == event.legendGroup.id ? event.legendGroup : group;
     }).toList();
 
+    // 同步更新mapItem中的图例组数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      legendGroups: updatedLegendGroups,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       legendGroups: updatedLegendGroups,
       lastModified: DateTime.now(),
     );
@@ -357,7 +363,15 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     _saveToHistory(currentState);
 
     final newLegendGroups = [...currentState.legendGroups, event.legendGroup];
+
+    // 同步更新mapItem中的图例组数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      legendGroups: newLegendGroups,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       legendGroups: newLegendGroups,
       lastModified: DateTime.now(),
     );
@@ -380,7 +394,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         .where((group) => group.id != event.groupId)
         .toList();
 
+    // 同步更新mapItem中的图例组数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      legendGroups: newLegendGroups,
+      updatedAt: DateTime.now(),
+    );
+
     final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
       legendGroups: newLegendGroups,
       lastModified: DateTime.now(),
     );
@@ -388,6 +409,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 更新绘制元素
   Future<void> _onUpdateDrawingElement(
     UpdateDrawingElement event,
@@ -426,6 +448,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 添加绘制元素
   Future<void> _onAddDrawingElement(
     AddDrawingElement event,
@@ -439,10 +462,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final updatedLayers = currentState.layers.map((layer) {
       if (layer.id == event.layerId) {
         final newElements = [...layer.elements, event.element];
-        return layer.copyWith(
-          elements: newElements,
-          updatedAt: DateTime.now(),
-        );
+        return layer.copyWith(elements: newElements, updatedAt: DateTime.now());
       }
       return layer;
     }).toList();
@@ -462,6 +482,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 删除绘制元素
   Future<void> _onDeleteDrawingElement(
     DeleteDrawingElement event,
@@ -477,10 +498,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         final newElements = layer.elements
             .where((element) => element.id != event.elementId)
             .toList();
-        return layer.copyWith(
-          elements: newElements,
-          updatedAt: DateTime.now(),
-        );
+        return layer.copyWith(elements: newElements, updatedAt: DateTime.now());
       }
       return layer;
     }).toList();
@@ -500,6 +518,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(newState);
     _notifyDataChangeListeners(newState);
   }
+
   /// 批量更新绘制元素
   Future<void> _onUpdateDrawingElements(
     UpdateDrawingElements event,
@@ -544,11 +563,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     if (state is! MapDataLoaded) return;
 
     final currentState = state as MapDataLoaded;
-    
+
     try {
       emit(MapDataSaving(currentData: currentState));
 
-      if (_currentMapTitle != null) {        // 更新MapItem
+      if (_currentMapTitle != null) {
+        // 更新MapItem
         final updatedMapItem = currentState.mapItem.copyWith(
           layers: currentState.layers,
           legendGroups: currentState.legendGroups,
@@ -593,11 +613,13 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         emit(savedState);
       }
     } catch (e, stackTrace) {
-      emit(MapDataError(
-        message: '保存地图数据失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      emit(
+        MapDataError(
+          message: '保存地图数据失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 
@@ -649,6 +671,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     emit(nextState);
     _notifyDataChangeListeners(nextState);
   }
+
   /// 脚本引擎更新
   Future<void> _onScriptEngineUpdate(
     ScriptEngineUpdate event,
@@ -692,10 +715,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     final currentState = state as MapDataLoaded;
     final newState = currentState.copyWith(
-      metadata: {
-        ...currentState.metadata,
-        ...event.metadata,
-      },
+      metadata: {...currentState.metadata, ...event.metadata},
       lastModified: DateTime.now(),
     );
 
@@ -712,7 +732,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     final currentState = state as MapDataLoaded;
     final layer = currentState.getLayerById(event.layerId);
-    
+
     if (layer != null) {
       final updatedLayer = layer.copyWith(
         isVisible: event.isVisible,
@@ -731,7 +751,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     final currentState = state as MapDataLoaded;
     final layer = currentState.getLayerById(event.layerId);
-    
+
     if (layer != null) {
       final updatedLayer = layer.copyWith(
         opacity: event.opacity,
@@ -750,7 +770,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     final currentState = state as MapDataLoaded;
     final group = currentState.getLegendGroupById(event.groupId);
-    
+
     if (group != null) {
       final updatedGroup = group.copyWith(
         isVisible: event.isVisible,
@@ -798,7 +818,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     _dataChangeListeners.clear();
     return super.close();
   }
-    // 便签事件处理方法
+  // 便签事件处理方法
 
   /// 添加便签
   Future<void> _onAddStickyNote(
@@ -813,8 +833,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       _saveToHistory(currentState);
 
       // 创建新的便签列表
-      final updatedStickyNotes = List<StickyNote>.from(currentState.mapItem.stickyNotes)
-        ..add(event.stickyNote);
+      final updatedStickyNotes = List<StickyNote>.from(
+        currentState.mapItem.stickyNotes,
+      )..add(event.stickyNote);
 
       // 更新地图数据
       final updatedMapItem = currentState.mapItem.copyWith(
@@ -825,7 +846,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       final newState = currentState.copyWith(mapItem: updatedMapItem);
       emit(newState);
       _notifyDataChangeListeners(newState);
-
     } catch (e) {
       debugPrint('添加便签失败: $e');
       emit(MapDataError(message: '添加便签失败: $e'));
@@ -845,9 +865,13 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       _saveToHistory(currentState);
 
       // 查找并更新便签
-      final updatedStickyNotes = List<StickyNote>.from(currentState.mapItem.stickyNotes);
-      final noteIndex = updatedStickyNotes.indexWhere((note) => note.id == event.stickyNote.id);
-      
+      final updatedStickyNotes = List<StickyNote>.from(
+        currentState.mapItem.stickyNotes,
+      );
+      final noteIndex = updatedStickyNotes.indexWhere(
+        (note) => note.id == event.stickyNote.id,
+      );
+
       if (noteIndex != -1) {
         updatedStickyNotes[noteIndex] = event.stickyNote.copyWith(
           updatedAt: DateTime.now(),
@@ -862,7 +886,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         final newState = currentState.copyWith(mapItem: updatedMapItem);
         emit(newState);
         _notifyDataChangeListeners(newState);
-
       }
     } catch (e) {
       debugPrint('更新便签失败: $e');
@@ -896,7 +919,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       final newState = currentState.copyWith(mapItem: updatedMapItem);
       emit(newState);
       _notifyDataChangeListeners(newState);
-
     } catch (e) {
       debugPrint('删除便签失败: $e');
       emit(MapDataError(message: '删除便签失败: $e'));
@@ -913,9 +935,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     try {
       final stickyNotes = currentState.mapItem.stickyNotes;
-      if (event.oldIndex < 0 || 
+      if (event.oldIndex < 0 ||
           event.oldIndex >= stickyNotes.length ||
-          event.newIndex < 0 || 
+          event.newIndex < 0 ||
           event.newIndex >= stickyNotes.length ||
           event.oldIndex == event.newIndex) {
         return;
@@ -938,7 +960,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       final newState = currentState.copyWith(mapItem: updatedMapItem);
       emit(newState);
       _notifyDataChangeListeners(newState);
-
     } catch (e) {
       debugPrint('重新排序便签失败: $e');
       emit(MapDataError(message: '重新排序便签失败: $e'));
@@ -966,7 +987,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       final newState = currentState.copyWith(mapItem: updatedMapItem);
       emit(newState);
       _notifyDataChangeListeners(newState);
-
     } catch (e) {
       debugPrint('通过拖拽重新排序便签失败: $e');
       emit(MapDataError(message: '通过拖拽重新排序便签失败: $e'));
