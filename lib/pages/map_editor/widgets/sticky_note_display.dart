@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:async';
 import '../../../models/sticky_note.dart';
 import '../../../models/map_layer.dart';
 import '../renderers/element_renderer.dart';
@@ -267,6 +268,19 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 /// 便签手势检测工具类
 /// 供 MapCanvas 使用的静态方法
 class StickyNoteGestureHelper {
+  // 静态变量用于节流控制
+  static final Map<String, Timer?> _throttleTimers = {};
+  static final Map<String, StickyNote> _pendingUpdates = {};
+  static const int _throttleIntervalMs = 16; // 约60Hz (1000ms / 60 ≈ 16.67ms)
+
+  /// 清理节流资源
+  static void dispose() {
+    for (final timer in _throttleTimers.values) {
+      timer?.cancel();
+    }
+    _throttleTimers.clear();
+    _pendingUpdates.clear();
+  }
   /// 检测点击位置是否命中便签的特定区域
   ///
   /// [canvasPosition] 相对于画布的点击位置
@@ -406,7 +420,6 @@ class StickyNoteGestureHelper {
         break;
     }
   }
-
   /// 处理便签拖拽结束
   static void handleStickyNotePanEnd(
     StickyNoteDragState dragState,
@@ -416,6 +429,9 @@ class StickyNoteGestureHelper {
     List<StickyNote> allStickyNotes,
     Function(List<StickyNote>) onStickyNotesReordered,
   ) {
+    // 立即执行任何待处理的节流更新
+    _flushPendingUpdate(dragState.note.id, dragState.onNoteUpdated);
+
     // 如果不是移动操作，直接返回
     if (dragState.type != StickyNoteDragType.move) {
       return;
@@ -445,7 +461,23 @@ class StickyNoteGestureHelper {
     }
   }
 
-  // 私有方法：处理移动更新
+  /// 立即执行待处理的更新
+  static void _flushPendingUpdate(
+    String noteId,
+    Function(StickyNote) onNoteUpdated,
+  ) {
+    // 取消定时器
+    _throttleTimers[noteId]?.cancel();
+    _throttleTimers[noteId] = null;
+
+    // 执行待处理的更新
+    final pendingNote = _pendingUpdates[noteId];
+    if (pendingNote != null) {
+      onNoteUpdated(pendingNote);
+      _pendingUpdates.remove(noteId);
+    }
+  }
+  // 私有方法：处理移动更新（带节流）
   static void _handleMoveUpdate(
     StickyNoteDragState dragState,
     Offset currentPosition,
@@ -477,15 +509,44 @@ class StickyNoteGestureHelper {
       ),
     );
 
-    // 更新便签位置
+    // 创建更新后的便签
     final updatedNote = dragState.note.copyWith(
       position: newPosition,
       updatedAt: DateTime.now(),
     );
-    dragState.onNoteUpdated(updatedNote);
+
+    // 使用节流机制更新便签位置
+    _throttledUpdateNote(dragState.note.id, updatedNote, dragState.onNoteUpdated);
   }
 
-  // 私有方法：处理调整大小更新
+  /// 节流更新便签
+  static void _throttledUpdateNote(
+    String noteId,
+    StickyNote updatedNote,
+    Function(StickyNote) onNoteUpdated,
+  ) {
+    // 存储待更新的便签
+    _pendingUpdates[noteId] = updatedNote;
+
+    // 如果已经有定时器在运行，不创建新的定时器
+    if (_throttleTimers[noteId] != null && _throttleTimers[noteId]!.isActive) {
+      return;
+    }
+
+    // 创建节流定时器
+    _throttleTimers[noteId] = Timer(
+      Duration(milliseconds: _throttleIntervalMs),
+      () {
+        final pendingNote = _pendingUpdates[noteId];
+        if (pendingNote != null) {
+          onNoteUpdated(pendingNote);
+          _pendingUpdates.remove(noteId);
+        }
+        _throttleTimers[noteId] = null;
+      },
+    );
+  }
+  // 私有方法：处理调整大小更新（带节流）
   static void _handleResizeUpdate(
     StickyNoteDragState dragState,
     Offset currentPosition,
@@ -510,12 +571,14 @@ class StickyNoteGestureHelper {
       ),
     );
 
-    // 更新便签大小
+    // 创建更新后的便签
     final updatedNote = dragState.note.copyWith(
       size: newSize,
       updatedAt: DateTime.now(),
     );
-    dragState.onNoteUpdated(updatedNote);
+
+    // 使用节流机制更新便签大小
+    _throttledUpdateNote(dragState.note.id, updatedNote, dragState.onNoteUpdated);
   }
 
   // 私有方法：查找目标便签

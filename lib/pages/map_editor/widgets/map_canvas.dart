@@ -236,7 +236,6 @@ class MapCanvasState extends State<MapCanvas> {
       widget.onSelectionCleared?.call();
     }
   }
-
   @override
   void dispose() {
     // 清理绘制工具管理器
@@ -244,6 +243,9 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 清理元素交互管理器
     _elementInteractionManager.reset();
+
+    // 清理便签手势辅助器的节流资源
+    StickyNoteGestureHelper.dispose();
 
     // 清理图片缓存
     for (final image in _imageCache.values) {
