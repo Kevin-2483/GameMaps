@@ -1,33 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
+import '../../../models/sticky_note.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../providers/user_preferences_provider.dart';
 
-/// Z层级元素检视器 - 显示图层中的绘制元素并支持删除操作
+/// Z层级元素检视器 - 显示图层或便签中的绘制元素并支持删除操作
 class ZIndexInspector extends StatelessWidget {
   final MapLayer? selectedLayer;
+  final StickyNote? selectedStickyNote;
   final Function(String elementId) onElementDeleted; // 删除元素的回调
   final String? selectedElementId; // 当前选中的元素ID
-  final Function(String? elementId)? onElementSelected; // 元素选中回调
+  final Function(String? elementId)? onElementSelected; // 元素选中回调 
   final Function(MapDrawingElement element)? onElementUpdated; // 元素更新回调
 
   const ZIndexInspector({
     super.key,
-    required this.selectedLayer,
+    this.selectedLayer,
+    this.selectedStickyNote,
     required this.onElementDeleted,
     this.selectedElementId,
     this.onElementSelected,
     this.onElementUpdated,
-  });
-  @override
+  }) : assert(selectedLayer != null || selectedStickyNote != null, 
+             'Either selectedLayer or selectedStickyNote must be provided');  @override
   Widget build(BuildContext context) {
-    if (selectedLayer == null || selectedLayer!.elements.isEmpty) {
+    // 获取要显示的元素列表
+    List<MapDrawingElement> elements;
+    
+    if (selectedStickyNote != null) {
+      elements = selectedStickyNote!.elements;
+    } else if (selectedLayer != null) {
+      elements = selectedLayer!.elements;
+    } else {
+      elements = [];
+    }
+    
+    if (elements.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Text(
-          '当前图层没有绘制元素',
+          '当前${selectedStickyNote != null ? '便签' : '图层'}没有绘制元素',
           style: TextStyle(
             fontSize: 12,
             color: Theme.of(
@@ -40,7 +54,7 @@ class ZIndexInspector extends StatelessWidget {
     }
 
     // 按z值排序，最高的在前面
-    final sortedElements = List<MapDrawingElement>.from(selectedLayer!.elements)
+    final sortedElements = List<MapDrawingElement>.from(elements)
       ..sort((a, b) => b.zIndex.compareTo(a.zIndex));
 
     return Column(

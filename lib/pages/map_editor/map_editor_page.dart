@@ -1909,10 +1909,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _initialSelectedLegendItemId = null;
     });
   }
-
   // 显示Z层级检视器
   void _showZIndexInspector() {
-    if (_selectedLayer == null) return;
+    // 检查是否有选中的图层或便签
+    if (_selectedLayer == null && _selectedStickyNote == null) return;
 
     setState(() {
       // 关闭其他抽屉
@@ -2758,10 +2758,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                               ),
                             ),
-                          ),
-
-                        // Z层级检视器覆盖层
-                        if (_isZIndexInspectorOpen && _selectedLayer != null)
+                          ),                        // Z层级检视器覆盖层
+                        if (_isZIndexInspectorOpen && (_selectedLayer != null || _selectedStickyNote != null))
                           Positioned(
                             top: 16,
                             bottom: 16,
@@ -2804,9 +2802,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                               context,
                                             ).colorScheme.onSecondaryContainer,
                                           ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Z层级检视器',
+                                          const SizedBox(width: 8),                                          Text(
+                                            _selectedStickyNote != null 
+                                                ? '便签元素检视器 - ${_selectedStickyNote!.title}'
+                                                : 'Z层级检视器',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
@@ -2831,9 +2830,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                         padding: const EdgeInsets.all(16),
                                         child: SingleChildScrollView(
                                           physics:
-                                              const BouncingScrollPhysics(),
-                                          child: ZIndexInspector(
+                                              const BouncingScrollPhysics(),                                          child: ZIndexInspector(
                                             selectedLayer: _selectedLayer,
+                                            selectedStickyNote: _selectedStickyNote,
                                             onElementDeleted: _deleteElement,
                                             selectedElementId:
                                                 _selectedElementId,
@@ -2938,10 +2937,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     onCurvaturePreview: _handleCurvaturePreview,
                     onTriangleCutPreview: _handleTriangleCutPreview,
                     onUndo: _undo,
-                    onRedo: _redo,
-                    canUndo: _canUndo,
+                    onRedo: _redo,                    canUndo: _canUndo,
                     canRedo: _canRedo,
                     selectedLayer: _selectedLayer,
+                    selectedStickyNote: _selectedStickyNote,
                     onElementDeleted: _deleteElement,
                     selectedElementId: _selectedElementId,
                     onElementSelected: (elementId) {
@@ -3106,8 +3105,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           ),
         ],
         child: _isStickyNotePanelCollapsed
-            ? null
-            : StickyNotePanel(
+            ? null            : StickyNotePanel(
                 stickyNotes: _currentMap?.stickyNotes ?? [],
                 selectedStickyNote: _selectedStickyNote,
                 isPreviewMode: widget.isPreviewMode,
@@ -3117,6 +3115,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 onStickyNotesReordered: _reorderStickyNotes,
                 onOpacityPreview: _handleStickyNoteOpacityPreview,
                 onStickyNoteSelected: _selectStickyNote,
+                onZIndexInspectorRequested: _showZIndexInspector,
               ),
       ),
     ); // 脚本管理面板

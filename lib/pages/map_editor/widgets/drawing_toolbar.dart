@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
+import '../../../models/sticky_note.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
@@ -34,9 +35,9 @@ class DrawingToolbarOptimized extends StatefulWidget {
   // 撤销/重做功能
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
-  final bool canUndo;
-  final bool canRedo; // Z层级检视器相关
+  final bool canUndo;  final bool canRedo; // Z层级检视器相关
   final MapLayer? selectedLayer;
+  final StickyNote? selectedStickyNote;
   final Function(String elementId)? onElementDeleted;
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
@@ -70,10 +71,10 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.onCurvaturePreview,
     this.onTriangleCutPreview,
     this.onUndo,
-    this.onRedo,
-    this.canUndo = false,
+    this.onRedo,    this.canUndo = false,
     this.canRedo = false,
     this.selectedLayer,
+    this.selectedStickyNote,
     this.onElementDeleted,
     this.selectedElementId,
     this.onElementSelected,
@@ -758,10 +759,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ),
               ),
 
-            const SizedBox(height: 16),
-
-            // Z层级检视器按钮
-            if (widget.selectedLayer != null &&
+            const SizedBox(height: 16),            // Z层级检视器按钮
+            if ((widget.selectedLayer != null || widget.selectedStickyNote != null) &&
                 widget.onZIndexInspectorRequested != null)
               SizedBox(
                 width: double.infinity,
@@ -769,7 +768,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   onPressed: widget.onZIndexInspectorRequested,
                   icon: const Icon(Icons.layers),
                   label: Text(
-                    'Z层级检视器 (${widget.selectedLayer!.elements.length})',
+                    widget.selectedStickyNote != null
+                        ? '便签元素检视器 (${widget.selectedStickyNote!.elements.length})'
+                        : 'Z层级检视器 (${widget.selectedLayer!.elements.length})',
                   ),
                 ),
               ),

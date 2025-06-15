@@ -17,6 +17,7 @@ class StickyNotePanel extends StatefulWidget {
   final Function(String)? onError;
   final Function(String)? onSuccess;
   final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
+  final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
 
   const StickyNotePanel({
     super.key,
@@ -31,6 +32,7 @@ class StickyNotePanel extends StatefulWidget {
     this.onError,
     this.onSuccess,
     this.onOpacityPreview,
+    this.onZIndexInspectorRequested,
   });
 
   @override
@@ -221,9 +223,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                           padding: const EdgeInsets.all(8),
                           child: const Icon(Icons.image, size: 16),
                         ),
-                      ),
-
-                      // 颜色设置按钮
+                      ),                      // 颜色设置按钮
                       GestureDetector(
                         onTap: () => _showColorPicker(context, note),
                         child: Container(
@@ -234,7 +234,27 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                             color: note.backgroundColor,
                           ),
                         ),
-                      ),
+                      ),                      // Z层级检视器按钮 (只在便签被选中时显示)
+                      if (widget.selectedStickyNote?.id == note.id &&
+                          widget.onZIndexInspectorRequested != null)
+                        Tooltip(
+                          message: note.elements.isNotEmpty 
+                              ? '便签元素检视器 (${note.elements.length}个元素)'
+                              : '便签元素检视器 (无元素)',
+                          child: GestureDetector(
+                            onTap: widget.onZIndexInspectorRequested,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.layers,
+                                size: 16,
+                                color: note.elements.isNotEmpty 
+                                    ? Theme.of(context).primaryColor
+                                    : Theme.of(context).disabledColor,
+                              ),
+                            ),
+                          ),
+                        ),
 
                       // 删除按钮
                       if (widget.stickyNotes.length > 1)
