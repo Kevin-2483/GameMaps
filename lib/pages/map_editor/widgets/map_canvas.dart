@@ -697,7 +697,8 @@ class MapCanvasState extends State<MapCanvas> {
         _showLegendSelectionNotAllowedMessage(hitLegendItem);
       }
       return;
-    }    final hitElementId = _getHitElement(canvasPosition);
+    }
+    final hitElementId = _getHitElement(canvasPosition);
 
     // 如果有选中的便签，且点击位置不在任何便签上，则取消选中便签
     if (widget.selectedStickyNote != null && hitStickyNote == null) {
@@ -1536,7 +1537,7 @@ class MapCanvasState extends State<MapCanvas> {
 
   void _onDrawingStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // 检查是否点击在便签内容区域
     bool isDrawingOnStickyNote = false;
     if (widget.selectedStickyNote != null &&
@@ -1593,9 +1594,10 @@ class MapCanvasState extends State<MapCanvas> {
       );
     }
   }
+
   void _onDrawingUpdate(DragUpdateDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // Check if drawing on sticky note
     if (_drawingToolManager.currentDrawingStickyNote != null) {
       _drawingToolManager.onStickyNoteDrawingUpdate(
@@ -1610,7 +1612,7 @@ class MapCanvasState extends State<MapCanvas> {
     } else {
       // Normal layer drawing - 处理便签透明度调整
       _handleStickyNoteOpacityDuringDrawing(canvasPosition);
-      
+
       _drawingToolManager.onDrawingUpdate(
         details,
         _effectiveDrawingTool,
@@ -1626,11 +1628,11 @@ class MapCanvasState extends State<MapCanvas> {
   /// 处理绘制过程中的便签透明度调整
   void _handleStickyNoteOpacityDuringDrawing(Offset canvasPosition) {
     if (!_drawingToolManager.isDrawing) return;
-    
+
     // 检查当前位置是否在任何便签内部
     for (final note in widget.mapItem.stickyNotes) {
       if (!note.isVisible) continue;
-      
+
       final notePosition = Offset(
         note.position.dx * kCanvasWidth,
         note.position.dy * kCanvasHeight,
@@ -1639,17 +1641,18 @@ class MapCanvasState extends State<MapCanvas> {
         note.size.width * kCanvasWidth,
         note.size.height * kCanvasHeight,
       );
-      
+
       final noteRect = Rect.fromLTWH(
         notePosition.dx,
         notePosition.dy,
         noteSize.width,
         noteSize.height,
       );
-      
+
       if (noteRect.contains(canvasPosition)) {
         // 指针在便签内部，检查透明度是否需要调整
-        final currentOpacity = widget.previewStickyNoteOpacityValues[note.id] ?? note.opacity;
+        final currentOpacity =
+            widget.previewStickyNoteOpacityValues[note.id] ?? note.opacity;
         if (currentOpacity > 0.3) {
           // 保存原始透明度（如果还没有保存）
           if (!_originalOpacityBeforeDrawing.containsKey(note.id)) {
@@ -1676,13 +1679,14 @@ class MapCanvasState extends State<MapCanvas> {
     // 对于拖拽操作，不应该限制以避免偏移量计算错误
     return localPosition;
   }
+
   void _onDrawingEnd(DragEndDetails details) {
     // 恢复所有因绘制而调整的便签透明度
     for (final entry in _originalOpacityBeforeDrawing.entries) {
       _updateStickyNoteOpacity(entry.key, entry.value);
     }
     _originalOpacityBeforeDrawing.clear();
-    
+
     // Check if drawing on sticky note
     if (_drawingToolManager.currentDrawingStickyNote != null) {
       _drawingToolManager.onStickyNoteDrawingEnd(

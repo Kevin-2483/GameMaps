@@ -34,9 +34,9 @@ class MapItem {
   final List<MapLayer> layers; // 图层列表
   final List<LegendGroup> legendGroups; // 图例组列表
   final List<StickyNote> stickyNotes; // 便签列表
+  final List<String>? tags; // 标签列表，用于分类和筛选
   final DateTime createdAt;
   final DateTime updatedAt;
-
   const MapItem({
     this.id,
     required this.title,
@@ -45,6 +45,7 @@ class MapItem {
     this.layers = const [],
     this.legendGroups = const [],
     this.stickyNotes = const [], // 默认无便签
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
     required this.updatedAt,
   });
@@ -133,7 +134,6 @@ class MapItem {
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
-
   /// 创建副本
   MapItem copyWith({
     int? id,
@@ -143,6 +143,7 @@ class MapItem {
     List<MapLayer>? layers,
     List<LegendGroup>? legendGroups,
     List<StickyNote>? stickyNotes,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -154,6 +155,7 @@ class MapItem {
       layers: layers ?? this.layers,
       legendGroups: legendGroups ?? this.legendGroups,
       stickyNotes: stickyNotes ?? this.stickyNotes,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

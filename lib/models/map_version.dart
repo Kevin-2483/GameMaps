@@ -9,21 +9,22 @@ class MapVersion {
   final DateTime createdAt;
   final DateTime updatedAt;
   final MapItem? mapData; // 版本的地图数据，null表示未加载
-
+  final List<String>? tags; // 标签列表，用于分类和筛选
   const MapVersion({
     required this.id,
     required this.name,
     required this.createdAt,
     required this.updatedAt,
     this.mapData,
+    this.tags, // 标签列表，默认为null
   });
-
   MapVersion copyWith({
     String? id,
     String? name,
     DateTime? createdAt,
     DateTime? updatedAt,
     MapItem? mapData,
+    List<String>? tags,
   }) {
     return MapVersion(
       id: id ?? this.id,
@@ -31,6 +32,7 @@ class MapVersion {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       mapData: mapData ?? this.mapData,
+      tags: tags ?? this.tags,
     );
   }
 

@@ -13,6 +13,7 @@ LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
   centerX: (json['centerX'] as num).toDouble(),
   centerY: (json['centerY'] as num).toDouble(),
   version: (json['version'] as num).toInt(),
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -25,6 +26,7 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'centerX': instance.centerX,
       'centerY': instance.centerY,
       'version': instance.version,
+      'tags': instance.tags,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

@@ -23,6 +23,7 @@ class MapLayer {
   final double xOffset; // 图层背景图片X轴偏移量 (相对坐标 -1.0 到 1.0)
   final double yOffset; // 图层背景图片Y轴偏移量 (相对坐标 -1.0 到 1.0)
   final double imageScale; // 图层背景图片缩放比例 (0.1 到 3.0，默认1.0表示原始大小)
+  final List<String>? tags; // 标签列表，用于分类和筛选
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isLinkedToNext; //是否链接到下一个图层
@@ -39,6 +40,7 @@ class MapLayer {
     this.xOffset = 0.0, // 默认X轴正中间偏移0
     this.yOffset = 0.0, // 默认Y轴正中间偏移0
     this.imageScale = 1.0, // 默认缩放为100%（原始大小）
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
     required this.updatedAt,
     this.isLinkedToNext = false, // 默认不链接
@@ -46,8 +48,7 @@ class MapLayer {
 
   factory MapLayer.fromJson(Map<String, dynamic> json) =>
       _$MapLayerFromJson(json);
-  Map<String, dynamic> toJson() => _$MapLayerToJson(this);
-  MapLayer copyWith({
+  Map<String, dynamic> toJson() => _$MapLayerToJson(this);  MapLayer copyWith({
     String? id,
     String? name,
     int? order,
@@ -60,6 +61,7 @@ class MapLayer {
     double? xOffset,
     double? yOffset,
     double? imageScale,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearImageData = false, //参数用于明确清除图片数据
@@ -78,6 +80,7 @@ class MapLayer {
       xOffset: xOffset ?? this.xOffset,
       yOffset: yOffset ?? this.yOffset,
       imageScale: imageScale ?? this.imageScale,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isLinkedToNext: isLinkedToNext ?? this.isLinkedToNext,
@@ -132,8 +135,8 @@ class MapDrawingElement {
   final String? imageHash; // VFS资产系统中的图像哈希引用
   @BoxFitConverter()
   final BoxFit? imageFit; // 图片适应方式（用于图片选区）
-  final DateTime createdAt;
-  const MapDrawingElement({
+  final List<String>? tags; // 标签列表，用于分类和筛选
+  final DateTime createdAt;  const MapDrawingElement({
     required this.id,
     required this.type,
     required this.points,
@@ -149,12 +152,12 @@ class MapDrawingElement {
     this.imageData, // 图片二进制数据
     this.imageHash, // VFS资产哈希引用
     this.imageFit = BoxFit.contain, // 默认图片适应方式
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
   });
   factory MapDrawingElement.fromJson(Map<String, dynamic> json) =>
       _$MapDrawingElementFromJson(json);
-  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);
-  MapDrawingElement copyWith({
+  Map<String, dynamic> toJson() => _$MapDrawingElementToJson(this);  MapDrawingElement copyWith({
     String? id,
     DrawingElementType? type,
     List<Offset>? points,
@@ -170,6 +173,7 @@ class MapDrawingElement {
     Uint8List? imageData,
     String? imageHash,
     BoxFit? imageFit,
+    List<String>? tags,
     DateTime? createdAt,
     bool clearImageData = false, // 用于明确清除图片数据
     bool clearImageHash = false, // 用于明确清除图像哈希
@@ -190,6 +194,7 @@ class MapDrawingElement {
       imageData: clearImageData ? null : (imageData ?? this.imageData),
       imageHash: clearImageHash ? null : (imageHash ?? this.imageHash),
       imageFit: imageFit ?? this.imageFit,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -203,15 +208,16 @@ class LegendGroup {
   final bool isVisible;
   final double opacity; // 透明度 0.0-1.0
   final List<LegendItem> legendItems; // 图例项列表
+  final List<String>? tags; // 标签列表，用于分类和筛选
   final DateTime createdAt;
   final DateTime updatedAt;
-
   const LegendGroup({
     required this.id,
     required this.name,
     this.isVisible = true,
     this.opacity = 1.0,
     this.legendItems = const [],
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
     required this.updatedAt,
   });
@@ -219,13 +225,13 @@ class LegendGroup {
   factory LegendGroup.fromJson(Map<String, dynamic> json) =>
       _$LegendGroupFromJson(json);
   Map<String, dynamic> toJson() => _$LegendGroupToJson(this);
-
   LegendGroup copyWith({
     String? id,
     String? name,
     bool? isVisible,
     double? opacity,
     List<LegendItem>? legendItems,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -235,6 +241,7 @@ class LegendGroup {
       isVisible: isVisible ?? this.isVisible,
       opacity: opacity ?? this.opacity,
       legendItems: legendItems ?? this.legendItems,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -253,8 +260,8 @@ class LegendItem {
   final double opacity; // 透明度 0.0-1.0
   final bool isVisible;
   final String? url; // 图例链接URL，支持网络链接和VFS协议链接
-  final DateTime createdAt;
-  const LegendItem({
+  final List<String>? tags; // 标签列表，用于分类和筛选
+  final DateTime createdAt;  const LegendItem({
     required this.id,
     required this.legendId,
     required this.position,
@@ -263,13 +270,13 @@ class LegendItem {
     this.opacity = 1.0,
     this.isVisible = true,
     this.url,
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
   });
 
   factory LegendItem.fromJson(Map<String, dynamic> json) =>
       _$LegendItemFromJson(json);
-  Map<String, dynamic> toJson() => _$LegendItemToJson(this);
-  LegendItem copyWith({
+  Map<String, dynamic> toJson() => _$LegendItemToJson(this);  LegendItem copyWith({
     String? id,
     String? legendId,
     Offset? position,
@@ -278,6 +285,7 @@ class LegendItem {
     double? opacity,
     bool? isVisible,
     String? url,
+    List<String>? tags,
     DateTime? createdAt,
   }) {
     return LegendItem(
@@ -289,6 +297,7 @@ class LegendItem {
       opacity: opacity ?? this.opacity,
       isVisible: isVisible ?? this.isVisible,
       url: url ?? this.url,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
     );
   }

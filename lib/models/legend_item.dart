@@ -31,9 +31,9 @@ class LegendItem {
   final double centerX; // 中心点X坐标 (0.0-1.0)
   final double centerY; // 中心点Y坐标 (0.0-1.0)
   final int version; // 图例版本
+  final List<String>? tags; // 标签列表，用于分类和筛选
   final DateTime createdAt;
   final DateTime updatedAt;
-
   const LegendItem({
     this.id,
     required this.title,
@@ -41,6 +41,7 @@ class LegendItem {
     required this.centerX,
     required this.centerY,
     required this.version,
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
     required this.updatedAt,
   });
@@ -79,7 +80,6 @@ class LegendItem {
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
-
   /// 创建副本
   LegendItem copyWith({
     int? id,
@@ -88,6 +88,7 @@ class LegendItem {
     double? centerX,
     double? centerY,
     int? version,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -98,6 +99,7 @@ class LegendItem {
       centerX: centerX ?? this.centerX,
       centerY: centerY ?? this.centerY,
       version: version ?? this.version,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

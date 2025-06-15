@@ -33,12 +33,12 @@ class StickyNote {
   final Uint8List? backgroundImageData; // 背景图片数据
   final String? backgroundImageHash; // VFS资产系统中的背景图像哈希引用
   @BoxFitConverter()
-  final BoxFit backgroundImageFit; // 背景图片适应方式
+  final BoxFit backgroundImageFit; // 背景图片适应方式  
   final double backgroundImageOpacity; // 背景图片透明度
   final List<MapDrawingElement> elements; // 便签上的绘画元素列表
+  final List<String>? tags; // 标签列表，用于分类和筛选
   final DateTime createdAt;
   final DateTime updatedAt;
-
   const StickyNote({
     required this.id,
     required this.title,
@@ -58,6 +58,7 @@ class StickyNote {
     this.backgroundImageFit = BoxFit.cover,
     this.backgroundImageOpacity = 0.3,
     this.elements = const [], // 默认无绘画元素
+    this.tags, // 标签列表，默认为null
     required this.createdAt,
     required this.updatedAt,
   });
@@ -65,7 +66,6 @@ class StickyNote {
   factory StickyNote.fromJson(Map<String, dynamic> json) =>
       _$StickyNoteFromJson(json);
   Map<String, dynamic> toJson() => _$StickyNoteToJson(this);
-
   StickyNote copyWith({
     String? id,
     String? title,
@@ -85,6 +85,7 @@ class StickyNote {
     BoxFit? backgroundImageFit,
     double? backgroundImageOpacity,
     List<MapDrawingElement>? elements,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearBackgroundImageData = false, // 用于明确清除背景图片数据
@@ -112,8 +113,8 @@ class StickyNote {
           : (backgroundImageHash ?? this.backgroundImageHash),
       backgroundImageFit: backgroundImageFit ?? this.backgroundImageFit,
       backgroundImageOpacity:
-          backgroundImageOpacity ?? this.backgroundImageOpacity,
-      elements: elements ?? this.elements,
+          backgroundImageOpacity ?? this.backgroundImageOpacity,      elements: elements ?? this.elements,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

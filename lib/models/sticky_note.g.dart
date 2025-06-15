@@ -46,6 +46,7 @@ StickyNote _$StickyNoteFromJson(Map<String, dynamic> json) => StickyNote(
           ?.map((e) => MapDrawingElement.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -73,6 +74,7 @@ Map<String, dynamic> _$StickyNoteToJson(
   'backgroundImageFit': _$BoxFitEnumMap[instance.backgroundImageFit]!,
   'backgroundImageOpacity': instance.backgroundImageOpacity,
   'elements': instance.elements,
+  'tags': instance.tags,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
 };

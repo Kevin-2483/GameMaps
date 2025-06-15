@@ -27,6 +27,7 @@ MapLayer _$MapLayerFromJson(Map<String, dynamic> json) => MapLayer(
   xOffset: (json['xOffset'] as num?)?.toDouble() ?? 0.0,
   yOffset: (json['yOffset'] as num?)?.toDouble() ?? 0.0,
   imageScale: (json['imageScale'] as num?)?.toDouble() ?? 1.0,
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   isLinkedToNext: json['isLinkedToNext'] as bool? ?? false,
@@ -45,6 +46,7 @@ Map<String, dynamic> _$MapLayerToJson(MapLayer instance) => <String, dynamic>{
   'xOffset': instance.xOffset,
   'yOffset': instance.yOffset,
   'imageScale': instance.imageScale,
+  'tags': instance.tags,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
   'isLinkedToNext': instance.isLinkedToNext,
@@ -75,6 +77,7 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
       imageFit: json['imageFit'] == null
           ? BoxFit.contain
           : const BoxFitConverter().fromJson(json['imageFit'] as String?),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -95,6 +98,7 @@ Map<String, dynamic> _$MapDrawingElementToJson(MapDrawingElement instance) =>
       'imageData': const Uint8ListConverter().toJson(instance.imageData),
       'imageHash': instance.imageHash,
       'imageFit': const BoxFitConverter().toJson(instance.imageFit),
+      'tags': instance.tags,
       'createdAt': instance.createdAt.toIso8601String(),
     };
 
@@ -131,6 +135,7 @@ LegendGroup _$LegendGroupFromJson(Map<String, dynamic> json) => LegendGroup(
           ?.map((e) => LegendItem.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -142,6 +147,7 @@ Map<String, dynamic> _$LegendGroupToJson(LegendGroup instance) =>
       'isVisible': instance.isVisible,
       'opacity': instance.opacity,
       'legendItems': instance.legendItems,
+      'tags': instance.tags,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };
@@ -157,6 +163,7 @@ LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
   opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
   isVisible: json['isVisible'] as bool? ?? true,
   url: json['url'] as String?,
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
@@ -170,5 +177,6 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'opacity': instance.opacity,
       'isVisible': instance.isVisible,
       'url': instance.url,
+      'tags': instance.tags,
       'createdAt': instance.createdAt.toIso8601String(),
     };
