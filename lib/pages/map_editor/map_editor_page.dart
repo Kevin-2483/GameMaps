@@ -317,16 +317,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null) return;
 
     try {
-      debugPrint('开始加载版本数据到会话: $versionId');
-
-      // 从VFS加载该版本的完整数据
+      debugPrint('开始加载版本数据到会话: $versionId');      // 从VFS加载该版本的完整数据
       final versionLayers = await _vfsMapService.getMapLayers(_currentMap!.title, versionId);
       final versionLegendGroups = await _vfsMapService.getMapLegendGroups(_currentMap!.title, versionId);
+      final versionStickyNotes = await _vfsMapService.getMapStickyNotes(_currentMap!.title, versionId);
       
       // 构建该版本的完整MapItem数据
       final versionMapData = _currentMap!.copyWith(
         layers: versionLayers,
         legendGroups: versionLegendGroups,
+        stickyNotes: versionStickyNotes,
         updatedAt: DateTime.now(),
       );
 
@@ -337,7 +337,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         initialData: versionMapData,
       );
 
-      debugPrint('版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}');
+      debugPrint('版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}, 便签数: ${versionStickyNotes.length}');
     } catch (e) {
       // 如果加载失败，至少创建空的版本状态
       debugPrint('加载版本 $versionId 数据失败，创建空版本状态: $e');
@@ -1937,17 +1937,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
         // 如果没有会话数据，尝试从VFS加载该版本的数据
         debugPrint('版本 $versionId 没有会话数据，尝试从VFS加载');
         try {
-          final versionExists = await _vfsMapService.mapVersionExists(baseMap.title, versionId);
-          if (versionExists) {
+          final versionExists = await _vfsMapService.mapVersionExists(baseMap.title, versionId);          if (versionExists) {
             // 从VFS加载该版本的数据
             final mapLayers = await _vfsMapService.getMapLayers(baseMap.title, versionId);
             final legendGroups = await _vfsMapService.getMapLegendGroups(baseMap.title, versionId);
+            final stickyNotes = await _vfsMapService.getMapStickyNotes(baseMap.title, versionId);
             versionMapData = baseMap.copyWith(
               layers: mapLayers,
               legendGroups: legendGroups,
+              stickyNotes: stickyNotes,
               updatedAt: DateTime.now(),
             );
-            debugPrint('从VFS加载版本 $versionId 数据，图层数: ${mapLayers.length}');
+            debugPrint('从VFS加载版本 $versionId 数据，图层数: ${mapLayers.length}, 便签数: ${stickyNotes.length}');
           } else {
             // 版本不存在，使用基础地图数据（这可能是第一次保存）
             versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
@@ -2009,9 +2010,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             versionId,
             null, // 不从其他版本复制，创建空目录
           );
-        }
-
-        // 保存版本特定的图层数据（保存该版本实际的数据）
+        }        // 保存版本特定的图层数据（保存该版本实际的数据）
         for (final layer in versionData.layers) {
           await _vfsMapService.saveLayer(versionData.title, layer, versionId);
         }
@@ -2021,6 +2020,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
           await _vfsMapService.saveLegendGroup(
             versionData.title,
             group,
+            versionId,
+          );
+        }
+
+        // 保存版本特定的便签数据（保存该版本实际的数据）
+        for (final stickyNote in versionData.stickyNotes) {
+          await _vfsMapService.saveStickyNote(
+            versionData.title,
+            stickyNote,
             versionId,
           );
         }
@@ -2129,7 +2137,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _updateDisplayOrderAfterLayerChange();
         });
 
-        _showSuccessSnackBar('已切换到版本');
+        // _showSuccessSnackBar('已切换到版本');
         debugPrint('已切换到版本: $versionId');
       });
     } catch (e) {

@@ -1,11 +1,11 @@
 // 红色线条统计脚本 - 最终版本（使用匿名函数避免冲突）
 
 // 外部函数声明
-external fun log(message);
-external fun print(message);
-external fun filterElements(filterFunc);
-external fun findTextElementsByContent(searchText);
-external fun updateTextContent(elementId, newText);
+// external fun log(message);
+// external fun print(message);
+// external fun filterElements(filterFunc);
+// external fun findTextElementsByContent(searchText);
+// external fun updateTextContent(elementId, newText);
 
 log('=== 红色线条统计脚本开始 ===');
 
@@ -20,13 +20,13 @@ var redLines = filterElements(fun(element) {
     var isLine = (type == 'line' || type == 'dashedLine' || type == 'arrow' || type == 'freeDrawing');    // 检查是否为红色
     var isRed = (color == redColor);
     
-    log('检查元素: type=' + type + ', color=' + color.toString() + ', isLine=' + isLine.toString() + ', isRed=' + isRed.toString());
+    // log('检查元素: type=' + type + ', color=' + color.toString() + ', isLine=' + isLine.toString() + ', isRed=' + isRed.toString());
     
     return isLine && isRed;
 });
 
 var redLineCount = redLines.length;
-log('在所有图层中找到 ' + redLineCount.toString() + ' 条红色线条');
+// log('在所有图层中找到 ' + redLineCount.toString() + ' 条红色线条');
 
 // 打印每条红色线条的详细信息
 for (var i = 0; i < redLines.length; i = i + 1) {
@@ -38,7 +38,7 @@ for (var i = 0; i < redLines.length; i = i + 1) {
 // 获取包含"num"的文本元素
 log('搜索包含"num"的文本元素...');
 var numTexts = findTextElementsByContent('num');
-log('找到 ' + numTexts.length.toString() + ' 个包含"num"的文本元素');
+// log('找到 ' + numTexts.length.toString() + ' 个包含"num"的文本元素');
 
 var updateCount = 0;
 

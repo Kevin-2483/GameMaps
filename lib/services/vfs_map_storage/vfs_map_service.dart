@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../models/sticky_note.dart';
 
 /// VFS地图数据服务抽象接口
 /// 定义VFS兼容的地图数据操作方法
@@ -113,6 +114,27 @@ abstract class VfsMapService {
     String mapTitle,
     String groupId,
     String itemId, [
+    String version = 'default',
+  ]);
+
+  // 便签数据操作 - 使用mapTitle作为地图标识符
+  Future<List<StickyNote>> getMapStickyNotes(
+    String mapTitle, [
+    String version = 'default',
+  ]);
+  Future<StickyNote?> getStickyNoteById(
+    String mapTitle,
+    String stickyNoteId, [
+    String version = 'default',
+  ]);
+  Future<void> saveStickyNote(
+    String mapTitle,
+    StickyNote stickyNote, [
+    String version = 'default',
+  ]);
+  Future<void> deleteStickyNote(
+    String mapTitle,
+    String stickyNoteId, [
     String version = 'default',
   ]);
 

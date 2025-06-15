@@ -98,9 +98,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       if (mapItem == null) {
         emit(const MapDataError(message: '地图不存在'));
         return;
-      }
-
-      // 加载图层数据
+      }      // 加载图层数据
       final layers = await _mapService.getMapLayers(
         event.mapTitle,
         event.version ?? 'default',
@@ -112,8 +110,21 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         event.version ?? 'default',
       );
 
+      // 加载便签数据
+      final stickyNotes = await _mapService.getMapStickyNotes(
+        event.mapTitle,
+        event.version ?? 'default',
+      );
+
+      // 更新mapItem以包含版本特定的数据
+      final updatedMapItem = mapItem.copyWith(
+        layers: layers,
+        legendGroups: legendGroups,
+        stickyNotes: stickyNotes,
+      );
+
       final loadedState = MapDataLoaded(
-        mapItem: mapItem,
+        mapItem: updatedMapItem,
         layers: layers,
         legendGroups: legendGroups,
         lastModified: DateTime.now(),
@@ -537,8 +548,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     try {
       emit(MapDataSaving(currentData: currentState));
 
-      if (_currentMapTitle != null) {
-        // 更新MapItem
+      if (_currentMapTitle != null) {        // 更新MapItem
         final updatedMapItem = currentState.mapItem.copyWith(
           layers: currentState.layers,
           legendGroups: currentState.legendGroups,
@@ -562,6 +572,15 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
           await _mapService.saveLegendGroup(
             _currentMapTitle!,
             group,
+            _currentVersion ?? 'default',
+          );
+        }
+
+        // 保存便签数据
+        for (final stickyNote in updatedMapItem.stickyNotes) {
+          await _mapService.saveStickyNote(
+            _currentMapTitle!,
+            stickyNote,
             _currentVersion ?? 'default',
           );
         }

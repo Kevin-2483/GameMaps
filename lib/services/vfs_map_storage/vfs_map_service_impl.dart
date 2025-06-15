@@ -8,6 +8,7 @@ import '../virtual_file_system/vfs_protocol.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../models/sticky_note.dart';
 import '../../utils/filename_sanitizer.dart';
 
 /// VFS地图服务具体实现
@@ -89,9 +90,13 @@ class VfsMapServiceImpl implements VfsMapService {
     String version = 'default',
   ]) => '${_getLegendItemsPath(mapTitle, groupId, version)}/$itemId.json';
 
-  // 版本元数据路径
-  String _getVersionMetadataPath(String mapTitle) =>
-      '${_getMapPath(mapTitle)}/versions_metadata.json';
+  // 便签数据路径构建方法 - 在版本独立的文件夹下建立note文件夹
+  String _getNotesPath(String mapTitle, [String version = 'default']) =>
+      '${_getMapPath(mapTitle)}/data/$version/notes';  String _getStickyNotePath(
+    String mapTitle,
+    String noteId, [
+    String version = 'default',
+  ]) => '${_getNotesPath(mapTitle, version)}/$noteId.json';
 
   // 资产管理路径构建
   String _getAssetsPath(String mapTitle) => '${_getMapPath(mapTitle)}/assets';
@@ -163,13 +168,14 @@ class VfsMapServiceImpl implements VfsMapService {
       }
 
       final metaJson =
-          jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
-
-      // 加载图层数据
+          jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;      // 加载图层数据
       final layers = await getMapLayers(title);
 
       // 加载图例组数据
       final legendGroups = await getMapLegendGroups(title);
+
+      // 加载便签数据
+      final stickyNotes = await getMapStickyNotes(title);
 
       // 加载封面图片
       VfsFileContent? coverData;
@@ -187,6 +193,7 @@ class VfsMapServiceImpl implements VfsMapService {
         version: metaJson['version'] as int,
         layers: layers,
         legendGroups: legendGroups,
+        stickyNotes: stickyNotes,
         createdAt: DateTime.parse(metaJson['createdAt'] as String),
         updatedAt: DateTime.parse(metaJson['updatedAt'] as String),
       );
@@ -212,9 +219,7 @@ class VfsMapServiceImpl implements VfsMapService {
       // 保存封面图片
       if (map.imageData != null && map.imageData!.isNotEmpty) {
         await _saveMapCover(map.title, map.imageData!);
-      }
-
-      // 保存图层数据
+      }      // 保存图层数据
       for (final layer in map.layers) {
         await saveLayer(map.title, layer);
       }
@@ -222,6 +227,11 @@ class VfsMapServiceImpl implements VfsMapService {
       // 保存图例组数据
       for (final group in map.legendGroups) {
         await saveLegendGroup(map.title, group);
+      }
+
+      // 保存便签数据
+      for (final stickyNote in map.stickyNotes) {
+        await saveStickyNote(map.title, stickyNote);
       }
 
       // 清除缓存
@@ -877,6 +887,101 @@ class VfsMapServiceImpl implements VfsMapService {
     } catch (e) {
       debugPrint('删除图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
       rethrow;
+    }
+  }
+
+  // 便签数据管理方法  /// 获取地图的所有便签数据
+  Future<List<StickyNote>> getMapStickyNotes(
+    String mapTitle, [
+    String version = 'default',
+  ]) async {
+    try {
+      final notesPath = _buildVfsPath(_getNotesPath(mapTitle, version));
+      final files = await _storageService.listDirectory(notesPath);
+      
+      final stickyNotes = <StickyNote>[];
+      for (final file in files) {
+        if (file.name.endsWith('.json') && !file.isDirectory) {
+          final noteData = await _storageService.readFile(file.path);
+          if (noteData != null) {
+            try {
+              final noteJson = jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
+              final stickyNote = StickyNote.fromJson(noteJson);
+              stickyNotes.add(stickyNote);
+            } catch (e) {
+              debugPrint('解析便签数据失败 [${file.path}]: $e');
+            }
+          }
+        }
+      }
+      
+      // 按创建时间排序
+      stickyNotes.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return stickyNotes;
+    } catch (e) {
+      debugPrint('加载便签数据失败 [$mapTitle:$version]: $e');
+      return [];
+    }
+  }
+
+  /// 保存便签数据
+  Future<void> saveStickyNote(
+    String mapTitle,
+    StickyNote stickyNote, [
+    String version = 'default',
+  ]) async {
+    try {
+      final stickyNotePath = _buildVfsPath(
+        _getStickyNotePath(mapTitle, stickyNote.id, version),
+      );
+      final stickyNoteJson = jsonEncode(stickyNote.toJson());
+      await _storageService.writeFile(stickyNotePath, utf8.encode(stickyNoteJson));
+      debugPrint('便签数据已保存 [$mapTitle/${stickyNote.id}:$version]');
+    } catch (e) {
+      debugPrint('保存便签数据失败 [$mapTitle/${stickyNote.id}:$version]: $e');
+      rethrow;
+    }
+  }
+
+  /// 删除便签数据
+  Future<void> deleteStickyNote(
+    String mapTitle,
+    String stickyNoteId, [
+    String version = 'default',
+  ]) async {
+    try {
+      final stickyNotePath = _buildVfsPath(
+        _getStickyNotePath(mapTitle, stickyNoteId, version),
+      );
+      await _storageService.delete(stickyNotePath);
+      debugPrint('便签数据已删除 [$mapTitle/$stickyNoteId:$version]');
+    } catch (e) {
+      debugPrint('删除便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');
+      rethrow;
+    }
+  }
+
+  /// 获取指定便签数据
+  Future<StickyNote?> getStickyNoteById(
+    String mapTitle,
+    String stickyNoteId, [
+    String version = 'default',
+  ]) async {
+    try {
+      final stickyNotePath = _buildVfsPath(
+        _getStickyNotePath(mapTitle, stickyNoteId, version),
+      );
+      final noteData = await _storageService.readFile(stickyNotePath);
+      
+      if (noteData == null) {
+        return null;
+      }
+
+      final noteJson = jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
+      return StickyNote.fromJson(noteJson);
+    } catch (e) {
+      debugPrint('加载便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');
+      return null;
     }
   }
 
