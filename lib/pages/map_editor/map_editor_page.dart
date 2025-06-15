@@ -3389,8 +3389,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   Widget _buildMapCanvas() {
     if (_currentMap == null) {
       return const Center(child: CircularProgressIndicator());
-    }
-    return Consumer<UserPreferencesProvider>(
+    }    return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 创建用于显示的地图副本，使用重新排序的图层
         return MapCanvas(
@@ -3440,6 +3439,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
           onStickyNoteUpdated: _updateStickyNote,
           onStickyNoteSelected: _selectStickyNote,
           onStickyNotesReordered: _reorderStickyNotesByDrag,
+          onStickyNoteOpacityChanged: (noteId, opacity) {
+            setState(() {
+              _previewStickyNoteOpacityValues[noteId] = opacity;
+            });
+          },
         );
       },
     );
