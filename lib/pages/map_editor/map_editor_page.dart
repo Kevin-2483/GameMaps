@@ -189,12 +189,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _initializeScriptManager();
     _initializeReactiveSystem();
   }
-
   /// 初始化响应式系统
   void _initializeReactiveSystem() async {
     try {
       await initializeReactiveSystem();
       debugPrint('响应式系统初始化完成');
+
+      // 重新初始化脚本引擎以确保外部函数声明正确
+      await reactiveIntegration.scriptManager.resetScriptEngine();
+      debugPrint('脚本引擎重新初始化完成');
 
       // 如果已有地图数据，加载到响应式系统
       if (_currentMap != null) {

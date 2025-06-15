@@ -281,11 +281,10 @@ class MapEditorIntegrationAdapter {
 
   /// 获取脚本管理器
   ReactiveScriptManager get scriptManager => _scriptManager;
-
   /// 重置脚本引擎（当地图数据发生重大变更时调用）
-  void resetScriptEngine() {
+  Future<void> resetScriptEngine() async {
     debugPrint('重置脚本引擎');
-    _scriptManager.resetScriptEngine();
+    await _scriptManager.resetScriptEngine();
   }
 
   // ==================== 实用方法 ====================

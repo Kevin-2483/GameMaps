@@ -423,17 +423,25 @@ class ReactiveScriptManager extends ChangeNotifier {
   void clearExecutionLogs() {
     _reactiveEngine.clearExecutionLogs();
   }
-
-  /// 重置脚本引擎
-  void resetScriptEngine() {
-    _reactiveEngine.reset();
-    // 清空所有脚本状态
-    for (final scriptId in _scriptStatuses.keys) {
-      _scriptStatuses[scriptId] = ScriptStatus.idle;
+  /// 重置脚本引擎（用于地图编辑器重新进入时清理状态）
+  Future<void> resetScriptEngine() async {
+    debugPrint('重置响应式脚本引擎');
+    
+    try {
+      // 重新初始化脚本引擎，这会重新预定义外部函数
+      await _reactiveEngine.scriptEngine.reinitialize();
+      
+      // 清空所有脚本状态
+      for (final scriptId in _scriptStatuses.keys) {
+        _scriptStatuses[scriptId] = ScriptStatus.idle;
+      }
+      _lastResults.clear();
+      notifyListeners();
+      
+      debugPrint('脚本引擎重置完成');
+    } catch (e) {
+      debugPrint('脚本引擎重置失败: $e');
     }
-    _lastResults.clear();
-    notifyListeners();
-    debugPrint('重置脚本引擎');
   }
 
   /// 清理资源

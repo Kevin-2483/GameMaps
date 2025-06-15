@@ -20,24 +20,60 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
 
   /// 当前地图图层数据的访问器
   List<MapLayer>? _currentLayers;
-  Function(List<MapLayer>)? _onLayersChanged;/// 初始化脚本引擎
+  Function(List<MapLayer>)? _onLayersChanged;  /// 初始化脚本引擎
   Future<void> initialize() async {
     if (_isInitialized) return;
     
     _hetu = Hetu();
     // 在 hetu_script 0.4.2 中，外部函数需要在 init 方法中提供
     _hetu!.init(externalFunctions: _buildExternalFunctions());
+    
+    // 预定义外部函数声明，避免用户重复声明
+    await _predefineExternalFunctions();
+    
     _isInitialized = true;
   }
-
   /// 重置脚本引擎（用于测试）
-  void reset() {
+  Future<void> reset() async {
     _isInitialized = false;
     _runningTimers.clear();
     _animationControllers.clear();
     _currentLayers = null;
     _onLayersChanged = null;
     _hetu = null;
+    
+    // 重新初始化以确保外部函数被正确预定义
+    await initialize();
+  }
+
+  /// 重新初始化脚本引擎（用于地图编辑器重新进入）
+  Future<void> reinitialize() async {
+    // 保存当前的地图数据访问器
+    final currentLayers = _currentLayers;
+    final currentOnLayersChanged = _onLayersChanged;
+    
+    // 停止所有运行中的任务
+    for (final timer in _runningTimers.values) {
+      timer.cancel();
+    }
+    _runningTimers.clear();
+    
+    for (final controller in _animationControllers.values) {
+      controller.close();
+    }
+    _animationControllers.clear();
+    
+    // 重置初始化状态
+    _isInitialized = false;
+    _hetu = null;
+    
+    // 重新初始化
+    await initialize();
+    
+    // 恢复地图数据访问器
+    if (currentLayers != null && currentOnLayersChanged != null) {
+      setMapDataAccessor(currentLayers, currentOnLayersChanged);
+    }
   }
 
   /// 设置地图数据访问器
@@ -495,5 +531,56 @@ class ScriptEngine {  static final ScriptEngine _instance = ScriptEngine._intern
       controller.close();
     }
     _animationControllers.clear();
+  }
+
+  /// 预定义外部函数声明，避免用户重复声明
+  Future<void> _predefineExternalFunctions() async {
+    final externalDeclarations = '''
+// 基础函数
+external fun log(message);
+external fun print(message);
+
+// 数学函数
+external fun sin(x);
+external fun cos(x);
+external fun tan(x);
+external fun sqrt(x);
+external fun pow(x, y);
+external fun abs(x);
+external fun random();
+
+// 绘图元素访问函数
+external fun getLayers();
+external fun getLayerById(id);
+external fun getElementsInLayer(layerId);
+external fun getAllElements();
+
+// 过滤和查找函数
+external fun filterElements(filterFunc);
+external fun countElements(typeFilter);
+external fun calculateTotalArea();
+
+// 元素修改函数
+external fun updateElementProperty(elementId, property, value);
+external fun moveElement(elementId, deltaX, deltaY);
+
+// 动画函数
+external fun animate(elementId, property, targetValue, duration);
+external fun delay(milliseconds);
+
+// 文本专用函数
+external fun createTextElement(text, fontSize, x, y);
+external fun updateTextContent(elementId, newText);
+external fun updateTextSize(elementId, fontSize);
+external fun getTextElements();
+external fun findTextElementsByContent(searchText);
+''';
+
+    try {
+      // 执行外部函数声明
+      _hetu!.eval(externalDeclarations);
+    } catch (e) {
+      debugPrint('预定义外部函数时出错: $e');
+    }
   }
 }

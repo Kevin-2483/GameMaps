@@ -1,11 +1,4 @@
-// 红色线条统计脚本 - 最终版本（使用匿名函数避免冲突）
 
-// 外部函数声明
-// external fun log(message);
-// external fun print(message);
-// external fun filterElements(filterFunc);
-// external fun findTextElementsByContent(searchText);
-// external fun updateTextContent(elementId, newText);
 
 log('=== 红色线条统计脚本开始 ===');
 
