@@ -61,6 +61,7 @@ class ZIndexInspector extends StatelessWidget {
       ],
     );
   }
+
   Widget _buildElementItem(BuildContext context, MapDrawingElement element) {
     final isSelected = selectedElementId == element.id;
 
@@ -80,7 +81,10 @@ class ZIndexInspector extends StatelessWidget {
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        childrenPadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 8.0,
+        ),
         initiallyExpanded: false,
         onExpansionChanged: (expanded) {
           if (expanded && onElementSelected != null) {
@@ -144,38 +148,58 @@ class ZIndexInspector extends StatelessWidget {
                 child: Wrap(
                   spacing: 2,
                   runSpacing: 2,
-                  children: element.tags!.take(3).map((tag) => 
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(2),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          width: 0.5,
+                  children:
+                      element.tags!
+                          .take(3)
+                          .map(
+                            (tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(2),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                tag,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList()
+                        ..addAll(
+                          element.tags!.length > 3
+                              ? [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
+                                    child: Text(
+                                      '+${element.tags!.length - 3}',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color,
+                                      ),
+                                    ),
+                                  ),
+                                ]
+                              : [],
                         ),
-                      ),
-                      child: Text(
-                        tag,
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ).toList()
-                    ..addAll(element.tags!.length > 3 ? [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                        child: Text(
-                          '+${element.tags!.length - 3}',
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                          ),
-                        ),
-                      ),
-                    ] : []),
                 ),
               ),
           ],
@@ -278,6 +302,7 @@ class ZIndexInspector extends StatelessWidget {
         return '图片选区';
     }
   }
+
   /// 根据背景色计算对比色
   Color _getContrastColor(Color backgroundColor) {
     // 计算亮度
@@ -297,11 +322,32 @@ class ZIndexInspector extends StatelessWidget {
           _buildDetailRow('文本内容', element.text!),
         if (element.fontSize != null)
           _buildDetailRow('字体大小', element.fontSize!.toStringAsFixed(1)),
-        _buildDetailRow('颜色', '#${element.color.value.toRadixString(16).toUpperCase()}'),
+        _buildDetailRow(
+          '颜色',
+          '#${element.color.value.toRadixString(16).toUpperCase()}',
+        ),
         _buildDetailRow('描边宽度', element.strokeWidth.toStringAsFixed(1)),
         if (element.rotation != 0)
           _buildDetailRow('旋转角度', '${element.rotation.toStringAsFixed(1)}°'),
-        
+        if (element.type != DrawingElementType.freeDrawing ||
+            element.type != DrawingElementType.text ||
+            element.type != DrawingElementType.imageArea ||
+            element.type != DrawingElementType.line ||
+            element.type != DrawingElementType.dashedLine ||
+            element.type != DrawingElementType.arrow)
+          _buildDetailRow('弧度', '${element.curvature}'),
+        if (element.type == DrawingElementType.dashedLine ||
+            element.type == DrawingElementType.diagonalLines ||
+            element.type == DrawingElementType.crossLines ||
+            element.type == DrawingElementType.dotGrid)
+          _buildDetailRow('密度', '${element.density}'),
+        if (element.type == DrawingElementType.rectangle ||
+            element.type == DrawingElementType.hollowRectangle ||
+            element.type == DrawingElementType.diagonalLines ||
+            element.type == DrawingElementType.crossLines ||
+            element.type == DrawingElementType.dotGrid ||
+            element.type == DrawingElementType.eraser)
+          _buildDetailRow('三角分割', '${element.triangleCut}'),
         // 标签管理区域
         const SizedBox(height: 8),
         const Divider(),
@@ -335,18 +381,10 @@ class ZIndexInspector extends StatelessWidget {
             width: 80,
             child: Text(
               '$label:',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 11),
-            ),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 11))),
         ],
       ),
     );
@@ -372,7 +410,7 @@ class ZIndexInspector extends StatelessWidget {
   /// 根据元素类型获取建议标签
   List<String> _getElementSuggestedTags(DrawingElementType type) {
     final baseTags = ['重要', '标记', '临时', '完成', '草稿', '审核'];
-    
+
     switch (type) {
       case DrawingElementType.text:
         return [...baseTags, '标题', '注释', '说明', '备注'];
