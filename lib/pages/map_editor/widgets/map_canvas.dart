@@ -522,12 +522,15 @@ class MapCanvasState extends State<MapCanvas> {
       width: size.width,
       height: effectiveHeight,
       child: Opacity(
-        opacity: effectiveOpacity,
-        child: StickyNoteDisplay(
+        opacity: effectiveOpacity,        child: StickyNoteDisplay(
           note: note,
           isSelected: widget.selectedStickyNote?.id == note.id,
           isPreviewMode: widget.isPreviewMode,
           onNoteUpdated: widget.onStickyNoteUpdated,
+          imageCache: _imageCache,
+          imageBufferCachedImage: _imageBufferCachedImage,
+          currentImageBufferData: widget.imageBufferData,
+          imageBufferFit: widget.imageBufferFit,
         ),
       ),
     );
@@ -1559,8 +1562,7 @@ class MapCanvasState extends State<MapCanvas> {
       );
 
       if (contentAreaRect.contains(canvasPosition)) {
-        isDrawingOnStickyNote = true;
-        // Drawing on sticky note content area
+        isDrawingOnStickyNote = true;        // Drawing on sticky note content area
         _drawingToolManager.onStickyNoteDrawingStart(
           details,
           stickyNote,
@@ -1571,6 +1573,8 @@ class MapCanvasState extends State<MapCanvas> {
           _effectiveCurvature,
           _effectiveTriangleCut,
           widget.onStickyNoteUpdated!,
+          imageBufferData: widget.imageBufferData, // 传递图片缓冲区数据
+          imageBufferFit: widget.imageBufferFit, // 传递图片适应方式
         );
         return;
       }
@@ -1683,8 +1687,7 @@ class MapCanvasState extends State<MapCanvas> {
     _originalOpacityBeforeDrawing.clear();
 
     // Check if drawing on sticky note
-    if (_drawingToolManager.currentDrawingStickyNote != null) {
-      _drawingToolManager.onStickyNoteDrawingEnd(
+    if (_drawingToolManager.currentDrawingStickyNote != null) {      _drawingToolManager.onStickyNoteDrawingEnd(
         details,
         _effectiveDrawingTool,
         _effectiveColor,
@@ -1693,6 +1696,8 @@ class MapCanvasState extends State<MapCanvas> {
         _effectiveCurvature,
         _effectiveTriangleCut,
         widget.onStickyNoteUpdated!,
+        imageBufferData: widget.imageBufferData, // 传递图片缓冲区数据
+        imageBufferFit: widget.imageBufferFit, // 传递图片适应方式
       );
     } else {
       // Normal layer drawing

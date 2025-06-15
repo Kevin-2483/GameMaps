@@ -910,7 +910,36 @@ class VfsMapServiceImpl implements VfsMapService {
               final noteJson =
                   jsonDecode(utf8.decode(noteData.data))
                       as Map<String, dynamic>;
-              final stickyNote = StickyNote.fromJson(noteJson);
+              StickyNote stickyNote = StickyNote.fromJson(noteJson);
+              
+              // 处理便签中绘画元素的图片资产恢复
+              if (stickyNote.elements.isNotEmpty) {
+                final updatedElements = <MapDrawingElement>[];
+                
+                for (final element in stickyNote.elements) {
+                  MapDrawingElement restoredElement = element;
+                  
+                  // 如果元素有图像哈希引用，从资产系统加载图片数据
+                  if (element.imageHash != null && element.imageHash!.isNotEmpty) {
+                    final imageData = await getAsset(mapTitle, element.imageHash!);
+                    if (imageData != null) {
+                      // 将资产数据恢复到元素的imageData字段
+                      restoredElement = element.copyWith(imageData: imageData);
+                      debugPrint(
+                        '便签绘画元素图像已从资产系统加载，哈希: ${element.imageHash} (${imageData.length} bytes)',
+                      );
+                    } else {
+                      debugPrint('警告：无法从资产系统加载便签绘画元素图像，哈希: ${element.imageHash}');
+                    }
+                  }
+                  
+                  updatedElements.add(restoredElement);
+                }
+                
+                // 创建包含恢复后元素的便签副本
+                stickyNote = stickyNote.copyWith(elements: updatedElements);
+              }
+              
               stickyNotes.add(stickyNote);
             } catch (e) {
               debugPrint('解析便签数据失败 [${file.path}]: $e');
@@ -927,7 +956,6 @@ class VfsMapServiceImpl implements VfsMapService {
       return [];
     }
   }
-
   /// 保存便签数据
   Future<void> saveStickyNote(
     String mapTitle,
@@ -935,10 +963,42 @@ class VfsMapServiceImpl implements VfsMapService {
     String version = 'default',
   ]) async {
     try {
+      // 处理便签中绘画元素的图片资产
+      StickyNote stickyNoteToSave = stickyNote;
+      
+      // 如果便签包含绘画元素，需要处理图片资产
+      if (stickyNote.elements.isNotEmpty) {
+        final updatedElements = <MapDrawingElement>[];
+        
+        for (final element in stickyNote.elements) {
+          MapDrawingElement elementToSave = element;
+          
+          // 如果元素包含图像数据，保存到资产系统并使用哈希引用
+          if (element.imageData != null && element.imageData!.isNotEmpty) {
+            // 保存图像到资产系统并获取哈希
+            final hash = await saveAsset(mapTitle, element.imageData!, 'image/png');
+            debugPrint(
+              '便签绘画元素图像已保存到资产系统，哈希: $hash (${element.imageData!.length} bytes)',
+            );
+
+            // 创建使用哈希引用而不是直接数据的元素
+            elementToSave = element.copyWith(
+              imageHash: hash,
+              clearImageData: true, // 清除直接图像数据
+            );
+          }
+          
+          updatedElements.add(elementToSave);
+        }
+        
+        // 创建包含处理后元素的便签副本
+        stickyNoteToSave = stickyNote.copyWith(elements: updatedElements);
+      }
+
       final stickyNotePath = _buildVfsPath(
         _getStickyNotePath(mapTitle, stickyNote.id, version),
       );
-      final stickyNoteJson = jsonEncode(stickyNote.toJson());
+      final stickyNoteJson = jsonEncode(stickyNoteToSave.toJson());
       await _storageService.writeFile(
         stickyNotePath,
         utf8.encode(stickyNoteJson),
@@ -967,7 +1027,6 @@ class VfsMapServiceImpl implements VfsMapService {
       rethrow;
     }
   }
-
   /// 获取指定便签数据
   Future<StickyNote?> getStickyNoteById(
     String mapTitle,
@@ -986,7 +1045,37 @@ class VfsMapServiceImpl implements VfsMapService {
 
       final noteJson =
           jsonDecode(utf8.decode(noteData.data)) as Map<String, dynamic>;
-      return StickyNote.fromJson(noteJson);
+      StickyNote stickyNote = StickyNote.fromJson(noteJson);
+      
+      // 处理便签中绘画元素的图片资产恢复
+      if (stickyNote.elements.isNotEmpty) {
+        final updatedElements = <MapDrawingElement>[];
+        
+        for (final element in stickyNote.elements) {
+          MapDrawingElement restoredElement = element;
+          
+          // 如果元素有图像哈希引用，从资产系统加载图片数据
+          if (element.imageHash != null && element.imageHash!.isNotEmpty) {
+            final imageData = await getAsset(mapTitle, element.imageHash!);
+            if (imageData != null) {
+              // 将资产数据恢复到元素的imageData字段
+              restoredElement = element.copyWith(imageData: imageData);
+              debugPrint(
+                '便签绘画元素图像已从资产系统加载，哈希: ${element.imageHash} (${imageData.length} bytes)',
+              );
+            } else {
+              debugPrint('警告：无法从资产系统加载便签绘画元素图像，哈希: ${element.imageHash}');
+            }
+          }
+          
+          updatedElements.add(restoredElement);
+        }
+        
+        // 创建包含恢复后元素的便签副本
+        stickyNote = stickyNote.copyWith(elements: updatedElements);
+      }
+      
+      return stickyNote;
     } catch (e) {
       debugPrint('加载便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');
       return null;

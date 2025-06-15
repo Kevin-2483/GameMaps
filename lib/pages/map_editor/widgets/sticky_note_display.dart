@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import '../../../models/sticky_note.dart';
 import '../../../models/map_layer.dart';
 import '../renderers/eraser_renderer.dart';
@@ -18,6 +20,12 @@ class StickyNoteDisplay extends StatefulWidget {
   final bool isSelected;
   final bool isPreviewMode;
   final Function(StickyNote)? onNoteUpdated;
+  
+  // 图片缓存相关参数
+  final Map<String, ui.Image>? imageCache;
+  final ui.Image? imageBufferCachedImage;
+  final Uint8List? currentImageBufferData;
+  final BoxFit imageBufferFit;
 
   const StickyNoteDisplay({
     super.key,
@@ -25,6 +33,10 @@ class StickyNoteDisplay extends StatefulWidget {
     required this.isSelected,
     required this.isPreviewMode,
     this.onNoteUpdated,
+    this.imageCache,
+    this.imageBufferCachedImage,
+    this.currentImageBufferData,
+    this.imageBufferFit = BoxFit.contain,
   });
 
   @override
@@ -32,6 +44,56 @@ class StickyNoteDisplay extends StatefulWidget {
 }
 
 class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
+  // 用于存储便签中图片元素的本地缓存
+  final Map<String, ui.Image> _localImageCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _preloadStickyNoteImages();
+  }
+
+  @override
+  void didUpdateWidget(StickyNoteDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 如果便签元素发生变化，重新预加载图片
+    if (oldWidget.note.elements != widget.note.elements) {
+      _preloadStickyNoteImages();
+    }
+  }
+
+  /// 预加载便签中所有图片元素的图片数据
+  void _preloadStickyNoteImages() async {
+    for (final element in widget.note.elements) {
+      if (element.type == DrawingElementType.imageArea && element.imageData != null) {
+        // 如果这个元素的图片还没有被缓存，则解码并缓存
+        if (!_localImageCache.containsKey(element.id)) {
+          try {
+            final codec = await ui.instantiateImageCodec(element.imageData!);
+            final frame = await codec.getNextFrame();
+            if (mounted) {
+              setState(() {
+                _localImageCache[element.id] = frame.image;
+              });
+              debugPrint('便签图片预加载完成: element.id=${element.id}, 图片尺寸=${frame.image.width}x${frame.image.height}');
+            }
+          } catch (e) {
+            debugPrint('便签图片预加载失败: element.id=${element.id}, 错误=$e');
+          }
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // 释放本地图片缓存
+    for (final image in _localImageCache.values) {
+      image.dispose();
+    }
+    _localImageCache.clear();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -216,15 +278,25 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         ),
       ),
     );
-  }
-
-  /// 构建便签绘制元素
+  }  /// 构建便签绘制元素
   Widget _buildDrawingElements() {
+    // 合并widget的imageCache和本地图片缓存
+    final Map<String, ui.Image> combinedImageCache = {
+      ...?widget.imageCache, // 先添加widget传入的缓存
+      ..._localImageCache,   // 然后添加本地预加载的缓存（会覆盖重复的key）
+    };
+
+    debugPrint('便签绘制: 元素=${widget.note.elements.length}, 图片缓存=${combinedImageCache.length}');
+
     return Positioned.fill(
       child: CustomPaint(
         painter: _StickyNoteDrawingPainter(
           elements: widget.note.elements,
           isSelected: widget.isSelected,
+          imageCache: combinedImageCache, // 使用合并后的缓存
+          imageBufferCachedImage: widget.imageBufferCachedImage,
+          currentImageBufferData: widget.currentImageBufferData,
+          imageBufferFit: widget.imageBufferFit,
         ),
       ),
     );
@@ -652,11 +724,28 @@ class StickyNoteDragState {
 class _StickyNoteDrawingPainter extends CustomPainter {
   final List<MapDrawingElement> elements;
   final bool isSelected;
+  final Map<String, ui.Image>? imageCache;
+  final ui.Image? imageBufferCachedImage;
+  final Uint8List? currentImageBufferData;
+  final BoxFit imageBufferFit;
 
-  _StickyNoteDrawingPainter({required this.elements, required this.isSelected});
-  @override
+  _StickyNoteDrawingPainter({
+    required this.elements,
+    required this.isSelected,
+    this.imageCache,
+    this.imageBufferCachedImage,
+    this.currentImageBufferData,
+    this.imageBufferFit = BoxFit.contain,
+  });  @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
+
+    // 调试信息：检查便签绘制元素
+    debugPrint('便签绘制器: 元素数量=${elements.length}');
+    for (int i = 0; i < elements.length; i++) {
+      final element = elements[i];
+      debugPrint('  元素[$i]: 类型=${element.type.name}, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}');
+    }
 
     // 创建裁剪区域，确保绘制内容不超出便签内容区域
     final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
@@ -676,24 +765,29 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
-      }
-
-      // 使用橡皮擦渲染器来处理橡皮擦遮挡效果
+      }      // 使用橡皮擦渲染器来处理橡皮擦遮挡效果
       EraserRenderer.drawElementWithEraserMask(
         canvas,
         element,
         eraserElements,
         size,
+        imageCache: imageCache,
+        imageBufferCachedImage: imageBufferCachedImage,
+        currentImageBufferData: currentImageBufferData,
+        imageBufferFit: imageBufferFit,
       );
     }
 
     // 恢复画布状态
     canvas.restore();
   }
-
   @override
   bool shouldRepaint(_StickyNoteDrawingPainter oldDelegate) {
     return oldDelegate.elements != elements ||
-        oldDelegate.isSelected != isSelected;
+        oldDelegate.isSelected != isSelected ||
+        oldDelegate.imageCache != imageCache ||
+        oldDelegate.imageBufferCachedImage != imageBufferCachedImage ||
+        oldDelegate.currentImageBufferData != currentImageBufferData ||
+        oldDelegate.imageBufferFit != imageBufferFit;
   }
 }
