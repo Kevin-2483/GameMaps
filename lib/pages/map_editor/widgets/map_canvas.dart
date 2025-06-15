@@ -362,21 +362,13 @@ class MapCanvasState extends State<MapCanvas> {
                       top: 0,
                       width: kCanvasWidth,
                       height: kCanvasHeight,
-                      child: _effectiveDrawingTool == DrawingElementType.text
-                          ? GestureDetector(
+                      child: _effectiveDrawingTool == DrawingElementType.text                          ? GestureDetector(
                               // 文本工具使用点击手势
                               onTapDown: (details) {
                                 final position = _getCanvasPosition(
                                   details.localPosition,
                                 );
-                                _drawingToolManager.showTextInputDialog(
-                                  position,
-                                  widget.selectedLayer!,
-                                  _effectiveColor,
-                                  _effectiveStrokeWidth,
-                                  _effectiveDensity,
-                                  _effectiveCurvature,
-                                );
+                                _handleTextToolTap(position);
                               },
                               behavior: HitTestBehavior.translucent,
                             )
@@ -1388,7 +1380,7 @@ class MapCanvasState extends State<MapCanvas> {
       }
     }
 
-    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
+    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层的绑定图层允许选择
     if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
       final highestPriorityLayers = _getHighestPriorityLayers();
       if (highestPriorityLayers.isNotEmpty) {
@@ -2122,6 +2114,69 @@ class MapCanvasState extends State<MapCanvas> {
       print('Failed to decode image buffer: $e');
       return null;
     }
+  }
+
+  /// 处理文本工具点击
+  void _handleTextToolTap(Offset canvasPosition) {
+    // 首先检查是否点击在选中的便签内
+    if (widget.selectedStickyNote != null) {
+      // 检查是否在便签的内容区域内
+      final hitStickyNote = _getHitStickyNote(canvasPosition);
+      if (hitStickyNote != null && hitStickyNote.id == widget.selectedStickyNote!.id) {
+        // 在选中的便签内，检查是否在内容区域
+        if (_isInStickyNoteContentArea(canvasPosition, widget.selectedStickyNote!)) {
+          // 在便签内容区域，创建便签文本元素
+          _drawingToolManager.showStickyNoteTextInputDialog(
+            canvasPosition,
+            widget.selectedStickyNote!,
+            _effectiveColor,
+            _effectiveStrokeWidth,
+            _effectiveDensity,
+            _effectiveCurvature,
+            widget.onStickyNoteUpdated!,
+          );
+          return;
+        }
+      }
+    }
+
+    // 如果不在便签内容区域，且有选中的图层，则在图层上创建文本
+    if (widget.selectedLayer != null) {
+      _drawingToolManager.showTextInputDialog(
+        canvasPosition,
+        widget.selectedLayer!,
+        _effectiveColor,
+        _effectiveStrokeWidth,
+        _effectiveDensity,
+        _effectiveCurvature,
+      );
+    }
+  }
+
+  /// 检查点击位置是否在便签的内容区域内
+  bool _isInStickyNoteContentArea(Offset canvasPosition, StickyNote note) {
+    // 转换便签的相对坐标到画布坐标
+    final notePosition = Offset(
+      note.position.dx * kCanvasWidth,
+      note.position.dy * kCanvasHeight,
+    );
+    final noteSize = Size(
+      note.size.width * kCanvasWidth,
+      note.size.height * kCanvasHeight,
+    );
+
+    // 计算内容区域边界（排除标题栏和padding）
+    const double titleBarHeight = 36.0; // 标题栏固定高度
+    const double contentPadding = 10.0; // 内容区域的 padding
+
+    final contentAreaRect = Rect.fromLTWH(
+      notePosition.dx + contentPadding,
+      notePosition.dy + titleBarHeight + contentPadding,
+      noteSize.width - (contentPadding * 2),
+      noteSize.height - titleBarHeight - (contentPadding * 2),
+    );
+
+    return contentAreaRect.contains(canvasPosition);
   }
 }
 

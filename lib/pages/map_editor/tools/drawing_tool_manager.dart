@@ -406,6 +406,132 @@ class DrawingToolManager {
     _clearDrawingState();
   }
 
+  /// 11. 在便签中创建文本元素
+  void createStickyNoteTextElement(
+    String text,
+    double fontSize,
+    Offset position,
+    StickyNote targetStickyNote,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) {
+    // Convert canvas position to sticky note local coordinates
+    final normalizedPosition = _convertCanvasToStickyNoteCoordinates(
+      position,
+      targetStickyNote,
+    );
+
+    final maxZIndex = targetStickyNote.elements.isEmpty
+        ? 0
+        : targetStickyNote.elements
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
+
+    final element = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.text,
+      points: [normalizedPosition],
+      color: effectiveColor,
+      strokeWidth: effectiveStrokeWidth,
+      density: effectiveDensity,
+      curvature: effectiveCurvature,
+      zIndex: maxZIndex + 1,
+      text: text,
+      fontSize: fontSize,
+      createdAt: DateTime.now(),
+    );
+
+    final updatedStickyNote = targetStickyNote.addElement(element);
+    onStickyNoteUpdated(updatedStickyNote);
+  }
+
+  /// 12. 显示便签文本输入对话框
+  Future<void> showStickyNoteTextInputDialog(
+    Offset position,
+    StickyNote targetStickyNote,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) async {
+    if (context == null) return;
+
+    final textController = TextEditingController();
+    final fontSize = ValueNotifier<double>(16.0);
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context!,
+      builder: (context) => AlertDialog(
+        title: const Text('添加文本到便签'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: textController,
+              decoration: const InputDecoration(
+                labelText: '文本内容',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<double>(
+              valueListenable: fontSize,
+              builder: (context, value, child) => Column(
+                children: [
+                  Text('字体大小: ${value.round()}px'),
+                  Slider(
+                    value: value,
+                    min: 10.0,
+                    max: 48.0,
+                    divisions: 19,
+                    onChanged: (newValue) => fontSize.value = newValue,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                Navigator.of(context).pop({
+                  'text': textController.text,
+                  'fontSize': fontSize.value,
+                });
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result['text'] != null) {
+      createStickyNoteTextElement(
+        result['text'],
+        result['fontSize'],
+        position,
+        targetStickyNote,
+        effectiveColor,
+        effectiveStrokeWidth,
+        effectiveDensity,
+        effectiveCurvature,
+        onStickyNoteUpdated,
+      );
+    }
+  }
+
   /// 创建标准绘制元素（非自由绘制、非橡皮擦、非文本）
   void _createStandardElement(
     Offset normalizedStart,
