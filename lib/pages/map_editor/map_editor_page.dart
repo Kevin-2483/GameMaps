@@ -184,28 +184,87 @@ class _MapEditorContentState extends State<_MapEditorContent>
   @override
   void initState() {
     super.initState();
-    _initializeMap();
+    _initializeMapAndReactiveSystem();
     _initializeLayoutFromPreferences();
     _initializeScriptManager();
-    _initializeReactiveSystem();
   }
-  /// 初始化响应式系统
-  void _initializeReactiveSystem() async {
+
+  /// 同步初始化地图和响应式系统
+  void _initializeMapAndReactiveSystem() async {
+    setState(() => _isLoading = true);
+
     try {
+      // 1. 首先初始化响应式系统
       await initializeReactiveSystem();
       debugPrint('响应式系统初始化完成');
 
-      // 重新初始化脚本引擎以确保外部函数声明正确
-      await reactiveIntegration.scriptManager.resetScriptEngine();
-      debugPrint('脚本引擎重新初始化完成');
+      // 2. 然后加载地图数据
+      await _loadMapData();
 
-      // 如果已有地图数据，加载到响应式系统
+      // 3. 将地图数据立即加载到响应式系统
       if (_currentMap != null) {
         await loadMapToReactiveSystem(_currentMap!);
+        debugPrint('地图数据已加载到响应式系统: ${_currentMap!.title}');
+
+        // 4. 设置响应式监听器，确保数据同步
         _setupReactiveListeners();
+
+        // 5. 立即初始化响应式版本管理系统
+        await _initializeReactiveVersionManagement();
       }
+
+      // 6. 重新初始化脚本引擎以确保外部函数声明正确
+      await reactiveIntegration.scriptManager.resetScriptEngine();
+      debugPrint('脚本引擎重新初始化完成');
     } catch (e) {
-      debugPrint('响应式系统初始化失败: $e');
+      _showErrorSnackBar('初始化地图失败: ${e.toString()}');
+      debugPrint('地图和响应式系统初始化失败: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// 分离的地图数据加载方法
+  Future<void> _loadMapData() async {
+    try {
+      // 如果已有 mapItem，直接使用；否则通过 mapTitle 从数据库加载
+      if (widget.mapItem != null) {
+        _currentMap = widget.mapItem!;
+      } else if (widget.mapTitle != null) {
+        final loadedMap = await _mapDatabaseService.getMapByTitle(
+          widget.mapTitle!,
+        );
+        if (loadedMap == null) {
+          throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
+        }
+        _currentMap = loadedMap;
+      } else {
+        throw Exception('mapItem 和 mapTitle 都为空');
+      }
+
+      // 加载可用图例
+      await _loadAvailableLegends();
+
+      // 如果没有图层，创建一个默认图层
+      if (_currentMap!.layers.isEmpty) {
+        _addDefaultLayer();
+      }
+
+      // 预加载所有图层的图片
+      _preloadAllLayerImages();
+
+      // 更新脚本管理器的地图数据访问器
+      _updateScriptMapDataAccessor();
+
+      // 更新脚本管理器的地图标题
+      if (_currentMap != null) {
+        _scriptManager.setMapTitle(_currentMap!.title);
+      }
+
+      debugPrint('地图数据加载完成: ${_currentMap!.title}');
+    } catch (e) {
+      debugPrint('加载地图数据失败: $e');
+      rethrow;
     }
   }
 
@@ -228,24 +287,47 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('响应式版本管理器已创建');
 
       // 加载VFS中所有已存储的版本
-      await _loadExistingVersionsFromVfs();
-
-      // 确保默认版本存在
+      await _loadExistingVersionsFromVfs(); // 确保默认版本存在并开始编辑
+      bool shouldStartEditingDefault = false;
       if (!allVersionStates.any((v) => v.versionId == 'default')) {
         final defaultVersionState = await createVersion(
           'default',
           versionName: '默认版本',
         );
         debugPrint('默认版本已创建: ${defaultVersionState?.versionId}');
+        // 新创建的版本会自动切换并开始编辑，不需要额外设置
       } else {
         debugPrint('默认版本已存在');
+        shouldStartEditingDefault = true;
       }
+
+      // 关键修复：确保始终有一个版本在编辑状态
+      // 如果没有正在编辑的版本，开始编辑适当的版本
+      if (versionAdapter?.versionManager.activeEditingVersionId == null) {
+        if (shouldStartEditingDefault ||
+            allVersionStates.any((v) => v.versionId == 'default')) {
+          versionAdapter?.versionManager.startEditingVersion('default');
+          debugPrint('开始编辑默认版本以确保数据同步正常工作');
+        } else if (allVersionStates.isNotEmpty) {
+          // 如果没有默认版本但有其他版本，开始编辑第一个版本
+          final firstVersionId = allVersionStates.first.versionId;
+          versionAdapter?.versionManager.startEditingVersion(firstVersionId);
+          debugPrint('开始编辑第一个可用版本: $firstVersionId');
+        }
+      }
+
+      // 关键修复：初始化完成后，立即同步当前响应式数据到版本系统
+      // 确保响应式系统的当前数据和版本系统保持一致
+      await _syncCurrentDataToVersionSystem();
+
       // 触发UI更新以显示版本标签栏
       if (mounted) {
         setState(() {
           // 触发重建以显示版本信息
         });
-      } // 添加版本管理器状态监听
+      }
+
+      // 添加版本管理器状态监听
       if (versionAdapter != null) {
         versionAdapter!.versionManager.addListener(() {
           if (mounted) {
@@ -262,6 +344,54 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('响应式版本管理初始化失败: $e');
     }
   }
+
+  Future<void> _syncCurrentDataToVersionSystem() async {
+    try {
+      // 获取当前响应式系统的数据状态
+      final currentMapData = getCurrentMapData();
+      if (currentMapData == null) {
+        debugPrint('当前响应式系统没有数据，跳过同步');
+        return;
+      }
+
+      // 获取当前正在编辑的版本ID
+      final activeVersionId =
+          versionAdapter?.versionManager.activeEditingVersionId;
+      if (activeVersionId == null) {
+        debugPrint('没有正在编辑的版本，跳过数据同步到版本系统');
+        return;
+      }
+
+      // 构建完整的地图数据
+      final mapItemToSync = currentMapData.mapItem.copyWith(
+        layers: currentMapData.layers,
+        legendGroups: currentMapData.legendGroups,
+        stickyNotes: currentMapData.mapItem.stickyNotes,
+        updatedAt: DateTime.now(),
+      );
+
+      // 更新版本数据，但不标记为已修改（因为这是初始同步）
+      versionAdapter?.versionManager.updateVersionData(
+        activeVersionId,
+        mapItemToSync,
+        markAsChanged: false, // 初始同步不标记为已修改
+      );
+
+      debugPrint(
+        '初始数据同步完成 [$activeVersionId], 图层数: ${mapItemToSync.layers.length}, 便签数: ${mapItemToSync.stickyNotes.length}',
+      );
+
+      // 详细日志：便签绘画元素数量
+      for (int i = 0; i < mapItemToSync.stickyNotes.length; i++) {
+        final note = mapItemToSync.stickyNotes[i];
+        debugPrint('  同步便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+      }
+    } catch (e) {
+      debugPrint('同步当前数据到版本系统失败: $e');
+      // 不抛出异常，允许系统继续工作
+    }
+  }
+
   /// 从VFS存储加载所有已存在的版本到响应式版本管理系统
   Future<void> _loadExistingVersionsFromVfs() async {
     if (_currentMap == null) return;
@@ -289,9 +419,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
           // 检查版本是否已经在响应式系统中
           if (versionAdapter?.versionManager.versionExists(versionId) == true) {
             debugPrint('版本 $versionId 已存在于响应式系统中，但需要确保数据已加载');
-            
+
             // 检查是否已有会话数据，如果没有则加载
-            final existingState = versionAdapter?.versionManager.getVersionState(versionId);
+            final existingState = versionAdapter?.versionManager
+                .getVersionState(versionId);
             if (existingState?.sessionData == null) {
               await _loadVersionDataToSession(versionId, versionName);
             }
@@ -316,15 +447,27 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 加载指定版本的完整数据到会话中
-  Future<void> _loadVersionDataToSession(String versionId, String versionName) async {
+  Future<void> _loadVersionDataToSession(
+    String versionId,
+    String versionName,
+  ) async {
     if (_currentMap == null) return;
 
     try {
-      debugPrint('开始加载版本数据到会话: $versionId');      // 从VFS加载该版本的完整数据
-      final versionLayers = await _vfsMapService.getMapLayers(_currentMap!.title, versionId);
-      final versionLegendGroups = await _vfsMapService.getMapLegendGroups(_currentMap!.title, versionId);
-      final versionStickyNotes = await _vfsMapService.getMapStickyNotes(_currentMap!.title, versionId);
-      
+      debugPrint('开始加载版本数据到会话: $versionId'); // 从VFS加载该版本的完整数据
+      final versionLayers = await _vfsMapService.getMapLayers(
+        _currentMap!.title,
+        versionId,
+      );
+      final versionLegendGroups = await _vfsMapService.getMapLegendGroups(
+        _currentMap!.title,
+        versionId,
+      );
+      final versionStickyNotes = await _vfsMapService.getMapStickyNotes(
+        _currentMap!.title,
+        versionId,
+      );
+
       // 构建该版本的完整MapItem数据
       final versionMapData = _currentMap!.copyWith(
         layers: versionLayers,
@@ -340,7 +483,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         initialData: versionMapData,
       );
 
-      debugPrint('版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}, 便签数: ${versionStickyNotes.length}');
+      debugPrint(
+        '版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}, 便签数: ${versionStickyNotes.length}',
+      );
     } catch (e) {
       // 如果加载失败，至少创建空的版本状态
       debugPrint('加载版本 $versionId 数据失败，创建空版本状态: $e');
@@ -350,6 +495,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
     }
   }
+
   /// 设置响应式监听器
   void _setupReactiveListeners() {
     // 监听地图数据变化
@@ -393,12 +539,37 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   .firstOrNull;
             }
 
+            // 重要修复：同步未保存更改状态
+            // 当响应式系统有数据变化时，UI也应该反映这个变化
+            _hasUnsavedChanges = hasUnsavedChangesReactive;
+
             // 更新显示顺序
             _updateDisplayOrderAfterLayerChange();
           });
+
+          // 重要：在状态同步后，确保UI能够正确反映更改状态
+          // 这样用户就能看到未保存的更改指示
+          debugPrint('UI状态已同步响应式数据，未保存更改: $_hasUnsavedChanges');
         }
       }
     });
+
+    // 添加额外的监听器来确保未保存状态的同步
+    // 这是为了确保当响应式系统状态变化时，UI能够及时更新
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 定期检查响应式系统的未保存状态并同步到UI
+      _syncUnsavedChangesFromReactive();
+    });
+  }
+
+  /// 同步响应式系统的未保存更改状态到UI
+  void _syncUnsavedChangesFromReactive() {
+    if (mounted && hasUnsavedChangesReactive != _hasUnsavedChanges) {
+      setState(() {
+        _hasUnsavedChanges = hasUnsavedChangesReactive;
+      });
+      debugPrint('已同步响应式系统的未保存状态到UI: $_hasUnsavedChanges');
+    }
   }
 
   /// 初始化脚本管理器
@@ -459,68 +630,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
           layout.panelAutoCloseStates['stickyNote'] ?? true;
       _isScriptPanelAutoClose = layout.panelAutoCloseStates['script'] ?? true;
     });
-  }
-
-  Future<void> _initializeMap() async {
-    setState(() => _isLoading = true);
-    try {
-      // 如果已有 mapItem，直接使用；否则通过 mapTitle 从数据库加载
-      if (widget.mapItem != null) {
-        _currentMap = widget.mapItem!;
-      } else if (widget.mapTitle != null) {
-        final loadedMap = await _mapDatabaseService.getMapByTitle(
-          widget.mapTitle!,
-        );
-        if (loadedMap == null) {
-          throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
-        }
-        _currentMap = loadedMap;
-      } else {
-        throw Exception('mapItem 和 mapTitle 都为空');
-      } // 初始化版本管理器（已移至响应式系统）
-      // final mapTitle = _currentMap!.title;
-      // _versionManager = MapVersionManager(mapTitle: mapTitle);// 初始化版本数据（已移至响应式系统）
-      // await _initializeVersions();
-
-      // 加载可用图例
-      await _loadAvailableLegends();
-
-      // 如果没有图层，创建一个默认图层
-      if (_currentMap!.layers.isEmpty) {
-        _addDefaultLayer();
-      }
-      // 保存初始状态到撤销历史
-      // _saveToUndoHistory();      // 预加载所有图层的图片
-      _preloadAllLayerImages(); // 更新脚本管理器的地图数据访问器
-      _updateScriptMapDataAccessor();
-
-      // 更新脚本管理器的地图标题
-      if (_currentMap != null) {
-        _scriptManager.setMapTitle(_currentMap!.title);
-      } // 加载地图到响应式系统
-      if (_currentMap != null) {
-        await _loadMapToReactiveSystemSafely(_currentMap!);
-
-        // 在地图加载完成后初始化响应式版本管理
-        await _initializeReactiveVersionManagement();
-      }
-    } catch (e) {
-      _showErrorSnackBar('初始化地图失败: ${e.toString()}');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  /// 安全地加载地图到响应式系统
-  Future<void> _loadMapToReactiveSystemSafely(MapItem mapItem) async {
-    try {
-      await loadMapToReactiveSystem(mapItem);
-      _setupReactiveListeners();
-      debugPrint('地图已加载到响应式系统: ${mapItem.title}');
-    } catch (e) {
-      debugPrint('加载地图到响应式系统失败: $e');
-      // 响应式系统失败时，继续使用传统系统
-    }
   }
 
   /// 预加载所有图层的图片
@@ -924,6 +1033,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showErrorSnackBar('加载图例失败: ${e.toString()}');
     }
   }
+
   void _addDefaultLayer() {
     if (_currentMap == null) return;
 
@@ -1926,7 +2036,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     for (final versionState in allVersionStates) {
       final versionId = versionState.versionId;
       debugPrint('保存版本: $versionId (${versionState.versionName})');
-      debugPrint('版本状态: 有会话数据=${versionState.sessionData != null}, 有未保存更改=${versionState.hasUnsavedChanges}');
+      debugPrint(
+        '版本状态: 有会话数据=${versionState.sessionData != null}, 有未保存更改=${versionState.hasUnsavedChanges}',
+      );
 
       // 获取版本的完整数据
       MapItem versionMapData;
@@ -1940,18 +2052,33 @@ class _MapEditorContentState extends State<_MapEditorContent>
         // 如果没有会话数据，尝试从VFS加载该版本的数据
         debugPrint('版本 $versionId 没有会话数据，尝试从VFS加载');
         try {
-          final versionExists = await _vfsMapService.mapVersionExists(baseMap.title, versionId);          if (versionExists) {
+          final versionExists = await _vfsMapService.mapVersionExists(
+            baseMap.title,
+            versionId,
+          );
+          if (versionExists) {
             // 从VFS加载该版本的数据
-            final mapLayers = await _vfsMapService.getMapLayers(baseMap.title, versionId);
-            final legendGroups = await _vfsMapService.getMapLegendGroups(baseMap.title, versionId);
-            final stickyNotes = await _vfsMapService.getMapStickyNotes(baseMap.title, versionId);
+            final mapLayers = await _vfsMapService.getMapLayers(
+              baseMap.title,
+              versionId,
+            );
+            final legendGroups = await _vfsMapService.getMapLegendGroups(
+              baseMap.title,
+              versionId,
+            );
+            final stickyNotes = await _vfsMapService.getMapStickyNotes(
+              baseMap.title,
+              versionId,
+            );
             versionMapData = baseMap.copyWith(
               layers: mapLayers,
               legendGroups: legendGroups,
               stickyNotes: stickyNotes,
               updatedAt: DateTime.now(),
             );
-            debugPrint('从VFS加载版本 $versionId 数据，图层数: ${mapLayers.length}, 便签数: ${stickyNotes.length}');
+            debugPrint(
+              '从VFS加载版本 $versionId 数据，图层数: ${mapLayers.length}, 便签数: ${stickyNotes.length}',
+            );
           } else {
             // 版本不存在，使用基础地图数据（这可能是第一次保存）
             versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
@@ -2000,7 +2127,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       if (isDefault) {
         // 默认版本：使用完整的saveMap方法（包含清理逻辑）
         await _vfsMapService.saveMap(versionData);
-        debugPrint('默认版本已保存 (完整重建)');      } else {
+        debugPrint('默认版本已保存 (完整重建)');
+      } else {
         // 其他版本：确保版本目录存在
         final versionExists = await _vfsMapService.mapVersionExists(
           versionData.title,
@@ -2013,7 +2141,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             versionId,
             null, // 不从其他版本复制，创建空目录
           );
-        }        // 保存版本特定的图层数据（保存该版本实际的数据）
+        } // 保存版本特定的图层数据（保存该版本实际的数据）
         for (final layer in versionData.layers) {
           await _vfsMapService.saveLayer(versionData.title, layer, versionId);
         }
@@ -2063,8 +2191,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       // 生成唯一的版本ID
       final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
-      
-      debugPrint('创建版本前状态: 当前版本=$currentVersionId, 当前地图图层数=${_currentMap!.layers.length}');
+
+      debugPrint(
+        '创建版本前状态: 当前版本=$currentVersionId, 当前地图图层数=${_currentMap!.layers.length}',
+      );
 
       // 使用响应式版本管理创建新版本（从当前版本复制数据）
       final newVersionState = await createVersion(
@@ -2074,8 +2204,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
 
       if (newVersionState != null) {
-        debugPrint('新版本已创建: $versionId, 会话数据=${newVersionState.sessionData != null ? '有(图层数: ${newVersionState.sessionData!.layers.length})' : '无'}');
-        
+        debugPrint(
+          '新版本已创建: $versionId, 会话数据=${newVersionState.sessionData != null ? '有(图层数: ${newVersionState.sessionData!.layers.length})' : '无'}',
+        );
+
         setState(() {
           // 新版本创建时重置选择状态
           if (_currentMap != null && _currentMap!.layers.isNotEmpty) {
@@ -2085,7 +2217,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           }
           _selectedLayerGroup = null;
           _selectedElementId = null;
-          
+
           // 更新显示顺序
           _updateDisplayOrderAfterLayerChange();
         });
@@ -2113,6 +2245,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showErrorSnackBar('创建版本失败: ${e.toString()}');
     }
   }
+
   /// 切换版本（使用响应式系统）
   void _switchVersion(String versionId) {
     if (versionId == currentVersionId) {
@@ -2132,7 +2265,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           }
           _selectedLayerGroup = null;
           _selectedElementId = null;
-          
+
           // 重置便签选择状态
           _selectedStickyNote = null;
 
@@ -3485,10 +3618,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 使用响应式系统添加便利贴
     addStickyNoteReactive(newNote);
-    
+
     // 设置当前选中的便利贴（响应式系统状态更新后会自动同步）
     _selectedStickyNote = newNote;
-  }  /// 更新便利贴（使用响应式系统）
+  }
+
+  /// 更新便利贴（使用响应式系统）
   void _updateStickyNote(StickyNote updatedNote) {
     if (_currentMap == null) return;
 
@@ -3503,7 +3638,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_selectedStickyNote?.id == updatedNote.id) {
       _selectedStickyNote = updatedNoteWithTimestamp;
     }
-  }  /// 删除便利贴（使用响应式系统）
+  }
+
+  /// 删除便利贴（使用响应式系统）
   void _deleteStickyNote(StickyNote note) {
     if (_currentMap == null) return;
 
@@ -3515,6 +3652,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedStickyNote = null;
     }
   }
+
   /// 重新排序便利贴（使用响应式系统）
   void _reorderStickyNotes(int oldIndex, int newIndex) {
     if (_currentMap == null ||
@@ -3528,7 +3666,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 使用响应式系统重新排序便利贴
     reorderStickyNotesReactive(oldIndex, newIndex);
-  }  /// 处理拖拽便签重排序（通过z-index调整）（使用响应式系统）
+  }
+
+  /// 处理拖拽便签重排序（通过z-index调整）（使用响应式系统）
   void _reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
     if (_currentMap == null) return;
 
