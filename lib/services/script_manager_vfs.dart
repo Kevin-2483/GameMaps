@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
 import 'script_engine.dart';
 import 'virtual_file_system/virtual_file_system.dart';
+import '../utils/filename_sanitizer.dart';
 
 /// 脚本管理器 - 使用VFS存储结构
 class ScriptManager extends ChangeNotifier {
@@ -35,21 +36,17 @@ class ScriptManager extends ChangeNotifier {
       loadScripts();
     }
   }
-
   /// 获取脚本存储路径
   String _getScriptsPath() {
     if (_currentMapTitle == null) {
       throw Exception('Map title not set');
     }
     return 'indexeddb://r6box/maps/${_getMapPath(_currentMapTitle!)}/scripts';
-  }
-
-  /// 获取地图路径（处理特殊字符）
+  }  /// 获取地图路径（处理特殊字符）- 使用与VFS地图服务相同的路径格式
   String _getMapPath(String mapTitle) {
-    // 将特殊字符替换为安全的文件名字符
-    return mapTitle
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(' ', '_');
+    // 使用与VfsMapServiceImpl相同的文件名清理逻辑
+    final sanitizedTitle = FilenameSanitizer.sanitize(mapTitle);
+    return '$sanitizedTitle.mapdata';
   }
 
   /// 获取脚本文件路径

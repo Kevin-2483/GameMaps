@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
 import '../services/script_engine.dart';
 import '../services/virtual_file_system/virtual_file_system.dart';
+import '../utils/filename_sanitizer.dart';
 import 'reactive_script_engine.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
@@ -139,12 +140,11 @@ class ReactiveScriptManager extends ChangeNotifier {
     }
     return 'indexeddb://r6box/maps/${_getMapPath(_currentMapTitle!)}/scripts';
   }
-
-  /// 获取地图路径（处理特殊字符）
+  /// 获取地图路径（处理特殊字符）- 使用与VFS地图服务相同的路径格式
   String _getMapPath(String mapTitle) {
-    return mapTitle
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(' ', '_');
+    // 使用与VfsMapServiceImpl相同的文件名清理逻辑
+    final sanitizedTitle = FilenameSanitizer.sanitize(mapTitle);
+    return '$sanitizedTitle.mapdata';
   }
 
   /// 获取脚本文件路径
