@@ -15,8 +15,7 @@ class StickyNotePanel extends StatefulWidget {
   final VoidCallback onStickyNoteAdded;
   final Function(int oldIndex, int newIndex) onStickyNotesReordered;
   final Function(String)? onError;
-  final Function(String)? onSuccess;
-  final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
+  final Function(String)? onSuccess;  final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
 
   const StickyNotePanel({
@@ -470,19 +469,23 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         );
       },
     );
-  }
-
-  /// 处理图片上传
+  }  /// 处理图片上传
   Future<void> _handleImageUpload(StickyNote note) async {
     try {
       final Uint8List? imageData = await ImageUtils.pickAndEncodeImage();
       if (imageData != null) {
+        // 直接保存图像数据到便签，不立即保存到资产系统
+        // 资产保存将在地图保存时由VFS服务处理
         final updatedNote = note.copyWith(
           backgroundImageData: imageData,
+          clearBackgroundImageHash: true, // 清除旧的哈希引用，新数据在保存时会生成哈希
           updatedAt: DateTime.now(),
         );
+        
         widget.onStickyNoteUpdated(updatedNote);
         widget.onSuccess?.call('背景图片已上传');
+        
+        debugPrint('便签背景图片已上传，将在地图保存时存储到资产系统 (${imageData.length} bytes)');
       }
     } catch (e) {
       widget.onError?.call('上传图片失败: $e');
@@ -547,7 +550,6 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       ),
     );
   }
-
   /// 移除背景图片
   void _removeBackgroundImage(StickyNote note) {
     final updatedNote = note.copyWith(

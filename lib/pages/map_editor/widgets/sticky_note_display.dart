@@ -252,11 +252,15 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         ),
       ),
     );
-  }
-
-  /// 构建背景图片
+  }  /// 构建背景图片
   Widget _buildBackgroundImage() {
-    if (widget.note.backgroundImageData == null) {
+    // 检查是否有背景图片（直接数据优先，然后是VFS哈希引用）
+    final hasDirectData = widget.note.backgroundImageData != null && 
+                         widget.note.backgroundImageData!.isNotEmpty;
+    final hasHashReference = widget.note.backgroundImageHash != null && 
+                            widget.note.backgroundImageHash!.isNotEmpty;
+    
+    if (!hasDirectData && !hasHashReference) {
       return const SizedBox.shrink();
     }
 
@@ -271,14 +275,79 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
             bottomLeft: Radius.circular(cornerRadius),
             bottomRight: Radius.circular(cornerRadius),
           ),
-          child: Image.memory(
-            widget.note.backgroundImageData!,
-            fit: widget.note.backgroundImageFit,
-          ),
+          child: hasDirectData
+              ? Image.memory(
+                  widget.note.backgroundImageData!,
+                  fit: widget.note.backgroundImageFit,
+                  errorBuilder: (context, error, stackTrace) {
+                    debugPrint('便签背景图片加载失败 (直接数据): $error');
+                    return _buildBackgroundImageError();
+                  },
+                )
+              : _buildVfsBackgroundPlaceholder(), // 显示哈希引用的占位符
         ),
       ),
     );
-  }  /// 构建便签绘制元素
+  }
+
+  /// 构建VFS背景图片占位符
+  Widget _buildVfsBackgroundPlaceholder() {
+    // 当便签只有哈希引用而没有直接数据时显示占位符
+    // 这种情况在正常使用中不应该出现，因为加载时会恢复直接数据
+    debugPrint('便签背景图片只有VFS哈希引用: ${widget.note.backgroundImageHash}');
+    debugPrint('提示: 便签背景图片应该在加载时已恢复为直接数据');
+    
+    return Container(
+      color: Colors.grey.shade100,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.image_outlined,
+              color: Colors.grey.shade400,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '背景图片',
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建背景图片错误占位符
+  Widget _buildBackgroundImageError() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
+              color: Colors.grey.shade400,
+              size: 32,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '图片加载失败',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }/// 构建便签绘制元素
   Widget _buildDrawingElements() {
     // 合并widget的imageCache和本地图片缓存
     final Map<String, ui.Image> combinedImageCache = {

@@ -172,7 +172,7 @@ class ReactiveVersionAdapter {
           return false;
         }
       }
-    } // 简单检查便签ID和基本属性
+    }    // 检查便签ID和所有属性（包括背景样式）
     for (int i = 0; i < data1.stickyNotes.length; i++) {
       final note1 = data1.stickyNotes[i];
       final note2 = data2.stickyNotes[i]; // 修复：使用data2而不是data1
@@ -180,14 +180,41 @@ class ReactiveVersionAdapter {
           note1.title != note2.title ||
           note1.content != note2.content ||
           note1.position != note2.position ||
-          note1.size != note2.size || // 添加尺寸比较
-          note1.opacity != note2.opacity || // 添加透明度比较
-          note1.isVisible != note2.isVisible || // 添加可见性比较
-          note1.isCollapsed != note2.isCollapsed || // 添加折叠状态比较
-          note1.zIndex != note2.zIndex || // 添加层级比较
+          note1.size != note2.size || // 尺寸比较
+          note1.opacity != note2.opacity || // 透明度比较
+          note1.isVisible != note2.isVisible || // 可见性比较
+          note1.isCollapsed != note2.isCollapsed || // 折叠状态比较
+          note1.zIndex != note2.zIndex || // 层级比较
+          note1.backgroundColor != note2.backgroundColor || // 背景颜色比较
+          note1.titleBarColor != note2.titleBarColor || // 标题栏颜色比较
+          note1.textColor != note2.textColor || // 文字颜色比较
+          note1.backgroundImageFit != note2.backgroundImageFit || // 背景图片适应方式比较
+          note1.backgroundImageOpacity != note2.backgroundImageOpacity || // 背景图片透明度比较
+          note1.backgroundImageHash != note2.backgroundImageHash || // 背景图片哈希比较
           note1.elements.length != note2.elements.length) {
-        // 添加绘画元素数量检查
+        // 绘画元素数量检查
         return false;
+      }      // 检查背景图片数据变化（用于兼容性和即时显示）
+      // 当便签同时有哈希引用和直接数据时，优先比较哈希引用
+      if (note1.backgroundImageHash != null && note2.backgroundImageHash != null &&
+          note1.backgroundImageHash!.isNotEmpty && note2.backgroundImageHash!.isNotEmpty) {
+        // 两个便签都有哈希引用，直接比较哈希（已在上面处理）
+      } else if ((note1.backgroundImageData == null) != (note2.backgroundImageData == null)) {
+        // 一个有直接数据，一个没有
+        return false;
+      } else if (note1.backgroundImageData != null && note2.backgroundImageData != null) {
+        // 两个便签都有直接数据，比较数据长度和内容
+        if (note1.backgroundImageData!.length != note2.backgroundImageData!.length) {
+          return false;
+        }
+        // 对于大图片，只比较前100字节作为快速检查
+        final length = note1.backgroundImageData!.length;
+        final checkLength = length > 100 ? 100 : length;
+        for (int k = 0; k < checkLength; k++) {
+          if (note1.backgroundImageData![k] != note2.backgroundImageData![k]) {
+            return false;
+          }
+        }
       }
 
       // 检查便签上的绘画元素变化
