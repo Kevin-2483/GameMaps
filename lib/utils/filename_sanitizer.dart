@@ -12,9 +12,7 @@ class FilenameSanitizer {
   static String sanitize(String title) {
     if (title.isEmpty) {
       return 'untitled_map';
-    }
-
-    String sanitized = title
+    }    String sanitized = title
         // 替换不安全的字符为下划线
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         // 替换空格为下划线
@@ -22,9 +20,12 @@ class FilenameSanitizer {
         // 移除连续的下划线
         .replaceAll(RegExp(r'_+'), '_')
         // 移除首尾的点和下划线
-        .replaceAll(RegExp(r'^[._]+|[._]+$'), '')
-        // 限制长度
-        .substring(0, title.length > 100 ? 100 : title.length);
+        .replaceAll(RegExp(r'^[._]+|[._]+$'), '');
+
+    // 限制长度
+    if (sanitized.length > 100) {
+      sanitized = sanitized.substring(0, 100);
+    }
 
     // 如果处理后为空，使用默认名称
     if (sanitized.isEmpty) {
