@@ -952,7 +952,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // // 最后备用：检查本地重做历史
     // return _redoHistory.isNotEmpty;
   }
-
   // 删除指定图层中的绘制元素（使用响应式系统重构）
   void _deleteElement(String elementId) {
     if (_selectedLayer == null) return;
@@ -986,6 +985,22 @@ class _MapEditorContentState extends State<_MapEditorContent>
     } catch (e) {
       debugPrint('响应式系统删除元素失败: $e');
       // _deleteElementTraditional(elementId, elementToDelete);
+    }
+  }
+
+  // 更新指定图层中的绘制元素（使用响应式系统）
+  void _updateElement(MapDrawingElement element) {
+    if (_selectedLayer == null) return;
+
+    try {
+      updateDrawingElementReactive(_selectedLayer!.id, element);
+      debugPrint('使用响应式系统更新绘制元素: ${_selectedLayer!.id}/${element.id}');
+      
+      // 显示更新成功消息
+      _showSuccessSnackBar('已更新元素标签');
+    } catch (e) {
+      debugPrint('响应式系统更新元素失败: $e');
+      _showErrorSnackBar('更新元素失败: $e');
     }
   }
 
@@ -2815,8 +2830,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                         padding: const EdgeInsets.all(16),
                                         child: SingleChildScrollView(
                                           physics:
-                                              const BouncingScrollPhysics(),
-                                          child: ZIndexInspector(
+                                              const BouncingScrollPhysics(),                                          child: ZIndexInspector(
                                             selectedLayer: _selectedLayer,
                                             onElementDeleted: _deleteElement,
                                             selectedElementId:
@@ -2827,6 +2841,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                                     elementId,
                                               );
                                             },
+                                            onElementUpdated: _updateElement,
                                           ),
                                         ),
                                       ),
