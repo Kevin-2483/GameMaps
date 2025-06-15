@@ -697,9 +697,12 @@ class MapCanvasState extends State<MapCanvas> {
         _showLegendSelectionNotAllowedMessage(hitLegendItem);
       }
       return;
-    }
+    }    final hitElementId = _getHitElement(canvasPosition);
 
-    final hitElementId = _getHitElement(canvasPosition);
+    // 如果有选中的便签，且点击位置不在任何便签上，则取消选中便签
+    if (widget.selectedStickyNote != null && hitStickyNote == null) {
+      widget.onStickyNoteSelected?.call(null);
+    }
 
     // 只有当点击了当前选中的元素时才保持选中状态
     // 如果点击了其他地方或其他元素，则取消选择
@@ -1381,7 +1384,7 @@ class MapCanvasState extends State<MapCanvas> {
       }
     }
 
-    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层的绑定图层允许选择
+    // 条件4：如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
     if (widget.selectedLayer == null && _getSelectedLayerGroup().isEmpty) {
       final highestPriorityLayers = _getHighestPriorityLayers();
       if (highestPriorityLayers.isNotEmpty) {
@@ -1402,7 +1405,6 @@ class MapCanvasState extends State<MapCanvas> {
   List<MapLayer> _getSelectedLayerGroup() {
     // 由于MapCanvas没有直接访问图层组选择状态的接口，
     // 这里返回基于显示顺序推断的最高优先级图层
-    _getHighestPriorityLayers();
     return _getHighestPriorityLayers();
   }
 
