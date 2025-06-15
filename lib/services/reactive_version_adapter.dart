@@ -136,16 +136,19 @@ class ReactiveVersionAdapter {
           return false;
         }
       }
-    }
-
-    // 简单检查便签ID和基本属性
+    }    // 简单检查便签ID和基本属性
     for (int i = 0; i < data1.stickyNotes.length; i++) {
       final note1 = data1.stickyNotes[i];
-      final note2 = data1.stickyNotes[i];
+      final note2 = data2.stickyNotes[i];  // 修复：使用data2而不是data1
       if (note1.id != note2.id ||
           note1.title != note2.title ||
           note1.content != note2.content ||
           note1.position != note2.position ||
+          note1.size != note2.size ||  // 添加尺寸比较
+          note1.opacity != note2.opacity ||  // 添加透明度比较
+          note1.isVisible != note2.isVisible ||  // 添加可见性比较
+          note1.isCollapsed != note2.isCollapsed ||  // 添加折叠状态比较
+          note1.zIndex != note2.zIndex ||  // 添加层级比较
           note1.elements.length != note2.elements.length) {
         // 添加绘画元素数量检查
         return false;
