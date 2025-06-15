@@ -705,11 +705,14 @@ class MapCanvasState extends State<MapCanvas> {
       widget.onStickyNoteSelected?.call(null);
     }
 
-    // 只有当点击了当前选中的元素时才保持选中状态
-    // 如果点击了其他地方或其他元素，则取消选择
-    if (hitElementId != widget.selectedElementId) {
-      // 取消选择
-      widget.onElementSelected.call(null);
+    // 处理元素选中逻辑
+    if (widget.selectedElementId != null) {
+      // 如果当前有选中的元素
+      if (hitElementId == null || hitElementId != widget.selectedElementId) {
+        // 如果点击的是空白区域或者其他元素，取消当前元素的选中
+        widget.onElementSelected.call(null);
+      }
+      // 如果点击的是当前选中的元素，保持选中状态（不做任何操作）
     }
 
     // 注意：我们不在这里选中新元素，只能通过Z层级检视器选中
