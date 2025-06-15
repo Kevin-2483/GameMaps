@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
+import '../models/sticky_note.dart';
 import '../services/vfs_map_storage/vfs_map_service.dart';
 import 'map_data_bloc.dart';
 import 'map_data_event.dart';
@@ -23,6 +24,9 @@ class MapEditorIntegrationAdapter {
   }) : _mapDataBloc = mapDataBloc,
        _scriptManager = scriptManager,
        _mapService = mapService;
+
+  /// 获取VFS地图服务实例
+  VfsMapService get mapService => _mapService;
 
   /// 初始化地图数据
   Future<void> initializeMap(MapItem mapItem) async {
@@ -176,6 +180,51 @@ class MapEditorIntegrationAdapter {
   /// 获取可见图例组
   List<LegendGroup> getVisibleLegendGroups() {
     return _mapDataBloc.currentData?.visibleLegendGroups ?? [];
+  }
+  // ==================== 便利贴操作 ====================
+
+  /// 更新便利贴
+  void updateStickyNote(StickyNote note) {
+    debugPrint('更新便利贴: ${note.id}');
+    _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
+  }
+
+  /// 添加便利贴
+  void addStickyNote(StickyNote note) {
+    debugPrint('添加便利贴: ${note.id}');
+    _mapDataBloc.add(AddStickyNote(stickyNote: note));
+  }
+
+  /// 删除便利贴
+  void deleteStickyNote(String noteId) {
+    debugPrint('删除便利贴: $noteId');
+    _mapDataBloc.add(DeleteStickyNote(stickyNoteId: noteId));
+  }
+
+  /// 重新排序便利贴
+  void reorderStickyNotes(int oldIndex, int newIndex) {
+    debugPrint('重新排序便利贴: $oldIndex -> $newIndex');
+    _mapDataBloc.add(ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex));
+  }
+
+  /// 通过拖拽重新排序便利贴
+  void reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
+    debugPrint('通过拖拽重新排序便利贴，数量: ${reorderedNotes.length}');
+    _mapDataBloc.add(ReorderStickyNotesByDrag(reorderedNotes: reorderedNotes));
+  }
+  /// 根据ID获取便利贴
+  StickyNote? getStickyNoteById(String noteId) {
+    final stickyNotes = _mapDataBloc.currentData?.mapItem.stickyNotes ?? [];
+    try {
+      return stickyNotes.firstWhere((note) => note.id == noteId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 获取所有便利贴
+  List<StickyNote> getStickyNotes() {
+    return _mapDataBloc.currentData?.mapItem.stickyNotes ?? [];
   }
 
   // ==================== 历史记录操作 ====================

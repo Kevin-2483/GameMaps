@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../models/map_layer.dart';
 import '../models/map_item.dart';
+import '../models/sticky_note.dart';
 
 /// 地图数据事件基类
 abstract class MapDataEvent extends Equatable {
@@ -265,4 +266,60 @@ class SetLegendGroupVisibility extends MapDataEvent {
 
   @override
   List<Object?> get props => [groupId, isVisible];
+}
+
+// 便签相关事件
+
+/// 添加便签
+class AddStickyNote extends MapDataEvent {
+  final StickyNote stickyNote;
+
+  const AddStickyNote({required this.stickyNote});
+
+  @override
+  List<Object?> get props => [stickyNote];
+}
+
+/// 更新便签
+class UpdateStickyNote extends MapDataEvent {
+  final StickyNote stickyNote;
+
+  const UpdateStickyNote({required this.stickyNote});
+
+  @override
+  List<Object?> get props => [stickyNote];
+}
+
+/// 删除便签
+class DeleteStickyNote extends MapDataEvent {
+  final String stickyNoteId;
+
+  const DeleteStickyNote({required this.stickyNoteId});
+
+  @override
+  List<Object?> get props => [stickyNoteId];
+}
+
+/// 重新排序便签
+class ReorderStickyNotes extends MapDataEvent {
+  final int oldIndex;
+  final int newIndex;
+
+  const ReorderStickyNotes({
+    required this.oldIndex,
+    required this.newIndex,
+  });
+
+  @override
+  List<Object?> get props => [oldIndex, newIndex];
+}
+
+/// 通过拖拽重新排序便签
+class ReorderStickyNotesByDrag extends MapDataEvent {
+  final List<StickyNote> reorderedNotes;
+
+  const ReorderStickyNotesByDrag({required this.reorderedNotes});
+
+  @override
+  List<Object?> get props => [reorderedNotes];
 }

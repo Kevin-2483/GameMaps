@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
+import '../models/sticky_note.dart';
 import '../services/vfs_map_storage/vfs_map_service.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import 'map_data_bloc.dart';
@@ -241,6 +242,41 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   bool get canRedoReactive => reactiveIntegration.canRedo;
   /// 检查是否有未保存的更改（响应式）
   bool get hasUnsavedChangesReactive => reactiveIntegration.hasUnsavedChanges;
+
+  /// 添加便利贴（响应式）
+  void addStickyNoteReactive(StickyNote note) {
+    reactiveIntegration.adapter.addStickyNote(note);
+  }
+
+  /// 更新便利贴（响应式）
+  void updateStickyNoteReactive(StickyNote note) {
+    reactiveIntegration.adapter.updateStickyNote(note);
+  }
+
+  /// 删除便利贴（响应式）
+  void deleteStickyNoteReactive(String noteId) {
+    reactiveIntegration.adapter.deleteStickyNote(noteId);
+  }
+
+  /// 重新排序便利贴（响应式）
+  void reorderStickyNotesReactive(int oldIndex, int newIndex) {
+    reactiveIntegration.adapter.reorderStickyNotes(oldIndex, newIndex);
+  }
+
+  /// 通过拖拽重新排序便利贴（响应式）
+  void reorderStickyNotesByDragReactive(List<StickyNote> reorderedNotes) {
+    reactiveIntegration.adapter.reorderStickyNotesByDrag(reorderedNotes);
+  }
+
+  /// 根据ID获取便利贴（响应式）
+  StickyNote? getStickyNoteByIdReactive(String noteId) {
+    return reactiveIntegration.adapter.getStickyNoteById(noteId);
+  }
+
+  /// 获取所有便利贴（响应式）
+  List<StickyNote> getStickyNotesReactive() {
+    return reactiveIntegration.adapter.getStickyNotes();
+  }
 
   /// 释放响应式系统资源
   void disposeReactiveIntegration() {

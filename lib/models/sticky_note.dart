@@ -157,6 +157,65 @@ class StickyNote {
   bool get hasBackgroundImage =>
       (backgroundImageData != null && backgroundImageData!.isNotEmpty) ||
       (backgroundImageHash != null && backgroundImageHash!.isNotEmpty);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! StickyNote) return false;
+
+    return id == other.id &&
+        title == other.title &&
+        content == other.content &&
+        position == other.position &&
+        size == other.size &&
+        opacity == other.opacity &&
+        isVisible == other.isVisible &&
+        isCollapsed == other.isCollapsed &&
+        isSelected == other.isSelected &&
+        zIndex == other.zIndex &&
+        backgroundColor == other.backgroundColor &&
+        titleBarColor == other.titleBarColor &&
+        textColor == other.textColor &&
+        backgroundImageFit == other.backgroundImageFit &&
+        backgroundImageOpacity == other.backgroundImageOpacity &&
+        elements.length == other.elements.length &&
+        _listsEqual(elements, other.elements) &&
+        createdAt == other.createdAt &&
+        updatedAt == other.updatedAt;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      id,
+      title,
+      content,
+      position,
+      size,
+      opacity,
+      isVisible,
+      isCollapsed,
+      isSelected,
+      zIndex,
+      backgroundColor,
+      titleBarColor,
+      textColor,
+      backgroundImageFit,
+      backgroundImageOpacity,
+      elements.length,
+      createdAt,
+      updatedAt,
+    );
+  }
+
+  /// 辅助方法：比较两个绘画元素列表是否相等
+  bool _listsEqual(List<MapDrawingElement> list1, List<MapDrawingElement> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i] != list2[i]) return false;
+    }
+    return true;
+  }
 }
 
 /// Size 转换器，用于 JSON 序列化

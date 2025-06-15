@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
 import '../services/vfs_map_storage/vfs_map_service.dart';
 import '../models/map_layer.dart';
+import '../models/sticky_note.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
 
@@ -50,6 +51,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     on<SetLayerVisibility>(_onSetLayerVisibility);
     on<SetLayerOpacity>(_onSetLayerOpacity);
     on<SetLegendGroupVisibility>(_onSetLegendGroupVisibility);
+    
+    // 便签事件处理器
+    on<AddStickyNote>(_onAddStickyNote);
+    on<UpdateStickyNote>(_onUpdateStickyNote);
+    on<DeleteStickyNote>(_onDeleteStickyNote);
+    on<ReorderStickyNotes>(_onReorderStickyNotes);
+    on<ReorderStickyNotesByDrag>(_onReorderStickyNotesByDrag);
+
   }
 
   /// 添加数据变更监听器
@@ -769,5 +778,179 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   Future<void> close() {
     _dataChangeListeners.clear();
     return super.close();
+  }
+    // 便签事件处理方法
+
+  /// 添加便签
+  Future<void> _onAddStickyNote(
+    AddStickyNote event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 创建新的便签列表
+      final updatedStickyNotes = List<StickyNote>.from(currentState.mapItem.stickyNotes)
+        ..add(event.stickyNote);
+
+      // 更新地图数据
+      final updatedMapItem = currentState.mapItem.copyWith(
+        stickyNotes: updatedStickyNotes,
+        updatedAt: DateTime.now(),
+      );
+
+      final newState = currentState.copyWith(mapItem: updatedMapItem);
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+
+    } catch (e) {
+      debugPrint('添加便签失败: $e');
+      emit(MapDataError(message: '添加便签失败: $e'));
+    }
+  }
+
+  /// 更新便签
+  Future<void> _onUpdateStickyNote(
+    UpdateStickyNote event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 查找并更新便签
+      final updatedStickyNotes = List<StickyNote>.from(currentState.mapItem.stickyNotes);
+      final noteIndex = updatedStickyNotes.indexWhere((note) => note.id == event.stickyNote.id);
+      
+      if (noteIndex != -1) {
+        updatedStickyNotes[noteIndex] = event.stickyNote.copyWith(
+          updatedAt: DateTime.now(),
+        );
+
+        // 更新地图数据
+        final updatedMapItem = currentState.mapItem.copyWith(
+          stickyNotes: updatedStickyNotes,
+          updatedAt: DateTime.now(),
+        );
+
+        final newState = currentState.copyWith(mapItem: updatedMapItem);
+        emit(newState);
+        _notifyDataChangeListeners(newState);
+
+      }
+    } catch (e) {
+      debugPrint('更新便签失败: $e');
+      emit(MapDataError(message: '更新便签失败: $e'));
+    }
+  }
+
+  /// 删除便签
+  Future<void> _onDeleteStickyNote(
+    DeleteStickyNote event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 删除便签
+      final updatedStickyNotes = currentState.mapItem.stickyNotes
+          .where((note) => note.id != event.stickyNoteId)
+          .toList();
+
+      // 更新地图数据
+      final updatedMapItem = currentState.mapItem.copyWith(
+        stickyNotes: updatedStickyNotes,
+        updatedAt: DateTime.now(),
+      );
+
+      final newState = currentState.copyWith(mapItem: updatedMapItem);
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+
+    } catch (e) {
+      debugPrint('删除便签失败: $e');
+      emit(MapDataError(message: '删除便签失败: $e'));
+    }
+  }
+
+  /// 重新排序便签
+  Future<void> _onReorderStickyNotes(
+    ReorderStickyNotes event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final stickyNotes = currentState.mapItem.stickyNotes;
+      if (event.oldIndex < 0 || 
+          event.oldIndex >= stickyNotes.length ||
+          event.newIndex < 0 || 
+          event.newIndex >= stickyNotes.length ||
+          event.oldIndex == event.newIndex) {
+        return;
+      }
+
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 重新排序便签
+      final updatedStickyNotes = List<StickyNote>.from(stickyNotes);
+      final item = updatedStickyNotes.removeAt(event.oldIndex);
+      updatedStickyNotes.insert(event.newIndex, item);
+
+      // 更新地图数据
+      final updatedMapItem = currentState.mapItem.copyWith(
+        stickyNotes: updatedStickyNotes,
+        updatedAt: DateTime.now(),
+      );
+
+      final newState = currentState.copyWith(mapItem: updatedMapItem);
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+
+    } catch (e) {
+      debugPrint('重新排序便签失败: $e');
+      emit(MapDataError(message: '重新排序便签失败: $e'));
+    }
+  }
+
+  /// 通过拖拽重新排序便签
+  Future<void> _onReorderStickyNotesByDrag(
+    ReorderStickyNotesByDrag event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 更新地图数据
+      final updatedMapItem = currentState.mapItem.copyWith(
+        stickyNotes: event.reorderedNotes,
+        updatedAt: DateTime.now(),
+      );
+
+      final newState = currentState.copyWith(mapItem: updatedMapItem);
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+
+    } catch (e) {
+      debugPrint('通过拖拽重新排序便签失败: $e');
+      emit(MapDataError(message: '通过拖拽重新排序便签失败: $e'));
+    }
   }
 }

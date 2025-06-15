@@ -46,14 +46,14 @@ class ReactiveVersionAdapter {
     if (activeVersionId == null) {
       debugPrint('没有正在编辑的版本，跳过数据同步');
       return;
-    }
-
-    if (state is MapDataLoaded) {
+    }    if (state is MapDataLoaded) {
       // 检查数据是否真的有变化，避免无意义的更新
       final currentVersionData = _versionManager.getVersionSessionData(activeVersionId);
       final newMapItem = state.mapItem.copyWith(
         layers: state.layers,
         legendGroups: state.legendGroups,
+        // 确保便签数据也被复制到版本中
+        stickyNotes: state.mapItem.stickyNotes,
         updatedAt: DateTime.now(),
       );
       
@@ -63,24 +63,29 @@ class ReactiveVersionAdapter {
       }
       
       _isUpdating = true;
-      try {
-        _versionManager.updateVersionData(
+      try {        _versionManager.updateVersionData(
           activeVersionId,
           newMapItem,
           markAsChanged: true,
         );
         
-        debugPrint('同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}');
+        debugPrint('同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}, 便签数: ${newMapItem.stickyNotes.length}');
+        
+        // 详细日志：便签绘画元素数量
+        for (int i = 0; i < newMapItem.stickyNotes.length; i++) {
+          final note = newMapItem.stickyNotes[i];
+          debugPrint('  便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+        }
       } finally {
         _isUpdating = false;
       }
     }
   }
-
   /// 检查两个MapItem是否相同（避免无意义更新）
   bool _isSameMapData(MapItem data1, MapItem data2) {
     if (data1.layers.length != data2.layers.length) return false;
     if (data1.legendGroups.length != data2.legendGroups.length) return false;
+    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;
     
     // 简单检查图层ID和基本属性
     for (int i = 0; i < data1.layers.length; i++) {
@@ -91,6 +96,31 @@ class ReactiveVersionAdapter {
           layer1.isVisible != layer2.isVisible ||
           layer1.elements.length != layer2.elements.length) {
         return false;
+      }
+    }    // 简单检查便签ID和基本属性
+    for (int i = 0; i < data1.stickyNotes.length; i++) {
+      final note1 = data1.stickyNotes[i];
+      final note2 = data2.stickyNotes[i];
+      if (note1.id != note2.id || 
+          note1.title != note2.title ||
+          note1.content != note2.content ||
+          note1.position != note2.position ||
+          note1.elements.length != note2.elements.length) { // 添加绘画元素数量检查
+        return false;
+      }
+      
+      // 检查便签上的绘画元素变化
+      for (int j = 0; j < note1.elements.length; j++) {
+        final element1 = note1.elements[j];
+        final element2 = note2.elements[j];
+        if (element1.id != element2.id ||
+            element1.type != element2.type ||
+            element1.points.length != element2.points.length ||
+            element1.color != element2.color ||
+            element1.strokeWidth != element2.strokeWidth ||
+            element1.createdAt != element2.createdAt) {
+          return false;
+        }
       }
     }
     
@@ -118,11 +148,16 @@ class ReactiveVersionAdapter {
       
       // 2. 获取版本的会话数据
       final versionData = _versionManager.getVersionSessionData(versionId);
-      
-      if (versionData != null) {
+        if (versionData != null) {
         // 3. 将版本数据加载到地图数据BLoC
         _mapDataBloc.add(InitializeMapData(mapItem: versionData));
-        debugPrint('切换并加载版本数据 [$versionId] 到响应式系统，图层数: ${versionData.layers.length}');
+        debugPrint('切换并加载版本数据 [$versionId] 到响应式系统，图层数: ${versionData.layers.length}, 便签数: ${versionData.stickyNotes.length}');
+        
+        // 详细日志：便签绘画元素数量
+        for (int i = 0; i < versionData.stickyNotes.length; i++) {
+          final note = versionData.stickyNotes[i];
+          debugPrint('  加载便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+        }
       } else {
         // 4. 如果没有会话数据，从VFS加载指定版本
         _mapDataBloc.add(LoadMapData(

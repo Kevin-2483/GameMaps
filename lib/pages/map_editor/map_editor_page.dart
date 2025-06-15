@@ -347,7 +347,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
     }
   }
-
   /// 设置响应式监听器
   void _setupReactiveListeners() {
     // 监听地图数据变化
@@ -381,6 +380,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 updatedGroup.add(updatedLayer);
               }
               _selectedLayerGroup = updatedGroup;
+            }
+
+            // 同步更新选中便利贴的引用，确保引用最新的便利贴对象
+            if (_selectedStickyNote != null) {
+              final selectedNoteId = _selectedStickyNote!.id;
+              _selectedStickyNote = state.mapItem.stickyNotes
+                  .where((note) => note.id == selectedNoteId)
+                  .firstOrNull;
             }
 
             // 更新显示顺序
@@ -914,8 +921,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showErrorSnackBar('加载图例失败: ${e.toString()}');
     }
   }
-
-  // TODO: 考虑使用响应式系统
   void _addDefaultLayer() {
     if (_currentMap == null) return;
 
@@ -927,12 +932,30 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updatedAt: DateTime.now(),
     );
 
-    setState(() {
-      _currentMap = _currentMap!.copyWith(
-        layers: [..._currentMap!.layers, defaultLayer],
-      );
-      _selectedLayer = defaultLayer;
-    });
+    // 使用响应式系统添加默认图层
+    try {
+      addLayerReactive(defaultLayer);
+      debugPrint('使用响应式系统添加默认图层: ${defaultLayer.name}');
+
+      // 更新UI状态
+      setState(() {
+        _selectedLayer = defaultLayer;
+        // 更新显示顺序
+        _updateDisplayOrderAfterLayerChange();
+      });
+
+      debugPrint('默认图层已添加: "${defaultLayer.name}"');
+    } catch (e) {
+      debugPrint('响应式系统添加默认图层失败: $e');
+      // // 如果响应式系统失败，回退到传统方式
+      // setState(() {
+      //   _currentMap = _currentMap!.copyWith(
+      //     layers: [..._currentMap!.layers, defaultLayer],
+      //   );
+      //   _selectedLayer = defaultLayer;
+      // });
+      // debugPrint('使用传统方式添加默认图层作为回退');
+    }
   }
 
   void _addNewLayer() {
@@ -2079,7 +2102,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showErrorSnackBar('创建版本失败: ${e.toString()}');
     }
   }
-
   /// 切换版本（使用响应式系统）
   void _switchVersion(String versionId) {
     if (versionId == currentVersionId) {
@@ -2099,6 +2121,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
           }
           _selectedLayerGroup = null;
           _selectedElementId = null;
+          
+          // 重置便签选择状态
+          _selectedStickyNote = null;
 
           // 更新显示顺序
           _updateDisplayOrderAfterLayerChange();
@@ -3430,13 +3455,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //   // 已迁移到响应式版本管理系统
   // }
 
-  // 便签管理方法
-  //TODO: 考虑使用响应式系统
+  // 便签管理方法  /// 添加新便利贴（使用响应式系统）
   void _addNewStickyNote() {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史
-    // _saveToUndoHistory();
     final newNote = StickyNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: '新便签 ${_currentMap!.stickyNotes.length + 1}',
@@ -3450,61 +3472,39 @@ class _MapEditorContentState extends State<_MapEditorContent>
       updatedAt: DateTime.now(),
     );
 
-    setState(() {
-      _currentMap = _currentMap!.copyWith(
-        stickyNotes: [..._currentMap!.stickyNotes, newNote],
-      );
-      _selectedStickyNote = newNote;
-    });
-  }
-
-  //TODO: 考虑使用响应式系统
+    // 使用响应式系统添加便利贴
+    addStickyNoteReactive(newNote);
+    
+    // 设置当前选中的便利贴（响应式系统状态更新后会自动同步）
+    _selectedStickyNote = newNote;
+  }  /// 更新便利贴（使用响应式系统）
   void _updateStickyNote(StickyNote updatedNote) {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史（只在非预览模式下）
-    // _saveToUndoHistory();
+    final updatedNoteWithTimestamp = updatedNote.copyWith(
+      updatedAt: DateTime.now(),
+    );
 
-    setState(() {
-      final noteIndex = _currentMap!.stickyNotes.indexWhere(
-        (note) => note.id == updatedNote.id,
-      );
-      if (noteIndex != -1) {
-        final updatedNotes = List<StickyNote>.from(_currentMap!.stickyNotes);
-        updatedNotes[noteIndex] = updatedNote.copyWith(
-          updatedAt: DateTime.now(),
-        );
-        _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
+    // 使用响应式系统更新便利贴
+    updateStickyNoteReactive(updatedNoteWithTimestamp);
 
-        // 如果当前选中的是这个便签，更新选中状态
-        if (_selectedStickyNote?.id == updatedNote.id) {
-          _selectedStickyNote = updatedNotes[noteIndex];
-        }
-      }
-    });
-  }
-
-  //TODO: 考虑使用响应式系统
+    // 如果当前选中的是这个便签，更新选中状态（响应式系统会自动同步）
+    if (_selectedStickyNote?.id == updatedNote.id) {
+      _selectedStickyNote = updatedNoteWithTimestamp;
+    }
+  }  /// 删除便利贴（使用响应式系统）
   void _deleteStickyNote(StickyNote note) {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史
-    // _saveToUndoHistory();
+    // 使用响应式系统删除便利贴
+    deleteStickyNoteReactive(note.id);
 
-    setState(() {
-      final updatedNotes = _currentMap!.stickyNotes
-          .where((n) => n.id != note.id)
-          .toList();
-      _currentMap = _currentMap!.copyWith(stickyNotes: updatedNotes);
-
-      // 如果删除的是当前选中的便签，清除选中状态
-      if (_selectedStickyNote?.id == note.id) {
-        _selectedStickyNote = null;
-      }
-    });
+    // 如果删除的是当前选中的便签，清除选中状态
+    if (_selectedStickyNote?.id == note.id) {
+      _selectedStickyNote = null;
+    }
   }
-
-  //TODO: 考虑使用响应式系统
+  /// 重新排序便利贴（使用响应式系统）
   void _reorderStickyNotes(int oldIndex, int newIndex) {
     if (_currentMap == null ||
         oldIndex < 0 ||
@@ -3515,36 +3515,22 @@ class _MapEditorContentState extends State<_MapEditorContent>
       return;
     }
 
-    // 保存当前状态到撤销历史
-    // _saveToUndoHistory();
-
-    setState(() {
-      final notes = List<StickyNote>.from(_currentMap!.stickyNotes);
-      final item = notes.removeAt(oldIndex);
-      notes.insert(newIndex, item);
-      _currentMap = _currentMap!.copyWith(stickyNotes: notes);
-    });
-  }
-
-  /// 处理拖拽便签重排序（通过z-index调整）
-  //TODO: 考虑使用响应式系统
+    // 使用响应式系统重新排序便利贴
+    reorderStickyNotesReactive(oldIndex, newIndex);
+  }  /// 处理拖拽便签重排序（通过z-index调整）（使用响应式系统）
   void _reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
     if (_currentMap == null) return;
 
-    // 保存当前状态到撤销历史
-    // _saveToUndoHistory();
+    // 使用响应式系统处理拖拽重排序
+    reorderStickyNotesByDragReactive(reorderedNotes);
 
-    setState(() {
-      _currentMap = _currentMap!.copyWith(stickyNotes: reorderedNotes);
-
-      // 如果当前选中的便签在重排序后发生了变化，更新选中状态
-      if (_selectedStickyNote != null) {
-        _selectedStickyNote = reorderedNotes.firstWhere(
-          (note) => note.id == _selectedStickyNote!.id,
-          orElse: () => _selectedStickyNote!,
-        );
-      }
-    });
+    // 如果当前选中的便签在重排序后发生了变化，更新选中状态
+    if (_selectedStickyNote != null) {
+      _selectedStickyNote = reorderedNotes.firstWhere(
+        (note) => note.id == _selectedStickyNote!.id,
+        orElse: () => _selectedStickyNote!,
+      );
+    }
   }
 
   /// 防抖自动保存
