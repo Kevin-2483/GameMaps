@@ -38,7 +38,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         children: [
           _buildTypeSelector(),
           Expanded(child: _buildScriptList()),
-          _buildActionBar(),
         ],
       ),
     );
@@ -297,34 +296,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     );
   }
 
-  Widget _buildActionBar() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: FilledButton.tonal(
-              onPressed: _showImportDialog,
-              child: const Text('导入', style: TextStyle(fontSize: 11)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: FilledButton.tonal(
-              onPressed: _selectedScriptId != null
-                  ? _exportSelectedScript
-                  : null,
-              child: const Text('导出', style: TextStyle(fontSize: 11)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showNewScriptDialog() {
     showDialog(
@@ -400,29 +371,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         ],
       ),
     );
-  }
-
-  void _showImportDialog() {
-    // TODO: 实现导入功能
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('导入功能开发中')));
-  }
-
-  void _exportSelectedScript() {
-    if (_selectedScriptId == null) return;
-
-    try {
-      final scriptJson = widget.scriptManager.exportScript(_selectedScriptId!);
-      // TODO: 实现导出到文件功能
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('导出功能开发中')));
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('导出失败: $e')));
-    }
   }
 
   String _getTypeDisplayName(ScriptType type) {

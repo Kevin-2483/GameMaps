@@ -28,32 +28,44 @@ class ReactiveScriptEditorWindow extends StatefulWidget {
 class _ReactiveScriptEditorWindowState
     extends State<ReactiveScriptEditorWindow> {
   late CodeController _codeController;
+  late ScrollController _scrollController;
   bool _isDarkTheme = true;
   bool _hasUnsavedChanges = false;
-
+  String _originalContent = ''; // 保存原始内容用于比较
   @override
   void initState() {
     super.initState();
+    _originalContent = widget.script.content; // 保存原始内容
+    _scrollController = ScrollController();
     _codeController = CodeController(
       text: widget.script.content,
       language: dart,
     );
 
-    _codeController.addListener(() {
-      if (!_hasUnsavedChanges) {
-        setState(() {
-          _hasUnsavedChanges = true;
-        });
-      }
+    // 延迟添加监听器，避免初始化时触发
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _codeController.addListener(_onTextChanged);
     });
   }
 
+  /// 文本变化监听器
+  void _onTextChanged() {
+    final currentContent = _codeController.text;
+    final hasChanges = currentContent != _originalContent;
+    
+    if (_hasUnsavedChanges != hasChanges) {
+      setState(() {
+        _hasUnsavedChanges = hasChanges;
+      });
+    }
+  }
   @override
   void dispose() {
+    _codeController.removeListener(_onTextChanged);
     _codeController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
-
   /// 保存脚本
   Future<void> _saveScript() async {
     try {
@@ -61,6 +73,9 @@ class _ReactiveScriptEditorWindowState
         widget.script.id,
         _codeController.text,
       );
+      
+      // 保存成功后更新原始内容
+      _originalContent = _codeController.text;
       setState(() {
         _hasUnsavedChanges = false;
       });
@@ -76,6 +91,26 @@ class _ReactiveScriptEditorWindowState
           SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }  /// 跳转到文档末尾
+  void _scrollToEnd() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  /// 跳转到文档开头
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -134,9 +169,9 @@ class _ReactiveScriptEditorWindowState
             widget.onClose?.call();
           }
         }
-      },
-      child: Scaffold(
+      },      child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false, // 禁用默认的后退按钮
           title: Row(
             children: [
               Text('编辑脚本: ${widget.script.name}'),
@@ -218,8 +253,21 @@ class _ReactiveScriptEditorWindowState
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  const Spacer(),
+                    ),                  const Spacer(),
+                  // 滚动控制按钮
+                  IconButton(
+                    onPressed: _scrollToTop,
+                    icon: const Icon(Icons.vertical_align_top),
+                    tooltip: '跳转到顶部',
+                    iconSize: 20,
+                  ),
+                  IconButton(
+                    onPressed: _scrollToEnd,
+                    icon: const Icon(Icons.vertical_align_bottom),
+                    tooltip: '跳转到底部',  
+                    iconSize: 20,
+                  ),
+                  const SizedBox(width: 8),
                   FilledButton.tonal(
                     onPressed: () {
                       // 运行脚本 - 使用响应式脚本管理器
@@ -236,18 +284,54 @@ class _ReactiveScriptEditorWindowState
                   ),
                 ],
               ),
-            ),
-            // 代码编辑器
+            ),            // 代码编辑器
             Expanded(
-              child: CodeTheme(
-                data: _isDarkTheme
-                    ? CodeThemeData(styles: monokaiSublimeTheme)
-                    : CodeThemeData(styles: githubTheme),
-                child: CodeField(
-                  controller: _codeController,
-                  textStyle: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
+              child: Container(
+                // 设置容器背景色与编辑器一致
+                color: _isDarkTheme ? const Color(0xFF272822) : Colors.white,
+                child: CodeTheme(
+                  data: _isDarkTheme
+                      ? CodeThemeData(styles: monokaiSublimeTheme)
+                      : CodeThemeData(styles: githubTheme),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // 计算需要的底部填充，使最后一行能够滚动到顶部
+                      // 使用80%的高度作为底部填充，确保最后一行能滚动到可视区域顶部
+                      final bottomPadding = constraints.maxHeight * 0.8;
+                      
+                      return SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(),                        child: Padding(
+                          padding: EdgeInsets.only(bottom: bottomPadding),
+                          child: CodeField(
+                            controller: _codeController,
+                            textStyle: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 14,
+                              height: 1.5, // 增加行高以改善可读性
+                            ),
+                            background: _isDarkTheme ? const Color(0xFF272822) : Colors.white,
+                            gutterStyle: GutterStyle(
+                              showLineNumbers: true,
+                              showErrors: true,
+                              showFoldingHandles: false,
+                              margin: 8,
+                              width: 60,
+                              background: _isDarkTheme
+                                  ? const Color(0xFF272822) // 与编辑器背景色保持一致
+                                  : Colors.white,
+                              textStyle: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                color: _isDarkTheme ? Colors.grey[500] : Colors.grey[600],
+                              ),
+                            ),
+                            wrap: false, // 禁用自动换行以支持水平滚动
+                            expands: false, // 让内容决定高度
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
