@@ -599,7 +599,6 @@ class DrawingToolManager {
       targetStickyNote: _currentDrawingStickyNote,
     );
   }
-
   /// 10. 结束便签上的绘制
   void onStickyNoteDrawingEnd(
     DragEndDetails details,
@@ -620,21 +619,54 @@ class DrawingToolManager {
       return;
     }
 
-    // Create drawing element in sticky note coordinates (0.0-1.0)
-    final element = _createStickyNoteDrawingElement(
-      _currentDrawingStart!,
-      _currentDrawingEnd!,
-      effectiveDrawingTool,
-      effectiveColor,
-      effectiveStrokeWidth,
-      effectiveDensity,
-      effectiveCurvature,
-      effectiveTriangleCut,
-    );
+    // 处理不同类型的绘制工具
+    if (effectiveDrawingTool == DrawingElementType.eraser) {
+      // 橡皮擦处理：创建橡皮擦元素
+      final eraserElement = _createStickyNoteDrawingElement(
+        _currentDrawingStart!,
+        _currentDrawingEnd!,
+        effectiveDrawingTool,
+        Colors.transparent, // 橡皮擦颜色透明
+        0.0, // 橡皮擦不需要笔触宽度
+        effectiveDensity,
+        effectiveCurvature,
+        effectiveTriangleCut,
+      );
+      
+      // Add eraser element to sticky note
+      final updatedStickyNote = _currentDrawingStickyNote!.addElement(eraserElement);
+      onStickyNoteUpdated(updatedStickyNote);
+    } else if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
+      // 自由绘制处理
+      if (_freeDrawingPath.isNotEmpty) {
+        final freeDrawingElement = _createStickyNoteFreeDrawingElement(
+          effectiveColor,
+          effectiveStrokeWidth,
+          effectiveDensity,
+          effectiveCurvature,
+        );
+        
+        final updatedStickyNote = _currentDrawingStickyNote!.addElement(freeDrawingElement);
+        onStickyNoteUpdated(updatedStickyNote);
+        _freeDrawingPath.clear();
+      }
+    } else {
+      // 标准绘制元素处理
+      final element = _createStickyNoteDrawingElement(
+        _currentDrawingStart!,
+        _currentDrawingEnd!,
+        effectiveDrawingTool,
+        effectiveColor,
+        effectiveStrokeWidth,
+        effectiveDensity,
+        effectiveCurvature,
+        effectiveTriangleCut,
+      );
 
-    // Add element to sticky note
-    final updatedStickyNote = _currentDrawingStickyNote!.addElement(element);
-    onStickyNoteUpdated(updatedStickyNote);
+      // Add element to sticky note
+      final updatedStickyNote = _currentDrawingStickyNote!.addElement(element);
+      onStickyNoteUpdated(updatedStickyNote);
+    }
 
     _clearStickyNoteDrawingState();
   }
@@ -673,7 +705,6 @@ class DrawingToolManager {
     // 限制绘制只能在便签的内容区域内（0.0-1.0）
     return Offset(relativeX.clamp(0.0, 1.0), relativeY.clamp(0.0, 1.0));
   }
-
   /// Create drawing element for sticky note
   MapDrawingElement _createStickyNoteDrawingElement(
     Offset start,
@@ -708,6 +739,34 @@ class DrawingToolManager {
       density: density,
       curvature: curvature,
       triangleCut: triangleCut,
+      zIndex: maxZIndex + 1,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  /// Create free drawing element for sticky note
+  MapDrawingElement _createStickyNoteFreeDrawingElement(
+    Color color,
+    double strokeWidth,
+    double density,
+    double curvature,
+  ) {
+    final stickyNote = _currentDrawingStickyNote!;
+    final maxZIndex = stickyNote.elements.isEmpty
+        ? 0
+        : stickyNote.elements
+              .map((e) => e.zIndex)
+              .reduce((a, b) => a > b ? a : b);
+
+    return MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.freeDrawing,
+      points: List.from(_freeDrawingPath),
+      color: color,
+      strokeWidth: strokeWidth,
+      density: density,
+      curvature: curvature,
+      triangleCut: TriangleCutType.none, // 自由绘制不需要三角形切割
       zIndex: maxZIndex + 1,
       createdAt: DateTime.now(),
     );

@@ -7,6 +7,11 @@ import '../utils/drawing_utils.dart';
 import 'element_renderer.dart';
 
 /// 橡皮擦渲染器 - 负责处理橡皮擦遮挡效果的渲染逻辑
+/// 
+/// 使用轴对齐矩形（AABB）重叠检测算法来简化重叠判断：
+/// - 将所有形状（包括三角切割和曲率参数）都简化为边界矩形
+/// - 使用统一的AABB算法进行重叠检测
+/// - 虽然会有个别精度损失，但大大提升了性能和稳定性
 class EraserRenderer {
   /// 绘制带有橡皮擦遮挡效果的元素
   static void drawElementWithEraserMask(
@@ -108,8 +113,7 @@ class EraserRenderer {
     // 恢复canvas状态
     canvas.restore();
   }
-
-  /// 检查橡皮擦是否影响元素
+  /// 检查橡皮擦是否影响元素 - 使用轴对齐矩形（AABB）重叠检测算法
   static bool _doesEraserAffectElement(
     MapDrawingElement element,
     MapDrawingElement eraser,
@@ -118,7 +122,7 @@ class EraserRenderer {
     // 基础检查
     if (element.points.isEmpty || eraser.points.length < 2) return false;
 
-    // 获取橡皮擦的基础信息
+    // 获取橡皮擦的边界矩形（AABB）
     final eraserStart = Offset(
       eraser.points[0].dx * size.width,
       eraser.points[0].dy * size.height,
@@ -128,48 +132,57 @@ class EraserRenderer {
       eraser.points[1].dy * size.height,
     );
     final Rect eraserRect = Rect.fromPoints(eraserStart, eraserEnd);
-    final double eraserCurvature = eraser.curvature;
-    final TriangleCutType eraserTriangleCut = eraser.triangleCut; // 获取橡皮擦的切割类型
-    // print(eraserTriangleCut);
 
-    // 根据元素类型进行判断
+    // 根据元素类型获取元素的边界矩形（AABB）
+    Rect elementRect;
+    
     switch (element.type) {
       case DrawingElementType.text:
-        if (element.points.isNotEmpty) {
-          final textPosition = Offset(
-            element.points[0].dx * size.width,
-            element.points[0].dy * size.height,
-          );
-          return isPointInFinalEraserShape(
-            textPosition,
-            eraserRect,
-            eraserCurvature,
-            eraserTriangleCut,
-          );
-        }
-        return false;
+        if (element.points.isEmpty) return false;
+        // 文本元素：创建一个小的边界矩形围绕文本位置
+        final textPosition = Offset(
+          element.points[0].dx * size.width,
+          element.points[0].dy * size.height,
+        );
+        const textBounds = 20.0; // 文本边界框大小
+        elementRect = Rect.fromCenter(
+          center: textPosition,
+          width: textBounds,
+          height: textBounds,
+        );
+        break;
 
       case DrawingElementType.freeDrawing:
-        for (final pointModel in element.points) {
-          // 假设 element.points 是 Offset 列表
+        if (element.points.isEmpty) return false;
+        // 自由绘制：计算包含所有点的最小边界矩形
+        double minX = double.infinity;
+        double minY = double.infinity;
+        double maxX = double.negativeInfinity;
+        double maxY = double.negativeInfinity;
+        
+        for (final point in element.points) {
           final screenPoint = Offset(
-            pointModel.dx * size.width,
-            pointModel.dy * size.height,
+            point.dx * size.width,
+            point.dy * size.height,
           );
-          if (isPointInFinalEraserShape(
-            screenPoint,
-            eraserRect,
-            eraserCurvature,
-            eraserTriangleCut,
-          )) {
-            return true;
-          }
+          minX = math.min(minX, screenPoint.dx);
+          minY = math.min(minY, screenPoint.dy);
+          maxX = math.max(maxX, screenPoint.dx);
+          maxY = math.max(maxY, screenPoint.dy);
         }
-        return false;
+        
+        // 添加一些边距以确保检测到边缘情况
+        const margin = 5.0;
+        elementRect = Rect.fromLTRB(
+          minX - margin,
+          minY - margin,
+          maxX + margin,
+          maxY + margin,
+        );
+        break;
 
-      default: // 其他被视为矩形的元素类型
+      default: // 矩形类元素
         if (element.points.length < 2) return false;
-
         final elementStart = Offset(
           element.points[0].dx * size.width,
           element.points[0].dy * size.height,
@@ -178,42 +191,19 @@ class EraserRenderer {
           element.points[1].dx * size.width,
           element.points[1].dy * size.height,
         );
-        final Rect elementRect = Rect.fromPoints(elementStart, elementEnd);
-
-        // 检查两个矩形区域是否重叠
-        if (!eraserRect.overlaps(elementRect)) {
-          return false;
-        }
-
-        // 如果有三角形切割或曲率，需要更精确的检测
-        if (eraserCurvature > 0.0 ||
-            eraserTriangleCut != TriangleCutType.none) {
-          // 检查元素矩形的四个角点是否有任何一个在橡皮擦的最终形状内
-          final corners = [
-            elementRect.topLeft,
-            elementRect.topRight,
-            elementRect.bottomLeft,
-            elementRect.bottomRight,
-          ];
-
-          for (final corner in corners) {
-            if (isPointInFinalEraserShape(
-              corner,
-              eraserRect,
-              eraserCurvature,
-              eraserTriangleCut,
-            )) {
-              return true;
-            }
-          }
-
-          // 如果角点都不在内部，还需要检查是否橡皮擦完全包含在元素内部
-          // 这里可以进一步优化...
-          return false;
-        }
-
-        // 普通矩形橡皮擦，直接使用矩形重叠检测
-        return true;
+        elementRect = Rect.fromPoints(elementStart, elementEnd);
+        break;
     }
+
+    // 使用轴对齐矩形（AABB）重叠检测算法
+    // 两个矩形重叠的条件：
+    // 1. 橡皮擦的左边 < 元素的右边
+    // 2. 橡皮擦的右边 > 元素的左边  
+    // 3. 橡皮擦的上边 < 元素的下边
+    // 4. 橡皮擦的下边 > 元素的上边
+    return eraserRect.left < elementRect.right &&
+           eraserRect.right > elementRect.left &&
+           eraserRect.top < elementRect.bottom &&
+           eraserRect.bottom > elementRect.top;
   }
 }
