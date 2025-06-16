@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
-import '../services/script_engine.dart';
+import '../services/scripting/script_engine.dart';
 import '../services/virtual_file_system/virtual_file_system.dart';
 import '../utils/filename_sanitizer.dart';
 import 'reactive_script_engine.dart';

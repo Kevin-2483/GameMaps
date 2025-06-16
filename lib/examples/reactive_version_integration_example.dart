@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import '../services/reactive_version_manager.dart';
-import '../services/reactive_version_adapter.dart';
+import '../services/reactive_version/reactive_version_manager.dart';
+import '../services/reactive_version/reactive_version_adapter.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_state.dart';
 import '../models/map_item.dart';

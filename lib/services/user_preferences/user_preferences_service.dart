@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import '../models/user_preferences.dart';
+import '../../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
 import 'user_preferences_migration_service.dart';
 import 'user_preferences_migration_service.dart';

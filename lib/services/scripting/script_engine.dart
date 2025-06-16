@@ -5,11 +5,11 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:flutter/material.dart';
-import '../models/script_data.dart';
-import '../models/map_layer.dart';
-import '../models/sticky_note.dart';
-import '../services/virtual_file_system/virtual_file_system.dart';
-import '../services/virtual_file_system/vfs_protocol.dart';
+import '../../models/script_data.dart';
+import '../../models/map_layer.dart';
+import '../../models/sticky_note.dart';
+import '../virtual_file_system/virtual_file_system.dart';
+import '../virtual_file_system/vfs_protocol.dart';
 
 /// 脚本引擎管理器
 class ScriptEngine {
@@ -31,9 +31,11 @@ class ScriptEngine {
   /// 当前便签数据的访问器
   List<StickyNote>? _currentStickyNotes;
   Function(List<StickyNote>)? _onStickyNotesChanged;
+
   /// 当前图例组数据的访问器
   List<LegendGroup>? _currentLegendGroups;
   Function(List<LegendGroup>)? _onLegendGroupsChanged;
+
   /// VFS 存储服务和地图信息
   VirtualFileSystem? _vfsStorageService;
   String? _currentMapTitle;
@@ -51,6 +53,7 @@ class ScriptEngine {
 
     _isInitialized = true;
   }
+
   /// 重置脚本引擎（用于测试）
   Future<void> reset() async {
     _isInitialized = false;
@@ -115,6 +118,7 @@ class ScriptEngine {
       );
     }
   }
+
   /// 设置地图数据访问器
   void setMapDataAccessor(
     List<MapLayer> layers,
@@ -131,6 +135,7 @@ class ScriptEngine {
     _currentLegendGroups = legendGroups;
     _onLegendGroupsChanged = onLegendGroupsChanged;
   }
+
   /// 设置 VFS 访问器
   void setVfsAccessor(VirtualFileSystem vfsService, String mapTitle) {
     _vfsStorageService = vfsService;
@@ -354,7 +359,8 @@ class ScriptEngine {
           }
         }
         return textElements;
-      },      'findTextElementsByContent': (String searchText) {
+      },
+      'findTextElementsByContent': (String searchText) {
         final matchingElements = <Map<String, dynamic>>[];
         if (_currentLayers != null) {
           for (final layer in _currentLayers!) {
@@ -405,10 +411,12 @@ class ScriptEngine {
                   if (tagFilter is List) {
                     final Set<String> filterSet = Set.from(tagFilter);
                     final Set<String> elementSet = Set.from(elementTags);
-                    matches = filterSet.length == elementSet.length && 
-                             filterSet.every((tag) => elementSet.contains(tag));
+                    matches =
+                        filterSet.length == elementSet.length &&
+                        filterSet.every((tag) => elementSet.contains(tag));
                   } else if (tagFilter is String) {
-                    matches = elementTags.length == 1 && elementTags[0] == tagFilter;
+                    matches =
+                        elementTags.length == 1 && elementTags[0] == tagFilter;
                   }
                   break;
                 case 'excludes':
@@ -416,7 +424,9 @@ class ScriptEngine {
                   if (tagFilter is String) {
                     matches = !elementTags.contains(tagFilter);
                   } else if (tagFilter is List) {
-                    matches = !tagFilter.any((tag) => elementTags.contains(tag));
+                    matches = !tagFilter.any(
+                      (tag) => elementTags.contains(tag),
+                    );
                   }
                   break;
                 default:
@@ -449,9 +459,11 @@ class ScriptEngine {
         // 如果有元素被更新，通知数据变更
         if (updatedCount > 0) {
           _onLayersChanged!(updatedLayers);
-        }        return updatedCount;      },
+        }
+        return updatedCount;
+      },
 
-      // 文件操作函数      
+      // 文件操作函数
       'readjson': (String filePath) async {
         if (_vfsStorageService == null || _currentMapTitle == null) {
           throw Exception('VFS service not available');
@@ -460,18 +472,21 @@ class ScriptEngine {
         try {
           // 处理类 Unix 路径，自动添加前缀
           String resolvedPath;
-          
+
           // 确保路径是类 Unix 格式且不带协议前缀
           if (filePath.contains('://')) {
-            throw Exception('Path should not contain protocol prefix. Use Unix-style path only.');
+            throw Exception(
+              'Path should not contain protocol prefix. Use Unix-style path only.',
+            );
           }
-          
+
           if (filePath.startsWith('/')) {
             // 绝对路径：拼接在 indexeddb://r6box/fs/ 后面
             resolvedPath = 'indexeddb://r6box/fs$filePath';
           } else {
             // 相对路径：相对于脚本路径 indexeddb://r6box/maps/maptitle.mapdata/scripts/
-            resolvedPath = 'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
+            resolvedPath =
+                'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
           }
 
           // 读取文件内容
@@ -482,11 +497,13 @@ class ScriptEngine {
 
           // 解析 JSON
           final jsonString = String.fromCharCodes(fileContent.data);
-          final jsonData = jsonDecode(jsonString);          return jsonData;
+          final jsonData = jsonDecode(jsonString);
+          return jsonData;
         } catch (e) {
           throw Exception('Failed to read JSON file: $e');
         }
-      },      'writetext': (String filePath, String content) async {
+      },
+      'writetext': (String filePath, String content) async {
         if (_vfsStorageService == null || _currentMapTitle == null) {
           throw Exception('VFS service not available');
         }
@@ -494,18 +511,21 @@ class ScriptEngine {
         try {
           // 处理类 Unix 路径，自动添加前缀
           String resolvedPath;
-          
+
           // 确保路径是类 Unix 格式且不带协议前缀
           if (filePath.contains('://')) {
-            throw Exception('Path should not contain protocol prefix. Use Unix-style path only.');
+            throw Exception(
+              'Path should not contain protocol prefix. Use Unix-style path only.',
+            );
           }
-          
+
           if (filePath.startsWith('/')) {
             // 绝对路径：拼接在 indexeddb://r6box/fs/ 后面
             resolvedPath = 'indexeddb://r6box/fs$filePath';
           } else {
             // 相对路径：相对于脚本路径 indexeddb://r6box/maps/maptitle.mapdata/scripts/
-            resolvedPath = 'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
+            resolvedPath =
+                'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
           }
 
           // 将内容转换为字节数组
@@ -1012,7 +1032,8 @@ class ScriptEngine {
                 .map((group) => _legendGroupToMap(group))
                 .toList() ??
             [];
-      },      'getVisibleLegendItems': (String groupId) {
+      },
+      'getVisibleLegendItems': (String groupId) {
         final group = _currentLegendGroups?.firstWhere(
           (g) => g.id == groupId,
           orElse: () => throw Exception('Legend group not found: $groupId'),
@@ -1029,21 +1050,23 @@ class ScriptEngine {
         if (_currentLayers == null || _onLayersChanged == null) {
           throw Exception('Layers not available');
         }
-        
+
         final layerIndex = _currentLayers!.indexWhere((l) => l.id == layerId);
         if (layerIndex == -1) {
           throw Exception('Layer not found: $layerId');
         }
-        
+
         final layer = _currentLayers![layerIndex];
         final updatedLayer = layer.copyWith(
           name: properties['name'] ?? layer.name,
           isVisible: properties['isVisible'] ?? layer.isVisible,
           opacity: (properties['opacity'] as num?)?.toDouble() ?? layer.opacity,
           order: (properties['order'] as int?) ?? layer.order,
-          tags: properties['tags'] != null ? List<String>.from(properties['tags']) : layer.tags,
+          tags: properties['tags'] != null
+              ? List<String>.from(properties['tags'])
+              : layer.tags,
         );
-        
+
         final updatedLayers = List<MapLayer>.from(_currentLayers!);
         updatedLayers[layerIndex] = updatedLayer;
         _onLayersChanged!(updatedLayers);
@@ -1054,15 +1077,15 @@ class ScriptEngine {
         if (_currentLayers == null || _onLayersChanged == null) {
           throw Exception('Layers not available');
         }
-        
+
         final layerIndex = _currentLayers!.indexWhere((l) => l.id == layerId);
         if (layerIndex == -1) {
           throw Exception('Layer not found: $layerId');
         }
-        
+
         final layer = _currentLayers![layerIndex];
         final updatedLayer = layer.copyWith(isVisible: isVisible);
-        
+
         final updatedLayers = List<MapLayer>.from(_currentLayers!);
         updatedLayers[layerIndex] = updatedLayer;
         _onLayersChanged!(updatedLayers);
@@ -1073,15 +1096,17 @@ class ScriptEngine {
         if (_currentLayers == null || _onLayersChanged == null) {
           throw Exception('Layers not available');
         }
-        
+
         final layerIndex = _currentLayers!.indexWhere((l) => l.id == layerId);
         if (layerIndex == -1) {
           throw Exception('Layer not found: $layerId');
         }
-        
+
         final layer = _currentLayers![layerIndex];
-        final updatedLayer = layer.copyWith(opacity: opacity.toDouble().clamp(0.0, 1.0));
-        
+        final updatedLayer = layer.copyWith(
+          opacity: opacity.toDouble().clamp(0.0, 1.0),
+        );
+
         final updatedLayers = List<MapLayer>.from(_currentLayers!);
         updatedLayers[layerIndex] = updatedLayer;
         _onLayersChanged!(updatedLayers);
@@ -1092,15 +1117,15 @@ class ScriptEngine {
         if (_currentLayers == null || _onLayersChanged == null) {
           throw Exception('Layers not available');
         }
-        
+
         final layerIndex = _currentLayers!.indexWhere((l) => l.id == layerId);
         if (layerIndex == -1) {
           throw Exception('Layer not found: $layerId');
         }
-        
+
         final layer = _currentLayers![layerIndex];
         final updatedLayer = layer.copyWith(name: name);
-        
+
         final updatedLayers = List<MapLayer>.from(_currentLayers!);
         updatedLayers[layerIndex] = updatedLayer;
         _onLayersChanged!(updatedLayers);
@@ -1111,15 +1136,15 @@ class ScriptEngine {
         if (_currentLayers == null || _onLayersChanged == null) {
           throw Exception('Layers not available');
         }
-        
+
         final layerIndex = _currentLayers!.indexWhere((l) => l.id == layerId);
         if (layerIndex == -1) {
           throw Exception('Layer not found: $layerId');
         }
-        
+
         final layer = _currentLayers![layerIndex];
         final updatedLayer = layer.copyWith(order: order);
-        
+
         final updatedLayers = List<MapLayer>.from(_currentLayers!);
         updatedLayers[layerIndex] = updatedLayer;
         _onLayersChanged!(updatedLayers);
@@ -1127,7 +1152,11 @@ class ScriptEngine {
       },
 
       'getVisibleLayers': () {
-        return _currentLayers?.where((layer) => layer.isVisible).map((layer) => _layerToMap(layer)).toList() ?? [];
+        return _currentLayers
+                ?.where((layer) => layer.isVisible)
+                .map((layer) => _layerToMap(layer))
+                .toList() ??
+            [];
       },
 
       'filterLayersByTags': (dynamic tagFilter, String filterType) {
@@ -1136,7 +1165,7 @@ class ScriptEngine {
           for (final layer in _currentLayers!) {
             final layerTags = layer.tags ?? [];
             bool matches = false;
-            
+
             switch (filterType) {
               case 'contains':
                 if (tagFilter is String) {
@@ -1149,8 +1178,9 @@ class ScriptEngine {
                 if (tagFilter is List) {
                   final Set<String> filterSet = Set.from(tagFilter);
                   final Set<String> layerSet = Set.from(layerTags);
-                  matches = filterSet.length == layerSet.length && 
-                           filterSet.every((tag) => layerSet.contains(tag));
+                  matches =
+                      filterSet.length == layerSet.length &&
+                      filterSet.every((tag) => layerSet.contains(tag));
                 }
                 break;
               case 'excludes':
@@ -1165,7 +1195,7 @@ class ScriptEngine {
                 matches = true;
                 break;
             }
-            
+
             if (matches) {
               matchingLayers.add(_layerToMap(layer));
             }
@@ -1179,38 +1209,42 @@ class ScriptEngine {
         if (_currentStickyNotes == null || _onStickyNotesChanged == null) {
           throw Exception('Sticky notes not available');
         }
-        
-        final noteIndex = _currentStickyNotes!.indexWhere((n) => n.id == noteId);
+
+        final noteIndex = _currentStickyNotes!.indexWhere(
+          (n) => n.id == noteId,
+        );
         if (noteIndex == -1) {
           throw Exception('Sticky note not found: $noteId');
         }
-        
+
         final note = _currentStickyNotes![noteIndex];
         final updatedNote = note.copyWith(
           title: properties['title'] ?? note.title,
           content: properties['content'] ?? note.content,
-          position: properties['position'] != null 
-            ? Offset(properties['position']['x'], properties['position']['y'])
-            : note.position,
-          size: properties['size'] != null 
-            ? Size(properties['size']['width'], properties['size']['height'])
-            : note.size,
+          position: properties['position'] != null
+              ? Offset(properties['position']['x'], properties['position']['y'])
+              : note.position,
+          size: properties['size'] != null
+              ? Size(properties['size']['width'], properties['size']['height'])
+              : note.size,
           opacity: (properties['opacity'] as num?)?.toDouble() ?? note.opacity,
           isVisible: properties['isVisible'] ?? note.isVisible,
           isCollapsed: properties['isCollapsed'] ?? note.isCollapsed,
-          backgroundColor: properties['backgroundColor'] != null 
-            ? Color(properties['backgroundColor']) 
-            : note.backgroundColor,
-          titleBarColor: properties['titleBarColor'] != null 
-            ? Color(properties['titleBarColor']) 
-            : note.titleBarColor,
-          textColor: properties['textColor'] != null 
-            ? Color(properties['textColor']) 
-            : note.textColor,
-          tags: properties['tags'] != null ? List<String>.from(properties['tags']) : note.tags,
+          backgroundColor: properties['backgroundColor'] != null
+              ? Color(properties['backgroundColor'])
+              : note.backgroundColor,
+          titleBarColor: properties['titleBarColor'] != null
+              ? Color(properties['titleBarColor'])
+              : note.titleBarColor,
+          textColor: properties['textColor'] != null
+              ? Color(properties['textColor'])
+              : note.textColor,
+          tags: properties['tags'] != null
+              ? List<String>.from(properties['tags'])
+              : note.tags,
           updatedAt: DateTime.now(),
         );
-        
+
         final updatedNotes = List<StickyNote>.from(_currentStickyNotes!);
         updatedNotes[noteIndex] = updatedNote;
         _onStickyNotesChanged!(updatedNotes);
@@ -1218,88 +1252,135 @@ class ScriptEngine {
       },
 
       'updateStickyNoteVisibility': (String noteId, bool isVisible) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'isVisible': isVisible}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'isVisible': isVisible},
+          ],
+        );
       },
 
       'updateStickyNoteOpacity': (String noteId, num opacity) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'opacity': opacity.toDouble().clamp(0.0, 1.0)}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'opacity': opacity.toDouble().clamp(0.0, 1.0)},
+          ],
+        );
       },
 
       'updateStickyNotePosition': (String noteId, num x, num y) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'position': {'x': x.toDouble(), 'y': y.toDouble()}}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {
+              'position': {'x': x.toDouble(), 'y': y.toDouble()},
+            },
+          ],
+        );
       },
 
       'updateStickyNoteSize': (String noteId, num width, num height) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'size': {'width': width.toDouble(), 'height': height.toDouble()}}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {
+              'size': {'width': width.toDouble(), 'height': height.toDouble()},
+            },
+          ],
+        );
       },
 
-      'updateStickyNoteColors': (String noteId, int backgroundColor, int titleBarColor, int textColor) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {
-            'backgroundColor': backgroundColor,
-            'titleBarColor': titleBarColor,
-            'textColor': textColor
-          }
-        ]);
-      },
+      'updateStickyNoteColors':
+          (
+            String noteId,
+            int backgroundColor,
+            int titleBarColor,
+            int textColor,
+          ) {
+            return _hetu!.invoke(
+              'updateStickyNote',
+              positionalArgs: [
+                noteId,
+                {
+                  'backgroundColor': backgroundColor,
+                  'titleBarColor': titleBarColor,
+                  'textColor': textColor,
+                },
+              ],
+            );
+          },
 
       'updateStickyNoteBackgroundColor': (String noteId, int color) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'backgroundColor': color}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'backgroundColor': color},
+          ],
+        );
       },
 
       'updateStickyNoteTitleBarColor': (String noteId, int color) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'titleBarColor': color}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'titleBarColor': color},
+          ],
+        );
       },
 
       'updateStickyNoteTextColor': (String noteId, int color) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'textColor': color}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'textColor': color},
+          ],
+        );
       },
 
       'updateStickyNoteTitle': (String noteId, String title) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'title': title}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'title': title},
+          ],
+        );
       },
 
       'updateStickyNoteContent': (String noteId, String content) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'content': content}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'content': content},
+          ],
+        );
       },
 
       'collapseStickyNote': (String noteId, bool isCollapsed) {
-        return _hetu!.invoke('updateStickyNote', positionalArgs: [
-          noteId, 
-          {'isCollapsed': isCollapsed}
-        ]);
+        return _hetu!.invoke(
+          'updateStickyNote',
+          positionalArgs: [
+            noteId,
+            {'isCollapsed': isCollapsed},
+          ],
+        );
       },
 
       'getVisibleStickyNotes': () {
-        return _currentStickyNotes?.where((note) => note.isVisible).map((note) => _stickyNoteToMap(note)).toList() ?? [];
+        return _currentStickyNotes
+                ?.where((note) => note.isVisible)
+                .map((note) => _stickyNoteToMap(note))
+                .toList() ??
+            [];
       },
     };
   }

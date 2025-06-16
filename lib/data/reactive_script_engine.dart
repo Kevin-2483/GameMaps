@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../services/script_engine.dart';
+import '../services/scripting/script_engine.dart';
 import '../models/script_data.dart';
 import '../models/map_layer.dart';
 import '../models/sticky_note.dart';
@@ -56,9 +56,13 @@ class ReactiveScriptEngine {
   /// 处理地图数据变更
   void _onMapDataChanged(MapDataLoaded data) {
     _updateScriptEngineDataAccessor(data);
-  }  /// 更新脚本引擎的地图数据访问器
+  }
+
+  /// 更新脚本引擎的地图数据访问器
   void _updateScriptEngineDataAccessor(MapDataLoaded mapData) {
-    debugPrint('更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}，便签数量: ${mapData.mapItem.stickyNotes.length}，图例组数量: ${mapData.legendGroups.length}');
+    debugPrint(
+      '更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}，便签数量: ${mapData.mapItem.stickyNotes.length}，图例组数量: ${mapData.legendGroups.length}',
+    );
 
     _scriptEngine.setMapDataAccessor(
       mapData.layers,
@@ -102,7 +106,9 @@ class ReactiveScriptEngine {
   }
 
   /// 处理脚本引擎修改图例组数据的回调
-  void _onScriptEngineLegendGroupsChanged(List<LegendGroup> updatedLegendGroups) {
+  void _onScriptEngineLegendGroupsChanged(
+    List<LegendGroup> updatedLegendGroups,
+  ) {
     debugPrint('脚本引擎修改了图例组数据，更新图例组数量: ${updatedLegendGroups.length}');
 
     // 通过Bloc事件更新地图数据，确保响应式流的一致性

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import '../models/script_data.dart';
+import '../../models/script_data.dart';
 import 'script_engine.dart';
-import 'virtual_file_system/virtual_file_system.dart';
-import '../utils/filename_sanitizer.dart';
+import '../virtual_file_system/virtual_file_system.dart';
+import '../../utils/filename_sanitizer.dart';
 
 /// 脚本管理器 - 使用VFS存储结构
 class ScriptManager extends ChangeNotifier {
@@ -309,11 +309,26 @@ class ScriptManager extends ChangeNotifier {
       await addScript(importedScript);
     } catch (e) {
       throw Exception('Failed to import script: $e');
-    }  }
+    }
+  }
 
   /// 设置地图数据访问器
-  void setMapDataAccessor(layers, onLayersChanged, stickyNotes, onStickyNotesChanged, legendGroups, onLegendGroupsChanged) {
-    _engine.setMapDataAccessor(layers, onLayersChanged, stickyNotes, onStickyNotesChanged, legendGroups, onLegendGroupsChanged);
+  void setMapDataAccessor(
+    layers,
+    onLayersChanged,
+    stickyNotes,
+    onStickyNotesChanged,
+    legendGroups,
+    onLegendGroupsChanged,
+  ) {
+    _engine.setMapDataAccessor(
+      layers,
+      onLayersChanged,
+      stickyNotes,
+      onStickyNotesChanged,
+      legendGroups,
+      onLegendGroupsChanged,
+    );
   }
 
   /// 设置 VFS 访问器

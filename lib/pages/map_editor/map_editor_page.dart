@@ -27,8 +27,8 @@ import 'widgets/reactive_version_tab_bar.dart';
 import 'widgets/sticky_note_panel.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
-import '../../services/reactive_version_adapter.dart';
-import '../../services/script_manager_vfs.dart';
+import '../../services/reactive_version/reactive_version_adapter.dart';
+import '../../services/scripting/script_manager_vfs.dart';
 import '../../models/script_data.dart';
 // import 'widgets/script_panel.dart';
 import 'widgets/reactive_script_panel.dart';
@@ -577,11 +577,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
     await _scriptManager.initialize(mapTitle: _currentMap?.title);
     // 设置地图数据访问器
     _updateScriptMapDataAccessor();
-  }  /// 更新脚本引擎的地图数据访问器
+  }
+
+  /// 更新脚本引擎的地图数据访问器
   void _updateScriptMapDataAccessor() {
     if (_currentMap != null) {
       _scriptManager.setMapDataAccessor(
-        _currentMap!.layers, 
+        _currentMap!.layers,
         (updatedLayers) {
           // 当脚本修改图层数据时，更新地图
           if (mounted) {
@@ -596,7 +598,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
           // 当脚本修改便签数据时，更新地图
           if (mounted) {
             setState(() {
-              _currentMap = _currentMap!.copyWith(stickyNotes: updatedStickyNotes);
+              _currentMap = _currentMap!.copyWith(
+                stickyNotes: updatedStickyNotes,
+              );
             });
             _saveMap();
           }
@@ -606,11 +610,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
           // 当脚本修改图例组数据时，更新地图
           if (mounted) {
             setState(() {
-              _currentMap = _currentMap!.copyWith(legendGroups: updatedLegendGroups);
+              _currentMap = _currentMap!.copyWith(
+                legendGroups: updatedLegendGroups,
+              );
             });
             _saveMap();
           }
-        }
+        },
       );
     }
   }
@@ -1009,32 +1015,39 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // _deleteElementTraditional(elementId, elementToDelete);
     }
   }
+
   // 更新指定图层或便签中的绘制元素（使用响应式系统）
   void _updateElement(MapDrawingElement element) {
     try {
       // 如果有选中的便签，优先处理便签中的元素
       if (_selectedStickyNote != null) {
         // 检查元素是否属于当前选中的便签
-        final elementIndex = _selectedStickyNote!.elements.indexWhere((e) => e.id == element.id);
+        final elementIndex = _selectedStickyNote!.elements.indexWhere(
+          (e) => e.id == element.id,
+        );
         if (elementIndex != -1) {
           // 更新便签中的元素
-          final updatedElements = List<MapDrawingElement>.from(_selectedStickyNote!.elements);
+          final updatedElements = List<MapDrawingElement>.from(
+            _selectedStickyNote!.elements,
+          );
           updatedElements[elementIndex] = element;
-          
+
           final updatedStickyNote = _selectedStickyNote!.copyWith(
             elements: updatedElements,
             updatedAt: DateTime.now(),
           );
-          
+
           updateStickyNoteReactive(updatedStickyNote);
-          debugPrint('使用响应式系统更新便签绘制元素: ${_selectedStickyNote!.id}/${element.id}');
-          
+          debugPrint(
+            '使用响应式系统更新便签绘制元素: ${_selectedStickyNote!.id}/${element.id}',
+          );
+
           // 显示更新成功消息
           _showSuccessSnackBar('已更新便签元素标签');
           return;
         }
       }
-      
+
       // 如果没有选中便签或元素不属于便签，则处理图层中的元素
       if (_selectedLayer != null) {
         updateDrawingElementReactive(_selectedLayer!.id, element);
@@ -1953,6 +1966,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _initialSelectedLegendItemId = null;
     });
   }
+
   // 显示Z层级检视器
   void _showZIndexInspector() {
     // 检查是否有选中的图层或便签
@@ -2801,8 +2815,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                               ),
                             ),
-                          ),                        // Z层级检视器覆盖层
-                        if (_isZIndexInspectorOpen && (_selectedLayer != null || _selectedStickyNote != null))
+                          ), // Z层级检视器覆盖层
+                        if (_isZIndexInspectorOpen &&
+                            (_selectedLayer != null ||
+                                _selectedStickyNote != null))
                           Positioned(
                             top: 16,
                             bottom: 16,
@@ -2845,8 +2861,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                               context,
                                             ).colorScheme.onSecondaryContainer,
                                           ),
-                                          const SizedBox(width: 8),                                          Text(
-                                            _selectedStickyNote != null 
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            _selectedStickyNote != null
                                                 ? '便签元素检视器 - ${_selectedStickyNote!.title}'
                                                 : 'Z层级检视器',
                                             style: TextStyle(
@@ -2873,9 +2890,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                         padding: const EdgeInsets.all(16),
                                         child: SingleChildScrollView(
                                           physics:
-                                              const BouncingScrollPhysics(),                                          child: ZIndexInspector(
+                                              const BouncingScrollPhysics(),
+                                          child: ZIndexInspector(
                                             selectedLayer: _selectedLayer,
-                                            selectedStickyNote: _selectedStickyNote,
+                                            selectedStickyNote:
+                                                _selectedStickyNote,
                                             onElementDeleted: _deleteElement,
                                             selectedElementId:
                                                 _selectedElementId,
@@ -2980,7 +2999,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     onCurvaturePreview: _handleCurvaturePreview,
                     onTriangleCutPreview: _handleTriangleCutPreview,
                     onUndo: _undo,
-                    onRedo: _redo,                    canUndo: _canUndo,
+                    onRedo: _redo,
+                    canUndo: _canUndo,
                     canRedo: _canRedo,
                     selectedLayer: _selectedLayer,
                     selectedStickyNote: _selectedStickyNote,
@@ -3148,7 +3168,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
           ),
         ],
         child: _isStickyNotePanelCollapsed
-            ? null            : StickyNotePanel(
+            ? null
+            : StickyNotePanel(
                 stickyNotes: _currentMap?.stickyNotes ?? [],
                 selectedStickyNote: _selectedStickyNote,
                 isPreviewMode: widget.isPreviewMode,

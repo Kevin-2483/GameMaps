@@ -443,7 +443,8 @@ class _LegendGroupManagementDrawerState
                           ),
                         ),
                       ],
-                    ),                  ),
+                    ),
+                  ),
                 ],
 
                 // 标签管理
@@ -812,7 +813,8 @@ class _LegendGroupManagementDrawerState
                                 url: value.trim().isEmpty ? null : value.trim(),
                               ),
                             );
-                          },                          style: const TextStyle(fontSize: 12),
+                          },
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
@@ -858,7 +860,10 @@ class _LegendGroupManagementDrawerState
                             TextButton.icon(
                               onPressed: () => _editLegendItemTags(item),
                               icon: const Icon(Icons.edit, size: 12),
-                              label: const Text('编辑', style: TextStyle(fontSize: 10)),
+                              label: const Text(
+                                '编辑',
+                                style: TextStyle(fontSize: 10),
+                              ),
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -1020,7 +1025,8 @@ class _LegendGroupManagementDrawerState
         ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
 
     double positionX = (baseX + offsetX).clamp(0.1, 0.9);
-    double positionY = (baseY + offsetY).clamp(0.1, 0.9);    double size = 1.0;
+    double positionY = (baseY + offsetY).clamp(0.1, 0.9);
+    double size = 1.0;
     double rotation = 0.0;
     String url = ''; // 图例链接URL
     List<String> itemTags = []; // 图例项标签
@@ -1077,7 +1083,8 @@ class _LegendGroupManagementDrawerState
                   ),
                   onChanged: (value) {
                     url = value;
-                  },                ),
+                  },
+                ),
                 const SizedBox(height: 16),
 
                 // 标签管理
@@ -1108,15 +1115,19 @@ class _LegendGroupManagementDrawerState
                           ),
                           const Spacer(),
                           TextButton.icon(
-                            onPressed: () => _showLegendItemTagsDialog(itemTags).then((newTags) {
-                              if (newTags != null) {
-                                setState(() {
-                                  itemTags = newTags;
-                                });
-                              }
-                            }),
+                            onPressed: () => _showLegendItemTagsDialog(itemTags)
+                                .then((newTags) {
+                                  if (newTags != null) {
+                                    setState(() {
+                                      itemTags = newTags;
+                                    });
+                                  }
+                                }),
                             icon: const Icon(Icons.edit, size: 14),
-                            label: const Text('管理', style: TextStyle(fontSize: 12)),
+                            label: const Text(
+                              '管理',
+                              style: TextStyle(fontSize: 12),
+                            ),
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -1216,7 +1227,8 @@ class _LegendGroupManagementDrawerState
             ),
             ElevatedButton(
               onPressed: selectedLegend != null
-                  ? () {                      final newItem = LegendItem(
+                  ? () {
+                      final newItem = LegendItem(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
                         legendId: selectedLegend!.id.toString(),
                         position: Offset(positionX, positionY),
@@ -1415,6 +1427,7 @@ class _LegendGroupManagementDrawerState
       _showErrorMessage('打开链接失败: $e');
     }
   }
+
   /// 显示错误消息
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(
@@ -1425,7 +1438,7 @@ class _LegendGroupManagementDrawerState
   /// 显示图例组标签管理对话框
   void _showTagsManagerDialog() async {
     final currentTags = _currentGroup.tags ?? [];
-    
+
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
@@ -1442,11 +1455,11 @@ class _LegendGroupManagementDrawerState
         updatedAt: DateTime.now(),
       );
       _updateGroup(updatedGroup);
-      
+
       if (result.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已清空图例组标签')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已清空图例组标签')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('图例组标签已更新 (${result.length}个标签)')),
@@ -1458,7 +1471,7 @@ class _LegendGroupManagementDrawerState
   /// 构建图例组标签显示
   Widget _buildTagsDisplay() {
     final tags = _currentGroup.tags ?? [];
-    
+
     if (tags.isEmpty) {
       return Text(
         '暂无标签',
@@ -1473,20 +1486,24 @@ class _LegendGroupManagementDrawerState
     return Wrap(
       spacing: 4,
       runSpacing: 4,
-      children: tags.map((tag) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          tag,
-          style: TextStyle(
-            fontSize: 10,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
-        ),
-      )).toList(),
+      children: tags
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tag,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -1509,7 +1526,9 @@ class _LegendGroupManagementDrawerState
   }
 
   /// 显示图例项标签管理对话框
-  Future<List<String>?> _showLegendItemTagsDialog(List<String> currentTags) async {
+  Future<List<String>?> _showLegendItemTagsDialog(
+    List<String> currentTags,
+  ) async {
     return await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
@@ -1537,20 +1556,24 @@ class _LegendGroupManagementDrawerState
     return Wrap(
       spacing: 4,
       runSpacing: 4,
-      children: tags.map((tag) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          tag,
-          style: TextStyle(
-            fontSize: 10,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
-        ),
-      )).toList(),
+      children: tags
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tag,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -1575,7 +1598,7 @@ class _LegendGroupManagementDrawerState
   /// 编辑图例项标签
   void _editLegendItemTags(LegendItem item) async {
     final currentTags = item.tags ?? [];
-    
+
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
@@ -1591,11 +1614,11 @@ class _LegendGroupManagementDrawerState
         tags: result.isNotEmpty ? result : null,
       );
       _updateLegendItem(updatedItem);
-      
+
       if (result.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已清空图例项标签')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已清空图例项标签')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('图例项标签已更新 (${result.length}个标签)')),

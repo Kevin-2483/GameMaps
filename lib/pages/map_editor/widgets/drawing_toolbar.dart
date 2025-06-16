@@ -35,7 +35,8 @@ class DrawingToolbarOptimized extends StatefulWidget {
   // 撤销/重做功能
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
-  final bool canUndo;  final bool canRedo; // Z层级检视器相关
+  final bool canUndo;
+  final bool canRedo; // Z层级检视器相关
   final MapLayer? selectedLayer;
   final StickyNote? selectedStickyNote;
   final Function(String elementId)? onElementDeleted;
@@ -71,7 +72,8 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.onCurvaturePreview,
     this.onTriangleCutPreview,
     this.onUndo,
-    this.onRedo,    this.canUndo = false,
+    this.onRedo,
+    this.canUndo = false,
     this.canRedo = false,
     this.selectedLayer,
     this.selectedStickyNote,
@@ -759,8 +761,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 ),
               ),
 
-            const SizedBox(height: 16),            // Z层级检视器按钮
-            if ((widget.selectedLayer != null || widget.selectedStickyNote != null) &&
+            const SizedBox(height: 16), // Z层级检视器按钮
+            if ((widget.selectedLayer != null ||
+                    widget.selectedStickyNote != null) &&
                 widget.onZIndexInspectorRequested != null)
               SizedBox(
                 width: double.infinity,

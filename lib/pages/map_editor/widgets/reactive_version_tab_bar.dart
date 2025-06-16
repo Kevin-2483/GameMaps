@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/reactive_version_manager.dart';
+import '../../../services/reactive_version/reactive_version_manager.dart';
 
 /// 响应式版本管理标签页组件
 class ReactiveVersionTabBar extends StatelessWidget {

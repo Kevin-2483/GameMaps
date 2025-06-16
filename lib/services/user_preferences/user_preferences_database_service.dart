@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/user_preferences.dart';
+import '../../models/user_preferences.dart';
 
 /// 用户偏好设置数据库服务
 /// 使用SQLite数据库替代SharedPreferences以提升性能

@@ -27,13 +27,16 @@ class EraserRenderer {
     // 找到影响当前元素的橡皮擦（z值更高的）
     final affectingErasers = eraserElements
         .where((eraser) => eraser.zIndex > element.zIndex)
-        .toList();    if (affectingErasers.isEmpty) {
+        .toList();
+    if (affectingErasers.isEmpty) {
       // 没有橡皮擦影响，直接绘制
       // 调试信息：检查图片选区元素
       if (element.type == DrawingElementType.imageArea) {
-        debugPrint('EraserRenderer: 绘制便签图片选区元素, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}');
+        debugPrint(
+          'EraserRenderer: 绘制便签图片选区元素, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
+        );
       }
-      
+
       ElementRenderer.drawElement(
         canvas,
         element,

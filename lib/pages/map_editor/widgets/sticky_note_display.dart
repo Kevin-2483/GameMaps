@@ -20,7 +20,7 @@ class StickyNoteDisplay extends StatefulWidget {
   final bool isSelected;
   final bool isPreviewMode;
   final Function(StickyNote)? onNoteUpdated;
-  
+
   // 图片缓存相关参数
   final Map<String, ui.Image>? imageCache;
   final ui.Image? imageBufferCachedImage;
@@ -65,7 +65,8 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
   /// 预加载便签中所有图片元素的图片数据
   void _preloadStickyNoteImages() async {
     for (final element in widget.note.elements) {
-      if (element.type == DrawingElementType.imageArea && element.imageData != null) {
+      if (element.type == DrawingElementType.imageArea &&
+          element.imageData != null) {
         // 如果这个元素的图片还没有被缓存，则解码并缓存
         if (!_localImageCache.containsKey(element.id)) {
           try {
@@ -75,7 +76,9 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
               setState(() {
                 _localImageCache[element.id] = frame.image;
               });
-              debugPrint('便签图片预加载完成: element.id=${element.id}, 图片尺寸=${frame.image.width}x${frame.image.height}');
+              debugPrint(
+                '便签图片预加载完成: element.id=${element.id}, 图片尺寸=${frame.image.width}x${frame.image.height}',
+              );
             }
           } catch (e) {
             debugPrint('便签图片预加载失败: element.id=${element.id}, 错误=$e');
@@ -94,6 +97,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
     _localImageCache.clear();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -252,14 +256,18 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
         ),
       ),
     );
-  }  /// 构建背景图片
+  }
+
+  /// 构建背景图片
   Widget _buildBackgroundImage() {
     // 检查是否有背景图片（直接数据优先，然后是VFS哈希引用）
-    final hasDirectData = widget.note.backgroundImageData != null && 
-                         widget.note.backgroundImageData!.isNotEmpty;
-    final hasHashReference = widget.note.backgroundImageHash != null && 
-                            widget.note.backgroundImageHash!.isNotEmpty;
-    
+    final hasDirectData =
+        widget.note.backgroundImageData != null &&
+        widget.note.backgroundImageData!.isNotEmpty;
+    final hasHashReference =
+        widget.note.backgroundImageHash != null &&
+        widget.note.backgroundImageHash!.isNotEmpty;
+
     if (!hasDirectData && !hasHashReference) {
       return const SizedBox.shrink();
     }
@@ -296,25 +304,18 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
     // 这种情况在正常使用中不应该出现，因为加载时会恢复直接数据
     debugPrint('便签背景图片只有VFS哈希引用: ${widget.note.backgroundImageHash}');
     debugPrint('提示: 便签背景图片应该在加载时已恢复为直接数据');
-    
+
     return Container(
       color: Colors.grey.shade100,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.image_outlined,
-              color: Colors.grey.shade400,
-              size: 24,
-            ),
+            Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 24),
             const SizedBox(height: 4),
             Text(
               '背景图片',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 10,
-              ),
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
             ),
           ],
         ),
@@ -338,24 +339,25 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
             const SizedBox(height: 4),
             Text(
               '图片加载失败',
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
           ],
         ),
       ),
     );
-  }/// 构建便签绘制元素
+  }
+
+  /// 构建便签绘制元素
   Widget _buildDrawingElements() {
     // 合并widget的imageCache和本地图片缓存
     final Map<String, ui.Image> combinedImageCache = {
       ...?widget.imageCache, // 先添加widget传入的缓存
-      ..._localImageCache,   // 然后添加本地预加载的缓存（会覆盖重复的key）
+      ..._localImageCache, // 然后添加本地预加载的缓存（会覆盖重复的key）
     };
 
-    debugPrint('便签绘制: 元素=${widget.note.elements.length}, 图片缓存=${combinedImageCache.length}');
+    debugPrint(
+      '便签绘制: 元素=${widget.note.elements.length}, 图片缓存=${combinedImageCache.length}',
+    );
 
     return Positioned.fill(
       child: CustomPaint(
@@ -805,7 +807,8 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     this.imageBufferCachedImage,
     this.currentImageBufferData,
     this.imageBufferFit = BoxFit.contain,
-  });  @override
+  });
+  @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
 
@@ -813,7 +816,9 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     debugPrint('便签绘制器: 元素数量=${elements.length}');
     for (int i = 0; i < elements.length; i++) {
       final element = elements[i];
-      debugPrint('  元素[$i]: 类型=${element.type.name}, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}');
+      debugPrint(
+        '  元素[$i]: 类型=${element.type.name}, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
+      );
     }
 
     // 创建裁剪区域，确保绘制内容不超出便签内容区域
@@ -834,7 +839,7 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
-      }      // 使用橡皮擦渲染器来处理橡皮擦遮挡效果
+      } // 使用橡皮擦渲染器来处理橡皮擦遮挡效果
       EraserRenderer.drawElementWithEraserMask(
         canvas,
         element,
@@ -850,6 +855,7 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     // 恢复画布状态
     canvas.restore();
   }
+
   @override
   bool shouldRepaint(_StickyNoteDrawingPainter oldDelegate) {
     return oldDelegate.elements != elements ||

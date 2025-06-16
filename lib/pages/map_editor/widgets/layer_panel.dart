@@ -953,7 +953,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 style: const TextStyle(fontSize: 11),
               ),
             ],
-          ),          // 图例组绑定 chip 和标签管理
+          ), // 图例组绑定 chip 和标签管理
           const SizedBox(height: 4),
           Row(
             children: [
@@ -1464,9 +1464,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
             const SizedBox(width: 4),
             Text(
-              hasAllTags
-                  ? '${tags.length} 个标签'
-                  : '添加标签',
+              hasAllTags ? '${tags.length} 个标签' : '添加标签',
               style: TextStyle(
                 fontSize: 10,
                 color: hasAllTags
@@ -1484,7 +1482,7 @@ class _LayerPanelState extends State<LayerPanel> {
   /// 显示标签管理对话框
   void _showTagsManagerDialog(MapLayer layer) async {
     final currentTags = layer.tags ?? [];
-    
+
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
@@ -1501,7 +1499,7 @@ class _LayerPanelState extends State<LayerPanel> {
         updatedAt: DateTime.now(),
       );
       widget.onLayerUpdated(updatedLayer);
-      
+
       if (result.isEmpty) {
         widget.onSuccess?.call('已清空图层标签');
       } else {
@@ -1519,30 +1517,23 @@ class _LayerPanelState extends State<LayerPanel> {
         allUsedTags.addAll(layer.tags!);
       }
     }
-    
+
     // 去重并排序
     final uniqueTags = allUsedTags.toSet().toList()..sort();
-    
+
     // 添加一些图层相关的默认建议标签
-    const layerSpecificTags = [
-      '背景图层',
-      '前景图层', 
-      '标注图层',
-      '参考图层',
-      '基础图层',
-      '装饰图层',
-    ];
-    
+    const layerSpecificTags = ['背景图层', '前景图层', '标注图层', '参考图层', '基础图层', '装饰图层'];
+
     // 合并建议标签，优先显示已使用的标签
     final suggestedTags = <String>[];
     suggestedTags.addAll(uniqueTags);
-    
+
     for (final tag in layerSpecificTags) {
       if (!suggestedTags.contains(tag)) {
         suggestedTags.add(tag);
       }
     }
-    
+
     return suggestedTags;
   }
 

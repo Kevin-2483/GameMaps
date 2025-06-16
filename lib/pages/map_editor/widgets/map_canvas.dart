@@ -362,7 +362,8 @@ class MapCanvasState extends State<MapCanvas> {
                       top: 0,
                       width: kCanvasWidth,
                       height: kCanvasHeight,
-                      child: _effectiveDrawingTool == DrawingElementType.text                          ? GestureDetector(
+                      child: _effectiveDrawingTool == DrawingElementType.text
+                          ? GestureDetector(
                               // 文本工具使用点击手势
                               onTapDown: (details) {
                                 final position = _getCanvasPosition(
@@ -522,7 +523,8 @@ class MapCanvasState extends State<MapCanvas> {
       width: size.width,
       height: effectiveHeight,
       child: Opacity(
-        opacity: effectiveOpacity,        child: StickyNoteDisplay(
+        opacity: effectiveOpacity,
+        child: StickyNoteDisplay(
           note: note,
           isSelected: widget.selectedStickyNote?.id == note.id,
           isPreviewMode: widget.isPreviewMode,
@@ -1562,7 +1564,7 @@ class MapCanvasState extends State<MapCanvas> {
       );
 
       if (contentAreaRect.contains(canvasPosition)) {
-        isDrawingOnStickyNote = true;        // Drawing on sticky note content area
+        isDrawingOnStickyNote = true; // Drawing on sticky note content area
         _drawingToolManager.onStickyNoteDrawingStart(
           details,
           stickyNote,
@@ -1687,7 +1689,8 @@ class MapCanvasState extends State<MapCanvas> {
     _originalOpacityBeforeDrawing.clear();
 
     // Check if drawing on sticky note
-    if (_drawingToolManager.currentDrawingStickyNote != null) {      _drawingToolManager.onStickyNoteDrawingEnd(
+    if (_drawingToolManager.currentDrawingStickyNote != null) {
+      _drawingToolManager.onStickyNoteDrawingEnd(
         details,
         _effectiveDrawingTool,
         _effectiveColor,
@@ -2127,9 +2130,13 @@ class MapCanvasState extends State<MapCanvas> {
     if (widget.selectedStickyNote != null) {
       // 检查是否在便签的内容区域内
       final hitStickyNote = _getHitStickyNote(canvasPosition);
-      if (hitStickyNote != null && hitStickyNote.id == widget.selectedStickyNote!.id) {
+      if (hitStickyNote != null &&
+          hitStickyNote.id == widget.selectedStickyNote!.id) {
         // 在选中的便签内，检查是否在内容区域
-        if (_isInStickyNoteContentArea(canvasPosition, widget.selectedStickyNote!)) {
+        if (_isInStickyNoteContentArea(
+          canvasPosition,
+          widget.selectedStickyNote!,
+        )) {
           // 在便签内容区域，创建便签文本元素
           _drawingToolManager.showStickyNoteTextInputDialog(
             canvasPosition,

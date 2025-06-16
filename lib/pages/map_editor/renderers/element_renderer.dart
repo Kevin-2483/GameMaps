@@ -159,6 +159,7 @@ class ElementRenderer {
       canvas.restore();
     }
   }
+
   /// 绘制图片区域元素
   static void _drawImageArea(
     Canvas canvas,
@@ -173,10 +174,16 @@ class ElementRenderer {
 
     // 调试信息：检查图片选区渲染
     debugPrint('ElementRenderer._drawImageArea: 开始渲染图片选区');
-    debugPrint('  element.imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}');
+    debugPrint(
+      '  element.imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
+    );
     debugPrint('  imageCache=${imageCache?.length ?? 0} items');
-    debugPrint('  imageBufferCachedImage=${imageBufferCachedImage != null ? 'available' : 'null'}');
-    debugPrint('  currentImageBufferData=${currentImageBufferData != null ? '${currentImageBufferData.length} bytes' : 'null'}');
+    debugPrint(
+      '  imageBufferCachedImage=${imageBufferCachedImage != null ? 'available' : 'null'}',
+    );
+    debugPrint(
+      '  currentImageBufferData=${currentImageBufferData != null ? '${currentImageBufferData.length} bytes' : 'null'}',
+    );
 
     final start = Offset(
       element.points[0].dx * size.width,
@@ -209,7 +216,7 @@ class ElementRenderer {
         final Path trianglePath = createTrianglePath(rect, element.triangleCut);
         canvas.clipPath(trianglePath);
       }
-    }    // 绘制图片内容
+    } // 绘制图片内容
     if (element.imageData != null) {
       // 1. 优先使用元素自己的图片数据
       debugPrint('  使用元素自己的图片数据，检查缓存: element.id=${element.id}');
@@ -221,7 +228,8 @@ class ElementRenderer {
           cachedImage,
           rect,
           element.imageFit ?? BoxFit.contain,
-        );      } else {
+        );
+      } else {
         debugPrint('  没有找到缓存图片，显示加载占位符');
         // 如果没有缓存，显示蓝色加载占位符
         drawImageBufferLoadingPlaceholder(canvas, rect);
@@ -341,7 +349,8 @@ class ElementRenderer {
         style: TextStyle(color: Colors.blue.withOpacity(0.7), fontSize: 12.0),
       ),
       textDirection: TextDirection.ltr,
-    );    textPainter.layout();
+    );
+    textPainter.layout();
     textPainter.paint(
       canvas,
       Offset(center.dx - textPainter.width / 2, center.dy + iconSize / 2 + 4),

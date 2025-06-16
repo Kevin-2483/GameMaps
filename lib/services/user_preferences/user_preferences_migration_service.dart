@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_preferences.dart';
+import '../../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
 
 /// 用户偏好设置数据迁移服务

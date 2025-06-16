@@ -16,7 +16,8 @@ class StickyNotePanel extends StatefulWidget {
   final VoidCallback onStickyNoteAdded;
   final Function(int oldIndex, int newIndex) onStickyNotesReordered;
   final Function(String)? onError;
-  final Function(String)? onSuccess;  final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
+  final Function(String)? onSuccess;
+  final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
 
   const StickyNotePanel({
@@ -223,7 +224,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                           padding: const EdgeInsets.all(8),
                           child: const Icon(Icons.image, size: 16),
                         ),
-                      ),                      // 颜色设置按钮
+                      ), // 颜色设置按钮
                       GestureDetector(
                         onTap: () => _showColorPicker(context, note),
                         child: Container(
@@ -234,11 +235,11 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                             color: note.backgroundColor,
                           ),
                         ),
-                      ),                      // Z层级检视器按钮 (只在便签被选中时显示)
+                      ), // Z层级检视器按钮 (只在便签被选中时显示)
                       if (widget.selectedStickyNote?.id == note.id &&
                           widget.onZIndexInspectorRequested != null)
                         Tooltip(
-                          message: note.elements.isNotEmpty 
+                          message: note.elements.isNotEmpty
                               ? '便签元素检视器 (${note.elements.length}个元素)'
                               : '便签元素检视器 (无元素)',
                           child: GestureDetector(
@@ -248,7 +249,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                               child: Icon(
                                 Icons.layers,
                                 size: 16,
-                                color: note.elements.isNotEmpty 
+                                color: note.elements.isNotEmpty
                                     ? Theme.of(context).primaryColor
                                     : Theme.of(context).disabledColor,
                               ),
@@ -271,7 +272,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
 
                 // 第二排：透明度滑块
                 const SizedBox(height: 8),
-                _buildOpacitySlider(note),                // 第三排：便签预览（如果有内容）
+                _buildOpacitySlider(note), // 第三排：便签预览（如果有内容）
                 if (note.content.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
@@ -472,7 +473,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         );
       },
     );
-  }  /// 处理图片上传
+  }
+
+  /// 处理图片上传
   Future<void> _handleImageUpload(StickyNote note) async {
     try {
       final Uint8List? imageData = await ImageUtils.pickAndEncodeImage();
@@ -484,10 +487,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           clearBackgroundImageHash: true, // 清除旧的哈希引用，新数据在保存时会生成哈希
           updatedAt: DateTime.now(),
         );
-        
+
         widget.onStickyNoteUpdated(updatedNote);
         widget.onSuccess?.call('背景图片已上传');
-        
+
         debugPrint('便签背景图片已上传，将在地图保存时存储到资产系统 (${imageData.length} bytes)');
       }
     } catch (e) {
@@ -553,6 +556,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       ),
     );
   }
+
   /// 移除背景图片
   void _removeBackgroundImage(StickyNote note) {
     final updatedNote = note.copyWith(
@@ -714,6 +718,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     );
     widget.onStickyNoteUpdated(updatedNote);
   }
+
   /// 移动到顶层
   void _moveToTop(StickyNote note) {
     // 找到当前最大的 zIndex
@@ -732,7 +737,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   /// 构建便签标签管理区域
   Widget _buildStickyNoteTagsSection(StickyNote note) {
     final tags = note.tags ?? [];
-    
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -764,7 +769,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                 GestureDetector(
                   onTap: () => _showStickyNoteTagsManagerDialog(note),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
@@ -790,7 +798,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   /// 显示便签标签管理对话框
   void _showStickyNoteTagsManagerDialog(StickyNote note) async {
     final currentTags = note.tags ?? [];
-    
+
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
@@ -807,7 +815,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         updatedAt: DateTime.now(),
       );
       widget.onStickyNoteUpdated(updatedNote);
-      
+
       if (result.isEmpty) {
         widget.onSuccess?.call('已清空便签标签');
       } else {
@@ -832,20 +840,24 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     return Wrap(
       spacing: 4,
       runSpacing: 4,
-      children: tags.map((tag) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          tag,
-          style: TextStyle(
-            fontSize: 10,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
-        ),
-      )).toList(),
+      children: tags
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tag,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 

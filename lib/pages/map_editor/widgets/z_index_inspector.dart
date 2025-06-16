@@ -12,7 +12,7 @@ class ZIndexInspector extends StatelessWidget {
   final StickyNote? selectedStickyNote;
   final Function(String elementId) onElementDeleted; // 删除元素的回调
   final String? selectedElementId; // 当前选中的元素ID
-  final Function(String? elementId)? onElementSelected; // 元素选中回调 
+  final Function(String? elementId)? onElementSelected; // 元素选中回调
   final Function(MapDrawingElement element)? onElementUpdated; // 元素更新回调
 
   const ZIndexInspector({
@@ -23,12 +23,15 @@ class ZIndexInspector extends StatelessWidget {
     this.selectedElementId,
     this.onElementSelected,
     this.onElementUpdated,
-  }) : assert(selectedLayer != null || selectedStickyNote != null, 
-             'Either selectedLayer or selectedStickyNote must be provided');  @override
+  }) : assert(
+         selectedLayer != null || selectedStickyNote != null,
+         'Either selectedLayer or selectedStickyNote must be provided',
+       );
+  @override
   Widget build(BuildContext context) {
     // 获取要显示的元素列表
     List<MapDrawingElement> elements;
-    
+
     if (selectedStickyNote != null) {
       elements = selectedStickyNote!.elements;
     } else if (selectedLayer != null) {
@@ -36,7 +39,7 @@ class ZIndexInspector extends StatelessWidget {
     } else {
       elements = [];
     }
-    
+
     if (elements.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16.0),

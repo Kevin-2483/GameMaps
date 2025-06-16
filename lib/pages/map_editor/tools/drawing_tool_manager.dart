@@ -622,6 +622,7 @@ class DrawingToolManager {
   void dispose() {
     _drawingPreviewNotifier.dispose();
   }
+
   /// 8. 开始在便签上绘制
   void onStickyNoteDrawingStart(
     DragStartDetails details,
@@ -725,7 +726,9 @@ class DrawingToolManager {
       freeDrawingPath: null,
       targetStickyNote: _currentDrawingStickyNote,
     );
-  }  /// 10. 结束便签上的绘制
+  }
+
+  /// 10. 结束便签上的绘制
   void onStickyNoteDrawingEnd(
     DragEndDetails details,
     DrawingElementType? effectiveDrawingTool,
@@ -745,9 +748,11 @@ class DrawingToolManager {
         effectiveDrawingTool == null) {
       _clearStickyNoteDrawingState();
       return;
-    }    // 调试信息：检查图片选区工具的缓冲区数据
+    } // 调试信息：检查图片选区工具的缓冲区数据
     if (effectiveDrawingTool == DrawingElementType.imageArea) {
-      debugPrint('便签创建图片选区: 缓冲区数据=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}');
+      debugPrint(
+        '便签创建图片选区: 缓冲区数据=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}',
+      );
     }
 
     // 处理不同类型的绘制工具
@@ -784,7 +789,8 @@ class DrawingToolManager {
         );
         onStickyNoteUpdated(updatedStickyNote);
         _freeDrawingPath.clear();
-      }    } else {
+      }
+    } else {
       // 标准绘制元素处理
       final element = _createStickyNoteDrawingElement(
         _currentDrawingStart!,
@@ -841,6 +847,7 @@ class DrawingToolManager {
     // 限制绘制只能在便签的内容区域内（0.0-1.0）
     return Offset(relativeX.clamp(0.0, 1.0), relativeY.clamp(0.0, 1.0));
   }
+
   /// Create drawing element for sticky note
   MapDrawingElement _createStickyNoteDrawingElement(
     Offset start,
@@ -859,14 +866,17 @@ class DrawingToolManager {
         ? 0
         : stickyNote.elements
               .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);    List<Offset> points;
+              .reduce((a, b) => a > b ? a : b);
+    List<Offset> points;
     if (elementType == DrawingElementType.freeDrawing) {
       points = List.from(_freeDrawingPath);
     } else {
       points = [start, end];
-    }    // 调试信息：检查图片选区元素创建
+    } // 调试信息：检查图片选区元素创建
     if (elementType == DrawingElementType.imageArea) {
-      debugPrint('创建便签图片选区元素: imageData=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}');
+      debugPrint(
+        '创建便签图片选区元素: imageData=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}',
+      );
     }
 
     return MapDrawingElement(

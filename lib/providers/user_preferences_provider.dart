@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_preferences.dart';
-import '../services/user_preferences_service.dart';
+import '../services/user_preferences/user_preferences_service.dart';
 import 'theme_provider.dart';
 
 /// 用户偏好设置状态管理Provider
