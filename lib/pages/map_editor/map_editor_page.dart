@@ -34,7 +34,7 @@ import '../../models/script_data.dart';
 import 'widgets/reactive_script_panel.dart';
 import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
-import '../../data/reactive_script_manager.dart';
+import '../../data/new_reactive_script_manager.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -3203,9 +3203,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
           ),
         ],
         child: _isScriptPanelCollapsed
-            ? null
-            : ReactiveScriptPanel(
-                scriptManager: reactiveScriptManager,
+            ? null            : ReactiveScriptPanel(
+                scriptManager: newReactiveScriptManager,
                 onNewScript: _showNewScriptDialog,
               ),
       ),
@@ -3801,14 +3800,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
     showDialog(
       context: context,
       builder: (context) =>
-          _ReactiveScriptCreateDialog(scriptManager: reactiveScriptManager),
+          _ReactiveScriptCreateDialog(scriptManager: newReactiveScriptManager),
     );
   }
 }
 
 /// 响应式脚本创建对话框
 class _ReactiveScriptCreateDialog extends StatefulWidget {
-  final ReactiveScriptManager scriptManager;
+  final NewReactiveScriptManager scriptManager;
 
   const _ReactiveScriptCreateDialog({required this.scriptManager});
 

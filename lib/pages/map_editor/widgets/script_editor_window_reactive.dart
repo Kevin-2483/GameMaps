@@ -3,14 +3,14 @@ import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:highlight/languages/dart.dart';
-import '../../../data/reactive_script_manager.dart';
+import '../../../data/new_reactive_script_manager.dart';
 import '../../../models/script_data.dart';
 
 /// 响应式脚本编辑器窗口
-/// 基于响应式脚本管理器的脚本编辑器
+/// 基于新的异步响应式脚本管理器的脚本编辑器
 class ReactiveScriptEditorWindow extends StatefulWidget {
   final ScriptData script;
-  final ReactiveScriptManager scriptManager;
+  final NewReactiveScriptManager scriptManager;
   final VoidCallback? onClose;
 
   const ReactiveScriptEditorWindow({
@@ -272,20 +272,42 @@ class _ReactiveScriptEditorWindowState
                     icon: const Icon(Icons.vertical_align_bottom),
                     tooltip: '跳转到底部',
                     iconSize: 20,
-                  ),
-                  const SizedBox(width: 8),
+                  ),                  const SizedBox(width: 8),
                   FilledButton.tonal(
-                    onPressed: () {
-                      // 运行脚本 - 使用响应式脚本管理器
+                    onPressed: widget.script.isEnabled ? () {
+                      // 运行脚本 - 使用新的响应式脚本管理器
                       widget.scriptManager.executeScript(widget.script.id);
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.play_arrow, size: 16),
-                        SizedBox(width: 4),
-                        Text('运行'),
-                      ],
+                    } : null,
+                    child: ListenableBuilder(
+                      listenable: widget.scriptManager,
+                      builder: (context, child) {
+                        final status = widget.scriptManager.getScriptStatus(widget.script.id);
+                        final isRunning = status == ScriptStatus.running;
+                        
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isRunning) ...[
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text('执行中'),
+                            ] else ...[
+                              const Icon(Icons.play_arrow, size: 16),
+                              const SizedBox(width: 4),
+                              const Text('运行'),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],

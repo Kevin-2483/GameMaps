@@ -9,6 +9,7 @@ import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../utils/throttle_manager.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
+import 'new_reactive_script_manager.dart';
 import 'reactive_script_manager.dart';
 import 'map_editor_integration_adapter.dart';
 
@@ -35,6 +36,7 @@ import 'map_editor_integration_adapter.dart';
 class MapEditorReactiveIntegration with ThrottleMixin {
   late final MapDataBloc _mapDataBloc;
   late final ReactiveScriptManager _scriptManager;
+  late final NewReactiveScriptManager _newScriptManager;
   late final MapEditorIntegrationAdapter _adapter;
   late final VfsMapService _mapService;
 
@@ -45,6 +47,9 @@ class MapEditorReactiveIntegration with ThrottleMixin {
 
   /// 获取脚本管理器
   ReactiveScriptManager get scriptManager => _scriptManager;
+
+  /// 获取新的脚本管理器
+  NewReactiveScriptManager get newScriptManager => _newScriptManager;
 
   /// 获取集成适配器
   MapEditorIntegrationAdapter get adapter => _adapter;
@@ -57,20 +62,22 @@ class MapEditorReactiveIntegration with ThrottleMixin {
     _mapService = VfsMapServiceFactory.createVfsMapService();
 
     // 2. 创建地图数据Bloc
-    _mapDataBloc = MapDataBloc(mapService: _mapService);
-
-    // 3. 创建响应式脚本管理器
+    _mapDataBloc = MapDataBloc(mapService: _mapService);    // 3. 创建响应式脚本管理器
     _scriptManager = ReactiveScriptManager(mapDataBloc: _mapDataBloc);
 
-    // 4. 创建集成适配器
+    // 4. 创建新的响应式脚本管理器
+    _newScriptManager = NewReactiveScriptManager(mapDataBloc: _mapDataBloc);
+
+    // 5. 创建集成适配器
     _adapter = MapEditorIntegrationAdapter(
       mapDataBloc: _mapDataBloc,
       scriptManager: _scriptManager,
       mapService: _mapService,
     );
 
-    // 5. 初始化脚本管理器
+    // 6. 初始化脚本管理器
     await _scriptManager.initialize();
+    await _newScriptManager.initialize();
 
     _isInitialized = true;
     debugPrint('响应式系统初始化完成');
@@ -265,10 +272,13 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   void deleteLegendGroupReactive(String legendGroupId) {
     reactiveIntegration.adapter.deleteLegendGroup(legendGroupId);
   }
-
   /// 获取响应式脚本管理器
   ReactiveScriptManager get reactiveScriptManager =>
       reactiveIntegration.scriptManager;
+
+  /// 获取新的响应式脚本管理器
+  NewReactiveScriptManager get newReactiveScriptManager =>
+      reactiveIntegration.newScriptManager;
 
   /// 保存地图数据（响应式）
   Future<void> saveMapDataReactive({bool forceUpdate = false}) async {

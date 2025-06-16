@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../models/script_data.dart';
-import '../../../data/reactive_script_manager.dart';
+import '../../../data/new_reactive_script_manager.dart';
 import 'script_editor_window_reactive.dart';
 
 /// 响应式脚本管理面板
-/// 使用新的响应式脚本管理器
+/// 使用新的异步响应式脚本管理器
 class ReactiveScriptPanel extends StatefulWidget {
-  final ReactiveScriptManager scriptManager;
+  final NewReactiveScriptManager scriptManager;
   final VoidCallback? onNewScript;
 
   const ReactiveScriptPanel({
@@ -36,8 +37,253 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildSystemStatusHeader(),
           _buildTypeSelector(),
           Expanded(child: _buildScriptList()),
+        ],
+      ),
+    );
+  }
+
+  /// 构建系统状态头部
+  Widget _buildSystemStatusHeader() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+      ),
+      child: ListenableBuilder(
+        listenable: widget.scriptManager,
+        builder: (context, child) {
+          return Row(
+            children: [
+              // 脚本引擎状态指示器
+              _buildEngineStatusIndicator(),
+              const SizedBox(width: 12),
+              
+              // 脚本统计信息
+              Expanded(child: _buildScriptStats()),
+              
+              // 系统控制按钮
+              _buildSystemControls(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 构建引擎状态指示器
+  Widget _buildEngineStatusIndicator() {
+    final hasMapData = widget.scriptManager.hasMapData;
+    final isWeb = kIsWeb;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: hasMapData ? Colors.green : Colors.orange,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '脚本引擎',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              isWeb ? 'Web Worker' : 'Isolate',
+              style: TextStyle(
+                fontSize: 8,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 构建脚本统计信息
+  Widget _buildScriptStats() {
+    final scripts = widget.scriptManager.scripts;
+    final statuses = widget.scriptManager.scriptStatuses;
+    
+    final runningCount = statuses.values.where((s) => s == ScriptStatus.running).length;
+    final enabledCount = scripts.where((s) => s.isEnabled).length;
+    final totalCount = scripts.length;
+
+    return Row(
+      children: [
+        _buildStatChip(
+          label: '总数',
+          value: '$totalCount',
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: 6),
+        _buildStatChip(
+          label: '启用',
+          value: '$enabledCount',
+          color: Colors.green,
+        ),
+        const SizedBox(width: 6),
+        if (runningCount > 0)
+          _buildStatChip(
+            label: '运行中',
+            value: '$runningCount',
+            color: Colors.orange,
+            isAnimated: true,
+          ),
+      ],
+    );
+  }
+
+  /// 构建统计芯片
+  Widget _buildStatChip({
+    required String label,
+    required String value,
+    required Color color,
+    bool isAnimated = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isAnimated) ...[
+            SizedBox(
+              width: 8,
+              height: 8,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            '$label: $value',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建系统控制按钮
+  Widget _buildSystemControls() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 刷新按钮
+        IconButton(
+          onPressed: () {
+            setState(() {
+              // 触发重新构建以刷新状态
+            });
+          },
+          icon: const Icon(Icons.refresh, size: 16),
+          tooltip: '刷新状态',
+          style: IconButton.styleFrom(
+            minimumSize: const Size(24, 24),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+        // 日志按钮
+        IconButton(
+          onPressed: _showExecutionLogs,
+          icon: const Icon(Icons.list_alt, size: 16),
+          tooltip: '查看执行日志',
+          style: IconButton.styleFrom(
+            minimumSize: const Size(24, 24),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+        // 新建脚本按钮
+        IconButton(
+          onPressed: _showNewScriptDialog,
+          icon: const Icon(Icons.add, size: 16),
+          tooltip: '新建脚本',
+          style: IconButton.styleFrom(
+            minimumSize: const Size(24, 24),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 显示执行日志
+  void _showExecutionLogs() {
+    final logs = widget.scriptManager.getExecutionLogs();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('脚本执行日志'),
+        content: SizedBox(
+          width: 500,
+          height: 400,
+          child: logs.isEmpty
+              ? const Center(
+                  child: Text('暂无执行日志'),
+                )
+              : ListView.builder(
+                  itemCount: logs.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        logs[index],
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              widget.scriptManager.clearExecutionLogs();
+              Navigator.of(context).pop();
+            },
+            child: const Text('清空日志'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
         ],
       ),
     );
@@ -141,8 +387,8 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
 
   Widget _buildScriptCard(ScriptData script) {
     final isSelected = _selectedScriptId == script.id;
-    final status =
-        widget.scriptManager.scriptStatuses[script.id] ?? ScriptStatus.idle;
+    final status = widget.scriptManager.getScriptStatus(script.id);
+    final lastResult = widget.scriptManager.getLastResult(script.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -170,20 +416,37 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 主要信息行
               Row(
                 children: [
-                  _buildStatusIcon(status),
-                  const SizedBox(width: 6),
+                  _buildAdvancedStatusIndicator(status, lastResult),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      script.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          script.name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (status == ScriptStatus.running) ...[
+                          const SizedBox(height: 2),
+                          _buildRunningIndicator(),
+                        ] else if (lastResult != null) ...[
+                          const SizedBox(height: 2),
+                          _buildLastExecutionInfo(lastResult),
+                        ],
+                      ],
                     ),
                   ),
+                  // 执行控制按钮
+                  _buildExecutionControls(script, status),
+                  const SizedBox(width: 8),
+                  // 启用/禁用开关
                   Switch(
                     value: script.isEnabled,
                     onChanged: (value) {
@@ -193,8 +456,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                   ),
                 ],
               ),
+              
+              // 描述信息
               if (script.description.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   script.description,
                   style: TextStyle(
@@ -205,6 +470,14 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+              
+              // 执行结果详情（仅在选中时显示）
+              if (isSelected && lastResult != null) ...[
+                const SizedBox(height: 8),
+                _buildExecutionResultDetails(lastResult),
+              ],
+              
+              // 操作按钮（仅在选中时显示）
               if (isSelected) ...[
                 const SizedBox(height: 8),
                 _buildScriptActions(script),
@@ -216,28 +489,217 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     );
   }
 
-  Widget _buildStatusIcon(ScriptStatus status) {
+  /// 构建高级状态指示器
+  Widget _buildAdvancedStatusIndicator(ScriptStatus status, ScriptExecutionResult? lastResult) {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _getStatusColor(status).withOpacity(0.2),
+        border: Border.all(
+          color: _getStatusColor(status),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: status == ScriptStatus.running
+            ? SizedBox(
+                width: 10,
+                height: 10,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(_getStatusColor(status)),
+                ),
+              )
+            : Icon(
+                _getStatusIcon(status, lastResult),
+                size: 12,
+                color: _getStatusColor(status),
+              ),
+      ),
+    );
+  }
+
+  /// 构建运行中指示器
+  Widget _buildRunningIndicator() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 8,
+          height: 8,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '执行中...',
+          style: TextStyle(
+            fontSize: 9,
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建最后执行信息
+  Widget _buildLastExecutionInfo(ScriptExecutionResult result) {
+    return Row(
+      children: [
+        Icon(
+          result.success ? Icons.check_circle : Icons.error_outline,
+          size: 10,
+          color: result.success ? Colors.green : Colors.red,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          result.success 
+              ? '执行成功 (${result.executionTime.inMilliseconds}ms)'
+              : '执行失败',
+          style: TextStyle(
+            fontSize: 9,
+            color: result.success ? Colors.green : Colors.red,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建执行控制按钮
+  Widget _buildExecutionControls(ScriptData script, ScriptStatus status) {
+    if (status == ScriptStatus.running) {
+      return IconButton(
+        onPressed: () => widget.scriptManager.stopScript(script.id),
+        icon: const Icon(Icons.stop_circle, size: 18),
+        tooltip: '停止执行',
+        style: IconButton.styleFrom(
+          foregroundColor: Colors.red,
+          minimumSize: const Size(24, 24),
+          padding: EdgeInsets.zero,
+        ),
+      );
+    } else {
+      return IconButton(
+        onPressed: script.isEnabled ? () => _executeScript(script) : null,
+        icon: const Icon(Icons.play_circle, size: 18),
+        tooltip: '执行脚本',
+        style: IconButton.styleFrom(
+          foregroundColor: script.isEnabled 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).disabledColor,
+          minimumSize: const Size(24, 24),
+          padding: EdgeInsets.zero,
+        ),
+      );
+    }
+  }
+
+  /// 构建执行结果详情
+  Widget _buildExecutionResultDetails(ScriptExecutionResult result) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: result.success 
+            ? Colors.green.withOpacity(0.1) 
+            : Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: result.success ? Colors.green : Colors.red,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                result.success ? Icons.check_circle : Icons.error,
+                size: 14,
+                color: result.success ? Colors.green : Colors.red,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                result.success ? '执行成功' : '执行失败',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: result.success ? Colors.green : Colors.red,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${result.executionTime.inMilliseconds}ms',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: result.success ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          if (!result.success && result.error != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              result.error!,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.red,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (result.success && result.result != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '返回值: ${result.result}',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.green,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 获取状态颜色
+  Color _getStatusColor(ScriptStatus status) {
     switch (status) {
       case ScriptStatus.idle:
-        return Icon(Icons.circle, size: 8, color: Colors.grey.shade400);
+        return Colors.grey;
       case ScriptStatus.running:
-        return Icon(
-          Icons.play_circle,
-          size: 8,
-          color: Theme.of(context).colorScheme.primary,
-        );
+        return Theme.of(context).colorScheme.primary;
       case ScriptStatus.paused:
-        return Icon(
-          Icons.pause_circle,
-          size: 8,
-          color: Theme.of(context).colorScheme.tertiary,
-        );
+        return Colors.orange;
       case ScriptStatus.error:
-        return Icon(
-          Icons.error,
-          size: 8,
-          color: Theme.of(context).colorScheme.error,
-        );
+        return Colors.red;
+    }
+  }
+
+  /// 获取状态图标
+  IconData _getStatusIcon(ScriptStatus status, ScriptExecutionResult? lastResult) {
+    switch (status) {
+      case ScriptStatus.idle:
+        if (lastResult != null) {
+          return lastResult.success ? Icons.check : Icons.error;
+        }
+        return Icons.circle;
+      case ScriptStatus.running:
+        return Icons.play_arrow;
+      case ScriptStatus.paused:
+        return Icons.pause;
+      case ScriptStatus.error:
+        return Icons.error;
     }
   }
 
@@ -438,7 +900,7 @@ log('总计: ' + totalElements.toString() + ' 个元素');''';
 /// 响应式脚本编辑对话框
 class _ReactiveScriptEditDialog extends StatefulWidget {
   final ScriptType type;
-  final ReactiveScriptManager scriptManager;
+  final NewReactiveScriptManager scriptManager;
   final Function(ScriptData) onSaved;
 
   const _ReactiveScriptEditDialog({
