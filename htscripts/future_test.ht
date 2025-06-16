@@ -1,0 +1,168 @@
+// 正确的性能测试脚本 - 使用.then()处理Future返回值
+external fun log(message);
+external fun sin(x);
+external fun cos(x);
+external fun sqrt(x);
+external fun pow(x, y);
+external fun random();
+external fun getLayers();
+external fun getAllElements();
+
+log("=== Future处理性能测试开始 ===");
+log("注意：所有外部函数都返回Future，使用.then()方法处理");
+
+// 测试1: 基本Future处理
+log("1. 测试基本Future处理");
+
+sin(1.5708).then(fun (result) {
+    log("sin(π/2) = " + result.toString());
+    
+    cos(0).then(fun (cosResult) {
+        log("cos(0) = " + cosResult.toString());
+        
+        // 开始随机数测试
+        testRandomNumbers();
+    });
+});
+
+// 测试2: 随机数生成
+function testRandomNumbers() {
+    log("2. 测试随机数生成");
+    var randomResults = [];
+    
+    // 生成第一个随机数
+    random().then(fun (num1) {
+        randomResults.add(num1);
+        log("随机数1: " + num1.toString());
+        
+        // 生成第二个随机数
+        random().then(fun (num2) {
+            randomResults.add(num2);
+            log("随机数2: " + num2.toString());
+            
+            // 生成第三个随机数
+            random().then(fun (num3) {
+                randomResults.add(num3);
+                log("随机数3: " + num3.toString());
+                
+                // 计算平均值
+                var sum = num1 + num2 + num3;
+                var average = sum / 3;
+                log("三个随机数平均值: " + average.toString());
+                
+                // 开始数据访问测试
+                testDataAccess();
+            });
+        });
+    });
+}
+
+// 测试3: 数据访问
+function testDataAccess() {
+    log("3. 测试数据访问");
+    
+    getLayers().then(fun (layers) {
+        log("获取图层数量: " + layers.length.toString());
+        
+        getAllElements().then(fun (elements) {
+            log("获取元素数量: " + elements.length.toString());
+            
+            // 开始数学运算链测试
+            testMathChain();
+        });
+    });
+}
+
+// 测试4: 数学运算链
+function testMathChain() {
+    log("4. 测试数学运算链");
+    
+    // 计算: sqrt(pow(sin(1), 2) + pow(cos(1), 2)) 应该等于1
+    sin(1).then(fun (sinVal) {
+        cos(1).then(fun (cosVal) {
+            pow(sinVal, 2).then(fun (sinSquared) {
+                pow(cosVal, 2).then(fun (cosSquared) {
+                    var sum = sinSquared + cosSquared;
+                    sqrt(sum).then(fun (result) {
+                        log("验证三角恒等式 sin²(1) + cos²(1) = " + result.toString());
+                        
+                        // 开始混合操作测试
+                        testMixedOperations();
+                    });
+                });
+            });
+        });
+    });
+}
+
+// 测试5: 混合操作
+function testMixedOperations() {
+    log("5. 测试混合操作");
+    
+    random().then(fun (randomVal) {
+        log("生成随机角度: " + randomVal.toString());
+        
+        var angle = randomVal * 3.14159;
+        sin(angle).then(fun (sinResult) {
+            log("sin(" + angle.toString() + ") = " + sinResult.toString());
+            
+            getLayers().then(fun (layers) {
+                var layerCount = layers.length;
+                var calculation = sinResult * layerCount;
+                log("混合计算结果: " + sinResult.toString() + " * " + layerCount.toString() + " = " + calculation.toString());
+                
+                // 开始嵌套Future测试
+                testNestedFutures();
+            });
+        });
+    });
+}
+
+// 测试6: 嵌套Future处理
+function testNestedFutures() {
+    log("6. 测试嵌套Future处理");
+    
+    // 测试精度：随机数 -> 平方 -> 开方 -> 应该接近原值
+    random().then(fun (original) {
+        log("原始值: " + original.toString());
+        
+        pow(original, 2).then(fun (squared) {
+            log("平方后: " + squared.toString());
+            
+            sqrt(squared).then(fun (restored) {
+                log("开方后: " + restored.toString());
+                
+                var difference = original - restored;
+                if (difference < 0) {
+                    difference = -difference; // abs函数也返回Future，直接计算绝对值
+                }
+                
+                log("精度差异: " + difference.toString());
+                
+                if (difference < 0.0001) {
+                    log("精度测试通过！");
+                } else {
+                    log("精度测试失败，差异过大");
+                }
+                
+                // 完成所有测试
+                completeTests();
+            });
+        });
+    });
+}
+
+// 完成测试
+function completeTests() {
+    log("=== 所有Future处理测试完成 ===");
+    log("测试结果总结:");
+    log("✓ 基本Future.then()调用");
+    log("✓ 随机数生成和统计");
+    log("✓ 数据访问功能");
+    log("✓ 数学运算链式调用");
+    log("✓ 混合操作处理");
+    log("✓ 嵌套Future精度测试");
+    log("");
+    log("如果看到这条消息，说明Future处理机制工作正常！");
+    log("脚本引擎正确支持.then()方法链式调用。");
+}

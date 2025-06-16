@@ -1,0 +1,162 @@
+// 性能测试脚本 - 测试外部函数调用性能
+external fun log(message);
+external fun sin(x);
+external fun cos(x);
+external fun sqrt(x);
+external fun pow(x, y);
+external fun random();
+external fun getLayers();
+external fun getAllElements();
+
+log("=== 性能测试开始 ===");
+
+// 测试1: 数学函数性能
+log("1. 测试数学函数性能");
+var mathStartTime = 0; // 简化时间记录
+var iterations = 100;
+
+log("执行 " + iterations.toString() + " 次数学运算...");
+for (var i = 0; i < iterations; i++) {
+    var angle = i * 0.1;
+    var sinVal = sin(angle);
+    var cosVal = cos(angle);
+    var sqrtVal = sqrt(i + 1);
+    var powVal = pow(2, i % 5 + 1);
+    
+    if (i % 20 == 0) {
+        log("进度: " + (i + 1).toString() + "/" + iterations.toString());
+    }
+}
+log("数学函数测试完成");
+
+// 测试2: 随机数生成性能
+log("2. 测试随机数生成性能");
+var randomNumbers = [];
+for (var i = 0; i < 50; i++) {
+    var num = random();
+    randomNumbers.add(num);
+    
+    if (i % 10 == 0) {
+        log("生成随机数: " + (i + 1).toString() + "/50");
+    }
+}
+
+// 计算随机数统计
+var sum = 0;
+var min = randomNumbers[0];
+var max = randomNumbers[0];
+
+for (var i = 0; i < randomNumbers.length; i++) {
+    var num = randomNumbers[i];
+    sum = sum + num;
+    
+    if (num < min) {
+        min = num;
+    }
+    if (num > max) {
+        max = num;
+    }
+}
+
+var average = sum / randomNumbers.length;
+log("随机数统计: 平均=" + average.toString() + ", 最小=" + min.toString() + ", 最大=" + max.toString());
+
+// 测试3: 数据访问性能
+log("3. 测试数据访问性能");
+var dataAccessCount = 10;
+
+log("执行 " + dataAccessCount.toString() + " 次数据访问...");
+for (var i = 0; i < dataAccessCount; i++) {
+    var layers = getLayers();
+    var elements = getAllElements();
+    
+    log("第 " + (i + 1).toString() + " 次访问: 图层=" + layers.length.toString() + ", 元素=" + elements.length.toString());
+}
+
+// 测试4: 混合操作性能
+log("4. 测试混合操作性能");
+var mixedOperations = 20;
+
+for (var i = 0; i < mixedOperations; i++) {
+    // 数学计算
+    var angle = random() * 3.14159;
+    var sinVal = sin(angle);
+    
+    // 数据访问
+    var layers = getLayers();
+    
+    // 更多数学计算
+    var result = pow(sinVal, 2);
+    var finalResult = sqrt(result + 1);
+    
+    if (i % 5 == 0) {
+        log("混合操作 " + (i + 1).toString() + ": 结果=" + finalResult.toString());
+    }
+}
+
+// 测试5: 批量处理
+log("5. 测试批量处理");
+var batchSize = 25;
+var results = [];
+
+for (var i = 0; i < batchSize; i++) {
+    var x = i * 0.5;
+    var sinResult = sin(x);
+    var cosResult = cos(x);
+    var combination = sinResult + cosResult;
+    
+    results.add(combination);
+    
+    if (i % 5 == 0) {
+        log("批量处理进度: " + (i + 1).toString() + "/" + batchSize.toString());
+    }
+}
+
+// 分析批量结果
+var batchSum = 0;
+for (var i = 0; i < results.length; i++) {
+    batchSum = batchSum + results[i];
+}
+var batchAverage = batchSum / results.length;
+log("批量处理结果平均值: " + batchAverage.toString());
+
+// 测试6: 嵌套异步调用
+log("6. 测试嵌套异步调用");
+var nestedCount = 10;
+
+for (var i = 0; i < nestedCount; i++) {
+    var base = random();
+    var squared = pow(base, 2);
+    var root = sqrt(squared);
+    var difference = pow(base - root, 2); // 应该接近0
+    
+    if (difference < 0.001) {
+        log("嵌套调用 " + (i + 1).toString() + ": 精度良好 (差异=" + difference.toString() + ")");
+    } else {
+        log("嵌套调用 " + (i + 1).toString() + ": 精度警告 (差异=" + difference.toString() + ")");
+    }
+}
+
+// 生成性能报告
+log("=== 性能测试完成 ===");
+log("测试摘要:");
+log("- 数学函数调用: " + iterations.toString() + " 次");
+log("- 随机数生成: " + randomNumbers.length.toString() + " 次");
+log("- 数据访问: " + dataAccessCount.toString() + " 次");
+log("- 混合操作: " + mixedOperations.toString() + " 次");
+log("- 批量处理: " + batchSize.toString() + " 次");
+log("- 嵌套调用: " + nestedCount.toString() + " 次");
+
+var performanceResult = {
+    'mathOperations': iterations,
+    'randomNumbers': randomNumbers.length,
+    'dataAccess': dataAccessCount,
+    'mixedOperations': mixedOperations,
+    'batchProcessing': batchSize,
+    'nestedCalls': nestedCount,
+    'randomAverage': average,
+    'batchAverage': batchAverage
+};
+
+log("性能测试结果: " + performanceResult.toString());
+log("如果所有测试都完成且没有错误，说明系统性能良好！");

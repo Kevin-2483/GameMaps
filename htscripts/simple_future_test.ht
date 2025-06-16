@@ -1,0 +1,54 @@
+// 最佳实践版本
+external fun log
+external fun sin  
+external fun random
+external fun getLayers
+
+fun logMessage(message: str) {
+    log(message)
+}
+
+fun handleFutureOrValue(value, callback) {
+    if (value is Future) {
+        value.then(callback)
+    } else {
+        callback(value)
+    }
+}
+
+fun runTests() {
+    logMessage('=== 简单Future测试开始 ===')
+    
+    // 测试1: 数学函数
+    logMessage('1. 测试sin函数')
+    var sinResult = sin(1.5708)
+    
+    handleFutureOrValue(sinResult, (result) {
+        logMessage('sin(π/2) = ${result}')
+        
+        // 测试2: 随机数
+        logMessage('2. 测试随机数生成')  
+        var randomResult = random()
+        
+        handleFutureOrValue(randomResult, (num) {
+            logMessage('随机数: ${num}')
+            
+            // 测试3: 数据访问
+            logMessage('3. 测试数据访问')
+            var layersResult = getLayers()
+            
+            handleFutureOrValue(layersResult, (layers) {
+                if (layers != null && layers.length != null) {
+                    logMessage('图层数量: ${layers.length}')
+                } else {
+                    logMessage('无法获取图层信息')
+                }
+                logMessage('=== 所有测试完成 ===')
+            })
+        })
+    })
+}
+
+// 启动测试
+runTests()
+logMessage('脚本开始执行，等待异步结果...')
