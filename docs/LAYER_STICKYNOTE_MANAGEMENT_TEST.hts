@@ -1,0 +1,390 @@
+// 图层和便签管理脚本示例
+// 展示如何使用新增的图层和便签更新函数
+
+print('=== 图层和便签管理功能测试 ===');
+
+// 1. 图层管理测试
+print('');
+print('=== 图层管理测试 ===');
+
+// 1.1 获取所有图层
+var allLayers = getLayers();
+print('当前图层数量: ' + allLayers.length);
+
+if (allLayers.length > 0) {
+  // 显示图层信息
+  for (var i = 0; i < allLayers.length; i = i + 1) {
+    var layer = allLayers[i];
+    print('图层 ' + (i + 1) + ':');
+    print('  ID: ' + layer.id);
+    print('  名称: ' + layer.name);
+    print('  可见: ' + (layer.isVisible ? '是' : '否'));
+    print('  透明度: ' + (layer.opacity * 100).toFixed(0) + '%');
+    print('  顺序: ' + layer.order);
+    print('  元素数量: ' + layer.elements.length);
+    
+    if (layer.tags && layer.tags.length > 0) {
+      print('  标签: ' + layer.tags.join(', '));
+    }
+    print('');
+  }
+
+  // 1.2 测试图层属性更新
+  var firstLayer = allLayers[0];
+  print('测试图层: ' + firstLayer.name);
+  
+  // 更新图层名称
+  print('更新图层名称...');
+  var nameResult = updateLayerName(firstLayer.id, firstLayer.name + ' (脚本修改)');
+  if (nameResult) {
+    print('✓ 图层名称更新成功');
+  }
+  
+  // 切换图层可见性
+  print('切换图层可见性...');
+  var visibilityResult = updateLayerVisibility(firstLayer.id, !firstLayer.isVisible);
+  if (visibilityResult) {
+    print('✓ 图层可见性切换成功');
+  }
+  
+  // 设置图层透明度
+  print('设置图层透明度为 85%...');
+  var opacityResult = updateLayerOpacity(firstLayer.id, 0.85);
+  if (opacityResult) {
+    print('✓ 图层透明度设置成功');
+  }
+  
+  // 修改图层顺序
+  print('修改图层顺序...');
+  var orderResult = updateLayerOrder(firstLayer.id, firstLayer.order + 1);
+  if (orderResult) {
+    print('✓ 图层顺序修改成功');
+  }
+  
+  // 综合属性更新
+  print('图层综合属性更新...');
+  var updateResult = updateLayer(firstLayer.id, {
+    'name': '重要图层 (脚本管理)',
+    'isVisible': true,
+    'opacity': 0.9,
+    'tags': ['脚本', '重要', '自动化']
+  });
+  if (updateResult) {
+    print('✓ 图层综合属性更新成功');
+  }
+}
+
+// 1.3 图层过滤测试
+print('');
+print('=== 图层过滤测试 ===');
+
+// 获取可见图层
+var visibleLayers = getVisibleLayers();
+print('可见图层数量: ' + visibleLayers.length + '/' + allLayers.length);
+
+// 标签过滤测试
+var importantLayers = filterLayersByTags('重要', 'contains');
+print('重要图层数量: ' + importantLayers.length);
+
+var scriptLayers = filterLayersByTags('脚本', 'contains');
+print('脚本标签图层数量: ' + scriptLayers.length);
+
+var exactLayers = filterLayersByTags(['脚本', '重要'], 'exact');
+print('完全匹配图层数量: ' + exactLayers.length);
+
+// 2. 便签管理测试
+print('');
+print('=== 便签管理测试 ===');
+
+// 2.1 获取所有便签
+var allNotes = getStickyNotes();
+print('当前便签数量: ' + allNotes.length);
+
+if (allNotes.length > 0) {
+  // 显示便签信息
+  for (var i = 0; i < allNotes.length; i = i + 1) {
+    var note = allNotes[i];
+    print('便签 ' + (i + 1) + ':');
+    print('  ID: ' + note.id);
+    print('  标题: ' + note.title);
+    print('  内容: ' + note.content.substring(0, Math.min(30, note.content.length)) + (note.content.length > 30 ? '...' : ''));
+    print('  可见: ' + (note.isVisible ? '是' : '否'));
+    print('  折叠: ' + (note.isCollapsed ? '是' : '否'));
+    print('  透明度: ' + (note.opacity * 100).toFixed(0) + '%');
+    print('  位置: (' + note.position.x.toFixed(1) + ', ' + note.position.y.toFixed(1) + ')');
+    print('  大小: ' + note.size.width.toFixed(0) + 'x' + note.size.height.toFixed(0));
+    print('  背景色: #' + note.backgroundColor.toString(16).padStart(8, '0'));
+    
+    if (note.tags && note.tags.length > 0) {
+      print('  标签: ' + note.tags.join(', '));
+    }
+    print('');
+  }
+
+  // 2.2 测试便签属性更新
+  var firstNote = allNotes[0];
+  print('测试便签: ' + firstNote.title);
+  
+  // 更新便签标题
+  print('更新便签标题...');
+  var titleResult = updateStickyNoteTitle(firstNote.id, firstNote.title + ' (脚本修改)');
+  if (titleResult) {
+    print('✓ 便签标题更新成功');
+  }
+  
+  // 更新便签内容
+  print('更新便签内容...');
+  var contentResult = updateStickyNoteContent(firstNote.id, firstNote.content + '\n\n[脚本自动添加的内容]');
+  if (contentResult) {
+    print('✓ 便签内容更新成功');
+  }
+  
+  // 切换便签可见性
+  print('切换便签可见性...');
+  var noteVisibilityResult = updateStickyNoteVisibility(firstNote.id, !firstNote.isVisible);
+  if (noteVisibilityResult) {
+    print('✓ 便签可见性切换成功');
+  }
+  
+  // 设置便签透明度
+  print('设置便签透明度为 80%...');
+  var noteOpacityResult = updateStickyNoteOpacity(firstNote.id, 0.8);
+  if (noteOpacityResult) {
+    print('✓ 便签透明度设置成功');
+  }
+  
+  // 移动便签位置
+  print('移动便签位置...');
+  var positionResult = updateStickyNotePosition(firstNote.id, firstNote.position.x + 50, firstNote.position.y + 30);
+  if (positionResult) {
+    print('✓ 便签位置更新成功');
+  }
+  
+  // 调整便签大小
+  print('调整便签大小...');
+  var sizeResult = updateStickyNoteSize(firstNote.id, firstNote.size.width * 1.2, firstNote.size.height * 1.1);
+  if (sizeResult) {
+    print('✓ 便签大小调整成功');
+  }
+  
+  // 更新便签颜色
+  print('更新便签颜色...');
+  
+  // 设置背景色为浅蓝色
+  var bgColorResult = updateStickyNoteBackgroundColor(firstNote.id, 0xFFE3F2FD);
+  if (bgColorResult) {
+    print('✓ 便签背景色更新成功');
+  }
+  
+  // 设置标题栏颜色为深蓝色
+  var titleColorResult = updateStickyNoteTitleBarColor(firstNote.id, 0xFF1976D2);
+  if (titleColorResult) {
+    print('✓ 便签标题栏颜色更新成功');
+  }
+  
+  // 设置文字颜色为深色
+  var textColorResult = updateStickyNoteTextColor(firstNote.id, 0xFF212121);
+  if (textColorResult) {
+    print('✓ 便签文字颜色更新成功');
+  }
+  
+  // 批量设置所有颜色
+  print('批量设置便签颜色主题...');
+  var colorsResult = updateStickyNoteColors(firstNote.id, 0xFFFFF3E0, 0xFFFF9800, 0xFF3E2723); // 橙色主题
+  if (colorsResult) {
+    print('✓ 便签颜色主题设置成功');
+  }
+  
+  // 折叠/展开便签
+  print('切换便签折叠状态...');
+  var collapseResult = collapseStickyNote(firstNote.id, !firstNote.isCollapsed);
+  if (collapseResult) {
+    print('✓ 便签折叠状态切换成功');
+  }
+  
+  // 综合属性更新
+  print('便签综合属性更新...');
+  var noteUpdateResult = updateStickyNote(firstNote.id, {
+    'title': '智能便签 (脚本管理)',
+    'content': '这是通过脚本管理的智能便签\n\n功能包括:\n- 自动颜色调整\n- 智能定位\n- 标签管理',
+    'position': {'x': 100, 'y': 100},
+    'size': {'width': 250, 'height': 180},
+    'opacity': 0.95,
+    'isVisible': true,
+    'isCollapsed': false,
+    'backgroundColor': 0xFFF1F8E9,  // 浅绿色
+    'titleBarColor': 0xFF4CAF50,   // 绿色
+    'textColor': 0xFF1B5E20,       // 深绿色
+    'tags': ['智能', '脚本', '自动化', '管理']
+  });
+  if (noteUpdateResult) {
+    print('✓ 便签综合属性更新成功');
+  }
+}
+
+// 2.3 便签过滤测试
+print('');
+print('=== 便签过滤测试 ===');
+
+// 获取可见便签
+var visibleNotes = getVisibleStickyNotes();
+print('可见便签数量: ' + visibleNotes.length + '/' + allNotes.length);
+
+// 标签过滤测试
+var smartNotes = filterStickyNotesByTags('智能', 'contains');
+print('智能便签数量: ' + smartNotes.length);
+
+var scriptNotes = filterStickyNotesByTags('脚本', 'contains');
+print('脚本标签便签数量: ' + scriptNotes.length);
+
+// 3. 批量操作示例
+print('');
+print('=== 批量操作示例 ===');
+
+// 3.1 批量显示所有图层
+print('批量显示所有图层...');
+var layerShowCount = 0;
+for (var i = 0; i < allLayers.length; i = i + 1) {
+  var layer = allLayers[i];
+  if (!layer.isVisible) {
+    var result = updateLayerVisibility(layer.id, true);
+    if (result) layerShowCount = layerShowCount + 1;
+  }
+}
+print('显示了 ' + layerShowCount + ' 个隐藏图层');
+
+// 3.2 批量调整图层透明度
+print('批量调整图层透明度...');
+var layerOpacityCount = 0;
+for (var i = 0; i < allLayers.length; i = i + 1) {
+  var layer = allLayers[i];
+  if (layer.opacity < 0.9) {
+    var result = updateLayerOpacity(layer.id, 0.9);
+    if (result) layerOpacityCount = layerOpacityCount + 1;
+  }
+}
+print('调整了 ' + layerOpacityCount + ' 个图层的透明度');
+
+// 3.3 批量显示所有便签
+print('批量显示所有便签...');
+var noteShowCount = 0;
+for (var i = 0; i < allNotes.length; i = i + 1) {
+  var note = allNotes[i];
+  if (!note.isVisible) {
+    var result = updateStickyNoteVisibility(note.id, true);
+    if (result) noteShowCount = noteShowCount + 1;
+  }
+}
+print('显示了 ' + noteShowCount + ' 个隐藏便签');
+
+// 3.4 批量优化便签透明度
+print('批量优化便签透明度...');
+var noteOpacityCount = 0;
+for (var i = 0; i < allNotes.length; i = i + 1) {
+  var note = allNotes[i];
+  if (note.opacity < 0.85) {
+    var result = updateStickyNoteOpacity(note.id, 0.85);
+    if (result) noteOpacityCount = noteOpacityCount + 1;
+  }
+}
+print('优化了 ' + noteOpacityCount + ' 个便签的透明度');
+
+// 4. 智能主题应用
+print('');
+print('=== 智能主题应用 ===');
+
+// 4.1 应用蓝色主题到重要便签
+var importantNotes = filterStickyNotesByTags('重要', 'contains');
+var blueThemeCount = 0;
+
+for (var i = 0; i < importantNotes.length; i = i + 1) {
+  var note = importantNotes[i];
+  var result = updateStickyNoteColors(note.id, 0xFFE3F2FD, 0xFF1976D2, 0xFF0D47A1); // 蓝色主题
+  if (result) blueThemeCount = blueThemeCount + 1;
+}
+print('应用蓝色主题到 ' + blueThemeCount + ' 个重要便签');
+
+// 4.2 应用绿色主题到完成便签
+var completedNotes = filterStickyNotesByTags('完成', 'contains');
+var greenThemeCount = 0;
+
+for (var i = 0; i < completedNotes.length; i = i + 1) {
+  var note = completedNotes[i];
+  var result = updateStickyNoteColors(note.id, 0xFFE8F5E8, 0xFF4CAF50, 0xFF1B5E20); // 绿色主题
+  if (result) greenThemeCount = greenThemeCount + 1;
+}
+print('应用绿色主题到 ' + greenThemeCount + ' 个完成便签');
+
+// 4.3 应用红色主题到紧急便签
+var urgentNotes = filterStickyNotesByTags('紧急', 'contains');
+var redThemeCount = 0;
+
+for (var i = 0; i < urgentNotes.length; i = i + 1) {
+  var note = urgentNotes[i];
+  var result = updateStickyNoteColors(note.id, 0xFFFFEBEE, 0xFFF44336, 0xFFB71C1C); // 红色主题
+  if (result) redThemeCount = redThemeCount + 1;
+}
+print('应用红色主题到 ' + redThemeCount + ' 个紧急便签');
+
+// 5. 数据统计报告
+print('');
+print('=== 数据统计报告 ===');
+
+// 5.1 图层统计
+var layerStats = {
+  'total': allLayers.length,
+  'visible': 0,
+  'transparent': 0,  // 透明度小于1.0的图层
+  'tagged': 0        // 有标签的图层
+};
+
+for (var i = 0; i < allLayers.length; i = i + 1) {
+  var layer = allLayers[i];
+  if (layer.isVisible) layerStats.visible = layerStats.visible + 1;
+  if (layer.opacity < 1.0) layerStats.transparent = layerStats.transparent + 1;
+  if (layer.tags && layer.tags.length > 0) layerStats.tagged = layerStats.tagged + 1;
+}
+
+print('图层统计:');
+print('  总数: ' + layerStats.total);
+print('  可见: ' + layerStats.visible + ' (' + (layerStats.total > 0 ? (layerStats.visible * 100 / layerStats.total).toFixed(1) : '0') + '%)');
+print('  透明: ' + layerStats.transparent + ' (' + (layerStats.total > 0 ? (layerStats.transparent * 100 / layerStats.total).toFixed(1) : '0') + '%)');
+print('  有标签: ' + layerStats.tagged + ' (' + (layerStats.total > 0 ? (layerStats.tagged * 100 / layerStats.total).toFixed(1) : '0') + '%)');
+
+// 5.2 便签统计
+var noteStats = {
+  'total': allNotes.length,
+  'visible': 0,
+  'collapsed': 0,
+  'transparent': 0,
+  'tagged': 0
+};
+
+for (var i = 0; i < allNotes.length; i = i + 1) {
+  var note = allNotes[i];
+  if (note.isVisible) noteStats.visible = noteStats.visible + 1;
+  if (note.isCollapsed) noteStats.collapsed = noteStats.collapsed + 1;
+  if (note.opacity < 1.0) noteStats.transparent = noteStats.transparent + 1;
+  if (note.tags && note.tags.length > 0) noteStats.tagged = noteStats.tagged + 1;
+}
+
+print('');
+print('便签统计:');
+print('  总数: ' + noteStats.total);
+print('  可见: ' + noteStats.visible + ' (' + (noteStats.total > 0 ? (noteStats.visible * 100 / noteStats.total).toFixed(1) : '0') + '%)');
+print('  折叠: ' + noteStats.collapsed + ' (' + (noteStats.total > 0 ? (noteStats.collapsed * 100 / noteStats.total).toFixed(1) : '0') + '%)');
+print('  透明: ' + noteStats.transparent + ' (' + (noteStats.total > 0 ? (noteStats.transparent * 100 / noteStats.total).toFixed(1) : '0') + '%)');
+print('  有标签: ' + noteStats.tagged + ' (' + (noteStats.total > 0 ? (noteStats.tagged * 100 / noteStats.total).toFixed(1) : '0') + '%)');
+
+// 6. 总结
+print('');
+print('=== 功能测试总结 ===');
+print('✓ 图层属性更新（名称、可见性、透明度、顺序、标签）');
+print('✓ 图层过滤和搜索功能');
+print('✓ 便签属性更新（标题、内容、位置、大小、颜色）');
+print('✓ 便签可见性和折叠状态控制');
+print('✓ 便签颜色主题管理');
+print('✓ 批量操作和智能主题应用');
+print('✓ 数据统计和分析功能');
+print('');
+print('图层和便签管理功能测试完成！');

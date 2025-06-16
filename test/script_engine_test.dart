@@ -41,8 +41,7 @@ void main() {
               curvature: 0.0,
               zIndex: 0,
               text: '',
-              fontSize: 14.0,
-              createdAt: now,
+              fontSize: 14.0,              createdAt: now,
               points: [const Offset(0, 0), const Offset(100, 100)],
             ),
           ],
@@ -51,6 +50,8 @@ void main() {
 
       scriptEngine.setMapDataAccessor(testLayers, (updatedLayers) {
         // 测试更新回调
+      }, [], (updatedStickyNotes) {
+        // 测试便签更新回调
       });
 
       final script = ScriptData(

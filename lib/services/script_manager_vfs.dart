@@ -309,12 +309,16 @@ class ScriptManager extends ChangeNotifier {
       await addScript(importedScript);
     } catch (e) {
       throw Exception('Failed to import script: $e');
-    }
-  }
+    }  }
 
   /// 设置地图数据访问器
-  void setMapDataAccessor(layers, onLayersChanged) {
-    _engine.setMapDataAccessor(layers, onLayersChanged);
+  void setMapDataAccessor(layers, onLayersChanged, stickyNotes, onStickyNotesChanged, legendGroups, onLegendGroupsChanged) {
+    _engine.setMapDataAccessor(layers, onLayersChanged, stickyNotes, onStickyNotesChanged, legendGroups, onLegendGroupsChanged);
+  }
+
+  /// 设置 VFS 访问器
+  void setVfsAccessor(String mapTitle) {
+    _engine.setVfsAccessor(_vfs, mapTitle);
   }
 
   /// 获取按类型分组的脚本

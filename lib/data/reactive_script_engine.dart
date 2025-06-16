@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../services/script_engine.dart';
 import '../models/script_data.dart';
 import '../models/map_layer.dart';
+import '../models/sticky_note.dart';
 import 'map_data_bloc.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
@@ -55,22 +56,24 @@ class ReactiveScriptEngine {
   /// 处理地图数据变更
   void _onMapDataChanged(MapDataLoaded data) {
     _updateScriptEngineDataAccessor(data);
-  }
-
-  /// 更新脚本引擎的地图数据访问器
+  }  /// 更新脚本引擎的地图数据访问器
   void _updateScriptEngineDataAccessor(MapDataLoaded mapData) {
-    debugPrint('更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}');
+    debugPrint('更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}，便签数量: ${mapData.mapItem.stickyNotes.length}，图例组数量: ${mapData.legendGroups.length}');
 
     _scriptEngine.setMapDataAccessor(
       mapData.layers,
       _onScriptEngineLayersChanged,
+      mapData.mapItem.stickyNotes,
+      _onScriptEngineStickyNotesChanged,
+      mapData.legendGroups,
+      _onScriptEngineLegendGroupsChanged,
     );
   }
 
   /// 清空脚本引擎的数据访问器
   void _clearScriptEngineDataAccessor() {
     debugPrint('清空脚本引擎数据访问器');
-    _scriptEngine.setMapDataAccessor([], (_) {});
+    _scriptEngine.setMapDataAccessor([], (_) {}, [], (_) {}, [], (_) {});
   }
 
   /// 处理脚本引擎修改图层数据的回调
@@ -85,6 +88,27 @@ class ReactiveScriptEngine {
         description: '脚本引擎更新图层数据',
       ),
     );
+  }
+
+  /// 处理脚本引擎修改便签数据的回调
+  void _onScriptEngineStickyNotesChanged(List<StickyNote> updatedStickyNotes) {
+    debugPrint('脚本引擎修改了便签数据，更新便签数量: ${updatedStickyNotes.length}');
+
+    // 目前暂时通过批量更新便签来处理
+    // TODO: 考虑添加专门的脚本引擎便签更新事件
+    for (final note in updatedStickyNotes) {
+      _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
+    }
+  }
+
+  /// 处理脚本引擎修改图例组数据的回调
+  void _onScriptEngineLegendGroupsChanged(List<LegendGroup> updatedLegendGroups) {
+    debugPrint('脚本引擎修改了图例组数据，更新图例组数量: ${updatedLegendGroups.length}');
+
+    // 通过Bloc事件更新地图数据，确保响应式流的一致性
+    for (final group in updatedLegendGroups) {
+      _mapDataBloc.add(UpdateLegendGroup(legendGroup: group));
+    }
   }
 
   /// 执行脚本

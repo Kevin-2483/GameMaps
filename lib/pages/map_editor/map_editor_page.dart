@@ -577,20 +577,41 @@ class _MapEditorContentState extends State<_MapEditorContent>
     await _scriptManager.initialize(mapTitle: _currentMap?.title);
     // 设置地图数据访问器
     _updateScriptMapDataAccessor();
-  }
-
-  /// 更新脚本引擎的地图数据访问器
+  }  /// 更新脚本引擎的地图数据访问器
   void _updateScriptMapDataAccessor() {
     if (_currentMap != null) {
-      _scriptManager.setMapDataAccessor(_currentMap!.layers, (updatedLayers) {
-        // 当脚本修改图层数据时，更新地图
-        if (mounted) {
-          setState(() {
-            _currentMap = _currentMap!.copyWith(layers: updatedLayers);
-          });
-          _saveMap();
+      _scriptManager.setMapDataAccessor(
+        _currentMap!.layers, 
+        (updatedLayers) {
+          // 当脚本修改图层数据时，更新地图
+          if (mounted) {
+            setState(() {
+              _currentMap = _currentMap!.copyWith(layers: updatedLayers);
+            });
+            _saveMap();
+          }
+        },
+        _currentMap!.stickyNotes,
+        (updatedStickyNotes) {
+          // 当脚本修改便签数据时，更新地图
+          if (mounted) {
+            setState(() {
+              _currentMap = _currentMap!.copyWith(stickyNotes: updatedStickyNotes);
+            });
+            _saveMap();
+          }
+        },
+        _currentMap!.legendGroups,
+        (updatedLegendGroups) {
+          // 当脚本修改图例组数据时，更新地图
+          if (mounted) {
+            setState(() {
+              _currentMap = _currentMap!.copyWith(legendGroups: updatedLegendGroups);
+            });
+            _saveMap();
+          }
         }
-      });
+      );
     }
   }
 

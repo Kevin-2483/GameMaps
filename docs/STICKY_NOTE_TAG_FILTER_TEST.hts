@@ -1,0 +1,191 @@
+// 便签标签过滤功能测试脚本
+// 这个脚本展示了如何使用增强的 filterElements 函数进行标签过滤
+
+print('=== 便签标签过滤功能测试 ===');
+
+// 1. 获取所有元素（包括图层和便签中的元素）
+var allElements = filterElements(fun(element) {
+  return true;  // 获取所有元素
+});
+
+print('总元素数量: ' + allElements.length);
+
+// 2. 按来源类型分类
+var layerElements = filterElements(fun(element) {
+  return element.sourceType == 'layer';
+});
+
+var stickyNoteElements = filterElements(fun(element) {
+  return element.sourceType == 'stickyNote';
+});
+
+print('图层元素: ' + layerElements.length + '个');
+print('便签元素: ' + stickyNoteElements.length + '个');
+
+// 3. 查找有标签的元素
+var taggedElements = filterElements(fun(element) {
+  var tags = element.tags || [];
+  return tags.length > 0;
+});
+
+print('有标签的元素: ' + taggedElements.length + '个');
+
+// 4. 查找特定标签的元素
+var importantElements = filterElements(fun(element) {
+  var tags = element.tags || [];
+  for (var i = 0; i < tags.length; i = i + 1) {
+    if (tags[i] == '重要') {
+      return true;
+    }
+  }
+  return false;
+});
+
+print('标记为"重要"的元素: ' + importantElements.length + '个');
+
+// 5. 查找便签中的重要元素
+var importantStickyElements = filterElements(fun(element) {
+  if (element.sourceType != 'stickyNote') {
+    return false;
+  }
+  
+  var tags = element.tags || [];
+  for (var i = 0; i < tags.length; i = i + 1) {
+    if (tags[i] == '重要') {
+      return true;
+    }
+  }
+  return false;
+});
+
+print('便签中的重要元素: ' + importantStickyElements.length + '个');
+
+// 6. 查找来自重要便签的元素
+var elementsFromImportantNotes = filterElements(fun(element) {
+  if (element.sourceType != 'stickyNote') {
+    return false;
+  }
+  
+  var stickyNoteTags = element.stickyNoteTags || [];
+  for (var i = 0; i < stickyNoteTags.length; i = i + 1) {
+    if (stickyNoteTags[i] == '重要') {
+      return true;
+    }
+  }
+  return false;
+});
+
+print('来自重要便签的元素: ' + elementsFromImportantNotes.length + '个');
+
+// 7. 详细分析有标签的元素
+if (taggedElements.length > 0) {
+  print('');
+  print('=== 标签详细分析 ===');
+  
+  for (var i = 0; i < taggedElements.length; i = i + 1) {
+    var element = taggedElements[i];
+    var tags = element.tags || [];
+    var tagStr = tags.join(', ');
+    
+    if (element.sourceType == 'stickyNote') {
+      var noteTags = element.stickyNoteTags || [];
+      var noteTagStr = noteTags.join(', ');
+      print('便签元素: ' + element.type + ' [' + tagStr + '] 在便签"' + element.stickyNoteTitle + '"[' + noteTagStr + ']');
+    } else {
+      print('图层元素: ' + element.type + ' [' + tagStr + '] 在图层 ' + element.layerId);
+    }
+  }
+}
+
+// 8. 查找文本元素中的重要内容
+var importantTexts = filterElements(fun(element) {
+  if (element.type != 'text') {
+    return false;
+  }
+  
+  var tags = element.tags || [];
+  for (var i = 0; i < tags.length; i = i + 1) {
+    if (tags[i] == '重要') {
+      return true;
+    }
+  }
+  return false;
+});
+
+print('');
+print('重要文本元素: ' + importantTexts.length + '个');
+
+// 9. 使用专门的便签过滤函数
+print('');
+print('=== 使用专门的便签过滤函数 ===');
+
+// 获取所有便签
+var allNotes = getStickyNotes();
+print('总便签数量: ' + allNotes.length);
+
+// 查找有"重要"标签的便签
+var importantNotes = filterStickyNotesByTags('重要', 'contains');
+print('重要便签数量: ' + importantNotes.length);
+
+// 查找便签中有"标记"标签的元素
+var markedElements = filterStickyNoteElementsByTags('标记', 'contains');
+print('便签中标记元素数量: ' + markedElements.length);
+
+// 10. 统计报告
+print('');
+print('=== 标签使用统计 ===');
+
+var elementTagCounts = {};
+var noteTagCounts = {};
+
+// 统计元素标签
+for (var i = 0; i < allElements.length; i = i + 1) {
+  var element = allElements[i];
+  var tags = element.tags || [];
+  
+  for (var j = 0; j < tags.length; j = j + 1) {
+    var tag = tags[j];
+    if (elementTagCounts[tag] == null) {
+      elementTagCounts[tag] = 0;
+    }
+    elementTagCounts[tag] = elementTagCounts[tag] + 1;
+  }
+}
+
+// 统计便签标签
+for (var i = 0; i < allNotes.length; i = i + 1) {
+  var note = allNotes[i];
+  var tags = note.tags || [];
+  
+  for (var j = 0; j < tags.length; j = j + 1) {
+    var tag = tags[j];
+    if (noteTagCounts[tag] == null) {
+      noteTagCounts[tag] = 0;
+    }
+    noteTagCounts[tag] = noteTagCounts[tag] + 1;
+  }
+}
+
+// 显示常见标签的统计
+var commonTags = ['重要', '紧急', '完成', '临时', '标记', '想法', '工作', '个人'];
+
+print('元素标签统计:');
+for (var i = 0; i < commonTags.length; i = i + 1) {
+  var tag = commonTags[i];
+  var count = elementTagCounts[tag] || 0;
+  if (count > 0) {
+    print('- ' + tag + ': ' + count + '个元素');
+  }
+}
+
+print('便签标签统计:');
+for (var i = 0; i < commonTags.length; i = i + 1) {
+  var tag = commonTags[i];
+  var count = noteTagCounts[tag] || 0;
+  if (count > 0) {
+    print('- ' + tag + ': ' + count + '个便签');
+  }
+}
+
+print('');
+print('=== 测试完成 ===');

@@ -1,0 +1,255 @@
+// 图例和图例组管理脚本示例
+// 展示如何使用新增的图例相关函数进行图例管理、属性更新和标签过滤
+
+print('=== 图例和图例组管理功能测试 ===');
+
+// 1. 获取所有图例组
+var allGroups = getLegendGroups();
+print('当前图例组数量: ' + allGroups.length);
+
+if (allGroups.length > 0) {
+  print('');
+  print('=== 图例组列表 ===');
+  
+  for (var i = 0; i < allGroups.length; i = i + 1) {
+    var group = allGroups[i];
+    print('图例组 ' + (i + 1) + ':');
+    print('  ID: ' + group.id);
+    print('  名称: ' + group.name);
+    print('  可见: ' + (group.isVisible ? '是' : '否'));
+    print('  透明度: ' + (group.opacity * 100).toFixed(0) + '%');
+    print('  图例项数量: ' + group.legendItemsCount);
+    print('  可见图例项: ' + group.visibleItemsCount);
+    
+    if (group.tags.length > 0) {
+      print('  标签: ' + group.tags.join(', '));
+    }
+    print('');
+  }
+
+  // 2. 测试图例组操作
+  print('=== 图例组操作测试 ===');
+  
+  var firstGroup = allGroups[0];
+  print('测试图例组: ' + firstGroup.name);
+  
+  // 2.1 更新图例组透明度
+  print('设置透明度为 75%...');
+  var updateResult = updateLegendGroupOpacity(firstGroup.id, 0.75);
+  if (updateResult) {
+    print('✓ 透明度更新成功');
+  } else {
+    print('✗ 透明度更新失败');
+  }
+  
+  // 2.2 切换图例组可见性
+  print('切换可见性...');
+  var toggleResult = updateLegendGroupVisibility(firstGroup.id, !firstGroup.isVisible);
+  if (toggleResult) {
+    print('✓ 可见性切换成功');
+  } else {
+    print('✗ 可见性切换失败');
+  }
+  
+  // 2.3 更新图例组名称和标签
+  print('更新图例组属性...');
+  var updateProps = updateLegendGroup(firstGroup.id, {
+    'name': firstGroup.name + ' (已修改)',
+    'tags': ['测试', '脚本修改', '自动化']
+  });
+  if (updateProps) {
+    print('✓ 图例组属性更新成功');
+  } else {
+    print('✗ 图例组属性更新失败');
+  }
+
+  // 3. 图例项操作测试
+  print('');
+  print('=== 图例项操作测试 ===');
+  
+  var legendItems = getLegendItems(firstGroup.id);
+  print('图例组 "' + firstGroup.name + '" 中的图例项数量: ' + legendItems.length);
+  
+  if (legendItems.length > 0) {
+    var firstItem = legendItems[0];
+    print('测试图例项: ' + firstItem.id);
+    print('当前位置: (' + firstItem.position.x.toFixed(2) + ', ' + firstItem.position.y.toFixed(2) + ')');
+    print('当前大小: ' + firstItem.size.toFixed(2));
+    print('当前旋转: ' + firstItem.rotation.toFixed(1) + '°');
+    
+    // 3.1 移动图例项
+    print('移动图例项...');
+    var moveResult = updateLegendItemPosition(firstGroup.id, firstItem.id, 0.1, 0.1);
+    if (moveResult) {
+      print('✓ 图例项位置更新成功');
+    }
+    
+    // 3.2 旋转图例项
+    print('旋转图例项 45 度...');
+    var rotateResult = updateLegendItemRotation(firstGroup.id, firstItem.id, firstItem.rotation + 45);
+    if (rotateResult) {
+      print('✓ 图例项旋转成功');
+    }
+    
+    // 3.3 缩放图例项
+    print('缩放图例项为 1.2 倍...');
+    var scaleResult = updateLegendItemSize(firstGroup.id, firstItem.id, firstItem.size * 1.2);
+    if (scaleResult) {
+      print('✓ 图例项缩放成功');
+    }
+    
+    // 3.4 设置图例项透明度
+    print('设置图例项透明度为 80%...');
+    var opacityResult = updateLegendItemOpacity(firstGroup.id, firstItem.id, 0.8);
+    if (opacityResult) {
+      print('✓ 图例项透明度设置成功');
+    }
+    
+    // 3.5 更新图例项综合属性
+    print('更新图例项综合属性...');
+    var itemUpdateResult = updateLegendItem(firstGroup.id, firstItem.id, {
+      'tags': ['重要', '测试', '脚本'],
+      'url': 'vfs://maps/icons/important.png'
+    });
+    if (itemUpdateResult) {
+      print('✓ 图例项综合属性更新成功');
+    }
+  }
+}
+
+// 4. 图例组标签过滤测试
+print('');
+print('=== 图例组标签过滤测试 ===');
+
+// 4.1 查找包含特定标签的图例组
+var taggedGroups = filterLegendGroupsByTags('重要', 'contains');
+print('包含"重要"标签的图例组: ' + taggedGroups.length + '个');
+
+var testGroups = filterLegendGroupsByTags('测试', 'contains');
+print('包含"测试"标签的图例组: ' + testGroups.length + '个');
+
+// 4.2 查找不包含临时标签的图例组
+var permanentGroups = filterLegendGroupsByTags('临时', 'excludes');
+print('不包含"临时"标签的图例组: ' + permanentGroups.length + '个');
+
+// 4.3 精确标签匹配
+var exactGroups = filterLegendGroupsByTags(['测试', '脚本修改'], 'exact');
+print('标签完全匹配的图例组: ' + exactGroups.length + '个');
+
+// 5. 图例项标签过滤测试
+print('');
+print('=== 图例项标签过滤测试 ===');
+
+var allLegendItems = filterLegendItemsByTags(null, 'any');
+print('所有图例项数量: ' + allLegendItems.length);
+
+var importantItems = filterLegendItemsByTags('重要', 'contains');
+print('重要图例项数量: ' + importantItems.length);
+
+if (importantItems.length > 0) {
+  print('重要图例项详情:');
+  for (var i = 0; i < importantItems.length; i = i + 1) {
+    var item = importantItems[i];
+    print('  - ' + item.id + ' 在图例组 "' + item.groupName + '"');
+    print('    位置: (' + item.position.x.toFixed(2) + ', ' + item.position.y.toFixed(2) + ')');
+    print('    标签: ' + item.tags.join(', '));
+  }
+}
+
+// 6. 按名称搜索图例组
+print('');
+print('=== 按名称搜索图例组 ===');
+
+var searchResults = findLegendGroupsByName('建筑');
+print('名称包含"建筑"的图例组: ' + searchResults.length + '个');
+
+var doorResults = findLegendGroupsByName('门');
+print('名称包含"门"的图例组: ' + doorResults.length + '个');
+
+// 7. 可见性统计
+print('');
+print('=== 可见性统计 ===');
+
+var visibleGroups = getVisibleLegendGroups();
+print('可见图例组数量: ' + visibleGroups.length + '/' + allGroups.length);
+
+if (visibleGroups.length > 0) {
+  var totalVisibleItems = 0;
+  for (var i = 0; i < visibleGroups.length; i = i + 1) {
+    var group = visibleGroups[i];
+    var visibleItems = getVisibleLegendItems(group.id);
+    totalVisibleItems = totalVisibleItems + visibleItems.length;
+    print('  - ' + group.name + ': ' + visibleItems.length + '个可见图例项');
+  }
+  print('总计可见图例项: ' + totalVisibleItems + '个');
+}
+
+// 8. 图例组批量操作示例
+print('');
+print('=== 批量操作示例 ===');
+
+// 批量设置所有图例组为可见
+var batchVisibleCount = 0;
+for (var i = 0; i < allGroups.length; i = i + 1) {
+  var group = allGroups[i];
+  if (!group.isVisible) {
+    var result = updateLegendGroupVisibility(group.id, true);
+    if (result) {
+      batchVisibleCount = batchVisibleCount + 1;
+    }
+  }
+}
+print('批量显示了 ' + batchVisibleCount + ' 个图例组');
+
+// 批量调整透明度（降低到 90%，增强可见性）
+var batchOpacityCount = 0;
+for (var i = 0; i < allGroups.length; i = i + 1) {
+  var group = allGroups[i];
+  if (group.opacity < 0.9) {
+    var result = updateLegendGroupOpacity(group.id, 0.9);
+    if (result) {
+      batchOpacityCount = batchOpacityCount + 1;
+    }
+  }
+}
+print('批量调整了 ' + batchOpacityCount + ' 个图例组的透明度');
+
+// 9. 图例组和图例项的关联分析
+print('');
+print('=== 关联分析 ===');
+
+var groupAnalysis = {};
+for (var i = 0; i < allGroups.length; i = i + 1) {
+  var group = allGroups[i];
+  var items = getLegendItems(group.id);
+  
+  var visibleItems = 0;
+  var taggedItems = 0;
+  var itemsWithUrl = 0;
+  
+  for (var j = 0; j < items.length; j = j + 1) {
+    var item = items[j];
+    if (item.isVisible) visibleItems = visibleItems + 1;
+    if (item.tags.length > 0) taggedItems = taggedItems + 1;
+    if (item.url != null && item.url != '') itemsWithUrl = itemsWithUrl + 1;
+  }
+  
+  print('图例组 "' + group.name + '" 分析:');
+  print('  总图例项: ' + items.length);
+  print('  可见图例项: ' + visibleItems + ' (' + (items.length > 0 ? (visibleItems * 100 / items.length).toFixed(1) : '0') + '%)');
+  print('  有标签图例项: ' + taggedItems + ' (' + (items.length > 0 ? (taggedItems * 100 / items.length).toFixed(1) : '0') + '%)');
+  print('  有链接图例项: ' + itemsWithUrl + ' (' + (items.length > 0 ? (itemsWithUrl * 100 / items.length).toFixed(1) : '0') + '%)');
+  print('');
+}
+
+// 10. 总结报告
+print('=== 功能测试总结 ===');
+print('✓ 图例组获取和基本信息显示');
+print('✓ 图例组透明度、可见性、属性更新');
+print('✓ 图例项位置、旋转、大小、透明度控制');
+print('✓ 基于标签的图例组和图例项过滤');
+print('✓ 按名称搜索图例组');
+print('✓ 可见性统计和批量操作');
+print('✓ 图例组和图例项关联分析');
+print('');
+print('图例管理功能测试完成！');
