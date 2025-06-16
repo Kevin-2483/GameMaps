@@ -4,6 +4,8 @@ import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
 import '../data/map_data_state.dart';
 import '../models/map_item.dart';
+import '../models/map_layer.dart';
+import '../models/sticky_note.dart';
 import 'dart:async';
 
 /// 响应式版本管理适配器
@@ -94,15 +96,50 @@ class ReactiveVersionAdapter {
   bool _isSameMapData(MapItem data1, MapItem data2) {
     if (data1.layers.length != data2.layers.length) return false;
     if (data1.legendGroups.length != data2.legendGroups.length) return false;
-    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;    // 简单检查图层ID和基本属性
+    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;    // 检查图层ID和所有属性（包括背景图片相关属性）
     for (int i = 0; i < data1.layers.length; i++) {
       final layer1 = data1.layers[i];
       final layer2 = data2.layers[i];
       if (layer1.id != layer2.id ||
           layer1.name != layer2.name ||
+          layer1.order != layer2.order ||
           layer1.isVisible != layer2.isVisible ||
-          layer1.elements.length != layer2.elements.length) {
+          layer1.opacity != layer2.opacity ||
+          layer1.imageFit != layer2.imageFit || // 背景图片适应方式比较
+          layer1.xOffset != layer2.xOffset || // X轴偏移比较
+          layer1.yOffset != layer2.yOffset || // Y轴偏移比较
+          layer1.imageScale != layer2.imageScale || // 缩放比例比较
+          layer1.isLinkedToNext != layer2.isLinkedToNext || // 链接状态比较
+          layer1.legendGroupIds.length != layer2.legendGroupIds.length ||
+          layer1.elements.length != layer2.elements.length ||
+          layer1.updatedAt != layer2.updatedAt) {
         return false;
+      }
+
+      // 检查图层背景图片数据变化
+      if ((layer1.imageData == null) != (layer2.imageData == null)) {
+        return false;
+      }
+      if (layer1.imageData != null && layer2.imageData != null) {
+        // 比较图片数据长度和内容
+        if (layer1.imageData!.length != layer2.imageData!.length) {
+          return false;
+        }
+        // 对于大图片，只比较前100字节作为快速检查
+        final length = layer1.imageData!.length;
+        final checkLength = length > 100 ? 100 : length;
+        for (int k = 0; k < checkLength; k++) {
+          if (layer1.imageData![k] != layer2.imageData![k]) {
+            return false;
+          }
+        }
+      }
+
+      // 检查图层关联的图例组ID列表
+      for (int j = 0; j < layer1.legendGroupIds.length; j++) {
+        if (layer1.legendGroupIds[j] != layer2.legendGroupIds[j]) {
+          return false;
+        }
       }
 
       // 检查图层元素的详细变化（包括tags属性）
@@ -487,6 +524,126 @@ class ReactiveVersionAdapter {
 
     return true;
   }
+
+  // ==================== 图层操作支持 ====================
+
+  /// 更新图层（响应式版本管理支持）
+  void updateLayer(MapLayer layer) {
+    debugPrint('响应式版本管理器: 更新图层 ${layer.name}');
+    _mapDataBloc.add(UpdateLayer(layer: layer));
+  }
+
+  /// 批量更新图层（响应式版本管理支持）
+  void updateLayers(List<MapLayer> layers) {
+    debugPrint('响应式版本管理器: 批量更新图层，数量: ${layers.length}');
+    _mapDataBloc.add(UpdateLayers(layers: layers));
+  }
+
+  /// 添加图层（响应式版本管理支持）
+  void addLayer(MapLayer layer) {
+    debugPrint('响应式版本管理器: 添加图层 ${layer.name}');
+    _mapDataBloc.add(AddLayer(layer: layer));
+  }
+
+  /// 删除图层（响应式版本管理支持）
+  void deleteLayer(String layerId) {
+    debugPrint('响应式版本管理器: 删除图层 $layerId');
+    _mapDataBloc.add(DeleteLayer(layerId: layerId));
+  }
+
+  /// 设置图层可见性（响应式版本管理支持）
+  void setLayerVisibility(String layerId, bool isVisible) {
+    debugPrint('响应式版本管理器: 设置图层可见性 $layerId = $isVisible');
+    _mapDataBloc.add(SetLayerVisibility(layerId: layerId, isVisible: isVisible));
+  }
+
+  /// 设置图层透明度（响应式版本管理支持）
+  void setLayerOpacity(String layerId, double opacity) {
+    debugPrint('响应式版本管理器: 设置图层透明度 $layerId = $opacity');
+    _mapDataBloc.add(SetLayerOpacity(layerId: layerId, opacity: opacity));
+  }
+
+  /// 重新排序图层（响应式版本管理支持）
+  void reorderLayers(int oldIndex, int newIndex) {
+    debugPrint('响应式版本管理器: 重新排序图层 $oldIndex -> $newIndex');
+    _mapDataBloc.add(ReorderLayers(oldIndex: oldIndex, newIndex: newIndex));
+  }
+
+  // ==================== 便签操作支持 ====================
+
+  /// 添加便签（响应式版本管理支持）
+  void addStickyNote(StickyNote note) {
+    debugPrint('响应式版本管理器: 添加便签 ${note.title}');
+    _mapDataBloc.add(AddStickyNote(stickyNote: note));
+  }
+
+  /// 更新便签（响应式版本管理支持）
+  void updateStickyNote(StickyNote note) {
+    debugPrint('响应式版本管理器: 更新便签 ${note.title}');
+    _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
+  }
+
+  /// 删除便签（响应式版本管理支持）
+  void deleteStickyNote(String noteId) {
+    debugPrint('响应式版本管理器: 删除便签 $noteId');
+    _mapDataBloc.add(DeleteStickyNote(stickyNoteId: noteId));
+  }
+
+  /// 重新排序便签（响应式版本管理支持）
+  void reorderStickyNotes(int oldIndex, int newIndex) {
+    debugPrint('响应式版本管理器: 重新排序便签 $oldIndex -> $newIndex');
+    _mapDataBloc.add(ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex));
+  }
+
+  /// 根据拖拽重新排序便签（响应式版本管理支持）
+  void reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
+    debugPrint('响应式版本管理器: 拖拽重新排序便签，数量: ${reorderedNotes.length}');
+    _mapDataBloc.add(ReorderStickyNotesByDrag(reorderedNotes: reorderedNotes));
+  }
+
+  /// 根据ID获取便签（响应式版本管理支持）
+  StickyNote? getStickyNoteById(String noteId) {
+    final currentState = _mapDataBloc.state;
+    if (currentState is MapDataLoaded) {
+      return currentState.mapItem.stickyNotes
+          .where((note) => note.id == noteId)
+          .firstOrNull;
+    }
+    return null;
+  }
+
+  /// 获取所有便签（响应式版本管理支持）
+  List<StickyNote> getStickyNotes() {
+    final currentState = _mapDataBloc.state;
+    if (currentState is MapDataLoaded) {
+      return currentState.mapItem.stickyNotes;
+    }
+    return [];
+  }
+
+  // ==================== 状态查询支持 ====================
+
+  /// 根据ID获取图层（响应式版本管理支持）
+  MapLayer? getLayerById(String layerId) {
+    final currentState = _mapDataBloc.state;
+    if (currentState is MapDataLoaded) {
+      return currentState.layers
+          .where((layer) => layer.id == layerId)
+          .firstOrNull;
+    }
+    return null;
+  }
+
+  /// 获取所有图层（响应式版本管理支持）
+  List<MapLayer> getLayers() {
+    final currentState = _mapDataBloc.state;
+    if (currentState is MapDataLoaded) {
+      return currentState.layers;
+    }
+    return [];
+  }
+
+  // ==================== 资源管理 ====================
 
   /// 获取适配器状态信息
   Map<String, dynamic> getAdapterStatus() {
