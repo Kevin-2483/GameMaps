@@ -1,0 +1,1368 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import '../../models/script_data.dart';
+import '../../models/map_layer.dart';
+import '../../models/sticky_note.dart';
+import '../../models/legend_item.dart' as legend_db;
+import '../virtual_file_system/virtual_file_system.dart';
+import '../virtual_file_system/vfs_protocol.dart';
+import 'isolated_script_executor.dart';
+import 'web_worker_script_executor.dart';
+
+/// 重构后的新脚本引擎
+/// 使用异步隔离执行，支持跨平台（Web + Windows）
+class NewScriptEngine {
+  static final NewScriptEngine _instance = NewScriptEngine._internal();
+  factory NewScriptEngine() => _instance;
+  NewScriptEngine._internal();
+
+  IsolatedScriptExecutor? _executor;
+  bool _isInitialized = false;
+
+  // 地图数据访问器
+  List<MapLayer>? _currentLayers;
+  Function(List<MapLayer>)? _onLayersChanged;
+  List<StickyNote>? _currentStickyNotes;
+  Function(List<StickyNote>)? _onStickyNotesChanged;
+  List<LegendGroup>? _currentLegendGroups;
+  Function(List<LegendGroup>)? _onLegendGroupsChanged;
+
+  // VFS 存储服务和地图信息
+  VirtualFileSystem? _vfsStorageService;
+  String? _currentMapTitle;
+
+  // 脚本执行状态
+  final Map<String, Timer> _runningTimers = {};
+  final Map<String, StreamController> _animationControllers = {};
+
+  /// 初始化脚本引擎
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    // 根据平台创建相应的执行器
+    if (kIsWeb) {
+      _executor = WebWorkerScriptExecutor();
+    } else {
+      _executor = IsolateScriptExecutor();
+    }
+
+    // 注册所有外部函数
+    _registerExternalFunctions();
+
+    _isInitialized = true;
+    debugPrint('新脚本引擎初始化完成（${kIsWeb ? 'Web Worker' : 'Isolate'}）');
+  }
+
+  /// 注册外部函数到执行器
+  void _registerExternalFunctions() {
+    if (_executor == null) return;
+
+    // 基础函数
+    _executor!.registerExternalFunction('print', _handlePrint);
+    _executor!.registerExternalFunction('log', _handleLog);
+
+    // 数学函数
+    _executor!.registerExternalFunction('sin', _handleSin);
+    _executor!.registerExternalFunction('cos', _handleCos);
+    _executor!.registerExternalFunction('tan', _handleTan);
+    _executor!.registerExternalFunction('sqrt', _handleSqrt);
+    _executor!.registerExternalFunction('pow', _handlePow);
+    _executor!.registerExternalFunction('abs', _handleAbs);
+    _executor!.registerExternalFunction('random', _handleRandom);
+
+    // 地图数据访问函数
+    _executor!.registerExternalFunction('getLayers', _handleGetLayers);
+    _executor!.registerExternalFunction('getLayerById', _handleGetLayerById);
+    _executor!.registerExternalFunction(
+      'getElementsInLayer',
+      _handleGetElementsInLayer,
+    );
+    _executor!.registerExternalFunction(
+      'getAllElements',
+      _handleGetAllElements,
+    );
+    _executor!.registerExternalFunction(
+      'filterElements',
+      _handleFilterElements,
+    );
+
+    // 统计函数
+    _executor!.registerExternalFunction('countElements', _handleCountElements);
+    _executor!.registerExternalFunction(
+      'calculateTotalArea',
+      _handleCalculateTotalArea,
+    );
+
+    // 元素修改函数
+    _executor!.registerExternalFunction(
+      'updateElementProperty',
+      _handleUpdateElementProperty,
+    );
+    _executor!.registerExternalFunction('moveElement', _handleMoveElement);
+
+    // 文本相关函数
+    _executor!.registerExternalFunction(
+      'createTextElement',
+      _handleCreateTextElement,
+    );
+    _executor!.registerExternalFunction(
+      'updateTextContent',
+      _handleUpdateTextContent,
+    );
+    _executor!.registerExternalFunction(
+      'updateTextSize',
+      _handleUpdateTextSize,
+    );
+    _executor!.registerExternalFunction(
+      'getTextElements',
+      _handleGetTextElements,
+    );
+    _executor!.registerExternalFunction(
+      'findTextElementsByContent',
+      _handleFindTextElementsByContent,
+    );
+    _executor!.registerExternalFunction('say', _handleSay);
+
+    // 文件操作函数
+    _executor!.registerExternalFunction('readjson', _handleReadJson);
+    _executor!.registerExternalFunction('writetext', _handleWriteText);
+
+    // 便签相关函数
+    _executor!.registerExternalFunction(
+      'getStickyNotes',
+      _handleGetStickyNotes,
+    );
+    _executor!.registerExternalFunction(
+      'getStickyNoteById',
+      _handleGetStickyNoteById,
+    );
+    _executor!.registerExternalFunction(
+      'getElementsInStickyNote',
+      _handleGetElementsInStickyNote,
+    );
+    _executor!.registerExternalFunction(
+      'filterStickyNotesByTags',
+      _handleFilterStickyNotesByTags,
+    );
+    _executor!.registerExternalFunction(
+      'filterStickyNoteElementsByTags',
+      _handleFilterStickyNoteElementsByTags,
+    );
+
+    // 图例相关函数
+    _executor!.registerExternalFunction(
+      'getLegendGroups',
+      _handleGetLegendGroups,
+    );
+    _executor!.registerExternalFunction(
+      'getLegendGroupById',
+      _handleGetLegendGroupById,
+    );
+    _executor!.registerExternalFunction(
+      'updateLegendGroup',
+      _handleUpdateLegendGroup,
+    );
+    _executor!.registerExternalFunction(
+      'updateLegendGroupVisibility',
+      _handleUpdateLegendGroupVisibility,
+    );
+    _executor!.registerExternalFunction(
+      'updateLegendGroupOpacity',
+      _handleUpdateLegendGroupOpacity,
+    );
+    _executor!.registerExternalFunction(
+      'getLegendItems',
+      _handleGetLegendItems,
+    );
+    _executor!.registerExternalFunction(
+      'getLegendItemById',
+      _handleGetLegendItemById,
+    );
+    _executor!.registerExternalFunction(
+      'updateLegendItem',
+      _handleUpdateLegendItem,
+    );
+    _executor!.registerExternalFunction(
+      'filterLegendGroupsByTags',
+      _handleFilterLegendGroupsByTags,
+    );
+    _executor!.registerExternalFunction(
+      'filterLegendItemsByTags',
+      _handleFilterLegendItemsByTags,
+    );
+
+    debugPrint('已注册所有外部函数到执行器');
+  }
+
+  /// 设置地图数据访问器
+  void setMapDataAccessor(
+    List<MapLayer> layers,
+    Function(List<MapLayer>) onLayersChanged,
+    List<StickyNote> stickyNotes,
+    Function(List<StickyNote>) onStickyNotesChanged,
+    List<LegendGroup> legendGroups,
+    Function(List<LegendGroup>) onLegendGroupsChanged,
+  ) {
+    _currentLayers = layers;
+    _onLayersChanged = onLayersChanged;
+    _currentStickyNotes = stickyNotes;
+    _onStickyNotesChanged = onStickyNotesChanged;
+    _currentLegendGroups = legendGroups;
+    _onLegendGroupsChanged = onLegendGroupsChanged;
+
+    // 同步地图数据到执行器
+    _syncMapDataToExecutor();
+  }
+
+  /// 设置 VFS 访问器
+  void setVfsAccessor(VirtualFileSystem vfsService, String mapTitle) {
+    _vfsStorageService = vfsService;
+    _currentMapTitle = mapTitle;
+  }
+
+  /// 同步地图数据到执行器
+  void _syncMapDataToExecutor() {
+    if (_executor == null) return;
+
+    final mapData = <String, dynamic>{
+      'layers':
+          _currentLayers?.map((layer) => _layerToMap(layer)).toList() ?? [],
+      'stickyNotes':
+          _currentStickyNotes?.map((note) => _stickyNoteToMap(note)).toList() ??
+          [],
+      'legendGroups':
+          _currentLegendGroups
+              ?.map((group) => _legendGroupToMap(group))
+              .toList() ??
+          [],
+    };
+
+    if (_executor is IsolateScriptExecutor) {
+      (_executor as IsolateScriptExecutor).sendMapDataUpdate(mapData);
+    } else if (_executor is WebWorkerScriptExecutor) {
+      (_executor as WebWorkerScriptExecutor).sendMapDataUpdate(mapData);
+    }
+  }
+
+  /// 执行脚本
+  Future<ScriptExecutionResult> executeScript(
+    ScriptData script, {
+    Duration? timeout,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception('Script engine not initialized');
+    }
+
+    if (_executor == null) {
+      throw Exception('Script executor not available');
+    }
+
+    try {
+      // 同步最新的地图数据
+      _syncMapDataToExecutor();
+
+      // 执行脚本
+      final result = await _executor!.execute(
+        script.content,
+        context: script.parameters,
+        timeout: timeout ?? const Duration(seconds: 30),
+      );
+
+      return result;
+    } catch (e) {
+      return ScriptExecutionResult(
+        success: false,
+        error: e.toString(),
+        executionTime: Duration.zero,
+      );
+    }
+  }
+
+  /// 停止脚本执行
+  void stopScript(String scriptId) {
+    _executor?.stop();
+
+    // 清理定时器和动画控制器
+    _runningTimers[scriptId]?.cancel();
+    _runningTimers.remove(scriptId);
+
+    _animationControllers[scriptId]?.close();
+    _animationControllers.remove(scriptId);
+  }
+
+  /// 获取执行日志
+  List<String> getExecutionLogs() {
+    if (_executor is IsolateScriptExecutor) {
+      return (_executor as IsolateScriptExecutor).getExecutionLogs();
+    } else if (_executor is WebWorkerScriptExecutor) {
+      return (_executor as WebWorkerScriptExecutor).getExecutionLogs();
+    }
+    return [];
+  }
+
+  /// 重置脚本引擎
+  void reset() {
+    // 停止所有运行中的脚本
+    for (final timer in _runningTimers.values) {
+      timer.cancel();
+    }
+    _runningTimers.clear();
+
+    for (final controller in _animationControllers.values) {
+      controller.close();
+    }
+    _animationControllers.clear();
+
+    // 清空数据访问器
+    _currentLayers = null;
+    _onLayersChanged = null;
+    _currentStickyNotes = null;
+    _onStickyNotesChanged = null;
+    _currentLegendGroups = null;
+    _onLegendGroupsChanged = null;
+    _vfsStorageService = null;
+    _currentMapTitle = null;
+  }
+
+  /// 重新初始化
+  Future<void> reinitialize() async {
+    reset();
+    _isInitialized = false;
+    await initialize();
+  }
+
+  /// 释放资源
+  void dispose() {
+    reset();
+    _executor?.dispose();
+    _executor = null;
+    _isInitialized = false;
+  }
+
+  // ==================== 外部函数处理器 ====================
+
+  /// 处理 print 函数
+  dynamic _handlePrint(List<dynamic> args) {
+    final message = args.isNotEmpty ? args[0]?.toString() ?? '' : '';
+    debugPrint(message);
+    return message;
+  }
+
+  /// 处理 log 函数
+  dynamic _handleLog(List<dynamic> args) {
+    final message = args.isNotEmpty ? args[0]?.toString() ?? '' : '';
+    final logMsg = '[Script] $message';
+    debugPrint(logMsg);
+    return message;
+  }
+
+  /// 处理数学函数
+  dynamic _handleSin(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('sin() requires 1 argument');
+    return math.sin(args[0]);
+  }
+
+  dynamic _handleCos(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('cos() requires 1 argument');
+    return math.cos(args[0]);
+  }
+
+  dynamic _handleTan(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('tan() requires 1 argument');
+    return math.tan(args[0]);
+  }
+
+  dynamic _handleSqrt(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('sqrt() requires 1 argument');
+    return math.sqrt(args[0]);
+  }
+
+  dynamic _handlePow(List<dynamic> args) {
+    if (args.length < 2) throw Exception('pow() requires 2 arguments');
+    return math.pow(args[0], args[1]);
+  }
+
+  dynamic _handleAbs(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('abs() requires 1 argument');
+    final num value = args[0];
+    return value.abs();
+  }
+
+  dynamic _handleRandom(List<dynamic> args) {
+    return math.Random().nextDouble();
+  }
+
+  /// 处理地图数据访问函数
+  dynamic _handleGetLayers(List<dynamic> args) {
+    return _currentLayers?.map((layer) => _layerToMap(layer)).toList() ?? [];
+  }
+
+  dynamic _handleGetLayerById(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('getLayerById() requires 1 argument');
+    final id = args[0] as String;
+    final layer = _currentLayers?.firstWhere(
+      (l) => l.id == id,
+      orElse: () => throw Exception('Layer not found: $id'),
+    );
+    return layer != null ? _layerToMap(layer) : null;
+  }
+
+  dynamic _handleGetElementsInLayer(List<dynamic> args) {
+    if (args.isEmpty)
+      throw Exception('getElementsInLayer() requires 1 argument');
+    final layerId = args[0] as String;
+    final layer = _currentLayers?.firstWhere(
+      (l) => l.id == layerId,
+      orElse: () => throw Exception('Layer not found: $layerId'),
+    );
+    return layer?.elements.map((element) => _elementToMap(element)).toList() ??
+        [];
+  }
+
+  dynamic _handleGetAllElements(List<dynamic> args) {
+    final elements = <Map<String, dynamic>>[];
+    if (_currentLayers != null) {
+      for (final layer in _currentLayers!) {
+        for (final element in layer.elements) {
+          final elementMap = _elementToMap(element);
+          elementMap['layerId'] = layer.id;
+          elements.add(elementMap);
+        }
+      }
+    }
+    return elements;
+  }
+
+  dynamic _handleFilterElements(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('filterElements() requires 1 argument');
+
+    // 这里需要特殊处理，因为过滤函数是从隔离环境传来的
+    // 在消息传递架构中，我们需要重新设计这个函数
+    throw Exception(
+      'filterElements() not yet implemented in isolated execution',
+    );
+  }
+
+  // 统计函数
+  dynamic _handleCountElements(List<dynamic> args) {
+    final typeFilter = args.isNotEmpty ? args[0] as String? : null;
+    int count = 0;
+
+    if (_currentLayers != null) {
+      for (final layer in _currentLayers!) {
+        for (final element in layer.elements) {
+          if (typeFilter == null || element.type.name == typeFilter) {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
+  }
+
+  dynamic _handleCalculateTotalArea(List<dynamic> args) {
+    double totalArea = 0.0;
+
+    if (_currentLayers != null) {
+      for (final layer in _currentLayers!) {
+        for (final element in layer.elements) {
+          if (element.type == DrawingElementType.rectangle ||
+              element.type == DrawingElementType.hollowRectangle) {
+            if (element.points.length >= 2) {
+              final width = (element.points[1].dx - element.points[0].dx).abs();
+              final height = (element.points[1].dy - element.points[0].dy)
+                  .abs();
+              totalArea += width * height;
+            }
+          }
+        }
+      }
+    }
+    return totalArea;
+  }
+
+  // 元素修改函数
+  dynamic _handleUpdateElementProperty(List<dynamic> args) {
+    if (args.length < 3)
+      throw Exception('updateElementProperty() requires 3 arguments');
+
+    final elementId = args[0] as String;
+    final property = args[1] as String;
+    final value = args[2];
+
+    return _updateElementProperty(elementId, property, value);
+  }
+
+  dynamic _handleMoveElement(List<dynamic> args) {
+    if (args.length < 3) throw Exception('moveElement() requires 3 arguments');
+
+    final elementId = args[0] as String;
+    final deltaX = (args[1] as num).toDouble();
+    final deltaY = (args[2] as num).toDouble();
+
+    return _moveElement(elementId, deltaX, deltaY);
+  }
+
+  // 文本相关函数
+  dynamic _handleCreateTextElement(List<dynamic> args) {
+    if (args.length < 4)
+      throw Exception('createTextElement() requires 4 arguments');
+
+    final text = args[0] as String;
+    final fontSize = (args[1] as num).toDouble();
+    final x = (args[2] as num).toDouble();
+    final y = (args[3] as num).toDouble();
+
+    return _createTextElement(text, fontSize, x, y);
+  }
+
+  dynamic _handleUpdateTextContent(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('updateTextContent() requires 2 arguments');
+
+    final elementId = args[0] as String;
+    final newText = args[1] as String;
+
+    return _updateElementProperty(elementId, 'text', newText);
+  }
+
+  dynamic _handleUpdateTextSize(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('updateTextSize() requires 2 arguments');
+
+    final elementId = args[0] as String;
+    final fontSize = (args[1] as num).toDouble();
+
+    return _updateElementProperty(elementId, 'fontSize', fontSize);
+  }
+
+  dynamic _handleGetTextElements(List<dynamic> args) {
+    final textElements = <Map<String, dynamic>>[];
+    if (_currentLayers != null) {
+      for (final layer in _currentLayers!) {
+        for (final element in layer.elements) {
+          if (element.type == DrawingElementType.text) {
+            final elementMap = _elementToMap(element);
+            elementMap['layerId'] = layer.id;
+            textElements.add(elementMap);
+          }
+        }
+      }
+    }
+    return textElements;
+  }
+
+  dynamic _handleFindTextElementsByContent(List<dynamic> args) {
+    if (args.isEmpty)
+      throw Exception('findTextElementsByContent() requires 1 argument');
+
+    final searchText = args[0] as String;
+    final matchingElements = <Map<String, dynamic>>[];
+
+    if (_currentLayers != null) {
+      for (final layer in _currentLayers!) {
+        for (final element in layer.elements) {
+          if (element.type == DrawingElementType.text &&
+              element.text != null &&
+              element.text!.contains(searchText)) {
+            final elementMap = _elementToMap(element);
+            elementMap['layerId'] = layer.id;
+            matchingElements.add(elementMap);
+          }
+        }
+      }
+    }
+    return matchingElements;
+  }
+
+  dynamic _handleSay(List<dynamic> args) {
+    if (args.length < 3) throw Exception('say() requires 3 arguments');
+
+    final tagFilter = args[0];
+    final filterType = args[1] as String;
+    final text = args[2] as String;
+
+    if (_currentLayers == null || _onLayersChanged == null) {
+      throw Exception('Layers not available');
+    }
+
+    var updatedCount = 0;
+    final updatedLayers = <MapLayer>[];
+
+    for (final layer in _currentLayers!) {
+      final updatedElements = <MapDrawingElement>[];
+      var layerModified = false;
+
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.text) {
+          final elementTags = element.tags ?? [];
+          bool matches = false;
+
+          switch (filterType) {
+            case 'contains':
+              if (tagFilter is String) {
+                matches = elementTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = tagFilter.any((tag) => elementTags.contains(tag));
+              }
+              break;
+            case 'exact':
+              if (tagFilter is List) {
+                final Set<String> filterSet = Set.from(tagFilter);
+                final Set<String> elementSet = Set.from(elementTags);
+                matches =
+                    filterSet.length == elementSet.length &&
+                    filterSet.every((tag) => elementSet.contains(tag));
+              } else if (tagFilter is String) {
+                matches =
+                    elementTags.length == 1 && elementTags[0] == tagFilter;
+              }
+              break;
+            case 'excludes':
+              if (tagFilter is String) {
+                matches = !elementTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = !tagFilter.any((tag) => elementTags.contains(tag));
+              }
+              break;
+            default:
+              matches = false;
+              break;
+          }
+
+          if (matches) {
+            final updatedElement = element.copyWith(text: text);
+            updatedElements.add(updatedElement);
+            layerModified = true;
+            updatedCount++;
+          } else {
+            updatedElements.add(element);
+          }
+        } else {
+          updatedElements.add(element);
+        }
+      }
+
+      if (layerModified) {
+        updatedLayers.add(layer.copyWith(elements: updatedElements));
+      } else {
+        updatedLayers.add(layer);
+      }
+    }
+
+    if (updatedCount > 0) {
+      _onLayersChanged!(updatedLayers);
+    }
+    return updatedCount;
+  }
+
+  // 文件操作函数
+  Future<dynamic> _handleReadJson(List<dynamic> args) async {
+    if (args.isEmpty) throw Exception('readjson() requires 1 argument');
+    if (_vfsStorageService == null || _currentMapTitle == null) {
+      throw Exception('VFS service not available');
+    }
+
+    final filePath = args[0] as String;
+
+    try {
+      String resolvedPath;
+
+      if (filePath.contains('://')) {
+        throw Exception(
+          'Path should not contain protocol prefix. Use Unix-style path only.',
+        );
+      }
+
+      if (filePath.startsWith('/')) {
+        resolvedPath = 'indexeddb://r6box/fs$filePath';
+      } else {
+        resolvedPath =
+            'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
+      }
+
+      final fileContent = await _vfsStorageService!.readFile(resolvedPath);
+      if (fileContent == null) {
+        throw Exception('File not found: $resolvedPath');
+      }
+
+      final jsonString = String.fromCharCodes(fileContent.data);
+      return jsonDecode(jsonString);
+    } catch (e) {
+      throw Exception('Failed to read JSON file: $e');
+    }
+  }
+
+  Future<dynamic> _handleWriteText(List<dynamic> args) async {
+    if (args.length < 2) throw Exception('writetext() requires 2 arguments');
+    if (_vfsStorageService == null || _currentMapTitle == null) {
+      throw Exception('VFS service not available');
+    }
+
+    final filePath = args[0] as String;
+    final content = args[1] as String;
+
+    try {
+      String resolvedPath;
+
+      if (filePath.contains('://')) {
+        throw Exception(
+          'Path should not contain protocol prefix. Use Unix-style path only.',
+        );
+      }
+
+      if (filePath.startsWith('/')) {
+        resolvedPath = 'indexeddb://r6box/fs$filePath';
+      } else {
+        resolvedPath =
+            'indexeddb://r6box/maps/$_currentMapTitle.mapdata/scripts/$filePath';
+      }
+
+      final contentBytes = Uint8List.fromList(content.codeUnits);
+      final fileContent = VfsFileContent(
+        data: contentBytes,
+        mimeType: 'text/plain',
+      );
+
+      await _vfsStorageService!.writeFile(resolvedPath, fileContent);
+      return true;
+    } catch (e) {
+      throw Exception('Failed to write text file: $e');
+    }
+  }
+
+  // 便签相关函数
+  dynamic _handleGetStickyNotes(List<dynamic> args) {
+    return _currentStickyNotes
+            ?.map((note) => _stickyNoteToMap(note))
+            .toList() ??
+        [];
+  }
+
+  dynamic _handleGetStickyNoteById(List<dynamic> args) {
+    if (args.isEmpty)
+      throw Exception('getStickyNoteById() requires 1 argument');
+
+    final id = args[0] as String;
+    final note = _currentStickyNotes?.firstWhere(
+      (n) => n.id == id,
+      orElse: () => throw Exception('Sticky note not found: $id'),
+    );
+    return note != null ? _stickyNoteToMap(note) : null;
+  }
+
+  dynamic _handleGetElementsInStickyNote(List<dynamic> args) {
+    if (args.isEmpty)
+      throw Exception('getElementsInStickyNote() requires 1 argument');
+
+    final noteId = args[0] as String;
+    final note = _currentStickyNotes?.firstWhere(
+      (n) => n.id == noteId,
+      orElse: () => throw Exception('Sticky note not found: $noteId'),
+    );
+    return note?.elements.map((element) => _elementToMap(element)).toList() ??
+        [];
+  }
+
+  dynamic _handleFilterStickyNotesByTags(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('filterStickyNotesByTags() requires 2 arguments');
+
+    final tagFilter = args[0];
+    final filterType = args[1] as String;
+    final matchingNotes = <Map<String, dynamic>>[];
+
+    if (_currentStickyNotes != null) {
+      for (final note in _currentStickyNotes!) {
+        if (!note.isVisible) continue;
+
+        final noteTags = note.tags ?? [];
+        bool matches = false;
+
+        switch (filterType) {
+          case 'contains':
+            if (tagFilter is String) {
+              matches = noteTags.contains(tagFilter);
+            } else if (tagFilter is List) {
+              matches = tagFilter.any((tag) => noteTags.contains(tag));
+            }
+            break;
+          case 'exact':
+            if (tagFilter is List) {
+              final Set<String> filterSet = Set.from(tagFilter);
+              final Set<String> noteSet = Set.from(noteTags);
+              matches =
+                  filterSet.length == noteSet.length &&
+                  filterSet.every((tag) => noteSet.contains(tag));
+            }
+            break;
+          case 'excludes':
+            if (tagFilter is String) {
+              matches = !noteTags.contains(tagFilter);
+            } else if (tagFilter is List) {
+              matches = !tagFilter.any((tag) => noteTags.contains(tag));
+            }
+            break;
+          case 'any':
+          default:
+            matches = true;
+            break;
+        }
+
+        if (matches) {
+          matchingNotes.add(_stickyNoteToMap(note));
+        }
+      }
+    }
+    return matchingNotes;
+  }
+
+  dynamic _handleFilterStickyNoteElementsByTags(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('filterStickyNoteElementsByTags() requires 2 arguments');
+
+    final tagFilter = args[0];
+    final filterType = args[1] as String;
+    final matchingElements = <Map<String, dynamic>>[];
+
+    if (_currentStickyNotes != null) {
+      for (final note in _currentStickyNotes!) {
+        if (!note.isVisible) continue;
+
+        for (final element in note.elements) {
+          final elementTags = element.tags ?? [];
+          bool matches = false;
+
+          switch (filterType) {
+            case 'contains':
+              if (tagFilter is String) {
+                matches = elementTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = tagFilter.any((tag) => elementTags.contains(tag));
+              }
+              break;
+            case 'exact':
+              if (tagFilter is List) {
+                final Set<String> filterSet = Set.from(tagFilter);
+                final Set<String> elementSet = Set.from(elementTags);
+                matches =
+                    filterSet.length == elementSet.length &&
+                    filterSet.every((tag) => elementSet.contains(tag));
+              }
+              break;
+            case 'excludes':
+              if (tagFilter is String) {
+                matches = !elementTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = !tagFilter.any((tag) => elementTags.contains(tag));
+              }
+              break;
+            case 'any':
+            default:
+              matches = true;
+              break;
+          }
+
+          if (matches) {
+            final elementMap = _elementToMap(element);
+            elementMap['stickyNoteId'] = note.id;
+            elementMap['stickyNoteTitle'] = note.title;
+            elementMap['stickyNoteTags'] = note.tags ?? [];
+            elementMap['sourceType'] = 'stickyNote';
+            matchingElements.add(elementMap);
+          }
+        }
+      }
+    }
+    return matchingElements;
+  }
+
+  // 图例相关函数
+  dynamic _handleGetLegendGroups(List<dynamic> args) {
+    return _currentLegendGroups
+            ?.map((group) => _legendGroupToMap(group))
+            .toList() ??
+        [];
+  }
+
+  dynamic _handleGetLegendGroupById(List<dynamic> args) {
+    if (args.isEmpty)
+      throw Exception('getLegendGroupById() requires 1 argument');
+
+    final groupId = args[0] as String;
+    final group = _currentLegendGroups?.firstWhere(
+      (g) => g.id == groupId,
+      orElse: () => throw Exception('Legend group not found: $groupId'),
+    );
+    return group != null ? _legendGroupToMap(group) : null;
+  }
+
+  dynamic _handleUpdateLegendGroup(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('updateLegendGroup() requires 2 arguments');
+
+    final groupId = args[0] as String;
+    final properties = args[1] as Map<String, dynamic>;
+
+    if (_currentLegendGroups == null || _onLegendGroupsChanged == null) {
+      throw Exception('Legend groups not available');
+    }
+
+    final groupIndex = _currentLegendGroups!.indexWhere((g) => g.id == groupId);
+    if (groupIndex == -1) {
+      throw Exception('Legend group not found: $groupId');
+    }
+
+    final group = _currentLegendGroups![groupIndex];
+    final updatedGroup = group.copyWith(
+      name: properties['name'] ?? group.name,
+      isVisible: properties['isVisible'] ?? group.isVisible,
+      opacity: (properties['opacity'] as num?)?.toDouble() ?? group.opacity,
+      tags: properties['tags'] != null
+          ? List<String>.from(properties['tags'])
+          : group.tags,
+      updatedAt: DateTime.now(),
+    );
+
+    final updatedGroups = List<LegendGroup>.from(_currentLegendGroups!);
+    updatedGroups[groupIndex] = updatedGroup;
+    _onLegendGroupsChanged!(updatedGroups);
+    return true;
+  }
+
+  dynamic _handleUpdateLegendGroupVisibility(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('updateLegendGroupVisibility() requires 2 arguments');
+
+    final groupId = args[0] as String;
+    final isVisible = args[1] as bool;
+
+    return _handleUpdateLegendGroup([
+      groupId,
+      {'isVisible': isVisible},
+    ]);
+  }
+
+  dynamic _handleUpdateLegendGroupOpacity(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('updateLegendGroupOpacity() requires 2 arguments');
+
+    final groupId = args[0] as String;
+    final opacity = (args[1] as num).toDouble().clamp(0.0, 1.0);
+
+    return _handleUpdateLegendGroup([
+      groupId,
+      {'opacity': opacity},
+    ]);
+  }
+
+  dynamic _handleGetLegendItems(List<dynamic> args) {
+    if (args.isEmpty) throw Exception('getLegendItems() requires 1 argument');
+
+    final groupId = args[0] as String;
+    final group = _currentLegendGroups?.firstWhere(
+      (g) => g.id == groupId,
+      orElse: () => throw Exception('Legend group not found: $groupId'),
+    );
+    return group?.legendItems.map((item) => _legendItemToMap(item)).toList() ??
+        [];
+  }
+
+  dynamic _handleGetLegendItemById(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('getLegendItemById() requires 2 arguments');
+
+    final groupId = args[0] as String;
+    final itemId = args[1] as String;
+
+    final group = _currentLegendGroups?.firstWhere(
+      (g) => g.id == groupId,
+      orElse: () => throw Exception('Legend group not found: $groupId'),
+    );
+    final item = group?.legendItems.firstWhere(
+      (i) => i.id == itemId,
+      orElse: () => throw Exception('Legend item not found: $itemId'),
+    );
+    return item != null ? _legendItemToMap(item) : null;
+  }
+
+  dynamic _handleUpdateLegendItem(List<dynamic> args) {
+    if (args.length < 3)
+      throw Exception('updateLegendItem() requires 3 arguments');
+
+    final groupId = args[0] as String;
+    final itemId = args[1] as String;
+    final properties = args[2] as Map<String, dynamic>;
+
+    if (_currentLegendGroups == null || _onLegendGroupsChanged == null) {
+      throw Exception('Legend groups not available');
+    }
+
+    final groupIndex = _currentLegendGroups!.indexWhere((g) => g.id == groupId);
+    if (groupIndex == -1) {
+      throw Exception('Legend group not found: $groupId');
+    }
+
+    final group = _currentLegendGroups![groupIndex];
+    final itemIndex = group.legendItems.indexWhere((i) => i.id == itemId);
+    if (itemIndex == -1) {
+      throw Exception('Legend item not found: $itemId');
+    }
+
+    final item = group.legendItems[itemIndex];
+    final updatedItem = item.copyWith(
+      position: properties['position'] != null
+          ? Offset(properties['position']['x'], properties['position']['y'])
+          : item.position,
+      size: (properties['size'] as num?)?.toDouble() ?? item.size,
+      rotation: (properties['rotation'] as num?)?.toDouble() ?? item.rotation,
+      opacity: (properties['opacity'] as num?)?.toDouble() ?? item.opacity,
+      isVisible: properties['isVisible'] ?? item.isVisible,
+      url: properties['url'] ?? item.url,
+      tags: properties['tags'] != null
+          ? List<String>.from(properties['tags'])
+          : item.tags,
+    );
+
+    final updatedItems = List<LegendItem>.from(group.legendItems);
+    updatedItems[itemIndex] = updatedItem;
+
+    final updatedGroup = group.copyWith(
+      legendItems: updatedItems,
+      updatedAt: DateTime.now(),
+    );
+
+    final updatedGroups = List<LegendGroup>.from(_currentLegendGroups!);
+    updatedGroups[groupIndex] = updatedGroup;
+    _onLegendGroupsChanged!(updatedGroups);
+    return true;
+  }
+
+  dynamic _handleFilterLegendGroupsByTags(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('filterLegendGroupsByTags() requires 2 arguments');
+
+    final tagFilter = args[0];
+    final filterType = args[1] as String;
+    final matchingGroups = <Map<String, dynamic>>[];
+
+    if (_currentLegendGroups != null) {
+      for (final group in _currentLegendGroups!) {
+        if (!group.isVisible) continue;
+
+        final groupTags = group.tags ?? [];
+        bool matches = false;
+
+        switch (filterType) {
+          case 'contains':
+            if (tagFilter is String) {
+              matches = groupTags.contains(tagFilter);
+            } else if (tagFilter is List) {
+              matches = tagFilter.any((tag) => groupTags.contains(tag));
+            }
+            break;
+          case 'exact':
+            if (tagFilter is List) {
+              final Set<String> filterSet = Set.from(tagFilter);
+              final Set<String> groupSet = Set.from(groupTags);
+              matches =
+                  filterSet.length == groupSet.length &&
+                  filterSet.every((tag) => groupSet.contains(tag));
+            }
+            break;
+          case 'excludes':
+            if (tagFilter is String) {
+              matches = !groupTags.contains(tagFilter);
+            } else if (tagFilter is List) {
+              matches = !tagFilter.any((tag) => groupTags.contains(tag));
+            }
+            break;
+          case 'any':
+          default:
+            matches = true;
+            break;
+        }
+
+        if (matches) {
+          matchingGroups.add(_legendGroupToMap(group));
+        }
+      }
+    }
+    return matchingGroups;
+  }
+
+  dynamic _handleFilterLegendItemsByTags(List<dynamic> args) {
+    if (args.length < 2)
+      throw Exception('filterLegendItemsByTags() requires 2 arguments');
+
+    final tagFilter = args[0];
+    final filterType = args[1] as String;
+    final matchingItems = <Map<String, dynamic>>[];
+
+    if (_currentLegendGroups != null) {
+      for (final group in _currentLegendGroups!) {
+        if (!group.isVisible) continue;
+
+        for (final item in group.legendItems) {
+          if (!item.isVisible) continue;
+
+          final itemTags = item.tags ?? [];
+          bool matches = false;
+
+          switch (filterType) {
+            case 'contains':
+              if (tagFilter is String) {
+                matches = itemTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = tagFilter.any((tag) => itemTags.contains(tag));
+              }
+              break;
+            case 'exact':
+              if (tagFilter is List) {
+                final Set<String> filterSet = Set.from(tagFilter);
+                final Set<String> itemSet = Set.from(itemTags);
+                matches =
+                    filterSet.length == itemSet.length &&
+                    filterSet.every((tag) => itemSet.contains(tag));
+              }
+              break;
+            case 'excludes':
+              if (tagFilter is String) {
+                matches = !itemTags.contains(tagFilter);
+              } else if (tagFilter is List) {
+                matches = !tagFilter.any((tag) => itemTags.contains(tag));
+              }
+              break;
+            case 'any':
+            default:
+              matches = true;
+              break;
+          }
+
+          if (matches) {
+            final itemData = _legendItemToMap(item);
+            itemData['groupId'] = group.id;
+            itemData['groupName'] = group.name;
+            matchingItems.add(itemData);
+          }
+        }
+      }
+    }
+    return matchingItems;
+  }
+
+  // ==================== 辅助函数 ====================
+
+  /// 将图层转换为Map
+  Map<String, dynamic> _layerToMap(MapLayer layer) {
+    return {
+      'id': layer.id,
+      'name': layer.name,
+      'isVisible': layer.isVisible,
+      'opacity': layer.opacity,
+      'elements': layer.elements.map((e) => _elementToMap(e)).toList(),
+      'tags': layer.tags ?? [],
+    };
+  }
+
+  /// 将绘图元素转换为Map
+  Map<String, dynamic> _elementToMap(MapDrawingElement element) {
+    return {
+      'id': element.id,
+      'type': element.type.name,
+      'points': element.points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+      'color': element.color.value,
+      'strokeWidth': element.strokeWidth,
+      'text': element.text,
+      'fontSize': element.fontSize,
+      'tags': element.tags ?? [],
+    };
+  }
+
+  /// 将便签转换为Map
+  Map<String, dynamic> _stickyNoteToMap(StickyNote note) {
+    return {
+      'id': note.id,
+      'title': note.title,
+      'content': note.content,
+      'position': {'x': note.position.dx, 'y': note.position.dy},
+      'size': {'width': note.size.width, 'height': note.size.height},
+      'color': note.backgroundColor.value,
+      'isVisible': note.isVisible,
+      'isCollapsed': note.isCollapsed,
+      'tags': note.tags ?? [],
+      'elements': note.elements.map((e) => _elementToMap(e)).toList(),
+    };
+  }
+
+  /// 将图例组转换为Map
+  Map<String, dynamic> _legendGroupToMap(LegendGroup group) {
+    return {
+      'id': group.id,
+      'name': group.name,
+      'isVisible': group.isVisible,
+      'opacity': group.opacity,
+      'tags': group.tags ?? [],
+      'legendItems': group.legendItems
+          .map((item) => _legendItemToMap(item))
+          .toList(),
+    };
+  }
+
+  /// 将图例项转换为Map
+  Map<String, dynamic> _legendItemToMap(LegendItem item) {
+    return {
+      'id': item.id,
+      'position': {'x': item.position.dx, 'y': item.position.dy},
+      'size': item.size,
+      'rotation': item.rotation,
+      'opacity': item.opacity,
+      'isVisible': item.isVisible,
+      'url': item.url,
+      'tags': item.tags ?? [],
+    };
+  }
+
+  /// 更新元素属性
+  bool _updateElementProperty(
+    String elementId,
+    String property,
+    dynamic value,
+  ) {
+    if (_currentLayers == null || _onLayersChanged == null) {
+      throw Exception('Layers not available');
+    }
+
+    final updatedLayers = <MapLayer>[];
+    var updated = false;
+
+    for (final layer in _currentLayers!) {
+      final updatedElements = <MapDrawingElement>[];
+      var layerModified = false;
+
+      for (final element in layer.elements) {
+        if (element.id == elementId) {
+          MapDrawingElement updatedElement;
+
+          switch (property) {
+            case 'text':
+              updatedElement = element.copyWith(text: value as String);
+              break;
+            case 'fontSize':
+              updatedElement = element.copyWith(fontSize: value as double);
+              break;
+            case 'color':
+              updatedElement = element.copyWith(color: Color(value as int));
+              break;
+            case 'strokeWidth':
+              updatedElement = element.copyWith(strokeWidth: value as double);
+              break;
+            default:
+              throw Exception('Unsupported property: $property');
+          }
+
+          updatedElements.add(updatedElement);
+          layerModified = true;
+          updated = true;
+        } else {
+          updatedElements.add(element);
+        }
+      }
+
+      if (layerModified) {
+        updatedLayers.add(layer.copyWith(elements: updatedElements));
+      } else {
+        updatedLayers.add(layer);
+      }
+    }
+
+    if (updated) {
+      _onLayersChanged!(updatedLayers);
+    }
+
+    return updated;
+  }
+
+  /// 移动元素
+  bool _moveElement(String elementId, double deltaX, double deltaY) {
+    if (_currentLayers == null || _onLayersChanged == null) {
+      throw Exception('Layers not available');
+    }
+
+    final updatedLayers = <MapLayer>[];
+    var updated = false;
+
+    for (final layer in _currentLayers!) {
+      final updatedElements = <MapDrawingElement>[];
+      var layerModified = false;
+
+      for (final element in layer.elements) {
+        if (element.id == elementId) {
+          final updatedPoints = element.points.map((point) {
+            return Offset(point.dx + deltaX, point.dy + deltaY);
+          }).toList();
+
+          final updatedElement = element.copyWith(points: updatedPoints);
+          updatedElements.add(updatedElement);
+          layerModified = true;
+          updated = true;
+        } else {
+          updatedElements.add(element);
+        }
+      }
+
+      if (layerModified) {
+        updatedLayers.add(layer.copyWith(elements: updatedElements));
+      } else {
+        updatedLayers.add(layer);
+      }
+    }
+
+    if (updated) {
+      _onLayersChanged!(updatedLayers);
+    }
+
+    return updated;
+  }
+
+  /// 创建文本元素
+  Map<String, dynamic> _createTextElement(
+    String text,
+    double fontSize,
+    double x,
+    double y,
+  ) {
+    if (_currentLayers == null || _onLayersChanged == null) {
+      throw Exception('Layers not available');
+    }
+
+    // 创建新的文本元素
+    final newElement = MapDrawingElement(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: DrawingElementType.text,
+      points: [Offset(x, y)],
+      color: Colors.black,
+      strokeWidth: 1.0,
+      text: text,
+      fontSize: fontSize,
+      createdAt: DateTime.now(),
+    );
+
+    // 添加到第一个图层
+    if (_currentLayers!.isNotEmpty) {
+      final layer = _currentLayers!.first;
+      final updatedElements = [...layer.elements, newElement];
+      final updatedLayer = layer.copyWith(elements: updatedElements);
+
+      final updatedLayers = [updatedLayer, ..._currentLayers!.skip(1)];
+      _onLayersChanged!(updatedLayers);
+    }
+
+    return _elementToMap(newElement);
+  }
+}
