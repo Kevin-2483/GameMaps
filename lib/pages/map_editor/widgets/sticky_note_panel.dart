@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/sticky_note.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/color_picker_dialog.dart';
+import '../../../components/common/tags_manager.dart';
 import 'dart:typed_data';
 import 'dart:async';
 
@@ -270,9 +271,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
 
                 // 第二排：透明度滑块
                 const SizedBox(height: 8),
-                _buildOpacitySlider(note),
-
-                // 第三排：便签预览（如果有内容）
+                _buildOpacitySlider(note),                // 第三排：便签预览（如果有内容）
                 if (note.content.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
@@ -293,6 +292,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                     ),
                   ),
                 ],
+
+                // 第四排：标签管理
+                const SizedBox(height: 8),
+                _buildStickyNoteTagsSection(note),
               ],
             ),
           ),
@@ -711,7 +714,6 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     );
     widget.onStickyNoteUpdated(updatedNote);
   }
-
   /// 移动到顶层
   void _moveToTop(StickyNote note) {
     // 找到当前最大的 zIndex
@@ -725,5 +727,143 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     );
     widget.onStickyNoteUpdated(updatedNote);
     widget.onSuccess?.call('便签已移到顶层');
+  }
+
+  /// 构建便签标签管理区域
+  Widget _buildStickyNoteTagsSection(StickyNote note) {
+    final tags = note.tags ?? [];
+    
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.label,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '标签',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const Spacer(),
+              if (!widget.isPreviewMode)
+                GestureDetector(
+                  onTap: () => _showStickyNoteTagsManagerDialog(note),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '管理',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _buildStickyNoteTagsDisplay(tags),
+        ],
+      ),
+    );
+  }
+
+  /// 显示便签标签管理对话框
+  void _showStickyNoteTagsManagerDialog(StickyNote note) async {
+    final currentTags = note.tags ?? [];
+    
+    final result = await TagsManagerUtils.showTagsDialog(
+      context,
+      initialTags: currentTags,
+      title: '管理便签标签 - ${note.title}',
+      maxTags: 10, // 限制最多10个标签
+      suggestedTags: _getStickyNoteSuggestedTags(),
+      tagValidator: TagsManagerUtils.defaultTagValidator,
+      enableCustomTagsManagement: true,
+    );
+
+    if (result != null) {
+      final updatedNote = note.copyWith(
+        tags: result.isNotEmpty ? result : null,
+        updatedAt: DateTime.now(),
+      );
+      widget.onStickyNoteUpdated(updatedNote);
+      
+      if (result.isEmpty) {
+        widget.onSuccess?.call('已清空便签标签');
+      } else {
+        widget.onSuccess?.call('便签标签已更新 (${result.length}个标签)');
+      }
+    }
+  }
+
+  /// 构建便签标签显示
+  Widget _buildStickyNoteTagsDisplay(List<String> tags) {
+    if (tags.isEmpty) {
+      return Text(
+        '暂无标签',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade600,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: tags.map((tag) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          tag,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+      )).toList(),
+    );
+  }
+
+  /// 获取便签建议标签
+  List<String> _getStickyNoteSuggestedTags() {
+    return [
+      '重要',
+      '待办',
+      '已完成',
+      '临时',
+      '提醒',
+      '想法',
+      '计划',
+      '问题',
+      '解决方案',
+      '备注',
+      '分析',
+      '总结',
+    ];
   }
 }

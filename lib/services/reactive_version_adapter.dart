@@ -108,10 +108,10 @@ class ReactiveVersionAdapter {
           layer1.imageFit != layer2.imageFit || // 背景图片适应方式比较
           layer1.xOffset != layer2.xOffset || // X轴偏移比较
           layer1.yOffset != layer2.yOffset || // Y轴偏移比较
-          layer1.imageScale != layer2.imageScale || // 缩放比例比较
-          layer1.isLinkedToNext != layer2.isLinkedToNext || // 链接状态比较
+          layer1.imageScale != layer2.imageScale || // 缩放比例比较          layer1.isLinkedToNext != layer2.isLinkedToNext || // 链接状态比较
           layer1.legendGroupIds.length != layer2.legendGroupIds.length ||
           layer1.elements.length != layer2.elements.length ||
+          layer1.tags?.length != layer2.tags?.length || // 图层标签数量比较
           layer1.updatedAt != layer2.updatedAt) {
         return false;
       }
@@ -133,13 +133,23 @@ class ReactiveVersionAdapter {
             return false;
           }
         }
-      }
-
-      // 检查图层关联的图例组ID列表
+      }      // 检查图层关联的图例组ID列表
       for (int j = 0; j < layer1.legendGroupIds.length; j++) {
         if (layer1.legendGroupIds[j] != layer2.legendGroupIds[j]) {
           return false;
         }
+      }
+
+      // 检查图层标签内容的变化
+      if (layer1.tags != null && layer2.tags != null) {
+        for (int j = 0; j < layer1.tags!.length; j++) {
+          if (layer1.tags![j] != layer2.tags![j]) {
+            return false;
+          }
+        }
+      } else if (layer1.tags != layer2.tags) {
+        // 一个为null，另一个不为null
+        return false;
       }
 
       // 检查图层元素的详细变化（包括tags属性）
@@ -179,9 +189,7 @@ class ReactiveVersionAdapter {
           }
         }
       }
-    }
-
-    // 检查图例组变化（包括图例组内容）
+    }    // 检查图例组变化（包括图例组内容和标签）
     for (int i = 0; i < data1.legendGroups.length; i++) {
       final group1 = data1.legendGroups[i];
       final group2 = data2.legendGroups[i];
@@ -190,11 +198,24 @@ class ReactiveVersionAdapter {
           group1.isVisible != group2.isVisible ||
           group1.opacity != group2.opacity ||
           group1.legendItems.length != group2.legendItems.length ||
+          group1.tags?.length != group2.tags?.length || // 图例组标签数量比较
           group1.updatedAt != group2.updatedAt) {
         return false;
       }
 
-      // 检查图例组中的图例项变化
+      // 检查图例组标签内容的变化
+      if (group1.tags != null && group2.tags != null) {
+        for (int j = 0; j < group1.tags!.length; j++) {
+          if (group1.tags![j] != group2.tags![j]) {
+            return false;
+          }
+        }
+      } else if (group1.tags != group2.tags) {
+        // 一个为null，另一个不为null
+        return false;
+      }
+
+      // 检查图例组中的图例项变化（包括标签）
       for (int j = 0; j < group1.legendItems.length; j++) {
         final item1 = group1.legendItems[j];
         final item2 = group2.legendItems[j];
@@ -205,11 +226,24 @@ class ReactiveVersionAdapter {
             item1.rotation != item2.rotation ||
             item1.opacity != item2.opacity ||
             item1.isVisible != item2.isVisible ||
-            item1.url != item2.url) {
+            item1.url != item2.url ||
+            item1.tags?.length != item2.tags?.length) { // 图例项标签数量比较
+          return false;
+        }
+
+        // 检查图例项标签内容的变化
+        if (item1.tags != null && item2.tags != null) {
+          for (int k = 0; k < item1.tags!.length; k++) {
+            if (item1.tags![k] != item2.tags![k]) {
+              return false;
+            }
+          }
+        } else if (item1.tags != item2.tags) {
+          // 一个为null，另一个不为null
           return false;
         }
       }
-    }    // 检查便签ID和所有属性（包括背景样式）
+    }    // 检查便签ID和所有属性（包括背景样式和标签）
     for (int i = 0; i < data1.stickyNotes.length; i++) {
       final note1 = data1.stickyNotes[i];
       final note2 = data2.stickyNotes[i]; // 修复：使用data2而不是data1
@@ -228,10 +262,22 @@ class ReactiveVersionAdapter {
           note1.backgroundImageFit != note2.backgroundImageFit || // 背景图片适应方式比较
           note1.backgroundImageOpacity != note2.backgroundImageOpacity || // 背景图片透明度比较
           note1.backgroundImageHash != note2.backgroundImageHash || // 背景图片哈希比较
-          note1.elements.length != note2.elements.length) {
-        // 绘画元素数量检查
+          note1.elements.length != note2.elements.length || // 绘画元素数量检查
+          note1.tags?.length != note2.tags?.length) { // 便签标签数量比较
         return false;
-      }      // 检查背景图片数据变化（用于兼容性和即时显示）
+      }
+
+      // 检查便签标签内容的变化
+      if (note1.tags != null && note2.tags != null) {
+        for (int j = 0; j < note1.tags!.length; j++) {
+          if (note1.tags![j] != note2.tags![j]) {
+            return false;
+          }
+        }
+      } else if (note1.tags != note2.tags) {
+        // 一个为null，另一个不为null
+        return false;
+      }// 检查背景图片数据变化（用于兼容性和即时显示）
       // 当便签同时有哈希引用和直接数据时，优先比较哈希引用
       if (note1.backgroundImageHash != null && note2.backgroundImageHash != null &&
           note1.backgroundImageHash!.isNotEmpty && note2.backgroundImageHash!.isNotEmpty) {
@@ -252,9 +298,7 @@ class ReactiveVersionAdapter {
             return false;
           }
         }
-      }
-
-      // 检查便签上的绘画元素变化
+      }      // 检查便签上的绘画元素变化（包括标签）
       for (int j = 0; j < note1.elements.length; j++) {
         final element1 = note1.elements[j];
         final element2 = note2.elements[j];
@@ -263,7 +307,20 @@ class ReactiveVersionAdapter {
             element1.points.length != element2.points.length ||
             element1.color != element2.color ||
             element1.strokeWidth != element2.strokeWidth ||
+            element1.tags?.length != element2.tags?.length || // 便签绘制元素标签数量比较
             element1.createdAt != element2.createdAt) {
+          return false;
+        }
+
+        // 检查便签绘制元素标签内容的变化
+        if (element1.tags != null && element2.tags != null) {
+          for (int k = 0; k < element1.tags!.length; k++) {
+            if (element1.tags![k] != element2.tags![k]) {
+              return false;
+            }
+          }
+        } else if (element1.tags != element2.tags) {
+          // 一个为null，另一个不为null
           return false;
         }
       }

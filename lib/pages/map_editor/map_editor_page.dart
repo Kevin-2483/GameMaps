@@ -988,17 +988,40 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // _deleteElementTraditional(elementId, elementToDelete);
     }
   }
-
-  // 更新指定图层中的绘制元素（使用响应式系统）
+  // 更新指定图层或便签中的绘制元素（使用响应式系统）
   void _updateElement(MapDrawingElement element) {
-    if (_selectedLayer == null) return;
-
     try {
-      updateDrawingElementReactive(_selectedLayer!.id, element);
-      debugPrint('使用响应式系统更新绘制元素: ${_selectedLayer!.id}/${element.id}');
+      // 如果有选中的便签，优先处理便签中的元素
+      if (_selectedStickyNote != null) {
+        // 检查元素是否属于当前选中的便签
+        final elementIndex = _selectedStickyNote!.elements.indexWhere((e) => e.id == element.id);
+        if (elementIndex != -1) {
+          // 更新便签中的元素
+          final updatedElements = List<MapDrawingElement>.from(_selectedStickyNote!.elements);
+          updatedElements[elementIndex] = element;
+          
+          final updatedStickyNote = _selectedStickyNote!.copyWith(
+            elements: updatedElements,
+            updatedAt: DateTime.now(),
+          );
+          
+          updateStickyNoteReactive(updatedStickyNote);
+          debugPrint('使用响应式系统更新便签绘制元素: ${_selectedStickyNote!.id}/${element.id}');
+          
+          // 显示更新成功消息
+          _showSuccessSnackBar('已更新便签元素标签');
+          return;
+        }
+      }
+      
+      // 如果没有选中便签或元素不属于便签，则处理图层中的元素
+      if (_selectedLayer != null) {
+        updateDrawingElementReactive(_selectedLayer!.id, element);
+        debugPrint('使用响应式系统更新图层绘制元素: ${_selectedLayer!.id}/${element.id}');
 
-      // 显示更新成功消息
-      _showSuccessSnackBar('已更新元素标签');
+        // 显示更新成功消息
+        _showSuccessSnackBar('已更新图层元素标签');
+      }
     } catch (e) {
       debugPrint('响应式系统更新元素失败: $e');
       _showErrorSnackBar('更新元素失败: $e');
@@ -2001,7 +2024,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
-  //TODO: 考虑使用响应式系统
   Future<void> _saveMap() async {
     if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
 

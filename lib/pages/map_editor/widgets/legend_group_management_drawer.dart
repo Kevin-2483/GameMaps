@@ -4,6 +4,7 @@ import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../components/vfs/vfs_file_picker_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
+import '../../../components/common/tags_manager.dart';
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -442,9 +443,46 @@ class _LegendGroupManagementDrawerState
                           ),
                         ),
                       ],
-                    ),
-                  ),
+                    ),                  ),
                 ],
+
+                // 标签管理
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.label,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '图例组标签',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (!widget.isPreviewMode)
+                      TextButton.icon(
+                        onPressed: _showTagsManagerDialog,
+                        icon: const Icon(Icons.edit, size: 14),
+                        label: const Text('管理', style: TextStyle(fontSize: 12)),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildTagsDisplay(),
               ],
             ),
           ),
@@ -774,9 +812,66 @@ class _LegendGroupManagementDrawerState
                                 url: value.trim().isEmpty ? null : value.trim(),
                               ),
                             );
-                          },
-                          style: const TextStyle(fontSize: 12),
+                          },                          style: const TextStyle(fontSize: 12),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 标签管理
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.label,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '标签',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () => _editLegendItemTags(item),
+                              icon: const Icon(Icons.edit, size: 12),
+                              label: const Text('编辑', style: TextStyle(fontSize: 10)),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        _buildLegendItemTagsDisplay(item.tags ?? []),
                       ],
                     ),
                   ),
@@ -925,10 +1020,10 @@ class _LegendGroupManagementDrawerState
         ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
 
     double positionX = (baseX + offsetX).clamp(0.1, 0.9);
-    double positionY = (baseY + offsetY).clamp(0.1, 0.9);
-    double size = 1.0;
+    double positionY = (baseY + offsetY).clamp(0.1, 0.9);    double size = 1.0;
     double rotation = 0.0;
     String url = ''; // 图例链接URL
+    List<String> itemTags = []; // 图例项标签
     final urlController = TextEditingController(text: url);
 
     showDialog(
@@ -982,7 +1077,61 @@ class _LegendGroupManagementDrawerState
                   ),
                   onChanged: (value) {
                     url = value;
-                  },
+                  },                ),
+                const SizedBox(height: 16),
+
+                // 标签管理
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.label,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '图例项标签',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: () => _showLegendItemTagsDialog(itemTags).then((newTags) {
+                              if (newTags != null) {
+                                setState(() {
+                                  itemTags = newTags;
+                                });
+                              }
+                            }),
+                            icon: const Icon(Icons.edit, size: 14),
+                            label: const Text('管理', style: TextStyle(fontSize: 12)),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildLegendItemTagsDisplay(itemTags),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
 
@@ -1067,14 +1216,14 @@ class _LegendGroupManagementDrawerState
             ),
             ElevatedButton(
               onPressed: selectedLegend != null
-                  ? () {
-                      final newItem = LegendItem(
+                  ? () {                      final newItem = LegendItem(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
                         legendId: selectedLegend!.id.toString(),
                         position: Offset(positionX, positionY),
                         size: size,
                         rotation: rotation,
                         url: url.trim().isEmpty ? null : url.trim(), // 添加URL字段
+                        tags: itemTags.isNotEmpty ? itemTags : null, // 添加标签字段
                         createdAt: DateTime.now(),
                       );
 
@@ -1266,11 +1415,192 @@ class _LegendGroupManagementDrawerState
       _showErrorMessage('打开链接失败: $e');
     }
   }
-
   /// 显示错误消息
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 显示图例组标签管理对话框
+  void _showTagsManagerDialog() async {
+    final currentTags = _currentGroup.tags ?? [];
+    
+    final result = await TagsManagerUtils.showTagsDialog(
+      context,
+      initialTags: currentTags,
+      title: '管理图例组标签 - ${_currentGroup.name}',
+      maxTags: 10, // 限制最多10个标签
+      suggestedTags: _getLegendGroupSuggestedTags(),
+      tagValidator: TagsManagerUtils.defaultTagValidator,
+      enableCustomTagsManagement: true,
+    );
+
+    if (result != null) {
+      final updatedGroup = _currentGroup.copyWith(
+        tags: result,
+        updatedAt: DateTime.now(),
+      );
+      _updateGroup(updatedGroup);
+      
+      if (result.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已清空图例组标签')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('图例组标签已更新 (${result.length}个标签)')),
+        );
+      }
+    }
+  }
+
+  /// 构建图例组标签显示
+  Widget _buildTagsDisplay() {
+    final tags = _currentGroup.tags ?? [];
+    
+    if (tags.isEmpty) {
+      return Text(
+        '暂无标签',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade600,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: tags.map((tag) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          tag,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+      )).toList(),
+    );
+  }
+
+  /// 获取图例组建议标签
+  List<String> _getLegendGroupSuggestedTags() {
+    return [
+      '建筑',
+      '房间',
+      '入口',
+      '装置',
+      '掩体',
+      '路径',
+      '标记',
+      '战术',
+      '重要',
+      '可破坏',
+      '陷阱',
+      '监控',
+    ];
+  }
+
+  /// 显示图例项标签管理对话框
+  Future<List<String>?> _showLegendItemTagsDialog(List<String> currentTags) async {
+    return await TagsManagerUtils.showTagsDialog(
+      context,
+      initialTags: currentTags,
+      title: '管理图例项标签',
+      maxTags: 10, // 限制最多10个标签
+      suggestedTags: _getLegendItemSuggestedTags(),
+      tagValidator: TagsManagerUtils.defaultTagValidator,
+      enableCustomTagsManagement: true,
+    );
+  }
+
+  /// 构建图例项标签显示
+  Widget _buildLegendItemTagsDisplay(List<String> tags) {
+    if (tags.isEmpty) {
+      return Text(
+        '暂无标签',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade600,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: tags.map((tag) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          tag,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+      )).toList(),
+    );
+  }
+
+  /// 获取图例项建议标签
+  List<String> _getLegendItemSuggestedTags() {
+    return [
+      '入口',
+      '楼梯',
+      '电梯',
+      '窗户',
+      '门',
+      '墙',
+      '掩体',
+      '装置',
+      '摄像头',
+      '陷阱',
+      '可破坏',
+      '重要',
+    ];
+  }
+
+  /// 编辑图例项标签
+  void _editLegendItemTags(LegendItem item) async {
+    final currentTags = item.tags ?? [];
+    
+    final result = await TagsManagerUtils.showTagsDialog(
+      context,
+      initialTags: currentTags,
+      title: '管理图例项标签',
+      maxTags: 10, // 限制最多10个标签
+      suggestedTags: _getLegendItemSuggestedTags(),
+      tagValidator: TagsManagerUtils.defaultTagValidator,
+      enableCustomTagsManagement: true,
+    );
+
+    if (result != null) {
+      final updatedItem = item.copyWith(
+        tags: result.isNotEmpty ? result : null,
+      );
+      _updateLegendItem(updatedItem);
+      
+      if (result.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已清空图例项标签')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('图例项标签已更新 (${result.length}个标签)')),
+        );
+      }
+    }
   }
 }

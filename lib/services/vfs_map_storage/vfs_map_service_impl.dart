@@ -409,10 +409,12 @@ class VfsMapServiceImpl implements VfsMapService {
         isVisible: configJson['isVisible'] as bool,
         imageData: imageData, // 设置加载的背景图片数据
         imageFit: imageFit,
-        xOffset: (configJson['xOffset'] as num?)?.toDouble() ?? 0.0,
-        yOffset: (configJson['yOffset'] as num?)?.toDouble() ?? 0.0,
+        xOffset: (configJson['xOffset'] as num?)?.toDouble() ?? 0.0,        yOffset: (configJson['yOffset'] as num?)?.toDouble() ?? 0.0,
         imageScale: (configJson['imageScale'] as num?)?.toDouble() ?? 1.0,
         legendGroupIds: List<String>.from(configJson['legendGroupIds'] ?? []),
+        tags: configJson['tags'] != null 
+            ? List<String>.from(configJson['tags'] as List)
+            : null,
         elements: elements,
         createdAt: DateTime.parse(configJson['createdAt'] as String),
         updatedAt: DateTime.parse(configJson['updatedAt'] as String),
@@ -461,11 +463,13 @@ class VfsMapServiceImpl implements VfsMapService {
       // 添加其他图层属性
       if (layer.imageFit != null) {
         configData['imageFit'] = layer.imageFit!.name;
-      }
-      configData['xOffset'] = layer.xOffset;
+      }      configData['xOffset'] = layer.xOffset;
       configData['yOffset'] = layer.yOffset;
       configData['imageScale'] = layer.imageScale;
       configData['isLinkedToNext'] = layer.isLinkedToNext;
+      if (layer.tags != null) {
+        configData['tags'] = layer.tags;
+      }
 
       final configPath = _buildVfsPath(
         _getLayerConfigPath(mapTitle, layer.id, version),
@@ -727,14 +731,15 @@ class VfsMapServiceImpl implements VfsMapService {
           jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
 
       // 加载图例项
-      final items = await getLegendGroupItems(mapTitle, groupId, version);
-
-      return LegendGroup(
+      final items = await getLegendGroupItems(mapTitle, groupId, version);      return LegendGroup(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
         isVisible: configJson['isVisible'] as bool? ?? true,
         opacity: (configJson['opacity'] as num?)?.toDouble() ?? 1.0,
         legendItems: items,
+        tags: configJson['tags'] != null 
+            ? List<String>.from(configJson['tags'] as List)
+            : null,
         createdAt: DateTime.parse(configJson['createdAt'] as String),
         updatedAt: DateTime.parse(configJson['updatedAt'] as String),
       );
@@ -750,9 +755,8 @@ class VfsMapServiceImpl implements VfsMapService {
     LegendGroup group, [
     String version = 'default',
   ]) async {
-    try {
-      // 保存图例组配置
-      final configData = {
+    try {      // 保存图例组配置
+      final Map<String, dynamic> configData = {
         'id': group.id,
         'name': group.name,
         'isVisible': group.isVisible,
@@ -760,6 +764,10 @@ class VfsMapServiceImpl implements VfsMapService {
         'createdAt': group.createdAt.toIso8601String(),
         'updatedAt': group.updatedAt.toIso8601String(),
       };
+      
+      if (group.tags != null) {
+        configData['tags'] = group.tags;
+      }
 
       final configPath = _buildVfsPath(
         _getLegendGroupConfigPath(mapTitle, group.id, version),

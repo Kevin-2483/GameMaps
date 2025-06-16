@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/background_image_settings_dialog.dart';
+import '../../../components/common/tags_manager.dart';
 import 'dart:async';
 
 class LayerPanel extends StatefulWidget {
@@ -952,11 +953,15 @@ class _LayerPanelState extends State<LayerPanel> {
                 style: const TextStyle(fontSize: 11),
               ),
             ],
-          ),
-
-          // 图例组绑定 chip
+          ),          // 图例组绑定 chip 和标签管理
           const SizedBox(height: 4),
-          _buildLegendGroupsChip(layer),
+          Row(
+            children: [
+              _buildLegendGroupsChip(layer),
+              const SizedBox(width: 8),
+              _buildTagsChip(layer),
+            ],
+          ),
         ],
       ),
     );
@@ -1420,6 +1425,125 @@ class _LayerPanelState extends State<LayerPanel> {
         ),
       ),
     );
+  }
+
+  /// 构建标签管理 chip
+  Widget _buildTagsChip(MapLayer layer) {
+    final tags = layer.tags ?? [];
+    final hasAllTags = tags.isNotEmpty;
+
+    return InkWell(
+      onTap: () => _showTagsManagerDialog(layer),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: hasAllTags
+              ? Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer.withAlpha((0.3 * 255).toInt())
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasAllTags
+                ? Theme.of(
+                    context,
+                  ).colorScheme.secondary.withAlpha((0.3 * 255).toInt())
+                : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.local_offer,
+              size: 12,
+              color: hasAllTags
+                  ? Theme.of(context).colorScheme.secondary
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              hasAllTags
+                  ? '${tags.length} 个标签'
+                  : '添加标签',
+              style: TextStyle(
+                fontSize: 10,
+                color: hasAllTags
+                    ? Theme.of(context).colorScheme.secondary
+                    : Colors.grey.shade600,
+                fontWeight: hasAllTags ? FontWeight.w500 : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 显示标签管理对话框
+  void _showTagsManagerDialog(MapLayer layer) async {
+    final currentTags = layer.tags ?? [];
+    
+    final result = await TagsManagerUtils.showTagsDialog(
+      context,
+      initialTags: currentTags,
+      title: '管理图层标签 - ${layer.name}',
+      maxTags: 10, // 限制最多10个标签
+      suggestedTags: _getLayerSuggestedTags(),
+      tagValidator: TagsManagerUtils.defaultTagValidator,
+      enableCustomTagsManagement: true,
+    );
+
+    if (result != null) {
+      final updatedLayer = layer.copyWith(
+        tags: result,
+        updatedAt: DateTime.now(),
+      );
+      widget.onLayerUpdated(updatedLayer);
+      
+      if (result.isEmpty) {
+        widget.onSuccess?.call('已清空图层标签');
+      } else {
+        widget.onSuccess?.call('已更新图层标签：${result.join(', ')}');
+      }
+    }
+  }
+
+  /// 获取图层的建议标签列表
+  List<String> _getLayerSuggestedTags() {
+    // 从当前所有图层中收集已使用的标签
+    final allUsedTags = <String>[];
+    for (final layer in widget.layers) {
+      if (layer.tags != null) {
+        allUsedTags.addAll(layer.tags!);
+      }
+    }
+    
+    // 去重并排序
+    final uniqueTags = allUsedTags.toSet().toList()..sort();
+    
+    // 添加一些图层相关的默认建议标签
+    const layerSpecificTags = [
+      '背景图层',
+      '前景图层', 
+      '标注图层',
+      '参考图层',
+      '基础图层',
+      '装饰图层',
+    ];
+    
+    // 合并建议标签，优先显示已使用的标签
+    final suggestedTags = <String>[];
+    suggestedTags.addAll(uniqueTags);
+    
+    for (final tag in layerSpecificTags) {
+      if (!suggestedTags.contains(tag)) {
+        suggestedTags.add(tag);
+      }
+    }
+    
+    return suggestedTags;
   }
 
   /// 构建图层名称编辑器
