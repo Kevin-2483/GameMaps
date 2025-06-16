@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
 import '../models/map_layer.dart';
 import '../models/sticky_note.dart';
 import '../services/virtual_file_system/virtual_file_system.dart';
+import '../services/scripting/isolated_script_executor.dart';
 import 'map_data_bloc.dart';
-import 'map_data_event.dart';
 import 'map_data_state.dart';
 
 /// 重构后的响应式脚本引擎
@@ -15,17 +16,8 @@ class NewReactiveScriptEngine {
   StreamSubscription<MapDataState>? _mapDataSubscription;
   bool _isListening = false;
 
-  // 地图数据访问器
-  List<MapLayer>? _currentLayers;
-  Function(List<MapLayer>)? _onLayersChanged;
-  List<StickyNote>? _currentStickyNotes;
-  Function(List<StickyNote>)? _onStickyNotesChanged;
-  List<LegendGroup>? _currentLegendGroups;
-  Function(List<LegendGroup>)? _onLegendGroupsChanged;
-
-  // VFS 存储服务和地图信息
-  VirtualFileSystem? _vfsStorageService;
-  String? _currentMapTitle;
+  // 脚本执行器（根据平台选择）
+  IsolatedScriptExecutor? _scriptExecutor;
 
   // 消息监听器
   final List<String> _executionLogs = [];
@@ -67,72 +59,26 @@ class NewReactiveScriptEngine {
   void _onMapDataChanged(MapDataLoaded data) {
     _updateDataAccessor(data);
   }
-
   /// 更新数据访问器
   void _updateDataAccessor(MapDataLoaded mapData) {
     debugPrint(
       '更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}，便签数量: ${mapData.mapItem.stickyNotes.length}，图例组数量: ${mapData.legendGroups.length}',
     );
-
-    _currentLayers = mapData.layers;
-    _onLayersChanged = (layers) => _handleLayersChanged(layers);
-    _currentStickyNotes = mapData.mapItem.stickyNotes;
-    _onStickyNotesChanged = (notes) => _handleStickyNotesChanged(notes);
-    _currentLegendGroups = mapData.legendGroups;
-    _onLegendGroupsChanged = (groups) => _handleLegendGroupsChanged(groups);
+    
+    // 在新架构中，脚本通过消息传递直接访问最新数据
+    // 不需要缓存数据，因为总是通过 _mapDataBloc.state 获取最新状态
   }
 
   /// 清空数据访问器
   void _clearDataAccessor() {
     debugPrint('清空脚本引擎数据访问器');
-    _currentLayers = null;
-    _onLayersChanged = null;
-    _currentStickyNotes = null;
-    _onStickyNotesChanged = null;
-    _currentLegendGroups = null;
-    _onLegendGroupsChanged = null;
-  }
-
-  /// 设置 VFS 访问器
+    // 在新架构中不需要清空缓存字段
+  }  /// 设置 VFS 访问器
   void setVfsAccessor(VirtualFileSystem vfsService, String mapTitle) {
-    _vfsStorageService = vfsService;
-    _currentMapTitle = mapTitle;
+    // 在新架构中，VFS访问通过消息传递机制实现
+    // 这里保留接口以便将来扩展文件操作外部函数
+    debugPrint('设置VFS访问器，地图标题: $mapTitle');
   }
-
-  /// 处理图层数据变更的回调
-  void _handleLayersChanged(List<MapLayer> updatedLayers) {
-    debugPrint('脚本引擎修改了图层数据，更新图层数量: ${updatedLayers.length}');
-
-    // 通过Bloc事件更新地图数据，确保响应式流的一致性
-    _mapDataBloc.add(
-      ScriptEngineUpdate(
-        updatedLayers: updatedLayers,
-        scriptId: 'script_engine_update',
-        description: '脚本引擎更新图层数据',
-      ),
-    );
-  }
-
-  /// 处理便签数据变更的回调
-  void _handleStickyNotesChanged(List<StickyNote> updatedStickyNotes) {
-    debugPrint('脚本引擎修改了便签数据，更新便签数量: ${updatedStickyNotes.length}');
-
-    // 目前暂时通过批量更新便签来处理
-    for (final note in updatedStickyNotes) {
-      _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
-    }
-  }
-
-  /// 处理图例组数据变更的回调
-  void _handleLegendGroupsChanged(List<LegendGroup> updatedLegendGroups) {
-    debugPrint('脚本引擎修改了图例组数据，更新图例组数量: ${updatedLegendGroups.length}');
-
-    // 通过Bloc事件更新地图数据，确保响应式流的一致性
-    for (final group in updatedLegendGroups) {
-      _mapDataBloc.add(UpdateLegendGroup(legendGroup: group));
-    }
-  }
-
   /// 执行脚本（使用消息传递机制）
   Future<ScriptExecutionResult> executeScript(ScriptData script) async {
     try {
@@ -147,11 +93,15 @@ class NewReactiveScriptEngine {
       debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
       if (!result.success) {
         debugPrint('脚本错误: ${result.error}');
+        // 如果执行失败，重置执行器以避免状态污染
+        _resetScriptExecutor();
       }
 
       return result;
     } catch (e) {
       debugPrint('脚本执行异常: $e');
+      // 发生异常时也重置执行器
+      _resetScriptExecutor();
       return ScriptExecutionResult(
         success: false,
         error: e.toString(),
@@ -159,7 +109,6 @@ class NewReactiveScriptEngine {
       );
     }
   }
-
   /// 使用消息传递机制执行脚本
   Future<ScriptExecutionResult> _executeScriptWithMessagePassing(
     ScriptData script,
@@ -167,19 +116,17 @@ class NewReactiveScriptEngine {
     final stopwatch = Stopwatch()..start();
 
     try {
-      // 创建消息处理器
-      final messageHandler = _ScriptMessageHandler(this);
+      // 确保脚本执行器已初始化
+      await _ensureScriptExecutorInitialized();
 
-      // 模拟脚本执行（在实际实现中，这里会启动Worker/Isolate）
-      final result = await messageHandler.executeScript(script);
+      // 使用真实的异步执行器执行脚本
+      final result = await _scriptExecutor!.execute(
+        script.content,
+        timeout: const Duration(seconds: 30),
+      );
 
       stopwatch.stop();
-
-      return ScriptExecutionResult(
-        success: true,
-        result: result,
-        executionTime: stopwatch.elapsed,
-      );
+      return result;
     } catch (e) {
       stopwatch.stop();
 
@@ -190,22 +137,254 @@ class NewReactiveScriptEngine {
       );
     }
   }
+  /// 确保脚本执行器已初始化
+  Future<void> _ensureScriptExecutorInitialized() async {
+    if (_scriptExecutor != null) return;
 
-  /// 停止脚本执行
-  void stopScript(String scriptId) {
-    // 实际实现中会向Worker/Isolate发送停止消息
-    debugPrint('停止脚本: $scriptId');
+    // 根据平台创建执行器
+    if (kIsWeb) {
+      // Web平台暂时使用占位符实现，避免编译错误
+      _scriptExecutor = IsolateScriptExecutor(); // 这里将返回错误，但不会导致编译失败
+    } else {
+      _scriptExecutor = IsolateScriptExecutor();
+    }
+
+    // 注册外部函数
+    _registerExternalFunctions();
+  }
+  /// 注册外部函数
+  void _registerExternalFunctions() {
+    if (_scriptExecutor == null) return;
+
+    // 基础函数
+    _scriptExecutor!.registerExternalFunction('log', _handleLog);
+    _scriptExecutor!.registerExternalFunction('print', _handleLog);
+    
+    // 数学函数
+    _scriptExecutor!.registerExternalFunction('sin', _handleSin);
+    _scriptExecutor!.registerExternalFunction('cos', _handleCos);
+    _scriptExecutor!.registerExternalFunction('tan', _handleTan);
+    _scriptExecutor!.registerExternalFunction('sqrt', _handleSqrt);
+    _scriptExecutor!.registerExternalFunction('pow', _handlePow);
+    _scriptExecutor!.registerExternalFunction('abs', _handleAbs);
+    _scriptExecutor!.registerExternalFunction('random', _handleRandom);
+    
+    // 地图数据访问函数
+    _scriptExecutor!.registerExternalFunction('getLayers', _handleGetLayers);
+    _scriptExecutor!.registerExternalFunction('getLayerById', _handleGetLayerById);
+    _scriptExecutor!.registerExternalFunction('getAllElements', _handleGetAllElements);
+    _scriptExecutor!.registerExternalFunction('countElements', _handleCountElements);
+    _scriptExecutor!.registerExternalFunction('calculateTotalArea', _handleCalculateTotalArea);
+    
+    // 文件操作函数
+    _scriptExecutor!.registerExternalFunction('readjson', _handleReadJson);
+    _scriptExecutor!.registerExternalFunction('writetext', _handleWriteText);
+    
+    // 便签相关函数
+    _scriptExecutor!.registerExternalFunction('getStickyNotes', _handleGetStickyNotes);
+    _scriptExecutor!.registerExternalFunction('getStickyNoteById', _handleGetStickyNoteById);
+    
+    // 图例相关函数
+    _scriptExecutor!.registerExternalFunction('getLegendGroups', _handleGetLegendGroups);
+    _scriptExecutor!.registerExternalFunction('getLegendGroupById', _handleGetLegendGroupById);
+    
+    debugPrint('已注册所有外部函数到Isolate执行器');
   }
 
-  /// 获取脚本执行日志
-  List<String> getExecutionLogs() {
-    return List.from(_executionLogs);
+  /// 处理获取图层函数
+  List<Map<String, dynamic>> _handleGetLayers() {
+    return getCurrentLayers()
+        .map((layer) => _layerToMap(layer))
+        .toList();
+  }  /// 处理日志函数
+  dynamic _handleLog(dynamic message) {
+    final logMessage = message?.toString() ?? '';
+    addExecutionLog(logMessage);
+    debugPrint('[Script Log] $logMessage');
+    return logMessage;
   }
 
-  /// 添加执行日志
-  void addExecutionLog(String message) {
-    _executionLogs.add(message);
-    debugPrint('[Script] $message');
+  /// 处理获取所有元素函数
+  List<Map<String, dynamic>> _handleGetAllElements() {
+    final layers = getCurrentLayers();
+    final allElements = <Map<String, dynamic>>[];
+    
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        allElements.add(_elementToMap(element));
+      }
+    }
+    
+    return allElements;
+  }
+
+  /// 处理读取JSON函数
+  Future<Map<String, dynamic>?> _handleReadJson(String path) async {
+    // 这里应该通过VFS读取JSON文件
+    debugPrint('读取JSON文件: $path');
+    return null; // 暂时返回null
+  }
+  /// 处理写入文本函数
+  Future<void> _handleWriteText(String path, String content) async {
+    // 应该通过VFS写入文本文件
+    debugPrint('写入文本文件: $path, 内容长度: ${content.length}');
+  }
+
+  // 数学函数处理器
+  dynamic _handleSin(num x) {
+    return math.sin(x.toDouble());
+  }
+
+  dynamic _handleCos(num x) {
+    return math.cos(x.toDouble());
+  }
+
+  dynamic _handleTan(num x) {
+    return math.tan(x.toDouble());
+  }
+
+  dynamic _handleSqrt(num x) {
+    return math.sqrt(x.toDouble());
+  }
+
+  dynamic _handlePow(num x, num y) {
+    return math.pow(x.toDouble(), y.toDouble());
+  }
+
+  dynamic _handleAbs(num x) {
+    return x.abs();
+  }
+
+  dynamic _handleRandom() {
+    return math.Random().nextDouble();
+  }
+
+  /// 处理根据ID获取图层
+  Map<String, dynamic>? _handleGetLayerById(String layerId) {
+    final layer = getLayerById(layerId);
+    return layer != null ? _layerToMap(layer) : null;
+  }
+
+  /// 处理统计元素
+  int _handleCountElements([String? type]) {
+    final layers = getCurrentLayers();
+    int count = 0;
+    
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        if (type == null || element.type.name == type) {
+          count++;
+        }
+      }
+    }
+    
+    return count;
+  }
+
+  /// 处理计算总面积
+  double _handleCalculateTotalArea() {
+    final layers = getCurrentLayers();
+    double totalArea = 0.0;
+    
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.rectangle ||
+            element.type == DrawingElementType.hollowRectangle) {
+          if (element.points.length >= 2) {
+            final width = (element.points[1].dx - element.points[0].dx).abs();
+            final height = (element.points[1].dy - element.points[0].dy).abs();
+            totalArea += width * height;
+          }
+        }
+      }
+    }
+    
+    return totalArea;
+  }
+
+  /// 处理获取便签
+  List<Map<String, dynamic>> _handleGetStickyNotes() {
+    // 这里应该从MapDataBloc获取便签数据
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      return state.mapItem.stickyNotes.map((note) => _stickyNoteToMap(note)).toList();
+    }
+    return [];
+  }
+
+  /// 处理根据ID获取便签
+  Map<String, dynamic>? _handleGetStickyNoteById(String noteId) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        if (note.id == noteId) {
+          return _stickyNoteToMap(note);
+        }
+      }
+    }
+    return null;
+  }
+  /// 处理获取图例组
+  List<Map<String, dynamic>> _handleGetLegendGroups() {
+    // 这里应该从MapDataBloc获取图例组数据
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      return state.legendGroups.map((group) => _legendGroupToMap(group)).toList();
+    }
+    return [];
+  }
+
+  /// 处理根据ID获取图例组
+  Map<String, dynamic>? _handleGetLegendGroupById(String groupId) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final group in state.legendGroups) {
+        if (group.id == groupId) {
+          return _legendGroupToMap(group);
+        }
+      }
+    }
+    return null;
+  }
+  /// 便签转换为Map
+  Map<String, dynamic> _stickyNoteToMap(StickyNote note) {
+    return {
+      'id': note.id,
+      'title': note.title,
+      'content': note.content,
+      'position': {'x': note.position.dx, 'y': note.position.dy},
+      'size': {'width': note.size.width, 'height': note.size.height},
+      'backgroundColor': note.backgroundColor.value,
+      'isVisible': note.isVisible,
+      'isCollapsed': note.isCollapsed,
+      'tags': note.tags ?? [],
+    };
+  }
+  /// 图例组转换为Map  
+  Map<String, dynamic> _legendGroupToMap(LegendGroup group) {
+    return {
+      'id': group.id,
+      'name': group.name,
+      'isVisible': group.isVisible,
+      'opacity': group.opacity,
+      'legendItems': group.legendItems.map((item) => _legendItemToMap(item)).toList(),
+      'tags': group.tags ?? [],
+    };
+  }
+
+  /// 图例项转换为Map
+  Map<String, dynamic> _legendItemToMap(LegendItem item) {
+    return {
+      'id': item.id,
+      'legendId': item.legendId,
+      'position': {'x': item.position.dx, 'y': item.position.dy},
+      'size': item.size,
+      'rotation': item.rotation,
+      'opacity': item.opacity,
+      'isVisible': item.isVisible,
+      'url': item.url,
+      'tags': item.tags ?? [],
+    };
   }
 
   /// 清空执行日志
@@ -257,11 +436,19 @@ class NewReactiveScriptEngine {
 
   /// 获取当前地图状态
   MapDataState get currentState => _mapDataBloc.state;
-
   /// 初始化脚本引擎
   Future<void> initializeScriptEngine() async {
-    // 实际实现中会初始化Worker/Isolate
-    debugPrint('初始化新响应式脚本引擎');
+    await _ensureScriptExecutorInitialized();
+    debugPrint('初始化新响应式脚本引擎完成');
+  }
+
+  /// 重置脚本执行器
+  void _resetScriptExecutor() {
+    if (_scriptExecutor != null) {
+      debugPrint('重置脚本执行器');
+      _scriptExecutor!.dispose();
+      _scriptExecutor = null;
+    }
   }
 
   /// 释放资源
@@ -272,93 +459,21 @@ class NewReactiveScriptEngine {
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;
 
+    // 释放脚本执行器
+    _scriptExecutor?.dispose();
+    _scriptExecutor = null;
+
     // 从MapDataBloc中移除监听器
     _mapDataBloc.removeDataChangeListener(_onMapDataChanged);
 
     // 清空数据访问器
-    _clearDataAccessor();
-    _executionLogs.clear();
-  }
-}
-
-/// 脚本消息处理器
-/// 负责处理脚本执行过程中的消息传递
-class _ScriptMessageHandler {
-  final NewReactiveScriptEngine _engine;
-
-  _ScriptMessageHandler(this._engine);
-
-  /// 执行脚本
-  Future<dynamic> executeScript(ScriptData script) async {
-    // 模拟消息传递的脚本执行
-    // 在实际实现中，这里会：
-    // 1. 将脚本代码发送给Worker/Isolate
-    // 2. 监听执行结果消息
-    // 3. 处理外部函数调用请求
-
-    _engine.addExecutionLog('开始执行脚本: ${script.name}');
-
-    try {
-      // 模拟脚本执行逻辑
-      final result = await _simulateScriptExecution(script);
-
-      _engine.addExecutionLog('脚本执行完成: ${script.name}');
-
-      return result;
-    } catch (e) {
-      _engine.addExecutionLog('脚本执行失败: ${script.name}, 错误: $e');
-      rethrow;
-    }
+    _clearDataAccessor();    _executionLogs.clear();
   }
 
-  /// 模拟脚本执行
-  Future<dynamic> _simulateScriptExecution(ScriptData script) async {
-    // 这里是模拟实现，实际应该通过消息传递机制
-    // 与Worker/Isolate中的脚本执行器进行通信
-
-    // 延迟模拟异步执行
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    // 模拟一些基本的脚本操作
-    if (script.content.contains('getLayers')) {
-      final layers = _engine.getCurrentLayers();
-      _engine.addExecutionLog('获取到 ${layers.length} 个图层');
-    }
-
-    if (script.content.contains('log')) {
-      _engine.addExecutionLog('脚本输出日志信息');
-    }
-
-    return 'Script executed successfully (simulated)';
-  }
-
-  /// 处理外部函数调用
-  Future<dynamic> handleExternalFunctionCall(
-    String functionName,
-    List<dynamic> arguments,
-  ) async {
-    _engine.addExecutionLog('调用外部函数: $functionName');
-
-    // 根据函数名执行相应的操作
-    switch (functionName) {
-      case 'getLayers':
-        return _engine
-            .getCurrentLayers()
-            .map((layer) => _layerToMap(layer))
-            .toList();
-
-      case 'log':
-      case 'print':
-        final message = arguments.isNotEmpty
-            ? arguments[0]?.toString() ?? ''
-            : '';
-        _engine.addExecutionLog(message);
-        return message;
-
-      // 其他外部函数的实现...
-      default:
-        throw Exception('Unknown external function: $functionName');
-    }
+  /// 添加执行日志
+  void addExecutionLog(String message) {
+    _executionLogs.add(message);
+    debugPrint('[Script] $message');
   }
 
   /// 将图层转换为Map
@@ -385,5 +500,17 @@ class _ScriptMessageHandler {
       'fontSize': element.fontSize,
       'tags': element.tags ?? [],
     };
+  }
+  /// 停止脚本执行
+  void stopScript(String scriptId) {
+    _scriptExecutor?.stop();
+    debugPrint('停止脚本: $scriptId');
+    // 停止后重置执行器，确保下次执行时使用全新的状态
+    _resetScriptExecutor();
+  }
+
+  /// 获取脚本执行日志
+  List<String> getExecutionLogs() {
+    return List.from(_executionLogs);
   }
 }

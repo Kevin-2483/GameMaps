@@ -1,0 +1,33 @@
+// 死循环脚本 - 每秒打印一个数字
+var counter = 0;
+
+await log("开始执行死循环脚本...");
+await log("如果UI界面仍然响应，说明异步执行成功！");
+
+// 无限循环
+while (true) {
+    counter++;
+    await log("循环计数: " + counter.toString());
+    
+    // 每秒执行一次（使用简单的延迟）
+    // 注意：这是一个简化的延迟实现
+    var startTime = 0; // 简化时间处理
+    for (var i = 0; i < 1000000; i++) {
+        // 简单的延迟循环
+    }
+    
+    // 每10次循环检查一次是否应该停止
+    if (counter % 10 == 0) {
+        await log("已执行 " + counter.toString() + " 次循环，脚本仍在运行...");
+    }
+    
+    // 每100次循环强制检查停止信号
+    if (counter % 100 == 0) {
+        await log("警告：脚本已执行 " + counter.toString() + " 次循环！");
+        await log("如果需要停止，请使用停止按钮。");
+    }
+}
+
+// 这行代码永远不会执行
+log("脚本结束（不应该看到这条消息）");
+return "Dead loop completed (this should never happen)";

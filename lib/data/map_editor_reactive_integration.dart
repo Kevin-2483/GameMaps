@@ -10,7 +10,6 @@ import '../utils/throttle_manager.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
 import 'new_reactive_script_manager.dart';
-import 'reactive_script_manager.dart';
 import 'map_editor_integration_adapter.dart';
 
 /// 地图编辑器响应式系统集成
@@ -35,7 +34,6 @@ import 'map_editor_integration_adapter.dart';
 ///    - 支持强制刷新待处理更新
 class MapEditorReactiveIntegration with ThrottleMixin {
   late final MapDataBloc _mapDataBloc;
-  late final ReactiveScriptManager _scriptManager;
   late final NewReactiveScriptManager _newScriptManager;
   late final MapEditorIntegrationAdapter _adapter;
   late final VfsMapService _mapService;
@@ -44,9 +42,6 @@ class MapEditorReactiveIntegration with ThrottleMixin {
 
   /// 获取地图数据Bloc
   MapDataBloc get mapDataBloc => _mapDataBloc;
-
-  /// 获取脚本管理器
-  ReactiveScriptManager get scriptManager => _scriptManager;
 
   /// 获取新的脚本管理器
   NewReactiveScriptManager get newScriptManager => _newScriptManager;
@@ -59,24 +54,20 @@ class MapEditorReactiveIntegration with ThrottleMixin {
     if (_isInitialized) return;
 
     debugPrint('初始化地图编辑器响应式系统'); // 1. 创建VFS地图服务
-    _mapService = VfsMapServiceFactory.createVfsMapService();
+    _mapService = VfsMapServiceFactory.createVfsMapService();    // 2. 创建地图数据Bloc
+    _mapDataBloc = MapDataBloc(mapService: _mapService);
 
-    // 2. 创建地图数据Bloc
-    _mapDataBloc = MapDataBloc(mapService: _mapService);    // 3. 创建响应式脚本管理器
-    _scriptManager = ReactiveScriptManager(mapDataBloc: _mapDataBloc);
-
-    // 4. 创建新的响应式脚本管理器
+    // 3. 创建新的响应式脚本管理器
     _newScriptManager = NewReactiveScriptManager(mapDataBloc: _mapDataBloc);
 
-    // 5. 创建集成适配器
+    // 4. 创建集成适配器
     _adapter = MapEditorIntegrationAdapter(
       mapDataBloc: _mapDataBloc,
-      scriptManager: _scriptManager,
+      scriptManager: _newScriptManager,
       mapService: _mapService,
     );
 
-    // 6. 初始化脚本管理器
-    await _scriptManager.initialize();
+    // 5. 初始化脚本管理器
     await _newScriptManager.initialize();
 
     _isInitialized = true;
@@ -135,13 +126,11 @@ class MapEditorReactiveIntegration with ThrottleMixin {
 
   /// 释放资源
   void dispose() {
-    debugPrint('释放地图编辑器响应式系统资源');
-
-    // 清理节流管理器
+    debugPrint('释放地图编辑器响应式系统资源');    // 清理节流管理器
     disposeThrottle();
 
     _adapter.dispose();
-    _scriptManager.dispose();
+    _newScriptManager.dispose();
     _mapDataBloc.close();
 
     _isInitialized = false;
@@ -271,12 +260,7 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   /// 删除图例组（响应式）
   void deleteLegendGroupReactive(String legendGroupId) {
     reactiveIntegration.adapter.deleteLegendGroup(legendGroupId);
-  }
-  /// 获取响应式脚本管理器
-  ReactiveScriptManager get reactiveScriptManager =>
-      reactiveIntegration.scriptManager;
-
-  /// 获取新的响应式脚本管理器
+  }  /// 获取新的响应式脚本管理器
   NewReactiveScriptManager get newReactiveScriptManager =>
       reactiveIntegration.newScriptManager;
 

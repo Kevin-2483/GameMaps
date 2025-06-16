@@ -6,7 +6,7 @@ import '../services/vfs_map_storage/vfs_map_service.dart';
 import 'map_data_bloc.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
-import 'reactive_script_manager.dart';
+import 'new_reactive_script_manager.dart';
 
 /// Timer类的导入（如果需要）
 import 'dart:async';
@@ -15,12 +15,12 @@ import 'dart:async';
 /// 提供统一的API接口，将传统的地图编辑器操作转换为响应式事件
 class MapEditorIntegrationAdapter {
   final MapDataBloc _mapDataBloc;
-  final ReactiveScriptManager _scriptManager;
+  final NewReactiveScriptManager _scriptManager;
   final VfsMapService _mapService;
 
   MapEditorIntegrationAdapter({
     required MapDataBloc mapDataBloc,
-    required ReactiveScriptManager scriptManager,
+    required NewReactiveScriptManager scriptManager,
     required VfsMapService mapService,
   }) : _mapDataBloc = mapDataBloc,
        _scriptManager = scriptManager,
@@ -290,9 +290,8 @@ class MapEditorIntegrationAdapter {
   }
 
   // ==================== 脚本管理操作 ====================
-
   /// 获取脚本管理器
-  ReactiveScriptManager get scriptManager => _scriptManager;
+  NewReactiveScriptManager get scriptManager => _scriptManager;
 
   /// 重置脚本引擎（当地图数据发生重大变更时调用）
   Future<void> resetScriptEngine() async {

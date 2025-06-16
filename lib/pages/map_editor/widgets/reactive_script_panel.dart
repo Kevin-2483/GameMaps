@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import '../../../models/script_data.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import 'script_editor_window_reactive.dart';
@@ -240,51 +241,12 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       ],
     );
   }
-
   /// 显示执行日志
   void _showExecutionLogs() {
-    final logs = widget.scriptManager.getExecutionLogs();
-    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('脚本执行日志'),
-        content: SizedBox(
-          width: 500,
-          height: 400,
-          child: logs.isEmpty
-              ? const Center(
-                  child: Text('暂无执行日志'),
-                )
-              : ListView.builder(
-                  itemCount: logs.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Text(
-                        logs[index],
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              widget.scriptManager.clearExecutionLogs();
-              Navigator.of(context).pop();
-            },
-            child: const Text('清空日志'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
+      builder: (context) => _ExecutionLogsDialog(
+        scriptManager: widget.scriptManager,
       ),
     );
   }
@@ -1033,5 +995,141 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
     // 使用相同的默认内容生成逻辑
     final panel = _ReactiveScriptPanelState();
     return panel._getDefaultScriptContent(type);
+  }
+}
+
+/// 执行日志对话框组件
+/// 支持实时刷新日志显示
+class _ExecutionLogsDialog extends StatefulWidget {
+  final NewReactiveScriptManager scriptManager;
+
+  const _ExecutionLogsDialog({
+    required this.scriptManager,
+  });
+
+  @override
+  State<_ExecutionLogsDialog> createState() => _ExecutionLogsDialogState();
+}
+
+class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // 启动定时刷新，每500ms刷新一次
+    _refreshTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final logs = widget.scriptManager.getExecutionLogs();
+    
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.terminal, size: 20),
+          const SizedBox(width: 8),
+          const Text('脚本执行日志'),
+          const Spacer(),
+          Text(
+            '共 ${logs.length} 条',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 600,
+        height: 400,
+        child: logs.isEmpty
+            ? const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text('暂无执行日志'),
+                    SizedBox(height: 8),
+                    Text(
+                      '执行脚本时的日志会显示在这里',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: ListView.builder(
+                  itemCount: logs.length,
+                  itemBuilder: (context, index) {
+                    final log = logs[index];
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: index.isEven ? Colors.grey.shade50 : Colors.white,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${index + 1}.',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              log,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+      ),
+      actions: [
+        TextButton.icon(
+          onPressed: () {
+            widget.scriptManager.clearExecutionLogs();
+            setState(() {});
+          },
+          icon: const Icon(Icons.clear_all, size: 16),
+          label: const Text('清空日志'),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {});
+          },
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('刷新'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('关闭'),
+        ),
+      ],
+    );
   }
 }

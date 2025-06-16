@@ -28,7 +28,6 @@ import 'widgets/sticky_note_panel.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
 import '../../services/reactive_version/reactive_version_adapter.dart';
-import '../../services/scripting/script_manager_vfs.dart';
 import '../../models/script_data.dart';
 // import 'widgets/script_panel.dart';
 import 'widgets/reactive_script_panel.dart';
@@ -89,9 +88,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   final MapDatabaseService _mapDatabaseService =
       VfsMapServiceFactory.createMapDatabaseService();
   final VfsMapService _vfsMapService =
-      VfsMapServiceFactory.createVfsMapService();
-  final LegendVfsService _legendDatabaseService = LegendVfsService();
-  final ScriptManager _scriptManager = ScriptManager();
+      VfsMapServiceFactory.createVfsMapService();  final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
@@ -180,13 +177,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     super.dispose();
   }
-
   @override
   void initState() {
     super.initState();
     _initializeMapAndReactiveSystem();
     _initializeLayoutFromPreferences();
-    _initializeScriptManager();
+    // 脚本管理器现在通过响应式系统自动初始化
   }
 
   /// 同步初始化地图和响应式系统
@@ -211,11 +207,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
         // 5. 立即初始化响应式版本管理系统
         await _initializeReactiveVersionManagement();
-      }
-
-      // 6. 重新初始化脚本引擎以确保外部函数声明正确
-      await reactiveIntegration.scriptManager.resetScriptEngine();
-      debugPrint('脚本引擎重新初始化完成');
+      }      // 6. 重新初始化脚本引擎以确保外部函数声明正确
+      await reactiveIntegration.newScriptManager.initialize();
+      debugPrint('新脚本引擎重新初始化完成');
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
       debugPrint('地图和响应式系统初始化失败: $e');
@@ -251,15 +245,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
 
       // 预加载所有图层的图片
-      _preloadAllLayerImages();
-
-      // 更新脚本管理器的地图数据访问器
+      _preloadAllLayerImages();      // 更新脚本管理器的地图数据访问器
       _updateScriptMapDataAccessor();
 
-      // 更新脚本管理器的地图标题
-      if (_currentMap != null) {
-        _scriptManager.setMapTitle(_currentMap!.title);
-      }
+      // 新的脚本管理器会通过响应式系统自动获取地图数据
+      // 无需手动设置地图标题
 
       debugPrint('地图数据加载完成: ${_currentMap!.title}');
     } catch (e) {
@@ -569,56 +559,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _hasUnsavedChanges = hasUnsavedChangesReactive;
       });
       debugPrint('已同步响应式系统的未保存状态到UI: $_hasUnsavedChanges');
-    }
-  }
+    }  }
 
-  /// 初始化脚本管理器
-  void _initializeScriptManager() async {
-    await _scriptManager.initialize(mapTitle: _currentMap?.title);
-    // 设置地图数据访问器
-    _updateScriptMapDataAccessor();
-  }
-
-  /// 更新脚本引擎的地图数据访问器
+  /// 旧的脚本引擎地图数据访问器更新方法已移除
+  /// 新的响应式脚本管理器通过MapDataBloc自动获取地图数据
   void _updateScriptMapDataAccessor() {
-    if (_currentMap != null) {
-      _scriptManager.setMapDataAccessor(
-        _currentMap!.layers,
-        (updatedLayers) {
-          // 当脚本修改图层数据时，更新地图
-          if (mounted) {
-            setState(() {
-              _currentMap = _currentMap!.copyWith(layers: updatedLayers);
-            });
-            _saveMap();
-          }
-        },
-        _currentMap!.stickyNotes,
-        (updatedStickyNotes) {
-          // 当脚本修改便签数据时，更新地图
-          if (mounted) {
-            setState(() {
-              _currentMap = _currentMap!.copyWith(
-                stickyNotes: updatedStickyNotes,
-              );
-            });
-            _saveMap();
-          }
-        },
-        _currentMap!.legendGroups,
-        (updatedLegendGroups) {
-          // 当脚本修改图例组数据时，更新地图
-          if (mounted) {
-            setState(() {
-              _currentMap = _currentMap!.copyWith(
-                legendGroups: updatedLegendGroups,
-              );
-            });
-            _saveMap();
-          }
-        },
-      );
-    }
+    // 新的响应式脚本管理器通过MapDataBloc自动访问地图数据
+    // 无需手动设置访问器
+    debugPrint('新的响应式脚本管理器自动通过MapDataBloc访问地图数据');
   }
 
   /// 从用户首选项初始化界面布局

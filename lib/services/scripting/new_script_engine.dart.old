@@ -227,26 +227,25 @@ class NewScriptEngine {
 
   /// 同步地图数据到执行器
   void _syncMapDataToExecutor() {
-    if (_executor == null) return;
+    // 这里的数据已经通过accessors传递给了外部函数处理器
+    // 在消息传递架构中，数据会通过外部函数调用返回给隔离环境
+  }
 
-    final mapData = <String, dynamic>{
-      'layers':
-          _currentLayers?.map((layer) => _layerToMap(layer)).toList() ?? [],
-      'stickyNotes':
-          _currentStickyNotes?.map((note) => _stickyNoteToMap(note)).toList() ??
-          [],
-      'legendGroups':
-          _currentLegendGroups
-              ?.map((group) => _legendGroupToMap(group))
-              .toList() ??
-          [],
-    };
-
-    if (_executor is IsolateScriptExecutor) {
-      (_executor as IsolateScriptExecutor).sendMapDataUpdate(mapData);
-    } else if (_executor is WebWorkerScriptExecutor) {
-      (_executor as WebWorkerScriptExecutor).sendMapDataUpdate(mapData);
-    }
+  /// 设置地图数据访问器（连接到响应式数据流）
+  void setMapDataAccessors({
+    required List<MapLayer>? Function() getCurrentLayers,
+    required Function(List<MapLayer>) onLayersChanged,
+    required List<StickyNote>? Function() getCurrentStickyNotes,
+    required Function(List<StickyNote>) onStickyNotesChanged,
+    required List<LegendGroup>? Function() getCurrentLegendGroups,
+    required Function(List<LegendGroup>) onLegendGroupsChanged,
+  }) {
+    _currentLayers = getCurrentLayers();
+    _onLayersChanged = onLayersChanged;
+    _currentStickyNotes = getCurrentStickyNotes();
+    _onStickyNotesChanged = onStickyNotesChanged;
+    _currentLegendGroups = getCurrentLegendGroups();
+    _onLegendGroupsChanged = onLegendGroupsChanged;
   }
 
   /// 执行脚本
