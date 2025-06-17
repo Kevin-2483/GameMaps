@@ -1,0 +1,7 @@
+// 简单测试脚本
+log("Hello from Hetu Script!");
+
+var result = 1 + 2;
+log("计算结果: " + result.toString());
+
+return result;

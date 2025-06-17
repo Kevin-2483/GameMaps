@@ -6,6 +6,7 @@ import '../models/map_layer.dart';
 import '../models/sticky_note.dart';
 import '../services/virtual_file_system/virtual_file_system.dart';
 import '../services/scripting/isolated_script_executor.dart';
+import '../services/scripting/script_executor_factory.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
 
@@ -136,18 +137,12 @@ class NewReactiveScriptEngine {
         executionTime: stopwatch.elapsed,
       );
     }
-  }
-  /// 确保脚本执行器已初始化
+  }  /// 确保脚本执行器已初始化
   Future<void> _ensureScriptExecutorInitialized() async {
     if (_scriptExecutor != null) return;
 
-    // 根据平台创建执行器
-    if (kIsWeb) {
-      // Web平台暂时使用占位符实现，避免编译错误
-      _scriptExecutor = IsolateScriptExecutor(); // 这里将返回错误，但不会导致编译失败
-    } else {
-      _scriptExecutor = IsolateScriptExecutor();
-    }
+    // 使用工厂创建平台适配的执行器
+    _scriptExecutor = ScriptExecutorFactory.create();
 
     // 注册外部函数
     _registerExternalFunctions();
