@@ -1,124 +1,13 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
 import '../../models/script_data.dart';
-
-/// 跨平台异步脚本执行器接口
-abstract class IsolatedScriptExecutor {
-  /// 执行脚本代码
-  Future<ScriptExecutionResult> execute(
-    String code, {
-    Map<String, dynamic>? context,
-    Duration? timeout,
-  });
-
-  /// 停止脚本执行
-  void stop();
-
-  /// 释放资源
-  void dispose();
-
-  /// 注册外部函数处理器
-  void registerExternalFunction(String name, Function handler);
-
-  /// 清空所有外部函数处理器
-  void clearExternalFunctions();
-
-  /// 发送地图数据更新
-  void sendMapDataUpdate(Map<String, dynamic> data);
-
-  /// 获取执行日志
-  List<String> getExecutionLogs();
-}
-
-/// 脚本执行消息类型
-enum ScriptMessageType {
-  execute,
-  started,
-  result,
-  error,
-  log,
-  stop,
-  mapDataUpdate,
-  externalFunctionCall,
-  externalFunctionResponse,
-}
-
-/// 脚本执行消息
-class ScriptMessage {
-  final ScriptMessageType type;
-  final Map<String, dynamic> data;
-
-  const ScriptMessage({required this.type, required this.data});
-
-  Map<String, dynamic> toJson() => {'type': type.name, 'data': data};
-
-  factory ScriptMessage.fromJson(Map<String, dynamic> json) {
-    return ScriptMessage(
-      type: ScriptMessageType.values.firstWhere((e) => e.name == json['type']),
-      data: Map<String, dynamic>.from(json['data']),
-    );
-  }
-}
-
-/// 外部函数调用请求
-class ExternalFunctionCall {
-  final String functionName;
-  final List<dynamic> arguments;
-  final String callId;
-
-  const ExternalFunctionCall({
-    required this.functionName,
-    required this.arguments,
-    required this.callId,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'functionName': functionName,
-    'arguments': arguments,
-    'callId': callId,
-  };
-
-  factory ExternalFunctionCall.fromJson(Map<String, dynamic> json) {
-    return ExternalFunctionCall(
-      functionName: json['functionName'],
-      arguments: List.from(json['arguments']),
-      callId: json['callId'],
-    );
-  }
-}
-
-/// 外部函数调用响应
-class ExternalFunctionResponse {
-  final String callId;
-  final dynamic result;
-  final String? error;
-
-  const ExternalFunctionResponse({
-    required this.callId,
-    this.result,
-    this.error,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'callId': callId,
-    'result': result,
-    'error': error,
-  };
-
-  factory ExternalFunctionResponse.fromJson(Map<String, dynamic> json) {
-    return ExternalFunctionResponse(
-      callId: json['callId'],
-      result: json['result'],
-      error: json['error'],
-    );
-  }
-}
+import 'script_executor_base.dart';
+import 'external_function_registry.dart';
 
 /// 桌面平台隔离执行器（使用 dart:isolate）
-class IsolateScriptExecutor implements IsolatedScriptExecutor {
+class IsolateScriptExecutor implements IScriptExecutor {
   Isolate? _isolate;
   SendPort? _isolateSendPort;
   ReceivePort? _receivePort;
@@ -435,17 +324,12 @@ class _IsolateScriptRunner {
       // 创建Hetu脚本解释器
       final hetu = Hetu();
 
-      // 准备外部函数映射
-      final externalFunctions = <String, Function>{};
-
-      // 注册基础外部函数
-      _registerBasicExternalFunctions(externalFunctions);
-
-      // 注册地图数据访问函数
-      _registerMapDataFunctions(externalFunctions);
-
-      // 注册便签和图例函数
-      _registerStickyNoteAndLegendFunctions(externalFunctions);
+      // 使用统一的外部函数注册器
+      final externalFunctions =
+          ExternalFunctionRegistry.createFunctionsForIsolate(
+            (functionName, arguments) =>
+                _callExternalFunction(functionName, arguments),
+          );
 
       // 初始化Hetu解释器
       hetu.init(externalFunctions: externalFunctions);
@@ -465,220 +349,12 @@ class _IsolateScriptRunner {
     }
   }
 
-  /// 注册基础外部函数（日志、数学等）
-  void _registerBasicExternalFunctions(Map<String, Function> functions) {
-    // 日志函数
-    functions['log'] = (dynamic message) async {
-      return await _callExternalFunction('log', [message]);
-    };
-
-    functions['print'] = (dynamic message) async {
-      return await _callExternalFunction('print', [message]);
-    };
-
-    // 数学函数
-    functions['sin'] = (num x) async {
-      return await _callExternalFunction('sin', [x]);
-    };
-
-    functions['cos'] = (num x) async {
-      return await _callExternalFunction('cos', [x]);
-    };
-
-    functions['tan'] = (num x) async {
-      return await _callExternalFunction('tan', [x]);
-    };
-
-    functions['sqrt'] = (num x) async {
-      return await _callExternalFunction('sqrt', [x]);
-    };
-
-    functions['pow'] = (num x, num y) async {
-      return await _callExternalFunction('pow', [x, y]);
-    };
-
-    functions['abs'] = (num x) async {
-      return await _callExternalFunction('abs', [x]);
-    };
-
-    functions['random'] = () async {
-      return await _callExternalFunction('random', []);
-    };
-  }
-
-  /// 注册地图数据访问函数
-  void _registerMapDataFunctions(Map<String, Function> functions) {
-    // 图层相关
-    functions['getLayers'] = () async {
-      return await _callExternalFunction('getLayers', []);
-    };
-
-    functions['getLayerById'] = (String id) async {
-      return await _callExternalFunction('getLayerById', [id]);
-    };
-
-    functions['getElementsInLayer'] = (String layerId) async {
-      return await _callExternalFunction('getElementsInLayer', [layerId]);
-    };
-
-    functions['getAllElements'] = () async {
-      return await _callExternalFunction('getAllElements', []);
-    };
-
-    functions['countElements'] = ([String? type]) async {
-      return await _callExternalFunction('countElements', [type]);
-    };
-
-    functions['calculateTotalArea'] = () async {
-      return await _callExternalFunction('calculateTotalArea', []);
-    };
-
-    // 元素修改函数
-    functions['updateElementProperty'] =
-        (String elementId, String property, dynamic value) async {
-          return await _callExternalFunction('updateElementProperty', [
-            elementId,
-            property,
-            value,
-          ]);
-        };
-
-    functions['moveElement'] =
-        (String elementId, Map<String, dynamic> newPosition) async {
-          return await _callExternalFunction('moveElement', [
-            elementId,
-            newPosition,
-          ]);
-        };
-
-    // 文本元素函数
-    functions['createTextElement'] = (Map<String, dynamic> params) async {
-      return await _callExternalFunction('createTextElement', [params]);
-    };
-
-    functions['updateTextContent'] = (String elementId, String content) async {
-      return await _callExternalFunction('updateTextContent', [
-        elementId,
-        content,
-      ]);
-    };
-
-    functions['updateTextSize'] = (String elementId, double size) async {
-      return await _callExternalFunction('updateTextSize', [elementId, size]);
-    };
-
-    functions['getTextElements'] = () async {
-      return await _callExternalFunction('getTextElements', []);
-    };
-
-    functions['findTextElementsByContent'] = (String content) async {
-      return await _callExternalFunction('findTextElementsByContent', [
-        content,
-      ]);
-    };
-
-    functions['say'] =
-        (dynamic tagFilter, String filterType, String text) async {
-          return await _callExternalFunction('say', [
-            tagFilter,
-            filterType,
-            text,
-          ]);
-        };
-
-    // 文件操作函数
-    functions['readjson'] = (String filename) async {
-      return await _callExternalFunction('readjson', [filename]);
-    };
-
-    functions['writetext'] = (String filename, String content) async {
-      return await _callExternalFunction('writetext', [filename, content]);
-    };
-  }
-
-  /// 注册便签和图例函数
-  void _registerStickyNoteAndLegendFunctions(Map<String, Function> functions) {
-    // 便签相关函数
-    functions['getStickyNotes'] = () async {
-      return await _callExternalFunction('getStickyNotes', []);
-    };
-
-    functions['getStickyNoteById'] = (String id) async {
-      return await _callExternalFunction('getStickyNoteById', [id]);
-    };
-
-    functions['getElementsInStickyNote'] = (String id) async {
-      return await _callExternalFunction('getElementsInStickyNote', [id]);
-    };
-
-    functions['filterStickyNotesByTags'] = (List<String> tags) async {
-      return await _callExternalFunction('filterStickyNotesByTags', [tags]);
-    };
-
-    functions['filterStickyNoteElementsByTags'] = (List<String> tags) async {
-      return await _callExternalFunction('filterStickyNoteElementsByTags', [
-        tags,
-      ]);
-    };
-
-    // 图例相关函数
-    functions['getLegendGroups'] = () async {
-      return await _callExternalFunction('getLegendGroups', []);
-    };
-
-    functions['getLegendGroupById'] = (String id) async {
-      return await _callExternalFunction('getLegendGroupById', [id]);
-    };
-
-    functions['updateLegendGroup'] =
-        (String id, Map<String, dynamic> params) async {
-          return await _callExternalFunction('updateLegendGroup', [id, params]);
-        };
-
-    functions['updateLegendGroupVisibility'] = (String id, bool visible) async {
-      return await _callExternalFunction('updateLegendGroupVisibility', [
-        id,
-        visible,
-      ]);
-    };
-
-    functions['updateLegendGroupOpacity'] = (String id, double opacity) async {
-      return await _callExternalFunction('updateLegendGroupOpacity', [
-        id,
-        opacity,
-      ]);
-    };
-
-    functions['getLegendItems'] = () async {
-      return await _callExternalFunction('getLegendItems', []);
-    };
-
-    functions['getLegendItemById'] = (String id) async {
-      return await _callExternalFunction('getLegendItemById', [id]);
-    };
-
-    functions['updateLegendItem'] =
-        (String id, Map<String, dynamic> params) async {
-          return await _callExternalFunction('updateLegendItem', [id, params]);
-        };
-
-    functions['filterLegendGroupsByTags'] = (List<String> tags) async {
-      return await _callExternalFunction('filterLegendGroupsByTags', [tags]);
-    };
-
-    functions['filterLegendItemsByTags'] = (List<String> tags) async {
-      return await _callExternalFunction('filterLegendItemsByTags', [tags]);
-    };
-  }
-
   /// 调用外部函数（通过消息传递与主线程通信）
   Future<dynamic> _callExternalFunction(
     String functionName,
     List<dynamic> arguments,
   ) async {
-    final callId =
-        DateTime.now().millisecondsSinceEpoch.toString() +
-        math.Random().nextInt(1000).toString();
+    final callId = ExternalFunctionRegistry.generateCallId();
 
     final call = ExternalFunctionCall(
       functionName: functionName,

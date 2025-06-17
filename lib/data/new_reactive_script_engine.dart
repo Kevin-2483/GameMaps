@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
 import '../models/map_layer.dart';
-import '../models/sticky_note.dart';
 import '../services/virtual_file_system/virtual_file_system.dart';
-import '../services/scripting/isolated_script_executor.dart';
+import '../services/scripting/script_executor_base.dart';
 import '../services/scripting/script_executor_factory.dart';
+import '../services/scripting/external_function_handler.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
 
@@ -16,19 +15,18 @@ class NewReactiveScriptEngine {
   final MapDataBloc _mapDataBloc;
   StreamSubscription<MapDataState>? _mapDataSubscription;
   bool _isListening = false;
-
   // 执行器池 - 支持并发执行多个脚本
-  final Map<String, IsolatedScriptExecutor> _executorPool = {};
+  final Map<String, IScriptExecutor> _executorPool = {};
   final int _maxConcurrentExecutors;
-
-  // 消息监听器
-  final List<String> _executionLogs = [];
+  // 统一的外部函数处理器
+  late final ExternalFunctionHandler _functionHandler;
 
   NewReactiveScriptEngine({
     required MapDataBloc mapDataBloc,
     int maxConcurrentExecutors = 5, // 默认最多支持5个并发脚本
   }) : _mapDataBloc = mapDataBloc,
        _maxConcurrentExecutors = maxConcurrentExecutors {
+    _functionHandler = ExternalFunctionHandler(mapDataBloc: _mapDataBloc);
     _initialize();
   }
 
@@ -97,7 +95,8 @@ class NewReactiveScriptEngine {
       }
 
       // 使用消息传递机制执行脚本
-      final result = await _executeScriptWithMessagePassing(script);      debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
+      final result = await _executeScriptWithMessagePassing(script);
+      debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
       if (!result.success) {
         debugPrint('脚本错误: ${result.error}');
         // 如果执行失败，清理该脚本的执行器以避免状态污染
@@ -116,6 +115,7 @@ class NewReactiveScriptEngine {
       );
     }
   }
+
   /// 使用消息传递机制执行脚本
   Future<ScriptExecutionResult> _executeScriptWithMessagePassing(
     ScriptData script,
@@ -146,7 +146,7 @@ class NewReactiveScriptEngine {
   }
 
   /// 获取或创建脚本执行器
-  Future<IsolatedScriptExecutor> _getOrCreateExecutor(String scriptId) async {
+  Future<IScriptExecutor> _getOrCreateExecutor(String scriptId) async {
     // 如果已存在该脚本的执行器，直接返回
     if (_executorPool.containsKey(scriptId)) {
       return _executorPool[scriptId]!;
@@ -155,298 +155,99 @@ class NewReactiveScriptEngine {
     // 检查是否达到最大并发数
     if (_executorPool.length >= _maxConcurrentExecutors) {
       throw Exception('达到最大并发脚本数限制 ($_maxConcurrentExecutors)');
-    }
+    } // 创建新的执行器（启用并发模式以支持长时间运行的脚本）
+    final executor = ScriptExecutorFactory.create(enableConcurrency: true);
 
-    // 创建新的执行器
-    final executor = ScriptExecutorFactory.create();
-    
     // 注册外部函数
     _registerExternalFunctions(executor);
-    
+
     // 加入执行器池
     _executorPool[scriptId] = executor;
-    
+
     debugPrint('为脚本 $scriptId 创建新的执行器 (当前池大小: ${_executorPool.length})');
-    
+
     return executor;
   }
 
   /// 注册外部函数到指定执行器
-  void _registerExternalFunctions(IsolatedScriptExecutor executor) {    // 基础函数
-    executor.registerExternalFunction('log', _handleLog);
-    executor.registerExternalFunction('print', _handleLog);
+  void _registerExternalFunctions(IScriptExecutor executor) {
+    // 基础函数
+    executor.registerExternalFunction('log', _functionHandler.handleLog);
+    executor.registerExternalFunction('print', _functionHandler.handleLog);
 
     // 数学函数
-    executor.registerExternalFunction('sin', _handleSin);
-    executor.registerExternalFunction('cos', _handleCos);
-    executor.registerExternalFunction('tan', _handleTan);
-    executor.registerExternalFunction('sqrt', _handleSqrt);
-    executor.registerExternalFunction('pow', _handlePow);
-    executor.registerExternalFunction('abs', _handleAbs);
-    executor.registerExternalFunction('random', _handleRandom);
+    executor.registerExternalFunction('sin', _functionHandler.handleSin);
+    executor.registerExternalFunction('cos', _functionHandler.handleCos);
+    executor.registerExternalFunction('tan', _functionHandler.handleTan);
+    executor.registerExternalFunction('sqrt', _functionHandler.handleSqrt);
+    executor.registerExternalFunction('pow', _functionHandler.handlePow);
+    executor.registerExternalFunction('abs', _functionHandler.handleAbs);
+    executor.registerExternalFunction('random', _functionHandler.handleRandom);
 
     // 地图数据访问函数
-    executor.registerExternalFunction('getLayers', _handleGetLayers);
+    executor.registerExternalFunction(
+      'getLayers',
+      _functionHandler.handleGetLayers,
+    );
     executor.registerExternalFunction(
       'getLayerById',
-      _handleGetLayerById,
+      _functionHandler.handleGetLayerById,
     );
     executor.registerExternalFunction(
       'getAllElements',
-      _handleGetAllElements,
+      _functionHandler.handleGetAllElements,
     );
     executor.registerExternalFunction(
       'countElements',
-      _handleCountElements,
+      _functionHandler.handleCountElements,
     );
     executor.registerExternalFunction(
       'calculateTotalArea',
-      _handleCalculateTotalArea,
+      _functionHandler.handleCalculateTotalArea,
     );
 
     // 文件操作函数
-    executor.registerExternalFunction('readjson', _handleReadJson);
-    executor.registerExternalFunction('writetext', _handleWriteText);
+    executor.registerExternalFunction(
+      'readjson',
+      _functionHandler.handleReadJson,
+    );
+    executor.registerExternalFunction(
+      'writetext',
+      _functionHandler.handleWriteText,
+    );
 
     // 便签相关函数
     executor.registerExternalFunction(
       'getStickyNotes',
-      _handleGetStickyNotes,
+      _functionHandler.handleGetStickyNotes,
     );
     executor.registerExternalFunction(
       'getStickyNoteById',
-      _handleGetStickyNoteById,
+      _functionHandler.handleGetStickyNoteById,
     );
 
     // 图例相关函数
     executor.registerExternalFunction(
       'getLegendGroups',
-      _handleGetLegendGroups,
+      _functionHandler.handleGetLegendGroups,
     );
     executor.registerExternalFunction(
       'getLegendGroupById',
-      _handleGetLegendGroupById,
+      _functionHandler.handleGetLegendGroupById,
     );
-
     debugPrint('已注册所有外部函数到Isolate执行器');
   }
 
-  /// 处理获取图层函数
-  List<Map<String, dynamic>> _handleGetLayers() {
-    return getCurrentLayers().map((layer) => _layerToMap(layer)).toList();
-  }
-
-  /// 处理日志函数
-  dynamic _handleLog(dynamic message) {
-    final logMessage = message?.toString() ?? '';
-    addExecutionLog(logMessage);
-    debugPrint('[Script Log] $logMessage');
-    return logMessage;
-  }
-
-  /// 处理获取所有元素函数
-  List<Map<String, dynamic>> _handleGetAllElements() {
-    final layers = getCurrentLayers();
-    final allElements = <Map<String, dynamic>>[];
-
-    for (final layer in layers) {
-      for (final element in layer.elements) {
-        allElements.add(_elementToMap(element));
-      }
-    }
-
-    return allElements;
-  }
-
-  /// 处理读取JSON函数
-  Future<Map<String, dynamic>?> _handleReadJson(String path) async {
-    // 这里应该通过VFS读取JSON文件
-    debugPrint('读取JSON文件: $path');
-    return null; // 暂时返回null
-  }
-
-  /// 处理写入文本函数
-  Future<void> _handleWriteText(String path, String content) async {
-    // 应该通过VFS写入文本文件
-    debugPrint('写入文本文件: $path, 内容长度: ${content.length}');
-  }
-
-  // 数学函数处理器
-  dynamic _handleSin(num x) {
-    return math.sin(x.toDouble());
-  }
-
-  dynamic _handleCos(num x) {
-    return math.cos(x.toDouble());
-  }
-
-  dynamic _handleTan(num x) {
-    return math.tan(x.toDouble());
-  }
-
-  dynamic _handleSqrt(num x) {
-    return math.sqrt(x.toDouble());
-  }
-
-  dynamic _handlePow(num x, num y) {
-    return math.pow(x.toDouble(), y.toDouble());
-  }
-
-  dynamic _handleAbs(num x) {
-    return x.abs();
-  }
-
-  dynamic _handleRandom() {
-    return math.Random().nextDouble();
-  }
-
-  /// 处理根据ID获取图层
-  Map<String, dynamic>? _handleGetLayerById(String layerId) {
-    final layer = getLayerById(layerId);
-    return layer != null ? _layerToMap(layer) : null;
-  }
-
-  /// 处理统计元素
-  int _handleCountElements([String? type]) {
-    final layers = getCurrentLayers();
-    int count = 0;
-
-    for (final layer in layers) {
-      for (final element in layer.elements) {
-        if (type == null || element.type.name == type) {
-          count++;
-        }
-      }
-    }
-
-    return count;
-  }
-
-  /// 处理计算总面积
-  double _handleCalculateTotalArea() {
-    final layers = getCurrentLayers();
-    double totalArea = 0.0;
-
-    for (final layer in layers) {
-      for (final element in layer.elements) {
-        if (element.type == DrawingElementType.rectangle ||
-            element.type == DrawingElementType.hollowRectangle) {
-          if (element.points.length >= 2) {
-            final width = (element.points[1].dx - element.points[0].dx).abs();
-            final height = (element.points[1].dy - element.points[0].dy).abs();
-            totalArea += width * height;
-          }
-        }
-      }
-    }
-
-    return totalArea;
-  }
-
-  /// 处理获取便签
-  List<Map<String, dynamic>> _handleGetStickyNotes() {
-    // 这里应该从MapDataBloc获取便签数据
-    if (_mapDataBloc.state is MapDataLoaded) {
-      final state = _mapDataBloc.state as MapDataLoaded;
-      return state.mapItem.stickyNotes
-          .map((note) => _stickyNoteToMap(note))
-          .toList();
-    }
-    return [];
-  }
-
-  /// 处理根据ID获取便签
-  Map<String, dynamic>? _handleGetStickyNoteById(String noteId) {
-    if (_mapDataBloc.state is MapDataLoaded) {
-      final state = _mapDataBloc.state as MapDataLoaded;
-      for (final note in state.mapItem.stickyNotes) {
-        if (note.id == noteId) {
-          return _stickyNoteToMap(note);
-        }
-      }
-    }
-    return null;
-  }
-
-  /// 处理获取图例组
-  List<Map<String, dynamic>> _handleGetLegendGroups() {
-    // 这里应该从MapDataBloc获取图例组数据
-    if (_mapDataBloc.state is MapDataLoaded) {
-      final state = _mapDataBloc.state as MapDataLoaded;
-      return state.legendGroups
-          .map((group) => _legendGroupToMap(group))
-          .toList();
-    }
-    return [];
-  }
-
-  /// 处理根据ID获取图例组
-  Map<String, dynamic>? _handleGetLegendGroupById(String groupId) {
-    if (_mapDataBloc.state is MapDataLoaded) {
-      final state = _mapDataBloc.state as MapDataLoaded;
-      for (final group in state.legendGroups) {
-        if (group.id == groupId) {
-          return _legendGroupToMap(group);
-        }
-      }
-    }
-    return null;
-  }
-
-  /// 便签转换为Map
-  Map<String, dynamic> _stickyNoteToMap(StickyNote note) {
-    return {
-      'id': note.id,
-      'title': note.title,
-      'content': note.content,
-      'position': {'x': note.position.dx, 'y': note.position.dy},
-      'size': {'width': note.size.width, 'height': note.size.height},
-      'backgroundColor': note.backgroundColor.value,
-      'isVisible': note.isVisible,
-      'isCollapsed': note.isCollapsed,
-      'tags': note.tags ?? [],
-    };
-  }
-
-  /// 图例组转换为Map
-  Map<String, dynamic> _legendGroupToMap(LegendGroup group) {
-    return {
-      'id': group.id,
-      'name': group.name,
-      'isVisible': group.isVisible,
-      'opacity': group.opacity,
-      'legendItems': group.legendItems
-          .map((item) => _legendItemToMap(item))
-          .toList(),
-      'tags': group.tags ?? [],
-    };
-  }
-
-  /// 图例项转换为Map
-  Map<String, dynamic> _legendItemToMap(LegendItem item) {
-    return {
-      'id': item.id,
-      'legendId': item.legendId,
-      'position': {'x': item.position.dx, 'y': item.position.dy},
-      'size': item.size,
-      'rotation': item.rotation,
-      'opacity': item.opacity,
-      'isVisible': item.isVisible,
-      'url': item.url,
-      'tags': item.tags ?? [],
-    };
-  }
-
-  /// 清空执行日志
+  /// 处理获取图层函数  /// 清空执行日志
   void clearExecutionLogs() {
-    _executionLogs.clear();
+    _functionHandler.clearExecutionLogs();
     debugPrint('清空脚本执行日志');
   }
 
   /// 重置脚本引擎
   void reset() {
     _clearDataAccessor();
-    _executionLogs.clear();
+    _functionHandler.clearExecutionLogs();
   }
 
   /// 获取当前地图图层数据（用于脚本访问）
@@ -486,6 +287,7 @@ class NewReactiveScriptEngine {
 
   /// 获取当前地图状态
   MapDataState get currentState => _mapDataBloc.state;
+
   /// 初始化脚本引擎
   Future<void> initializeScriptEngine() async {
     debugPrint('初始化新响应式脚本引擎 (支持 $_maxConcurrentExecutors 个并发脚本)');
@@ -515,44 +317,16 @@ class NewReactiveScriptEngine {
     _executorPool.clear();
 
     // 从MapDataBloc中移除监听器
-    _mapDataBloc.removeDataChangeListener(_onMapDataChanged);
-
-    // 清空数据访问器
+    _mapDataBloc.removeDataChangeListener(_onMapDataChanged); // 清空数据访问器
     _clearDataAccessor();
-    _executionLogs.clear();
+    _functionHandler.clearExecutionLogs();
   }
 
   /// 添加执行日志
   void addExecutionLog(String message) {
-    _executionLogs.add(message);
-    debugPrint('[Script] $message');
+    _functionHandler.addExecutionLog(message);
   }
 
-  /// 将图层转换为Map
-  Map<String, dynamic> _layerToMap(MapLayer layer) {
-    return {
-      'id': layer.id,
-      'name': layer.name,
-      'isVisible': layer.isVisible,
-      'opacity': layer.opacity,
-      'elements': layer.elements.map((e) => _elementToMap(e)).toList(),
-      'tags': layer.tags ?? [],
-    };
-  }
-
-  /// 将绘图元素转换为Map
-  Map<String, dynamic> _elementToMap(MapDrawingElement element) {
-    return {
-      'id': element.id,
-      'type': element.type.name,
-      'points': element.points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
-      'color': element.color.value,
-      'strokeWidth': element.strokeWidth,
-      'text': element.text,
-      'fontSize': element.fontSize,
-      'tags': element.tags ?? [],
-    };
-  }
   /// 停止脚本执行
   void stopScript(String scriptId) {
     if (_executorPool.containsKey(scriptId)) {
@@ -565,6 +339,6 @@ class NewReactiveScriptEngine {
 
   /// 获取脚本执行日志
   List<String> getExecutionLogs() {
-    return List.from(_executionLogs);
+    return _functionHandler.getExecutionLogs();
   }
 }

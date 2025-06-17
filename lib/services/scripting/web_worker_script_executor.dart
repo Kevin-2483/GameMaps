@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:isolate_manager/isolate_manager.dart';
-import 'isolated_script_executor.dart';
+import 'script_executor_base.dart';
+import 'external_function_registry.dart';
 import '../../models/script_data.dart';
 import 'hetu_script_worker.dart';
 
 /// Web Worker版本的脚本执行器
 /// 使用 isolate_manager 在 Web 平台上实现真正的多线程脚本执行
-class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
+class WebWorkerScriptExecutor implements IScriptExecutor {
   IsolateManager<String, String>? _isolateManager;
   final Map<String, Function> _externalFunctions = {};
   final List<String> _executionLogs = [];
@@ -66,7 +67,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
       'type': 'execute',
       'code': code,
       'context': context ?? {},
-      'externalFunctions': _externalFunctions.keys.toList(),
+      'externalFunctions': ExternalFunctionRegistry.getAllFunctionNames(),
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
 

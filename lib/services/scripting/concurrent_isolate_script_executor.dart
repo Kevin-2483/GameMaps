@@ -4,11 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
 import '../../models/script_data.dart';
-import 'isolated_script_executor.dart';
+import 'script_executor_base.dart';
+import 'external_function_registry.dart';
 
 /// 支持并发的Isolate脚本执行器
 /// 基于现有的IsolateScriptExecutor，但支持真正的多任务并发执行
-class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
+class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
   Isolate? _isolate;
   SendPort? _isolateSendPort;
   ReceivePort? _receivePort;
@@ -34,38 +35,51 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
     }
 
     // 生成唯一的执行ID
-    final executionId = DateTime.now().millisecondsSinceEpoch.toString() + 
-        '_' + math.Random().nextInt(1000).toString();
+    final executionId =
+        DateTime.now().millisecondsSinceEpoch.toString() +
+        '_' +
+        math.Random().nextInt(1000).toString();
 
     final completer = Completer<ScriptExecutionResult>();
     _pendingExecutions[executionId] = completer;
 
     try {
       // 启动隔离（如果尚未启动）
-      await _ensureIsolateStarted();
-
-      // 设置超时
+      await _ensureIsolateStarted(); // 设置超时
       if (timeout != null) {
+        debugPrint(
+          'DEBUG: Setting timeout timer for execution: $executionId, timeout: ${timeout.inSeconds}s',
+        );
         _timeoutTimers[executionId] = Timer(timeout, () {
+          debugPrint(
+            'DEBUG: Timeout timer triggered for execution: $executionId',
+          );
           if (!completer.isCompleted) {
             _pendingExecutions.remove(executionId);
             _timeoutTimers.remove(executionId);
+            debugPrint('ERROR: Script execution timeout for: $executionId');
             completer.complete(
               ScriptExecutionResult(
                 success: false,
-                error: 'Script execution timeout after ${timeout.inSeconds} seconds',
+                error:
+                    'Script execution timeout after ${timeout.inSeconds} seconds',
                 executionTime: timeout,
               ),
             );
+          } else {
+            debugPrint(
+              'DEBUG: Completer already completed for execution: $executionId',
+            );
           }
         });
+        debugPrint('DEBUG: Timeout timer created for execution: $executionId');
       }
 
       // 发送执行消息
       final message = ScriptMessage(
         type: ScriptMessageType.execute,
         data: {
-          'code': code, 
+          'code': code,
           'context': context ?? {},
           'executionId': executionId, // 添加执行ID以识别响应
         },
@@ -77,7 +91,7 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
       _pendingExecutions.remove(executionId);
       _timeoutTimers[executionId]?.cancel();
       _timeoutTimers.remove(executionId);
-      
+
       return ScriptExecutionResult(
         success: false,
         error: e.toString(),
@@ -92,7 +106,10 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
 
     try {
       _receivePort = ReceivePort();
-      _isolate = await Isolate.spawn(_isolateEntryPoint, _receivePort!.sendPort);      // 等待隔离准备就绪
+      _isolate = await Isolate.spawn(
+        _isolateEntryPoint,
+        _receivePort!.sendPort,
+      ); // 等待隔离准备就绪
       final completer = Completer<void>();
       bool isReady = false;
 
@@ -120,31 +137,49 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
 
   /// 处理来自隔离的消息
   void _handleIsolateMessage(dynamic data) {
-    if (data is! Map<String, dynamic>) return;    try {
+    if (data is! Map<String, dynamic>) return;
+    try {
       debugPrint('DEBUG: Received message: ${data.toString()}');
       final message = ScriptMessage.fromJson(data);
       final executionId = message.data['executionId'] as String?;
-      debugPrint('DEBUG: Message type: ${message.type}, executionId: $executionId');
-
+      debugPrint(
+        'DEBUG: Message type: ${message.type}, executionId: $executionId',
+      );
       switch (message.type) {
         case ScriptMessageType.started:
           // 脚本已开始执行，取消超时定时器
-          debugPrint('DEBUG: Processing started message for execution: $executionId');
+          debugPrint(
+            'DEBUG: Processing started message for execution: $executionId',
+          );
+          debugPrint(
+            'DEBUG: Available timeout timers: ${_timeoutTimers.keys.toList()}',
+          );
+          debugPrint(
+            'DEBUG: Available pending executions: ${_pendingExecutions.keys.toList()}',
+          );
           if (executionId != null && _timeoutTimers.containsKey(executionId)) {
             _timeoutTimers[executionId]?.cancel();
             _timeoutTimers.remove(executionId);
-            debugPrint('Script started, timeout timer cancelled for execution: $executionId');
+            debugPrint(
+              'SUCCESS: Timeout timer cancelled for execution: $executionId',
+            );
           } else {
-            debugPrint('DEBUG: No timeout timer found for execution: $executionId, available timers: ${_timeoutTimers.keys}');
+            debugPrint(
+              'WARNING: No timeout timer found for execution: $executionId',
+            );
+            debugPrint(
+              'DEBUG: Available timers: ${_timeoutTimers.keys.toList()}',
+            );
           }
           break;
 
         case ScriptMessageType.result:
-          if (executionId != null && _pendingExecutions.containsKey(executionId)) {
+          if (executionId != null &&
+              _pendingExecutions.containsKey(executionId)) {
             final completer = _pendingExecutions.remove(executionId)!;
             _timeoutTimers[executionId]?.cancel();
             _timeoutTimers.remove(executionId);
-            
+
             final result = ScriptExecutionResult(
               success: true,
               result: message.data['result'],
@@ -157,11 +192,12 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
           break;
 
         case ScriptMessageType.error:
-          if (executionId != null && _pendingExecutions.containsKey(executionId)) {
+          if (executionId != null &&
+              _pendingExecutions.containsKey(executionId)) {
             final completer = _pendingExecutions.remove(executionId)!;
             _timeoutTimers[executionId]?.cancel();
             _timeoutTimers.remove(executionId);
-            
+
             final result = ScriptExecutionResult(
               success: false,
               error: message.data['error'] ?? 'Unknown error',
@@ -272,20 +308,20 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
   @override
   void dispose() {
     if (_isDisposed) return;
-    
+
     _isDisposed = true;
     stop();
 
     _isolate?.kill(priority: Isolate.immediate);
     _isolate = null;
-    
+
     _receivePort?.close();
     _receivePort = null;
-    
+
     _isolateSendPort = null;
     _executionLogs.clear();
     _externalFunctionHandlers.clear();
-    
+
     _isInitialized = false;
     debugPrint('ConcurrentIsolateScriptExecutor disposed');
   }
@@ -319,12 +355,9 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
   /// Isolate入口点 - 支持并发执行
   static void _isolateEntryPoint(SendPort mainSendPort) {
     final receivePort = ReceivePort();
-    
+
     // 发送准备就绪消息
-    mainSendPort.send({
-      'type': 'ready',
-      'sendPort': receivePort.sendPort,
-    });
+    mainSendPort.send({'type': 'ready', 'sendPort': receivePort.sendPort});
 
     // 存储外部函数的响应等待映射
     final Map<String, Completer<dynamic>> pendingExternalCalls = {};
@@ -338,7 +371,7 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
         switch (message.type) {
           case ScriptMessageType.execute:
             _handleExecuteInIsolate(
-              message, 
+              message,
               mainSendPort,
               pendingExternalCalls,
             );
@@ -386,22 +419,25 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
           if (success) 'result': result else 'error': error ?? 'Unknown error',
           'executionTime': stopwatch.elapsedMilliseconds,
           'executionId': executionId,
-        },      );
+        },
+      );
       mainSendPort.send(responseMessage.toJson());
     }
 
     try {
       final code = message.data['code'] as String;
-      final context = message.data['context'] as Map<String, dynamic>? ?? {};
-
-      // 创建Hetu脚本解释器
-      final hetu = Hetu();
-
-      // 准备外部函数映射
-      final externalFunctions = <String, Function>{};
-
-      // 注册所有外部函数（基于现有的IsolateScriptExecutor实现）
-      _registerAllExternalFunctions(externalFunctions, mainSendPort, pendingExternalCalls);
+      final context =
+          message.data['context'] as Map<String, dynamic>? ?? {}; // 创建Hetu脚本解释器
+      final hetu = Hetu(); // 使用统一的外部函数注册器
+      final externalFunctions =
+          ExternalFunctionRegistry.createFunctionsForIsolate(
+            (functionName, arguments) => _callExternalFunction(
+              functionName,
+              arguments,
+              mainSendPort,
+              pendingExternalCalls,
+            ),
+          );
 
       // 初始化Hetu解释器
       hetu.init(externalFunctions: externalFunctions);
@@ -411,7 +447,7 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
         hetu.assign(entry.key, entry.value);
       }
 
-        // 发送脚本已开始执行的消息
+      // 发送脚本已开始执行的消息
       debugPrint('DEBUG: Sending started message for execution: $executionId');
       final startedMessage = ScriptMessage(
         type: ScriptMessageType.started,
@@ -422,113 +458,21 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
 
       // 执行脚本 - 处理同步和异步结果
       final result = hetu.eval(code);
-      
+
       if (result is Future) {
-        result.then((actualResult) {
-          sendResult(true, result: actualResult);
-        }).catchError((e) {
-          sendResult(false, error: e.toString());
-        });
+        result
+            .then((actualResult) {
+              sendResult(true, result: actualResult);
+            })
+            .catchError((e) {
+              sendResult(false, error: e.toString());
+            });
       } else {
         sendResult(true, result: result);
       }
-
     } catch (e) {
       sendResult(false, error: e.toString());
     }
-  }
-
-  /// 注册所有外部函数
-  static void _registerAllExternalFunctions(
-    Map<String, Function> functions,
-    SendPort mainSendPort,
-    Map<String, Completer<dynamic>> pendingExternalCalls,
-  ) {
-    // 日志函数
-    functions['log'] = (dynamic message) async {
-      return await _callExternalFunction('log', [message], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['print'] = (dynamic message) async {
-      return await _callExternalFunction('print', [message], mainSendPort, pendingExternalCalls);
-    };
-
-    // 数学函数
-    functions['sin'] = (num x) async {
-      return await _callExternalFunction('sin', [x], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['cos'] = (num x) async {
-      return await _callExternalFunction('cos', [x], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['tan'] = (num x) async {
-      return await _callExternalFunction('tan', [x], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['sqrt'] = (num x) async {
-      return await _callExternalFunction('sqrt', [x], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['pow'] = (num x, num y) async {
-      return await _callExternalFunction('pow', [x, y], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['abs'] = (num x) async {
-      return await _callExternalFunction('abs', [x], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['random'] = () async {
-      return await _callExternalFunction('random', [], mainSendPort, pendingExternalCalls);
-    };
-
-    // 地图数据访问函数
-    functions['getLayers'] = () async {
-      return await _callExternalFunction('getLayers', [], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['getLayerById'] = (String id) async {
-      return await _callExternalFunction('getLayerById', [id], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['getAllElements'] = () async {
-      return await _callExternalFunction('getAllElements', [], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['countElements'] = ([String? type]) async {
-      return await _callExternalFunction('countElements', [type], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['calculateTotalArea'] = () async {
-      return await _callExternalFunction('calculateTotalArea', [], mainSendPort, pendingExternalCalls);
-    };
-
-    // 文件操作函数
-    functions['readjson'] = (String filename) async {
-      return await _callExternalFunction('readjson', [filename], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['writetext'] = (String filename, String content) async {
-      return await _callExternalFunction('writetext', [filename, content], mainSendPort, pendingExternalCalls);
-    };
-
-    // 便签相关函数
-    functions['getStickyNotes'] = () async {
-      return await _callExternalFunction('getStickyNotes', [], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['getStickyNoteById'] = (String id) async {
-      return await _callExternalFunction('getStickyNoteById', [id], mainSendPort, pendingExternalCalls);
-    };
-
-    // 图例相关函数
-    functions['getLegendGroups'] = () async {
-      return await _callExternalFunction('getLegendGroups', [], mainSendPort, pendingExternalCalls);
-    };
-
-    functions['getLegendGroupById'] = (String id) async {
-      return await _callExternalFunction('getLegendGroupById', [id], mainSendPort, pendingExternalCalls);
-    };
   }
 
   /// 调用外部函数（通过消息传递与主线程通信）
@@ -538,8 +482,7 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
     SendPort mainSendPort,
     Map<String, Completer<dynamic>> pendingExternalCalls,
   ) async {
-    final callId = DateTime.now().millisecondsSinceEpoch.toString() +
-        '_' + math.Random().nextInt(1000).toString();
+    final callId = ExternalFunctionRegistry.generateCallId();
 
     final call = ExternalFunctionCall(
       functionName: functionName,
@@ -584,7 +527,7 @@ class ConcurrentIsolateScriptExecutor implements IsolatedScriptExecutor {
 
     if (pendingExternalCalls.containsKey(callId)) {
       final completer = pendingExternalCalls.remove(callId)!;
-      
+
       if (response.error != null) {
         completer.completeError(Exception(response.error));
       } else {

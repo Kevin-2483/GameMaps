@@ -100,7 +100,7 @@ print("脚本3完成，结果: " + quickResult.toString());
 
       // 同时启动所有脚本（测试并发执行）
       debugPrint('开始并发执行所有脚本...');
-      
+
       final futures = <Future<void>>[
         scriptManager.executeScript(script1.id),
         scriptManager.executeScript(script2.id),
@@ -117,7 +117,6 @@ print("脚本3完成，结果: " + quickResult.toString());
       );
 
       debugPrint('并发脚本执行测试完成');
-
     } catch (e) {
       debugPrint('并发脚本执行测试失败: $e');
     }
@@ -172,7 +171,6 @@ print("长时间运行完成");
       }
 
       debugPrint('脚本停止测试完成');
-
     } catch (e) {
       debugPrint('脚本停止测试失败: $e');
     }
@@ -181,24 +179,24 @@ print("长时间运行完成");
   /// 运行所有测试
   Future<void> runAllTests() async {
     debugPrint('========== 开始并发脚本执行测试 ==========');
-    
+
     await testConcurrentExecution();
-    
+
     debugPrint('========== 开始脚本停止功能测试 ==========');
-    
+
     await testScriptStopping();
-    
+
     debugPrint('========== 所有测试完成 ==========');
   }
 }
 
 /// 如何使用这个测试类的示例
-/// 
+///
 /// ```dart
 /// final mapDataBloc = MapDataBloc();
 /// final scriptManager = NewReactiveScriptManager(mapDataBloc: mapDataBloc);
 /// await scriptManager.initialize();
-/// 
+///
 /// final test = ConcurrentScriptExecutionTest(scriptManager);
 /// await test.runAllTests();
 /// ```
