@@ -204,14 +204,23 @@ Future<dynamic> _callExternalFunction(
   final completer = Completer<dynamic>();
 
   _externalFunctionCalls[callId] = completer;
+  
+  _addWorkerLog('Calling external function: $functionName');
+  _addWorkerLog('Arguments type: ${arguments.runtimeType}');
+  _addWorkerLog('Arguments value: $arguments');
 
   // 发送外部函数调用请求到主线程 - 使用 JSON 字符串
-  controller.sendResult(jsonEncode({
+  final requestData = {
     'type': 'externalFunctionCall',
     'functionName': functionName,
     'arguments': arguments,
     'callId': callId,
-  }));
+  };
+  
+  final jsonRequest = jsonEncode(requestData);
+  _addWorkerLog('Sending JSON request: $jsonRequest');
+  
+  controller.sendResult(jsonRequest);
 
   // 等待结果，设置超时以防止死锁
   try {

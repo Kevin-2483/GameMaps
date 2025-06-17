@@ -93,13 +93,20 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
       late StreamSubscription subscription;
       subscription = _isolateManager!.stream.listen((jsonResponse) {
         try {
+          _addLog('Raw JSON response: $jsonResponse');
+          
           // 解析 JSON 响应
           final response = jsonDecode(jsonResponse) as Map<String, dynamic>;
+          _addLog('Parsed response: $response');
           _addLog('Received response from worker: ${response['type']}');
 
           final responseType = response['type'] as String?;
 
           if (responseType == 'externalFunctionCall') {
+            _addLog('Processing external function call: ${response['functionName']}');
+            _addLog('Arguments type: ${response['arguments'].runtimeType}');
+            _addLog('Arguments value: ${response['arguments']}');
+            
             // 处理外部函数调用
             _handleExternalFunctionCall(response);
           } else if (!completer.isCompleted) {
@@ -110,15 +117,16 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
             final result = _parseExecutionResult(response);
             completer.complete(result);
           }
-        } catch (e) {
+        } catch (e, stackTrace) {
           _addLog('Error parsing JSON response: $e');
+          _addLog('Stack trace: $stackTrace');
           if (!completer.isCompleted) {
             timeoutTimer?.cancel();
             subscription.cancel();
             completer.completeError(e);
           }
         }
-      });      // 发送执行请求
+      });// 发送执行请求
       await _isolateManager!.sendMessage(jsonRequest);
       _addLog('Execute request sent to worker');
 
@@ -195,11 +203,9 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
     }
     return defaultValue;
   }
-
   /// 处理外部函数调用
   void _handleExternalFunctionCall(Map<String, dynamic> response) {
     final functionName = _safeGetString(response, 'functionName');
-    final arguments = response['arguments'] as List<dynamic>? ?? [];
     final callId = _safeGetString(response, 'callId');
 
     if (functionName.isEmpty || callId.isEmpty) {
@@ -207,12 +213,49 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
       return;
     }
 
+    // 智能解析参数，支持多种格式
+    List<dynamic> arguments;
+    final rawArguments = response['arguments'];
+    
+    _addLog('Processing external function call: $functionName');
+    _addLog('Raw arguments type: ${rawArguments.runtimeType}');
+    _addLog('Raw arguments value: $rawArguments');
+
+    if (rawArguments == null) {
+      arguments = [];
+    } else if (rawArguments is List) {
+      // 如果已经是列表，直接使用
+      arguments = rawArguments;
+    } else if (rawArguments is String) {
+      // 如果是字符串，尝试解析为JSON数组，失败则作为单个参数
+      try {
+        final decoded = jsonDecode(rawArguments);
+        if (decoded is List) {
+          arguments = decoded;
+        } else {
+          // 如果解析出来不是数组，作为单个参数
+          arguments = [decoded];
+        }
+      } catch (e) {
+        // JSON解析失败，直接作为单个字符串参数
+        arguments = [rawArguments];
+      }
+    } else {
+      // 其他类型，作为单个参数
+      arguments = [rawArguments];
+    }
+
+    _addLog('Processed arguments: $arguments (${arguments.length} items)');
+
     try {
       final function = _externalFunctions[functionName];
       if (function == null) {
         throw Exception('External function not found: $functionName');
-      }      // 调用外部函数
+      }
+
+      // 调用外部函数
       final result = Function.apply(function, arguments);
+      _addLog('External function result: $result');
 
       // 发送结果回 Worker
       final responseData = {
@@ -223,6 +266,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
 
       _isolateManager!.sendMessage(jsonEncode(responseData));
     } catch (e) {
+      _addLog('External function call failed: $e');
       // 发送错误回 Worker
       final errorData = {
         'type': 'externalFunctionError',

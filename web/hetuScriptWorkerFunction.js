@@ -15194,7 +15194,7 @@
     _callExternalFunction$body(controller, functionName, $arguments) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.dynamic),
-        $async$returnValue, $async$handler = 2, $async$errorStack = [], $async$next = [], t2, callId, completer, t1;
+        $async$returnValue, $async$handler = 2, $async$errorStack = [], $async$next = [], jsonRequest, t2, callId, completer, t1;
       var $async$_callExternalFunction = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1) {
           $async$errorStack.push($async$result);
@@ -15208,7 +15208,12 @@
               completer = A.Completer_Completer(type$.dynamic);
               t1 = J.getInterceptor$ax($._externalFunctionCalls);
               t1.$indexSet($._externalFunctionCalls, callId, completer);
-              controller.sendResult$1(A.jsonEncode(A.LinkedHashMap_LinkedHashMap$_literal(["type", "externalFunctionCall", "functionName", functionName, "arguments", $arguments, "callId", callId], type$.String, type$.Object)));
+              A._addWorkerLog("Calling external function: " + functionName);
+              A._addWorkerLog("Arguments type: " + A.S(J.get$runtimeType$($arguments)));
+              A._addWorkerLog("Arguments value: " + A.S($arguments));
+              jsonRequest = A.jsonEncode(A.LinkedHashMap_LinkedHashMap$_literal(["type", "externalFunctionCall", "functionName", functionName, "arguments", $arguments, "callId", callId], type$.String, type$.Object));
+              A._addWorkerLog("Sending JSON request: " + jsonRequest);
+              controller.sendResult$1(jsonRequest);
               $async$handler = 3;
               $async$goto = 6;
               return A._asyncAwait(completer.get$future().timeout$2$onTimeout(B.Duration_30000000, new A._callExternalFunction_closure(functionName)), $async$_callExternalFunction);
