@@ -11,20 +11,24 @@ import 'map_data_bloc.dart';
 import 'map_data_state.dart';
 
 /// 重构后的响应式脚本引擎
-/// 使用消息传递机制，支持异步隔离执行
+/// 使用消息传递机制，支持异步隔离执行和并发脚本执行
 class NewReactiveScriptEngine {
   final MapDataBloc _mapDataBloc;
   StreamSubscription<MapDataState>? _mapDataSubscription;
   bool _isListening = false;
 
-  // 脚本执行器（根据平台选择）
-  IsolatedScriptExecutor? _scriptExecutor;
+  // 执行器池 - 支持并发执行多个脚本
+  final Map<String, IsolatedScriptExecutor> _executorPool = {};
+  final int _maxConcurrentExecutors;
 
   // 消息监听器
   final List<String> _executionLogs = [];
 
-  NewReactiveScriptEngine({required MapDataBloc mapDataBloc})
-    : _mapDataBloc = mapDataBloc {
+  NewReactiveScriptEngine({
+    required MapDataBloc mapDataBloc,
+    int maxConcurrentExecutors = 5, // 默认最多支持5个并发脚本
+  }) : _mapDataBloc = mapDataBloc,
+       _maxConcurrentExecutors = maxConcurrentExecutors {
     _initialize();
   }
 
@@ -93,20 +97,18 @@ class NewReactiveScriptEngine {
       }
 
       // 使用消息传递机制执行脚本
-      final result = await _executeScriptWithMessagePassing(script);
-
-      debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
+      final result = await _executeScriptWithMessagePassing(script);      debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
       if (!result.success) {
         debugPrint('脚本错误: ${result.error}');
-        // 如果执行失败，重置执行器以避免状态污染
-        _resetScriptExecutor();
+        // 如果执行失败，清理该脚本的执行器以避免状态污染
+        _cleanupExecutor(script.id);
       }
 
       return result;
     } catch (e) {
       debugPrint('脚本执行异常: $e');
-      // 发生异常时也重置执行器
-      _resetScriptExecutor();
+      // 发生异常时也清理执行器
+      _cleanupExecutor(script.id);
       return ScriptExecutionResult(
         success: false,
         error: e.toString(),
@@ -114,7 +116,6 @@ class NewReactiveScriptEngine {
       );
     }
   }
-
   /// 使用消息传递机制执行脚本
   Future<ScriptExecutionResult> _executeScriptWithMessagePassing(
     ScriptData script,
@@ -122,11 +123,11 @@ class NewReactiveScriptEngine {
     final stopwatch = Stopwatch()..start();
 
     try {
-      // 确保脚本执行器已初始化
-      await _ensureScriptExecutorInitialized();
+      // 获取或创建专用的脚本执行器
+      final executor = await _getOrCreateExecutor(script.id);
 
-      // 使用真实的异步执行器执行脚本
-      final result = await _scriptExecutor!.execute(
+      // 使用专用执行器执行脚本
+      final result = await executor.execute(
         script.content,
         timeout: const Duration(seconds: 30),
       );
@@ -144,73 +145,85 @@ class NewReactiveScriptEngine {
     }
   }
 
-  /// 确保脚本执行器已初始化
-  Future<void> _ensureScriptExecutorInitialized() async {
-    if (_scriptExecutor != null) return;
+  /// 获取或创建脚本执行器
+  Future<IsolatedScriptExecutor> _getOrCreateExecutor(String scriptId) async {
+    // 如果已存在该脚本的执行器，直接返回
+    if (_executorPool.containsKey(scriptId)) {
+      return _executorPool[scriptId]!;
+    }
 
-    // 使用工厂创建平台适配的执行器
-    _scriptExecutor = ScriptExecutorFactory.create();
+    // 检查是否达到最大并发数
+    if (_executorPool.length >= _maxConcurrentExecutors) {
+      throw Exception('达到最大并发脚本数限制 ($_maxConcurrentExecutors)');
+    }
 
+    // 创建新的执行器
+    final executor = ScriptExecutorFactory.create();
+    
     // 注册外部函数
-    _registerExternalFunctions();
+    _registerExternalFunctions(executor);
+    
+    // 加入执行器池
+    _executorPool[scriptId] = executor;
+    
+    debugPrint('为脚本 $scriptId 创建新的执行器 (当前池大小: ${_executorPool.length})');
+    
+    return executor;
   }
 
-  /// 注册外部函数
-  void _registerExternalFunctions() {
-    if (_scriptExecutor == null) return;
-
-    // 基础函数
-    _scriptExecutor!.registerExternalFunction('log', _handleLog);
-    _scriptExecutor!.registerExternalFunction('print', _handleLog);
+  /// 注册外部函数到指定执行器
+  void _registerExternalFunctions(IsolatedScriptExecutor executor) {    // 基础函数
+    executor.registerExternalFunction('log', _handleLog);
+    executor.registerExternalFunction('print', _handleLog);
 
     // 数学函数
-    _scriptExecutor!.registerExternalFunction('sin', _handleSin);
-    _scriptExecutor!.registerExternalFunction('cos', _handleCos);
-    _scriptExecutor!.registerExternalFunction('tan', _handleTan);
-    _scriptExecutor!.registerExternalFunction('sqrt', _handleSqrt);
-    _scriptExecutor!.registerExternalFunction('pow', _handlePow);
-    _scriptExecutor!.registerExternalFunction('abs', _handleAbs);
-    _scriptExecutor!.registerExternalFunction('random', _handleRandom);
+    executor.registerExternalFunction('sin', _handleSin);
+    executor.registerExternalFunction('cos', _handleCos);
+    executor.registerExternalFunction('tan', _handleTan);
+    executor.registerExternalFunction('sqrt', _handleSqrt);
+    executor.registerExternalFunction('pow', _handlePow);
+    executor.registerExternalFunction('abs', _handleAbs);
+    executor.registerExternalFunction('random', _handleRandom);
 
     // 地图数据访问函数
-    _scriptExecutor!.registerExternalFunction('getLayers', _handleGetLayers);
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction('getLayers', _handleGetLayers);
+    executor.registerExternalFunction(
       'getLayerById',
       _handleGetLayerById,
     );
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'getAllElements',
       _handleGetAllElements,
     );
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'countElements',
       _handleCountElements,
     );
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'calculateTotalArea',
       _handleCalculateTotalArea,
     );
 
     // 文件操作函数
-    _scriptExecutor!.registerExternalFunction('readjson', _handleReadJson);
-    _scriptExecutor!.registerExternalFunction('writetext', _handleWriteText);
+    executor.registerExternalFunction('readjson', _handleReadJson);
+    executor.registerExternalFunction('writetext', _handleWriteText);
 
     // 便签相关函数
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'getStickyNotes',
       _handleGetStickyNotes,
     );
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'getStickyNoteById',
       _handleGetStickyNoteById,
     );
 
     // 图例相关函数
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'getLegendGroups',
       _handleGetLegendGroups,
     );
-    _scriptExecutor!.registerExternalFunction(
+    executor.registerExternalFunction(
       'getLegendGroupById',
       _handleGetLegendGroupById,
     );
@@ -473,19 +486,17 @@ class NewReactiveScriptEngine {
 
   /// 获取当前地图状态
   MapDataState get currentState => _mapDataBloc.state;
-
   /// 初始化脚本引擎
   Future<void> initializeScriptEngine() async {
-    await _ensureScriptExecutorInitialized();
-    debugPrint('初始化新响应式脚本引擎完成');
+    debugPrint('初始化新响应式脚本引擎 (支持 $_maxConcurrentExecutors 个并发脚本)');
   }
 
-  /// 重置脚本执行器
-  void _resetScriptExecutor() {
-    if (_scriptExecutor != null) {
-      debugPrint('重置脚本执行器');
-      _scriptExecutor!.dispose();
-      _scriptExecutor = null;
+  /// 清理指定脚本的执行器
+  void _cleanupExecutor(String scriptId) {
+    if (_executorPool.containsKey(scriptId)) {
+      debugPrint('清理脚本执行器: $scriptId');
+      _executorPool[scriptId]!.dispose();
+      _executorPool.remove(scriptId);
     }
   }
 
@@ -497,9 +508,11 @@ class NewReactiveScriptEngine {
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;
 
-    // 释放脚本执行器
-    _scriptExecutor?.dispose();
-    _scriptExecutor = null;
+    // 释放所有脚本执行器
+    for (final entry in _executorPool.entries) {
+      entry.value.dispose();
+    }
+    _executorPool.clear();
 
     // 从MapDataBloc中移除监听器
     _mapDataBloc.removeDataChangeListener(_onMapDataChanged);
@@ -540,13 +553,14 @@ class NewReactiveScriptEngine {
       'tags': element.tags ?? [],
     };
   }
-
   /// 停止脚本执行
   void stopScript(String scriptId) {
-    _scriptExecutor?.stop();
-    debugPrint('停止脚本: $scriptId');
-    // 停止后重置执行器，确保下次执行时使用全新的状态
-    _resetScriptExecutor();
+    if (_executorPool.containsKey(scriptId)) {
+      _executorPool[scriptId]!.stop();
+      debugPrint('停止脚本: $scriptId');
+      // 停止后清理执行器，确保下次执行时使用全新的状态
+      _cleanupExecutor(scriptId);
+    }
   }
 
   /// 获取脚本执行日志

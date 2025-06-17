@@ -1,18 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'isolated_script_executor.dart';
+import 'concurrent_isolate_script_executor_new.dart';
 import 'web_worker_script_executor.dart';
 
 /// 脚本执行器工厂类
 ///
 /// 根据平台和配置自动选择最合适的脚本执行器实现
 /// 支持桌面端的Isolate执行器和Web平台的Worker执行器
-class ScriptExecutorFactory {
-  /// 创建适合当前平台的脚本执行器
+class ScriptExecutorFactory {  /// 创建适合当前平台的脚本执行器
   static IsolatedScriptExecutor create() {
     if (kIsWeb) {
       return WebWorkerScriptExecutor();
     } else {
-      return IsolateScriptExecutor();
+      return ConcurrentIsolateScriptExecutor();
     }
   }
 
@@ -20,10 +20,9 @@ class ScriptExecutorFactory {
   static WebWorkerScriptExecutor createWebWorker() {
     return WebWorkerScriptExecutor();
   }
-
   /// 创建Isolate执行器（明确指定，用于桌面端）
-  static IsolateScriptExecutor createIsolate() {
-    return IsolateScriptExecutor();
+  static ConcurrentIsolateScriptExecutor createIsolate() {
+    return ConcurrentIsolateScriptExecutor();
   }
 
   /// 检测当前平台支持的执行器类型

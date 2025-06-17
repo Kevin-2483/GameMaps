@@ -36,12 +36,14 @@ abstract class IsolatedScriptExecutor {
 /// 脚本执行消息类型
 enum ScriptMessageType {
   execute,
+  started,
   result,
   error,
   log,
   stop,
   mapDataUpdate,
   externalFunctionCall,
+  externalFunctionResponse,
 }
 
 /// 脚本执行消息

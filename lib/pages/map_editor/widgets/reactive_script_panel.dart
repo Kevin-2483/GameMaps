@@ -230,16 +230,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
             padding: EdgeInsets.zero,
           ),
         ),
-        // 新建脚本按钮
-        IconButton(
-          onPressed: _showNewScriptDialog,
-          icon: const Icon(Icons.add, size: 16),
-          tooltip: '新建脚本',
-          style: IconButton.styleFrom(
-            minimumSize: const Size(24, 24),
-            padding: EdgeInsets.zero,
-          ),
-        ),
       ],
     );
   }
