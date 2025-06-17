@@ -88,7 +88,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
   final MapDatabaseService _mapDatabaseService =
       VfsMapServiceFactory.createMapDatabaseService();
   final VfsMapService _vfsMapService =
-      VfsMapServiceFactory.createVfsMapService();  final LegendVfsService _legendDatabaseService = LegendVfsService();
+      VfsMapServiceFactory.createVfsMapService();
+  final LegendVfsService _legendDatabaseService = LegendVfsService();
   List<legend_db.LegendItem> _availableLegends = [];
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
@@ -177,6 +178,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     super.dispose();
   }
+
   @override
   void initState() {
     super.initState();
@@ -207,7 +209,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
         // 5. 立即初始化响应式版本管理系统
         await _initializeReactiveVersionManagement();
-      }      // 6. 重新初始化脚本引擎以确保外部函数声明正确
+      } // 6. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
       debugPrint('新脚本引擎重新初始化完成');
     } catch (e) {
@@ -245,7 +247,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
 
       // 预加载所有图层的图片
-      _preloadAllLayerImages();      // 更新脚本管理器的地图数据访问器
+      _preloadAllLayerImages(); // 更新脚本管理器的地图数据访问器
       _updateScriptMapDataAccessor();
 
       // 新的脚本管理器会通过响应式系统自动获取地图数据
@@ -559,7 +561,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _hasUnsavedChanges = hasUnsavedChangesReactive;
       });
       debugPrint('已同步响应式系统的未保存状态到UI: $_hasUnsavedChanges');
-    }  }
+    }
+  }
 
   /// 旧的脚本引擎地图数据访问器更新方法已移除
   /// 新的响应式脚本管理器通过MapDataBloc自动获取地图数据
@@ -3151,7 +3154,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
           ),
         ],
         child: _isScriptPanelCollapsed
-            ? null            : ReactiveScriptPanel(
+            ? null
+            : ReactiveScriptPanel(
                 scriptManager: newReactiveScriptManager,
                 onNewScript: _showNewScriptDialog,
               ),

@@ -272,18 +272,25 @@ class _ReactiveScriptEditorWindowState
                     icon: const Icon(Icons.vertical_align_bottom),
                     tooltip: '跳转到底部',
                     iconSize: 20,
-                  ),                  const SizedBox(width: 8),
+                  ),
+                  const SizedBox(width: 8),
                   FilledButton.tonal(
-                    onPressed: widget.script.isEnabled ? () {
-                      // 运行脚本 - 使用新的响应式脚本管理器
-                      widget.scriptManager.executeScript(widget.script.id);
-                    } : null,
+                    onPressed: widget.script.isEnabled
+                        ? () {
+                            // 运行脚本 - 使用新的响应式脚本管理器
+                            widget.scriptManager.executeScript(
+                              widget.script.id,
+                            );
+                          }
+                        : null,
                     child: ListenableBuilder(
                       listenable: widget.scriptManager,
                       builder: (context, child) {
-                        final status = widget.scriptManager.getScriptStatus(widget.script.id);
+                        final status = widget.scriptManager.getScriptStatus(
+                          widget.script.id,
+                        );
                         final isRunning = status == ScriptStatus.running;
-                        
+
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

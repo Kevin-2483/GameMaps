@@ -31,13 +31,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
       duration: const Duration(seconds: 1),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(
-      begin: 0.6,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
     _pulseController.repeat(reverse: true);
   }
 
@@ -84,7 +80,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildCompactStatus() {
     final scripts = widget.scriptManager.scripts;
     final statuses = widget.scriptManager.scriptStatuses;
-    final runningCount = statuses.values.where((s) => s == ScriptStatus.running).length;
+    final runningCount = statuses.values
+        .where((s) => s == ScriptStatus.running)
+        .length;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -101,7 +99,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           // 系统状态指示器
           _buildSystemStatusIndicator(),
           const SizedBox(width: 12),
-          
+
           // 运行中脚本指示器
           if (runningCount > 0) ...[
             AnimatedBuilder(
@@ -130,23 +128,13 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
               ),
             ),
           ] else ...[
-            Icon(
-              Icons.check_circle,
-              size: 16,
-              color: Colors.green,
-            ),
+            Icon(Icons.check_circle, size: 16, color: Colors.green),
             const SizedBox(width: 6),
-            Text(
-              '空闲状态',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.green,
-              ),
-            ),
+            Text('空闲状态', style: TextStyle(fontSize: 12, color: Colors.green)),
           ],
-          
+
           const SizedBox(width: 12),
-          
+
           // 脚本总数
           Text(
             '${scripts.length} 个脚本',
@@ -164,15 +152,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildStatusHeader() {
     return Row(
       children: [
-        Icon(
-          Icons.monitor_heart,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.monitor_heart, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          '脚本引擎状态监控',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('脚本引擎状态监控', style: Theme.of(context).textTheme.titleMedium),
         const Spacer(),
         _buildSystemStatusIndicator(),
       ],
@@ -183,7 +165,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildSystemStatusIndicator() {
     final hasMapData = widget.scriptManager.hasMapData;
     final platform = kIsWeb ? 'Web Worker' : 'Isolate';
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -195,7 +177,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             color: hasMapData ? Colors.green : Colors.orange,
             boxShadow: [
               BoxShadow(
-                color: (hasMapData ? Colors.green : Colors.orange).withOpacity(0.3),
+                color: (hasMapData ? Colors.green : Colors.orange).withOpacity(
+                  0.3,
+                ),
                 blurRadius: 4,
                 spreadRadius: 1,
               ),
@@ -208,10 +192,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           children: [
             Text(
               '执行引擎',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             Text(
               platform,
@@ -230,19 +211,20 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildSystemMetrics() {
     final scripts = widget.scriptManager.scripts;
     final statuses = widget.scriptManager.scriptStatuses;
-    
+
     final totalScripts = scripts.length;
     final enabledScripts = scripts.where((s) => s.isEnabled).length;
-    final runningScripts = statuses.values.where((s) => s == ScriptStatus.running).length;
-    final errorScripts = statuses.values.where((s) => s == ScriptStatus.error).length;
+    final runningScripts = statuses.values
+        .where((s) => s == ScriptStatus.running)
+        .length;
+    final errorScripts = statuses.values
+        .where((s) => s == ScriptStatus.error)
+        .length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '系统指标',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('系统指标', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Wrap(
           spacing: 12,
@@ -319,10 +301,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
               ),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: color.withOpacity(0.8),
-                ),
+                style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
               ),
             ],
           ),
@@ -349,10 +328,10 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildRunningScripts() {
     final scripts = widget.scriptManager.scripts;
     final statuses = widget.scriptManager.scriptStatuses;
-    
-    final runningScripts = scripts.where((script) => 
-      statuses[script.id] == ScriptStatus.running
-    ).toList();
+
+    final runningScripts = scripts
+        .where((script) => statuses[script.id] == ScriptStatus.running)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,15 +345,14 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                ),
+                Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
                 Text(
                   '当前没有运行中的脚本',
@@ -427,9 +405,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
               children: [
                 Text(
                   script.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 if (script.description.isNotEmpty)
                   Text(
@@ -458,30 +434,28 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   Widget _buildRecentExecutions() {
     final scripts = widget.scriptManager.scripts;
     final lastResults = widget.scriptManager.lastResults;
-    
+
     // 获取有执行结果的脚本，按时间排序
-    final recentExecutions = scripts
-        .where((script) => lastResults.containsKey(script.id))
-        .toList()
-      ..sort((a, b) {
-        final aTime = a.lastRunAt ?? DateTime(0);
-        final bTime = b.lastRunAt ?? DateTime(0);
-        return bTime.compareTo(aTime);
-      });
+    final recentExecutions =
+        scripts.where((script) => lastResults.containsKey(script.id)).toList()
+          ..sort((a, b) {
+            final aTime = a.lastRunAt ?? DateTime(0);
+            final bTime = b.lastRunAt ?? DateTime(0);
+            return bTime.compareTo(aTime);
+          });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '最近执行记录',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('最近执行记录', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         if (recentExecutions.isEmpty) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -501,27 +475,33 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             ),
           ),
         ] else ...[
-          ...recentExecutions.take(5).map((script) => 
-            _buildExecutionHistoryItem(script, lastResults[script.id]!)
-          ),
+          ...recentExecutions
+              .take(5)
+              .map(
+                (script) =>
+                    _buildExecutionHistoryItem(script, lastResults[script.id]!),
+              ),
         ],
       ],
     );
   }
 
   /// 构建执行历史项
-  Widget _buildExecutionHistoryItem(ScriptData script, ScriptExecutionResult result) {
+  Widget _buildExecutionHistoryItem(
+    ScriptData script,
+    ScriptExecutionResult result,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: result.success 
-            ? Colors.green.withOpacity(0.05) 
+        color: result.success
+            ? Colors.green.withOpacity(0.05)
             : Colors.red.withOpacity(0.05),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: result.success 
-              ? Colors.green.withOpacity(0.2) 
+          color: result.success
+              ? Colors.green.withOpacity(0.2)
               : Colors.red.withOpacity(0.2),
         ),
       ),
@@ -557,11 +537,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           if (!result.success && result.error != null)
             Tooltip(
               message: result.error!,
-              child: Icon(
-                Icons.info_outline,
-                size: 14,
-                color: Colors.red,
-              ),
+              child: Icon(Icons.info_outline, size: 14, color: Colors.red),
             ),
         ],
       ),
@@ -571,10 +547,10 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
   /// 格式化时间
   String _formatTime(DateTime? dateTime) {
     if (dateTime == null) return '未知';
-    
+
     final now = DateTime.now();
     final diff = now.difference(dateTime);
-    
+
     if (diff.inMinutes < 1) {
       return '刚刚';
     } else if (diff.inHours < 1) {

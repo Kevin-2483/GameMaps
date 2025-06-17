@@ -10,10 +10,7 @@ import 'package:isolate_manager/isolate_manager.dart';
 @pragma('vm:entry-point')
 @isolateManagerCustomWorker
 void hetuScriptWorkerFunction(dynamic params) {
-  IsolateManagerFunction.customFunction<
-    String,
-    String
-  >(
+  IsolateManagerFunction.customFunction<String, String>(
     params,
     onInit: (controller) async {
       // 初始化 Hetu 脚本引擎
@@ -63,7 +60,7 @@ Future<String> _handleWorkerMessage(
   String jsonMessage,
 ) async {
   _addWorkerLog('Received JSON message: $jsonMessage');
-  
+
   try {
     // 解析 JSON 消息
     final message = jsonDecode(jsonMessage) as Map<String, dynamic>;
@@ -73,7 +70,7 @@ Future<String> _handleWorkerMessage(
     _addWorkerLog('Received message type: $type');
 
     Map<String, dynamic> result;
-    
+
     switch (type) {
       case 'execute':
         _addWorkerLog('Processing execute request...');
@@ -101,12 +98,9 @@ Future<String> _handleWorkerMessage(
 
       default:
         _addWorkerLog('Unknown message type: $type');
-        result = {
-          'type': 'error',
-          'error': 'Unknown message type: $type',
-        };
+        result = {'type': 'error', 'error': 'Unknown message type: $type'};
     }
-    
+
     return jsonEncode(result);
   } catch (e, stackTrace) {
     _addWorkerLog('Error handling message: $e');
@@ -117,7 +111,7 @@ Future<String> _handleWorkerMessage(
       'error': e.toString(),
       'executionTime': DateTime.now().millisecondsSinceEpoch,
     };
-    
+
     return jsonEncode(errorResult);
   }
 }
@@ -204,7 +198,7 @@ Future<dynamic> _callExternalFunction(
   final completer = Completer<dynamic>();
 
   _externalFunctionCalls[callId] = completer;
-  
+
   _addWorkerLog('Calling external function: $functionName');
   _addWorkerLog('Arguments type: ${arguments.runtimeType}');
   _addWorkerLog('Arguments value: $arguments');
@@ -216,10 +210,10 @@ Future<dynamic> _callExternalFunction(
     'arguments': arguments,
     'callId': callId,
   };
-  
+
   final jsonRequest = jsonEncode(requestData);
   _addWorkerLog('Sending JSON request: $jsonRequest');
-  
+
   controller.sendResult(jsonRequest);
 
   // 等待结果，设置超时以防止死锁

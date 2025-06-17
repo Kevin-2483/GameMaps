@@ -61,7 +61,8 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
 
     if (_isDisposed || _isolateManager == null) {
       throw StateError('WebWorkerScriptExecutor has been disposed');
-    }    final requestData = {
+    }
+    final requestData = {
       'type': 'execute',
       'code': code,
       'context': context ?? {},
@@ -70,7 +71,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
     };
 
     _addLog('Sending execute request to worker...');
-    
+
     // 转换为 JSON 字符串
     final jsonRequest = jsonEncode(requestData);
     _addLog('Request JSON: $jsonRequest');
@@ -89,12 +90,12 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
             );
           }
         });
-      }      // 监听 isolate 消息流以处理外部函数调用
+      } // 监听 isolate 消息流以处理外部函数调用
       late StreamSubscription subscription;
       subscription = _isolateManager!.stream.listen((jsonResponse) {
         try {
           _addLog('Raw JSON response: $jsonResponse');
-          
+
           // 解析 JSON 响应
           final response = jsonDecode(jsonResponse) as Map<String, dynamic>;
           _addLog('Parsed response: $response');
@@ -103,10 +104,12 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
           final responseType = response['type'] as String?;
 
           if (responseType == 'externalFunctionCall') {
-            _addLog('Processing external function call: ${response['functionName']}');
+            _addLog(
+              'Processing external function call: ${response['functionName']}',
+            );
             _addLog('Arguments type: ${response['arguments'].runtimeType}');
             _addLog('Arguments value: ${response['arguments']}');
-            
+
             // 处理外部函数调用
             _handleExternalFunctionCall(response);
           } else if (!completer.isCompleted) {
@@ -126,7 +129,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
             completer.completeError(e);
           }
         }
-      });// 发送执行请求
+      }); // 发送执行请求
       await _isolateManager!.sendMessage(jsonRequest);
       _addLog('Execute request sent to worker');
 
@@ -203,6 +206,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
     }
     return defaultValue;
   }
+
   /// 处理外部函数调用
   void _handleExternalFunctionCall(Map<String, dynamic> response) {
     final functionName = _safeGetString(response, 'functionName');
@@ -216,7 +220,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
     // 智能解析参数，支持多种格式
     List<dynamic> arguments;
     final rawArguments = response['arguments'];
-    
+
     _addLog('Processing external function call: $functionName');
     _addLog('Raw arguments type: ${rawArguments.runtimeType}');
     _addLog('Raw arguments value: $rawArguments');
@@ -277,6 +281,7 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
       _isolateManager!.sendMessage(jsonEncode(errorData));
     }
   }
+
   @override
   void stop() {
     if (_isolateManager != null) {
@@ -306,7 +311,9 @@ class WebWorkerScriptExecutor implements IsolatedScriptExecutor {
   void clearExternalFunctions() {
     _externalFunctions.clear();
     _addLog('Cleared all external functions');
-  }  @override
+  }
+
+  @override
   void sendMapDataUpdate(Map<String, dynamic> data) {
     if (_isolateManager != null) {
       final updateData = {'type': 'mapDataUpdate', 'data': data};

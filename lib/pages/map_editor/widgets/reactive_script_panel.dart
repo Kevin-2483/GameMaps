@@ -70,10 +70,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
               // 脚本引擎状态指示器
               _buildEngineStatusIndicator(),
               const SizedBox(width: 12),
-              
+
               // 脚本统计信息
               Expanded(child: _buildScriptStats()),
-              
+
               // 系统控制按钮
               _buildSystemControls(),
             ],
@@ -87,7 +87,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   Widget _buildEngineStatusIndicator() {
     final hasMapData = widget.scriptManager.hasMapData;
     final isWeb = kIsWeb;
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -128,8 +128,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   Widget _buildScriptStats() {
     final scripts = widget.scriptManager.scripts;
     final statuses = widget.scriptManager.scriptStatuses;
-    
-    final runningCount = statuses.values.where((s) => s == ScriptStatus.running).length;
+
+    final runningCount = statuses.values
+        .where((s) => s == ScriptStatus.running)
+        .length;
     final enabledCount = scripts.where((s) => s.isEnabled).length;
     final totalCount = scripts.length;
 
@@ -241,13 +243,13 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       ],
     );
   }
+
   /// 显示执行日志
   void _showExecutionLogs() {
     showDialog(
       context: context,
-      builder: (context) => _ExecutionLogsDialog(
-        scriptManager: widget.scriptManager,
-      ),
+      builder: (context) =>
+          _ExecutionLogsDialog(scriptManager: widget.scriptManager),
     );
   }
 
@@ -418,7 +420,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                   ),
                 ],
               ),
-              
+
               // 描述信息
               if (script.description.isNotEmpty) ...[
                 const SizedBox(height: 6),
@@ -432,13 +434,13 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              
+
               // 执行结果详情（仅在选中时显示）
               if (isSelected && lastResult != null) ...[
                 const SizedBox(height: 8),
                 _buildExecutionResultDetails(lastResult),
               ],
-              
+
               // 操作按钮（仅在选中时显示）
               if (isSelected) ...[
                 const SizedBox(height: 8),
@@ -452,17 +454,17 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   }
 
   /// 构建高级状态指示器
-  Widget _buildAdvancedStatusIndicator(ScriptStatus status, ScriptExecutionResult? lastResult) {
+  Widget _buildAdvancedStatusIndicator(
+    ScriptStatus status,
+    ScriptExecutionResult? lastResult,
+  ) {
     return Container(
       width: 20,
       height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _getStatusColor(status).withOpacity(0.2),
-        border: Border.all(
-          color: _getStatusColor(status),
-          width: 2,
-        ),
+        border: Border.all(color: _getStatusColor(status), width: 2),
       ),
       child: Center(
         child: status == ScriptStatus.running
@@ -471,7 +473,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                 height: 10,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(_getStatusColor(status)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    _getStatusColor(status),
+                  ),
                 ),
               )
             : Icon(
@@ -521,7 +525,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         ),
         const SizedBox(width: 4),
         Text(
-          result.success 
+          result.success
               ? '执行成功 (${result.executionTime.inMilliseconds}ms)'
               : '执行失败',
           style: TextStyle(
@@ -552,8 +556,8 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         icon: const Icon(Icons.play_circle, size: 18),
         tooltip: '执行脚本',
         style: IconButton.styleFrom(
-          foregroundColor: script.isEnabled 
-              ? Theme.of(context).colorScheme.primary 
+          foregroundColor: script.isEnabled
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).disabledColor,
           minimumSize: const Size(24, 24),
           padding: EdgeInsets.zero,
@@ -567,8 +571,8 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: result.success 
-            ? Colors.green.withOpacity(0.1) 
+        color: result.success
+            ? Colors.green.withOpacity(0.1)
             : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
@@ -609,10 +613,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
             const SizedBox(height: 4),
             Text(
               result.error!,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.red,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.red),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
@@ -621,10 +622,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
             const SizedBox(height: 4),
             Text(
               '返回值: ${result.result}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.green,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.green),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -649,7 +647,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   }
 
   /// 获取状态图标
-  IconData _getStatusIcon(ScriptStatus status, ScriptExecutionResult? lastResult) {
+  IconData _getStatusIcon(
+    ScriptStatus status,
+    ScriptExecutionResult? lastResult,
+  ) {
     switch (status) {
       case ScriptStatus.idle:
         if (lastResult != null) {
@@ -1003,9 +1004,7 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
 class _ExecutionLogsDialog extends StatefulWidget {
   final NewReactiveScriptManager scriptManager;
 
-  const _ExecutionLogsDialog({
-    required this.scriptManager,
-  });
+  const _ExecutionLogsDialog({required this.scriptManager});
 
   @override
   State<_ExecutionLogsDialog> createState() => _ExecutionLogsDialogState();
@@ -1034,7 +1033,7 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
   @override
   Widget build(BuildContext context) {
     final logs = widget.scriptManager.getExecutionLogs();
-    
+
     return AlertDialog(
       title: Row(
         children: [
@@ -1077,9 +1076,14 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
                   itemBuilder: (context, index) {
                     final log = logs[index];
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: index.isEven ? Colors.grey.shade50 : Colors.white,
+                        color: index.isEven
+                            ? Colors.grey.shade50
+                            : Colors.white,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,

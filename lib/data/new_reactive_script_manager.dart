@@ -423,7 +423,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
     return _reactiveEngine.getExecutionLogs();
   }
 
-  /// 清空脚本执行日志  
+  /// 清空脚本执行日志
   void clearExecutionLogs() {
     _reactiveEngine.clearExecutionLogs();
   }

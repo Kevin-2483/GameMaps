@@ -177,7 +177,9 @@ class IsolateScriptExecutor implements IsolatedScriptExecutor {
       _timeoutTimer?.cancel();
       _timeoutTimer = null;
     }
-  }  /// 启动隔离
+  }
+
+  /// 启动隔离
   Future<void> _startIsolate() async {
     if (_isolate != null) return;
 
@@ -187,7 +189,7 @@ class IsolateScriptExecutor implements IsolatedScriptExecutor {
 
     // 等待隔离准备就绪
     final completer = Completer<void>();
-    
+
     // 使用单一监听器处理所有消息
     _receivePort!.listen((data) {
       if (data is Map && data['type'] == 'ready' && !completer.isCompleted) {
@@ -422,6 +424,7 @@ class _IsolateScriptRunner {
       );
     }
   }
+
   Future<dynamic> _runScriptInIsolate(
     String code,
     Map<String, dynamic>? context,
@@ -429,29 +432,29 @@ class _IsolateScriptRunner {
     try {
       // 创建Hetu脚本解释器
       final hetu = Hetu();
-      
+
       // 准备外部函数映射
       final externalFunctions = <String, Function>{};
-      
+
       // 注册基础外部函数
       _registerBasicExternalFunctions(externalFunctions);
-      
+
       // 注册地图数据访问函数
       _registerMapDataFunctions(externalFunctions);
-      
+
       // 注册便签和图例函数
       _registerStickyNoteAndLegendFunctions(externalFunctions);
-      
+
       // 初始化Hetu解释器
       hetu.init(externalFunctions: externalFunctions);
-      
+
       // 设置初始上下文
       if (context != null) {
         for (final entry in context.entries) {
           hetu.assign(entry.key, entry.value);
         }
       }
-      
+
       // 执行脚本（Hetu支持异步外部函数）
       final result = await hetu.eval(code);
       return result;
@@ -466,7 +469,7 @@ class _IsolateScriptRunner {
     functions['log'] = (dynamic message) async {
       return await _callExternalFunction('log', [message]);
     };
-    
+
     functions['print'] = (dynamic message) async {
       return await _callExternalFunction('print', [message]);
     };
@@ -475,27 +478,27 @@ class _IsolateScriptRunner {
     functions['sin'] = (num x) async {
       return await _callExternalFunction('sin', [x]);
     };
-    
+
     functions['cos'] = (num x) async {
       return await _callExternalFunction('cos', [x]);
     };
-    
+
     functions['tan'] = (num x) async {
       return await _callExternalFunction('tan', [x]);
     };
-    
+
     functions['sqrt'] = (num x) async {
       return await _callExternalFunction('sqrt', [x]);
     };
-    
+
     functions['pow'] = (num x, num y) async {
       return await _callExternalFunction('pow', [x, y]);
     };
-    
+
     functions['abs'] = (num x) async {
       return await _callExternalFunction('abs', [x]);
     };
-    
+
     functions['random'] = () async {
       return await _callExternalFunction('random', []);
     };
@@ -507,66 +510,85 @@ class _IsolateScriptRunner {
     functions['getLayers'] = () async {
       return await _callExternalFunction('getLayers', []);
     };
-    
+
     functions['getLayerById'] = (String id) async {
       return await _callExternalFunction('getLayerById', [id]);
     };
-    
+
     functions['getElementsInLayer'] = (String layerId) async {
       return await _callExternalFunction('getElementsInLayer', [layerId]);
     };
-    
+
     functions['getAllElements'] = () async {
       return await _callExternalFunction('getAllElements', []);
     };
-    
+
     functions['countElements'] = ([String? type]) async {
       return await _callExternalFunction('countElements', [type]);
     };
-    
+
     functions['calculateTotalArea'] = () async {
       return await _callExternalFunction('calculateTotalArea', []);
     };
 
     // 元素修改函数
-    functions['updateElementProperty'] = (String elementId, String property, dynamic value) async {
-      return await _callExternalFunction('updateElementProperty', [elementId, property, value]);
-    };
-    
-    functions['moveElement'] = (String elementId, Map<String, dynamic> newPosition) async {
-      return await _callExternalFunction('moveElement', [elementId, newPosition]);
-    };
+    functions['updateElementProperty'] =
+        (String elementId, String property, dynamic value) async {
+          return await _callExternalFunction('updateElementProperty', [
+            elementId,
+            property,
+            value,
+          ]);
+        };
+
+    functions['moveElement'] =
+        (String elementId, Map<String, dynamic> newPosition) async {
+          return await _callExternalFunction('moveElement', [
+            elementId,
+            newPosition,
+          ]);
+        };
 
     // 文本元素函数
     functions['createTextElement'] = (Map<String, dynamic> params) async {
       return await _callExternalFunction('createTextElement', [params]);
     };
-    
+
     functions['updateTextContent'] = (String elementId, String content) async {
-      return await _callExternalFunction('updateTextContent', [elementId, content]);
+      return await _callExternalFunction('updateTextContent', [
+        elementId,
+        content,
+      ]);
     };
-    
+
     functions['updateTextSize'] = (String elementId, double size) async {
       return await _callExternalFunction('updateTextSize', [elementId, size]);
     };
-    
+
     functions['getTextElements'] = () async {
       return await _callExternalFunction('getTextElements', []);
     };
-    
+
     functions['findTextElementsByContent'] = (String content) async {
-      return await _callExternalFunction('findTextElementsByContent', [content]);
+      return await _callExternalFunction('findTextElementsByContent', [
+        content,
+      ]);
     };
-    
-    functions['say'] = (dynamic tagFilter, String filterType, String text) async {
-      return await _callExternalFunction('say', [tagFilter, filterType, text]);
-    };
+
+    functions['say'] =
+        (dynamic tagFilter, String filterType, String text) async {
+          return await _callExternalFunction('say', [
+            tagFilter,
+            filterType,
+            text,
+          ]);
+        };
 
     // 文件操作函数
     functions['readjson'] = (String filename) async {
       return await _callExternalFunction('readjson', [filename]);
     };
-    
+
     functions['writetext'] = (String filename, String content) async {
       return await _callExternalFunction('writetext', [filename, content]);
     };
@@ -578,70 +600,84 @@ class _IsolateScriptRunner {
     functions['getStickyNotes'] = () async {
       return await _callExternalFunction('getStickyNotes', []);
     };
-    
+
     functions['getStickyNoteById'] = (String id) async {
       return await _callExternalFunction('getStickyNoteById', [id]);
     };
-    
+
     functions['getElementsInStickyNote'] = (String id) async {
       return await _callExternalFunction('getElementsInStickyNote', [id]);
     };
-    
+
     functions['filterStickyNotesByTags'] = (List<String> tags) async {
       return await _callExternalFunction('filterStickyNotesByTags', [tags]);
     };
-    
+
     functions['filterStickyNoteElementsByTags'] = (List<String> tags) async {
-      return await _callExternalFunction('filterStickyNoteElementsByTags', [tags]);
+      return await _callExternalFunction('filterStickyNoteElementsByTags', [
+        tags,
+      ]);
     };
 
     // 图例相关函数
     functions['getLegendGroups'] = () async {
       return await _callExternalFunction('getLegendGroups', []);
     };
-    
+
     functions['getLegendGroupById'] = (String id) async {
       return await _callExternalFunction('getLegendGroupById', [id]);
     };
-    
-    functions['updateLegendGroup'] = (String id, Map<String, dynamic> params) async {
-      return await _callExternalFunction('updateLegendGroup', [id, params]);
-    };
-    
+
+    functions['updateLegendGroup'] =
+        (String id, Map<String, dynamic> params) async {
+          return await _callExternalFunction('updateLegendGroup', [id, params]);
+        };
+
     functions['updateLegendGroupVisibility'] = (String id, bool visible) async {
-      return await _callExternalFunction('updateLegendGroupVisibility', [id, visible]);
+      return await _callExternalFunction('updateLegendGroupVisibility', [
+        id,
+        visible,
+      ]);
     };
-    
+
     functions['updateLegendGroupOpacity'] = (String id, double opacity) async {
-      return await _callExternalFunction('updateLegendGroupOpacity', [id, opacity]);
+      return await _callExternalFunction('updateLegendGroupOpacity', [
+        id,
+        opacity,
+      ]);
     };
-    
+
     functions['getLegendItems'] = () async {
       return await _callExternalFunction('getLegendItems', []);
     };
-    
+
     functions['getLegendItemById'] = (String id) async {
       return await _callExternalFunction('getLegendItemById', [id]);
     };
-    
-    functions['updateLegendItem'] = (String id, Map<String, dynamic> params) async {
-      return await _callExternalFunction('updateLegendItem', [id, params]);
-    };
-    
+
+    functions['updateLegendItem'] =
+        (String id, Map<String, dynamic> params) async {
+          return await _callExternalFunction('updateLegendItem', [id, params]);
+        };
+
     functions['filterLegendGroupsByTags'] = (List<String> tags) async {
       return await _callExternalFunction('filterLegendGroupsByTags', [tags]);
     };
-    
+
     functions['filterLegendItemsByTags'] = (List<String> tags) async {
       return await _callExternalFunction('filterLegendItemsByTags', [tags]);
     };
   }
 
   /// 调用外部函数（通过消息传递与主线程通信）
-  Future<dynamic> _callExternalFunction(String functionName, List<dynamic> arguments) async {
-    final callId = DateTime.now().millisecondsSinceEpoch.toString() + 
-                   math.Random().nextInt(1000).toString();
-    
+  Future<dynamic> _callExternalFunction(
+    String functionName,
+    List<dynamic> arguments,
+  ) async {
+    final callId =
+        DateTime.now().millisecondsSinceEpoch.toString() +
+        math.Random().nextInt(1000).toString();
+
     final call = ExternalFunctionCall(
       functionName: functionName,
       arguments: arguments,
@@ -666,7 +702,10 @@ class _IsolateScriptRunner {
         const Duration(seconds: 10),
         onTimeout: () {
           _pendingExternalCalls.remove(callId);
-          throw TimeoutException('External function call timeout: $functionName', const Duration(seconds: 10));
+          throw TimeoutException(
+            'External function call timeout: $functionName',
+            const Duration(seconds: 10),
+          );
         },
       );
     } catch (e) {

@@ -18,11 +18,11 @@ class NewScriptSystemIntegrationExample extends StatefulWidget {
   });
 
   @override
-  State<NewScriptSystemIntegrationExample> createState() => 
+  State<NewScriptSystemIntegrationExample> createState() =>
       _NewScriptSystemIntegrationExampleState();
 }
 
-class _NewScriptSystemIntegrationExampleState 
+class _NewScriptSystemIntegrationExampleState
     extends State<NewScriptSystemIntegrationExample> {
   late NewReactiveScriptManager _scriptManager;
   bool _showStatusMonitor = false;
@@ -38,10 +38,10 @@ class _NewScriptSystemIntegrationExampleState
   Future<void> _initializeScriptManager() async {
     _scriptManager = NewReactiveScriptManager(mapDataBloc: widget.mapDataBloc);
     await _scriptManager.initialize();
-    
+
     // 监听脚本状态变化
     _scriptManager.addListener(_onScriptManagerChanged);
-    
+
     setState(() {
       // 触发UI更新
     });
@@ -76,7 +76,9 @@ class _NewScriptSystemIntegrationExampleState
                 _showStatusMonitor = !_showStatusMonitor;
               });
             },
-            icon: Icon(_showStatusMonitor ? Icons.visibility_off : Icons.monitor),
+            icon: Icon(
+              _showStatusMonitor ? Icons.visibility_off : Icons.monitor,
+            ),
             tooltip: _showStatusMonitor ? '隐藏状态监控' : '显示状态监控',
           ),
           // 系统信息按钮
@@ -106,7 +108,7 @@ class _NewScriptSystemIntegrationExampleState
           ),
           const Divider(height: 1),
         ],
-        
+
         // 主要内容区域
         Expanded(
           child: Row(
@@ -122,17 +124,15 @@ class _NewScriptSystemIntegrationExampleState
                   ),
                 ),
               ),
-              
+
               const VerticalDivider(width: 1),
-              
+
               // 右侧：脚本编辑器或占位符
-              Expanded(
-                child: _buildMainContent(),
-              ),
+              Expanded(child: _buildMainContent()),
             ],
           ),
         ),
-        
+
         // 底部状态栏
         _buildStatusBar(),
       ],
@@ -142,9 +142,10 @@ class _NewScriptSystemIntegrationExampleState
   /// 构建主要内容区域
   Widget _buildMainContent() {
     if (_editingScriptId != null) {
-      final script = _scriptManager.scripts
-          .firstWhere((s) => s.id == _editingScriptId);
-      
+      final script = _scriptManager.scripts.firstWhere(
+        (s) => s.id == _editingScriptId,
+      );
+
       return ReactiveScriptEditorWindow(
         script: script,
         scriptManager: _scriptManager,
@@ -168,10 +169,7 @@ class _NewScriptSystemIntegrationExampleState
             color: Theme.of(context).colorScheme.outline,
           ),
           const SizedBox(height: 16),
-          Text(
-            '新异步脚本执行引擎',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text('新异步脚本执行引擎', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(
             '选择左侧脚本进行编辑，或创建新脚本开始使用',
@@ -180,12 +178,12 @@ class _NewScriptSystemIntegrationExampleState
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // 功能特性卡片
           _buildFeatureCards(),
-          
+
           const SizedBox(height: 24),
-          
+
           // 快速开始按钮
           Wrap(
             spacing: 12,
@@ -220,21 +218,13 @@ class _NewScriptSystemIntegrationExampleState
         'title': '异步执行',
         'description': '脚本在隔离环境运行，不阻塞UI',
       },
-      {
-        'icon': Icons.security,
-        'title': '安全沙盒',
-        'description': '脚本错误不会影响主程序',
-      },
+      {'icon': Icons.security, 'title': '安全沙盒', 'description': '脚本错误不会影响主程序'},
       {
         'icon': Icons.devices,
         'title': '跨平台',
         'description': 'Web Worker + Isolate 双引擎',
       },
-      {
-        'icon': Icons.speed,
-        'title': '高性能',
-        'description': '消息传递机制，响应迅速',
-      },
+      {'icon': Icons.speed, 'title': '高性能', 'description': '消息传递机制，响应迅速'},
     ];
 
     return SizedBox(
@@ -305,9 +295,9 @@ class _NewScriptSystemIntegrationExampleState
             scriptManager: _scriptManager,
             showDetailed: false,
           ),
-          
+
           const Spacer(),
-          
+
           // 系统信息
           Text(
             '新异步脚本引擎 | 消息传递机制',
@@ -325,9 +315,9 @@ class _NewScriptSystemIntegrationExampleState
   void _createNewScript() {
     // 这里可以打开新脚本创建对话框
     // 或者直接创建一个示例脚本
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('创建新脚本功能待实现')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('创建新脚本功能待实现')));
   }
 
   /// 显示系统信息
@@ -342,15 +332,20 @@ class _NewScriptSystemIntegrationExampleState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow('执行引擎', 
-                kIsWeb ? 'Web Worker (浏览器)' : 'Dart Isolate (桌面)'),
+              _buildInfoRow(
+                '执行引擎',
+                kIsWeb ? 'Web Worker (浏览器)' : 'Dart Isolate (桌面)',
+              ),
               _buildInfoRow('脚本数量', '${_scriptManager.scripts.length}'),
-              _buildInfoRow('启用脚本', 
-                '${_scriptManager.scripts.where((s) => s.isEnabled).length}'),
-              _buildInfoRow('运行中脚本', 
-                '${_scriptManager.scriptStatuses.values.where((s) => s == ScriptStatus.running).length}'),
-              _buildInfoRow('地图数据', 
-                _scriptManager.hasMapData ? '已连接' : '未连接'),
+              _buildInfoRow(
+                '启用脚本',
+                '${_scriptManager.scripts.where((s) => s.isEnabled).length}',
+              ),
+              _buildInfoRow(
+                '运行中脚本',
+                '${_scriptManager.scriptStatuses.values.where((s) => s == ScriptStatus.running).length}',
+              ),
+              _buildInfoRow('地图数据', _scriptManager.hasMapData ? '已连接' : '未连接'),
               _buildInfoRow('架构特性', '异步隔离执行 + 消息传递'),
               _buildInfoRow('安全性', '沙盒环境 + 受控API'),
               const SizedBox(height: 16),
@@ -385,18 +380,10 @@ class _NewScriptSystemIntegrationExampleState
             width: 80,
             child: Text(
               '$label:',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 12))),
         ],
       ),
     );
@@ -404,8 +391,8 @@ class _NewScriptSystemIntegrationExampleState
 
   /// 运行系统测试
   void _runSystemTest() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('系统测试功能待实现')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('系统测试功能待实现')));
   }
 }
