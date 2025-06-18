@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../../data/map_data_bloc.dart';
 import '../../data/map_data_state.dart';
 import '../../models/map_layer.dart';
-import '../../models/sticky_note.dart';
 import '../../utils/script_data_converter.dart';
 
 /// 外部函数处理器

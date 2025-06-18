@@ -1,0 +1,33 @@
+// 测试双向通信和外部函数调用的脚本
+
+fun main() {
+    // 测试基础外部函数调用
+    print('=== 测试双向通信功能 ===');
+    
+    // 测试日志函数
+    log('这是一个测试日志消息');
+    print('打印消息测试');
+    
+    // 测试数学函数
+    var x = 3.14159;
+    var sinValue = sin(x);
+    var cosValue = cos(x);
+    var sqrtValue = sqrt(16);
+    var randomValue = random();
+    
+    print('sin(π) = ${sinValue}');
+    print('cos(π) = ${cosValue}');
+    print('sqrt(16) = ${sqrtValue}');
+    print('random() = ${randomValue}');
+    
+    // 测试组合计算
+    var result = sin(x) * cos(x) + sqrt(sqrtValue);
+    print('组合计算结果: ${result}');
+    
+    print('=== 双向通信测试完成 ===');
+    
+    return '双向通信测试成功完成';
+}
+
+// 调用主函数
+main();

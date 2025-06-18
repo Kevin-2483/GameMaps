@@ -1,4 +1,6 @@
 // 死循环脚本 - 每秒打印一个数字
+external fun log;
+
 var counter = 0;
 
 log("开始执行死循环脚本...");

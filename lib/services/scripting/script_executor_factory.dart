@@ -3,6 +3,8 @@ import 'script_executor_base.dart';
 import 'isolated_script_executor.dart';
 import 'concurrent_isolate_script_executor.dart';
 import 'web_worker_script_executor.dart';
+import 'concurrent_web_worker_script_executor.dart';
+import 'squadron/squadron_concurrent_web_worker_script_executor.dart';
 
 /// 脚本执行器类型
 enum ScriptExecutorType {
@@ -14,6 +16,12 @@ enum ScriptExecutorType {
 
   /// 并发 Isolate 执行器（多任务）
   concurrent,
+
+  /// 并发 Web Worker 执行器（Web 平台多任务）
+  concurrentWebWorker,
+
+  /// Squadron 并发 Web Worker 执行器（Web 平台多任务，支持双向通信）
+  squadronConcurrentWebWorker,
 }
 
 /// 脚本执行器工厂类
@@ -25,10 +33,10 @@ class ScriptExecutorFactory {
   static IScriptExecutor create({
     ScriptExecutorType? type,
     bool enableConcurrency = false,
+    int? workerPoolSize,
   }) {
     // 如果未指定类型，自动选择
     type ??= _getDefaultType(enableConcurrency);
-
     switch (type) {
       case ScriptExecutorType.isolate:
         if (kIsWeb) {
@@ -53,13 +61,35 @@ class ScriptExecutorFactory {
           );
         }
         return ConcurrentIsolateScriptExecutor();
+
+      case ScriptExecutorType.concurrentWebWorker:
+        if (!kIsWeb) {
+          throw UnsupportedError(
+            'Concurrent web worker executor is only supported on web platform',
+          );
+        }
+        return ConcurrentWebWorkerScriptExecutor(
+          workerPoolSize: workerPoolSize ?? 4,
+        );
+
+      case ScriptExecutorType.squadronConcurrentWebWorker:
+        if (!kIsWeb) {
+          throw UnsupportedError(
+            'Squadron concurrent web worker executor is only supported on web platform',
+          );
+        }
+        return SquadronConcurrentWebWorkerScriptExecutor(
+          workerPoolSize: workerPoolSize ?? 4,
+        );
     }
   }
 
   /// 获取平台默认的执行器类型
   static ScriptExecutorType _getDefaultType(bool enableConcurrency) {
     if (kIsWeb) {
-      return ScriptExecutorType.webWorker;
+      return enableConcurrency
+          ? ScriptExecutorType.concurrentWebWorker
+          : ScriptExecutorType.webWorker;
     } else {
       return enableConcurrency
           ? ScriptExecutorType.concurrent
@@ -82,6 +112,13 @@ class ScriptExecutorFactory {
     return ConcurrentIsolateScriptExecutor();
   }
 
+  /// 创建并发Web Worker执行器（明确指定，用于Web端）
+  static ConcurrentWebWorkerScriptExecutor createConcurrentWebWorker({
+    int workerPoolSize = 4,
+  }) {
+    return ConcurrentWebWorkerScriptExecutor(workerPoolSize: workerPoolSize);
+  }
+
   /// 检查指定类型是否在当前平台可用
   static bool isTypeSupported(ScriptExecutorType type) {
     switch (type) {
@@ -89,6 +126,8 @@ class ScriptExecutorFactory {
       case ScriptExecutorType.concurrent:
         return !kIsWeb;
       case ScriptExecutorType.webWorker:
+      case ScriptExecutorType.concurrentWebWorker:
+      case ScriptExecutorType.squadronConcurrentWebWorker:
         return kIsWeb;
     }
   }
@@ -96,7 +135,10 @@ class ScriptExecutorFactory {
   /// 获取当前平台支持的所有执行器类型
   static List<ScriptExecutorType> getSupportedTypes() {
     if (kIsWeb) {
-      return [ScriptExecutorType.webWorker];
+      return [
+        ScriptExecutorType.webWorker,
+        ScriptExecutorType.concurrentWebWorker,
+      ];
     } else {
       return [ScriptExecutorType.isolate, ScriptExecutorType.concurrent];
     }
@@ -108,9 +150,13 @@ class ScriptExecutorFactory {
       case ScriptExecutorType.isolate:
         return 'Standard Isolate Executor (single task, native platforms)';
       case ScriptExecutorType.webWorker:
-        return 'Web Worker Executor (web platform only)';
+        return 'Web Worker Executor (single task, web platform only)';
       case ScriptExecutorType.concurrent:
         return 'Concurrent Isolate Executor (multiple tasks, native platforms)';
+      case ScriptExecutorType.concurrentWebWorker:
+        return 'Concurrent Web Worker Executor (multiple tasks, web platform only)';
+      case ScriptExecutorType.squadronConcurrentWebWorker:
+        return 'Squadron Concurrent Web Worker Executor (multiple tasks with bidirectional communication, web platform only)';
     }
   }
 

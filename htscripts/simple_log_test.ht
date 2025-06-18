@@ -1,0 +1,6 @@
+// 简单的日志测试
+external fun log
+
+fun main() {
+    log('Hello World')
+}

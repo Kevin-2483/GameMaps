@@ -11,12 +11,12 @@ class IsolateScriptExecutor implements IScriptExecutor {
   Isolate? _isolate;
   SendPort? _isolateSendPort;
   ReceivePort? _receivePort;
+  Timer? _timeoutTimer;
 
   final List<String> _executionLogs = [];
   final Map<String, Function> _externalFunctionHandlers = {};
 
   Completer<ScriptExecutionResult>? _currentExecution;
-  Timer? _timeoutTimer;
 
   @override
   Future<ScriptExecutionResult> execute(
@@ -101,11 +101,22 @@ class IsolateScriptExecutor implements IScriptExecutor {
       final message = ScriptMessage.fromJson(data);
 
       switch (message.type) {
+        case ScriptMessageType.started:
+          // 脚本开始执行时取消超时计时器
+          _timeoutTimer?.cancel();
+          _timeoutTimer = null;
+          debugPrint('SUCCESS: Timeout timer cancelled - script started');
+          break;
+
         case ScriptMessageType.result:
           final success = message.data['success'] as bool;
           final error = message.data['error'] as String?;
           final result = message.data['result'];
           final executionTimeMs = message.data['executionTimeMs'] as int?;
+
+          // 取消计时器（如果还在运行）
+          _timeoutTimer?.cancel();
+          _timeoutTimer = null;
 
           if (_currentExecution != null && !_currentExecution!.isCompleted) {
             _currentExecution!.complete(
@@ -252,13 +263,11 @@ class IsolateScriptExecutor implements IScriptExecutor {
 class _IsolateScriptRunner {
   final SendPort _mainSendPort;
   final Map<String, Completer<dynamic>> _pendingExternalCalls = {};
-
   _IsolateScriptRunner(this._mainSendPort);
 
   void handleMessage(dynamic data) async {
     try {
       final message = ScriptMessage.fromJson(data);
-
       switch (message.type) {
         case ScriptMessageType.execute:
           await _executeScript(message.data);
@@ -340,6 +349,15 @@ class _IsolateScriptRunner {
           hetu.assign(entry.key, entry.value);
         }
       }
+
+      // 发送脚本已开始执行的消息
+      debugPrint('DEBUG: Sending started message');
+      final startedMessage = ScriptMessage(
+        type: ScriptMessageType.started,
+        data: {'executionId': null},
+      );
+      _mainSendPort.send(startedMessage.toJson());
+      debugPrint('DEBUG: Started message sent');
 
       // 执行脚本（Hetu支持异步外部函数）
       final result = await hetu.eval(code);

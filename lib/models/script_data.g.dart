@@ -17,9 +17,10 @@ ScriptData _$ScriptDataFromJson(Map<String, dynamic> json) => ScriptData(
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   lastError: json['lastError'] as String?,
-  lastRunAt: json['lastRunAt'] == null
-      ? null
-      : DateTime.parse(json['lastRunAt'] as String),
+  lastRunAt:
+      json['lastRunAt'] == null
+          ? null
+          : DateTime.parse(json['lastRunAt'] as String),
 );
 
 Map<String, dynamic> _$ScriptDataToJson(ScriptData instance) =>

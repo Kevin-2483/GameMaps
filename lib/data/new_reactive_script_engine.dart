@@ -11,6 +11,8 @@ import 'map_data_state.dart';
 
 /// 重构后的响应式脚本引擎
 /// 使用消息传递机制，支持异步隔离执行和并发脚本执行
+/// 在Web平台上使用Web Worker，在桌面平台上使用Isolate
+/// 支持真正的多任务并发执行，适用于长时间运行的脚本
 class NewReactiveScriptEngine {
   final MapDataBloc _mapDataBloc;
   StreamSubscription<MapDataState>? _mapDataSubscription;
@@ -155,8 +157,10 @@ class NewReactiveScriptEngine {
     // 检查是否达到最大并发数
     if (_executorPool.length >= _maxConcurrentExecutors) {
       throw Exception('达到最大并发脚本数限制 ($_maxConcurrentExecutors)');
-    } // 创建新的执行器（启用并发模式以支持长时间运行的脚本）
-    final executor = ScriptExecutorFactory.create(enableConcurrency: true);
+    }
+
+    // 创建新的执行器（根据平台和需求选择合适的类型）
+    final executor = _createAppropriateExecutor();
 
     // 注册外部函数
     _registerExternalFunctions(executor);
@@ -340,5 +344,48 @@ class NewReactiveScriptEngine {
   /// 获取脚本执行日志
   List<String> getExecutionLogs() {
     return _functionHandler.getExecutionLogs();
+  }
+
+  /// 获取执行器池统计信息
+  Map<String, dynamic> getExecutorPoolStats() {
+    final stats = {
+      'activeExecutors': _executorPool.length,
+      'maxConcurrentExecutors': _maxConcurrentExecutors,
+      'platform': kIsWeb ? 'web' : 'desktop',
+      'executorType': kIsWeb ? 'squadronConcurrentWebWorker' : 'concurrent',
+      'executorIds': _executorPool.keys.toList(),
+    };
+
+    // 如果是Squadron并发Web Worker执行器，添加基本统计信息
+    if (kIsWeb) {
+      for (final entry in _executorPool.entries) {
+        final executor = entry.value;
+        // 简单检查Squadron执行器
+        final executorTypeName = executor.runtimeType.toString();
+        if (executorTypeName.contains('Squadron')) {
+          stats['concurrency_${entry.key}'] = {
+            'executorType': 'SquadronConcurrentWebWorker',
+            'status': 'active',
+            'platform': 'web',
+          };
+        }
+      }
+    }
+
+    return stats;
+  }
+
+  /// 根据平台和配置创建合适的脚本执行器
+  IScriptExecutor _createAppropriateExecutor() {
+    if (kIsWeb) {
+      // Web平台总是使用Squadron并发Web Worker执行器以支持双向通信
+      return ScriptExecutorFactory.create(
+        type: ScriptExecutorType.squadronConcurrentWebWorker,
+        workerPoolSize: 4, // Squadron Worker池大小
+      );
+    } else {
+      // 非Web平台使用Isolate执行器
+      return ScriptExecutorFactory.create(enableConcurrency: true);
+    }
   }
 }

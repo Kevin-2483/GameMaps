@@ -96,3 +96,26 @@ calculateTotalArea() - 计算总面积
 语音合成：say() - 需要平台API集成
 真正的隔离执行 - 当前还是模拟执行
 结论：大约30%的外部函数完全可用，50%部分可用（有定义但功能不完整），20%暂不可用。最大的限制是缺少真正的 Hetu Script 解释器集成和完整的消息传递机制
+
+
+从调试信息中我看到了关键信息：
+
+[ScriptWorkerService] Arguments type: JSArray<dynamic> - 参数类型是 JSArray<dynamic>
+参数正确地作为数组传递：[开始执行死循环脚本...]
+JSON 序列化也正常工作
+这表明我们之前的修改实际上解决了问题！类型安全的外部函数绑定机制起作用了。
+
+让我验证一下之前失败的脚本现在是否能够正常运行。从日志来看，脚本现在能够：
+
+成功调用 log("开始执行死循环脚本...")
+成功调用 log("如果UI界面仍然响应，说明异步执行成功！")
+在循环中成功调用多次 log
+这意味着我们通过以下修改解决了问题：
+
+在 Squadron Worker Service 中添加了类型安全的外部函数绑定：
+
+添加了详细的调试信息来帮助追踪问题
+
+问题的根本原因是：在 Web 环境中，当 Dart 代码编译为 JavaScript 时，JSArray<dynamic> 和 List<dynamic> 之间的类型转换出现了问题。通过使用 List<dynamic>.from() 创建一个新的 Dart 列表，我们确保了类型兼容性。
+
+脚本现在应该能够正常运行而不会出现 "type 'String' is not a subtype of type 'List<dynamic>'" 错误了！

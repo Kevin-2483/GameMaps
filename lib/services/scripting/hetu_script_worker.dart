@@ -124,6 +124,7 @@ Future<Map<String, dynamic>> _executeScript(
 ) async {
   final code = message['code'] as String? ?? '';
   final context = message['context'] as Map<String, dynamic>? ?? {};
+  final executionId = message['executionId'] as String? ?? '';
 
   // 安全地转换外部函数列表
   final externalFunctionsObj = message['externalFunctions'];
@@ -147,10 +148,10 @@ Future<Map<String, dynamic>> _executeScript(
     // 设置上下文变量
     for (final entry in context.entries) {
       _hetuEngine!.define(entry.key, entry.value);
-    }
+    } // 设置地图数据
+    _hetuEngine!.define('mapData', _currentMapData);
 
-    // 设置地图数据
-    _hetuEngine!.define('mapData', _currentMapData); // 注册外部函数代理
+    // 注册外部函数代理
     for (final functionName in externalFunctions) {
       _hetuEngine!.interpreter.bindExternalFunction(functionName, (
         List<dynamic> positionalArgs, {
@@ -161,9 +162,16 @@ Future<Map<String, dynamic>> _executeScript(
           controller,
           functionName,
           positionalArgs,
+          executionId, // 传递executionId
         );
       });
     }
+
+    // 发送脚本已开始执行的信号
+    _addWorkerLog('Sending started signal for execution: $executionId');
+    final startedSignal = {'type': 'started', 'executionId': executionId};
+    controller.sendResult(jsonEncode(startedSignal));
+    _addWorkerLog('Started signal sent for execution: $executionId');
 
     // 执行脚本
     final result = _hetuEngine!.eval(code);
@@ -193,6 +201,7 @@ Future<dynamic> _callExternalFunction(
   IsolateManagerController controller,
   String functionName,
   List<dynamic> arguments,
+  String executionId,
 ) async {
   final callId = DateTime.now().millisecondsSinceEpoch.toString();
   final completer = Completer<dynamic>();
@@ -203,12 +212,27 @@ Future<dynamic> _callExternalFunction(
   _addWorkerLog('Arguments type: ${arguments.runtimeType}');
   _addWorkerLog('Arguments value: $arguments');
 
+  // 处理参数 - 如果只有一个参数且为简单类型，直接发送该值
+  dynamic argumentsToSend;
+  if (arguments.length == 1) {
+    final arg = arguments.first;
+    // 对于简单类型（字符串、数字、布尔值），直接发送值
+    if (arg is String || arg is num || arg is bool || arg == null) {
+      argumentsToSend = arg;
+    } else {
+      argumentsToSend = arguments;
+    }
+  } else {
+    argumentsToSend = arguments;
+  }
+
   // 发送外部函数调用请求到主线程 - 使用 JSON 字符串
   final requestData = {
     'type': 'externalFunctionCall',
     'functionName': functionName,
-    'arguments': arguments,
+    'arguments': argumentsToSend,
     'callId': callId,
+    'executionId': executionId, // 添加executionId
   };
 
   final jsonRequest = jsonEncode(requestData);
