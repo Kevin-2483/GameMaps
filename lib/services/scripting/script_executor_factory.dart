@@ -2,9 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'script_executor_base.dart';
 import 'isolated_script_executor.dart';
 import 'concurrent_isolate_script_executor.dart';
-import 'web_worker_script_executor.dart';
-import 'concurrent_web_worker_script_executor.dart';
-import 'squadron/squadron_concurrent_web_worker_script_executor.dart';
+
+// 条件导入：只在 Web 平台导入这些依赖 web 包的文件
+import 'web_worker_script_executor_stub.dart'
+    if (dart.library.html) 'web_worker_script_executor.dart'
+    if (dart.library.js_interop) 'web_worker_script_executor.dart';
+
+import 'concurrent_web_worker_script_executor_stub.dart'
+    if (dart.library.html) 'concurrent_web_worker_script_executor.dart'
+    if (dart.library.js_interop) 'concurrent_web_worker_script_executor.dart';
+
+// import 'squadron/squadron_concurrent_web_worker_script_executor.dart';
 
 /// 脚本执行器类型
 enum ScriptExecutorType {
@@ -78,9 +86,9 @@ class ScriptExecutorFactory {
             'Squadron concurrent web worker executor is only supported on web platform',
           );
         }
-        return SquadronConcurrentWebWorkerScriptExecutor(
-          workerPoolSize: workerPoolSize ?? 4,
-        );
+        throw UnsupportedError(
+            'Squadron concurrent web worker executor is no longer supported',
+          );
     }
   }
 
@@ -96,19 +104,33 @@ class ScriptExecutorFactory {
           : ScriptExecutorType.isolate;
     }
   }
-
   /// 创建Web Worker执行器（明确指定）
   static WebWorkerScriptExecutor createWebWorker() {
+    if (!kIsWeb) {
+      throw UnsupportedError(
+        'WebWorker executor is only supported on web platform',
+      );
+    }
     return WebWorkerScriptExecutor();
   }
 
   /// 创建Isolate执行器（明确指定，用于桌面端）
   static IsolateScriptExecutor createIsolate() {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Isolate executor is not supported on web platform',
+      );
+    }
     return IsolateScriptExecutor();
   }
 
   /// 创建并发Isolate执行器（明确指定，用于桌面端）
   static ConcurrentIsolateScriptExecutor createConcurrentIsolate() {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'Concurrent isolate executor is not supported on web platform',
+      );
+    }
     return ConcurrentIsolateScriptExecutor();
   }
 
@@ -116,6 +138,11 @@ class ScriptExecutorFactory {
   static ConcurrentWebWorkerScriptExecutor createConcurrentWebWorker({
     int workerPoolSize = 4,
   }) {
+    if (!kIsWeb) {
+      throw UnsupportedError(
+        'Concurrent web worker executor is only supported on web platform',
+      );
+    }
     return ConcurrentWebWorkerScriptExecutor(workerPoolSize: workerPoolSize);
   }
 
