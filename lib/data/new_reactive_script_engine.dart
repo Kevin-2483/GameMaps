@@ -352,7 +352,7 @@ class NewReactiveScriptEngine {
       'activeExecutors': _executorPool.length,
       'maxConcurrentExecutors': _maxConcurrentExecutors,
       'platform': kIsWeb ? 'web' : 'desktop',
-      'executorType': kIsWeb ? 'squadronConcurrentWebWorker' : 'concurrent',
+      'executorType': kIsWeb ? 'concurrentWebWorker' : 'concurrent',
       'executorIds': _executorPool.keys.toList(),
     };
 
@@ -364,7 +364,7 @@ class NewReactiveScriptEngine {
         final executorTypeName = executor.runtimeType.toString();
         if (executorTypeName.contains('Squadron')) {
           stats['concurrency_${entry.key}'] = {
-            'executorType': 'SquadronConcurrentWebWorker',
+            'executorType': 'concurrentWebWorker',
             'status': 'active',
             'platform': 'web',
           };
@@ -380,7 +380,7 @@ class NewReactiveScriptEngine {
     if (kIsWeb) {
       // Web平台总是使用Squadron并发Web Worker执行器以支持双向通信
       return ScriptExecutorFactory.create(
-        type: ScriptExecutorType.squadronConcurrentWebWorker,
+        type: ScriptExecutorType.concurrentWebWorker,
         workerPoolSize: 4, // Squadron Worker池大小
       );
     } else {

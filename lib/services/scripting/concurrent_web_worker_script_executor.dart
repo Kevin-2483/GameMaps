@@ -22,12 +22,20 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
   /// 执行日志
   final List<String> _executionLogs = [];
-
   /// 正在执行的任务映射
   final Map<String, _ExecutionTask> _activeTasks = {};
 
+  /// 任务ID到worker索引的映射
+  final Map<String, int> _taskToWorkerMap = {};
+
+  /// worker索引到任务ID的映射
+  final Map<int, String?> _workerToTaskMap = {};
+
   /// 等待队列
   final List<_ExecutionTask> _taskQueue = [];
+
+  /// 底层消息流订阅
+  StreamSubscription<String>? _rawMessageSubscription;
 
   /// 初始化状态
   bool _isInitialized = false;
@@ -67,7 +75,6 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       debugPrint('[ConcurrentWebWorkerScriptExecutor] $message');
     }
   }
-
   /// 初始化Worker池
   Future<void> _ensureInitialized() async {
     if (_isInitialized || _isDisposed) return;
@@ -81,8 +88,12 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       for (int i = 0; i < _workerPoolSize; i++) {
         final worker = await _createWorkerInstance(i);
         _workerPool.add(worker);
+        _workerToTaskMap[i] = null; // 初始化worker映射
         _addLog('Worker $i created successfully');
       }
+
+      // 设置底层消息流监听
+      _setupRawMessageListener();
 
       _isInitialized = true;
       _addLog('Concurrent web worker pool initialized successfully');
@@ -96,6 +107,74 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     } catch (e) {
       _addLog('Failed to initialize concurrent web worker pool: $e');
       rethrow;
+    }
+  }
+
+  /// 设置底层消息流监听
+  void _setupRawMessageListener() {
+    if (_workerPool.isEmpty) return;
+    
+    // 使用第一个worker的isolateManager获取rawMessageStream
+    // 因为所有worker都会发送消息到同一个stream
+    final isolateManager = _workerPool.first.isolateManager;
+    
+    _rawMessageSubscription = isolateManager.rawMessageStream.listen(
+      _handleRawMessage,
+      onError: (error) {
+        _addLog('Error in raw message stream: $error');
+      },
+    );
+    
+    _addLog('Raw message listener set up successfully');
+  }
+
+  /// 处理来自worker的原始消息
+  void _handleRawMessage(String jsonResponse) {
+    try {
+      final response = jsonDecode(jsonResponse) as Map<String, dynamic>;
+      final responseExecutionId = response['executionId'] as String?;
+
+      if (responseExecutionId == null) {
+        _addLog('Received message without executionId, ignoring');
+        return;
+      }
+
+      // 查找对应的任务
+      final task = _activeTasks[responseExecutionId];
+      if (task == null) {
+        _addLog('Received message for unknown task $responseExecutionId, ignoring');
+        return;
+      }
+
+      final responseType = response['type'] as String?;
+      _addLog('Received message type: $responseType for task: $responseExecutionId');
+
+      switch (responseType) {
+        case 'started':
+          _addLog('Script started for task $responseExecutionId');
+          break;
+
+        case 'externalFunctionCall':
+          _handleExternalFunctionCall(response);
+          break;
+
+        case 'result':
+        case 'error':
+          if (!task.completer.isCompleted) {
+            final result = _parseExecutionResult(response);
+            _completeTask(responseExecutionId, result);
+          }
+          break;
+
+        default:
+          _addLog('Received unknown message type: $responseType, ignoring');
+          break;
+      }
+    } on FormatException {
+      // JSON解析失败，忽略消息
+      _addLog('Worker sent a non-JSON message, ignoring. Content: "$jsonResponse"');
+    } catch (e) {
+      _addLog('Error processing worker response: $e');
     }
   }
 
@@ -164,15 +243,19 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       }
     }
     return null;
-  }
-
-  /// 执行任务
+  }  /// 执行任务
   Future<void> _executeTask(_ExecutionTask task, _WorkerInstance worker) async {
+    final workerIndex = _workerPool.indexOf(worker);
+    
+    // 更新映射关系
     _activeTasks[task.id] = task;
+    _taskToWorkerMap[task.id] = workerIndex;
+    _workerToTaskMap[workerIndex] = task.id;
+    
     worker.isBusy = true;
     worker.currentTaskId = task.id;
 
-    _addLog('Executing task ${task.id} on worker ${worker.id}');
+    _addLog('Executing task ${task.id} on worker ${worker.id} (index: $workerIndex)');
 
     try {
       final requestData = {
@@ -185,98 +268,28 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       };
 
       final jsonRequest = jsonEncode(requestData);
-      Timer? timeoutTimer;
-
-      // 设置超时
+      
+      // 设置超时处理
       if (task.timeout != null) {
-        timeoutTimer = Timer(task.timeout!, () {
+        Timer(task.timeout!, () {
           if (!task.completer.isCompleted) {
             _addLog('Task ${task.id} timeout on worker ${worker.id}');
             _completeTask(
               task.id,
               ScriptExecutionResult(
                 success: false,
-                error:
-                    'Script execution timeout after ${task.timeout!.inSeconds} seconds',
+                error: 'Script execution timeout after ${task.timeout!.inSeconds} seconds',
                 executionTime: task.timeout!,
               ),
             );
           }
         });
-      } // 监听Worker响应
-      late StreamSubscription subscription;
-      subscription = worker.isolateManager.stream.listen((jsonResponse) {
-        // 分析器是正确的，jsonResponse 的类型就是 String。
-        // 我们直接在 try 块中处理。
-        try {
-          // 核心逻辑：尝试解码，如果失败，会被下面的 on FormatException 捕获
-          final response = jsonDecode(jsonResponse) as Map<String, dynamic>;
+      }
 
-          final responseExecutionId = response['executionId'] as String?;
-
-          if (responseExecutionId == task.id) {
-            final responseType = response['type'] as String?;
-
-            switch (responseType) {
-              case 'started':
-                _addLog(
-                  'Script started for task ${task.id}, cancelling timeout timer',
-                );
-                timeoutTimer?.cancel();
-                break;
-
-              case 'externalFunctionCall':
-                _handleExternalFunctionCall(response);
-                break;
-
-              case 'result':
-              case 'error':
-                if (!task.completer.isCompleted) {
-                  subscription.cancel();
-                  final result = _parseExecutionResult(response);
-                  _completeTask(task.id, result);
-                }
-                break;
-
-              default:
-                _addLog(
-                  'Received unknown message type: $responseType from worker. Ignoring.',
-                );
-                break;
-            }
-          }
-        } on FormatException catch (e) {
-          // --- 这里是关键的修正 ---
-          // 专门捕获JSON解析失败的异常。
-          // 这很可能就是收到了 '[object Object]' 这样的坏数据。
-          // 我们只记录日志，不中断任何事情，等待下一条正常消息。
-          _addLog(
-            'Worker sent a non-JSON message, ignoring. Content: "$jsonResponse"',
-          );
-        } catch (e) {
-          // 对于其他所有未预料到的严重错误，我们才中断任务。
-          _addLog(
-            'An unexpected error occurred while processing worker response: $e',
-          );
-          if (!task.completer.isCompleted) {
-            timeoutTimer?.cancel();
-            subscription.cancel();
-            _completeTask(
-              task.id,
-              ScriptExecutionResult(
-                success: false,
-                error:
-                    'Unexpected error processing worker response: ${e.toString()}',
-                executionTime: Duration.zero,
-              ),
-            );
-          }
-        }
-      });
-
-      // 发送执行请求
-      await worker.isolateManager.sendMessage(jsonRequest);
-      _addLog('Task ${task.id} sent to worker ${worker.id}');
+      // 使用底层接口发送请求到指定的worker
+      worker.isolateManager.sendRawMessageFireAndForget(jsonRequest, isolateIndex: 0);
+      _addLog('Task ${task.id} sent to worker ${worker.id} using raw interface');
+      
     } catch (e) {
       _addLog('Error executing task ${task.id}: $e');
       _completeTask(
@@ -289,7 +302,6 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       );
     }
   }
-
   /// 完成任务
   void _completeTask(String taskId, ScriptExecutionResult result) {
     final task = _activeTasks.remove(taskId);
@@ -300,19 +312,27 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       );
     }
 
-    // 释放Worker并处理队列中的下一个任务
-    final worker = _workerPool.firstWhere(
-      (w) => w.currentTaskId == taskId,
-      orElse: () => _workerPool.first,
-    );
-
-    worker.isBusy = false;
-    worker.currentTaskId = null;
-
-    // 处理等待队列中的下一个任务
-    if (_taskQueue.isNotEmpty) {
-      final nextTask = _taskQueue.removeAt(0);
-      _executeTask(nextTask, worker);
+    // 获取worker索引并清理映射关系
+    final workerIndex = _taskToWorkerMap.remove(taskId);
+    if (workerIndex != null) {
+      _workerToTaskMap[workerIndex] = null;
+      
+      // 释放Worker
+      if (workerIndex < _workerPool.length) {
+        final worker = _workerPool[workerIndex];
+        worker.isBusy = false;
+        worker.currentTaskId = null;
+        
+        _addLog('Released worker $workerIndex (id: ${worker.id})');
+        
+        // 处理等待队列中的下一个任务
+        if (_taskQueue.isNotEmpty) {
+          final nextTask = _taskQueue.removeAt(0);
+          _executeTask(nextTask, worker);
+        }
+      }
+    } else {
+      _addLog('Warning: Could not find worker for completed task $taskId');
     }
   }
 
@@ -504,7 +524,6 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
     _addLog('All concurrent script executions stopped');
   }
-
   @override
   void dispose() {
     if (_isDisposed) return;
@@ -519,6 +538,10 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
     // 首先停止所有脚本执行
     stop();
+
+    // 取消底层消息流订阅
+    _rawMessageSubscription?.cancel();
+    _rawMessageSubscription = null;
 
     // 等待一小段时间确保所有Worker消息处理完成
     Future.delayed(Duration(milliseconds: 100), () {
@@ -535,6 +558,10 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         }
       }
       _workerPool.clear();
+
+      // 清理映射关系
+      _taskToWorkerMap.clear();
+      _workerToTaskMap.clear();
 
       // 最后关闭StreamController
       if (!_logController.isClosed) {
@@ -597,6 +624,61 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       'queuedTasks': _taskQueue.length,
       'isInitialized': _isInitialized,
       'isDisposed': _isDisposed,
+    };
+  }
+
+  /// 获取指定任务的worker索引
+  int? getTaskWorkerIndex(String taskId) {
+    return _taskToWorkerMap[taskId];
+  }
+
+  /// 获取指定worker的当前任务ID
+  String? getWorkerCurrentTask(int workerIndex) {
+    return _workerToTaskMap[workerIndex];
+  }
+
+  /// 获取所有活动任务的映射信息
+  Map<String, Map<String, dynamic>> getTaskMappingInfo() {
+    final info = <String, Map<String, dynamic>>{};
+    
+    for (final entry in _taskToWorkerMap.entries) {
+      final taskId = entry.key;
+      final workerIndex = entry.value;
+      final task = _activeTasks[taskId];
+      
+      info[taskId] = {
+        'workerIndex': workerIndex,
+        'workerId': workerIndex < _workerPool.length ? _workerPool[workerIndex].id : null,
+        'isCompleted': task?.completer.isCompleted ?? true,
+        'hasTask': task != null,
+      };
+    }
+    
+    return info;
+  }
+
+  /// 获取Worker池状态信息
+  Map<String, dynamic> getWorkerPoolStatus() {
+    final workers = <Map<String, dynamic>>[];
+    
+    for (int i = 0; i < _workerPool.length; i++) {
+      final worker = _workerPool[i];
+      workers.add({
+        'index': i,
+        'id': worker.id,
+        'isBusy': worker.isBusy,
+        'currentTaskId': worker.currentTaskId,
+        'mappedTaskId': _workerToTaskMap[i],
+      });
+    }
+    
+    return {
+      'workerCount': _workerPool.length,
+      'activeTaskCount': _activeTasks.length,
+      'queuedTaskCount': _taskQueue.length,
+      'workers': workers,
+      'taskToWorkerMap': Map.from(_taskToWorkerMap),
+      'workerToTaskMap': Map.from(_workerToTaskMap),
     };
   }
 }

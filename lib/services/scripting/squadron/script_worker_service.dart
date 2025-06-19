@@ -12,19 +12,21 @@ part 'script_worker_service.worker.g.dart';
 base class ScriptWorkerService {
   /// Hetu脚本引擎实例
   Hetu? _hetuEngine;
-  
+
   /// 当前地图数据
   Map<String, dynamic> _currentMapData = {};
-  
+
   /// 等待外部函数响应的映射
   final Map<String, Completer<dynamic>> _pendingExternalCalls = {};
-  
+
   /// 外部函数调用的Stream控制器
-  final StreamController<String> _externalCallController = StreamController<String>.broadcast();
+  final StreamController<String> _externalCallController =
+      StreamController<String>.broadcast();
+
   /// 获取外部函数调用的Stream
   @SquadronMethod()
-  Stream<String> getExternalFunctionCalls() async* {
-    yield* _externalCallController.stream;
+  Stream<String> getExternalFunctionCalls() {
+    return _externalCallController.stream;
   }
 
   /// 初始化Worker
@@ -53,15 +55,17 @@ base class ScriptWorkerService {
   @SquadronMethod()
   Stream<String> executeScript(String requestJson) async* {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       // 解析请求
       final requestData = jsonDecode(requestJson) as Map<String, dynamic>;
       final executionId = requestData['executionId'] as String;
       final code = requestData['code'] as String;
       final context = requestData['context'] as Map<String, dynamic>? ?? {};
-      final externalFunctions = List<String>.from(requestData['externalFunctions'] as List? ?? []);
-      
+      final externalFunctions = List<String>.from(
+        requestData['externalFunctions'] as List? ?? [],
+      );
+
       if (_hetuEngine == null) {
         yield jsonEncode({
           'type': 'error',
@@ -78,7 +82,7 @@ base class ScriptWorkerService {
       }
 
       // 设置地图数据
-      _hetuEngine!.define('mapData', _currentMapData);      // 注册外部函数代理
+      _hetuEngine!.define('mapData', _currentMapData); // 注册外部函数代理
       for (final functionName in externalFunctions) {
         _hetuEngine!.interpreter.bindExternalFunction(functionName, (
           dynamic positionalArgs, {
@@ -96,20 +100,13 @@ base class ScriptWorkerService {
           } else {
             args = [];
           }
-          
-          return await _callExternalFunction(
-            executionId,
-            functionName,
-            args,
-          );
+
+          return await _callExternalFunction(executionId, functionName, args);
         });
       }
 
       // 发送started信号
-      yield jsonEncode({
-        'type': 'started',
-        'executionId': executionId,
-      });
+      yield jsonEncode({'type': 'started', 'executionId': executionId});
 
       // 执行脚本
       final result = _hetuEngine!.eval(code);
@@ -122,17 +119,16 @@ base class ScriptWorkerService {
         'result': _serializeResult(result),
         'executionTime': stopwatch.elapsedMilliseconds,
       });
-
     } catch (e) {
       stopwatch.stop();
-      
+
       // 尝试从requestJson中获取executionId
       String executionId = 'unknown';
       try {
         final requestData = jsonDecode(requestJson) as Map<String, dynamic>;
         executionId = requestData['executionId'] as String? ?? 'unknown';
       } catch (_) {}
-      
+
       yield jsonEncode({
         'type': 'error',
         'executionId': executionId,
@@ -150,7 +146,7 @@ base class ScriptWorkerService {
       final callId = responseData['callId'] as String;
       final result = responseData['result'];
       final error = responseData['error'] as String?;
-      
+
       final completer = _pendingExternalCalls.remove(callId);
       if (completer != null) {
         if (error != null) {
@@ -163,6 +159,7 @@ base class ScriptWorkerService {
       // 忽略解析错误
     }
   }
+
   /// 停止Worker
   @SquadronMethod()
   Future<void> stopWorker() async {
@@ -173,14 +170,16 @@ base class ScriptWorkerService {
       }
     }
     _pendingExternalCalls.clear();
-    
+
     // 关闭Stream控制器
     await _externalCallController.close();
-    
+
     // 清理Hetu引擎
     _hetuEngine = null;
     _currentMapData.clear();
-  }  /// 调用外部函数 - 实现真正的双向通信
+  }
+
+  /// 调用外部函数 - 实现真正的双向通信
   Future<dynamic> _callExternalFunction(
     String executionId,
     String functionName,
@@ -190,18 +189,21 @@ base class ScriptWorkerService {
     print('[ScriptWorkerService] Calling external function: $functionName');
     print('[ScriptWorkerService] Arguments type: ${arguments.runtimeType}');
     print('[ScriptWorkerService] Arguments: $arguments');
-    
+
     // 生成唯一的调用ID
-    final callId = DateTime.now().millisecondsSinceEpoch.toString() + 
-                   '_' + 
-                   math.Random().nextInt(1000).toString();
-      // 创建Completer等待响应
+    final callId =
+        DateTime.now().millisecondsSinceEpoch.toString() +
+        '_' +
+        math.Random().nextInt(1000).toString();
+    // 创建Completer等待响应
     final completer = Completer<dynamic>();
     _pendingExternalCalls[callId] = completer;
-      // 直接使用传入的参数列表
+    // 直接使用传入的参数列表
     final argumentsToSend = arguments;
-    print('[ScriptWorkerService] Arguments to send: $argumentsToSend (type: ${argumentsToSend.runtimeType})');
-      // 构造外部函数调用请求
+    print(
+      '[ScriptWorkerService] Arguments to send: $argumentsToSend (type: ${argumentsToSend.runtimeType})',
+    );
+    // 构造外部函数调用请求
     final requestData = {
       'type': 'externalFunctionCall',
       'functionName': functionName,
@@ -209,14 +211,14 @@ base class ScriptWorkerService {
       'callId': callId,
       'executionId': executionId,
     };
-    
+
     print('[ScriptWorkerService] Request data: $requestData');
-    
+
     // 通过Stream发送外部函数调用请求
     final requestJson = jsonEncode(requestData);
     print('[ScriptWorkerService] Request JSON: $requestJson');
     _externalCallController.add(requestJson);
-    
+
     try {
       // 等待响应，设置超时防止死锁
       return await completer.future.timeout(
@@ -231,6 +233,7 @@ base class ScriptWorkerService {
       rethrow;
     }
   }
+
   /// 序列化结果
   dynamic _serializeResult(dynamic result) {
     if (result == null ||

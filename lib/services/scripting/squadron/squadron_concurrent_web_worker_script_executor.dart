@@ -15,6 +15,7 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
   /// Worker池
   final List<_SquadronWorkerInstance> _workerPool = [];
+
   /// 外部函数处理器
   final Map<String, Function> _externalFunctions = {};
 
@@ -23,6 +24,7 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
   /// 正在执行的任务映射
   final Map<String, _ExecutionTask> _activeTasks = {};
+
   /// 等待队列
   final List<_ExecutionTask> _taskQueue = [];
 
@@ -32,7 +34,7 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
   /// 构造函数
   SquadronConcurrentWebWorkerScriptExecutor({int workerPoolSize = 4})
-      : _workerPoolSize = workerPoolSize;
+    : _workerPoolSize = workerPoolSize;
 
   /// 添加日志
   void _addLog(String message) {
@@ -52,7 +54,9 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     if (_isInitialized || _isDisposed) return;
 
     try {
-      _addLog('Initializing Squadron concurrent web worker pool (size: $_workerPoolSize)...');
+      _addLog(
+        'Initializing Squadron concurrent web worker pool (size: $_workerPoolSize)...',
+      );
 
       // 创建Worker池
       for (int i = 0; i < _workerPoolSize; i++) {
@@ -67,14 +71,16 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       _addLog('Failed to initialize Squadron concurrent web worker pool: $e');
       rethrow;
     }
-  }  /// 创建Worker实例
+  }
+
+  /// 创建Worker实例
   Future<_SquadronWorkerInstance> _createWorkerInstance(int workerId) async {
     // 创建Squadron Worker实例
     final worker = ScriptWorkerServiceWorker();
-    
+
     // 启动Worker
     await worker.start();
-    
+
     // 初始化Worker中的Hetu引擎
     final initialized = await worker.initialize();
     if (!initialized) {
@@ -82,10 +88,7 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     }
 
     // 创建Worker实例
-    final instance = _SquadronWorkerInstance(
-      id: workerId,
-      worker: worker,
-    );
+    final instance = _SquadronWorkerInstance(id: workerId, worker: worker);
 
     // 监听Worker的外部函数调用
     _listenToWorkerExternalFunctionCalls(instance);
@@ -95,38 +98,52 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   }
 
   /// 监听Worker的外部函数调用
-  void _listenToWorkerExternalFunctionCalls(_SquadronWorkerInstance workerInstance) {
+  void _listenToWorkerExternalFunctionCalls(
+    _SquadronWorkerInstance workerInstance,
+  ) {
     // 监听外部函数调用流
     workerInstance.worker.getExternalFunctionCalls().listen(
       (callRequestJson) {
         _handleExternalFunctionCall(callRequestJson, workerInstance);
       },
       onError: (error) {
-        _addLog('Worker ${workerInstance.id} external function call stream error: $error');
+        _addLog(
+          'Worker ${workerInstance.id} external function call stream error: $error',
+        );
       },
     );
   }
+
   /// 处理外部函数调用
-  Future<void> _handleExternalFunctionCall(String callRequestJson, _SquadronWorkerInstance workerInstance) async {
+  Future<void> _handleExternalFunctionCall(
+    String callRequestJson,
+    _SquadronWorkerInstance workerInstance,
+  ) async {
     try {
       _addLog('Received external function call JSON: $callRequestJson');
-      
+
       final callRequest = jsonDecode(callRequestJson) as Map<String, dynamic>;
       final callId = callRequest['callId'] as String?;
       final functionName = callRequest['functionName'] as String?;
       final arguments = callRequest['arguments'] as dynamic;
 
       if (callId == null || functionName == null) {
-        _addLog('Invalid external function call: missing callId or functionName');
+        _addLog(
+          'Invalid external function call: missing callId or functionName',
+        );
         return;
       }
 
-      _addLog('Handling external function call: $functionName from worker ${workerInstance.id}');
-      _addLog('Raw arguments from JSON: $arguments (type: ${arguments.runtimeType})');
-      
+      _addLog(
+        'Handling external function call: $functionName from worker ${workerInstance.id}',
+      );
+      _addLog(
+        'Raw arguments from JSON: $arguments (type: ${arguments.runtimeType})',
+      );
+
       // 更严格的参数类型处理
       List<dynamic> argsList;
-      
+
       if (arguments == null) {
         argsList = [];
         _addLog('No arguments provided');
@@ -138,11 +155,14 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         argsList = [arguments];
         _addLog('Single argument wrapped in List: $argsList');
       }
-      
-      _addLog('Final arguments list: $argsList (types: ${argsList.map((a) => a.runtimeType).toList()})');
+
+      _addLog(
+        'Final arguments list: $argsList (types: ${argsList.map((a) => a.runtimeType).toList()})',
+      );
 
       dynamic result;
-      String? error;try {
+      String? error;
+      try {
         // 检查本地函数
         final localFunction = _externalFunctions[functionName];
         if (localFunction != null) {
@@ -160,22 +180,25 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       }
 
       // 发送响应回Worker
-      final response = {
-        'callId': callId,
-        'result': result,
-        'error': error,
-      };
+      final response = {'callId': callId, 'result': result, 'error': error};
 
-      await workerInstance.worker.handleExternalFunctionResponse(jsonEncode(response));
-      
+      await workerInstance.worker.handleExternalFunctionResponse(
+        jsonEncode(response),
+      );
     } catch (e) {
       _addLog('Error handling external function call: $e');
     }
   }
+
   /// 调用默认外部函数
-  Future<dynamic> _callDefaultExternalFunction(String functionName, List<dynamic> arguments) async {
-    _addLog('Calling default external function: $functionName with args: $arguments (type: ${arguments.runtimeType})');
-    
+  Future<dynamic> _callDefaultExternalFunction(
+    String functionName,
+    List<dynamic> arguments,
+  ) async {
+    _addLog(
+      'Calling default external function: $functionName with args: $arguments (type: ${arguments.runtimeType})',
+    );
+
     // 这里可以实现默认的外部函数处理逻辑
     // 例如：数学函数、日志函数等
     switch (functionName) {
@@ -184,38 +207,39 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         final message = arguments.isNotEmpty ? arguments.first.toString() : '';
         _addLog('Script log: $message');
         return null;
-        
+
       case 'sin':
         if (arguments.isNotEmpty && arguments.first is num) {
           return math.sin(arguments.first as num);
         }
         throw Exception('Invalid arguments for sin function');
-        
+
       case 'cos':
         if (arguments.isNotEmpty && arguments.first is num) {
           return math.cos(arguments.first as num);
         }
         throw Exception('Invalid arguments for cos function');
-        
+
       case 'sqrt':
         if (arguments.isNotEmpty && arguments.first is num) {
           return math.sqrt(arguments.first as num);
         }
         throw Exception('Invalid arguments for sqrt function');
-        
+
       case 'random':
         return math.Random().nextDouble();
-        
+
       default:
         throw Exception('Unknown external function: $functionName');
     }
   }
+
   /// 调用函数（处理同步和异步函数）
   Future<dynamic> _callFunction(Function function, List<dynamic> args) async {
     try {
       _addLog('Calling function with ${args.length} arguments: $args');
       _addLog('Arguments types: ${args.map((a) => a.runtimeType).toList()}');
-      
+
       // 根据参数数量调用函数
       dynamic result;
       switch (args.length) {
@@ -223,7 +247,9 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
           result = function();
           break;
         case 1:
-          _addLog('Calling function with single argument: ${args[0]} (type: ${args[0].runtimeType})');
+          _addLog(
+            'Calling function with single argument: ${args[0]} (type: ${args[0].runtimeType})',
+          );
           result = function(args[0]);
           break;
         case 2:
@@ -260,13 +286,16 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     Duration? timeout,
   }) async {
     if (_isDisposed) {
-      throw StateError('SquadronConcurrentWebWorkerScriptExecutor has been disposed');
+      throw StateError(
+        'SquadronConcurrentWebWorkerScriptExecutor has been disposed',
+      );
     }
 
     await _ensureInitialized();
 
     // 生成唯一的执行ID
-    final executionId = '${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(1000)}';
+    final executionId =
+        '${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(1000)}';
 
     final task = _ExecutionTask(
       id: executionId,
@@ -285,7 +314,9 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     } else {
       // 添加到等待队列
       _taskQueue.add(task);
-      _addLog('Task $executionId added to queue (queue size: ${_taskQueue.length})');
+      _addLog(
+        'Task $executionId added to queue (queue size: ${_taskQueue.length})',
+      );
     }
 
     return task.completer.future;
@@ -302,12 +333,17 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   }
 
   /// 执行任务
-  Future<void> _executeTask(_ExecutionTask task, _SquadronWorkerInstance workerInstance) async {
+  Future<void> _executeTask(
+    _ExecutionTask task,
+    _SquadronWorkerInstance workerInstance,
+  ) async {
     _activeTasks[task.id] = task;
     workerInstance.isBusy = true;
     workerInstance.currentTaskId = task.id;
 
-    _addLog('Executing task ${task.id} on Squadron worker ${workerInstance.id}');
+    _addLog(
+      'Executing task ${task.id} on Squadron worker ${workerInstance.id}',
+    );
 
     try {
       // 创建脚本执行请求JSON
@@ -324,12 +360,15 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       if (task.timeout != null) {
         timeoutTimer = Timer(task.timeout!, () {
           if (!task.completer.isCompleted) {
-            _addLog('Task ${task.id} timeout on Squadron worker ${workerInstance.id}');
+            _addLog(
+              'Task ${task.id} timeout on Squadron worker ${workerInstance.id}',
+            );
             _completeTask(
               task.id,
               ScriptExecutionResult(
                 success: false,
-                error: 'Script execution timeout after ${task.timeout!.inSeconds} seconds',
+                error:
+                    'Script execution timeout after ${task.timeout!.inSeconds} seconds',
                 executionTime: task.timeout!,
               ),
             );
@@ -338,18 +377,29 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       }
 
       // 执行脚本并监听结果流
-      await for (final responseJson in workerInstance.worker.executeScript(requestJson)) {
+      await for (final responseJson in workerInstance.worker.executeScript(
+        requestJson,
+      )) {
         try {
           final response = jsonDecode(responseJson) as Map<String, dynamic>;
+          debugPrint(
+            'Received response from Squadron worker ${workerInstance.id}: $response',
+          );
           final responseType = response['type'] as String?;
           final responseExecutionId = response['executionId'] as String?;
 
           if (responseExecutionId == task.id) {
             switch (responseType) {
               case 'started':
-                _addLog('Script started for task ${task.id}, cancelling timeout timer');
+                _addLog(
+                  'Script started for task ${task.id}, cancelling timeout timer',
+                );
                 timeoutTimer?.cancel();
-                break;
+                // 收到started信号后跳出stream监听，让外部函数调用能够正常处理
+                _addLog(
+                  'Breaking out of executeScript stream after started signal',
+                );
+                return; // 直接返回，跳出整个await for循环
 
               case 'result':
                 if (!task.completer.isCompleted) {
@@ -414,7 +464,9 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     final task = _activeTasks.remove(taskId);
     if (task != null && !task.completer.isCompleted) {
       task.completer.complete(result);
-      _addLog('Task $taskId completed: ${result.success ? 'success' : 'error'}');
+      _addLog(
+        'Task $taskId completed: ${result.success ? 'success' : 'error'}',
+      );
     }
 
     // 释放Worker并处理队列中的下一个任务
@@ -522,7 +574,9 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       try {
         workerInstance.worker.updateMapData(dataJson);
       } catch (e) {
-        _addLog('Error sending map data update to Squadron worker ${workerInstance.id}: $e');
+        _addLog(
+          'Error sending map data update to Squadron worker ${workerInstance.id}: $e',
+        );
       }
     }
     _addLog('Map data update sent to all Squadron workers');
@@ -557,10 +611,7 @@ class _SquadronWorkerInstance {
   bool isBusy = false;
   String? currentTaskId;
 
-  _SquadronWorkerInstance({
-    required this.id,
-    required this.worker,
-  });
+  _SquadronWorkerInstance({required this.id, required this.worker});
 }
 
 /// 执行任务

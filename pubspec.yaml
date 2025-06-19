@@ -85,11 +85,18 @@ dependencies:
   media_kit_video: ^1.2.4
   media_kit_libs_video: ^1.0.4
   hetu_script: ^0.4.2
-  isolate_manager: ^6.0.0+2
   squadron: ^7.1.1
+
+  isolate_manager:
+    path: E:/code/isolate_manager
+  # 或者使用绝对路径:
+  # my_local_package:
+  #   path: C:\path\to\my_local_package
 
 dependency_overrides:
   intl: ^0.20.2
+  isolate_manager:
+    path: E:/code/isolate_manager
 
 dev_dependencies:
   flutter_test:
@@ -101,11 +108,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  analyzer: ^7.4.5
+  analyzer: ^6.0.0
   # Code generation
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
-  squadron_builder: ^7.1.0
+  isolate_manager_generator: ^0.0.13
+  
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

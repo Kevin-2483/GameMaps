@@ -42999,40 +42999,6 @@
     $signature: 90
   };
   A.ScriptWorkerService.prototype = {
-    getExternalFunctionCalls$0() {
-      var $async$getExternalFunctionCalls$0 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
-        switch ($async$errorCode) {
-          case 2:
-            $async$next = $async$nextWhenCanceled;
-            $async$goto = $async$next.pop();
-            break;
-          case 1:
-            $async$errorStack.push($async$result);
-            $async$goto = $async$handler;
-        }
-        while (true)
-          switch ($async$goto) {
-            case 0:
-              // Function start
-              t1 = $async$self._externalCallController;
-              $async$goto = 3;
-              $async$nextWhenCanceled = [1];
-              return A._asyncStarHelper(A._IterationMarker_yieldStar(new A._BroadcastStream(t1, A._instanceType(t1)._eval$1("_BroadcastStream<1>"))), $async$getExternalFunctionCalls$0, $async$controller);
-            case 3:
-              // after yield
-            case 1:
-              // return
-              return A._asyncStarHelper(null, 0, $async$controller);
-            case 2:
-              // rethrow
-              return A._asyncStarHelper($async$errorStack.at(-1), 1, $async$controller);
-          }
-      });
-      var $async$goto = 0,
-        $async$controller = A._makeAsyncStarStreamController($async$getExternalFunctionCalls$0, type$.String),
-        $async$nextWhenCanceled, $async$handler = 2, $async$errorStack = [], $async$next = [], $async$self = this, t1;
-      return A._streamOfController($async$controller);
-    },
     initialize$0() {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.bool),
@@ -43473,7 +43439,8 @@
   };
   A._extension_0__$getOperations_closure0.prototype = {
     call$1($$req) {
-      return this._this.getExternalFunctionCalls$0();
+      var t1 = this._this._externalCallController;
+      return new A._BroadcastStream(t1, A._instanceType(t1)._eval$1("_BroadcastStream<1>"));
     },
     $signature: 48
   };

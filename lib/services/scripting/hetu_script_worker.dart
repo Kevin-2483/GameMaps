@@ -12,6 +12,7 @@ import 'package:isolate_manager/isolate_manager.dart';
 void hetuScriptWorkerFunction(dynamic params) {
   IsolateManagerFunction.customFunction<String, String>(
     params,
+    autoHandleResult: false,
     onInit: (controller) async {
       // 初始化 Hetu 脚本引擎
       await _initializeHetuEngine(controller);
