@@ -96,7 +96,9 @@ dependencies:
 dependency_overrides:
   intl: ^0.20.2
   isolate_manager:
-    path: E:/code/isolate_manager
+    git:
+      url: https://github.com/Kevin-2483/isolate_manager
+      ref: main
 
 dev_dependencies:
   flutter_test:

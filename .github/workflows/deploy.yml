@@ -49,6 +49,10 @@ jobs:
 
     - name: Enable web support
       run: flutter config --enable-web
+
+    - name: isolate_manager:generate
+      run: dart run isolate_manager:generate
+
     - name: Build web
       run: |
         flutter build web --release --base-href "/GameMaps/"

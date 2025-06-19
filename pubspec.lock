@@ -533,9 +533,11 @@ packages:
   isolate_manager:
     dependency: "direct main"
     description:
-      path: "E:/code/isolate_manager"
-      relative: false
-    source: path
+      path: "."
+      ref: main
+      resolved-ref: "5f1a11d3a4ef20fd20ddae66b0e5e87ac1916217"
+      url: "https://github.com/Kevin-2483/isolate_manager"
+    source: git
     version: "6.0.0+2"
   isolate_manager_generator:
     dependency: "direct dev"
