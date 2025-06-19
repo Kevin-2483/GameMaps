@@ -22,6 +22,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
   /// 执行日志
   final List<String> _executionLogs = [];
+
   /// 正在执行的任务映射
   final Map<String, _ExecutionTask> _activeTasks = {};
 
@@ -75,6 +76,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       debugPrint('[ConcurrentWebWorkerScriptExecutor] $message');
     }
   }
+
   /// 初始化Worker池
   Future<void> _ensureInitialized() async {
     if (_isInitialized || _isDisposed) return;
@@ -113,25 +115,48 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   /// 设置底层消息流监听
   void _setupRawMessageListener() {
     if (_workerPool.isEmpty) return;
-    
+
     // 使用第一个worker的isolateManager获取rawMessageStream
     // 因为所有worker都会发送消息到同一个stream
     final isolateManager = _workerPool.first.isolateManager;
-    
+
     _rawMessageSubscription = isolateManager.rawMessageStream.listen(
       _handleRawMessage,
       onError: (error) {
         _addLog('Error in raw message stream: $error');
       },
     );
-    
+
     _addLog('Raw message listener set up successfully');
   }
 
   /// 处理来自worker的原始消息
-  void _handleRawMessage(String jsonResponse) {
+  void _handleRawMessage(dynamic rawMessage) {
     try {
-      final response = jsonDecode(jsonResponse) as Map<String, dynamic>;
+      Map<String, dynamic> response;
+
+      // 处理不同类型的消息
+      if (rawMessage is Map<String, dynamic>) {
+        // 如果已经是Map，直接使用
+        response = rawMessage;
+      } else if (rawMessage is Map) {
+        // 如果是其他类型的Map，转换为Map<String, dynamic>
+        response = Map<String, dynamic>.from(rawMessage);
+      } else if (rawMessage is String) {
+        // 如果是字符串，尝试JSON解析
+        try {
+          response = jsonDecode(rawMessage) as Map<String, dynamic>;
+        } catch (e) {
+          _addLog('Failed to parse JSON message: $e. Content: "$rawMessage"');
+          return;
+        }
+      } else {
+        _addLog(
+          'Received unsupported message type: ${rawMessage.runtimeType}. Content: "$rawMessage"',
+        );
+        return;
+      }
+
       final responseExecutionId = response['executionId'] as String?;
 
       if (responseExecutionId == null) {
@@ -142,12 +167,16 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       // 查找对应的任务
       final task = _activeTasks[responseExecutionId];
       if (task == null) {
-        _addLog('Received message for unknown task $responseExecutionId, ignoring');
+        _addLog(
+          'Received message for unknown task $responseExecutionId, ignoring',
+        );
         return;
       }
 
       final responseType = response['type'] as String?;
-      _addLog('Received message type: $responseType for task: $responseExecutionId');
+      _addLog(
+        'Received message type: $responseType for task: $responseExecutionId',
+      );
 
       switch (responseType) {
         case 'started':
@@ -170,9 +199,6 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
           _addLog('Received unknown message type: $responseType, ignoring');
           break;
       }
-    } on FormatException {
-      // JSON解析失败，忽略消息
-      _addLog('Worker sent a non-JSON message, ignoring. Content: "$jsonResponse"');
     } catch (e) {
       _addLog('Error processing worker response: $e');
     }
@@ -183,7 +209,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     final isolateManager = IsolateManager<String, String>.createCustom(
       hetuScriptWorkerFunction,
       workerName: 'hetuScriptWorkerFunction',
-      concurrent: 1,
+      concurrent: 4,
       isDebug: kDebugMode,
     );
 
@@ -243,19 +269,23 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       }
     }
     return null;
-  }  /// 执行任务
+  }
+
+  /// 执行任务
   Future<void> _executeTask(_ExecutionTask task, _WorkerInstance worker) async {
     final workerIndex = _workerPool.indexOf(worker);
-    
+
     // 更新映射关系
     _activeTasks[task.id] = task;
     _taskToWorkerMap[task.id] = workerIndex;
     _workerToTaskMap[workerIndex] = task.id;
-    
+
     worker.isBusy = true;
     worker.currentTaskId = task.id;
 
-    _addLog('Executing task ${task.id} on worker ${worker.id} (index: $workerIndex)');
+    _addLog(
+      'Executing task ${task.id} on worker ${worker.id} (index: $workerIndex)',
+    );
 
     try {
       final requestData = {
@@ -268,7 +298,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       };
 
       final jsonRequest = jsonEncode(requestData);
-      
+
       // 设置超时处理
       if (task.timeout != null) {
         Timer(task.timeout!, () {
@@ -278,7 +308,8 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
               task.id,
               ScriptExecutionResult(
                 success: false,
-                error: 'Script execution timeout after ${task.timeout!.inSeconds} seconds',
+                error:
+                    'Script execution timeout after ${task.timeout!.inSeconds} seconds',
                 executionTime: task.timeout!,
               ),
             );
@@ -287,9 +318,13 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       }
 
       // 使用底层接口发送请求到指定的worker
-      worker.isolateManager.sendRawMessageFireAndForget(jsonRequest, isolateIndex: 0);
-      _addLog('Task ${task.id} sent to worker ${worker.id} using raw interface');
-      
+      worker.isolateManager.sendRawMessageFireAndForget(
+        jsonRequest,
+        isolateIndex: 0,
+      );
+      _addLog(
+        'Task ${task.id} sent to worker ${worker.id} using raw interface',
+      );
     } catch (e) {
       _addLog('Error executing task ${task.id}: $e');
       _completeTask(
@@ -302,6 +337,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       );
     }
   }
+
   /// 完成任务
   void _completeTask(String taskId, ScriptExecutionResult result) {
     final task = _activeTasks.remove(taskId);
@@ -316,15 +352,15 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     final workerIndex = _taskToWorkerMap.remove(taskId);
     if (workerIndex != null) {
       _workerToTaskMap[workerIndex] = null;
-      
+
       // 释放Worker
       if (workerIndex < _workerPool.length) {
         final worker = _workerPool[workerIndex];
         worker.isBusy = false;
         worker.currentTaskId = null;
-        
+
         _addLog('Released worker $workerIndex (id: ${worker.id})');
-        
+
         // 处理等待队列中的下一个任务
         if (_taskQueue.isNotEmpty) {
           final nextTask = _taskQueue.removeAt(0);
@@ -524,6 +560,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
     _addLog('All concurrent script executions stopped');
   }
+
   @override
   void dispose() {
     if (_isDisposed) return;
@@ -640,27 +677,29 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   /// 获取所有活动任务的映射信息
   Map<String, Map<String, dynamic>> getTaskMappingInfo() {
     final info = <String, Map<String, dynamic>>{};
-    
+
     for (final entry in _taskToWorkerMap.entries) {
       final taskId = entry.key;
       final workerIndex = entry.value;
       final task = _activeTasks[taskId];
-      
+
       info[taskId] = {
         'workerIndex': workerIndex,
-        'workerId': workerIndex < _workerPool.length ? _workerPool[workerIndex].id : null,
+        'workerId': workerIndex < _workerPool.length
+            ? _workerPool[workerIndex].id
+            : null,
         'isCompleted': task?.completer.isCompleted ?? true,
         'hasTask': task != null,
       };
     }
-    
+
     return info;
   }
 
   /// 获取Worker池状态信息
   Map<String, dynamic> getWorkerPoolStatus() {
     final workers = <Map<String, dynamic>>[];
-    
+
     for (int i = 0; i < _workerPool.length; i++) {
       final worker = _workerPool[i];
       workers.add({
@@ -671,7 +710,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         'mappedTaskId': _workerToTaskMap[i],
       });
     }
-    
+
     return {
       'workerCount': _workerPool.length,
       'activeTaskCount': _activeTasks.length,

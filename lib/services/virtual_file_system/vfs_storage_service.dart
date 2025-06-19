@@ -222,11 +222,11 @@ class VfsStorageService {
     final db = await database;
     final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
 
-    debugPrint('🗄️ Storage: listDirectory called with path: $path');
-    debugPrint(
-      '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
-    );
-    debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
+    // debugPrint('🗄️ Storage: listDirectory called with path: $path');
+    // debugPrint(
+    //   '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
+    // );
+    // debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
 
     // 查找直接子项（不包含深层嵌套）
     // 计算期望的斜杠数量：路径前缀的斜杠数
@@ -250,15 +250,16 @@ class VfsStorageService {
       ],
     );
 
-    debugPrint('🗄️ Storage: SQL query returned ${result.length} rows');
-    for (final row in result) {
-      debugPrint(
-        '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
-      );
-    }
-    debugPrint(
-      '🗄️ Storage: converted to ${result.length} VfsFileInfo objects',
-    );
+    // debugPrint('🗄️ Storage: SQL query returned ${result.length} rows');
+
+    // for (final row in result) {
+    //   debugPrint(
+    //     '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
+    //   );
+    // }
+    // debugPrint(
+    //   '🗄️ Storage: converted to ${result.length} VfsFileInfo objects',
+    // );
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }
@@ -295,11 +296,11 @@ class VfsStorageService {
     final db = await database;
     final pathPrefix = vfsPath.path.isEmpty ? '' : '${vfsPath.path}/';
 
-    debugPrint('🗄️ Storage: getAllFilesRecursive called with path: $path');
-    debugPrint(
-      '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
-    );
-    debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
+    // debugPrint('🗄️ Storage: getAllFilesRecursive called with path: $path');
+    // debugPrint(
+    //   '🗄️ Storage: parsed - database: ${vfsPath.database}, collection: ${vfsPath.collection}, path: ${vfsPath.path}',
+    // );
+    // debugPrint('🗄️ Storage: pathPrefix: "$pathPrefix"');
 
     // 查找所有以路径前缀开头的文件（包括深层嵌套），但不包括路径本身
     final result = await db.rawQuery(
@@ -313,14 +314,14 @@ class VfsStorageService {
       [vfsPath.database, vfsPath.collection, '$pathPrefix%', vfsPath.path],
     );
 
-    debugPrint(
-      '🗄️ Storage: getAllFilesRecursive SQL query returned ${result.length} rows',
-    );
-    for (final row in result) {
-      debugPrint(
-        '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
-      );
-    }
+    // debugPrint(
+    //   '🗄️ Storage: getAllFilesRecursive SQL query returned ${result.length} rows',
+    // );
+    // for (final row in result) {
+    //   debugPrint(
+    //     '🗄️ Storage: - ${row['file_name']} (${row['is_directory'] == 1 ? 'DIR' : 'FILE'}) at path: ${row['file_path']}',
+    //   );
+    // }
 
     return result.map((row) => _rowToFileInfo(row)).toList();
   }

@@ -1,28 +1,103 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:js_interop';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:isolate_manager/isolate_manager.dart';
+import 'package:web/web.dart' show MessageEvent;
 
 /// Web Worker 入口函数
-/// 这个函数将在 Web Worker 中运行
-/// 不能依赖任何 Flutter 特定的包，因为它会在独立的 Web Worker 环境中执行
-/// 使用自定义 Worker 注解，因为需要手动控制生命周期和复杂的消息处理
+/// 使用 setRawMessageHandler 进行消息处理，避免复杂的 JS 互操作
 @pragma('vm:entry-point')
 @isolateManagerCustomWorker
 void hetuScriptWorkerFunction(dynamic params) {
   IsolateManagerFunction.customFunction<String, String>(
     params,
     autoHandleResult: false,
-    onInit: (controller) async {
+    onInit: (controller) async {      // 使用 setRawMessageHandler 来处理原始消息
+      controller.setRawMessageHandler((event) {
+        try {          // 提取消息数据 - isolate_manager发送的是字符串
+          dynamic rawData;
+          try {
+            // 使用 JS interop 安全访问 MessageEvent.data
+            if (event is MessageEvent) {
+              rawData = event.data.dartify();
+            } else {
+              // 回退方案：直接使用反射访问 data 属性
+              try {
+                rawData = (event as dynamic).data;
+                if (rawData != null && rawData.dartify != null) {
+                  rawData = rawData.dartify();
+                }
+              } catch (e2) {
+                _addWorkerLog('回退方案也失败: $e2');
+                return false;
+              }
+            }
+            
+            // isolate_manager发送的消息总是字符串，我们需要处理这种情况
+            if (rawData is String) {
+              _addWorkerLog('收到字符串消息，尝试JSON解析: ${rawData.length > 200 ? rawData.substring(0, 200) + '...' : rawData}');
+            } else {
+              _addWorkerLog('收到非字符串消息: ${rawData.runtimeType}');
+            }
+          } catch (e) {
+            _addWorkerLog('无法访问event.data: $e');
+            return false;
+          }          
+          var data = rawData;
+          
+          // isolate_manager总是发送字符串，我们需要解析JSON
+          if (data is String) {
+            try {
+              data = json.decode(data);
+              _addWorkerLog('JSON解析成功，数据类型: ${data.runtimeType}');
+            } catch (e) {
+              _addWorkerLog('JSON解析失败: $e, 原始数据: ${data.length > 100 ? data.substring(0, 100) + '...' : data}');
+              // 如果解析失败，发送错误消息
+              _sendCustomErrorMessage(controller, 'unknown', 'JSON解析失败: $e');
+              return false;
+            }
+          }
+          
+          _addWorkerLog('处理数据类型: ${data.runtimeType}');
+          
+          if (data is Map) {
+            final dataMap = Map<String, dynamic>.from(data);
+            final executionId = dataMap['executionId'] as String? ?? 'unknown';
+            final messageType = dataMap['type'] as String? ?? 'unknown';
+            _addWorkerLog('处理任务ID: $executionId, 消息类型: $messageType');
+            
+            // 异步处理消息
+            Future(() async {
+              await _handleCustomMessage(controller, dataMap, executionId);
+            }).catchError((e) {
+              _addWorkerLog('异步消息处理错误: $e');
+              _sendCustomErrorMessage(controller, executionId, '异步消息处理错误: $e');
+            });
+          } else {
+            _addWorkerLog('JSON解析后仍非Map类型: ${data.runtimeType}, 内容: $data');
+            _sendCustomErrorMessage(controller, 'unknown', '消息格式错误: 期望Map类型，实际: ${data.runtimeType}');
+          }
+        } catch (e, stackTrace) {
+          _addWorkerLog('原始消息处理错误: $e');
+          _addWorkerLog('错误堆栈: $stackTrace');
+          _sendCustomErrorMessage(controller, 'unknown', '原始消息处理错误: $e');
+        }
+        
+        return false; // 阻止进一步的默认处理
+      });
+      
       // 初始化 Hetu 脚本引擎
       await _initializeHetuEngine(controller);
     },
-    onEvent: (controller, jsonMessage) async {
-      return await _handleWorkerMessage(controller, jsonMessage);
+    onEvent: (controller, message) async {
+      // 这个不会被调用，因为我们重写了 onmessage
+      _addWorkerLog('备用onEvent被调用: $message');
+      return "fallback";
     },
     onDispose: (controller) {
       // 清理资源
-      _disposeHetuEngine();
+      _disposeHetuEngine(controller);
     },
   );
 }
@@ -33,99 +108,147 @@ Map<String, dynamic> _currentMapData = {};
 final Map<String, Completer<dynamic>> _externalFunctionCalls = {};
 final List<String> _workerLogs = [];
 
+/// 处理自定义消息
+Future<void> _handleCustomMessage(
+  IsolateManagerController controller,
+  Map<String, dynamic> data,
+  String executionId,
+) async {
+  try {
+    final type = data['type'] as String? ?? 'unknown';
+    final startTime = DateTime.now();
+
+    _addWorkerLog('处理自定义消息类型: $type, 任务ID: $executionId');
+
+    switch (type) {
+      case 'execute':
+        _addWorkerLog('执行脚本请求，任务ID: $executionId');
+        await _executeScript(controller, data, startTime);
+        break;
+
+      case 'mapDataUpdate':
+        _currentMapData = data['data'] as Map<String, dynamic>? ?? {};
+        _addWorkerLog('地图数据更新，任务ID: $executionId');
+        _sendCustomMessage(controller, {
+          'type': 'ack',
+          'message': 'Map data updated',
+          'executionId': executionId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        break;
+
+      case 'stop':
+        _addWorkerLog('收到停止信号，任务ID: $executionId');
+        _sendCustomMessage(controller, {
+          'type': 'stopped',
+          'executionId': executionId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        break;      case 'externalFunctionResult':
+        _handleExternalFunctionResult(controller, data);
+        break;
+
+      case 'externalFunctionError':
+        _handleExternalFunctionError(controller, data);
+        break;
+
+      case 'externalFunctionResponse':
+        // 处理主线程发送的外部函数响应
+        if (data['error'] != null) {
+          _handleExternalFunctionError(controller, data);
+        } else {
+          _handleExternalFunctionResult(controller, data);
+        }
+        break;
+
+      case 'ping':
+        // 立即回复 pong
+        _sendCustomMessage(controller, {
+          'type': 'pong',
+          'executionId': executionId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        break;
+
+      default:
+        _addWorkerLog('未知消息类型: $type, 任务ID: $executionId');
+        _sendCustomErrorMessage(controller, executionId, '未知消息类型: $type');
+    }
+  } catch (e, stackTrace) {
+    _addWorkerLog('自定义消息处理错误: $e');
+    _addWorkerLog('错误堆栈: $stackTrace');
+    _sendCustomErrorMessage(controller, executionId, '自定义消息处理错误: $e');
+  }
+}
+
+/// 发送自定义消息到主线程
+void _sendCustomMessage(IsolateManagerController controller, Map<String, dynamic> data) {
+  try {
+    // 先将数据转换为JSON字符串，然后再发送
+    // 这样可以避免jsify()方法的问题
+    final jsonString = json.encode(data);
+    controller.sendResult(jsonString);
+    _addWorkerLog('发送自定义消息: ${data['type']} 任务ID: ${data['executionId'] ?? 'unknown'}');
+  } catch (e) {
+    _addWorkerLog('发送自定义消息错误: $e');
+    // 如果JSON序列化失败，尝试发送简化的错误消息
+    try {
+      final errorMessage = json.encode({
+        'type': 'error',
+        'error': 'Failed to serialize message: $e',
+        'executionId': data['executionId'] ?? 'unknown',
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      controller.sendResult(errorMessage);
+    } catch (e2) {
+      _addWorkerLog('发送错误消息也失败: $e2');
+    }
+  }
+}
+
+/// 发送自定义错误消息
+void _sendCustomErrorMessage(IsolateManagerController controller, String executionId, String error) {
+  _sendCustomMessage(controller, {
+    'type': 'error',
+    'error': error,
+    'executionId': executionId,
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
+}
+
+/// 发送错误消息（使用自定义方式）
+void _sendErrorMessage(IsolateManagerController controller, String? executionId, String error) {
+  _sendCustomErrorMessage(controller, executionId ?? 'unknown', error);
+}
+
 /// 初始化 Hetu 脚本引擎
 Future<void> _initializeHetuEngine(IsolateManagerController controller) async {
   try {
     _hetuEngine = Hetu();
     _hetuEngine!.init();
-    _addWorkerLog('Hetu script engine initialized successfully');
-
-    // 发送初始化完成信号 - 使用 JSON 字符串
-    // controller.sendResult(jsonEncode({
-    //   'type': 'initialized',
-    //   'message': 'Hetu engine ready',
-    // }));
+    _addWorkerLog('Hetu script engine initialized successfully');    // 发送初始化完成信号
+    _sendCustomMessage(controller, {
+      'type': 'initialized',
+      'message': 'Hetu engine ready',
+      'executionId': 'init',
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
   } catch (e) {
     _addWorkerLog('Failed to initialize Hetu engine: $e');
-
-    // 发送初始化失败信号 - 使用 JSON 字符串
-    // controller.sendResult(jsonEncode({'type': 'initError', 'error': e.toString()}));
-
+    _sendErrorMessage(controller, 'init', 'Failed to initialize Hetu engine: $e');
     rethrow;
   }
 }
 
-/// 处理来自主线程的消息
-Future<String> _handleWorkerMessage(
-  IsolateManagerController controller,
-  String jsonMessage,
-) async {
-  _addWorkerLog('Received JSON message: $jsonMessage');
-
-  try {
-    // 解析 JSON 消息
-    final message = jsonDecode(jsonMessage) as Map<String, dynamic>;
-    final type = message['type'] as String? ?? 'unknown';
-    final startTime = DateTime.now();
-
-    _addWorkerLog('Received message type: $type');
-
-    Map<String, dynamic> result;
-
-    switch (type) {
-      case 'execute':
-        _addWorkerLog('Processing execute request...');
-        result = await _executeScript(controller, message, startTime);
-        break;
-
-      case 'mapDataUpdate':
-        _currentMapData = message['data'] as Map<String, dynamic>? ?? {};
-        _addWorkerLog('Map data updated');
-        result = {'type': 'ack', 'message': 'Map data updated'};
-        break;
-
-      case 'stop':
-        _addWorkerLog('Received stop signal');
-        result = {'type': 'stopped'};
-        break;
-
-      case 'externalFunctionResult':
-        result = _handleExternalFunctionResult(message);
-        break;
-
-      case 'externalFunctionError':
-        result = _handleExternalFunctionError(message);
-        break;
-
-      default:
-        _addWorkerLog('Unknown message type: $type');
-        result = {'type': 'error', 'error': 'Unknown message type: $type'};
-    }
-
-    return jsonEncode(result);
-  } catch (e, stackTrace) {
-    _addWorkerLog('Error handling message: $e');
-    _addWorkerLog('Stack trace: $stackTrace');
-
-    final errorResult = {
-      'type': 'error',
-      'error': e.toString(),
-      'executionTime': DateTime.now().millisecondsSinceEpoch,
-    };
-
-    return jsonEncode(errorResult);
-  }
-}
-
 /// 执行脚本
-Future<Map<String, dynamic>> _executeScript(
+Future<void> _executeScript(
   IsolateManagerController controller,
   Map<String, dynamic> message,
   DateTime startTime,
 ) async {
   final code = message['code'] as String? ?? '';
   final context = message['context'] as Map<String, dynamic>? ?? {};
-  final executionId = message['executionId'] as String? ?? '';
+  final executionId = message['executionId'] as String? ?? 'unknown';
 
   // 安全地转换外部函数列表
   final externalFunctionsObj = message['externalFunctions'];
@@ -149,7 +272,9 @@ Future<Map<String, dynamic>> _executeScript(
     // 设置上下文变量
     for (final entry in context.entries) {
       _hetuEngine!.define(entry.key, entry.value);
-    } // 设置地图数据
+    }
+
+    // 设置地图数据
     _hetuEngine!.define('mapData', _currentMapData);
 
     // 注册外部函数代理
@@ -163,37 +288,43 @@ Future<Map<String, dynamic>> _executeScript(
           controller,
           functionName,
           positionalArgs,
-          executionId, // 传递executionId
+          executionId,
         );
       });
-    }
-
-    // 发送脚本已开始执行的信号
-    _addWorkerLog('Sending started signal for execution: $executionId');
-    final startedSignal = {'type': 'started', 'executionId': executionId};
-    controller.sendResult(jsonEncode(startedSignal));
-    _addWorkerLog('Started signal sent for execution: $executionId');
+    }    // 发送脚本已开始执行的信号
+    _addWorkerLog('发送开始信号，任务ID: $executionId');
+    _sendCustomMessage(controller, {
+      'type': 'started',
+      'executionId': executionId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
 
     // 执行脚本
     final result = _hetuEngine!.eval(code);
     final executionTime = DateTime.now().difference(startTime).inMilliseconds;
 
-    _addWorkerLog('Script executed successfully in ${executionTime}ms');
+    _addWorkerLog('脚本执行成功，用时 ${executionTime}ms，任务ID: $executionId');
 
-    return {
+    // 发送执行结果
+    _sendCustomMessage(controller, {
       'type': 'result',
       'result': _serializeResult(result),
       'executionTime': executionTime,
-    };
+      'executionId': executionId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
   } catch (e) {
     final executionTime = DateTime.now().difference(startTime).inMilliseconds;
-    _addWorkerLog('Script execution failed: $e');
+    _addWorkerLog('脚本执行失败，任务ID $executionId: $e');
 
-    return {
+    // 发送执行错误
+    _sendCustomMessage(controller, {
       'type': 'error',
       'error': e.toString(),
       'executionTime': executionTime,
-    };
+      'executionId': executionId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 }
 
@@ -209,7 +340,7 @@ Future<dynamic> _callExternalFunction(
 
   _externalFunctionCalls[callId] = completer;
 
-  _addWorkerLog('Calling external function: $functionName');
+  _addWorkerLog('Calling external function: $functionName for task: $executionId');
   _addWorkerLog('Arguments type: ${arguments.runtimeType}');
   _addWorkerLog('Arguments value: $arguments');
 
@@ -226,20 +357,15 @@ Future<dynamic> _callExternalFunction(
   } else {
     argumentsToSend = arguments;
   }
-
-  // 发送外部函数调用请求到主线程 - 使用 JSON 字符串
-  final requestData = {
+  // 发送外部函数调用请求到主线程
+  _sendCustomMessage(controller, {
     'type': 'externalFunctionCall',
     'functionName': functionName,
     'arguments': argumentsToSend,
     'callId': callId,
-    'executionId': executionId, // 添加executionId
-  };
-
-  final jsonRequest = jsonEncode(requestData);
-  _addWorkerLog('Sending JSON request: $jsonRequest');
-
-  controller.sendResult(jsonRequest);
+    'executionId': executionId,
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
 
   // 等待结果，设置超时以防止死锁
   try {
@@ -255,33 +381,60 @@ Future<dynamic> _callExternalFunction(
 }
 
 /// 处理外部函数调用结果
-Map<String, dynamic> _handleExternalFunctionResult(
+void _handleExternalFunctionResult(
+  IsolateManagerController controller,
   Map<String, dynamic> message,
 ) {
   final callId = message['callId'] as String? ?? '';
   final result = message['result'];
+  final executionId = message['executionId'] as String? ?? 'unknown';
+
+  _addWorkerLog('Received external function result for callId: $callId, task: $executionId');
 
   final completer = _externalFunctionCalls.remove(callId);
   if (completer != null && !completer.isCompleted) {
     completer.complete(result);
+    _addWorkerLog('External function result processed for callId: $callId');
+  } else {
+    _addWorkerLog('Warning: No completer found for callId: $callId');
   }
-
-  return {'type': 'ack', 'message': 'External function result processed'};
+  // 发送确认消息
+  _sendCustomMessage(controller, {
+    'type': 'ack',
+    'message': 'External function result processed',
+    'callId': callId,
+    'executionId': executionId,
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
 }
 
 /// 处理外部函数调用错误
-Map<String, dynamic> _handleExternalFunctionError(
+void _handleExternalFunctionError(
+  IsolateManagerController controller,
   Map<String, dynamic> message,
 ) {
   final callId = message['callId'] as String? ?? '';
   final error = message['error'] as String? ?? 'Unknown error';
+  final executionId = message['executionId'] as String? ?? 'unknown';
+
+  _addWorkerLog('Received external function error for callId: $callId, task: $executionId, error: $error');
 
   final completer = _externalFunctionCalls.remove(callId);
   if (completer != null && !completer.isCompleted) {
     completer.completeError(Exception(error));
+    _addWorkerLog('External function error processed for callId: $callId');
+  } else {
+    _addWorkerLog('Warning: No completer found for error callId: $callId');
   }
-
-  return {'type': 'ack', 'message': 'External function error processed'};
+  // 发送确认消息
+  _sendCustomMessage(controller, {
+    'type': 'ack',
+    'message': 'External function error processed',
+    'callId': callId,
+    'executionId': executionId,
+    'error': error,
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
 }
 
 /// 序列化执行结果
@@ -312,10 +465,27 @@ void _addWorkerLog(String message) {
 }
 
 /// 清理 Hetu 引擎
-void _disposeHetuEngine() {
+void _disposeHetuEngine(IsolateManagerController controller) {
+  _addWorkerLog('Disposing Hetu engine...');
+  
+  // 取消所有待处理的外部函数调用
+  for (final completer in _externalFunctionCalls.values) {
+    if (!completer.isCompleted) {
+      completer.completeError(Exception('Worker is being disposed'));
+    }
+  }
+  
   _hetuEngine = null;
   _currentMapData.clear();
   _externalFunctionCalls.clear();
   _workerLogs.clear();
+  
   _addWorkerLog('Hetu engine disposed');
+    // 发送清理完成信号
+  _sendCustomMessage(controller, {
+    'type': 'disposed',
+    'message': 'Worker resources cleaned up',
+    'executionId': 'dispose',
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
 }
