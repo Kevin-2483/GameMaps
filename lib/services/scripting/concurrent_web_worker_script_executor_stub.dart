@@ -7,7 +7,7 @@ import '../../models/script_data.dart';
 class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   ConcurrentWebWorkerScriptExecutor({int? workerPoolSize}) {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
@@ -18,49 +18,49 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     Duration? timeout,
   }) async {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void stop() {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void dispose() {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void registerExternalFunction(String name, Function handler) {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void clearExternalFunctions() {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void sendMapDataUpdate(Map<String, dynamic> data) {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   List<String> getExecutionLogs() {
     throw UnsupportedError(
-      'ConcurrentWebWorkerScriptExecutor is only supported on web platform'
+      'ConcurrentWebWorkerScriptExecutor is only supported on web platform',
     );
   }
 }

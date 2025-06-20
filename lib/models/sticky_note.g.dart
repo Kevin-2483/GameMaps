@@ -13,33 +13,25 @@ StickyNote _$StickyNoteFromJson(Map<String, dynamic> json) => StickyNote(
   position: const OffsetConverter().fromJson(
     json['position'] as Map<String, dynamic>,
   ),
-  size:
-      json['size'] == null
-          ? const Size(0.2, 0.15)
-          : const SizeConverter().fromJson(
-            json['size'] as Map<String, dynamic>,
-          ),
+  size: json['size'] == null
+      ? const Size(0.2, 0.15)
+      : const SizeConverter().fromJson(json['size'] as Map<String, dynamic>),
   opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
   isVisible: json['isVisible'] as bool? ?? true,
   isCollapsed: json['isCollapsed'] as bool? ?? false,
   isSelected: json['isSelected'] as bool? ?? false,
   zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
-  backgroundColor:
-      json['backgroundColor'] == null
-          ? const Color(0xFFFFF9C4)
-          : const ColorConverter().fromJson(
-            (json['backgroundColor'] as num).toInt(),
-          ),
-  titleBarColor:
-      json['titleBarColor'] == null
-          ? const Color(0xFFF9A825)
-          : const ColorConverter().fromJson(
-            (json['titleBarColor'] as num).toInt(),
-          ),
-  textColor:
-      json['textColor'] == null
-          ? const Color(0xFF424242)
-          : const ColorConverter().fromJson((json['textColor'] as num).toInt()),
+  backgroundColor: json['backgroundColor'] == null
+      ? const Color(0xFFFFF9C4)
+      : const ColorConverter().fromJson(
+          (json['backgroundColor'] as num).toInt(),
+        ),
+  titleBarColor: json['titleBarColor'] == null
+      ? const Color(0xFFF9A825)
+      : const ColorConverter().fromJson((json['titleBarColor'] as num).toInt()),
+  textColor: json['textColor'] == null
+      ? const Color(0xFF424242)
+      : const ColorConverter().fromJson((json['textColor'] as num).toInt()),
   backgroundImageData: const Uint8ListConverter().fromJson(
     json['backgroundImageData'] as String?,
   ),

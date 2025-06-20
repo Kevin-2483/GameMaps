@@ -351,7 +351,8 @@ class SquadronConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         'executionId': task.id,
         'code': task.code,
         'context': task.context,
-        'externalFunctions': ExternalFunctionRegistry.getAllFunctionNames(),
+        'externalFunctions':
+            ExternalFunctionRegistry.getAllFunctionNamesWithInternal(),
       });
 
       Timer? timeoutTimer;

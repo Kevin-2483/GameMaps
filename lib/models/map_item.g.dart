@@ -46,10 +46,9 @@ Map<String, dynamic> _$MapItemToJson(MapItem instance) => <String, dynamic>{
 
 MapDatabase _$MapDatabaseFromJson(Map<String, dynamic> json) => MapDatabase(
   version: (json['version'] as num).toInt(),
-  maps:
-      (json['maps'] as List<dynamic>)
-          .map((e) => MapItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  maps: (json['maps'] as List<dynamic>)
+      .map((e) => MapItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
   exportedAt: DateTime.parse(json['exportedAt'] as String),
 );
 

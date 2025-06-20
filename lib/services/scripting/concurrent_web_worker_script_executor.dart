@@ -12,16 +12,22 @@ import 'hetu_script_worker.dart';
 enum TaskStatus {
   /// 任务已创建，等待执行
   pending,
+
   /// 任务已分配给Worker，正在准备
   assigned,
+
   /// 任务已开始执行
   running,
+
   /// 任务执行完成（成功）
   completed,
+
   /// 任务执行失败
   failed,
+
   /// 任务被取消
   cancelled,
+
   /// 任务超时
   timeout,
 }
@@ -36,7 +42,7 @@ class TaskStatusInfo {
   final int? workerIndex;
   final String? error;
   final Duration? timeout;
-  
+
   TaskStatusInfo({
     required this.taskId,
     required this.status,
@@ -185,7 +191,9 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   }
 
   /// 更新任务状态
-  void _updateTaskStatus(String taskId, TaskStatus status, {
+  void _updateTaskStatus(
+    String taskId,
+    TaskStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
     int? workerIndex,
@@ -345,7 +353,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   /// 处理任务开始信号
   void _handleTaskStarted(String taskId) {
     _addLog('Script started for task $taskId');
-    
+
     // 取消超时计时器
     final task = _activeTasks[taskId];
     if (task != null && task.timeoutTimer != null) {
@@ -355,11 +363,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     }
 
     // 更新任务状态为运行中
-    _updateTaskStatus(
-      taskId, 
-      TaskStatus.running, 
-      startedAt: DateTime.now(),
-    );
+    _updateTaskStatus(taskId, TaskStatus.running, startedAt: DateTime.now());
   }
 
   /// 创建Worker实例
@@ -450,11 +454,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     worker.currentTaskId = task.id;
 
     // 更新任务状态为已分配
-    _updateTaskStatus(
-      task.id, 
-      TaskStatus.assigned, 
-      workerIndex: workerIndex,
-    );
+    _updateTaskStatus(task.id, TaskStatus.assigned, workerIndex: workerIndex);
 
     _addLog(
       'Executing task ${task.id} on worker ${worker.id} (index: $workerIndex)',
@@ -465,7 +465,8 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         'type': 'execute',
         'code': task.code,
         'context': task.context,
-        'externalFunctions': ExternalFunctionRegistry.getAllFunctionNames(),
+        'externalFunctions':
+            ExternalFunctionRegistry.getAllFunctionNamesWithInternal(),
         'executionId': task.id,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       };
@@ -481,7 +482,8 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
               task.id,
               TaskStatus.timeout,
               completedAt: DateTime.now(),
-              error: 'Script execution timeout after ${task.timeout!.inSeconds} seconds',
+              error:
+                  'Script execution timeout after ${task.timeout!.inSeconds} seconds',
             );
             _completeTask(
               task.id,
@@ -529,9 +531,9 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     if (task != null && !task.completer.isCompleted) {
       // 取消超时计时器
       task.timeoutTimer?.cancel();
-      
+
       task.completer.complete(result);
-      
+
       // 更新任务状态
       _updateTaskStatus(
         taskId,
@@ -539,7 +541,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
         completedAt: DateTime.now(),
         error: result.error,
       );
-      
+
       _addLog(
         'Task $taskId completed: ${result.success ? 'success' : 'error'}',
       );
@@ -732,14 +734,14 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       if (!task.completer.isCompleted) {
         // 取消超时计时器
         task.timeoutTimer?.cancel();
-        
+
         // 更新任务状态
         _updateTaskStatus(
           task.id,
           TaskStatus.cancelled,
           completedAt: DateTime.now(),
         );
-        
+
         task.completer.complete(
           ScriptExecutionResult(
             success: false,
@@ -756,14 +758,14 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       if (!task.completer.isCompleted) {
         // 取消超时计时器
         task.timeoutTimer?.cancel();
-        
+
         // 更新任务状态
         _updateTaskStatus(
           task.id,
           TaskStatus.cancelled,
           completedAt: DateTime.now(),
         );
-        
+
         task.completer.complete(
           ScriptExecutionResult(
             success: false,
@@ -894,18 +896,16 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
   int get queuedTaskCount => _taskQueue.length;
 
   /// 获取可用Worker数量
-  int get availableWorkerCount => 
-      _workerPool.where((w) => !w.isBusy).length;
+  int get availableWorkerCount => _workerPool.where((w) => !w.isBusy).length;
 
   /// 获取繁忙Worker数量
-  int get busyWorkerCount => 
-      _workerPool.where((w) => w.isBusy).length;
+  int get busyWorkerCount => _workerPool.where((w) => w.isBusy).length;
 
   /// 获取并发统计信息
   Map<String, dynamic> getConcurrencyStats() {
     final busyWorkers = _workerPool.where((w) => w.isBusy).length;
     final statusCounts = <String, int>{};
-    
+
     for (final status in TaskStatus.values) {
       statusCounts[status.name] = getTasksWithStatus(status).length;
     }
@@ -969,8 +969,10 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     for (int i = 0; i < _workerPool.length; i++) {
       final worker = _workerPool[i];
       final currentTaskId = _workerToTaskMap[i];
-      final taskStatus = currentTaskId != null ? _taskStatusMap[currentTaskId] : null;
-      
+      final taskStatus = currentTaskId != null
+          ? _taskStatusMap[currentTaskId]
+          : null;
+
       workers.add({
         'index': i,
         'id': worker.id,
@@ -999,14 +1001,14 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     if (task != null && !task.completer.isCompleted) {
       // 取消超时计时器
       task.timeoutTimer?.cancel();
-      
+
       // 更新任务状态
       _updateTaskStatus(
         taskId,
         TaskStatus.cancelled,
         completedAt: DateTime.now(),
       );
-      
+
       task.completer.complete(
         ScriptExecutionResult(
           success: false,
@@ -1023,9 +1025,9 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
           final worker = _workerPool[workerIndex];
           worker.isBusy = false;
           worker.currentTaskId = null;
-          
+
           _addLog('Task $taskId cancelled, worker $workerIndex released');
-          
+
           // 处理等待队列中的下一个任务
           if (_taskQueue.isNotEmpty) {
             final nextTask = _taskQueue.removeAt(0);
@@ -1033,7 +1035,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
           }
         }
       }
-      
+
       return true;
     }
 
@@ -1042,14 +1044,14 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     if (queueIndex >= 0) {
       final queuedTask = _taskQueue.removeAt(queueIndex);
       queuedTask.timeoutTimer?.cancel();
-      
+
       // 更新任务状态
       _updateTaskStatus(
         taskId,
         TaskStatus.cancelled,
         completedAt: DateTime.now(),
       );
-      
+
       if (!queuedTask.completer.isCompleted) {
         queuedTask.completer.complete(
           ScriptExecutionResult(
@@ -1059,7 +1061,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
           ),
         );
       }
-      
+
       _addLog('Queued task $taskId cancelled');
       return true;
     }

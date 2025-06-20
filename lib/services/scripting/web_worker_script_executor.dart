@@ -67,7 +67,8 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
       'type': 'execute',
       'code': code,
       'context': context ?? {},
-      'externalFunctions': ExternalFunctionRegistry.getAllFunctionNames(),
+      'externalFunctions':
+          ExternalFunctionRegistry.getAllFunctionNamesWithInternal(),
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
 

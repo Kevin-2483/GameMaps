@@ -25,10 +25,9 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       locale: json['locale'] as String? ?? 'zh_CN',
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
-      lastLoginAt:
-          json['lastLoginAt'] == null
-              ? null
-              : DateTime.parse(json['lastLoginAt'] as String),
+      lastLoginAt: json['lastLoginAt'] == null
+          ? null
+          : DateTime.parse(json['lastLoginAt'] as String),
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -125,23 +124,19 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
     ToolPreferences(
-      recentColors:
-          (json['recentColors'] as List<dynamic>)
-              .map((e) => (e as num).toInt())
-              .toList(),
-      customColors:
-          (json['customColors'] as List<dynamic>)
-              .map((e) => (e as num).toInt())
-              .toList(),
-      favoriteStrokeWidths:
-          (json['favoriteStrokeWidths'] as List<dynamic>)
-              .map((e) => (e as num).toDouble())
-              .toList(),
+      recentColors: (json['recentColors'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+      customColors: (json['customColors'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+      favoriteStrokeWidths: (json['favoriteStrokeWidths'] as List<dynamic>)
+          .map((e) => (e as num).toDouble())
+          .toList(),
       shortcuts: Map<String, String>.from(json['shortcuts'] as Map),
-      toolbarLayout:
-          (json['toolbarLayout'] as List<dynamic>)
-              .map((e) => e as String)
-              .toList(),
+      toolbarLayout: (json['toolbarLayout'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
       customTags:

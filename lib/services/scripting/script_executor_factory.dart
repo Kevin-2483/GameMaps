@@ -87,8 +87,8 @@ class ScriptExecutorFactory {
           );
         }
         throw UnsupportedError(
-            'Squadron concurrent web worker executor is no longer supported',
-          );
+          'Squadron concurrent web worker executor is no longer supported',
+        );
     }
   }
 
@@ -104,6 +104,7 @@ class ScriptExecutorFactory {
           : ScriptExecutorType.isolate;
     }
   }
+
   /// 创建Web Worker执行器（明确指定）
   static WebWorkerScriptExecutor createWebWorker() {
     if (!kIsWeb) {

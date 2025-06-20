@@ -21,8 +21,9 @@ Map<String, dynamic> _$AppConfigToJson(AppConfig instance) => <String, dynamic>{
 PlatformConfig _$PlatformConfigFromJson(Map<String, dynamic> json) =>
     PlatformConfig(
       pages: (json['pages'] as List<dynamic>).map((e) => e as String).toList(),
-      features:
-          (json['features'] as List<dynamic>).map((e) => e as String).toList(),
+      features: (json['features'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$PlatformConfigToJson(PlatformConfig instance) =>

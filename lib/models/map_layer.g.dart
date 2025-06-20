@@ -57,10 +57,9 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       type: $enumDecode(_$DrawingElementTypeEnumMap, json['type']),
       points: const OffsetListConverter().fromJson(json['points'] as List),
-      color:
-          json['color'] == null
-              ? const Color(0xFF000000)
-              : const ColorConverter().fromJson((json['color'] as num).toInt()),
+      color: json['color'] == null
+          ? const Color(0xFF000000)
+          : const ColorConverter().fromJson((json['color'] as num).toInt()),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
       density: (json['density'] as num?)?.toDouble() ?? 3.0,
       rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
@@ -75,10 +74,9 @@ MapDrawingElement _$MapDrawingElementFromJson(Map<String, dynamic> json) =>
         json['imageData'] as String?,
       ),
       imageHash: json['imageHash'] as String?,
-      imageFit:
-          json['imageFit'] == null
-              ? BoxFit.contain
-              : const BoxFitConverter().fromJson(json['imageFit'] as String?),
+      imageFit: json['imageFit'] == null
+          ? BoxFit.contain
+          : const BoxFitConverter().fromJson(json['imageFit'] as String?),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );

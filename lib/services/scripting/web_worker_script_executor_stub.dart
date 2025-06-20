@@ -7,7 +7,7 @@ import '../../models/script_data.dart';
 class WebWorkerScriptExecutor implements IScriptExecutor {
   WebWorkerScriptExecutor() {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
@@ -18,49 +18,49 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
     Duration? timeout,
   }) async {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void stop() {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void dispose() {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void registerExternalFunction(String name, Function handler) {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void clearExternalFunctions() {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   void sendMapDataUpdate(Map<String, dynamic> data) {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 
   @override
   List<String> getExecutionLogs() {
     throw UnsupportedError(
-      'WebWorkerScriptExecutor is only supported on web platform'
+      'WebWorkerScriptExecutor is only supported on web platform',
     );
   }
 }

@@ -19,9 +19,6 @@ class ExternalFunctionRegistry {
     // 基础函数
     _registerBasicFunctions(functions, callExternalFunction);
 
-    // 数学函数
-    _registerMathFunctions(functions, callExternalFunction);
-
     // 地图数据访问函数
     _registerMapDataFunctions(functions, callExternalFunction);
 
@@ -46,8 +43,8 @@ class ExternalFunctionRegistry {
       // 基础函数
       'log', 'print',
 
-      // 数学函数
-      'sin', 'cos', 'tan', 'sqrt', 'pow', 'abs', 'random',
+      // 数学函数 (已移至Worker内部实现)
+      // 'sin', 'cos', 'tan', 'sqrt', 'pow', 'abs', 'random',
 
       // 地图数据访问函数
       'getLayers', 'getLayerById', 'getElementsInLayer', 'getAllElements',
@@ -75,6 +72,39 @@ class ExternalFunctionRegistry {
     ];
   }
 
+  /// 获取所有函数名称列表（包括Worker内部函数）
+  static List<String> getAllFunctionNamesWithInternal() {
+    final externalFunctions = getAllFunctionNames();
+    final internalFunctions = getInternalFunctionNames();
+
+    // 合并并去重
+    final allFunctions = <String>{};
+    allFunctions.addAll(externalFunctions);
+    allFunctions.addAll(internalFunctions);
+
+    return allFunctions.toList();
+  }
+
+  /// 获取Worker内部函数名称列表
+  static List<String> getInternalFunctionNames() {
+    return [
+      'sin',
+      'cos',
+      'tan',
+      'sqrt',
+      'pow',
+      'abs',
+      'random',
+      'min',
+      'max',
+      'floor',
+      'ceil',
+      'round',
+      // Worker内部实现的延迟函数
+      'delay', 'delayThen', 'now',
+    ];
+  }
+
   /// 注册基础函数
   static void _registerBasicFunctions(
     Map<String, Function> functions,
@@ -86,40 +116,6 @@ class ExternalFunctionRegistry {
 
     functions['print'] = (dynamic message) async {
       return await callExternalFunction('print', [message]);
-    };
-  }
-
-  /// 注册数学函数
-  static void _registerMathFunctions(
-    Map<String, Function> functions,
-    Future<dynamic> Function(String, List<dynamic>) callExternalFunction,
-  ) {
-    functions['sin'] = (num x) async {
-      return await callExternalFunction('sin', [x]);
-    };
-
-    functions['cos'] = (num x) async {
-      return await callExternalFunction('cos', [x]);
-    };
-
-    functions['tan'] = (num x) async {
-      return await callExternalFunction('tan', [x]);
-    };
-
-    functions['sqrt'] = (num x) async {
-      return await callExternalFunction('sqrt', [x]);
-    };
-
-    functions['pow'] = (num x, num y) async {
-      return await callExternalFunction('pow', [x, y]);
-    };
-
-    functions['abs'] = (num x) async {
-      return await callExternalFunction('abs', [x]);
-    };
-
-    functions['random'] = () async {
-      return await callExternalFunction('random', []);
     };
   }
 
