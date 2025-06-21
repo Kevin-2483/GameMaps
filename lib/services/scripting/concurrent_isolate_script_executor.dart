@@ -422,7 +422,6 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       }
     });
   }
-
   /// 在隔离中处理脚本执行
   static void _handleExecuteInIsolate(
     ScriptMessage message,
@@ -449,7 +448,9 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       final code = message.data['code'] as String;
       final context =
           message.data['context'] as Map<String, dynamic>? ?? {}; // 创建Hetu脚本解释器
-      final hetu = Hetu();      // 使用统一的外部函数注册器
+      final hetu = Hetu();
+
+      // 使用统一的外部函数注册器
       final externalFunctions =
           ExternalFunctionRegistry.createFunctionsForIsolate(
             (functionName, arguments) => _callExternalFunction(
@@ -464,6 +465,9 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
               mainSendPort,
             ),
           );
+
+      // 添加内部函数（直接在isolate内部执行，不需要跨线程通信）
+      _addInternalFunctions(externalFunctions);
 
       // 初始化Hetu解释器
       hetu.init(externalFunctions: externalFunctions);
@@ -581,5 +585,36 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
         completer.complete(response.result);
       }
     }
+  }
+
+  /// 添加内部函数（直接在isolate内部执行，不需要跨线程通信）
+  static void _addInternalFunctions(Map<String, Function> functions) {
+    // 数学函数 - 直接在isolate内部执行
+    functions['sin'] = (num x) => math.sin(x.toDouble());
+    functions['cos'] = (num x) => math.cos(x.toDouble());
+    functions['tan'] = (num x) => math.tan(x.toDouble());
+    functions['sqrt'] = (num x) => math.sqrt(x.toDouble());
+    functions['pow'] = (num x, num y) => math.pow(x.toDouble(), y.toDouble());
+    functions['abs'] = (num x) => x.abs();
+    functions['random'] = () => math.Random().nextDouble();
+    functions['min'] = (num a, num b) => math.min(a, b);
+    functions['max'] = (num a, num b) => math.max(a, b);
+    functions['floor'] = (num x) => x.floor();
+    functions['ceil'] = (num x) => x.ceil();
+    functions['round'] = (num x) => x.round();
+
+    // 获取当前时间戳
+    functions['now'] = () => DateTime.now().millisecondsSinceEpoch;
+
+    // 延迟函数 - 返回 Future
+    functions['delay'] = (int milliseconds) => Future.delayed(
+      Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
+    );
+
+    // 带返回值的延迟函数 - 返回 Future
+    functions['delayThen'] = (int milliseconds, dynamic value) => Future.delayed(
+      Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
+      () => value,
+    );
   }
 }
