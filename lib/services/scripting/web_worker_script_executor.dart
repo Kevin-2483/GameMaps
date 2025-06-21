@@ -103,9 +103,7 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
           _addLog('Parsed response: $response');
           _addLog('Received response from worker: ${response['type']}');
 
-          final responseType = response['type'] as String?;
-
-          if (responseType == 'externalFunctionCall') {
+          final responseType = response['type'] as String?;          if (responseType == 'externalFunctionCall') {
             _addLog(
               'Processing external function call: ${response['functionName']}',
             );
@@ -114,6 +112,15 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
 
             // 处理外部函数调用
             _handleExternalFunctionCall(response);
+          } else if (responseType == 'fireAndForgetFunctionCall') {
+            _addLog(
+              'Processing fire-and-forget function call: ${response['functionName']}',
+            );
+            _addLog('Arguments type: ${response['arguments'].runtimeType}');
+            _addLog('Arguments value: ${response['arguments']}');
+
+            // 处理不需要等待结果的外部函数调用
+            _handleFireAndForgetFunctionCall(response);
           } else if (!completer.isCompleted) {
             // 处理脚本执行结果
             timeoutTimer?.cancel();
@@ -281,6 +288,65 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
       };
 
       _isolateManager!.sendMessage(jsonEncode(errorData));
+    }
+  }
+
+  /// 处理不需要等待结果的外部函数调用（Fire and Forget）
+  void _handleFireAndForgetFunctionCall(Map<String, dynamic> response) {
+    final functionName = _safeGetString(response, 'functionName');
+
+    if (functionName.isEmpty) {
+      _addLog('Invalid fire-and-forget function call: missing functionName');
+      return;
+    }
+
+    // 智能解析参数，支持多种格式
+    List<dynamic> arguments;
+    final rawArguments = response['arguments'];
+
+    _addLog('Processing fire-and-forget function call: $functionName');
+    _addLog('Raw arguments type: ${rawArguments.runtimeType}');
+    _addLog('Raw arguments value: $rawArguments');
+
+    if (rawArguments == null) {
+      arguments = [];
+    } else if (rawArguments is List) {
+      // 如果已经是列表，直接使用
+      arguments = rawArguments;
+    } else if (rawArguments is String) {
+      // 如果是字符串，尝试解析为JSON数组，失败则作为单个参数
+      try {
+        final decoded = jsonDecode(rawArguments);
+        if (decoded is List) {
+          arguments = decoded;
+        } else {
+          // 如果解析出来不是数组，作为单个参数
+          arguments = [decoded];
+        }
+      } catch (e) {
+        // JSON解析失败，直接作为单个字符串参数
+        arguments = [rawArguments];
+      }
+    } else {
+      // 其他类型，作为单个参数
+      arguments = [rawArguments];
+    }
+
+    _addLog('Processed arguments: $arguments (${arguments.length} items)');
+
+    try {
+      final function = _externalFunctions[functionName];
+      if (function == null) {
+        _addLog('Warning: Fire-and-forget function not found: $functionName');
+        return;
+      }
+
+      // 调用外部函数但不等待结果
+      Function.apply(function, arguments);
+      _addLog('Fire-and-forget function $functionName executed successfully');
+    } catch (e) {
+      _addLog('Error in fire-and-forget function $functionName: $e');
+      // 对于 Fire and Forget 函数，我们只记录错误，不影响脚本执行
     }
   }
 

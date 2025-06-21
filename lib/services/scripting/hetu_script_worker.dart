@@ -136,28 +136,23 @@ final Map<String, Function> _internalFunctions = {
   'ceil': (num x) => x.ceil(),
   'round': (num x) => x.round(),
 
-  // 延迟函数 - 异步但不需要主线程
-  'delay': (int milliseconds) async {
-    if (milliseconds < 0) milliseconds = 0;
-    await Future.delayed(Duration(milliseconds: milliseconds));
-    return null;
-  },
-
-  // 带返回值的延迟函数
-  'delayThen': (int milliseconds, dynamic value) async {
-    if (milliseconds < 0) milliseconds = 0;
-    await Future.delayed(Duration(milliseconds: milliseconds));
-    return value;
-  },
-
   // 获取当前时间戳
   'now': () => DateTime.now().millisecondsSinceEpoch,
 };
 
-/// 检查函数是否为内部函数
-bool _isInternalFunction(String functionName) {
-  return _internalFunctions.containsKey(functionName);
-}
+// 异步的内部函数（直接返回 Dart Future）
+final Map<String, Function> _asyncInternalFunctions = {
+  // 延迟函数 - 返回 Future
+  'delay': (int milliseconds) => Future.delayed(
+    Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
+  ),
+
+  // 带返回值的延迟函数 - 返回 Future
+  'delayThen': (int milliseconds, dynamic value) => Future.delayed(
+    Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
+    () => value,
+  ),
+};
 
 /// 处理自定义消息
 Future<void> _handleCustomMessage(
@@ -290,12 +285,34 @@ void _sendErrorMessage(
 Future<void> _initializeHetuEngine(IsolateManagerController controller) async {
   try {
     _hetuEngine = Hetu();
-    _hetuEngine!.init();
+    
+    // 准备所有外部函数（包括内部函数）
+    final Map<String, Function> allExternalFunctions = {};
+    
+    // 添加同步内部函数
+    allExternalFunctions.addAll(_internalFunctions);
+    
+    // 添加异步内部函数
+    allExternalFunctions.addAll(_asyncInternalFunctions);    // 使用标准的方式初始化 Hetu 引擎（包含所有内置绑定）
+    _hetuEngine!.init(
+      externalFunctions: allExternalFunctions,
+      // 确保加载所有标准的类绑定和扩展方法
+    );
+    
+    // 手动添加 _Future 类型的绑定，因为 Web 环境下 Future 类型名为 "_Future"
+    // 但 HTFutureClassBinding 注册为 "Future"
+    final futureBinding = _hetuEngine!.interpreter.fetchExternalClass('Future');
+    // 直接在外部类映射中添加别名
+    _hetuEngine!.interpreter.externClasses['_Future'] = futureBinding;
+    _addWorkerLog('手动绑定 _Future 类型到 Future 外部类');
+    
     _addWorkerLog('Hetu script engine initialized successfully');
 
-    // 记录可用的内部函数
+    // 记录可用的函数
     final internalFunctionNames = _internalFunctions.keys.toList();
-    _addWorkerLog('Available internal functions: $internalFunctionNames');
+    final asyncInternalFunctionNames = _asyncInternalFunctions.keys.toList();
+    _addWorkerLog('同步内部函数: $internalFunctionNames');
+    _addWorkerLog('异步内部函数: $asyncInternalFunctionNames');
 
     // 发送初始化完成信号
     _sendCustomMessage(controller, {
@@ -347,76 +364,66 @@ Future<void> _executeScript(
     // 设置上下文变量
     for (final entry in context.entries) {
       _hetuEngine!.define(entry.key, entry.value);
-    } // 设置地图数据
+    }
+    
+    // 设置地图数据
     _hetuEngine!.define('mapData', _currentMapData);
 
-    // 合并内部函数和外部函数列表
-    final allFunctions = <String>{};
-
-    // 添加所有内部函数
-    allFunctions.addAll(_internalFunctions.keys);
-
-    // 添加外部函数，但排除已经在内部实现的
+    // 只需要绑定外部函数（不包括内部函数，因为它们已经在初始化时绑定了）
     final uniqueExternalFunctions = externalFunctions.where(
-      (name) => !_internalFunctions.containsKey(name),
-    );
-    allFunctions.addAll(uniqueExternalFunctions);
+      (name) => !_internalFunctions.containsKey(name) && 
+                !_asyncInternalFunctions.containsKey(name),
+    ).toList();
 
-    _addWorkerLog('注册函数总数: ${allFunctions.length}');
-    _addWorkerLog('内部函数: ${_internalFunctions.keys.toList()}');
-    _addWorkerLog('外部函数: ${uniqueExternalFunctions.toList()}'); // 注册所有函数
-    for (final functionName in allFunctions) {
-      if (_isInternalFunction(functionName)) {
-        // 内部函数直接绑定，不需要异步包装
-        final dartFunction = _internalFunctions[functionName]!;
-        _hetuEngine!.interpreter.bindExternalFunction(functionName, (
-          HTEntity entity, {
-          List<dynamic> positionalArgs = const [],
-          Map<String, dynamic> namedArgs = const {},
-          List<HTType> typeArgs = const [],
-        }) {
-          _addWorkerLog('调用内部函数: $functionName, 参数: $positionalArgs');
+    _addWorkerLog('需要绑定的外部函数: $uniqueExternalFunctions');    // 绑定外部函数（需要跨线程通信的）
+    for (final functionName in uniqueExternalFunctions) {
+      // 检查是否是需要等待结果的函数
+      final awaitableFunctions = [
+        // 地图数据访问函数（读取类）
+        'getLayers', 'getLayerById', 'getElementsInLayer', 'getAllElements',
+        'countElements', 'calculateTotalArea',
+        // 文本元素查询函数（读取类）
+        'getTextElements', 'findTextElementsByContent',
+        // 文件操作函数（读取类）
+        'readjson',
+        // 便签相关函数（读取类）
+        'getStickyNotes', 'getStickyNoteById', 'getElementsInStickyNote',
+        'filterStickyNotesByTags', 'filterStickyNoteElementsByTags',
+        // 图例相关函数（读取类）
+        'getLegendGroups', 'getLegendGroupById', 'getLegendItems', 
+        'getLegendItemById', 'filterLegendGroupsByTags', 'filterLegendItemsByTags',
+      ];
 
-          // 直接调用 Dart 函数，不包装成异步
-          try {
-            switch (positionalArgs.length) {
-              case 0:
-                return dartFunction();
-              case 1:
-                return dartFunction(positionalArgs[0]);
-              case 2:
-                return dartFunction(positionalArgs[0], positionalArgs[1]);
-              case 3:
-                return dartFunction(
-                  positionalArgs[0],
-                  positionalArgs[1],
-                  positionalArgs[2],
-                );
-              default:
-                return Function.apply(dartFunction, positionalArgs);
-            }
-          } catch (e) {
-            _addWorkerLog('内部函数 $functionName 执行失败: $e');
-            rethrow;
-          }
-        });
-      } else {
-        // 外部函数使用异步调用
-        _hetuEngine!.interpreter.bindExternalFunction(functionName, (
-          HTEntity entity, {
-          List<dynamic> positionalArgs = const [],
-          Map<String, dynamic> namedArgs = const {},
-          List<HTType> typeArgs = const [],
-        }) async {
+      final isAwaitableFunction = awaitableFunctions.contains(functionName);
+
+      _hetuEngine!.interpreter.bindExternalFunction(functionName, (
+        HTEntity entity, {
+        List<dynamic> positionalArgs = const [],
+        Map<String, dynamic> namedArgs = const {},
+        List<HTType> typeArgs = const [],
+      }) async {
+        if (isAwaitableFunction) {
+          // 需要等待结果的函数
           return await _callExternalFunction(
             controller,
             functionName,
             positionalArgs,
             executionId,
           );
-        });
-      }
-    } // 发送脚本已开始执行的信号
+        } else {
+          // 不需要等待结果的函数（Fire and Forget）
+          _callFireAndForgetFunction(
+            controller,
+            functionName,
+            positionalArgs,
+            executionId,
+          );
+          return null; // 立即返回 null
+        }
+      });
+    }
+
+    // 发送脚本已开始执行的信号
     _addWorkerLog('发送开始信号，任务ID: $executionId');
     _sendCustomMessage(controller, {
       'type': 'started',
@@ -505,6 +512,42 @@ Future<dynamic> _callExternalFunction(
   } finally {
     _externalFunctionCalls.remove(callId);
   }
+}
+
+/// 调用不需要等待结果的外部函数（Fire and Forget）
+void _callFireAndForgetFunction(
+  IsolateManagerController controller,
+  String functionName,
+  List<dynamic> arguments,
+  String executionId,
+) {
+  _addWorkerLog(
+    'Calling fire-and-forget function: $functionName for task: $executionId',
+  );
+  _addWorkerLog('Arguments: $arguments');
+
+  // 处理参数 - 如果只有一个参数且为简单类型，直接发送该值
+  dynamic argumentsToSend;
+  if (arguments.length == 1) {
+    final arg = arguments.first;
+    // 对于简单类型（字符串、数字、布尔值），直接发送值
+    if (arg is String || arg is num || arg is bool || arg == null) {
+      argumentsToSend = arg;
+    } else {
+      argumentsToSend = arguments;
+    }
+  } else {
+    argumentsToSend = arguments;
+  }
+
+  // 发送外部函数调用请求到主线程，但不等待结果
+  _sendCustomMessage(controller, {
+    'type': 'fireAndForgetFunctionCall',
+    'functionName': functionName,
+    'arguments': argumentsToSend,
+    'executionId': executionId,
+    'timestamp': DateTime.now().millisecondsSinceEpoch,
+  });
 }
 
 /// 处理外部函数调用结果

@@ -5851,13 +5851,12 @@
     Future_Future$value(value, $T) {
       return A._Future$immediate(value == null ? $T._as(value) : value, $T);
     },
-    Future_Future$delayed(duration, $T) {
-      var result,
-        t1 = A.typeAcceptsNull($T);
-      if (!t1)
+    Future_Future$delayed(duration, computation, $T) {
+      var result;
+      if (computation == null && !A.typeAcceptsNull($T))
         throw A.wrapException(A.ArgumentError$value(null, "computation", "The type parameter is not nullable"));
       result = A._Future$($T);
-      A.Timer_Timer(duration, new A.Future_Future$delayed_closure(null, result, $T));
+      A.Timer_Timer(duration, new A.Future_Future$delayed_closure(computation, result, $T));
       return result;
     },
     Future_wait(futures, $T) {
@@ -14988,9 +14987,6 @@
       var t1 = type$.String;
       A.IsolateManagerFunction_customFunction(params, false, new A.hetuScriptWorkerFunction_closure(), new A.hetuScriptWorkerFunction_closure0(), new A.hetuScriptWorkerFunction_closure1(), t1, t1);
     },
-    _isInternalFunction(functionName) {
-      return $.$get$_internalFunctions().containsKey$1(functionName);
-    },
     _handleCustomMessage(controller, data, executionId) {
       return A._handleCustomMessage$body(controller, data, executionId);
     },
@@ -15177,7 +15173,7 @@
     _initializeHetuEngine$body(controller) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        internalFunctionNames, e, t1, exception;
+        allExternalFunctions, futureBinding, internalFunctionNames, asyncInternalFunctionNames, e, t1, t2, t3, exception;
       var $async$_initializeHetuEngine = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -15186,13 +15182,23 @@
             case 0:
               // Function start
               try {
-                t1 = A.Hetu$();
-                $._hetuEngine = t1;
-                t1.init$0();
+                $._hetuEngine = A.Hetu$();
+                t1 = type$.String;
+                allExternalFunctions = A.LinkedHashMap_LinkedHashMap$_empty(t1, type$.Function);
+                t2 = $.$get$_internalFunctions();
+                J.addAll$1$ax(allExternalFunctions, t2);
+                t3 = $.$get$_asyncInternalFunctions();
+                J.addAll$1$ax(allExternalFunctions, t3);
+                $._hetuEngine.init$1$externalFunctions(allExternalFunctions);
+                futureBinding = $._hetuEngine.get$interpreter().fetchExternalClass$1("Future");
+                J.$indexSet$ax($._hetuEngine.get$interpreter().externClasses, "_Future", futureBinding);
+                A._addWorkerLog("\u624b\u52a8\u7ed1\u5b9a _Future \u7c7b\u578b\u5230 Future \u5916\u90e8\u7c7b");
                 A._addWorkerLog("Hetu script engine initialized successfully");
-                internalFunctionNames = J.toList$0$ax($.$get$_internalFunctions().get$keys());
-                A._addWorkerLog("Available internal functions: " + A.S(internalFunctionNames));
-                A._sendCustomMessage(controller, A.LinkedHashMap_LinkedHashMap$_literal(["type", "initialized", "message", "Hetu engine ready", "executionId", "init", "timestamp", A.DateTime$now().get$millisecondsSinceEpoch()], type$.String, type$.dynamic));
+                internalFunctionNames = J.toList$0$ax(t2.get$keys());
+                asyncInternalFunctionNames = J.toList$0$ax(t3.get$keys());
+                A._addWorkerLog("\u540c\u6b65\u5185\u90e8\u51fd\u6570: " + A.S(internalFunctionNames));
+                A._addWorkerLog("\u5f02\u6b65\u5185\u90e8\u51fd\u6570: " + A.S(asyncInternalFunctionNames));
+                A._sendCustomMessage(controller, A.LinkedHashMap_LinkedHashMap$_literal(["type", "initialized", "message", "Hetu engine ready", "executionId", "init", "timestamp", A.DateTime$now().get$millisecondsSinceEpoch()], t1, type$.dynamic));
               } catch (exception) {
                 e = A.unwrapException(exception);
                 A._addWorkerLog("Failed to initialize Hetu engine: " + A.S(e));
@@ -15211,7 +15217,7 @@
     _executeScript$body(controller, message, startTime) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        entry, allFunctions, uniqueExternalFunctions, functionName, dartFunction, result, executionTime, e, executionTime0, t1, item, t2, t3, exception, code0, code, context0, context, executionId0, executionId, externalFunctionsObj, externalFunctions;
+        entry, uniqueExternalFunctions, functionName, awaitableFunctions, isAwaitableFunction, result, executionTime, e, executionTime0, t2, item, t3, exception, code0, code, context0, context, executionId0, executionId, externalFunctionsObj, t1, externalFunctions;
       var $async$_executeScript = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -15226,10 +15232,11 @@
               executionId0 = A._asStringQ(message.$index(0, "executionId"));
               executionId = executionId0 == null ? "unknown" : executionId0;
               externalFunctionsObj = message.$index(0, "externalFunctions");
-              externalFunctions = A._setArrayType([], type$.JSArray_String);
+              t1 = type$.JSArray_String;
+              externalFunctions = A._setArrayType([], t1);
               if (type$.List_dynamic._is(externalFunctionsObj))
-                for (t1 = J.get$iterator$ax(externalFunctionsObj); t1.moveNext$0();) {
-                  item = t1.get$current();
+                for (t2 = J.get$iterator$ax(externalFunctionsObj); t2.moveNext$0();) {
+                  item = t2.get$current();
                   if (typeof item == "string")
                     J.add$1$ax(externalFunctions, item);
                   else if (item != null)
@@ -15240,33 +15247,23 @@
                   t1 = A.Exception_Exception("Hetu engine not initialized");
                   throw A.wrapException(t1);
                 }
-                for (t1 = J.get$iterator$ax(context.get$entries()); t1.moveNext$0();) {
-                  entry = t1.get$current();
-                  t2 = $._hetuEngine;
-                  t2.toString;
-                  t2.define$2(entry.key, entry.value);
+                for (t2 = J.get$iterator$ax(context.get$entries()); t2.moveNext$0();) {
+                  entry = t2.get$current();
+                  t3 = $._hetuEngine;
+                  t3.toString;
+                  t3.define$2(entry.key, entry.value);
                 }
                 $._hetuEngine.define$2("mapData", $._currentMapData);
-                t1 = type$.String;
-                allFunctions = A.LinkedHashSet_LinkedHashSet$_empty(t1);
-                t2 = $.$get$_internalFunctions();
-                J.addAll$1$ax(allFunctions, t2.get$keys());
-                uniqueExternalFunctions = J.where$1$ax(externalFunctions, new A._executeScript_closure());
-                J.addAll$1$ax(allFunctions, uniqueExternalFunctions);
-                A._addWorkerLog("\u6ce8\u518c\u51fd\u6570\u603b\u6570: " + A.S(J.get$length$asx(allFunctions)));
-                A._addWorkerLog("\u5185\u90e8\u51fd\u6570: " + A.S(J.toList$0$ax(t2.get$keys())));
-                A._addWorkerLog("\u5916\u90e8\u51fd\u6570: " + A.S(J.toList$0$ax(uniqueExternalFunctions)));
-                for (t2 = J.get$iterator$ax(allFunctions); t2.moveNext$0();) {
+                uniqueExternalFunctions = J.toList$0$ax(J.where$1$ax(externalFunctions, new A._executeScript_closure()));
+                A._addWorkerLog("\u9700\u8981\u7ed1\u5b9a\u7684\u5916\u90e8\u51fd\u6570: " + A.S(uniqueExternalFunctions));
+                for (t2 = J.get$iterator$ax(uniqueExternalFunctions); t2.moveNext$0();) {
                   functionName = t2.get$current();
-                  if (A._isInternalFunction(functionName)) {
-                    t3 = J.$index$asx($.$get$_internalFunctions(), functionName);
-                    t3.toString;
-                    dartFunction = t3;
-                    $._hetuEngine.get$interpreter().bindExternalFunction$2(functionName, new A._executeScript_closure0(functionName, dartFunction));
-                  } else
-                    $._hetuEngine.get$interpreter().bindExternalFunction$2(functionName, new A._executeScript_closure1(controller, functionName, executionId));
+                  awaitableFunctions = A._setArrayType(["getLayers", "getLayerById", "getElementsInLayer", "getAllElements", "countElements", "calculateTotalArea", "getTextElements", "findTextElementsByContent", "readjson", "getStickyNotes", "getStickyNoteById", "getElementsInStickyNote", "filterStickyNotesByTags", "filterStickyNoteElementsByTags", "getLegendGroups", "getLegendGroupById", "getLegendItems", "getLegendItemById", "filterLegendGroupsByTags", "filterLegendItemsByTags"], t1);
+                  isAwaitableFunction = J.contains$1$asx(awaitableFunctions, functionName);
+                  $._hetuEngine.get$interpreter().bindExternalFunction$2(functionName, new A._executeScript_closure0(isAwaitableFunction, controller, functionName, executionId));
                 }
                 A._addWorkerLog("\u53d1\u9001\u5f00\u59cb\u4fe1\u53f7\uff0c\u4efb\u52a1ID: " + A.S(executionId));
+                t1 = type$.String;
                 t2 = type$.dynamic;
                 A._sendCustomMessage(controller, A.LinkedHashMap_LinkedHashMap$_literal(["type", "started", "executionId", executionId, "timestamp", A.DateTime$now().get$millisecondsSinceEpoch()], t1, t2));
                 result = $._hetuEngine.eval$1(code);
@@ -15353,6 +15350,18 @@
           }
       });
       return A._asyncStartSync($async$_callExternalFunction, $async$completer);
+    },
+    _callFireAndForgetFunction(controller, functionName, $arguments, executionId) {
+      var t1, arg, argumentsToSend;
+      A._addWorkerLog("Calling fire-and-forget function: " + functionName + " for task: " + executionId);
+      A._addWorkerLog("Arguments: " + A.S($arguments));
+      t1 = J.getInterceptor$asx($arguments);
+      if (J.$eq$(t1.get$length($arguments), 1)) {
+        arg = t1.get$first($arguments);
+        argumentsToSend = typeof arg == "string" || typeof arg == "number" || A._isBool(arg) || arg == null ? arg : $arguments;
+      } else
+        argumentsToSend = $arguments;
+      A._sendCustomMessage(controller, A.LinkedHashMap_LinkedHashMap$_literal(["type", "fireAndForgetFunctionCall", "functionName", functionName, "arguments", argumentsToSend, "executionId", executionId, "timestamp", A.DateTime$now().get$millisecondsSinceEpoch()], type$.String, type$.dynamic));
     },
     _handleExternalFunctionResult(controller, message) {
       var result, executionId, completer,
@@ -15473,20 +15482,21 @@
     },
     _internalFunctions_closure11: function _internalFunctions_closure11() {
     },
-    _internalFunctions_closure12: function _internalFunctions_closure12() {
+    _asyncInternalFunctions_closure: function _asyncInternalFunctions_closure() {
     },
-    _internalFunctions_closure13: function _internalFunctions_closure13() {
+    _asyncInternalFunctions_closure0: function _asyncInternalFunctions_closure0() {
+    },
+    _asyncInternalFunctions__closure: function _asyncInternalFunctions__closure(t0) {
+      this.value = t0;
     },
     _executeScript_closure: function _executeScript_closure() {
     },
-    _executeScript_closure0: function _executeScript_closure0(t0, t1) {
-      this.functionName = t0;
-      this.dartFunction = t1;
-    },
-    _executeScript_closure1: function _executeScript_closure1(t0, t1, t2) {
-      this.controller = t0;
-      this.functionName = t1;
-      this.executionId = t2;
+    _executeScript_closure0: function _executeScript_closure0(t0, t1, t2, t3) {
+      var _ = this;
+      _.isAwaitableFunction = t0;
+      _.controller = t1;
+      _.functionName = t2;
+      _.executionId = t3;
     },
     _callExternalFunction_closure: function _callExternalFunction_closure(t0) {
       this.functionName = t0;
@@ -19088,7 +19098,7 @@
     get$namedArguments() {
       var t1, t2, namedArgumentCount, t3, t4, t5, t6, namedArgumentsStartIndex, map, i, _this = this;
       if (_this.get$isAccessor())
-        return B.Map_empty3;
+        return B.Map_empty2;
       t1 = _this._namedArgumentNames;
       t2 = J.getInterceptor$asx(t1);
       namedArgumentCount = t2.get$length(t1);
@@ -19102,7 +19112,7 @@
         return A.iae(t6);
       namedArgumentsStartIndex = t5 - namedArgumentCount - t6;
       if (namedArgumentCount === 0)
-        return B.Map_empty3;
+        return B.Map_empty2;
       t5 = type$.Symbol;
       t6 = type$.dynamic;
       map = A.JsLinkedHashMap$(t5, t6);
@@ -19124,7 +19134,7 @@
         return t2.$add();
       t1.argumentCount = t2 + 1;
     },
-    $signature: 21
+    $signature: 22
   };
   A.TypeErrorDecoder.prototype = {
     matchTypeError$1(message) {
@@ -20323,7 +20333,7 @@
       t1.storedCallback = null;
       f.call$0();
     },
-    $signature: 30
+    $signature: 29
   };
   A._AsyncRun__initializeScheduleImmediate_closure.prototype = {
     call$1(callback) {
@@ -21323,7 +21333,7 @@
     call$1(__wc0_formal) {
       this.joinedResult._completeWithResultOf$1(this.originalSource);
     },
-    $signature: 30
+    $signature: 29
   };
   A._Future__propagateToListeners_handleWhenCompleteCallback_closure0.prototype = {
     call$2(e, s) {
@@ -23306,7 +23316,7 @@
       t1.write$1(": ");
       t1.write$1(v);
     },
-    $signature: 28
+    $signature: 32
   };
   A.UnmodifiableMapBase.prototype = {$is_UnmodifiableMapMixin: 1};
   A._MapBaseValueIterable.prototype = {
@@ -23946,7 +23956,7 @@
     call$2(key, value) {
       J.$indexSet$ax(this.$this, key, value);
     },
-    $signature: 21
+    $signature: 22
   };
   A._JsonMapKeyIterable.prototype = {
     get$length(_) {
@@ -24507,7 +24517,7 @@
       t2.i = t3 + 1;
       t4.$indexSet(t1, t3, value);
     },
-    $signature: 28
+    $signature: 32
   };
   A._JsonPrettyPrintMixin.prototype = {
     writeList$1(list) {
@@ -24614,7 +24624,7 @@
       t2.i = t3 + 1;
       t4.$indexSet(t1, t3, value);
     },
-    $signature: 28
+    $signature: 32
   };
   A._JsonStringStringifier.prototype = {
     get$_partialResult() {
@@ -25888,7 +25898,7 @@
             A._asStringQ(value);
         }
     },
-    $signature: 21
+    $signature: 22
   };
   A.DateTime.prototype = {
     DateTime$_internal$9(year, month, day, hour, minute, second, millisecond, microsecond, isUtc) {
@@ -27043,7 +27053,7 @@
         for (t1 = J.get$iterator$ax(value), t2 = this.writeParameter; t1.moveNext$0();)
           t2.call$2(key, t1.get$current());
     },
-    $signature: 21
+    $signature: 22
   };
   A.UriData.prototype = {
     get$uri() {
@@ -30202,15 +30212,15 @@
       return A.num_tryParse(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 75
   };
@@ -30237,15 +30247,15 @@
       return A.throwUnsupportedError("int.fromEnvironment can only be used as a const constructor");
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -30254,15 +30264,15 @@
       return A.int_tryParse(J.$index$asx(positionalArgs, 0), namedArgs.$index(0, "radix"));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 69
   };
@@ -30295,66 +30305,66 @@
       return A.BigInt_zero();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 19
+    $signature: 20
   };
   A.HTBigIntClassBinding_memberGet_closure0.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return A.BigInt_one();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 19
+    $signature: 20
   };
   A.HTBigIntClassBinding_memberGet_closure1.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return A.BigInt_two();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 19
+    $signature: 20
   };
   A.HTBigIntClassBinding_memberGet_closure2.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return A.BigInt_tryParse(J.get$first$ax(positionalArgs), namedArgs.$index(0, "radix"));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 68
   };
@@ -30363,17 +30373,17 @@
       return A._BigIntImpl__BigIntImpl$from(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 19
+    $signature: 20
   };
   A.HTFloatClassBinding.prototype = {
     memberGet$2$from(varName, from) {
@@ -30406,15 +30416,15 @@
       return A.double_tryParse(J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 67
   };
@@ -30436,15 +30446,15 @@
       return J.$eq$(J.toLowerCase$0$s(J.get$first$ax(positionalArgs)), "true") && true;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -30469,15 +30479,15 @@
       return J.toString$0$(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -30512,17 +30522,17 @@
       return A.List_List$from(positionalArgs, true, type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 24
+    $signature: 19
   };
   A.HTSetClassBinding.prototype = {
     memberGet$2$from(varName, from) {
@@ -30545,15 +30555,15 @@
       return A.LinkedHashSet_LinkedHashSet$from(positionalArgs, type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 16
   };
@@ -30579,15 +30589,15 @@
       return A.LinkedHashMap_LinkedHashMap$_empty(t1, t1);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 55
   };
@@ -30612,15 +30622,15 @@
       return A.Random_Random(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 63
   };
@@ -30692,15 +30702,15 @@
       return A.degrees(J.toDouble$0$n(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30709,15 +30719,15 @@
       return A.radians(J.toDouble$0$n(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30726,15 +30736,15 @@
       return A.radiusToSigma(J.toDouble$0$n(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30759,15 +30769,15 @@
       return r;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30796,15 +30806,15 @@
       return A.noise2(size, size, frequency, noiseType, seed);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 60
   };
@@ -30814,15 +30824,15 @@
       return A.min(A._asNum(t1.$index(positionalArgs, 0)), A._asNum(t1.$index(positionalArgs, 1)), type$.num);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -30832,15 +30842,15 @@
       return A.max(A._asNum(t1.$index(positionalArgs, 0)), A._asNum(t1.$index(positionalArgs, 1)), type$.num);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -30849,15 +30859,15 @@
       return A.sqrt(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30867,15 +30877,15 @@
       return A.pow(A._asNum(t1.$index(positionalArgs, 0)), A._asNum(t1.$index(positionalArgs, 1)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -30884,15 +30894,15 @@
       return A.sin(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30901,15 +30911,15 @@
       return A.cos(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30918,15 +30928,15 @@
       return A.tan(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30935,15 +30945,15 @@
       return A.exp(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30952,15 +30962,15 @@
       return A.log(A._asNum(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -30970,15 +30980,15 @@
       return t1 == null ? 0 : t1;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -30988,15 +30998,15 @@
       return t1 == null ? 0 : t1;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31005,15 +31015,15 @@
       return J.reduce$1$ax(type$.List_num._as(J.get$first$ax(positionalArgs)), new A.HTMathClassBinding_memberGet__closure());
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -31029,15 +31039,15 @@
       return (A._asInt(t1.$index(positionalArgs, 0)) & B.JSInt_methods.$shl(1, A._asInt(t1.$index(positionalArgs, 1)))) >>> 0 !== 0;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -31047,15 +31057,15 @@
       return B.JSInt_methods.$shl(A._asInt(t1.$index(positionalArgs, 0)), A._asInt(t1.$index(positionalArgs, 1)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31065,15 +31075,15 @@
       return B.JSInt_methods.$shr(A._asInt(t1.$index(positionalArgs, 0)), A._asInt(t1.$index(positionalArgs, 1)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31083,15 +31093,15 @@
       return (A._asInt(t1.$index(positionalArgs, 0)) & A._asInt(t1.$index(positionalArgs, 1))) >>> 0;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31101,15 +31111,15 @@
       return (A._asInt(t1.$index(positionalArgs, 0)) | A._asInt(t1.$index(positionalArgs, 1))) >>> 0;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31118,15 +31128,15 @@
       return ~A._asInt(J.$index$asx(positionalArgs, 0)) >>> 0;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31136,15 +31146,15 @@
       return (A._asInt(t1.$index(positionalArgs, 0)) ^ A._asInt(t1.$index(positionalArgs, 1))) >>> 0;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31170,15 +31180,15 @@
       return A.uid4(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31190,15 +31200,15 @@
       return A.crcString(data, crc == null ? 0 : crc);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31210,15 +31220,15 @@
       return A.crcInt(data, crc == null ? 0 : crc);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31260,17 +31270,17 @@
       return A.Future_Future(new A.HTFutureClassBinding_memberGet__closure(J.get$first$ax(positionalArgs)), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 23
+    $signature: 24
   };
   A.HTFutureClassBinding_memberGet__closure.prototype = {
     call$0() {
@@ -31283,15 +31293,15 @@
       return A.Future_wait(A.List_List$from(J.get$first$ax(positionalArgs), true, type$.Future_dynamic), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 58
   };
@@ -31300,17 +31310,17 @@
       return A.Future_Future$value(J.get$first$ax(positionalArgs), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 23
+    $signature: 24
   };
   A.HTHetuClassBinding.prototype = {
     instanceMemberGet$2(object, varName) {
@@ -31338,15 +31348,15 @@
       return this.hetu.get$lexicon().stringify$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31356,15 +31366,15 @@
       return this.hetu.get$interpreter().createStructfromJson$1(jsonData);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 47
   };
@@ -31381,15 +31391,15 @@
         return A.jsonEncode(object);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 57
   };
@@ -31403,15 +31413,15 @@
       return result;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -31420,15 +31430,15 @@
       return this.hetu.require$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 51
   };
@@ -31437,15 +31447,15 @@
       return this.hetu.help$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 49
   };
@@ -31460,15 +31470,15 @@
       return J.$add$ansx(t1, "%");
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31477,15 +31487,15 @@
       return J.compareTo$1$ns(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31494,15 +31504,15 @@
       return J.remainder$1$n(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -31511,15 +31521,15 @@
       return J.abs$0$in(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 12
   };
@@ -31528,15 +31538,15 @@
       return J.round$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31545,15 +31555,15 @@
       return J.floor$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31562,15 +31572,15 @@
       return J.ceil$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31579,15 +31589,15 @@
       return J.truncate$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31596,15 +31606,15 @@
       return J.roundToDouble$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31613,15 +31623,15 @@
       return J.floorToDouble$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31630,15 +31640,15 @@
       return J.ceilToDouble$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31647,15 +31657,15 @@
       return J.truncateToDouble$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31664,15 +31674,15 @@
       return J.toInt$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31681,15 +31691,15 @@
       return J.toDouble$0$n(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31698,15 +31708,15 @@
       return J.toStringAsFixed$1$n(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31715,15 +31725,15 @@
       return J.toStringAsExponential$1$n(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31732,15 +31742,15 @@
       return J.toStringAsPrecision$1$n(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31749,15 +31759,15 @@
       return J.toString$0$(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31767,15 +31777,15 @@
       return J.modPow$2$i(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31784,15 +31794,15 @@
       return J.modInverse$1$i(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31801,15 +31811,15 @@
       return J.gcd$1$i(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31818,15 +31828,15 @@
       return J.toUnsigned$1$i(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31835,15 +31845,15 @@
       return J.toSigned$1$i(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31852,15 +31862,15 @@
       return J.toRadixString$1$n(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31869,15 +31879,15 @@
       return A.double_parse(J.toStringAsFixed$1$n(this._this, J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -31886,15 +31896,15 @@
       return J.toString$0$(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -31903,15 +31913,15 @@
       return J.compareTo$1$ns(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31920,15 +31930,15 @@
       return J.codeUnitAt$1$s(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31937,15 +31947,15 @@
       return J.endsWith$1$s(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -31955,15 +31965,15 @@
       return J.startsWith$2$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -31973,15 +31983,15 @@
       return J.indexOf$2$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -31991,15 +32001,15 @@
       return J.lastIndexOf$2$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -32009,15 +32019,15 @@
       return J.substring$2$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32026,15 +32036,15 @@
       return J.trim$0$s(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32043,15 +32053,15 @@
       return J.trimLeft$0$s(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32060,15 +32070,15 @@
       return J.trimRight$0$s(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32078,15 +32088,15 @@
       return J.padLeft$2$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32096,15 +32106,15 @@
       return J.padRight$2$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32114,15 +32124,15 @@
       return J.contains$2$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32132,15 +32142,15 @@
       return J.replaceFirst$3$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32150,15 +32160,15 @@
       return J.replaceAll$2$s(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32168,15 +32178,15 @@
       return J.replaceRange$3$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32185,15 +32195,15 @@
       return J.split$1$s(this._this, J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 50
   };
@@ -32202,15 +32212,15 @@
       return J.toLowerCase$0$s(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32219,15 +32229,15 @@
       return J.toUpperCase$0$s(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32236,15 +32246,15 @@
       return this._this.moveNext$0();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32253,32 +32263,32 @@
       return A.jsonifyList(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 24
+    $signature: 19
   };
   A.IterableBinding_htFetch_closure0.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return J.map$1$1$ax(this._this, new A.IterableBinding_htFetch__closure13(J.get$first$ax(positionalArgs)), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32293,15 +32303,15 @@
       return J.where$1$ax(this._this, new A.IterableBinding_htFetch__closure12(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32316,15 +32326,15 @@
       return J.expand$1$1$ax(this._this, new A.IterableBinding_htFetch__closure11(J.get$first$ax(positionalArgs)), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32339,15 +32349,15 @@
       return J.contains$1$asx(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32356,15 +32366,15 @@
       return J.reduce$1$ax(this._this, new A.IterableBinding_htFetch__closure10(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32380,15 +32390,15 @@
       return J.fold$1$2$ax(this._this, t1.$index(positionalArgs, 0), new A.IterableBinding_htFetch__closure9(t1.$index(positionalArgs, 1)), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32403,15 +32413,15 @@
       return J.every$1$ax(this._this, new A.IterableBinding_htFetch__closure8(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32426,15 +32436,15 @@
       return J.join$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32443,15 +32453,15 @@
       return J.any$1$ax(this._this, new A.IterableBinding_htFetch__closure7(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32466,32 +32476,32 @@
       return J.toList$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 24
+    $signature: 19
   };
   A.IterableBinding_htFetch_closure10.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return J.take$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32500,15 +32510,15 @@
       return J.takeWhile$1$ax(this._this, new A.IterableBinding_htFetch__closure6(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32523,15 +32533,15 @@
       return J.skip$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32540,15 +32550,15 @@
       return J.skipWhile$1$ax(this._this, new A.IterableBinding_htFetch__closure5(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -32563,15 +32573,15 @@
       return J.firstWhere$2$orElse$ax(this._this, new A.IterableBinding_htFetch__closure3(J.get$first$ax(positionalArgs)), new A.IterableBinding_htFetch__closure4(namedArgs.$index(0, "orElse")));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32593,15 +32603,15 @@
       return J.lastWhere$2$orElse$ax(this._this, new A.IterableBinding_htFetch__closure1(J.get$first$ax(positionalArgs)), new A.IterableBinding_htFetch__closure2(namedArgs.$index(0, "orElse")));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32623,15 +32633,15 @@
       return J.singleWhere$2$orElse$ax(this._this, new A.IterableBinding_htFetch__closure(J.get$first$ax(positionalArgs)), new A.IterableBinding_htFetch__closure0(namedArgs.$index(0, "orElse")));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32653,15 +32663,15 @@
       return J.elementAt$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32670,15 +32680,15 @@
       return J.toString$0$(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -32687,15 +32697,15 @@
       return J.add$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32704,15 +32714,15 @@
       return J.addAll$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32722,15 +32732,15 @@
       return J.indexOf$2$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -32740,15 +32750,15 @@
       return J.lastIndexOf$2$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -32758,15 +32768,15 @@
       return J.insert$2$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32776,15 +32786,15 @@
       return J.insertAll$2$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32793,15 +32803,15 @@
       return J.clear$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32810,15 +32820,15 @@
       return J.remove$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -32827,15 +32837,15 @@
       return J.removeAt$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32844,15 +32854,15 @@
       return J.removeLast$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -32862,32 +32872,32 @@
       return J.sublist$2$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 24
+    $signature: 19
   };
   A.ListBinding_htFetch_closure10.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return J.asMap$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 56
   };
@@ -32898,15 +32908,15 @@
       J.sort$1$ax(this._this, sortFunc);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -32914,22 +32924,22 @@
     call$2(a, b) {
       return A._asInt(this.func.call$1$positionalArgs([a, b]));
     },
-    $signature: 32
+    $signature: 31
   };
   A.ListBinding_htFetch_closure12.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return J.shuffle$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -32939,15 +32949,15 @@
       return J.indexWhere$2$ax(this._this, new A.ListBinding_htFetch__closure2(t1.get$first(positionalArgs)), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -32963,15 +32973,15 @@
       return J.lastIndexWhere$2$ax(this._this, new A.ListBinding_htFetch__closure1(t1.get$first(positionalArgs)), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -32986,15 +32996,15 @@
       J.removeWhere$1$ax(this._this, new A.ListBinding_htFetch__closure0(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -33009,15 +33019,15 @@
       J.retainWhere$1$ax(this._this, new A.ListBinding_htFetch__closure(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -33033,15 +33043,15 @@
       return J.getRange$2$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -33051,15 +33061,15 @@
       return J.setRange$4$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2), t1.$index(positionalArgs, 3));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33069,15 +33079,15 @@
       return J.removeRange$2$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33087,15 +33097,15 @@
       return J.fillRange$3$ax(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33105,15 +33115,15 @@
       return J.replaceRange$3$asx(this._this, t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33122,15 +33132,15 @@
       return J.add$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33139,15 +33149,15 @@
       return J.addAll$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33156,15 +33166,15 @@
       return J.remove$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33173,15 +33183,15 @@
       return this._this.lookup$1(J.$index$asx(positionalArgs, 0));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -33190,15 +33200,15 @@
       return this._this.removeAll$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33207,15 +33217,15 @@
       return this._this.retainAll$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33224,15 +33234,15 @@
       J.removeWhere$1$ax(this._this, new A.SetBinding_htFetch__closure0(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -33247,15 +33257,15 @@
       J.retainWhere$1$ax(this._this, new A.SetBinding_htFetch__closure(J.get$first$ax(positionalArgs)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -33270,15 +33280,15 @@
       return this._this.containsAll$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33287,15 +33297,15 @@
       return this._this.intersection$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 16
   };
@@ -33304,15 +33314,15 @@
       return this._this.union$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 16
   };
@@ -33321,15 +33331,15 @@
       return this._this.difference$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 16
   };
@@ -33338,15 +33348,15 @@
       return J.clear$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33355,15 +33365,15 @@
       return J.toSet$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 16
   };
@@ -33372,15 +33382,15 @@
       return J.toString$0$(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -33389,15 +33399,15 @@
       return this._this.containsKey$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33406,15 +33416,15 @@
       return this._this.containsValue$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33423,15 +33433,15 @@
       return J.addAll$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33440,15 +33450,15 @@
       return J.clear$0$ax(this._this);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -33457,15 +33467,15 @@
       return J.remove$1$ax(this._this, J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -33474,15 +33484,15 @@
       return this._this.nextDouble$0();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 4
   };
@@ -33491,15 +33501,15 @@
       return this._this.nextInt$1(J.toInt$0$n(J.$index$asx(positionalArgs, 0)));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -33508,15 +33518,15 @@
       return this._this.nextBool$0();
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -33526,15 +33536,15 @@
       return B.JSString_methods.$add(prefix, J.padLeft$2$s(J.toRadixString$1$n(B.JSNumber_methods.truncate$0(this._this.nextDouble$0() * 16777215), 16), 6, "0"));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -33544,15 +33554,15 @@
       return B.JSString_methods.$add(prefix, J.padLeft$2$s(J.toRadixString$1$n(B.JSNumber_methods.truncate$0(this._this.nextDouble$0() * 5592405 + 11184810), 16), 6, "0"));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -33566,15 +33576,15 @@
         return null;
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -33583,15 +33593,15 @@
       return A._makeSyncStarIterable(this.$call$body$RandomBinding_htFetch_closure(entity, namedArgs, positionalArgs, typeArgs), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $call$body$RandomBinding_htFetch_closure($async$entity, $async$namedArgs, $async$positionalArgs, $async$typeArgs) {
       var $async$self = this;
@@ -33670,17 +33680,17 @@
       return this._this.then$1$1(new A.FutureBinding_htFetch__closure(J.get$first$ax(positionalArgs)), type$.dynamic);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
-    $signature: 23
+    $signature: 24
   };
   A.FutureBinding_htFetch__closure.prototype = {
     call$1(value) {
@@ -34505,9 +34515,9 @@
         bytesBuilder.add$1(0, right);
         bytesBuilder.addByte$1(66);
       } else if (t4.$eq(t3, _this.get$_compiler$_lexicon().get$kIn()))
-        bytesBuilder.add$1(0, _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(t2, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idCollectionContains(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty4, 0, A._setArrayType([t1], type$.JSArray_ASTNode), _null)));
+        bytesBuilder.add$1(0, _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(t2, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idCollectionContains(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty3, 0, A._setArrayType([t1], type$.JSArray_ASTNode), _null)));
       else if (t4.$eq(t3, _this.get$_compiler$_lexicon().get$kNotIn())) {
-        bytesBuilder.add$1(0, _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(t2, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idCollectionContains(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty4, 0, A._setArrayType([t1], type$.JSArray_ASTNode), _null)));
+        bytesBuilder.add$1(0, _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(t2, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idCollectionContains(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty3, 0, A._setArrayType([t1], type$.JSArray_ASTNode), _null)));
         bytesBuilder.addByte$1(69);
       }
       return bytesBuilder.toBytes$0();
@@ -34839,7 +34849,7 @@
       iterId = "__iter" + A.S(t1);
       t1 = stmt.iterator;
       bytesBuilder.add$1(0, _this._assembleVarDeclStmt$4$initializer(iterId, t1.line, t1.column, iterInitBytes));
-      moveIterBytes = _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(A.IdentifierExpr$(iterId, 0, true, 0, 0, 0, _null), A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idIterableIteratorMoveNext(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty4, 0, B.List_empty8, _null));
+      moveIterBytes = _this.visitCallExpr$1(A.CallExpr$(A.MemberExpr$(A.IdentifierExpr$(iterId, 0, true, 0, 0, 0, _null), A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idIterableIteratorMoveNext(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty3, 0, B.List_empty8, _null));
       t1.initializer = A.MemberExpr$(A.IdentifierExpr$(iterId, 0, true, 0, 0, 0, _null), A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idIterableIteratorCurrent(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null);
       t2 = stmt.loop;
       J.insert$2$ax(t2.statements, 0, t1);
@@ -35338,7 +35348,7 @@
         for (t2 = J.get$iterator$ax(stmt.enumerations); t2.moveNext$0();) {
           t3 = t2.get$current();
           itemList.push(t3);
-          bytesBuilder.add$1(0, _this.visitVarDecl$1(A.VarDecl$(t3, _null, 0, _null, false, A.CallExpr$(A.MemberExpr$(t1, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$privatePrefix(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty4, 0, A._setArrayType([A.ASTLiteralString$(t3.id, _this.get$_compiler$_lexicon().get$stringStart1(), _this.get$_compiler$_lexicon().get$stringEnd1(), 0, 0, 0, 0, _null)], t4), _null), _null, false, false, false, false, true, true, false, false, true, 0, 0, 0, _null)));
+          bytesBuilder.add$1(0, _this.visitVarDecl$1(A.VarDecl$(t3, _null, 0, _null, false, A.CallExpr$(A.MemberExpr$(t1, A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$privatePrefix(), 0, false, 0, 0, 0, _null), 0, false, 0, 0, 0, _null), 0, _null, false, false, 0, 0, B.Map_empty3, 0, A._setArrayType([A.ASTLiteralString$(t3.id, _this.get$_compiler$_lexicon().get$stringStart1(), _this.get$_compiler$_lexicon().get$stringEnd1(), 0, 0, 0, 0, _null)], t4), _null), _null, false, false, false, false, true, true, false, false, true, 0, 0, 0, _null)));
         }
         valuesInit = A.ListExpr$(itemList, 0, 0, 0, 0, _null);
         bytesBuilder.add$1(0, _this.visitVarDecl$1(A.VarDecl$(A.IdentifierExpr$(_this.get$_compiler$_lexicon().get$idCollectionValues(), 0, true, 0, 0, 0, _null), _null, 0, _null, false, valuesInit, _null, false, false, false, false, true, true, false, false, true, 0, 0, 0, _null)));
@@ -35416,14 +35426,14 @@
       var t1 = this._box_0;
       t1.literal = J.replaceAll$2$s(t1.literal, key, value);
     },
-    $signature: 31
+    $signature: 30
   };
   A.HTCompiler_visitStringInterpolationExpr_closure.prototype = {
     call$2(key, value) {
       var t1 = this._box_0;
       t1.literal = J.replaceAll$2$s(t1.literal, key, value);
     },
-    $signature: 31
+    $signature: 30
   };
   A.GotoInfo.prototype = {
     get$fileName() {
@@ -35647,11 +35657,11 @@
     memberGet$2$isRecursive(varName, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, isRecursive, true);
     },
-    memberGet$1(varName) {
-      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, false, true);
-    },
     memberGet$3$from$isRecursive(varName, from, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, isRecursive, true);
+    },
+    memberGet$1(varName) {
+      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, false, true);
     },
     memberGet$2$from(varName, from) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, false, true);
@@ -36082,7 +36092,7 @@
       _this.set$compiler(A.HTCompiler$(t2, _this.get$lexicon()));
       _this.set$interpreter(A.HTInterpreter$(t2, _this.get$lexicon(), t1));
     },
-    init$0() {
+    init$1$externalFunctions(externalFunctions) {
       var t1, t2, t3, t4, t5, coreModule, value, _this = this;
       if (_this._isInitted)
         return;
@@ -36118,17 +36128,17 @@
       _this.get$interpreter().invoke$2$positionalArgs("initHetuEnv", [_this]);
       $.HTInterpreter_rootClass = _this.get$interpreter().get$globalNamespace().memberGet$2$isRecursive(_this.get$lexicon().get$globalObjectId(), true);
       $.HTInterpreter_rootStruct = _this.get$interpreter().get$globalNamespace().memberGet$2$isRecursive(_this.get$lexicon().get$globalPrototypeId(), true);
+      for (t1 = J.get$iterator$ax(externalFunctions.get$keys()); t1.moveNext$0();) {
+        t2 = t1.get$current();
+        t3 = _this.get$interpreter();
+        t4 = externalFunctions.$index(0, t2);
+        t4.toString;
+        t3.bindExternalFunction$2(t2, t4);
+      }
       for (t1 = J.get$iterator$ax(B.Map_empty0.get$keys()); t1.moveNext$0();) {
         t2 = t1.get$current();
         t3 = _this.get$interpreter();
         t4 = B.Map_empty0.$index(0, t2);
-        t4.toString;
-        t3.bindExternalFunction$2(t2, t4);
-      }
-      for (t1 = J.get$iterator$ax(B.Map_empty1.get$keys()); t1.moveNext$0();) {
-        t2 = t1.get$current();
-        t3 = _this.get$interpreter();
-        t4 = B.Map_empty1.$index(0, t2);
         t4.toString;
         t3.bindExternalFunctionType$2(t2, t4);
       }
@@ -36146,7 +36156,7 @@
       var _null = null;
       if (J.get$isEmpty$asx(B.JSString_methods.trim$0($content)))
         return _null;
-      return this.evalSource$7$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$typeArgs(A.HTSource$($content, _null, B.HTResourceType_2), false, _null, _null, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.evalSource$7$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$typeArgs(A.HTSource$($content, _null, B.HTResourceType_2), false, _null, _null, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     evalSource$7$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$typeArgs(source, globallyImport, invokeFunc, moduleName, namedArgs, positionalArgs, typeArgs) {
       var bytes, t1, t2;
@@ -36561,7 +36571,7 @@
       }
     },
     invoke$2$positionalArgs(funcName, positionalArgs) {
-      return this.invoke$4$moduleName$namedArgs$positionalArgs(funcName, null, B.Map_empty5, positionalArgs);
+      return this.invoke$4$moduleName$namedArgs$positionalArgs(funcName, null, B.Map_empty4, positionalArgs);
     },
     containsExternalClass$1(id) {
       return this.externClasses.containsKey$1(id);
@@ -36888,10 +36898,10 @@
       }
     },
     loadBytecode$4$bytes$globallyImport$moduleName$printPerformanceStatistics(bytes, globallyImport, moduleName, printPerformanceStatistics) {
-      return this.loadBytecode$8$bytes$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$printPerformanceStatistics$typeArgs(bytes, globallyImport, null, moduleName, B.Map_empty5, B.List_empty4, printPerformanceStatistics, B.List_empty5);
+      return this.loadBytecode$8$bytes$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$printPerformanceStatistics$typeArgs(bytes, globallyImport, null, moduleName, B.Map_empty4, B.List_empty4, printPerformanceStatistics, B.List_empty5);
     },
     loadBytecode$2$bytes$moduleName(bytes, moduleName) {
-      return this.loadBytecode$8$bytes$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$printPerformanceStatistics$typeArgs(bytes, false, null, moduleName, B.Map_empty5, B.List_empty4, false, B.List_empty5);
+      return this.loadBytecode$8$bytes$globallyImport$invokeFunc$moduleName$namedArgs$positionalArgs$printPerformanceStatistics$typeArgs(bytes, false, null, moduleName, B.Map_empty4, B.List_empty4, false, B.List_empty5);
     },
     getContext$6$column$filename$ip$line$moduleName$namespace(column, filename, ip, line, moduleName, namespace) {
       var _this = this, _null = null,
@@ -37150,7 +37160,7 @@
               _this.set$_currentNamespace(t10);
               if (!klass.isAbstract && !klass.hasUserDefinedConstructor && !klass.isExternal) {
                 ctorType = A.HTFunctionType$(B.List_empty2, A.HTTypeAny$(_this.get$_lexicon().get$typeAny()));
-                ctor = A.HTFunction$(_this._currentFileName, _this.get$_currentBytecodeModule().id, _this, B.FunctionCategory_2, klass.id, klass.get$namespace(), ctorType, _null, _null, _null, _null, _null, _null, B.List_empty3, true, _null, _s10_, false, false, false, false, false, false, false, false, _null, 0, 0, _null, B.Map_empty2, _null, _null);
+                ctor = A.HTFunction$(_this._currentFileName, _this.get$_currentBytecodeModule().id, _this, B.FunctionCategory_2, klass.id, klass.get$namespace(), ctorType, _null, _null, _null, _null, _null, _null, B.List_empty3, true, _null, _s10_, false, false, false, false, false, false, false, false, _null, 0, 0, _null, B.Map_empty1, _null, _null);
                 klass.get$namespace().define$2(_s10_, ctor);
               }
               _this.set$_localValue(klass);
@@ -38767,7 +38777,7 @@
       }
       return buffer2.toString$0(0);
     },
-    $signature: 20
+    $signature: 21
   };
   A.HTLexer_lex_hanldeStringLiteral.prototype = {
     call$2(startMark, endMark) {
@@ -38809,7 +38819,7 @@
       _this.handleLineInfo.call$1(lexeme);
       _this.addToken.call$1(token);
     },
-    $signature: 31
+    $signature: 30
   };
   A.HTLexicon.prototype = {
     get$autoSemicolonInsertAtStart() {
@@ -42849,15 +42859,15 @@
       return A.print(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 5
   };
@@ -42867,15 +42877,15 @@
       return A.range(t1.$index(positionalArgs, 0), t1.$index(positionalArgs, 1), t1.$index(positionalArgs, 2));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 77
   };
@@ -42884,15 +42894,15 @@
       return type$.HTStruct._as(object).get$keys();
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 78
   };
@@ -42901,15 +42911,15 @@
       return type$.HTStruct._as(object).get$values();
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 8
   };
@@ -42918,15 +42928,15 @@
       return type$.HTStruct._as(object).contains$1(0, J.get$first$ax(positionalArgs));
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -42935,15 +42945,15 @@
       return type$.HTStruct._as(object).containsKey$1(J.get$first$ax(positionalArgs));
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -42952,15 +42962,15 @@
       return type$.HTStruct._as(object).get$isEmpty(0);
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -42969,15 +42979,15 @@
       return type$.HTStruct._as(object).get$isNotEmpty(0);
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 3
   };
@@ -42986,15 +42996,15 @@
       return type$.HTStruct._as(object).get$length(0);
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 0
   };
@@ -43003,15 +43013,15 @@
       return type$.HTStruct._as(object).clone$0();
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 47
   };
@@ -43021,15 +43031,15 @@
       t1._as(object).assign$1(t1._as(J.get$first$ax(positionalArgs)));
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 13
   };
@@ -43038,15 +43048,15 @@
       return type$.HTInstance._as(object).getTypeString$0();
     },
     call$1(object) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(object, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(object, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 1
   };
@@ -43585,11 +43595,11 @@
     memberGet$2$isRecursive(varName, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, isRecursive, true);
     },
-    memberGet$1(varName) {
-      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, true, true);
-    },
     memberGet$3$from$isRecursive(varName, from, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, isRecursive, true);
+    },
+    memberGet$1(varName) {
+      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, true, true);
     },
     memberGet$2$from(varName, from) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, true, true);
@@ -43827,13 +43837,13 @@
         return _this._call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(createInstance, namedArgs, positionalArgs, typeArgs, useCallingNamespace);
     },
     call$0() {
-      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(true, B.Map_empty5, B.List_empty4, B.List_empty5, true);
+      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(true, B.Map_empty4, B.List_empty4, B.List_empty5, true);
     },
     call$2$createInstance$useCallingNamespace(createInstance, useCallingNamespace) {
-      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(createInstance, B.Map_empty5, B.List_empty4, B.List_empty5, useCallingNamespace);
+      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(createInstance, B.Map_empty4, B.List_empty4, B.List_empty5, useCallingNamespace);
     },
     call$1$positionalArgs(positionalArgs) {
-      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(true, B.Map_empty5, positionalArgs, B.List_empty5, true);
+      return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(true, B.Map_empty4, positionalArgs, B.List_empty5, true);
     },
     call$3$namedArgs$positionalArgs$typeArgs(namedArgs, positionalArgs, typeArgs) {
       return this.call$5$createInstance$namedArgs$positionalArgs$typeArgs$useCallingNamespace(true, namedArgs, positionalArgs, typeArgs, true);
@@ -44254,15 +44264,15 @@
       return this.$this.bind$1(J.get$first$ax(positionalArgs));
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 80
   };
@@ -44271,15 +44281,15 @@
       return this.$this.apply$4$namedArgs$positionalArgs$typeArgs(J.get$first$ax(positionalArgs), namedArgs, positionalArgs, typeArgs);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $signature: 7
   };
@@ -44667,11 +44677,11 @@
     memberGet$2$isRecursive(varName, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, isRecursive, true);
     },
-    memberGet$1(varName) {
-      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, true, true);
-    },
     memberGet$3$from$isRecursive(varName, from, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, isRecursive, true);
+    },
+    memberGet$1(varName) {
+      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, true, true);
     },
     memberGet$2$from(varName, from) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, true, true);
@@ -44769,11 +44779,11 @@
     memberGet$2$isRecursive(varName, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, isRecursive, true);
     },
-    memberGet$1(varName) {
-      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, false, true);
-    },
     memberGet$3$from$isRecursive(varName, from, isRecursive) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, isRecursive, true);
+    },
+    memberGet$1(varName) {
+      return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, null, false, false, true);
     },
     memberGet$2$from(varName, from) {
       return this.memberGet$5$from$isPrivate$isRecursive$throws(varName, from, false, false, true);
@@ -45929,13 +45939,13 @@
     call$0() {
       return "[Main App] Message received from the Web Future: " + A.S(this.value);
     },
-    $signature: 20
+    $signature: 21
   };
   A.IsolateContactorControllerImplFuture__handleIsolatePort_closure.prototype = {
     call$0() {
       return "[Isolate] Message received from Main App: " + A.S(this.value);
     },
-    $signature: 20
+    $signature: 21
   };
   A.IsolateContactorControllerImplWorker.prototype = {
     IsolateContactorControllerImplWorker$4$debugMode$onDispose$workerConverter(params, debugMode, onDispose, workerConverter, $R, $P) {
@@ -46031,7 +46041,7 @@
     call$0() {
       return "[Main App] Message received from the Web Worker: " + A.S(A.getProperty(this.event, "data", type$.nullable_Object));
     },
-    $signature: 20
+    $signature: 21
   };
   A.IsolatePort.prototype = {
     _enumToString$0() {
@@ -46549,7 +46559,7 @@
     call$1(part) {
       return part !== "";
     },
-    $signature: 29
+    $signature: 28
   };
   A._validateArgList_closure.prototype = {
     call$1(arg) {
@@ -47107,7 +47117,7 @@
       A._addWorkerLog("\u5f02\u6b65\u6d88\u606f\u5904\u7406\u9519\u8bef: " + A.S(e));
       A._sendCustomErrorMessage(this.controller, this.executionId, "\u5f02\u6b65\u6d88\u606f\u5904\u7406\u9519\u8bef: " + A.S(e));
     },
-    $signature: 30
+    $signature: 29
   };
   A.hetuScriptWorkerFunction_closure0.prototype = {
     call$2(controller, message) {
@@ -47148,25 +47158,25 @@
     call$1(x) {
       return A.sin(B.JSNumber_methods.toDouble$0(x));
     },
-    $signature: 22
+    $signature: 23
   };
   A._internalFunctions_closure0.prototype = {
     call$1(x) {
       return A.cos(B.JSNumber_methods.toDouble$0(x));
     },
-    $signature: 22
+    $signature: 23
   };
   A._internalFunctions_closure1.prototype = {
     call$1(x) {
       return A.tan(B.JSNumber_methods.toDouble$0(x));
     },
-    $signature: 22
+    $signature: 23
   };
   A._internalFunctions_closure2.prototype = {
     call$1(x) {
       return A.sqrt(B.JSNumber_methods.toDouble$0(x));
     },
-    $signature: 22
+    $signature: 23
   };
   A._internalFunctions_closure3.prototype = {
     call$2(x, y) {
@@ -47202,159 +47212,69 @@
     call$1(x) {
       return B.JSNumber_methods.floor$0(x);
     },
-    $signature: 33
+    $signature: 25
   };
   A._internalFunctions_closure9.prototype = {
     call$1(x) {
       return B.JSNumber_methods.ceil$0(x);
     },
-    $signature: 33
+    $signature: 25
   };
   A._internalFunctions_closure10.prototype = {
     call$1(x) {
       return B.JSNumber_methods.round$0(x);
     },
-    $signature: 33
+    $signature: 25
   };
   A._internalFunctions_closure11.prototype = {
-    call$1(milliseconds) {
-      return this.$call$body$_internalFunctions_closure0(milliseconds);
-    },
-    $call$body$_internalFunctions_closure0(milliseconds) {
-      var $async$goto = 0,
-        $async$completer = A._makeAsyncAwaitCompleter(type$.Null),
-        $async$returnValue;
-      var $async$call$1 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
-        if ($async$errorCode === 1)
-          return A._asyncRethrow($async$result, $async$completer);
-        while (true)
-          switch ($async$goto) {
-            case 0:
-              // Function start
-              $async$goto = 3;
-              return A._asyncAwait(A.Future_Future$delayed(A.Duration$(0, milliseconds < 0 ? 0 : milliseconds), type$.dynamic), $async$call$1);
-            case 3:
-              // returning from await.
-              $async$returnValue = null;
-              // goto return
-              $async$goto = 1;
-              break;
-            case 1:
-              // return
-              return A._asyncReturn($async$returnValue, $async$completer);
-          }
-      });
-      return A._asyncStartSync($async$call$1, $async$completer);
-    },
-    $signature: 103
-  };
-  A._internalFunctions_closure12.prototype = {
-    call$2(milliseconds, value) {
-      return this.$call$body$_internalFunctions_closure(milliseconds, value);
-    },
-    $call$body$_internalFunctions_closure(milliseconds, value) {
-      var $async$goto = 0,
-        $async$completer = A._makeAsyncAwaitCompleter(type$.dynamic),
-        $async$returnValue;
-      var $async$call$2 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
-        if ($async$errorCode === 1)
-          return A._asyncRethrow($async$result, $async$completer);
-        while (true)
-          switch ($async$goto) {
-            case 0:
-              // Function start
-              $async$goto = 3;
-              return A._asyncAwait(A.Future_Future$delayed(A.Duration$(0, milliseconds < 0 ? 0 : milliseconds), type$.dynamic), $async$call$2);
-            case 3:
-              // returning from await.
-              $async$returnValue = value;
-              // goto return
-              $async$goto = 1;
-              break;
-            case 1:
-              // return
-              return A._asyncReturn($async$returnValue, $async$completer);
-          }
-      });
-      return A._asyncStartSync($async$call$2, $async$completer);
-    },
-    $signature: 104
-  };
-  A._internalFunctions_closure13.prototype = {
     call$0() {
       return A.DateTime$now().get$millisecondsSinceEpoch();
     },
+    $signature: 103
+  };
+  A._asyncInternalFunctions_closure.prototype = {
+    call$1(milliseconds) {
+      return A.Future_Future$delayed(A.Duration$(0, milliseconds < 0 ? 0 : milliseconds), null, type$.dynamic);
+    },
+    $signature: 104
+  };
+  A._asyncInternalFunctions_closure0.prototype = {
+    call$2(milliseconds, value) {
+      return A.Future_Future$delayed(A.Duration$(0, milliseconds < 0 ? 0 : milliseconds), new A._asyncInternalFunctions__closure(value), type$.dynamic);
+    },
     $signature: 105
+  };
+  A._asyncInternalFunctions__closure.prototype = {
+    call$0() {
+      return this.value;
+    },
+    $signature: 9
   };
   A._executeScript_closure.prototype = {
     call$1($name) {
-      return !$.$get$_internalFunctions().containsKey$1($name);
+      return !$.$get$_internalFunctions().containsKey$1($name) && !$.$get$_asyncInternalFunctions().containsKey$1($name);
     },
-    $signature: 29
+    $signature: 28
   };
   A._executeScript_closure0.prototype = {
-    call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
-      var e, t2, t3, exception,
-        t1 = this.functionName;
-      A._addWorkerLog("\u8c03\u7528\u5185\u90e8\u51fd\u6570: " + A.S(t1) + ", \u53c2\u6570: " + A.S(positionalArgs));
-      try {
-        t2 = J.getInterceptor$asx(positionalArgs);
-        t3 = this.dartFunction;
-        switch (t2.get$length(positionalArgs)) {
-          case 0:
-            t2 = t3.call$0();
-            return t2;
-          case 1:
-            t2 = t3.call$1(t2.$index(positionalArgs, 0));
-            return t2;
-          case 2:
-            t2 = t3.call$2(t2.$index(positionalArgs, 0), t2.$index(positionalArgs, 1));
-            return t2;
-          case 3:
-            t2 = t3.call$3(t2.$index(positionalArgs, 0), t2.$index(positionalArgs, 1), t2.$index(positionalArgs, 2));
-            return t2;
-          default:
-            t2 = A.Function_apply(t3, positionalArgs, null);
-            return t2;
-        }
-      } catch (exception) {
-        e = A.unwrapException(exception);
-        A._addWorkerLog("\u5185\u90e8\u51fd\u6570 " + A.S(t1) + " \u6267\u884c\u5931\u8d25: " + A.S(e));
-        throw exception;
-      }
-    },
-    call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
-    },
-    call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
-    },
-    "call*": "call$4$namedArgs$positionalArgs$typeArgs",
-    $requiredArgCount: 1,
-    $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
-    },
-    $signature: 7
-  };
-  A._executeScript_closure1.prototype = {
     call$4$namedArgs$positionalArgs$typeArgs(entity, namedArgs, positionalArgs, typeArgs) {
       return this.$call$body$_executeScript_closure(entity, namedArgs, positionalArgs, typeArgs);
     },
     call$1(entity) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, B.List_empty4, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, B.List_empty4, B.List_empty5);
     },
     call$2$positionalArgs(entity, positionalArgs) {
-      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty5, positionalArgs, B.List_empty5);
+      return this.call$4$namedArgs$positionalArgs$typeArgs(entity, B.Map_empty4, positionalArgs, B.List_empty5);
     },
     "call*": "call$4$namedArgs$positionalArgs$typeArgs",
     $requiredArgCount: 1,
     $defaultValues() {
-      return {namedArgs: B.Map_empty5, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
+      return {namedArgs: B.Map_empty4, positionalArgs: B.List_empty4, typeArgs: B.List_empty5};
     },
     $call$body$_executeScript_closure(entity, namedArgs, positionalArgs, typeArgs) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.dynamic),
-        $async$returnValue, $async$self = this;
+        $async$returnValue, $async$self = this, t1, t2, t3;
       var $async$call$4$namedArgs$positionalArgs$typeArgs = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -47362,14 +47282,33 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              $async$goto = 3;
-              return A._asyncAwait(A._callExternalFunction($async$self.controller, $async$self.functionName, positionalArgs, $async$self.executionId), $async$call$4$namedArgs$positionalArgs$typeArgs);
+              t1 = $async$self.controller;
+              t2 = $async$self.functionName;
+              t3 = $async$self.executionId;
+              $async$goto = $async$self.isAwaitableFunction ? 3 : 5;
+              break;
             case 3:
+              // then
+              $async$goto = 6;
+              return A._asyncAwait(A._callExternalFunction(t1, t2, positionalArgs, t3), $async$call$4$namedArgs$positionalArgs$typeArgs);
+            case 6:
               // returning from await.
               $async$returnValue = $async$result;
               // goto return
               $async$goto = 1;
               break;
+              // goto join
+              $async$goto = 4;
+              break;
+            case 5:
+              // else
+              A._callFireAndForgetFunction(t1, t2, positionalArgs, t3);
+              $async$returnValue = null;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 4:
+              // join
             case 1:
               // return
               return A._asyncReturn($async$returnValue, $async$completer);
@@ -47377,7 +47316,7 @@
       });
       return A._asyncStartSync($async$call$4$namedArgs$positionalArgs$typeArgs, $async$completer);
     },
-    $signature: 23
+    $signature: 24
   };
   A._callExternalFunction_closure.prototype = {
     call$0() {
@@ -47481,13 +47420,13 @@
       _static = hunkHelpers.installStaticTearOff,
       _instance_2_u = hunkHelpers._instance_2u,
       _instance_0_u = hunkHelpers._instance_0u;
-    _static_2(J, "_interceptors_JSArray__compareAny$closure", "JSArray__compareAny", 32);
+    _static_2(J, "_interceptors_JSArray__compareAny$closure", "JSArray__compareAny", 31);
     _instance_1_u(A.CastStreamSubscription.prototype, "get$_onData", "_onData$1", 66);
     _static_1(A, "_js_helper___matchString$closure", "_matchString", 41);
     _static_1(A, "_js_helper___stringIdentity$closure", "_stringIdentity", 10);
-    _static_1(A, "async__AsyncRun__scheduleImmediateJsOverride$closure", "_AsyncRun__scheduleImmediateJsOverride", 25);
-    _static_1(A, "async__AsyncRun__scheduleImmediateWithSetImmediate$closure", "_AsyncRun__scheduleImmediateWithSetImmediate", 25);
-    _static_1(A, "async__AsyncRun__scheduleImmediateWithTimer$closure", "_AsyncRun__scheduleImmediateWithTimer", 25);
+    _static_1(A, "async__AsyncRun__scheduleImmediateJsOverride$closure", "_AsyncRun__scheduleImmediateJsOverride", 33);
+    _static_1(A, "async__AsyncRun__scheduleImmediateWithSetImmediate$closure", "_AsyncRun__scheduleImmediateWithSetImmediate", 33);
+    _static_1(A, "async__AsyncRun__scheduleImmediateWithTimer$closure", "_AsyncRun__scheduleImmediateWithTimer", 33);
     _static_0(A, "async___startMicrotaskLoop$closure", "_startMicrotaskLoop", 2);
     _static_1(A, "async___nullDataHandler$closure", "_nullDataHandler", 15);
     _static_2(A, "async___nullErrorHandler$closure", "_nullErrorHandler", 26);
@@ -47495,10 +47434,10 @@
     _static(A, "async___rootScheduleMicrotask$closure", 4, null, ["call$4"], ["_rootScheduleMicrotask"], 108, 0);
     _instance_2_u(A._Future.prototype, "get$_completeError", "_completeError$2", 26);
     _instance_0_u(A._DoneStreamSubscription.prototype, "get$_onMicrotask", "_onMicrotask$0", 2);
-    _static_2(A, "collection_ListBase__compareAny$closure", "ListBase__compareAny", 32);
+    _static_2(A, "collection_ListBase__compareAny$closure", "ListBase__compareAny", 31);
     _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 11);
     _static_1(A, "core_Uri_decodeComponent$closure", "Uri_decodeComponent", 10);
-    _instance_1_u(A.HTLexicon.prototype, "get$isPrivate", "isPrivate$1", 29);
+    _instance_1_u(A.HTLexicon.prototype, "get$isPrivate", "isPrivate$1", 28);
     _static_1(A, "date_format_DateFormat_localeExists$closure", "DateFormat_localeExists", 37);
     _static_1(A, "intl_helpers__canonicalizedLocale$closure", "canonicalizedLocale", 46);
     _static_1(A, "intl_helpers___throwLocaleError$closure", "_throwLocaleError", 10);
@@ -47542,12 +47481,12 @@
     _inheritMany(J.JSNumber, [J.JSInt, J.JSNumNotInt]);
     _inheritMany(A.Stream, [A.CastStream, A._StreamImpl]);
     _inheritMany(A.Iterable, [A._CastIterableBase, A.EfficientLengthIterable, A.MappedIterable, A.WhereIterable, A.ExpandIterable, A.TakeIterable, A.TakeWhileIterable, A.SkipIterable, A.SkipWhileIterable, A.WhereTypeIterable, A._KeysOrValues, A._AllMatchesIterable, A._StringAllMatchesIterable, A._SyncStarIterable, A.StringCharacters]);
-    _inheritMany(A.Closure, [A._CastIterableBase_lastWhere_closure0, A.Closure0Args, A.Closure2Args, A._CastListBase_removeWhere_closure, A._CastListBase_retainWhere_closure, A.Instantiation, A.TearOffClosure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A.Future_wait_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure1, A.Stream_length_closure, A._HashMap_values_closure, A._HashMap_containsValue_closure, A.MapBase_entries_closure, A._convertJsonToDart_walk, A._JsonMap_values_closure, A._BigIntImpl_hashCode_finish, A._BigIntImpl_toDouble_readBits, A._Uri__makePath_closure, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.HTNumberClassBinding_memberGet_closure, A.HTIntClassBinding_memberGet_closure, A.HTIntClassBinding_memberGet_closure0, A.HTBigIntClassBinding_memberGet_closure, A.HTBigIntClassBinding_memberGet_closure0, A.HTBigIntClassBinding_memberGet_closure1, A.HTBigIntClassBinding_memberGet_closure2, A.HTBigIntClassBinding_memberGet_closure3, A.HTFloatClassBinding_memberGet_closure, A.HTBooleanClassBinding_memberGet_closure, A.HTStringClassBinding_memberGet_closure, A.HTListClassBinding_memberGet_closure, A.HTSetClassBinding_memberGet_closure, A.HTMapClassBinding_memberGet_closure, A.HTRandomClassBinding_memberGet_closure, A.HTMathClassBinding_memberGet_closure, A.HTMathClassBinding_memberGet_closure0, A.HTMathClassBinding_memberGet_closure1, A.HTMathClassBinding_memberGet_closure2, A.HTMathClassBinding_memberGet_closure3, A.HTMathClassBinding_memberGet_closure4, A.HTMathClassBinding_memberGet_closure5, A.HTMathClassBinding_memberGet_closure6, A.HTMathClassBinding_memberGet_closure7, A.HTMathClassBinding_memberGet_closure8, A.HTMathClassBinding_memberGet_closure9, A.HTMathClassBinding_memberGet_closure10, A.HTMathClassBinding_memberGet_closure11, A.HTMathClassBinding_memberGet_closure12, A.HTMathClassBinding_memberGet_closure13, A.HTMathClassBinding_memberGet_closure14, A.HTMathClassBinding_memberGet_closure15, A.HTMathClassBinding_memberGet_closure16, A.HTMathClassBinding_memberGet_closure17, A.HTMathClassBinding_memberGet_closure18, A.HTMathClassBinding_memberGet_closure19, A.HTMathClassBinding_memberGet_closure20, A.HTMathClassBinding_memberGet_closure21, A.HTMathClassBinding_memberGet_closure22, A.HTHashClassBinding_memberGet_closure, A.HTHashClassBinding_memberGet_closure0, A.HTHashClassBinding_memberGet_closure1, A.HTFutureClassBinding_memberGet_closure, A.HTFutureClassBinding_memberGet_closure0, A.HTFutureClassBinding_memberGet_closure1, A.HTHetuClassBinding_instanceMemberGet_closure, A.HTHetuClassBinding_instanceMemberGet_closure0, A.HTHetuClassBinding_instanceMemberGet_closure1, A.HTHetuClassBinding_instanceMemberGet_closure2, A.HTHetuClassBinding_instanceMemberGet_closure3, A.HTHetuClassBinding_instanceMemberGet_closure4, A.NumBinding_htFetch_closure, A.NumBinding_htFetch_closure0, A.NumBinding_htFetch_closure1, A.NumBinding_htFetch_closure2, A.NumBinding_htFetch_closure3, A.NumBinding_htFetch_closure4, A.NumBinding_htFetch_closure5, A.NumBinding_htFetch_closure6, A.NumBinding_htFetch_closure7, A.NumBinding_htFetch_closure8, A.NumBinding_htFetch_closure9, A.NumBinding_htFetch_closure10, A.NumBinding_htFetch_closure11, A.NumBinding_htFetch_closure12, A.NumBinding_htFetch_closure13, A.NumBinding_htFetch_closure14, A.NumBinding_htFetch_closure15, A.NumBinding_htFetch_closure16, A.IntBinding_htFetch_closure, A.IntBinding_htFetch_closure0, A.IntBinding_htFetch_closure1, A.IntBinding_htFetch_closure2, A.IntBinding_htFetch_closure3, A.IntBinding_htFetch_closure4, A.DoubleBinding_htFetch_closure, A.StringBinding_htFetch_closure, A.StringBinding_htFetch_closure0, A.StringBinding_htFetch_closure1, A.StringBinding_htFetch_closure2, A.StringBinding_htFetch_closure3, A.StringBinding_htFetch_closure4, A.StringBinding_htFetch_closure5, A.StringBinding_htFetch_closure6, A.StringBinding_htFetch_closure7, A.StringBinding_htFetch_closure8, A.StringBinding_htFetch_closure9, A.StringBinding_htFetch_closure10, A.StringBinding_htFetch_closure11, A.StringBinding_htFetch_closure12, A.StringBinding_htFetch_closure13, A.StringBinding_htFetch_closure14, A.StringBinding_htFetch_closure15, A.StringBinding_htFetch_closure16, A.StringBinding_htFetch_closure17, A.StringBinding_htFetch_closure18, A.IteratorBinding_htFetch_closure, A.IterableBinding_htFetch_closure, A.IterableBinding_htFetch_closure0, A.IterableBinding_htFetch__closure13, A.IterableBinding_htFetch_closure1, A.IterableBinding_htFetch__closure12, A.IterableBinding_htFetch_closure2, A.IterableBinding_htFetch__closure11, A.IterableBinding_htFetch_closure3, A.IterableBinding_htFetch_closure4, A.IterableBinding_htFetch_closure5, A.IterableBinding_htFetch_closure6, A.IterableBinding_htFetch__closure8, A.IterableBinding_htFetch_closure7, A.IterableBinding_htFetch_closure8, A.IterableBinding_htFetch__closure7, A.IterableBinding_htFetch_closure9, A.IterableBinding_htFetch_closure10, A.IterableBinding_htFetch_closure11, A.IterableBinding_htFetch__closure6, A.IterableBinding_htFetch_closure12, A.IterableBinding_htFetch_closure13, A.IterableBinding_htFetch__closure5, A.IterableBinding_htFetch_closure14, A.IterableBinding_htFetch__closure3, A.IterableBinding_htFetch_closure15, A.IterableBinding_htFetch__closure1, A.IterableBinding_htFetch_closure16, A.IterableBinding_htFetch__closure, A.IterableBinding_htFetch_closure17, A.IterableBinding_htFetch_closure18, A.ListBinding_htFetch_closure, A.ListBinding_htFetch_closure0, A.ListBinding_htFetch_closure1, A.ListBinding_htFetch_closure2, A.ListBinding_htFetch_closure3, A.ListBinding_htFetch_closure4, A.ListBinding_htFetch_closure5, A.ListBinding_htFetch_closure6, A.ListBinding_htFetch_closure7, A.ListBinding_htFetch_closure8, A.ListBinding_htFetch_closure9, A.ListBinding_htFetch_closure10, A.ListBinding_htFetch_closure11, A.ListBinding_htFetch_closure12, A.ListBinding_htFetch_closure13, A.ListBinding_htFetch__closure2, A.ListBinding_htFetch_closure14, A.ListBinding_htFetch__closure1, A.ListBinding_htFetch_closure15, A.ListBinding_htFetch__closure0, A.ListBinding_htFetch_closure16, A.ListBinding_htFetch__closure, A.ListBinding_htFetch_closure17, A.ListBinding_htFetch_closure18, A.ListBinding_htFetch_closure19, A.ListBinding_htFetch_closure20, A.ListBinding_htFetch_closure21, A.SetBinding_htFetch_closure, A.SetBinding_htFetch_closure0, A.SetBinding_htFetch_closure1, A.SetBinding_htFetch_closure2, A.SetBinding_htFetch_closure3, A.SetBinding_htFetch_closure4, A.SetBinding_htFetch_closure5, A.SetBinding_htFetch__closure0, A.SetBinding_htFetch_closure6, A.SetBinding_htFetch__closure, A.SetBinding_htFetch_closure7, A.SetBinding_htFetch_closure8, A.SetBinding_htFetch_closure9, A.SetBinding_htFetch_closure10, A.SetBinding_htFetch_closure11, A.SetBinding_htFetch_closure12, A.MapBinding_htFetch_closure, A.MapBinding_htFetch_closure0, A.MapBinding_htFetch_closure1, A.MapBinding_htFetch_closure2, A.MapBinding_htFetch_closure3, A.MapBinding_htFetch_closure4, A.RandomBinding_htFetch_closure, A.RandomBinding_htFetch_closure0, A.RandomBinding_htFetch_closure1, A.RandomBinding_htFetch_closure2, A.RandomBinding_htFetch_closure3, A.RandomBinding_htFetch_closure4, A.RandomBinding_htFetch_closure5, A.FutureBinding_htFetch_closure, A.FutureBinding_htFetch__closure, A.HTBundler_bundle_handleImport, A.HTInterpreter_processError_handleStackTrace, A.HTInterpreter__call_handleClassConstructor, A.HTInterpreter__storeLocal_closure, A.HTInterpreter__handleFuncDecl_closure, A.HTLexer_lex_addToken, A.HTLexer_lex_handleLineInfo, A.HTDefaultParser__parsePrimaryExpr_closure, A.preincludeFunctions_closure, A.preincludeFunctions_closure0, A.preincludeFunctions_closure1, A.preincludeFunctions_closure2, A.preincludeFunctions_closure3, A.preincludeFunctions_closure4, A.preincludeFunctions_closure5, A.preincludeFunctions_closure6, A.preincludeFunctions_closure7, A.preincludeFunctions_closure8, A.preincludeFunctions_closure9, A.preincludeFunctions_closure10, A.HTFunction_memberGet_closure, A.HTFunction_memberGet_closure0, A.DateFormat_dateTimeConstructor_closure, A.verifiedLocale_closure, A.verifiedLocale_closure0, A.verifiedLocale_closure1, A._IsolateManagerWorkerController_closure, A.IsolateManagerFunction_customFunction_closure0, A.ImType_wrap_closure, A._ImTypedIterable_unwrap_closure, A.Context_joinAll_closure, A._validateArgList_closure, A.ParsedPath__splitExtension_closure, A.Version__splitParts_closure, A.hetuScriptWorkerFunction_closure1, A.hetuScriptWorkerFunction__closure, A.hetuScriptWorkerFunction___closure0, A.hetuScriptWorkerFunction_closure, A._internalFunctions_closure, A._internalFunctions_closure0, A._internalFunctions_closure1, A._internalFunctions_closure2, A._internalFunctions_closure4, A._internalFunctions_closure8, A._internalFunctions_closure9, A._internalFunctions_closure10, A._internalFunctions_closure11, A._executeScript_closure, A._executeScript_closure0, A._executeScript_closure1, A.ReCase__getSentenceCase_closure]);
-    _inheritMany(A.Closure0Args, [A._CastIterableBase_lastWhere_closure, A.nullFuture_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A.Future_Future_closure, A.Future_Future$delayed_closure, A.Future_wait_handleError_closure, A.Future_wait__closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A._Future_timeout_closure0, A.Stream_length_closure0, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._rootHandleError_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A._BigIntImpl_toDouble_roundUp, A.HTFutureClassBinding_memberGet__closure, A.IterableBinding_htFetch__closure4, A.IterableBinding_htFetch__closure2, A.IterableBinding_htFetch__closure0, A.HTLexer_lex_handleEndOfLine, A.HTLexer_lex_handleStringInterpolation, A.HTDefaultParser__parsePrimaryExpr_closure0, A.HTDefaultParser__handleCommaExpr_closure, A.HTDefaultParser__parseTypeExpr_closure, A.HTDefaultParser__parseTypeExpr_closure0, A.HTDefaultParser__parseTypeExpr_closure1, A.HTDefaultParser__parseTypeExpr_closure2, A.HTDefaultParser__parseBlockStmt_closure, A.HTDefaultParser__getGenericParams_closure, A.HTDefaultParser__parseImportDecl_closure, A.HTDefaultParser__parseImportDecl__handleAlias, A.HTDefaultParser__parseExportStmt_closure, A.HTDefaultParser__parseFunction_parseParam, A.HTFunction_call_closure, A.IsolateContactorControllerImplFuture__handleMainPort_closure, A.IsolateContactorControllerImplFuture__handleIsolatePort_closure, A.IsolateContactorControllerImplWorker__handleMessage_closure, A.IsolateManagerFunction_customFunction_closure, A.ParsedPath__splitExtension_closure0, A.hetuScriptWorkerFunction___closure, A._internalFunctions_closure5, A._internalFunctions_closure13, A._callExternalFunction_closure]);
+    _inheritMany(A.Closure, [A._CastIterableBase_lastWhere_closure0, A.Closure0Args, A.Closure2Args, A._CastListBase_removeWhere_closure, A._CastListBase_retainWhere_closure, A.Instantiation, A.TearOffClosure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A.Future_wait_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure1, A.Stream_length_closure, A._HashMap_values_closure, A._HashMap_containsValue_closure, A.MapBase_entries_closure, A._convertJsonToDart_walk, A._JsonMap_values_closure, A._BigIntImpl_hashCode_finish, A._BigIntImpl_toDouble_readBits, A._Uri__makePath_closure, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.HTNumberClassBinding_memberGet_closure, A.HTIntClassBinding_memberGet_closure, A.HTIntClassBinding_memberGet_closure0, A.HTBigIntClassBinding_memberGet_closure, A.HTBigIntClassBinding_memberGet_closure0, A.HTBigIntClassBinding_memberGet_closure1, A.HTBigIntClassBinding_memberGet_closure2, A.HTBigIntClassBinding_memberGet_closure3, A.HTFloatClassBinding_memberGet_closure, A.HTBooleanClassBinding_memberGet_closure, A.HTStringClassBinding_memberGet_closure, A.HTListClassBinding_memberGet_closure, A.HTSetClassBinding_memberGet_closure, A.HTMapClassBinding_memberGet_closure, A.HTRandomClassBinding_memberGet_closure, A.HTMathClassBinding_memberGet_closure, A.HTMathClassBinding_memberGet_closure0, A.HTMathClassBinding_memberGet_closure1, A.HTMathClassBinding_memberGet_closure2, A.HTMathClassBinding_memberGet_closure3, A.HTMathClassBinding_memberGet_closure4, A.HTMathClassBinding_memberGet_closure5, A.HTMathClassBinding_memberGet_closure6, A.HTMathClassBinding_memberGet_closure7, A.HTMathClassBinding_memberGet_closure8, A.HTMathClassBinding_memberGet_closure9, A.HTMathClassBinding_memberGet_closure10, A.HTMathClassBinding_memberGet_closure11, A.HTMathClassBinding_memberGet_closure12, A.HTMathClassBinding_memberGet_closure13, A.HTMathClassBinding_memberGet_closure14, A.HTMathClassBinding_memberGet_closure15, A.HTMathClassBinding_memberGet_closure16, A.HTMathClassBinding_memberGet_closure17, A.HTMathClassBinding_memberGet_closure18, A.HTMathClassBinding_memberGet_closure19, A.HTMathClassBinding_memberGet_closure20, A.HTMathClassBinding_memberGet_closure21, A.HTMathClassBinding_memberGet_closure22, A.HTHashClassBinding_memberGet_closure, A.HTHashClassBinding_memberGet_closure0, A.HTHashClassBinding_memberGet_closure1, A.HTFutureClassBinding_memberGet_closure, A.HTFutureClassBinding_memberGet_closure0, A.HTFutureClassBinding_memberGet_closure1, A.HTHetuClassBinding_instanceMemberGet_closure, A.HTHetuClassBinding_instanceMemberGet_closure0, A.HTHetuClassBinding_instanceMemberGet_closure1, A.HTHetuClassBinding_instanceMemberGet_closure2, A.HTHetuClassBinding_instanceMemberGet_closure3, A.HTHetuClassBinding_instanceMemberGet_closure4, A.NumBinding_htFetch_closure, A.NumBinding_htFetch_closure0, A.NumBinding_htFetch_closure1, A.NumBinding_htFetch_closure2, A.NumBinding_htFetch_closure3, A.NumBinding_htFetch_closure4, A.NumBinding_htFetch_closure5, A.NumBinding_htFetch_closure6, A.NumBinding_htFetch_closure7, A.NumBinding_htFetch_closure8, A.NumBinding_htFetch_closure9, A.NumBinding_htFetch_closure10, A.NumBinding_htFetch_closure11, A.NumBinding_htFetch_closure12, A.NumBinding_htFetch_closure13, A.NumBinding_htFetch_closure14, A.NumBinding_htFetch_closure15, A.NumBinding_htFetch_closure16, A.IntBinding_htFetch_closure, A.IntBinding_htFetch_closure0, A.IntBinding_htFetch_closure1, A.IntBinding_htFetch_closure2, A.IntBinding_htFetch_closure3, A.IntBinding_htFetch_closure4, A.DoubleBinding_htFetch_closure, A.StringBinding_htFetch_closure, A.StringBinding_htFetch_closure0, A.StringBinding_htFetch_closure1, A.StringBinding_htFetch_closure2, A.StringBinding_htFetch_closure3, A.StringBinding_htFetch_closure4, A.StringBinding_htFetch_closure5, A.StringBinding_htFetch_closure6, A.StringBinding_htFetch_closure7, A.StringBinding_htFetch_closure8, A.StringBinding_htFetch_closure9, A.StringBinding_htFetch_closure10, A.StringBinding_htFetch_closure11, A.StringBinding_htFetch_closure12, A.StringBinding_htFetch_closure13, A.StringBinding_htFetch_closure14, A.StringBinding_htFetch_closure15, A.StringBinding_htFetch_closure16, A.StringBinding_htFetch_closure17, A.StringBinding_htFetch_closure18, A.IteratorBinding_htFetch_closure, A.IterableBinding_htFetch_closure, A.IterableBinding_htFetch_closure0, A.IterableBinding_htFetch__closure13, A.IterableBinding_htFetch_closure1, A.IterableBinding_htFetch__closure12, A.IterableBinding_htFetch_closure2, A.IterableBinding_htFetch__closure11, A.IterableBinding_htFetch_closure3, A.IterableBinding_htFetch_closure4, A.IterableBinding_htFetch_closure5, A.IterableBinding_htFetch_closure6, A.IterableBinding_htFetch__closure8, A.IterableBinding_htFetch_closure7, A.IterableBinding_htFetch_closure8, A.IterableBinding_htFetch__closure7, A.IterableBinding_htFetch_closure9, A.IterableBinding_htFetch_closure10, A.IterableBinding_htFetch_closure11, A.IterableBinding_htFetch__closure6, A.IterableBinding_htFetch_closure12, A.IterableBinding_htFetch_closure13, A.IterableBinding_htFetch__closure5, A.IterableBinding_htFetch_closure14, A.IterableBinding_htFetch__closure3, A.IterableBinding_htFetch_closure15, A.IterableBinding_htFetch__closure1, A.IterableBinding_htFetch_closure16, A.IterableBinding_htFetch__closure, A.IterableBinding_htFetch_closure17, A.IterableBinding_htFetch_closure18, A.ListBinding_htFetch_closure, A.ListBinding_htFetch_closure0, A.ListBinding_htFetch_closure1, A.ListBinding_htFetch_closure2, A.ListBinding_htFetch_closure3, A.ListBinding_htFetch_closure4, A.ListBinding_htFetch_closure5, A.ListBinding_htFetch_closure6, A.ListBinding_htFetch_closure7, A.ListBinding_htFetch_closure8, A.ListBinding_htFetch_closure9, A.ListBinding_htFetch_closure10, A.ListBinding_htFetch_closure11, A.ListBinding_htFetch_closure12, A.ListBinding_htFetch_closure13, A.ListBinding_htFetch__closure2, A.ListBinding_htFetch_closure14, A.ListBinding_htFetch__closure1, A.ListBinding_htFetch_closure15, A.ListBinding_htFetch__closure0, A.ListBinding_htFetch_closure16, A.ListBinding_htFetch__closure, A.ListBinding_htFetch_closure17, A.ListBinding_htFetch_closure18, A.ListBinding_htFetch_closure19, A.ListBinding_htFetch_closure20, A.ListBinding_htFetch_closure21, A.SetBinding_htFetch_closure, A.SetBinding_htFetch_closure0, A.SetBinding_htFetch_closure1, A.SetBinding_htFetch_closure2, A.SetBinding_htFetch_closure3, A.SetBinding_htFetch_closure4, A.SetBinding_htFetch_closure5, A.SetBinding_htFetch__closure0, A.SetBinding_htFetch_closure6, A.SetBinding_htFetch__closure, A.SetBinding_htFetch_closure7, A.SetBinding_htFetch_closure8, A.SetBinding_htFetch_closure9, A.SetBinding_htFetch_closure10, A.SetBinding_htFetch_closure11, A.SetBinding_htFetch_closure12, A.MapBinding_htFetch_closure, A.MapBinding_htFetch_closure0, A.MapBinding_htFetch_closure1, A.MapBinding_htFetch_closure2, A.MapBinding_htFetch_closure3, A.MapBinding_htFetch_closure4, A.RandomBinding_htFetch_closure, A.RandomBinding_htFetch_closure0, A.RandomBinding_htFetch_closure1, A.RandomBinding_htFetch_closure2, A.RandomBinding_htFetch_closure3, A.RandomBinding_htFetch_closure4, A.RandomBinding_htFetch_closure5, A.FutureBinding_htFetch_closure, A.FutureBinding_htFetch__closure, A.HTBundler_bundle_handleImport, A.HTInterpreter_processError_handleStackTrace, A.HTInterpreter__call_handleClassConstructor, A.HTInterpreter__storeLocal_closure, A.HTInterpreter__handleFuncDecl_closure, A.HTLexer_lex_addToken, A.HTLexer_lex_handleLineInfo, A.HTDefaultParser__parsePrimaryExpr_closure, A.preincludeFunctions_closure, A.preincludeFunctions_closure0, A.preincludeFunctions_closure1, A.preincludeFunctions_closure2, A.preincludeFunctions_closure3, A.preincludeFunctions_closure4, A.preincludeFunctions_closure5, A.preincludeFunctions_closure6, A.preincludeFunctions_closure7, A.preincludeFunctions_closure8, A.preincludeFunctions_closure9, A.preincludeFunctions_closure10, A.HTFunction_memberGet_closure, A.HTFunction_memberGet_closure0, A.DateFormat_dateTimeConstructor_closure, A.verifiedLocale_closure, A.verifiedLocale_closure0, A.verifiedLocale_closure1, A._IsolateManagerWorkerController_closure, A.IsolateManagerFunction_customFunction_closure0, A.ImType_wrap_closure, A._ImTypedIterable_unwrap_closure, A.Context_joinAll_closure, A._validateArgList_closure, A.ParsedPath__splitExtension_closure, A.Version__splitParts_closure, A.hetuScriptWorkerFunction_closure1, A.hetuScriptWorkerFunction__closure, A.hetuScriptWorkerFunction___closure0, A.hetuScriptWorkerFunction_closure, A._internalFunctions_closure, A._internalFunctions_closure0, A._internalFunctions_closure1, A._internalFunctions_closure2, A._internalFunctions_closure4, A._internalFunctions_closure8, A._internalFunctions_closure9, A._internalFunctions_closure10, A._asyncInternalFunctions_closure, A._executeScript_closure, A._executeScript_closure0, A.ReCase__getSentenceCase_closure]);
+    _inheritMany(A.Closure0Args, [A._CastIterableBase_lastWhere_closure, A.nullFuture_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A.Future_Future_closure, A.Future_Future$delayed_closure, A.Future_wait_handleError_closure, A.Future_wait__closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A._Future_timeout_closure0, A.Stream_length_closure0, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._rootHandleError_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A._BigIntImpl_toDouble_roundUp, A.HTFutureClassBinding_memberGet__closure, A.IterableBinding_htFetch__closure4, A.IterableBinding_htFetch__closure2, A.IterableBinding_htFetch__closure0, A.HTLexer_lex_handleEndOfLine, A.HTLexer_lex_handleStringInterpolation, A.HTDefaultParser__parsePrimaryExpr_closure0, A.HTDefaultParser__handleCommaExpr_closure, A.HTDefaultParser__parseTypeExpr_closure, A.HTDefaultParser__parseTypeExpr_closure0, A.HTDefaultParser__parseTypeExpr_closure1, A.HTDefaultParser__parseTypeExpr_closure2, A.HTDefaultParser__parseBlockStmt_closure, A.HTDefaultParser__getGenericParams_closure, A.HTDefaultParser__parseImportDecl_closure, A.HTDefaultParser__parseImportDecl__handleAlias, A.HTDefaultParser__parseExportStmt_closure, A.HTDefaultParser__parseFunction_parseParam, A.HTFunction_call_closure, A.IsolateContactorControllerImplFuture__handleMainPort_closure, A.IsolateContactorControllerImplFuture__handleIsolatePort_closure, A.IsolateContactorControllerImplWorker__handleMessage_closure, A.IsolateManagerFunction_customFunction_closure, A.ParsedPath__splitExtension_closure0, A.hetuScriptWorkerFunction___closure, A._internalFunctions_closure5, A._internalFunctions_closure11, A._asyncInternalFunctions__closure, A._callExternalFunction_closure]);
     _inheritMany(A._CastIterableBase, [A.CastIterable, A.__CastListBase__CastIterableBase_ListMixin]);
     _inherit(A._EfficientLengthCastIterable, A.CastIterable);
     _inherit(A._CastListBase, A.__CastListBase__CastIterableBase_ListMixin);
-    _inheritMany(A.Closure2Args, [A._CastListBase_sort_closure, A.ConstantMap_map_closure, A.Primitives_functionNoSuchMethod_closure, A.JsLinkedHashMap_addAll_closure, A.initHooks_closure0, A._awaitOnObject_closure0, A._wrapJsFunctionForAsync_closure, A.Future_wait_handleError, A._Future__propagateToListeners_handleWhenCompleteCallback_closure0, A._Future_timeout_closure2, A._HashMap_addAll_closure, A.LinkedHashMap_LinkedHashMap$from_closure, A.MapBase_addAll_closure, A.MapBase_mapToString_closure, A._JsonMap_addAll_closure, A._JsonStringifier_writeMap_closure, A._JsonPrettyPrintMixin_writeMap_closure, A._BigIntImpl_hashCode_combine, A._symbolMapToStringMap_closure, A.NoSuchMethodError_toString_closure, A._Uri__makeQueryFromParameters_closure, A.Uri__parseIPv4Address_error, A.Uri_parseIPv6Address_error, A.Uri_parseIPv6Address_parseHex, A._Uri__makeQueryFromParametersDefault_writeParameter, A._Uri__makeQueryFromParametersDefault_closure, A.HTMathClassBinding_memberGet__closure, A.IterableBinding_htFetch__closure10, A.IterableBinding_htFetch__closure9, A.ListBinding_htFetch__closure3, A.HTCompiler_visitStringLiteralExpr_closure, A.HTCompiler_visitStringInterpolationExpr_closure, A.HTInterpreter__call_closure, A.HTLexer_lex_hanldeStringLiteral, A.HTStructuralType_closure, A.HTFunction__call_closure, A.HTFunction__call_closure0, A.HTFunction__call_closure1, A.HTFunction__call_closure2, A.DateFormat__fieldConstructors_closure, A.DateFormat__fieldConstructors_closure0, A.DateFormat__fieldConstructors_closure1, A.ImType_wrap_closure0, A._ImTypedMap_unwrap_closure, A.hashObjects_closure, A.hetuScriptWorkerFunction_closure0, A._internalFunctions_closure3, A._internalFunctions_closure6, A._internalFunctions_closure7, A._internalFunctions_closure12]);
+    _inheritMany(A.Closure2Args, [A._CastListBase_sort_closure, A.ConstantMap_map_closure, A.Primitives_functionNoSuchMethod_closure, A.JsLinkedHashMap_addAll_closure, A.initHooks_closure0, A._awaitOnObject_closure0, A._wrapJsFunctionForAsync_closure, A.Future_wait_handleError, A._Future__propagateToListeners_handleWhenCompleteCallback_closure0, A._Future_timeout_closure2, A._HashMap_addAll_closure, A.LinkedHashMap_LinkedHashMap$from_closure, A.MapBase_addAll_closure, A.MapBase_mapToString_closure, A._JsonMap_addAll_closure, A._JsonStringifier_writeMap_closure, A._JsonPrettyPrintMixin_writeMap_closure, A._BigIntImpl_hashCode_combine, A._symbolMapToStringMap_closure, A.NoSuchMethodError_toString_closure, A._Uri__makeQueryFromParameters_closure, A.Uri__parseIPv4Address_error, A.Uri_parseIPv6Address_error, A.Uri_parseIPv6Address_parseHex, A._Uri__makeQueryFromParametersDefault_writeParameter, A._Uri__makeQueryFromParametersDefault_closure, A.HTMathClassBinding_memberGet__closure, A.IterableBinding_htFetch__closure10, A.IterableBinding_htFetch__closure9, A.ListBinding_htFetch__closure3, A.HTCompiler_visitStringLiteralExpr_closure, A.HTCompiler_visitStringInterpolationExpr_closure, A.HTInterpreter__call_closure, A.HTLexer_lex_hanldeStringLiteral, A.HTStructuralType_closure, A.HTFunction__call_closure, A.HTFunction__call_closure0, A.HTFunction__call_closure1, A.HTFunction__call_closure2, A.DateFormat__fieldConstructors_closure, A.DateFormat__fieldConstructors_closure0, A.DateFormat__fieldConstructors_closure1, A.ImType_wrap_closure0, A._ImTypedMap_unwrap_closure, A.hashObjects_closure, A.hetuScriptWorkerFunction_closure0, A._internalFunctions_closure3, A._internalFunctions_closure6, A._internalFunctions_closure7, A._asyncInternalFunctions_closure0]);
     _inherit(A.CastList, A._CastListBase);
     _inheritMany(A.Error, [A.LateError, A.TypeError, A.JsNoSuchMethodError, A.UnknownJsTypeError, A.RuntimeError, A._Error, A.JsonUnsupportedObjectError, A.AssertionError, A.ArgumentError, A.NoSuchMethodError, A.UnsupportedError, A.UnimplementedError, A.StateError, A.ConcurrentModificationError]);
     _inherit(A.UnmodifiableListBase, A.ListBase);
@@ -47692,7 +47631,7 @@
     typeUniverse: {eC: new Map(), tR: {}, eT: {}, tPV: {}, sEA: []},
     mangledGlobalNames: {int: "int", double: "double", num: "num", String: "String", bool: "bool", Null: "Null", List: "List", Object: "Object", Map: "Map"},
     mangledNames: {},
-    types: ["int(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "String(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~()", "bool(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "double(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "bool(@)", "@(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "@()", "String(String)", "@(@)", "num(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Null(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Null()", "~(@)", "Set<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "MapEntry<Symbol0,@>(String,@)", "num(num,num)", "BigInt(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "String()", "~(String,@)", "double(num)", "Future<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "List<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(~())", "~(Object,StackTrace)", "String(@)", "~(Object?,Object?)", "bool(String)", "Null(@)", "~(String,String)", "int(@,@)", "int(num)", "int(int,int)", "int(int)", "~(Symbol0,@)", "bool(String?)", "Object?(Object?)", "IdentifierExpr()", "ParamTypeExpr()", "String(Match)", "@(String)", "Future<~>()", "Null(Object,StackTrace)", "HTParameterType(HTParameter)", "String(String?)", "HTStruct(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ASTNode?()", "String?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "List<String>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "HTNamespace(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<@>(@)", "@(@,@)", "@(Object?,@)", "Map<@,@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Map<int,@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Object(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Future<List<@>>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(ASTSource)", "List<List<double>>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(List<String>{withLineNumber:bool})", "Null(~())", "Random(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(Token)", "~(String{handleNewLine:bool})", "~(Object?)", "double?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "BigInt?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "int?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ASTNode()", "@(@,String)", "FieldTypeExpr?()", "0^(@{customConverter:0^(@)?,enableWasmConverter:bool})<Object?>", "GenericTypeParameterExpr()", "num?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ParamDecl()", "Iterable<num>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<String>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "MapEntry<String,HTType>(String,HTType)", "HTFunction(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "DateTime(int,int,int,int,int,int,int,bool)", "_DateFormatQuotedField(String,DateFormat)", "_DateFormatPatternField(String,DateFormat)", "_DateFormatLiteralField(String,DateFormat)", "~(String,String?)", "Future<~>(@)", "~(JSObject)", "Null(JSObject)", "ImType<Object>(@)", "MapEntry<ImType<Object>,ImType<Object>>(@,@)", "~(String,int?)", "~(String,int)", "Object(String)", "int(int,@)", "Future<~>(IsolateManagerController<String,String>)", "Future<Null>()", "Future<String>(IsolateManagerController<String,String>,String)", "~(IsolateManagerController<String,String>)", "~(@,@)", "num(num)", "double()", "~(int,@)", "Future<Null>(int)", "Future<@>(int,@)", "int()", "0&()", "Null(@,StackTrace)", "~(Zone?,ZoneDelegate?,Zone,~())", "IsolateException(Object[StackTrace,String])", "UnsupportedImTypeException(Object[StackTrace])", "TypeExpr()"],
+    types: ["int(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "String(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~()", "bool(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "double(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "bool(@)", "@(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "@()", "String(String)", "@(@)", "num(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Null(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Null()", "~(@)", "Set<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "MapEntry<Symbol0,@>(String,@)", "num(num,num)", "List<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "BigInt(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "String()", "~(String,@)", "double(num)", "Future<@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "int(num)", "~(Object,StackTrace)", "String(@)", "bool(String)", "Null(@)", "~(String,String)", "int(@,@)", "~(Object?,Object?)", "~(~())", "int(int,int)", "int(int)", "~(Symbol0,@)", "bool(String?)", "Object?(Object?)", "IdentifierExpr()", "ParamTypeExpr()", "String(Match)", "@(String)", "Future<~>()", "Null(Object,StackTrace)", "HTParameterType(HTParameter)", "String(String?)", "HTStruct(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ASTNode?()", "String?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "List<String>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "HTNamespace(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<@>(@)", "@(@,@)", "@(Object?,@)", "Map<@,@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Map<int,@>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Object(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Future<List<@>>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(ASTSource)", "List<List<double>>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(List<String>{withLineNumber:bool})", "Null(~())", "Random(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "~(Token)", "~(String{handleNewLine:bool})", "~(Object?)", "double?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "BigInt?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "int?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ASTNode()", "@(@,String)", "FieldTypeExpr?()", "0^(@{customConverter:0^(@)?,enableWasmConverter:bool})<Object?>", "GenericTypeParameterExpr()", "num?(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "ParamDecl()", "Iterable<num>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "Iterable<String>(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "MapEntry<String,HTType>(String,HTType)", "HTFunction(HTEntity{namedArgs:Map<String,@>,positionalArgs:List<@>,typeArgs:List<HTType>})", "DateTime(int,int,int,int,int,int,int,bool)", "_DateFormatQuotedField(String,DateFormat)", "_DateFormatPatternField(String,DateFormat)", "_DateFormatLiteralField(String,DateFormat)", "~(String,String?)", "Future<~>(@)", "~(JSObject)", "Null(JSObject)", "ImType<Object>(@)", "MapEntry<ImType<Object>,ImType<Object>>(@,@)", "~(String,int?)", "~(String,int)", "Object(String)", "int(int,@)", "Future<~>(IsolateManagerController<String,String>)", "Future<Null>()", "Future<String>(IsolateManagerController<String,String>,String)", "~(IsolateManagerController<String,String>)", "~(@,@)", "num(num)", "double()", "~(int,@)", "int()", "Future<@>(int)", "Future<@>(int,@)", "0&()", "Null(@,StackTrace)", "~(Zone?,ZoneDelegate?,Zone,~())", "IsolateException(Object[StackTrace,String])", "UnsupportedImTypeException(Object[StackTrace])", "TypeExpr()"],
     interceptorsByTag: null,
     leafTags: null,
     arrayRti: Symbol("$ti")
@@ -48447,14 +48386,14 @@
     B.Object_7NH = {d: 0, E: 1, EEEE: 2, LLL: 3, LLLL: 4, M: 5, Md: 6, MEd: 7, MMM: 8, MMMd: 9, MMMEd: 10, MMMM: 11, MMMMd: 12, MMMMEEEEd: 13, QQQ: 14, QQQQ: 15, y: 16, yM: 17, yMd: 18, yMEd: 19, yMMM: 20, yMMMd: 21, yMMMEd: 22, yMMMM: 23, yMMMMd: 24, yMMMMEEEEd: 25, yQQQ: 26, yQQQQ: 27, H: 28, Hm: 29, Hms: 30, j: 31, jm: 32, jms: 33, jmv: 34, jmz: 35, jz: 36, m: 37, ms: 38, s: 39, v: 40, z: 41, zzzz: 42, ZZZZ: 43};
     B.Map_WsQuQ = new A.ConstantStringMap(B.Object_7NH, ["d", "ccc", "cccc", "LLL", "LLLL", "L", "M/d", "EEE, M/d", "LLL", "MMM d", "EEE, MMM d", "LLLL", "MMMM d", "EEEE, MMMM d", "QQQ", "QQQQ", "y", "M/y", "M/d/y", "EEE, M/d/y", "MMM y", "MMM d, y", "EEE, MMM d, y", "MMMM y", "MMMM d, y", "EEEE, MMMM d, y", "QQQ y", "QQQQ y", "HH", "HH:mm", "HH:mm:ss", "h\u202fa", "h:mm\u202fa", "h:mm:ss\u202fa", "h:mm\u202fa v", "h:mm\u202fa z", "h\u202fa z", "m", "mm:ss", "s", "v", "z", "zzzz", "ZZZZ"], A.findType("ConstantStringMap<String,String>"));
     B.Object_empty = {};
-    B.Map_empty1 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,Function(HTFunction)>"));
-    B.Map_empty4 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,ASTNode>"));
-    B.Map_empty0 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,Function>"));
-    B.Map_empty2 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,HTAbstractParameter>"));
+    B.Map_empty0 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,Function(HTFunction)>"));
+    B.Map_empty3 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,ASTNode>"));
+    B.Map_empty5 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,Function>"));
+    B.Map_empty1 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,HTAbstractParameter>"));
     B.Map_empty6 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,HTType>"));
     B.Map_empty7 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,int>"));
-    B.Map_empty5 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,@>"));
-    B.Map_empty3 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<Symbol0,@>"));
+    B.Map_empty4 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<String,@>"));
+    B.Map_empty2 = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<Symbol0,@>"));
     B.Map_empty = new A.ConstantStringMap(B.Object_empty, [], A.findType("ConstantStringMap<0&,0&>"));
     B.NoiseType_2 = new A.NoiseType(2, "Perlin");
     B.NoiseType_3 = new A.NoiseType(3, "PerlinFractal");
@@ -48587,7 +48526,8 @@
     _lazyFinal($, "Style_windows", "$get$Style_windows", () => A.WindowsStyle$());
     _lazyFinal($, "Style_url", "$get$Style_url", () => A.UrlStyle$());
     _lazyFinal($, "Style_platform", "$get$Style_platform", () => A.Style__getPlatformStyle());
-    _lazyFinal($, "_internalFunctions", "$get$_internalFunctions", () => A.LinkedHashMap_LinkedHashMap$_literal(["sin", new A._internalFunctions_closure(), "cos", new A._internalFunctions_closure0(), "tan", new A._internalFunctions_closure1(), "sqrt", new A._internalFunctions_closure2(), "pow", new A._internalFunctions_closure3(), "abs", new A._internalFunctions_closure4(), "random", new A._internalFunctions_closure5(), "min", new A._internalFunctions_closure6(), "max", new A._internalFunctions_closure7(), "floor", new A._internalFunctions_closure8(), "ceil", new A._internalFunctions_closure9(), "round", new A._internalFunctions_closure10(), "delay", new A._internalFunctions_closure11(), "delayThen", new A._internalFunctions_closure12(), "now", new A._internalFunctions_closure13()], type$.String, type$.Function));
+    _lazyFinal($, "_internalFunctions", "$get$_internalFunctions", () => A.LinkedHashMap_LinkedHashMap$_literal(["sin", new A._internalFunctions_closure(), "cos", new A._internalFunctions_closure0(), "tan", new A._internalFunctions_closure1(), "sqrt", new A._internalFunctions_closure2(), "pow", new A._internalFunctions_closure3(), "abs", new A._internalFunctions_closure4(), "random", new A._internalFunctions_closure5(), "min", new A._internalFunctions_closure6(), "max", new A._internalFunctions_closure7(), "floor", new A._internalFunctions_closure8(), "ceil", new A._internalFunctions_closure9(), "round", new A._internalFunctions_closure10(), "now", new A._internalFunctions_closure11()], type$.String, type$.Function));
+    _lazyFinal($, "_asyncInternalFunctions", "$get$_asyncInternalFunctions", () => A.LinkedHashMap_LinkedHashMap$_literal(["delay", new A._asyncInternalFunctions_closure(), "delayThen", new A._asyncInternalFunctions_closure0()], type$.String, type$.Function));
   })();
   (function nativeSupport() {
     !function() {

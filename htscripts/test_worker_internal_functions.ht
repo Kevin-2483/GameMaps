@@ -1,114 +1,40 @@
-// Worker内部函数测试脚本
-// 测试数学函数和延迟函数的性能和功能
+// 测试手动创建的Future
+log('测试手动Future...')
+var testFuture = Future(() => 'test value')
+log('手动Future类型: ${typeof(testFuture)}')
 
-external fun log
-external fun sin
-external fun cos
-external fun tan
-external fun sqrt
-external fun pow
-external fun abs
-external fun random
-external fun min
-external fun max
-external fun floor
-external fun ceil
-external fun round
-external fun delay
-external fun delayThen
-external fun now
-external fun typeof
+// 尝试使用官方文档的语法
+log('尝试官方文档语法...')
+var future = Future(() => 42)
+log('创建Future成功: ${typeof(future)}')
 
-log('=== Worker内部函数全面测试 ===')
+// 尝试调用then
+future.then((value) => log('Future结果: ${value}'))
+log('then调用成功')
 
-// 1. 数学函数测试
-log('1. 数学函数测试开始')
-var startTime = now()
-
-// 三角函数
-var angle = 1.5708  // π/2
-log('sin(π/2) = ${sin(angle)}')
-log('cos(π/2) = ${cos(angle)}')
-log('tan(π/4) = ${tan(0.7854)}')
-
-// 基础数学
-log('sqrt(16) = ${sqrt(16)}')
-log('pow(2, 8) = ${pow(2, 8)}')
-log('abs(-42) = ${abs(-42)}')
-
-// 随机数
-var rand1 = random()
-var rand2 = random()
-log('随机数1: ${rand1}')
-log('随机数2: ${rand2}')
-log('min(${rand1}, ${rand2}) = ${min(rand1, rand2)}')
-log('max(${rand1}, ${rand2}) = ${max(rand1, rand2)}')
-
-// 取整函数
-var decimal = 3.7
-log('floor(${decimal}) = ${floor(decimal)}')
-log('ceil(${decimal}) = ${ceil(decimal)}')
-log('round(${decimal}) = ${round(decimal)}')
-
-// var mathTime = now() - startTime
-// log('数学函数测试完成，用时: ${mathTime}ms')
-
-// 2. 类型检查测试
-log('2. 类型检查测试')
-log('typeof("hello") = ${typeof("hello")}')
-log('typeof(42) = ${typeof(42)}')
-log('typeof(3.14) = ${typeof(3.14)}')
-log('typeof(true) = ${typeof(true)}')
-log('typeof([1,2,3]) = ${typeof([1,2,3])}')
-log('typeof(null) = ${typeof(null)}')
-
-// 3. 延迟函数测试
-log('3. 延迟函数测试开始')
-var delayStart = now()
-
-log('延迟500ms...')
-delay(500)
-var after500 = now()
-// log('500ms延迟实际用时: ${after500 - delayStart}ms')
-
-log('延迟1000ms并返回值...')
-var delayResult = delayThen(1000, 'Hello from the future!')
-var after1000 = now()
-log('延迟结果: ${delayResult}')
-// log('1000ms延迟实际用时: ${after1000 - after500}ms')
-
-// 4. 性能对比测试
-log('4. 性能测试 - 1000次数学运算')
-var perfStart = now()
-
-var sum = 0
-for (var i = 0; i < 1000; i++) {
-    // sum += sin(i * 0.01) + cos(i * 0.01)
+// 尝试异步函数语法
+log('尝试async函数语法...')
+fun testAsync() async {
+    return 'async result'
 }
 
-var perfEnd = now()
-// log('1000次三角函数计算用时: ${perfEnd - perfStart}ms')
-// log('平均每次计算: ${(perfEnd - perfStart) / 1000}ms')
-log('计算结果sum: ${sum}')
+var asyncResult = testAsync()
+log('async函数返回类型: ${typeof(asyncResult)}')
+asyncResult.then((value) => log('async结果: ${value}'))
 
-// 5. 综合测试
-log('5. 综合应用测试')
-var points = []
-for (var i = 0; i < 10; i++) {
-    var x = random() * 10
-    var y = random() * 10
-    var distance = sqrt(pow(x, 2) + pow(y, 2))
-    points.append({
-        'x': round(x * 100) / 100,
-        'y': round(y * 100) / 100, 
-        'distance': round(distance * 100) / 100
-    })
-}
+// 现在测试我们自定义的异步函数
+log('=== 测试自定义异步函数 ===')
+log('测试delay函数...')
+var delayResult = delay(100)
+log('delay返回类型: ${typeof(delayResult)}')
 
-log('生成的随机点:')
-for (var point in points) {
-    log('点(${point.x}, ${point.y}), 距离原点: ${point.distance}')
-}
+log('测试delayThen函数...')  
+var delayThenResult = delayThen(200, 'hello')
+log('delayThen返回类型: ${typeof(delayThenResult)}')
 
-var totalTime = now() - startTime
-log('=== 测试完成，总用时: ${totalTime}ms ===')
+// 尝试调用then方法
+log('尝试调用delay().then()...')
+delay(300).then(() => log('delay完成!'))
+
+log('尝试调用delayThen().then()...')
+delayThen(400, 'world').then((value) => log('delayThen结果: ${value}'))

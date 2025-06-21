@@ -1,0 +1,54 @@
+// 测试主线程函数分类的脚本示例
+
+fun main() {
+  // 测试需要等待结果的函数（读取类）
+  print('开始测试需要等待结果的函数...');
+  
+  // 获取图层信息 - 需要等待结果
+  var layers = getLayers();
+  print('获取到的图层数量: ${layers.length}');
+  
+  // 获取所有元素 - 需要等待结果
+  var elements = getAllElements();
+  print('获取到的元素数量: ${elements.length}');
+  
+  // 统计元素 - 需要等待结果
+  var count = countElements();
+  print('元素总数: $count');
+  
+  print('需要等待结果的函数测试完成');
+  
+  // 测试不需要等待结果的函数（Fire and Forget）
+  print('开始测试不需要等待结果的函数...');
+  
+  // 日志函数 - 不需要等待结果，立即返回
+  log('这是一条测试日志消息');
+  print('日志函数调用完成（立即返回）');
+  
+  // 更新元素属性 - 不需要等待结果，立即返回
+  // updateElementProperty('test-id', 'color', '#FF0000');
+  print('更新元素属性调用完成（立即返回）');
+  
+  // say 函数 - 不需要等待结果，立即返回
+  // say(['test'], 'any', '这是一个测试消息');
+  print('say函数调用完成（立即返回）');
+  
+  print('不需要等待结果的函数测试完成');
+  
+  // 混合测试
+  print('开始混合测试...');
+  
+  // 先读取数据
+  var textElements = getTextElements();
+  print('文本元素数量: ${textElements.length}');
+  
+  // 然后执行不等待结果的操作
+  log('混合测试中的日志');
+  
+  // 再读取数据
+  var stickyNotes = getStickyNotes();
+  print('便签数量: ${stickyNotes.length}');
+  
+  print('混合测试完成');
+  print('所有测试完成！');
+}

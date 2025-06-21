@@ -215,10 +215,12 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
           if (kDebugMode) {
             debugPrint('[Script] $logMessage');
           }
+          break;        case ScriptMessageType.externalFunctionCall:
+          _handleExternalFunctionCall(message);
           break;
 
-        case ScriptMessageType.externalFunctionCall:
-          _handleExternalFunctionCall(message);
+        case ScriptMessageType.fireAndForgetFunctionCall:
+          _handleFireAndForgetFunctionCall(message);
           break;
 
         default:
@@ -277,6 +279,25 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       );
 
       _isolateSendPort?.send(responseMessage.toJson());
+    }
+  }
+
+  /// 处理不需要等待结果的外部函数调用（Fire and Forget）
+  void _handleFireAndForgetFunctionCall(ScriptMessage message) {
+    final call = ExternalFunctionCall.fromJson(message.data);
+
+    try {
+      if (_externalFunctionHandlers.containsKey(call.functionName)) {
+        final handler = _externalFunctionHandlers[call.functionName]!;
+        // Fire and Forget - 调用函数但不发送响应
+        Function.apply(handler, call.arguments);
+        debugPrint('Fire-and-forget function ${call.functionName} executed successfully');
+      } else {
+        debugPrint('Warning: Fire-and-forget function ${call.functionName} not found');
+      }
+    } catch (e) {
+      debugPrint('Error in fire-and-forget function ${call.functionName}: $e');
+      // 对于 Fire and Forget 函数，我们只记录错误，不影响脚本执行
     }
   }
 
@@ -428,7 +449,7 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       final code = message.data['code'] as String;
       final context =
           message.data['context'] as Map<String, dynamic>? ?? {}; // 创建Hetu脚本解释器
-      final hetu = Hetu(); // 使用统一的外部函数注册器
+      final hetu = Hetu();      // 使用统一的外部函数注册器
       final externalFunctions =
           ExternalFunctionRegistry.createFunctionsForIsolate(
             (functionName, arguments) => _callExternalFunction(
@@ -436,6 +457,11 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
               arguments,
               mainSendPort,
               pendingExternalCalls,
+            ),
+            (functionName, arguments) => _callFireAndForgetFunction(
+              functionName,
+              arguments,
+              mainSendPort,
             ),
           );
 
@@ -515,6 +541,27 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       pendingExternalCalls.remove(callId);
       rethrow;
     }
+  }
+
+  /// 调用不需要等待结果的外部函数（Fire and Forget）
+  static void _callFireAndForgetFunction(
+    String functionName,
+    List<dynamic> arguments,
+    SendPort mainSendPort,
+  ) {
+    final call = ExternalFunctionCall(
+      functionName: functionName,
+      arguments: arguments,
+      callId: 'fire-and-forget-${DateTime.now().millisecondsSinceEpoch}',
+    );
+
+    // 发送函数调用消息到主线程，但不等待响应
+    final message = ScriptMessage(
+      type: ScriptMessageType.fireAndForgetFunctionCall,
+      data: call.toJson(),
+    );
+
+    mainSendPort.send(message.toJson());
   }
 
   /// 在隔离中处理外部函数响应

@@ -39,6 +39,7 @@ enum ScriptMessageType {
   stop,
   mapDataUpdate,
   externalFunctionCall,
+  fireAndForgetFunctionCall,
   externalFunctionResponse,
 }
 

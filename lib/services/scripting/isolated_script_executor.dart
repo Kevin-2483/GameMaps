@@ -135,9 +135,12 @@ class IsolateScriptExecutor implements IScriptExecutor {
           _executionLogs.add(logMessage);
           debugPrint('[Script] $logMessage');
           break;
-
         case ScriptMessageType.externalFunctionCall:
           _handleExternalFunctionCall(message.data);
+          break;
+
+        case ScriptMessageType.fireAndForgetFunctionCall:
+          _handleFireAndForgetFunctionCall(message.data);
           break;
 
         default:
@@ -183,6 +186,29 @@ class IsolateScriptExecutor implements IScriptExecutor {
       );
 
       _isolateSendPort?.send(message.toJson());
+    }
+  }
+
+  /// 处理不需要等待结果的外部函數调用（Fire and Forget）
+  void _handleFireAndForgetFunctionCall(Map<String, dynamic> data) {
+    try {
+      final call = ExternalFunctionCall.fromJson(data);
+      final functionName = call.functionName;
+      final arguments = call.arguments;
+
+      debugPrint('Handling fire-and-forget function call: $functionName');
+
+      if (_externalFunctionHandlers.containsKey(functionName)) {
+        final function = _externalFunctionHandlers[functionName]!;
+        // Fire and Forget - 调用函数但不发送响应回 Worker
+        Function.apply(function, arguments);
+        debugPrint('Fire-and-forget function $functionName executed successfully');
+      } else {
+        debugPrint('Warning: Fire-and-forget function $functionName not found');
+      }
+    } catch (e) {
+      debugPrint('Error in fire-and-forget function call: $e');
+      // 对于 Fire and Forget 函数，我们只记录错误，不影响脚本执行
     }
   }
 
@@ -281,6 +307,11 @@ class _IsolateScriptRunner {
           _handleExternalFunctionResponse(message.data);
           break;
 
+        case ScriptMessageType.fireAndForgetFunctionCall:
+          // Fire and Forget 函数调用不需要在 Worker 端处理响应
+          // 这个消息类型只用于主线程接收 Worker 发出的调用
+          break;
+
         case ScriptMessageType.mapDataUpdate:
           // 更新隔离内的地图数据缓存
           break;
@@ -332,12 +363,13 @@ class _IsolateScriptRunner {
     try {
       // 创建Hetu脚本解释器
       final hetu = Hetu();
-
       // 使用统一的外部函数注册器
       final externalFunctions =
           ExternalFunctionRegistry.createFunctionsForIsolate(
             (functionName, arguments) =>
                 _callExternalFunction(functionName, arguments),
+            (functionName, arguments) =>
+                _callFireAndForgetFunction(functionName, arguments),
           );
 
       // 初始化Hetu解释器
@@ -408,6 +440,26 @@ class _IsolateScriptRunner {
       _pendingExternalCalls.remove(callId);
       rethrow;
     }
+  }
+
+  /// 调用不需要等待结果的外部函数（Fire and Forget）
+  void _callFireAndForgetFunction(
+    String functionName,
+    List<dynamic> arguments,
+  ) {
+    final call = ExternalFunctionCall(
+      functionName: functionName,
+      arguments: arguments,
+      callId: 'fire-and-forget-${DateTime.now().millisecondsSinceEpoch}',
+    );
+
+    // 发送函数调用消息到主线程，但不等待响应
+    final message = ScriptMessage(
+      type: ScriptMessageType.fireAndForgetFunctionCall,
+      data: call.toJson(),
+    );
+
+    _mainSendPort.send(message.toJson());
   }
 
   void _handleExternalFunctionResponse(Map<String, dynamic> data) {

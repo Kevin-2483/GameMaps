@@ -308,23 +308,29 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       if (responseExecutionId == null) {
         _addLog('Received message without executionId, ignoring');
         return;
+      }      final responseType = response['type'] as String?;
+      
+      // 对于 fire-and-forget 函数调用，即使任务已完成也要处理
+      if (responseType == 'fireAndForgetFunctionCall') {
+        _addLog(
+          'Received message type: $responseType for task: $responseExecutionId, content: $response',
+        );
+        _handleFireAndForgetFunctionCall(response);
+        return;
       }
 
       // 查找对应的任务
       final task = _activeTasks[responseExecutionId];
       if (task == null) {
         _addLog(
-          'Received message for unknown task $responseExecutionId, ignoring',
+          'Received message for unknown task $responseExecutionId, ignoring, content: $response',
         );
         return;
       }
 
-      final responseType = response['type'] as String?;
       _addLog(
-        'Received message type: $responseType for task: $responseExecutionId',
-      );
-
-      switch (responseType) {
+        'Received message type: $responseType for task: $responseExecutionId, content: $response',
+      );      switch (responseType) {
         case 'started':
           _handleTaskStarted(responseExecutionId);
           break;
@@ -654,6 +660,42 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     }
   }
 
+  /// 处理不需要等待结果的外部函数调用（Fire and Forget）
+  void _handleFireAndForgetFunctionCall(Map<String, dynamic> response) {
+    final functionName = _safeGetString(response, 'functionName');
+    // 处理Worker发送的参数格式 - 可能是单个值或List
+    final argumentsRaw = response['arguments'];
+    final arguments = <dynamic>[];
+
+    if (argumentsRaw != null) {
+      if (argumentsRaw is List) {
+        arguments.addAll(argumentsRaw);
+      } else {
+        // 如果是单个值，将其作为第一个参数
+        arguments.add(argumentsRaw);
+      }
+    }
+    final executionId = _safeGetString(response, 'executionId');
+
+    _addLog(
+      'Handling fire-and-forget function call: $functionName with args: $arguments (executionId: $executionId)',
+    );
+
+    try {
+      if (_externalFunctions.containsKey(functionName)) {
+        final handler = _externalFunctions[functionName]!;
+        // Fire and Forget - 调用函数但不等待结果，也不发送响应
+        Function.apply(handler, arguments);
+        _addLog('Fire-and-forget function $functionName executed successfully');
+      } else {
+        _addLog('Warning: Fire-and-forget function $functionName not found');
+      }
+    } catch (e) {
+      _addLog('Error in fire-and-forget function $functionName: $e');
+      // 对于 Fire and Forget 函数，我们只记录错误，不影响脚本执行
+    }
+  }
+
   /// 发送外部函数响应
   void _sendExternalFunctionResponse(
     String executionId,
@@ -692,9 +734,14 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       };
 
       final jsonResponse = jsonEncode(responseData);
-      worker.isolateManager.sendMessage(jsonResponse);
+      // 修复：使用 sendRawMessageFireAndForget 而不是 sendMessage
+      // 因为 Worker 只设置了 setRawMessageHandler 来处理原始消息
+      worker.isolateManager.sendRawMessageFireAndForget(
+        jsonResponse,
+        isolateIndex: 0,
+      );
       _addLog(
-        'External function response sent for call: $callId to worker ${worker.id}',
+        'External function response sent for call: $callId to worker ${worker.id} using raw interface',
       );
     } catch (e) {
       _addLog('Error sending external function response: $e');
@@ -851,7 +898,6 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     _externalFunctions.clear();
     _addLog('All external functions cleared');
   }
-
   @override
   void sendMapDataUpdate(Map<String, dynamic> data) {
     // 向所有Worker发送地图数据更新
@@ -859,12 +905,17 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       try {
         final updateData = {'type': 'mapDataUpdate', 'data': data};
         final jsonUpdate = jsonEncode(updateData);
-        worker.isolateManager.sendMessage(jsonUpdate);
+        // 修复：使用 sendRawMessageFireAndForget 而不是 sendMessage
+        // 因为 Worker 只设置了 setRawMessageHandler 来处理原始消息
+        worker.isolateManager.sendRawMessageFireAndForget(
+          jsonUpdate,
+          isolateIndex: 0,
+        );
       } catch (e) {
         _addLog('Error sending map data update to worker ${worker.id}: $e');
       }
     }
-    _addLog('Map data update sent to all workers');
+    _addLog('Map data update sent to all workers using raw interface');
   }
 
   @override
