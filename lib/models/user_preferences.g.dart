@@ -25,9 +25,10 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       locale: json['locale'] as String? ?? 'zh_CN',
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
-      lastLoginAt: json['lastLoginAt'] == null
-          ? null
-          : DateTime.parse(json['lastLoginAt'] as String),
+      lastLoginAt:
+          json['lastLoginAt'] == null
+              ? null
+              : DateTime.parse(json['lastLoginAt'] as String),
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -124,19 +125,23 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
     ToolPreferences(
-      recentColors: (json['recentColors'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
-          .toList(),
-      customColors: (json['customColors'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
-          .toList(),
-      favoriteStrokeWidths: (json['favoriteStrokeWidths'] as List<dynamic>)
-          .map((e) => (e as num).toDouble())
-          .toList(),
+      recentColors:
+          (json['recentColors'] as List<dynamic>)
+              .map((e) => (e as num).toInt())
+              .toList(),
+      customColors:
+          (json['customColors'] as List<dynamic>)
+              .map((e) => (e as num).toInt())
+              .toList(),
+      favoriteStrokeWidths:
+          (json['favoriteStrokeWidths'] as List<dynamic>)
+              .map((e) => (e as num).toDouble())
+              .toList(),
       shortcuts: Map<String, String>.from(json['shortcuts'] as Map),
-      toolbarLayout: (json['toolbarLayout'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      toolbarLayout:
+          (json['toolbarLayout'] as List<dynamic>)
+              .map((e) => e as String)
+              .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
       customTags:
@@ -149,6 +154,7 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      tts: TtsPreferences.fromJson(json['tts'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
@@ -162,4 +168,27 @@ Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
       'handleSize': instance.handleSize,
       'customTags': instance.customTags,
       'recentTags': instance.recentTags,
+      'tts': instance.tts,
+    };
+
+TtsPreferences _$TtsPreferencesFromJson(Map<String, dynamic> json) =>
+    TtsPreferences(
+      language: json['language'] as String?,
+      speechRate: (json['speechRate'] as num?)?.toDouble() ?? 0.5,
+      volume: (json['volume'] as num?)?.toDouble() ?? 0.8,
+      pitch: (json['pitch'] as num?)?.toDouble() ?? 1.0,
+      voice: (json['voice'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ),
+      enabled: json['enabled'] as bool? ?? true,
+    );
+
+Map<String, dynamic> _$TtsPreferencesToJson(TtsPreferences instance) =>
+    <String, dynamic>{
+      'language': instance.language,
+      'speechRate': instance.speechRate,
+      'volume': instance.volume,
+      'pitch': instance.pitch,
+      'voice': instance.voice,
+      'enabled': instance.enabled,
     };

@@ -34,9 +34,10 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
 LegendDatabase _$LegendDatabaseFromJson(Map<String, dynamic> json) =>
     LegendDatabase(
       version: (json['version'] as num).toInt(),
-      legends: (json['legends'] as List<dynamic>)
-          .map((e) => LegendItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      legends:
+          (json['legends'] as List<dynamic>)
+              .map((e) => LegendItem.fromJson(e as Map<String, dynamic>))
+              .toList(),
       exportedAt: DateTime.parse(json['exportedAt'] as String),
     );
 

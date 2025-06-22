@@ -8,35 +8,68 @@ class ExternalFunctionRegistry {
       ExternalFunctionRegistry._internal();
   factory ExternalFunctionRegistry() => _instance;
   ExternalFunctionRegistry._internal();
+
   /// 为隔离环境注册外部函数（通过消息传递）
   static Map<String, Function> createFunctionsForIsolate(
     Future<dynamic> Function(String functionName, List<dynamic> arguments)
-        callAwaitableFunction,
+    callAwaitableFunction,
     void Function(String functionName, List<dynamic> arguments)
-        callFireAndForgetFunction,
+    callFireAndForgetFunction,
   ) {
     final functions = <String, Function>{};
 
     // 基础函数
-    _registerBasicFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerBasicFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     // 地图数据访问函数
-    _registerMapDataFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerMapDataFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     // 文本和UI函数
-    _registerTextAndUIFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerTextAndUIFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     // 文件操作函数
-    _registerFileOperationFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerFileOperationFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     // 便签相关函数
-    _registerStickyNoteFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerStickyNoteFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     // 图例相关函数
-    _registerLegendFunctions(functions, callAwaitableFunction, callFireAndForgetFunction);
+    _registerLegendFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
+
+    // TTS相关函数
+    _registerTtsFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
 
     return functions;
   }
+
   /// 获取需要等待结果的函数名称列表（读取、查找类函数）
   static List<String> getAwaitableFunctionNames() {
     return [
@@ -47,6 +80,12 @@ class ExternalFunctionRegistry {
       // 文本元素查询函数（读取类）
       'getTextElements', 'findTextElementsByContent',
 
+      // TTS查询函数（读取类）
+      'ttsGetLanguages',
+      'ttsGetVoices',
+      'ttsIsLanguageAvailable',
+      'ttsGetSpeechRateRange',
+
       // 文件操作函数（读取类）
       'readjson',
 
@@ -55,8 +94,10 @@ class ExternalFunctionRegistry {
       'filterStickyNotesByTags', 'filterStickyNoteElementsByTags',
 
       // 图例相关函数（读取类）
-      'getLegendGroups', 'getLegendGroupById', 'getLegendItems', 
-      'getLegendItemById', 'filterLegendGroupsByTags', 'filterLegendItemsByTags',
+      'getLegendGroups', 'getLegendGroupById', 'getLegendItems',
+      'getLegendItemById',
+      'filterLegendGroupsByTags',
+      'filterLegendItemsByTags',
     ];
   }
 
@@ -70,13 +111,19 @@ class ExternalFunctionRegistry {
       'updateElementProperty', 'moveElement',
 
       // 文本元素函数（修改类）
-      'createTextElement', 'updateTextContent', 'updateTextSize', 'say',
+      'createTextElement',
+      'updateTextContent',
+      'updateTextSize',
+      'say',
+      'ttsStop',
 
       // 文件操作函数（写入类）
       'writetext',
 
       // 图例相关函数（修改类）
-      'updateLegendGroup', 'updateLegendGroupVisibility', 'updateLegendGroupOpacity',
+      'updateLegendGroup',
+      'updateLegendGroupVisibility',
+      'updateLegendGroupOpacity',
       'updateLegendItem',
     ];
   }
@@ -85,12 +132,12 @@ class ExternalFunctionRegistry {
   static List<String> getAllFunctionNames() {
     final awaitableFunctions = getAwaitableFunctionNames();
     final fireAndForgetFunctions = getFireAndForgetFunctionNames();
-    
+
     // 合并并去重
     final allFunctions = <String>{};
     allFunctions.addAll(awaitableFunctions);
     allFunctions.addAll(fireAndForgetFunctions);
-    
+
     return allFunctions.toList();
   }
 
@@ -126,6 +173,7 @@ class ExternalFunctionRegistry {
       'delay', 'delayThen', 'now',
     ];
   }
+
   /// 注册基础函数
   static void _registerBasicFunctions(
     Map<String, Function> functions,
@@ -143,6 +191,7 @@ class ExternalFunctionRegistry {
       return null; // 立即返回，不等待结果
     };
   }
+
   /// 注册地图数据访问函数
   static void _registerMapDataFunctions(
     Map<String, Function> functions,
@@ -187,13 +236,11 @@ class ExternalFunctionRegistry {
 
     functions['moveElement'] =
         (String elementId, Map<String, dynamic> newPosition) {
-          callFireAndForgetFunction('moveElement', [
-            elementId,
-            newPosition,
-          ]);
+          callFireAndForgetFunction('moveElement', [elementId, newPosition]);
           return null; // 立即返回，不等待结果
         };
   }
+
   /// 注册文本和UI函数
   static void _registerTextAndUIFunctions(
     Map<String, Function> functions,
@@ -207,10 +254,7 @@ class ExternalFunctionRegistry {
     };
 
     functions['updateTextContent'] = (String elementId, String content) {
-      callFireAndForgetFunction('updateTextContent', [
-        elementId,
-        content,
-      ]);
+      callFireAndForgetFunction('updateTextContent', [elementId, content]);
       return null; // 立即返回，不等待结果
     };
 
@@ -225,18 +269,30 @@ class ExternalFunctionRegistry {
     };
 
     functions['findTextElementsByContent'] = (String content) async {
-      return await callAwaitableFunction('findTextElementsByContent', [content]);
-    };    // say 函数 - 不需要等待结果
+      return await callAwaitableFunction('findTextElementsByContent', [
+        content,
+      ]);
+    };
+
+    // say 函数 - 语音合成，不需要等待结果
+    // 支持可选参数：language, speechRate, volume, pitch, voice
     functions['say'] =
-        (dynamic tagFilter, String filterType, String text) {
+        (
+          dynamic tagFilter,
+          String filterType,
+          String text, [
+          Map<String, dynamic>? options,
+        ]) {
           callFireAndForgetFunction('say', [
             tagFilter,
             filterType,
             text,
+            options, // 传递可选参数映射
           ]);
           return null; // 立即返回，不等待结果
         };
   }
+
   /// 注册文件操作函数
   static void _registerFileOperationFunctions(
     Map<String, Function> functions,
@@ -254,6 +310,7 @@ class ExternalFunctionRegistry {
       return null; // 立即返回，不等待结果
     };
   }
+
   /// 注册便签相关函数
   static void _registerStickyNoteFunctions(
     Map<String, Function> functions,
@@ -283,6 +340,7 @@ class ExternalFunctionRegistry {
       ]);
     };
   }
+
   /// 注册图例相关函数
   static void _registerLegendFunctions(
     Map<String, Function> functions,
@@ -315,33 +373,55 @@ class ExternalFunctionRegistry {
     };
 
     // 图例修改函数 - 不需要等待结果
-    functions['updateLegendGroup'] =
-        (String id, Map<String, dynamic> params) {
-          callFireAndForgetFunction('updateLegendGroup', [id, params]);
-          return null; // 立即返回，不等待结果
-        };
+    functions['updateLegendGroup'] = (String id, Map<String, dynamic> params) {
+      callFireAndForgetFunction('updateLegendGroup', [id, params]);
+      return null; // 立即返回，不等待结果
+    };
 
     functions['updateLegendGroupVisibility'] = (String id, bool visible) {
-      callFireAndForgetFunction('updateLegendGroupVisibility', [
-        id,
-        visible,
-      ]);
+      callFireAndForgetFunction('updateLegendGroupVisibility', [id, visible]);
       return null; // 立即返回，不等待结果
     };
 
     functions['updateLegendGroupOpacity'] = (String id, double opacity) {
-      callFireAndForgetFunction('updateLegendGroupOpacity', [
-        id,
-        opacity,
-      ]);
+      callFireAndForgetFunction('updateLegendGroupOpacity', [id, opacity]);
       return null; // 立即返回，不等待结果
     };
 
-    functions['updateLegendItem'] =
-        (String id, Map<String, dynamic> params) {
-          callFireAndForgetFunction('updateLegendItem', [id, params]);
-          return null; // 立即返回，不等待结果
-        };
+    functions['updateLegendItem'] = (String id, Map<String, dynamic> params) {
+      callFireAndForgetFunction('updateLegendItem', [id, params]);
+      return null; // 立即返回，不等待结果
+    };
+  }
+
+  /// 注册TTS相关函数
+  static void _registerTtsFunctions(
+    Map<String, Function> functions,
+    Future<dynamic> Function(String, List<dynamic>) callAwaitableFunction,
+    void Function(String, List<dynamic>) callFireAndForgetFunction,
+  ) {
+    // TTS停止函数 - 不需要等待结果
+    functions['ttsStop'] = () {
+      callFireAndForgetFunction('ttsStop', []);
+      return null; // 立即返回，不等待结果
+    };
+
+    // TTS查询函数 - 需要等待结果
+    functions['ttsGetLanguages'] = () async {
+      return await callAwaitableFunction('ttsGetLanguages', []);
+    };
+
+    functions['ttsGetVoices'] = () async {
+      return await callAwaitableFunction('ttsGetVoices', []);
+    };
+
+    functions['ttsIsLanguageAvailable'] = (String language) async {
+      return await callAwaitableFunction('ttsIsLanguageAvailable', [language]);
+    };
+
+    functions['ttsGetSpeechRateRange'] = () async {
+      return await callAwaitableFunction('ttsGetSpeechRateRange', []);
+    };
   }
 
   /// 生成唯一的调用ID

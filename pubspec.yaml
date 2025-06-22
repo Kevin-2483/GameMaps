@@ -45,9 +45,11 @@ dependencies:
   
   # Navigation
   go_router: ^14.6.1
-  
-  # Configuration management
+    # Configuration management
   yaml: ^3.1.2
+  
+  # Text-to-Speech
+  flutter_tts: ^4.2.3
     # Storage
   shared_preferences: ^2.3.2    # Database
   sqflite: ^2.3.3+1

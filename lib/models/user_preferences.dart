@@ -365,6 +365,9 @@ class ToolPreferences {
   /// 最近使用的标签
   final List<String> recentTags;
 
+  /// 语音合成设置 (TTS)
+  final TtsPreferences tts;
+
   const ToolPreferences({
     required this.recentColors,
     required this.customColors,
@@ -375,23 +378,24 @@ class ToolPreferences {
     this.handleSize = 8.0,
     this.customTags = const [],
     this.recentTags = const [],
+    required this.tts,
   });
   factory ToolPreferences.createDefault() {
-    return const ToolPreferences(
-      recentColors: [
+    return ToolPreferences(
+      recentColors: const [
         0xFF000000, // 黑色
         0xFFFF0000, // 红色
         0xFF00FF00, // 绿色
         0xFF0000FF, // 蓝色
         0xFFFFFF00, // 黄色
       ],
-      customColors: [
+      customColors: const [
         0xFF9C27B0, // 紫色
         0xFFFF9800, // 橙色
         0xFF795548, // 棕色
       ],
-      favoriteStrokeWidths: [1.0, 2.0, 3.0, 5.0, 8.0],
-      shortcuts: {
+      favoriteStrokeWidths: const [1.0, 2.0, 3.0, 5.0, 8.0],
+      shortcuts: const {
         'undo': 'Ctrl+Z',
         'redo': 'Ctrl+Y',
         'save': 'Ctrl+S',
@@ -399,7 +403,7 @@ class ToolPreferences {
         'paste': 'Ctrl+V',
         'delete': 'Delete',
       },
-      toolbarLayout: [
+      toolbarLayout: const [
         'line',
         'dashedLine',
         'arrow',
@@ -415,7 +419,7 @@ class ToolPreferences {
       ],
       showAdvancedTools: false,
       handleSize: 8.0,
-      customTags: [
+      customTags: const [
         '重要',
         '紧急',
         '完成',
@@ -428,7 +432,8 @@ class ToolPreferences {
         '想法',
         '参考',
       ],
-      recentTags: [],
+      recentTags: const [],
+      tts: TtsPreferences.createDefault(),
     );
   }
   ToolPreferences copyWith({
@@ -441,6 +446,7 @@ class ToolPreferences {
     double? handleSize,
     List<String>? customTags,
     List<String>? recentTags,
+    TtsPreferences? tts,
   }) {
     return ToolPreferences(
       recentColors: recentColors ?? this.recentColors,
@@ -452,11 +458,77 @@ class ToolPreferences {
       handleSize: handleSize ?? this.handleSize,
       customTags: customTags ?? this.customTags,
       recentTags: recentTags ?? this.recentTags,
+      tts: tts ?? this.tts,
     );
   }
 
   factory ToolPreferences.fromJson(Map<String, dynamic> json) =>
       _$ToolPreferencesFromJson(json);
-
   Map<String, dynamic> toJson() => _$ToolPreferencesToJson(this);
+}
+
+/// 语音合成偏好设置 (TTS)
+@JsonSerializable()
+class TtsPreferences {
+  /// 语言代码 (如 'zh-CN', 'en-US')
+  final String? language;
+
+  /// 语音速度 (0.0 - 1.0)
+  final double speechRate;
+
+  /// 音量 (0.0 - 1.0)
+  final double volume;
+
+  /// 音调 (0.5 - 2.0)
+  final double pitch;
+
+  /// 选择的语音 (语音ID)
+  final Map<String, String>? voice;
+
+  /// 是否启用TTS
+  final bool enabled;
+
+  const TtsPreferences({
+    this.language,
+    this.speechRate = 0.5,
+    this.volume = 0.8,
+    this.pitch = 1.0,
+    this.voice,
+    this.enabled = true,
+  });
+
+  /// 创建默认TTS设置
+  factory TtsPreferences.createDefault() {
+    return const TtsPreferences(
+      language: 'zh-CN', // 默认中文
+      speechRate: 0.5, // 中等语速
+      volume: 0.8, // 80%音量
+      pitch: 1.0, // 标准音调
+      voice: null, // 使用默认语音
+      enabled: true, // 默认启用
+    );
+  }
+
+  TtsPreferences copyWith({
+    String? language,
+    double? speechRate,
+    double? volume,
+    double? pitch,
+    Map<String, String>? voice,
+    bool? enabled,
+  }) {
+    return TtsPreferences(
+      language: language ?? this.language,
+      speechRate: speechRate ?? this.speechRate,
+      volume: volume ?? this.volume,
+      pitch: pitch ?? this.pitch,
+      voice: voice ?? this.voice,
+      enabled: enabled ?? this.enabled,
+    );
+  }
+
+  factory TtsPreferences.fromJson(Map<String, dynamic> json) =>
+      _$TtsPreferencesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TtsPreferencesToJson(this);
 }

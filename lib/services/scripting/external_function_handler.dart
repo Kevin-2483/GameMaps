@@ -4,15 +4,157 @@ import '../../data/map_data_bloc.dart';
 import '../../data/map_data_state.dart';
 import '../../models/map_layer.dart';
 import '../../utils/script_data_converter.dart';
+import '../tts_service.dart';
 
 /// 外部函数处理器
 /// 统一处理所有脚本执行器的外部函数调用实现
 class ExternalFunctionHandler {
   final MapDataBloc _mapDataBloc;
   final List<String> _executionLogs = [];
+  final String? _scriptId; // 脚本标识符
+  
+  // TTS 服务实例
+  late final TtsService _ttsService;
 
-  ExternalFunctionHandler({required MapDataBloc mapDataBloc})
-    : _mapDataBloc = mapDataBloc;
+  ExternalFunctionHandler({
+    required MapDataBloc mapDataBloc,
+    String? scriptId,
+  }) : _mapDataBloc = mapDataBloc,
+       _scriptId = scriptId {
+    _ttsService = TtsService();
+    // 初始化 TTS 服务
+    _initializeTtsService();
+  }
+
+  /// 初始化 TTS 服务
+  void _initializeTtsService() async {
+    try {
+      await _ttsService.initialize();
+      debugPrint('TTS 服务初始化成功');
+    } catch (e) {
+      debugPrint('TTS 服务初始化失败: $e');
+    }
+  }  /// 处理语音合成函数
+  /// 参数: text, [可选参数映射]
+  void handleSay(String text, [Map<String, dynamic>? options]) async {
+    try {
+      debugPrint('处理语音合成: text="$text"');
+      
+      if (text.isEmpty) {
+        debugPrint('语音合成: 文本为空，跳过');
+        return;
+      }
+
+      // 解析可选参数
+      String? language;
+      double? speechRate;
+      double? volume;
+      double? pitch;
+      Map<String, String>? voice;
+
+      if (options != null) {
+        language = options['language'] as String?;
+        speechRate = options['speechRate'] as double?;
+        volume = options['volume'] as double?;
+        pitch = options['pitch'] as double?;
+        voice = options['voice'] as Map<String, String>?;
+      }      // 调用 TTS 服务进行语音合成
+      await _ttsService.speak(
+        text,
+        language: language,
+        speechRate: speechRate,
+        volume: volume,
+        pitch: pitch,
+        voice: voice,
+        sourceId: _scriptId ?? 'script-unknown',
+      );
+
+      // 记录执行日志
+      String logMessage = '语音合成: "$text"';
+      if (language != null) logMessage += ', language: $language';
+      if (speechRate != null) logMessage += ', rate: $speechRate';
+      if (volume != null) logMessage += ', volume: $volume';
+      if (pitch != null) logMessage += ', pitch: $pitch';
+      if (voice != null) logMessage += ', voice: $voice';
+      
+      addExecutionLog(logMessage);
+      
+    } catch (e) {
+      debugPrint('语音合成失败: $e');
+      addExecutionLog('语音合成失败: $e');
+    }
+  }
+  /// 停止当前脚本的所有TTS播放
+  Future<void> stopScriptTts() async {
+    try {
+      if (_scriptId != null) {
+        await _ttsService.stopBySource(_scriptId);
+        addExecutionLog('已停止脚本 $_scriptId 的所有TTS播放');
+      }
+    } catch (e) {
+      debugPrint('停止脚本TTS失败: $e');
+      addExecutionLog('停止脚本TTS失败: $e');
+    }
+  }
+
+  /// 处理TTS停止函数
+  void handleTtsStop() async {
+    await stopScriptTts();
+  }
+
+  /// 处理TTS获取语言列表函数
+  dynamic handleTtsGetLanguages() async {
+    try {
+      await _ttsService.initialize();
+      final languages = _ttsService.availableLanguages;
+      addExecutionLog('获取TTS语言列表: ${languages?.length ?? 0} 种语言');
+      return languages;
+    } catch (e) {
+      debugPrint('获取TTS语言列表失败: $e');
+      addExecutionLog('获取TTS语言列表失败: $e');
+      return [];
+    }
+  }
+
+  /// 处理TTS获取语音列表函数
+  dynamic handleTtsGetVoices() async {
+    try {
+      await _ttsService.initialize();
+      final voices = _ttsService.availableVoices;
+      addExecutionLog('获取TTS语音列表: ${voices?.length ?? 0} 种语音');
+      return voices;
+    } catch (e) {
+      debugPrint('获取TTS语音列表失败: $e');
+      addExecutionLog('获取TTS语音列表失败: $e');
+      return [];
+    }
+  }
+
+  /// 处理TTS检查语言可用性函数
+  dynamic handleTtsIsLanguageAvailable(String language) async {
+    try {
+      final isAvailable = await _ttsService.isLanguageAvailable(language);
+      addExecutionLog('检查语言 $language 可用性: $isAvailable');
+      return isAvailable;
+    } catch (e) {
+      debugPrint('检查语言可用性失败: $e');
+      addExecutionLog('检查语言可用性失败: $e');
+      return false;
+    }
+  }
+
+  /// 处理TTS获取语音速度范围函数
+  dynamic handleTtsGetSpeechRateRange() async {
+    try {
+      final range = await _ttsService.getSpeechRateRange();
+      addExecutionLog('获取TTS语音速度范围: $range');
+      return range;
+    } catch (e) {
+      debugPrint('获取语音速度范围失败: $e');
+      addExecutionLog('获取语音速度范围失败: $e');
+      return null;
+    }
+  }
 
   /// 处理日志函数
   dynamic handleLog(dynamic message) {

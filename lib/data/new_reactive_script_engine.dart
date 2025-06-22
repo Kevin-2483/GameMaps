@@ -238,7 +238,32 @@ class NewReactiveScriptEngine {
     executor.registerExternalFunction(
       'getLegendGroupById',
       _functionHandler.handleGetLegendGroupById,
+    );    // 语音合成函数
+    executor.registerExternalFunction(
+      'say',
+      _functionHandler.handleSay,
     );
+    executor.registerExternalFunction(
+      'ttsStop',
+      _functionHandler.handleTtsStop,
+    );
+    executor.registerExternalFunction(
+      'ttsGetLanguages',
+      _functionHandler.handleTtsGetLanguages,
+    );
+    executor.registerExternalFunction(
+      'ttsGetVoices',
+      _functionHandler.handleTtsGetVoices,
+    );
+    executor.registerExternalFunction(
+      'ttsIsLanguageAvailable',
+      _functionHandler.handleTtsIsLanguageAvailable,
+    );
+    executor.registerExternalFunction(
+      'ttsGetSpeechRateRange',
+      _functionHandler.handleTtsGetSpeechRateRange,
+    );
+
     debugPrint('已注册所有外部函数到Isolate执行器');
   }
 

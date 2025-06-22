@@ -298,13 +298,9 @@ Future<void> _initializeHetuEngine(IsolateManagerController controller) async {
       externalFunctions: allExternalFunctions,
       // 确保加载所有标准的类绑定和扩展方法
     );
-    
-    // 手动添加 _Future 类型的绑定，因为 Web 环境下 Future 类型名为 "_Future"
-    // 但 HTFutureClassBinding 注册为 "Future"
-    final futureBinding = _hetuEngine!.interpreter.fetchExternalClass('Future');
-    // 直接在外部类映射中添加别名
-    _hetuEngine!.interpreter.externClasses['_Future'] = futureBinding;
-    _addWorkerLog('手动绑定 _Future 类型到 Future 外部类');
+      // 自动检测并注册混淆后的类型名
+    _autoRegisterObfuscatedTypes();
+    _addWorkerLog('自动类型别名注册完成');
     
     _addWorkerLog('Hetu script engine initialized successfully');
 
@@ -471,26 +467,16 @@ Future<dynamic> _callExternalFunction(
   final completer = Completer<dynamic>();
 
   _externalFunctionCalls[callId] = completer;
-
   _addWorkerLog(
     'Calling external function: $functionName for task: $executionId',
   );
   _addWorkerLog('Arguments type: ${arguments.runtimeType}');
   _addWorkerLog('Arguments value: $arguments');
+  _addWorkerLog('Arguments length: ${arguments.length}');
 
-  // 处理参数 - 如果只有一个参数且为简单类型，直接发送该值
-  dynamic argumentsToSend;
-  if (arguments.length == 1) {
-    final arg = arguments.first;
-    // 对于简单类型（字符串、数字、布尔值），直接发送值
-    if (arg is String || arg is num || arg is bool || arg == null) {
-      argumentsToSend = arg;
-    } else {
-      argumentsToSend = arguments;
-    }
-  } else {
-    argumentsToSend = arguments;
-  }
+  // 始终发送完整的参数列表，不进行简化处理
+  // 因为主线程的函数可能需要特定数量的参数
+  final argumentsToSend = arguments;
   // 发送外部函数调用请求到主线程
   _sendCustomMessage(controller, {
     'type': 'externalFunctionCall',
@@ -525,20 +511,11 @@ void _callFireAndForgetFunction(
     'Calling fire-and-forget function: $functionName for task: $executionId',
   );
   _addWorkerLog('Arguments: $arguments');
+  _addWorkerLog('Arguments length: ${arguments.length}');
 
-  // 处理参数 - 如果只有一个参数且为简单类型，直接发送该值
-  dynamic argumentsToSend;
-  if (arguments.length == 1) {
-    final arg = arguments.first;
-    // 对于简单类型（字符串、数字、布尔值），直接发送值
-    if (arg is String || arg is num || arg is bool || arg == null) {
-      argumentsToSend = arg;
-    } else {
-      argumentsToSend = arguments;
-    }
-  } else {
-    argumentsToSend = arguments;
-  }
+  // 始终发送完整的参数列表，不进行简化处理
+  // 因为主线程的函数可能需要特定数量的参数
+  final argumentsToSend = arguments;
 
   // 发送外部函数调用请求到主线程，但不等待结果
   _sendCustomMessage(controller, {
@@ -662,4 +639,46 @@ void _disposeHetuEngine(IsolateManagerController controller) {
     'executionId': 'dispose',
     'timestamp': DateTime.now().millisecondsSinceEpoch,
   });
+}
+void _autoRegisterObfuscatedTypes() {
+  if (_hetuEngine == null) return;
+
+  final typeInstances = <String, dynamic>{
+    'Future': Future.value(),
+  };
+
+  for (final entry in typeInstances.entries) {
+    final logicalName = entry.key;
+    final instance = entry.value;
+    final fullTypeName = instance.runtimeType.toString(); // 如 minified:Q<dynamic>
+    _addWorkerLog('类型映射: $logicalName -> $fullTypeName');
+
+    // 提取核心混淆名，如 "minified:Q"
+    final coreNameMatch = RegExp(r'^([^\<]+)').firstMatch(fullTypeName);
+    final coreTypeName = coreNameMatch?.group(1); // 获取 < 之前的字符串
+
+    if (coreTypeName == null) {
+      _addWorkerLog('提取核心类型失败: $fullTypeName');
+      continue;
+    }
+
+    try {
+      final binding = _hetuEngine!.interpreter.fetchExternalClass(logicalName);
+
+      // 注册完整名（带泛型）
+      if (!_hetuEngine!.interpreter.externClasses.containsKey(fullTypeName)) {
+        _hetuEngine!.interpreter.externClasses[fullTypeName] = binding;
+        _addWorkerLog('注册泛型类型名: $fullTypeName -> $logicalName');
+      }
+
+      // 注册核心名（不带泛型但保留混淆前缀）
+      if (coreTypeName != fullTypeName &&
+          !_hetuEngine!.interpreter.externClasses.containsKey(coreTypeName)) {
+        _hetuEngine!.interpreter.externClasses[coreTypeName] = binding;
+        _addWorkerLog('注册核心混淆名: $coreTypeName -> $logicalName');
+      }
+    } catch (e) {
+      _addWorkerLog('注册类型失败: $fullTypeName/$coreTypeName -> $logicalName, 错误: $e');
+    }
+  }
 }
