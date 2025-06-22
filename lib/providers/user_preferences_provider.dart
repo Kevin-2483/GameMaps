@@ -177,7 +177,6 @@ class UserPreferencesProvider extends ChangeNotifier {
       _setError('更新界面布局设置失败: ${e.toString()}');
     }
   }
-
   /// 更新工具设置
   Future<void> updateTools({
     List<int>? recentColors,
@@ -187,11 +186,11 @@ class UserPreferencesProvider extends ChangeNotifier {
     List<String>? toolbarLayout,
     bool? showAdvancedTools,
     double? handleSize,
+    TtsPreferences? tts,
   }) async {
     if (_currentPreferences == null) return;
 
-    try {
-      final updatedTools = tools.copyWith(
+    try {      final updatedTools = tools.copyWith(
         recentColors: recentColors,
         customColors: customColors,
         favoriteStrokeWidths: favoriteStrokeWidths,
@@ -199,6 +198,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         toolbarLayout: toolbarLayout,
         showAdvancedTools: showAdvancedTools,
         handleSize: handleSize,
+        tts: tts,
       );
 
       await _service.updateTools(updatedTools);

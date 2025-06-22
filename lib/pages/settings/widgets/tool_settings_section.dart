@@ -4,6 +4,7 @@ import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../components/common/tags_manager.dart';
+import '../../../services/tts_service.dart';
 
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -412,6 +413,179 @@ class ToolSettingsSection extends StatelessWidget {
                   ),
               ],
             ),
+
+            const SizedBox(height: 16),
+
+            // TTS 设置
+            Text(
+              'TTS 语音合成设置',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            
+            // TTS 启用开关
+            SwitchListTile(
+              title: Text('启用语音合成'),
+              subtitle: Text('开启后将支持语音朗读功能'),
+              value: tools.tts.enabled,
+              onChanged: (value) {
+                provider.updateTools(
+                  tts: tools.tts.copyWith(enabled: value),
+                );
+              },
+            ),
+            
+            // 仅在 TTS 启用时显示其他设置
+            if (tools.tts.enabled) ...[
+              const SizedBox(height: 8),
+                // 语言设置
+              _TtsLanguageSelector(
+                currentLanguage: tools.tts.language,
+                onLanguageChanged: (value) {
+                  provider.updateTools(
+                    tts: tools.tts.copyWith(language: value),
+                  );
+                },
+              ),
+              
+              // 语音速度
+              ListTile(
+                title: Text('语音速度'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('调整语音播放速度'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text('慢'),
+                        Expanded(
+                          child: Slider(
+                            value: tools.tts.speechRate.clamp(0.1, 1.0),
+                            min: 0.1,
+                            max: 1.0,
+                            divisions: 9,
+                            label: '${(tools.tts.speechRate * 100).round()}%',
+                            onChanged: (value) {
+                              provider.updateTools(
+                                tts: tools.tts.copyWith(speechRate: value),
+                              );
+                            },
+                          ),
+                        ),
+                        Text('快'),
+                      ],
+                    ),
+                    Text(
+                      '当前: ${(tools.tts.speechRate * 100).round()}%',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 音量
+              ListTile(
+                title: Text('音量'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('调整语音播放音量'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.volume_mute, size: 16),
+                        Expanded(
+                          child: Slider(
+                            value: tools.tts.volume.clamp(0.0, 1.0),
+                            min: 0.0,
+                            max: 1.0,
+                            divisions: 10,
+                            label: '${(tools.tts.volume * 100).round()}%',
+                            onChanged: (value) {
+                              provider.updateTools(
+                                tts: tools.tts.copyWith(volume: value),
+                              );
+                            },
+                          ),
+                        ),
+                        Icon(Icons.volume_up, size: 16),
+                      ],
+                    ),
+                    Text(
+                      '当前: ${(tools.tts.volume * 100).round()}%',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 音调
+              ListTile(
+                title: Text('音调'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('调整语音音调高低'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text('低'),
+                        Expanded(
+                          child: Slider(
+                            value: tools.tts.pitch.clamp(0.5, 2.0),
+                            min: 0.5,
+                            max: 2.0,
+                            divisions: 15,
+                            label: '${tools.tts.pitch.toStringAsFixed(1)}',
+                            onChanged: (value) {
+                              provider.updateTools(
+                                tts: tools.tts.copyWith(pitch: value),
+                              );
+                            },
+                          ),
+                        ),
+                        Text('高'),
+                      ],
+                    ),
+                    Text(
+                      '当前: ${tools.tts.pitch.toStringAsFixed(1)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),              ),
+              
+              // 语音选择
+              _TtsVoiceSelector(
+                currentVoice: tools.tts.voice,
+                currentLanguage: tools.tts.language,
+                onVoiceChanged: (value) {
+                  provider.updateTools(
+                    tts: tools.tts.copyWith(voice: value),
+                  );
+                },
+              ),
+              
+              // TTS 测试按钮
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _testTts(context),
+                    icon: Icon(Icons.play_arrow),
+                    label: Text('测试语音'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _resetTtsSettings(context, provider),
+                    icon: Icon(Icons.restore),
+                    label: Text('重置TTS设置'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -815,7 +989,177 @@ class ToolSettingsSection extends StatelessWidget {
         ],
       ),
     );
+  }  /// 测试 TTS 功能
+  void _testTts(BuildContext context) async {
+    try {
+      // 使用 TTS 服务
+      final tts = TtsService();
+      await tts.initialize();
+      
+      // 首先停止所有当前播放，包括测试播放
+      await tts.stopBySource('settings_test');
+      await tts.stop(); // 停止所有播放
+      
+      // 获取当前用户设置
+      final ttsSettings = preferences.tools.tts;
+      
+      // 测试语音播放，使用当前设置的语言
+      final currentLanguage = ttsSettings.language;
+      String testText = '这是一个语音合成测试，当前设置已应用。';
+      
+      // 根据语言调整测试文本
+      if (currentLanguage != null) {
+        switch (currentLanguage.toLowerCase().split('-')[0]) {
+          case 'en':
+            testText = 'This is a text-to-speech test. Current settings have been applied.';
+            break;
+          case 'ja':
+            testText = 'これは音声合成のテストです。現在の設定が適用されています。';
+            break;
+          case 'ko':
+            testText = '이것은 음성 합성 테스트입니다. 현재 설정이 적용되었습니다.';
+            break;
+          case 'fr':
+            testText = 'Ceci est un test de synthèse vocale. Les paramètres actuels ont été appliqués.';
+            break;
+          case 'de':
+            testText = 'Dies ist ein Text-zu-Sprache-Test. Die aktuellen Einstellungen wurden angewendet.';
+            break;
+          case 'es':
+            testText = 'Esta es una prueba de síntesis de voz. Se han aplicado los ajustes actuales.';
+            break;
+          case 'it':
+            testText = 'Questo è un test di sintesi vocale. Le impostazioni correnti sono state applicate.';
+            break;
+          case 'pt':
+            testText = 'Este é um teste de síntese de voz. As configurações atuais foram aplicadas.';
+            break;
+          case 'ru':
+            testText = 'Это тест синтеза речи. Текущие настройки применены.';
+            break;
+          case 'ar':
+            testText = 'هذا اختبار لتحويل النص إلى كلام. تم تطبيق الإعدادات الحالية.';
+            break;
+          case 'th':
+            testText = 'นี่คือการทดสอบการสังเคราะห์เสียงพูด การตั้งค่าปัจจุบันได้ถูกนำไปใช้แล้ว';
+            break;
+          case 'vi':
+            testText = 'Đây là bài kiểm tra chuyển văn bản thành giọng nói. Các cài đặt hiện tại đã được áp dụng.';
+            break;
+          case 'hi':
+            testText = 'यह टेक्स्ट-टू-स्पीच परीक्षण है। वर्तमान सेटिंग्स लागू की गई हैं।';
+            break;
+          default:
+            testText = '这是一个语音合成测试，当前设置已应用。';
+        }
+      }
+      
+      // 直接调用 TTS，使用当前设置的所有参数
+      await tts.speak(
+        testText,
+        language: ttsSettings.language,
+        speechRate: ttsSettings.speechRate,
+        volume: ttsSettings.volume,
+        pitch: ttsSettings.pitch,
+        voice: ttsSettings.voice,
+        sourceId: 'settings_test',
+      );
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('TTS 测试已开始播放 (${_getLanguageDisplayName(currentLanguage ?? 'zh-CN')})'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('TTS 测试失败: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
+
+  /// 获取语言显示名称 (用于测试反馈)
+  String _getLanguageDisplayName(String languageCode) {
+    const languageMap = {
+      'zh': '中文',
+      'zh-CN': '中文 (简体)',
+      'zh-TW': '中文 (繁体)',
+      'en': '英语',
+      'en-US': '英语 (美国)',
+      'en-GB': '英语 (英国)',
+      'ja': '日语',
+      'ja-JP': '日语',
+      'ko': '韩语',
+      'ko-KR': '韩语',
+      'fr': '法语',
+      'fr-FR': '法语',
+      'de': '德语',
+      'de-DE': '德语',
+      'es': '西班牙语',
+      'es-ES': '西班牙语',
+      'it': '意大利语',
+      'it-IT': '意大利语',
+      'pt': '葡萄牙语',
+      'pt-BR': '葡萄牙语 (巴西)',
+      'ru': '俄语',
+      'ru-RU': '俄语',
+      'ar': '阿拉伯语',
+      'ar-SA': '阿拉伯语',
+      'th': '泰语',
+      'th-TH': '泰语',
+      'vi': '越南语',
+      'vi-VN': '越南语',
+      'hi': '印地语',
+      'hi-IN': '印地语',
+    };
+    return languageMap[languageCode] ?? languageCode;
+  }
+
+  /// 重置 TTS 设置
+  void _resetTtsSettings(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('重置TTS设置'),
+        content: const Text('确定要重置TTS设置为默认值吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              provider.updateTools(
+                tts: TtsPreferences.createDefault(),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('TTS设置已重置'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
 
 /// 添加自定义标签对话框
@@ -894,5 +1238,378 @@ class _AddCustomTagDialogState extends State<_AddCustomTagDialog> {
         ElevatedButton(onPressed: _addTag, child: const Text('添加')),
       ],
     );
+  }
+}
+
+/// TTS 语言选择器组件
+class _TtsLanguageSelector extends StatefulWidget {
+  final String? currentLanguage;
+  final ValueChanged<String?> onLanguageChanged;
+
+  const _TtsLanguageSelector({
+    required this.currentLanguage,
+    required this.onLanguageChanged,
+  });
+
+  @override
+  State<_TtsLanguageSelector> createState() => _TtsLanguageSelectorState();
+}
+
+class _TtsLanguageSelectorState extends State<_TtsLanguageSelector> {
+  List<dynamic>? _availableLanguages;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailableLanguages();
+  }
+
+  Future<void> _loadAvailableLanguages() async {
+    try {
+      final tts = TtsService();
+      await tts.initialize();
+      setState(() {
+        _availableLanguages = tts.availableLanguages;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  String _getLanguageDisplayName(String languageCode) {
+    // 将语言代码转换为显示名称
+    const languageMap = {
+      // 中文系列
+      'zh': '中文',
+      'zh-CN': '中文 (简体)',
+      'zh-TW': '中文 (繁体)',
+      'zh-HK': '中文 (香港)',
+      'zh-SG': '中文 (新加坡)',
+      
+      // 英语系列
+      'en': '英语',
+      'en-US': '英语 (美国)',
+      'en-GB': '英语 (英国)',
+      'en-AU': '英语 (澳大利亚)',
+      'en-CA': '英语 (加拿大)',
+      'en-IN': '英语 (印度)',
+      
+      // 日语
+      'ja': '日语',
+      'ja-JP': '日语',
+      
+      // 韩语
+      'ko': '韩语',
+      'ko-KR': '韩语',
+      
+      // 欧洲语言
+      'fr': '法语',
+      'fr-FR': '法语 (法国)',
+      'fr-CA': '法语 (加拿大)',
+      'de': '德语',
+      'de-DE': '德语',
+      'es': '西班牙语',
+      'es-ES': '西班牙语 (西班牙)',
+      'es-MX': '西班牙语 (墨西哥)',
+      'it': '意大利语',
+      'it-IT': '意大利语',
+      'pt': '葡萄牙语',
+      'pt-BR': '葡萄牙语 (巴西)',
+      'pt-PT': '葡萄牙语 (葡萄牙)',
+      'ru': '俄语',
+      'ru-RU': '俄语',
+      'nl': '荷兰语',
+      'nl-NL': '荷兰语',
+      
+      // 北欧语言
+      'sv': '瑞典语',
+      'sv-SE': '瑞典语',
+      'da': '丹麦语',
+      'da-DK': '丹麦语',
+      'no': '挪威语',
+      'no-NO': '挪威语',
+      'fi': '芬兰语',
+      'fi-FI': '芬兰语',
+      
+      // 东欧语言
+      'pl': '波兰语',
+      'pl-PL': '波兰语',
+      'cs': '捷克语',
+      'cs-CZ': '捷克语',
+      'hu': '匈牙利语',
+      'hu-HU': '匈牙利语',
+      'ro': '罗马尼亚语',
+      'ro-RO': '罗马尼亚语',
+      'bg': '保加利亚语',
+      'bg-BG': '保加利亚语',
+      'hr': '克罗地亚语',
+      'hr-HR': '克罗地亚语',
+      'sk': '斯洛伐克语',
+      'sk-SK': '斯洛伐克语',
+      'sl': '斯洛文尼亚语',
+      'sl-SI': '斯洛文尼亚语',
+      'et': '爱沙尼亚语',
+      'et-EE': '爱沙尼亚语',
+      'lv': '拉脱维亚语',
+      'lv-LV': '拉脱维亚语',
+      'lt': '立陶宛语',
+      'lt-LT': '立陶宛语',
+      
+      // 其他语言
+      'ar': '阿拉伯语',
+      'ar-SA': '阿拉伯语',
+      'th': '泰语',
+      'th-TH': '泰语',
+      'vi': '越南语',
+      'vi-VN': '越南语',
+      'hi': '印地语',
+      'hi-IN': '印地语',
+      'tr': '土耳其语',
+      'tr-TR': '土耳其语',
+      'he': '希伯来语',
+      'he-IL': '希伯来语',
+      'id': '印尼语',
+      'id-ID': '印尼语',
+      'ms': '马来语',
+      'ms-MY': '马来语',
+      'tl': '菲律宾语',
+      'tl-PH': '菲律宾语',
+    };
+
+    return languageMap[languageCode] ?? languageCode;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: const Text('语言'),
+      subtitle: Text(widget.currentLanguage != null 
+          ? _getLanguageDisplayName(widget.currentLanguage!)
+          : '默认'),
+      trailing: _isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : DropdownButton<String>(
+              value: widget.currentLanguage,
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('默认'),
+                ),
+                if (_availableLanguages != null)
+                  ..._availableLanguages!.map<DropdownMenuItem<String>>((lang) {
+                    final languageCode = lang.toString();
+                    return DropdownMenuItem<String>(
+                      value: languageCode,
+                      child: Text(_getLanguageDisplayName(languageCode)),
+                    );
+                  }).toList(),
+              ],
+              onChanged: widget.onLanguageChanged,
+              isExpanded: false,
+            ),
+    );
+  }
+}
+
+/// TTS 语音选择器组件
+class _TtsVoiceSelector extends StatefulWidget {
+  final Map<String, String>? currentVoice;
+  final String? currentLanguage;
+  final ValueChanged<Map<String, String>?> onVoiceChanged;
+
+  const _TtsVoiceSelector({
+    required this.currentVoice,
+    required this.currentLanguage,
+    required this.onVoiceChanged,
+  });
+
+  @override
+  State<_TtsVoiceSelector> createState() => _TtsVoiceSelectorState();
+}
+
+class _TtsVoiceSelectorState extends State<_TtsVoiceSelector> {
+  List<dynamic>? _availableVoices;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailableVoices();
+  }
+
+  @override
+  void didUpdateWidget(_TtsVoiceSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 当语言改变时，重新加载语音选项
+    if (oldWidget.currentLanguage != widget.currentLanguage) {
+      _loadAvailableVoices();
+    }
+  }
+
+  Future<void> _loadAvailableVoices() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      final tts = TtsService();
+      await tts.initialize();
+      setState(() {
+        _availableVoices = tts.availableVoices;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  List<Map<String, dynamic>> _getFilteredVoices() {
+    if (_availableVoices == null) return [];
+    
+    try {
+      final voices = <Map<String, dynamic>>[];
+      
+      for (final voice in _availableVoices!) {
+        if (voice is Map) {
+          // 转换为 Map<String, dynamic>
+          final voiceMap = <String, dynamic>{};
+          voice.forEach((key, value) {
+            voiceMap[key.toString()] = value;
+          });
+          voices.add(voiceMap);
+        }
+      }
+      
+      // 如果指定了语言，过滤匹配的语音
+      if (widget.currentLanguage != null) {
+        final targetLanguage = widget.currentLanguage!.toLowerCase();
+        return voices.where((voice) {
+          final voiceLocale = voice['locale']?.toString().toLowerCase();
+          if (voiceLocale == null) return false;
+          
+          // 支持完全匹配或语言前缀匹配
+          return voiceLocale == targetLanguage || 
+                 voiceLocale.startsWith('${targetLanguage.split('-')[0]}-');
+        }).toList();
+      }
+      
+      return voices;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  String _getVoiceDisplayName(Map<String, dynamic> voice) {
+    final name = voice['name']?.toString() ?? '';
+    final locale = voice['locale']?.toString() ?? '';
+    
+    if (name.isNotEmpty && locale.isNotEmpty) {
+      return '$name ($locale)';
+    } else if (name.isNotEmpty) {
+      return name;
+    } else if (locale.isNotEmpty) {
+      return locale;
+    }
+    
+    return '未知语音';
+  }
+
+  String _getCurrentVoiceDisplayName() {
+    if (widget.currentVoice == null) return '默认';
+    
+    final name = widget.currentVoice!['name'] ?? '';
+    final locale = widget.currentVoice!['locale'] ?? '';
+    
+    if (name.isNotEmpty && locale.isNotEmpty) {
+      return '$name ($locale)';
+    } else if (name.isNotEmpty) {
+      return name;
+    }
+    
+    return '自定义语音';
+  }
+  @override
+  Widget build(BuildContext context) {
+    final filteredVoices = _getFilteredVoices();
+    final currentVoiceId = _getCurrentVoiceId();
+    
+    return ListTile(
+      title: const Text('语音'),
+      subtitle: Text(_getCurrentVoiceDisplayName()),
+      trailing: _isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : DropdownButton<String>(
+              value: currentVoiceId,
+              items: [
+                const DropdownMenuItem<String>(
+                  value: 'default',
+                  child: Text('默认'),
+                ),
+                ...filteredVoices.asMap().entries.map<DropdownMenuItem<String>>((entry) {
+                  final index = entry.key;
+                  final voice = entry.value;
+                  final voiceId = 'voice_$index';
+                  return DropdownMenuItem<String>(
+                    value: voiceId,
+                    child: Text(_getVoiceDisplayName(voice)),
+                  );
+                }).toList(),
+              ],
+              onChanged: (String? selectedVoiceId) {
+                if (selectedVoiceId == null || selectedVoiceId == 'default') {
+                  widget.onVoiceChanged(null);
+                } else {
+                  // 从 voice_1, voice_2 等格式中提取索引
+                  final indexStr = selectedVoiceId.replaceFirst('voice_', '');
+                  final index = int.tryParse(indexStr);
+                  if (index != null && index < filteredVoices.length) {
+                    final selectedVoice = filteredVoices[index];
+                    final voiceMap = Map<String, String>.from(
+                      selectedVoice.map((key, value) => MapEntry(key, value?.toString() ?? '')),
+                    );
+                    widget.onVoiceChanged(voiceMap);
+                  }
+                }
+              },
+              isExpanded: false,
+            ),
+    );
+  }
+
+  // 获取当前语音的ID用于选择
+  String? _getCurrentVoiceId() {
+    if (widget.currentVoice == null) return 'default';
+    
+    final filteredVoices = _getFilteredVoices();
+    final currentName = widget.currentVoice!['name'] ?? '';
+    final currentLocale = widget.currentVoice!['locale'] ?? '';
+    
+    for (int i = 0; i < filteredVoices.length; i++) {
+      final voice = filteredVoices[i];
+      final voiceName = voice['name']?.toString() ?? '';
+      final voiceLocale = voice['locale']?.toString() ?? '';
+      
+      if (voiceName == currentName && voiceLocale == currentLocale) {
+        return 'voice_$i';
+      }
+    }
+    
+    return 'default';
   }
 }

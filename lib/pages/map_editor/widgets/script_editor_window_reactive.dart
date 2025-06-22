@@ -46,14 +46,25 @@ class _ReactiveScriptEditorWindowState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _codeController.addListener(_onTextChanged);
     });
-  }
-
-  /// 文本变化监听器
+  }  /// 文本变化监听器
   void _onTextChanged() {
     final currentContent = _codeController.text;
     final hasChanges = currentContent != _originalContent;
-
-    if (_hasUnsavedChanges != hasChanges) {
+    
+    // 检查行数变化
+    final currentLineCount = currentContent.split('\n').length;
+    final originalLineCount = _originalContent.split('\n').length;
+    
+    // 当行数发生变化时，强制重新构建UI以调整行号宽度
+    bool needsRebuild = _hasUnsavedChanges != hasChanges;
+    
+    // 如果行数变化跨越了位数边界，也需要重新构建
+    if (currentLineCount.toString().length != originalLineCount.toString().length) {
+      needsRebuild = true;
+      debugPrint('行数位数变化: $originalLineCount -> $currentLineCount');
+    }
+    
+    if (needsRebuild) {
       setState(() {
         _hasUnsavedChanges = hasChanges;
       });
@@ -348,19 +359,19 @@ class _ReactiveScriptEditorWindowState
                             ),
                             background: _isDarkTheme
                                 ? const Color(0xFF272822)
-                                : Colors.white,
-                            gutterStyle: GutterStyle(
+                                : Colors.white,                            gutterStyle: GutterStyle(
                               showLineNumbers: true,
                               showErrors: true,
                               showFoldingHandles: false,
-                              margin: 8,
-                              width: 60,
+                              margin: 4, // 减少边距，给行号更多空间
+                              width: _calculateGutterWidth(_codeController.text),
                               background: _isDarkTheme
                                   ? const Color(0xFF272822) // 与编辑器背景色保持一致
                                   : Colors.white,
                               textStyle: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12,
+                                height: 1.5, // 与编辑器行高保持一致
                                 color: _isDarkTheme
                                     ? Colors.grey[500]
                                     : Colors.grey[600],
@@ -380,6 +391,36 @@ class _ReactiveScriptEditorWindowState
         ),
       ),
     );
+  }  /// 计算行号宽度，根据总行数自适应
+  double _calculateGutterWidth(String text) {
+    final lineCount = text.split('\n').length;
+    final digits = lineCount.toString().length;
+    
+    // 使用更保守的计算方式，确保有足够空间
+    // 根据不同位数设定固定宽度，避免计算误差
+    double width;
+    switch (digits) {
+      case 1:
+        width = 50.0; // 1-9行
+        break;
+      case 2:
+        width = 60.0; // 10-99行
+        break;
+      case 3:
+        width = 70.0; // 100-999行
+        break;
+      case 4:
+        width = 80.0; // 1000-9999行
+        break;
+      default:
+        width = 80.0 + (digits - 4) * 10.0; // 更多位数
+        break;
+    }
+    
+    // 调试输出
+    debugPrint('行数: $lineCount, 位数: $digits, 设定宽度: $width');
+    
+    return width;
   }
 
   /// 获取脚本类型对应的颜色

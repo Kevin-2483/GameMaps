@@ -75,7 +75,6 @@ fun main() {
   // 不需要等待结果的函数
   log('开始处理...');                 // 立即返回 null
   updateElementProperty('id', 'color', '#FF0000');  // 立即返回 null
-  say(['tag'], 'any', '消息');        // 立即返回 null
   
   // 混合使用
   var elements = getAllElements();    // 等待返回
