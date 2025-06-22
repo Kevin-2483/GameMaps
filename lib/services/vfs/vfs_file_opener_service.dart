@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../components/vfs/viewers/vfs_image_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_text_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
+import '../../components/vfs/viewers/vfs_video_viewer_window.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 
 /// VFS文件打开配置
@@ -62,11 +63,19 @@ class VfsFileOpenConfig {
     resizable: true,
     barrierDismissible: true,
   );
-
   /// 为Markdown查看器创建默认配置
   static const VfsFileOpenConfig forMarkdown = VfsFileOpenConfig(
     widthRatio: 0.85,
     heightRatio: 0.9,
+    draggable: true,
+    resizable: true,
+    barrierDismissible: true,
+  );
+
+  /// 为视频查看器创建默认配置
+  static const VfsFileOpenConfig forVideo = VfsFileOpenConfig(
+    widthRatio: 0.9,
+    heightRatio: 0.8,
     draggable: true,
     resizable: true,
     barrierDismissible: true,
@@ -140,8 +149,7 @@ class VfsFileOpenerService {
   }) async {
     final fileType = _getFileType(vfsPath);
     final defaultConfig = _getDefaultConfig(fileType);
-    final finalConfig = config ?? defaultConfig;
-    switch (fileType) {
+    final finalConfig = config ?? defaultConfig;    switch (fileType) {
       case VfsFileType.image:
         await _openImageFile(context, vfsPath, finalConfig, fileInfo);
         break;
@@ -151,6 +159,9 @@ class VfsFileOpenerService {
         break;
       case VfsFileType.markdown:
         await _openMarkdownFile(context, vfsPath, finalConfig, fileInfo);
+        break;
+      case VfsFileType.video:
+        await _openVideoFile(context, vfsPath, finalConfig, fileInfo);
         break;
       default:
         _showUnsupportedFileDialog(context, vfsPath, fileType);
@@ -186,7 +197,6 @@ class VfsFileOpenerService {
       config: config,
     );
   }
-
   /// 打开Markdown文件
   Future<void> _openMarkdownFile(
     BuildContext context,
@@ -195,6 +205,21 @@ class VfsFileOpenerService {
     VfsFileInfo? fileInfo,
   ) async {
     await VfsMarkdownViewerWindow.show(
+      context,
+      vfsPath: vfsPath,
+      fileInfo: fileInfo,
+      config: config,
+    );
+  }
+
+  /// 打开视频文件
+  Future<void> _openVideoFile(
+    BuildContext context,
+    String vfsPath,
+    VfsFileOpenConfig config,
+    VfsFileInfo? fileInfo,
+  ) async {
+    await VfsVideoViewerWindow.show(
       context,
       vfsPath: vfsPath,
       fileInfo: fileInfo,
@@ -253,7 +278,6 @@ class VfsFileOpenerService {
         return VfsFileType.unknown;
     }
   }
-
   /// 获取默认配置
   VfsFileOpenConfig _getDefaultConfig(VfsFileType fileType) {
     switch (fileType) {
@@ -264,6 +288,8 @@ class VfsFileOpenerService {
         return VfsFileOpenConfig.forText;
       case VfsFileType.markdown:
         return VfsFileOpenConfig.forMarkdown;
+      case VfsFileType.video:
+        return VfsFileOpenConfig.forVideo;
       default:
         return const VfsFileOpenConfig();
     }
@@ -288,9 +314,9 @@ class VfsFileOpenerService {
           children: [
             Text('文件名: $fileName'),
             Text('文件类型: .$extension'),
-            const SizedBox(height: 16),
-            const Text('当前支持的文件类型:'),
+            const SizedBox(height: 16),            const Text('当前支持的文件类型:'),
             const Text('• 图片: png, jpg, jpeg, gif, bmp, webp, svg'),
+            const Text('• 视频: mp4, avi, mov, wmv'),
             const Text('• 文本: txt, log, csv, json'),
             const Text('• Markdown: md, markdown'),
           ],
