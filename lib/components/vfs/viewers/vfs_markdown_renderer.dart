@@ -12,6 +12,7 @@ import 'vfs_text_viewer_window.dart';
 import 'html_processor.dart';
 import 'latex_processor.dart';
 import 'video_processor.dart';
+import 'media_kit_video_player.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -123,9 +124,15 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     super.initState();
     _loadMarkdownFile();
   }
-
   @override
   void dispose() {
+    // 清理VFS临时文件
+    VfsServiceProvider.cleanupTempFiles().then((_) {
+      print('🔗 VfsMarkdownRenderer: 已清理临时文件');
+    }).catchError((e) {
+      print('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
+    });
+    
     _tocController.dispose();
     super.dispose();
   }
@@ -1034,9 +1041,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       _showErrorSnackBar('打开相对路径链接失败: $e');
     }
   }
-
   /// 构建图片组件 - 支持VFS协议
   Widget _buildImage(String url, Map<String, String> attributes) {
+    // 检查是否为视频文件
+    if (_isVideoFile(url)) {
+      // 如果是视频文件，使用视频播放器
+      return _buildVideoPlayer(url, attributes);
+    }
+    
     if (url.startsWith('indexeddb://')) {
       return _buildVfsImage(url, attributes);
     } else if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -1045,8 +1057,65 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 处理相对路径，解析为VFS绝对路径
       final currentDir = _getCurrentDirectory();
       final absolutePath = _resolveRelativePath(currentDir, url);
+      
+      // 再次检查解析后的路径是否为视频文件
+      if (_isVideoFile(absolutePath)) {
+        return _buildVideoPlayer(absolutePath, attributes);
+      }
+      
       return _buildVfsImage(absolutePath, attributes);
     }
+  }
+
+  /// 检查是否为视频文件
+  bool _isVideoFile(String url) {
+    final videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'];
+    final extension = url.split('.').last.toLowerCase();
+    return videoExtensions.contains(extension);
+  }
+
+  /// 构建视频播放器
+  Widget _buildVideoPlayer(String url, Map<String, String> attributes) {
+    // 解析视频属性
+    double? width;
+    double? height;
+
+    if (attributes['width'] != null) {
+      try {
+        width = double.parse(attributes['width']!);
+      } catch (e) {
+        // 忽略解析错误
+      }
+    }
+
+    if (attributes['height'] != null) {
+      try {
+        height = double.parse(attributes['height']!);
+      } catch (e) {
+        // 忽略解析错误
+      }
+    }
+
+    final autoplay = attributes.containsKey('autoplay');
+    final loop = attributes.containsKey('loop');
+    final muted = attributes.containsKey('muted');
+    
+    final config = MediaKitVideoConfig(
+      autoPlay: autoplay,
+      looping: loop,
+      aspectRatio: width != null && height != null ? width / height : null,
+      maxWidth: width ?? 800,
+      maxHeight: height ?? 450,
+    );
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: MediaKitVideoPlayer(
+        url: url,
+        config: config,
+        muted: muted,
+      ),
+    );
   }
 
   /// 构建VFS图片

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
@@ -26,8 +25,10 @@ class MediaKitVideoPlayer extends StatefulWidget {
 class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
   late final Player _player;
   late final VideoController _controller;
+  final VfsServiceProvider _vfsService = VfsServiceProvider();
   bool _isInitialized = false;
   String? _errorMessage;
+  String? _convertedUrl; // 存储转换后的URL，用于资源清理
 
   @override
   void initState() {
@@ -102,24 +103,37 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
         _errorMessage = '网络视频加载失败: $e';
       });
     }
-  }
-
-  /// 初始化VFS视频
+  }  /// 初始化VFS视频
   Future<void> _initializeVfsVideo() async {
     try {
-      final vfsService = VfsServiceProvider();
-      final fileContent = await vfsService.vfs.readFile(widget.url);
-
-      if (fileContent == null) {
-        throw Exception('VFS视频文件不存在');
+      print('🎥 MediaKitVideoPlayer: 开始初始化VFS视频 - ${widget.url}');
+      
+      // 使用VFS服务生成可播放的URL
+      final playableUrl = await _vfsService.generateFileUrl(widget.url);
+      
+      if (playableUrl == null) {
+        throw Exception('无法为VFS视频文件生成可播放URL 注意:超过4MB无法生成');
       }
+      
+      print('🎥 MediaKitVideoPlayer: 成功生成VFS视频URL - $playableUrl');
+      _convertedUrl = playableUrl;
 
-      // 对于VFS视频，我们需要将数据写入临时文件
-      // 这里暂时显示错误信息，实际应用中可以创建临时文件
+      // 使用转换后的URL初始化播放器
+      await _player.open(Media(playableUrl));
+
       setState(() {
-        _errorMessage = 'VFS视频播放暂未实现，请使用网络视频URL';
+        _isInitialized = true;
       });
+
+      // 自动播放
+      final config = widget.config;
+      if (config?.autoPlay ?? false) {
+        await _player.play();
+      }
+      
+      print('🎥 MediaKitVideoPlayer: VFS视频初始化完成');
     } catch (e) {
+      print('🎥 MediaKitVideoPlayer: VFS视频初始化失败 - $e');
       setState(() {
         _errorMessage = 'VFS视频加载失败: $e';
       });
@@ -264,9 +278,18 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
       ),
     );
   }
-
   @override
   void dispose() {
+    // 清理资源
+    if (_convertedUrl != null) {
+      // 对于Web平台的Blob URL，应该释放资源
+      // 对于客户端平台的临时文件，可以选择保留用于缓存
+      if (kIsWeb && _convertedUrl!.startsWith('blob:')) {
+        // Web平台的Blob URL清理将在VFS视频服务中处理
+        print('🎥 MediaKitVideoPlayer: 释放资源 - $_convertedUrl');
+      }
+    }
+    
     _player.dispose();
     super.dispose();
   }
