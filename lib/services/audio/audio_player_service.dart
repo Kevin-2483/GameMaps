@@ -445,6 +445,17 @@ class AudioPlayerService extends ChangeNotifier {
     print('🎵 AudioPlayerService: 批量添加到播放队列 - ${items.length}首');
   }
 
+  /// 在指定位置插入到播放队列
+  void insertToPlaylist(int index, PlaylistItem item) {
+    if (index < 0 || index > _playlist.length) {
+      _playlist.add(item);
+    } else {
+      _playlist.insert(index, item);
+    }
+    notifyListeners();
+    print('🎵 AudioPlayerService: 插入到播放队列[$index] - ${item.title}');
+  }
+
   /// 从播放队列移除
   void removeFromPlaylist(int index) {
     if (index >= 0 && index < _playlist.length) {
@@ -463,6 +474,14 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
+  /// 按source移除播放队列中的项
+  void removeFromPlaylistBySource(String source) {
+    final idx = _playlist.indexWhere((item) => item.source == source);
+    if (idx != -1) {
+      removeFromPlaylist(idx);
+    }
+  }
+
   /// 清空播放队列
   void clearPlaylist() {
     _playlist.clear();
@@ -470,6 +489,15 @@ class AudioPlayerService extends ChangeNotifier {
     stop();
     notifyListeners();
     print('🎵 AudioPlayerService: 清空播放队列');
+  }
+
+  /// 替换整个播放队列（用于拖拽排序等场景）
+  void updatePlaylist(List<PlaylistItem> newList) {
+    _playlist
+      ..clear()
+      ..addAll(newList);
+    notifyListeners();
+    print('🎵 AudioPlayerService: 播放队列已更新');
   }
 
   /// 播放队列中的指定项目
@@ -716,4 +744,21 @@ class AudioPlayerService extends ChangeNotifier {
 
   /// 获取当前真实的播放器状态（用于调试）
   PlayerState? get currentPlayerState => _player.state;
+
+  /// 确保流监听已注册（多次调用安全）
+  void ensureListeners() {
+    _playerStateSubscription ??= _player.onPlayerStateChanged.listen(_onPlayerStateChanged);
+    _positionSubscription ??= _player.onPositionChanged.listen(_onPositionChanged);
+    _durationSubscription ??= _player.onDurationChanged.listen(_onDurationChanged);
+  }
+
+  /// 注销流监听（不销毁底层播放器）
+  Future<void> removeListeners() async {
+    await _playerStateSubscription?.cancel();
+    _playerStateSubscription = null;
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    await _durationSubscription?.cancel();
+    _durationSubscription = null;
+  }
 }

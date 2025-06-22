@@ -190,6 +190,8 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
       title: _getTitleFromFileInfo(),
       artist: _getArtistFromFileInfo(),
       isVfsPath: true,
+      connectToExisting: true, // 连接到现有播放器实例
+      forcePlayFirst: true,    // 插播到队列最前并立即播放
       config: const AudioPlayerConfig(
         autoPlay: false,
         looping: false,

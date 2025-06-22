@@ -12,6 +12,7 @@ import 'vfs_text_viewer_window.dart';
 import 'html_processor.dart';
 import 'latex_processor.dart';
 import 'video_processor.dart';
+import 'audio_processor.dart';
 import 'media_kit_video_player.dart';
 
 /// Markdown渲染器配置
@@ -114,10 +115,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   // 显示配置
   bool _isDarkTheme = false;
   bool _showToc = false;
-  double _contentScale = 1.0;
-  bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
+  double _contentScale = 1.0;  bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
   bool _enableLatexRendering = true; // 是否启用LaTeX渲染支持
   bool _enableVideoRendering = true; // 是否启用视频渲染支持
+  bool _enableAudioRendering = true; // 是否启用音频渲染支持
 
   @override
   void initState() {
@@ -164,13 +165,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             LatexProcessor.containsLatex(textContent)) {
           print('🔧 _loadMarkdownFile: 预处理LaTeX内容');
           textContent = _preprocessLatexContent(textContent);
-        }
-
-        // 如果启用视频渲染，预处理视频内容
+        }        // 如果启用视频渲染，预处理视频内容
         if (_enableVideoRendering &&
             VideoProcessor.containsVideo(textContent)) {
           print('🎥 _loadMarkdownFile: 预处理视频内容');
           textContent = _preprocessVideoContent(textContent);
+        }
+
+        // 如果启用音频渲染，预处理音频内容
+        if (_enableAudioRendering &&
+            AudioProcessor.containsAudio(textContent)) {
+          print('🎵 _loadMarkdownFile: 预处理音频内容');
+          textContent = _preprocessAudioContent(textContent);
         }
 
         setState(() {
@@ -292,15 +298,27 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
 
-      const SizedBox(width: 16),
-
-      // 视频渲染切换
+      const SizedBox(width: 16),      // 视频渲染切换
       IconButton(
         onPressed: _toggleVideoRendering,
         icon: Icon(_enableVideoRendering ? Icons.videocam : Icons.videocam_off),
         tooltip: _enableVideoRendering ? '禁用视频渲染' : '启用视频渲染',
         style: IconButton.styleFrom(
           foregroundColor: _enableVideoRendering
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+      ),
+
+      const SizedBox(width: 16),
+
+      // 音频渲染切换
+      IconButton(
+        onPressed: _toggleAudioRendering,
+        icon: Icon(_enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined),
+        tooltip: _enableAudioRendering ? '禁用音频渲染' : '启用音频渲染',
+        style: IconButton.styleFrom(
+          foregroundColor: _enableAudioRendering
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
@@ -360,6 +378,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           onPressed: _showVideoInfo,
           icon: const Icon(Icons.videocam_outlined),
           tooltip: '视频信息',
+        ),
+
+      // 音频信息按钮（如果包含音频）
+      if (_containsAudio())
+        IconButton(
+          onPressed: _showAudioInfo,
+          icon: const Icon(Icons.audiotrack),
+          tooltip: '音频信息',
         ),
 
       // 使用文本编辑器打开
@@ -493,11 +519,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (_enableLatexRendering) {
       inlineSyntaxList.add(LatexSyntax());
       generators.add(LatexProcessor.createGenerator());
-    } // 添加视频支持
+    }    // 添加视频支持
     if (_enableVideoRendering) {
       print('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
       inlineSyntaxList.add(VideoProcessor.createSyntax());
       generators.add(VideoProcessor.createGenerator());
+    }
+
+    // 添加音频支持
+    if (_enableAudioRendering) {
+      print('🎵 _buildMarkdownContent: 添加音频语法解析器和生成器');
+      inlineSyntaxList.add(AudioProcessor.createSyntax());
+      generators.add(AudioProcessor.createGenerator());
     }
 
     // 如果有任何自定义生成器或语法，创建MarkdownGenerator
@@ -529,12 +562,35 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
-    final isDark = _isDarkTheme;
-
-    // 如果启用HTML和LaTeX渲染，使用混合配置
+    final isDark = _isDarkTheme;    // 如果启用HTML、LaTeX、视频和音频渲染，使用混合配置
     if (_enableHtmlRendering &&
         _enableLatexRendering &&
+        _enableVideoRendering &&
+        _enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用HTML、LaTeX和视频渲染，使用混合配置
+    else if (_enableHtmlRendering &&
+        _enableLatexRendering &&
         _enableVideoRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用HTML、LaTeX和音频渲染，使用混合配置
+    else if (_enableHtmlRendering &&
+        _enableLatexRendering &&
+        _enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用HTML、视频和音频渲染，使用混合配置
+    else if (_enableHtmlRendering &&
+        _enableVideoRendering &&
+        _enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用LaTeX、视频和音频渲染，使用混合配置
+    else if (_enableLatexRendering &&
+        _enableVideoRendering &&
+        _enableAudioRendering) {
       return _createMixedRenderingConfig(isDark);
     }
     // 如果启用HTML和LaTeX渲染，使用混合配置
@@ -545,8 +601,20 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     else if (_enableHtmlRendering && _enableVideoRendering) {
       return _createMixedRenderingConfig(isDark);
     }
+    // 如果启用HTML和音频渲染，使用混合配置
+    else if (_enableHtmlRendering && _enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
     // 如果启用LaTeX和视频渲染，使用混合配置
     else if (_enableLatexRendering && _enableVideoRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用LaTeX和音频渲染，使用混合配置
+    else if (_enableLatexRendering && _enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
+    }
+    // 如果启用视频和音频渲染，使用混合配置
+    else if (_enableVideoRendering && _enableAudioRendering) {
       return _createMixedRenderingConfig(isDark);
     }
     // 如果只启用HTML渲染，使用HTML扩展配置
@@ -566,8 +634,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         imageBuilder: (url, alt) => _buildImage(url, {'alt': alt}),
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
-    }
-    // 如果只启用视频渲染，使用视频扩展配置
+    }    // 如果只启用视频渲染，使用视频扩展配置
     else if (_enableVideoRendering) {
       return VideoConfigExtension.createWithVideoSupport(
         isDarkTheme: isDark,
@@ -575,6 +642,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         imageBuilder: _buildImage,
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
+    }
+    // 如果只启用音频渲染，使用混合配置
+    else if (_enableAudioRendering) {
+      return _createMixedRenderingConfig(isDark);
     }
 
     // 否则使用标准配置
@@ -746,10 +817,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   Widget _buildStatusBar() {
     final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
-    final lineCount = _markdownContent.split('\n').length;
-    final htmlStats = _getHtmlStats();
+    final lineCount = _markdownContent.split('\n').length;    final htmlStats = _getHtmlStats();
     final latexStats = _getLatexStats();
     final videoStats = _getVideoStats();
+    final audioStats = _getAudioStats();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -918,6 +989,54 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               const SizedBox(width: 8),
               Text(
                 '视频: ${videoStats['videoCount']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],          ],
+
+          // 显示音频信息
+          if (audioStats['hasAudio'] == true) ...[
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _enableAudioRendering
+                    ? Colors.green.withOpacity(0.2)
+                    : Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: _enableAudioRendering
+                      ? Colors.green.withOpacity(0.5)
+                      : Colors.orange.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined,
+                    size: 12,
+                    color: _enableAudioRendering
+                        ? Colors.green
+                        : Colors.orange,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '音频${_enableAudioRendering ? '' : '(禁用)'}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _enableAudioRendering
+                          ? Colors.green
+                          : Colors.orange,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (audioStats['audioCount'] != null &&
+                audioStats['audioCount'] > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '音频: ${audioStats['audioCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1599,6 +1718,85 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     );
   }
 
+  /// 显示音频信息对话框
+  void _showAudioInfo() {
+    final audioStats = _getAudioStats();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('音频信息'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('音频数量: ${audioStats['audioCount']}'),
+              const SizedBox(height: 16),
+              if (audioStats['hasAudio'] as bool) ...[
+                const Text('音频列表:'),
+                const SizedBox(height: 8),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: (audioStats['audios'] as List<String>)
+                          .take(10)
+                          .map(
+                            (audio) => Container(
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.music_note, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      audio.length > 50
+                                          ? '${audio.substring(0, 50)}...'
+                                          : audio,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                if ((audioStats['audios'] as List).length > 10)
+                  Text(
+                    '... 还有${(audioStats['audios'] as List).length - 10}个音频',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ] else ...[
+                Text(
+                  '此文档不包含音频内容',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 使用文本编辑器打开当前Markdown文件
   Future<void> _openWithTextEditor() async {
     try {
@@ -1805,7 +2003,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 重新加载内容以应用LaTeX渲染设置
     _loadMarkdownFile();
   }
-
   /// 切换视频渲染
   void _toggleVideoRendering() {
     setState(() {
@@ -1815,6 +2012,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     _loadMarkdownFile();
   }
 
+  /// 切换音频渲染
+  void _toggleAudioRendering() {
+    setState(() {
+      _enableAudioRendering = !_enableAudioRendering;
+    });
+    // 重新加载内容以应用音频渲染设置
+    _loadMarkdownFile();
+  }
   /// 预处理视频内容
   String _preprocessVideoContent(String content) {
     print('🎥 _preprocessVideoContent: 开始处理');
@@ -1828,10 +2033,28 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     return result;
   }
 
+  /// 预处理音频内容
+  String _preprocessAudioContent(String content) {
+    print('🎵 _preprocessAudioContent: 开始处理');
+    if (!_enableAudioRendering) {
+      print('🎵 _preprocessAudioContent: 音频渲染已禁用');
+      return content;
+    }
+
+    final result = AudioProcessor.convertMarkdownAudios(content);
+    print('🎵 _preprocessAudioContent: 转换完成');
+    return result;
+  }
   /// 检查内容是否包含视频
   bool _containsVideo() {
     return _enableVideoRendering &&
         VideoProcessor.containsVideo(_markdownContent);
+  }
+
+  /// 检查内容是否包含音频
+  bool _containsAudio() {
+    return _enableAudioRendering &&
+        AudioProcessor.containsAudio(_markdownContent);
   }
 
   /// 获取视频统计信息
@@ -1840,6 +2063,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       return {'hasVideo': false, 'videoCount': 0, 'videos': []};
     }
     return VideoProcessor.getVideoStats(_markdownContent);
+  }
+
+  /// 获取音频统计信息
+  Map<String, dynamic> _getAudioStats() {
+    if (!_enableAudioRendering) {
+      return {'hasAudio': false, 'audioCount': 0, 'audios': []};
+    }
+    return AudioProcessor.getAudioStats(_markdownContent);
   }
 
   /// 显示视频信息对话框
@@ -2087,14 +2318,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     ]; // 如果启用LaTeX渲染，添加LaTeX配置
     if (_enableLatexRendering) {
       configs.add(LatexConfig(isDarkTheme: isDark));
-    }
-
-    // 如果启用视频渲染，添加视频配置
+    }    // 如果启用视频渲染，添加视频配置
     if (_enableVideoRendering) {
       configs.add(
         VideoNodeConfig(
           isDarkTheme: isDark,
           onVideoTap: _onLinkTap,
+          errorBuilder: (url, alt, error) =>
+              _buildImageError(url, error.toString()),
+        ),
+      );
+    }
+
+    // 如果启用音频渲染，添加音频配置
+    if (_enableAudioRendering) {
+      configs.add(
+        AudioNodeConfig(
+          isDarkTheme: isDark,
+          onAudioTap: _onLinkTap,
           errorBuilder: (url, alt, error) =>
               _buildImageError(url, error.toString()),
         ),

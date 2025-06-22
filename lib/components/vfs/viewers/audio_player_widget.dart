@@ -17,12 +17,17 @@ class AudioPlayerWidget extends StatefulWidget {
   
   /// 是否为VFS路径
   final bool isVfsPath;
-  
-  /// 播放配置
+    /// 播放配置
   final AudioPlayerConfig config;
+  
+  /// 是否连接到现有播放器实例（而不是创建新实例）
+  final bool connectToExisting;
   
   /// 错误回调
   final Function(String)? onError;
+  
+  /// 是否插播到队列最前并立即播放
+  final bool forcePlayFirst;
 
   const AudioPlayerWidget({
     super.key,
@@ -32,7 +37,9 @@ class AudioPlayerWidget extends StatefulWidget {
     this.album,
     this.isVfsPath = true,
     this.config = AudioPlayerConfig.defaultConfig,
+    this.connectToExisting = false,
     this.onError,
+    this.forcePlayFirst = false,
   });
 
   @override
@@ -46,12 +53,15 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   late final AnimationController _volumeAnimationController;
     bool _showVolumeSlider = false;
   bool _showEqualizerPanel = false;
-  bool _isMinimized = false;
+  bool _isMinimized = false;  
+  bool _showPlaylistPanel = false; // 播放列表面板显示状态
 
   @override
   void initState() {
     super.initState();
+    // 音频服务始终使用单例
     _audioService = AudioPlayerService();
+    _audioService.ensureListeners(); // 保证每次都注册监听
     _progressAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -60,17 +70,35 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    
-    _initializePlayer();
+    if (widget.connectToExisting) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _audioService.ensureListeners(); // 再次保证监听
+        _checkCurrentPlayingState();
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializePlayer();
+      });
+    }
   }
 
   @override
   void dispose() {
+    if (!widget.connectToExisting) {
+      _audioService.stop().catchError((e) {
+        print('停止音频播放失败: $e');
+      });
+      _audioService.dispose().catchError((e) {
+        print('清理音频服务失败: $e');
+      });
+    } else {
+      _audioService.removeListeners(); // 只注销监听，不销毁底层播放器
+      print('🎵 窗口关闭，音频继续在后台播放');
+    }
     _progressAnimationController.dispose();
     _volumeAnimationController.dispose();
     super.dispose();
   }
-
   /// 初始化播放器
   Future<void> _initializePlayer() async {
     try {
@@ -95,20 +123,55 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     } catch (e) {
       widget.onError?.call('初始化播放器失败: $e');
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _audioService,
-      builder: (context, child) {
-        if (_isMinimized) {
-          return _buildMinimizedPlayer();
+  }  /// 检查当前播放状态（连接到现有播放器时使用）
+  Future<void> _checkCurrentPlayingState() async {
+    try {
+      _audioService.forceRefreshUI();
+      final currentSource = _audioService.currentSource;
+      print('🎵 检查播放状态 - 当前源: $currentSource, 目标源: ${widget.source}');
+      final playlistItem = PlaylistItem(
+        source: widget.source,
+        title: widget.title,
+        artist: widget.artist,
+        album: widget.album,
+        isVfsPath: widget.isVfsPath,
+      );
+      int existingIndex = _getOurAudioIndex();
+      // 插播逻辑：插入队列最前并立即播放
+      if (widget.forcePlayFirst) {
+        if (_audioService.currentSource == widget.source) {
+          // 已经在播放同一个音频，直接刷新UI即可
+          _audioService.forceRefreshUI();
+          print('🎵 插播请求与当前播放源一致，跳过插播。');
+          return;
         }
-        
-        return _buildFullPlayer();
-      },
-    );
+        _audioService.removeFromPlaylistBySource(widget.source);
+        _audioService.insertToPlaylist(0, playlistItem);
+        await _audioService.stop(); // 强制停止，确保底层播放器状态刷新
+        await _audioService.playFromPlaylist(0);
+      } else {
+        if (existingIndex == -1) {
+          _audioService.addToPlaylist(playlistItem);
+          existingIndex = _audioService.playlist.length - 1;
+        }
+        if (!_isPlayingOurAudio() && widget.config.autoPlay) {
+          await _audioService.playFromPlaylist(existingIndex);
+        }
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+      _audioService.forceRefreshUI();
+      print('🎵 连接到现有播放器完成:');
+      print('  - 当前播放: ${_audioService.currentSource}');
+      print('  - 播放状态: ${_audioService.state}');
+      print('  - 播放进度: ${_audioService.currentPosition}/${_audioService.totalDuration}');
+      print('  - 播放列表长度: ${_audioService.playlist.length}');
+      print('  - 当前索引: ${_audioService.currentIndex}');
+      print('  - 是否播放我们的音频: ${_isPlayingOurAudio()}');
+      print('  - 是否在播放列表中: ${_isInPlaylist()}');
+    } catch (e) {
+      print('🎵 连接到播放器失败: $e');
+      widget.onError?.call('连接到播放器失败: $e');
+    }
   }
 
   /// 构建完整播放器界面
@@ -183,22 +246,21 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           ),
           
           const SizedBox(width: 12),
-          
-          // 音频信息
+            // 音频信息
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  widget.title,
+                  _audioService.currentItem?.title ?? widget.title,
                   style: Theme.of(context).textTheme.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (widget.artist != null)
+                if (_audioService.currentItem?.artist != null || widget.artist != null)
                   Text(
-                    widget.artist!,
+                    _audioService.currentItem?.artist ?? widget.artist!,
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -232,10 +294,14 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const Spacer(),
-          
+          // 播放列表按钮
+          IconButton(
+            icon: const Icon(Icons.queue_music),
+            tooltip: '播放列表',
+            onPressed: () => setState(() => _showPlaylistPanel = true),
+          ),
           // 播放模式切换
           _buildPlaybackModeButton(),
-          
           // 最小化按钮
           IconButton(
             onPressed: () => setState(() => _isMinimized = true),
@@ -243,6 +309,127 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             tooltip: '最小化播放器',
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        AnimatedBuilder(
+          animation: _audioService,
+          builder: (context, child) {
+            if (_isMinimized) {
+              return _buildMinimizedPlayer();
+            }
+            return _buildFullPlayer();
+          },
+        ),
+        if (_showPlaylistPanel)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => setState(() => _showPlaylistPanel = false),
+              child: Container(
+                color: Colors.black.withOpacity(0.3),
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: _buildPlaylistPanel(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 构建播放列表面板
+  Widget _buildPlaylistPanel() {
+    final playlist = _audioService.playlist;
+    return Material(
+      borderRadius: BorderRadius.circular(16),
+      color: Theme.of(context).dialogBackgroundColor,
+      child: Container(
+        width: 400,
+        height: 480,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.queue_music),
+                const SizedBox(width: 8),
+                const Text('播放列表', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(() => _showPlaylistPanel = false),
+                ),
+              ],
+            ),
+            const Divider(),
+            if (playlist.isEmpty)
+              const Expanded(
+                child: Center(child: Text('播放列表为空', style: TextStyle(color: Colors.grey))),
+              )
+            else
+              Expanded(
+                child: ReorderableListView.builder(
+                  itemCount: playlist.length,
+                  onReorder: (oldIndex, newIndex) async {
+                    final currentSource = _audioService.currentItem?.source;
+                    setState(() {
+                      if (newIndex > oldIndex) newIndex--;
+                      final newList = List.of(playlist);
+                      final item = newList.removeAt(oldIndex);
+                      newList.insert(newIndex, item);
+                      _audioService.updatePlaylist(newList);
+                    });
+                    // 拖拽后自动播放当前曲目的新索引
+                    if (currentSource != null) {
+                      final newIndexInList = _audioService.playlist.indexWhere((e) => e.source == currentSource);
+                      if (newIndexInList != -1 && _audioService.currentIndex != newIndexInList) {
+                        await _audioService.playFromPlaylist(newIndexInList);
+                        setState(() {});
+                      }
+                    }
+                  },
+                  itemBuilder: (context, index) {
+                    final item = playlist[index];
+                    final isCurrent = _audioService.currentIndex == index;
+                    return ListTile(
+                      key: ValueKey(item.source),
+                      leading: Icon(isCurrent ? Icons.play_arrow : Icons.music_note, color: isCurrent ? Theme.of(context).colorScheme.primary : null),
+                      title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: item.artist != null ? Text(item.artist!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: '移除',
+                            onPressed: () {
+                              setState(() {
+                                _audioService.removeFromPlaylistBySource(item.source);
+                              });
+                            },
+                          ),
+                          const Icon(Icons.drag_handle),
+                        ],
+                      ),
+                      selected: isCurrent,
+                      onTap: () async {
+                        await _audioService.playFromPlaylist(index);
+                        setState(() {});
+                      },
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -288,34 +475,39 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       ),
     );
   }
-
   /// 构建音频信息
   Widget _buildAudioInfo() {
+    // 获取当前正在播放的音频信息，如果没有则使用widget的信息
+    final currentItem = _audioService.currentItem;
+    final displayTitle = currentItem?.title ?? widget.title;
+    final displayArtist = currentItem?.artist ?? widget.artist;
+    final displayAlbum = currentItem?.album ?? widget.album;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
         children: [
           Text(
-            widget.title,
+            displayTitle,
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          if (widget.artist != null) ...[
+          if (displayArtist != null) ...[
             const SizedBox(height: 4),
             Text(
-              widget.artist!,
+              displayArtist,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
           ],
-          if (widget.album != null) ...[
+          if (displayAlbum != null) ...[
             const SizedBox(height: 2),
             Text(
-              widget.album!,
+              displayAlbum,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
@@ -332,26 +524,27 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
-        children: [
-          // 进度条
+        children: [          // 进度条
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 4,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            ),            child: Slider(
+            ),
+            child: Slider(
               value: _audioService.totalDuration.inSeconds > 0
-                  ? _audioService.currentPosition.inSeconds.toDouble() /
-                      _audioService.totalDuration.inSeconds.toDouble()
+                  ? (_audioService.currentPosition.inSeconds.toDouble() /
+                      _audioService.totalDuration.inSeconds.toDouble()).clamp(0.0, 1.0)
                   : 0.0,
-              onChanged: (value) {
+              onChanged: _audioService.totalDuration.inSeconds > 0 ? (value) {
                 final position = Duration(
                   seconds: (value * _audioService.totalDuration.inSeconds).round(),
                 );
+                print('🎵 进度条拖拽到: ${_formatDuration(position)} / ${_formatDuration(_audioService.totalDuration)}');
                 // 异步调用seek，不阻塞UI
                 _audioService.seek(position).catchError((e) {
                   print('进度条拖拽跳转失败: $e');
                 });
-              },
+              } : null, // 如果没有总时长，禁用拖拽
             ),
           ),
           
@@ -673,17 +866,49 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         ),
       ],
     );
-  }
-  /// 切换播放/暂停
+  }  /// 切换播放/暂停
   void _togglePlayPause() async {
     try {
       if (_audioService.isPlaying) {
         await _audioService.pause();
       } else {
         if (_audioService.currentSource == null) {
-          await _audioService.playFromPlaylist(0);
-        } else {
+          // 如果没有当前音频源，从播放列表播放第一首
+          if (_audioService.playlist.isNotEmpty) {
+            await _audioService.playFromPlaylist(0);
+          } else {
+            // 如果播放列表也为空，添加当前音频并播放
+            final playlistItem = PlaylistItem(
+              source: widget.source,
+              title: widget.title,
+              artist: widget.artist,
+              album: widget.album,
+              isVfsPath: widget.isVfsPath,
+            );
+            _audioService.addToPlaylist(playlistItem);
+            await _audioService.playFromPlaylist(0);
+          }
+        } else if (_isPlayingOurAudio()) {
+          // 如果当前音频源就是我们的音频，直接恢复播放
           await _audioService.play();
+        } else {
+          // 如果当前音频源不是我们的音频，找到我们的音频并播放
+          int targetIndex = _getOurAudioIndex();
+          
+          if (targetIndex >= 0) {
+            await _audioService.playFromPlaylist(targetIndex);
+          } else {
+            // 如果找不到，添加并播放
+            final playlistItem = PlaylistItem(
+              source: widget.source,
+              title: widget.title,
+              artist: widget.artist,
+              album: widget.album,
+              isVfsPath: widget.isVfsPath,
+            );
+            _audioService.addToPlaylist(playlistItem);
+            await _audioService.playFromPlaylist(_audioService.playlist.length - 1);
+          }
         }
       }
     } catch (e) {
@@ -804,6 +1029,26 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         ],
       ),
     );
+  }
+
+  /// 检查当前播放器是否正在播放我们的音频
+  bool _isPlayingOurAudio() {
+    return _audioService.currentSource == widget.source;
+  }
+  
+  /// 检查我们的音频是否在播放列表中
+  bool _isInPlaylist() {
+    return _audioService.playlist.any((item) => item.source == widget.source);
+  }
+  
+  /// 获取我们的音频在播放列表中的索引
+  int _getOurAudioIndex() {
+    for (int i = 0; i < _audioService.playlist.length; i++) {
+      if (_audioService.playlist[i].source == widget.source) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   /// 格式化时长
