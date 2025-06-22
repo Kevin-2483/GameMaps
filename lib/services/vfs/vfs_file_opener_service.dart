@@ -3,6 +3,7 @@ import '../../components/vfs/viewers/vfs_image_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_text_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_video_viewer_window.dart';
+import '../../components/vfs/viewers/vfs_audio_player_window.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 
 /// VFS文件打开配置
@@ -76,6 +77,15 @@ class VfsFileOpenConfig {
   static const VfsFileOpenConfig forVideo = VfsFileOpenConfig(
     widthRatio: 0.9,
     heightRatio: 0.8,
+    draggable: true,
+    resizable: true,
+    barrierDismissible: true,
+  );
+
+  /// 为音频播放器创建默认配置
+  static const VfsFileOpenConfig forAudio = VfsFileOpenConfig(
+    widthRatio: 0.6,
+    heightRatio: 0.7,
     draggable: true,
     resizable: true,
     barrierDismissible: true,
@@ -163,6 +173,9 @@ class VfsFileOpenerService {
       case VfsFileType.video:
         await _openVideoFile(context, vfsPath, finalConfig, fileInfo);
         break;
+      case VfsFileType.audio:
+        await _openAudioFile(context, vfsPath, finalConfig, fileInfo);
+        break;
       default:
         _showUnsupportedFileDialog(context, vfsPath, fileType);
     }
@@ -227,6 +240,21 @@ class VfsFileOpenerService {
     );
   }
 
+  /// 打开音频文件
+  Future<void> _openAudioFile(
+    BuildContext context,
+    String vfsPath,
+    VfsFileOpenConfig config,
+    VfsFileInfo? fileInfo,
+  ) async {
+    await VfsAudioPlayerWindow.show(
+      context,
+      vfsPath: vfsPath,
+      fileInfo: fileInfo,
+      config: config,
+    );
+  }
+
   /// 获取文件类型
   VfsFileType _getFileType(String vfsPath) {
     final extension = vfsPath.split('.').last.toLowerCase();
@@ -260,12 +288,16 @@ class VfsFileOpenerService {
       case 'avi':
       case 'mov':
       case 'wmv':
-        return VfsFileType.video;
-
-      case 'mp3':
+        return VfsFileType.video;      case 'mp3':
       case 'wav':
       case 'flac':
       case 'aac':
+      case 'm4a':
+      case 'ogg':
+      case 'opus':
+      case 'wma':
+      case 'aiff':
+      case 'pcm':
         return VfsFileType.audio;
 
       case 'zip':
@@ -290,6 +322,8 @@ class VfsFileOpenerService {
         return VfsFileOpenConfig.forMarkdown;
       case VfsFileType.video:
         return VfsFileOpenConfig.forVideo;
+      case VfsFileType.audio:
+        return VfsFileOpenConfig.forAudio;
       default:
         return const VfsFileOpenConfig();
     }

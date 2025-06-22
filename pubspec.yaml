@@ -81,11 +81,13 @@ dependencies:
   visibility_detector: ^0.4.0+2
   flutter_math_fork: ^0.7.2
   html: ^0.15.4
-  
-  # Video player
+    # Video player
   media_kit: ^1.1.10+1
   media_kit_video: ^1.2.4
   media_kit_libs_video: ^1.0.4
+  
+  # Audio player
+  audioplayers: ^6.2.0  # 更新到较新版本，可能修复了线程问题
   hetu_script: ^0.4.2
   squadron: ^7.1.1
 
