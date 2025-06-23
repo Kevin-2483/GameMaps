@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:markdown/markdown.dart' as m;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
@@ -115,25 +116,32 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   // 显示配置
   bool _isDarkTheme = false;
   bool _showToc = false;
-  double _contentScale = 1.0;  bool _enableHtmlRendering = true; // 是否启用HTML渲染支持
-  bool _enableLatexRendering = true; // 是否启用LaTeX渲染支持
-  bool _enableVideoRendering = true; // 是否启用视频渲染支持
-  bool _enableAudioRendering = true; // 是否启用音频渲染支持
+  double _contentScale = 1.0;
+  bool _enableHtmlRendering = true;
+  bool _enableLatexRendering = true;
+  bool _enableVideoRendering = true;
+  bool _enableAudioRendering = true;
+
+  // 音频source到uuid的映射
+  final Map<String, String> _audioUuidMap = {};
 
   @override
   void initState() {
     super.initState();
     _loadMarkdownFile();
   }
+
   @override
   void dispose() {
     // 清理VFS临时文件
-    VfsServiceProvider.cleanupTempFiles().then((_) {
-      print('🔗 VfsMarkdownRenderer: 已清理临时文件');
-    }).catchError((e) {
-      print('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
-    });
-    
+    VfsServiceProvider.cleanupTempFiles()
+        .then((_) {
+          print('🔗 VfsMarkdownRenderer: 已清理临时文件');
+        })
+        .catchError((e) {
+          print('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
+        });
+    _audioUuidMap.clear();
     _tocController.dispose();
     super.dispose();
   }
@@ -152,7 +160,6 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         try {
           textContent = utf8.decode(fileContent.data);
         } catch (e) {
-          // 如果UTF-8解码失败，尝试使用Latin-1
           textContent = latin1.decode(fileContent.data);
         } // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
@@ -165,7 +172,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             LatexProcessor.containsLatex(textContent)) {
           print('🔧 _loadMarkdownFile: 预处理LaTeX内容');
           textContent = _preprocessLatexContent(textContent);
-        }        // 如果启用视频渲染，预处理视频内容
+        } // 如果启用视频渲染，预处理视频内容
         if (_enableVideoRendering &&
             VideoProcessor.containsVideo(textContent)) {
           print('🎥 _loadMarkdownFile: 预处理视频内容');
@@ -178,6 +185,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           print('🎵 _loadMarkdownFile: 预处理音频内容');
           textContent = _preprocessAudioContent(textContent);
         }
+
+        // 生成音频uuid映射
+        _audioUuidMap.clear();
+        final audioSources = AudioProcessor.extractAudioSources(textContent);
+        for (final src in audioSources) {
+          _audioUuidMap[src] = const Uuid().v4();
+        }
+        print('🎵 渲染器: _audioUuidMap=$_audioUuidMap');
 
         setState(() {
           _markdownContent = textContent;
@@ -298,7 +313,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         ),
       ),
 
-      const SizedBox(width: 16),      // 视频渲染切换
+      const SizedBox(width: 16), // 视频渲染切换
       IconButton(
         onPressed: _toggleVideoRendering,
         icon: Icon(_enableVideoRendering ? Icons.videocam : Icons.videocam_off),
@@ -315,7 +330,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 音频渲染切换
       IconButton(
         onPressed: _toggleAudioRendering,
-        icon: Icon(_enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined),
+        icon: Icon(
+          _enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined,
+        ),
         tooltip: _enableAudioRendering ? '禁用音频渲染' : '启用音频渲染',
         style: IconButton.styleFrom(
           foregroundColor: _enableAudioRendering
@@ -519,7 +536,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (_enableLatexRendering) {
       inlineSyntaxList.add(LatexSyntax());
       generators.add(LatexProcessor.createGenerator());
-    }    // 添加视频支持
+    } // 添加视频支持
     if (_enableVideoRendering) {
       print('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
       inlineSyntaxList.add(VideoProcessor.createSyntax());
@@ -530,7 +547,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     if (_enableAudioRendering) {
       print('🎵 _buildMarkdownContent: 添加音频语法解析器和生成器');
       inlineSyntaxList.add(AudioProcessor.createSyntax());
-      generators.add(AudioProcessor.createGenerator());
+      generators.add(AudioProcessor.createGenerator(_audioUuidMap));
     }
 
     // 如果有任何自定义生成器或语法，创建MarkdownGenerator
@@ -562,7 +579,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
-    final isDark = _isDarkTheme;    // 如果启用HTML、LaTeX、视频和音频渲染，使用混合配置
+    final isDark = _isDarkTheme; // 如果启用HTML、LaTeX、视频和音频渲染，使用混合配置
     if (_enableHtmlRendering &&
         _enableLatexRendering &&
         _enableVideoRendering &&
@@ -634,7 +651,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         imageBuilder: (url, alt) => _buildImage(url, {'alt': alt}),
         imageErrorBuilder: (url, alt, error) => _buildImageError(url, error),
       );
-    }    // 如果只启用视频渲染，使用视频扩展配置
+    } // 如果只启用视频渲染，使用视频扩展配置
     else if (_enableVideoRendering) {
       return VideoConfigExtension.createWithVideoSupport(
         isDarkTheme: isDark,
@@ -817,7 +834,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   Widget _buildStatusBar() {
     final wordCount = _markdownContent.split(RegExp(r'\s+')).length;
     final charCount = _markdownContent.length;
-    final lineCount = _markdownContent.split('\n').length;    final htmlStats = _getHtmlStats();
+    final lineCount = _markdownContent.split('\n').length;
+    final htmlStats = _getHtmlStats();
     final latexStats = _getLatexStats();
     final videoStats = _getVideoStats();
     final audioStats = _getAudioStats();
@@ -991,7 +1009,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 '视频: ${videoStats['videoCount']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            ],          ],
+            ],
+          ],
 
           // 显示音频信息
           if (audioStats['hasAudio'] == true) ...[
@@ -1013,11 +1032,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined,
+                    _enableAudioRendering
+                        ? Icons.audiotrack
+                        : Icons.audiotrack_outlined,
                     size: 12,
-                    color: _enableAudioRendering
-                        ? Colors.green
-                        : Colors.orange,
+                    color: _enableAudioRendering ? Colors.green : Colors.orange,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -1160,6 +1179,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       _showErrorSnackBar('打开相对路径链接失败: $e');
     }
   }
+
   /// 构建图片组件 - 支持VFS协议
   Widget _buildImage(String url, Map<String, String> attributes) {
     // 检查是否为视频文件
@@ -1167,7 +1187,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 如果是视频文件，使用视频播放器
       return _buildVideoPlayer(url, attributes);
     }
-    
+
     if (url.startsWith('indexeddb://')) {
       return _buildVfsImage(url, attributes);
     } else if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -1176,12 +1196,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 处理相对路径，解析为VFS绝对路径
       final currentDir = _getCurrentDirectory();
       final absolutePath = _resolveRelativePath(currentDir, url);
-      
+
       // 再次检查解析后的路径是否为视频文件
       if (_isVideoFile(absolutePath)) {
         return _buildVideoPlayer(absolutePath, attributes);
       }
-      
+
       return _buildVfsImage(absolutePath, attributes);
     }
   }
@@ -1218,7 +1238,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     final autoplay = attributes.containsKey('autoplay');
     final loop = attributes.containsKey('loop');
     final muted = attributes.containsKey('muted');
-    
+
     final config = MediaKitVideoConfig(
       autoPlay: autoplay,
       looping: loop,
@@ -1229,11 +1249,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: MediaKitVideoPlayer(
-        url: url,
-        config: config,
-        muted: muted,
-      ),
+      child: MediaKitVideoPlayer(url: url, config: config, muted: muted),
     );
   }
 
@@ -2003,6 +2019,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 重新加载内容以应用LaTeX渲染设置
     _loadMarkdownFile();
   }
+
   /// 切换视频渲染
   void _toggleVideoRendering() {
     setState(() {
@@ -2020,6 +2037,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 重新加载内容以应用音频渲染设置
     _loadMarkdownFile();
   }
+
   /// 预处理视频内容
   String _preprocessVideoContent(String content) {
     print('🎥 _preprocessVideoContent: 开始处理');
@@ -2045,6 +2063,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     print('🎵 _preprocessAudioContent: 转换完成');
     return result;
   }
+
   /// 检查内容是否包含视频
   bool _containsVideo() {
     return _enableVideoRendering &&
@@ -2318,7 +2337,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     ]; // 如果启用LaTeX渲染，添加LaTeX配置
     if (_enableLatexRendering) {
       configs.add(LatexConfig(isDarkTheme: isDark));
-    }    // 如果启用视频渲染，添加视频配置
+    } // 如果启用视频渲染，添加视频配置
     if (_enableVideoRendering) {
       configs.add(
         VideoNodeConfig(
@@ -2336,6 +2355,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         AudioNodeConfig(
           isDarkTheme: isDark,
           onAudioTap: _onLinkTap,
+          audioUuidMap: _audioUuidMap, // 新增
           errorBuilder: (url, alt, error) =>
               _buildImageError(url, error.toString()),
         ),

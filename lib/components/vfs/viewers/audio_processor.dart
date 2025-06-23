@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/config/all.dart';
 import 'package:markdown_widget/widget/span_node.dart';
@@ -39,15 +41,16 @@ class AudioProcessor {
   }
 
   /// 创建音频节点生成器
-  static SpanNodeGeneratorWithTag createGenerator() {
+  static SpanNodeGeneratorWithTag createGenerator(audioUuidMap) {
     print('🎵 AudioProcessor: 创建音频生成器');
     return SpanNodeGeneratorWithTag(
       tag: audioTag,
       generator: (e, config, visitor) {
-        print(
-          '🎵 AudioProcessor: 生成AudioNode - tag: ${e.tag}, attributes: ${e.attributes}, textContent: ${e.textContent}',
+        final playerId = audioUuidMap[e.attributes['src']];
+                print(
+          '🎵 AudioProcessor: 生成AudioNode - tag: \\${e.tag}, attributes: \\${e.attributes}, textContent: \\${e.textContent}, uuid: $playerId',
         );
-        return AudioNode(e.attributes, e.textContent);
+        return AudioNode(e.attributes, e.textContent, playerId);
       },
     );
   }
@@ -136,7 +139,8 @@ class AudioProcessor {
           : '';
 
       // 构建audio标签
-      final audioTag = '<audio src="$src" $controls $autoplay $loop title="$title" artist="$artist" album="$album"></audio>';
+      final audioTag =
+          '<audio src="$src" $controls $autoplay $loop title="$title" artist="$artist" album="$album"></audio>';
       print('🎵 AudioProcessor.convertMarkdownAudios: 生成标签 $audioTag');
       return audioTag;
     });
@@ -151,6 +155,30 @@ class AudioProcessor {
     final dotIndex = fileName.lastIndexOf('.');
     return dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName;
   }
+
+  /// 提取所有音频source（支持HTML标签和Markdown语法）
+  static List<String> extractAudioSources(String content) {
+    final sources = <String>[];
+    // 匹配 <audio src="..."> 标签
+    final audioTagPattern = RegExp(
+      r'<audio[^>]*src=["\"]([^"\"]+)["\"][^>]*>',
+      caseSensitive: false,
+    );
+    for (final match in audioTagPattern.allMatches(content)) {
+      final src = match.group(1);
+      if (src != null && src.isNotEmpty) sources.add(src);
+    }
+    // 匹配 Markdown 音频 ![](xxx.mp3)
+    final markdownAudioPattern = RegExp(
+      r'!\[.*?\]\(([^)]+\.(mp3|wav|ogg|aac|m4a|flac|wma|opus))\)',
+      caseSensitive: false,
+    );
+    for (final match in markdownAudioPattern.allMatches(content)) {
+      final src = match.group(1);
+      if (src != null && src.isNotEmpty) sources.add(src);
+    }
+    return sources;
+  }
 }
 
 /// 音频节点配置
@@ -162,11 +190,13 @@ class AudioNodeConfig implements WidgetConfig {
   final bool isDarkTheme;
   final void Function(String)? onAudioTap;
   final Widget Function(String, String, dynamic)? errorBuilder;
+  final Map<String, String>? audioUuidMap; // 新增
 
   const AudioNodeConfig({
     this.isDarkTheme = false,
     this.onAudioTap,
     this.errorBuilder,
+    this.audioUuidMap,
   });
 
   static const AudioNodeConfig light = AudioNodeConfig(isDarkTheme: false);
@@ -177,17 +207,16 @@ class AudioNodeConfig implements WidgetConfig {
 class AudioNode extends SpanNode {
   final Map<String, String> attributes;
   final String textContent;
+  final String? playerId; // 新增
 
-  AudioNode(this.attributes, this.textContent) {
-    print(
-      '🎵 AudioNode: 创建节点 - attributes: $attributes, textContent: $textContent',
-    );
-  }
+  AudioNode(this.attributes, this.textContent, this.playerId);
 
   @override
   InlineSpan build() {
-    print('🎵 AudioNode.build: 开始构建 - src: ${attributes['src']}');
-
+    print(
+      '🎵 AudioNode.build: src=[200m${attributes['src']}[0m, playerId=$playerId',
+    );
+    print('🎵 AudioNode.build: 开始构建 - src: \\${attributes['src']}');
     final src = attributes['src'] ?? '';
     final title = attributes['title'] ?? AudioProcessor._extractFileName(src);
     final artist = attributes['artist'];
@@ -205,6 +234,7 @@ class AudioNode extends SpanNode {
           album: album,
           isVfsPath: _isVfsPath(src),
           autoPlay: autoplay,
+          playerId: playerId, // 传递uuid
           onError: (error) {
             print('🎵 AudioNode: 播放器错误 - $error');
           },
@@ -227,11 +257,17 @@ class AudioSyntax extends m.InlineSyntax {
   @override
   bool onMatch(m.InlineParser parser, Match match) {
     final audioHtml = match.group(0)!;
-    print('🎵 AudioSyntax.onMatch: 匹配到音频标签 - $audioHtml');    // 解析audio标签属性
+    print('🎵 AudioSyntax.onMatch: 匹配到音频标签 - $audioHtml'); // 解析audio标签属性
     final srcMatch = RegExp(r'''src=["']([^"']*)["']''').firstMatch(audioHtml);
-    final titleMatch = RegExp(r'''title=["']([^"']*)["']''').firstMatch(audioHtml);
-    final artistMatch = RegExp(r'''artist=["']([^"']*)["']''').firstMatch(audioHtml);
-    final albumMatch = RegExp(r'''album=["']([^"']*)["']''').firstMatch(audioHtml);
+    final titleMatch = RegExp(
+      r'''title=["']([^"']*)["']''',
+    ).firstMatch(audioHtml);
+    final artistMatch = RegExp(
+      r'''artist=["']([^"']*)["']''',
+    ).firstMatch(audioHtml);
+    final albumMatch = RegExp(
+      r'''album=["']([^"']*)["']''',
+    ).firstMatch(audioHtml);
 
     final attributes = <String, String>{};
     if (srcMatch != null) attributes['src'] = srcMatch.group(1)!;

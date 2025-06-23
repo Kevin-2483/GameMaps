@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../../../services/audio/audio_player_service.dart';
 
 /// 嵌入式音频播放器配置
@@ -30,29 +31,25 @@ class EmbeddedAudioConfig {
 class EmbeddedAudioPlayer extends StatefulWidget {
   /// 音频源（VFS路径或网络URL）
   final String source;
-  
   /// 标题
   final String title;
-  
   /// 艺术家
   final String? artist;
-  
   /// 专辑
   final String? album;
-    /// 是否为VFS路径
+  /// 是否为VFS路径
   final bool isVfsPath;
-  
   /// 是否自动播放
   final bool autoPlay;
-  
   /// 是否连接到现有播放器实例
   final bool connectToExisting;
-  
   /// 配置
   final EmbeddedAudioConfig config;
-  
   /// 错误回调
   final Function(String)? onError;
+  /// 唯一播放器ID（可选，外部传入uuid）
+  final String? playerId;
+
   const EmbeddedAudioPlayer({
     super.key,
     required this.source,
@@ -64,6 +61,7 @@ class EmbeddedAudioPlayer extends StatefulWidget {
     this.connectToExisting = true, // 嵌入式播放器默认连接到现有实例
     this.config = EmbeddedAudioConfig.defaultConfig,
     this.onError,
+    this.playerId, // 新增
   });
 
   @override
@@ -76,6 +74,8 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
   late final AnimationController _expandController;
   bool _isExpanded = false;
   bool _isInitialized = false;
+  Duration? _tempProgress; // 记录临时队列进度
+  late final String _playerId; // 组件唯一id
 
   @override
   void initState() {
@@ -85,113 +85,98 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
-    // 根据配置设置初始展开状态
     _isExpanded = !widget.config.defaultCollapsed;
     if (_isExpanded) {
       _expandController.value = 1.0;
     }
-    
+    // 优先使用外部传入的playerId，否则自动生成
+    _playerId = widget.playerId ?? const Uuid().v4();
+    // 注册暂停监听
+    _audioService.registerTempQueuePauseListener(_playerId, _onPauseByService);
     _initializePlayer();
   }
   @override
   void dispose() {
     _expandController.dispose();
-    
-    // 嵌入式播放器默认连接到现有实例，不清理服务
-    if (!widget.connectToExisting) {
-      // 只有在创建新播放会话时才清理
-      print('🎵 清理嵌入式播放器的播放会话');
-    } else {
-      // 连接到现有播放器时，让音频继续在后台播放
-      print('🎵 嵌入式播放器关闭，音频继续在后台播放');
-    }
-    
+    _audioService.unregisterTempQueuePauseListener(_playerId);
     super.dispose();
   }
+  /// 被服务通知暂停
+  void _onPauseByService() async {
+    if (_audioService.isPlaying) {
+      await _audioService.pause();
+      _tempProgress = _audioService.currentPosition;
+      setState(() {});
+    }
+  }
+
   /// 初始化播放器
   Future<void> _initializePlayer() async {
     try {
       await _audioService.initialize();
-      
-      if (widget.connectToExisting) {
-        // 连接到现有播放器实例，检查当前播放状态
-        await _checkCurrentPlayingState();
-      } else {
-        // 创建新的播放会话
-        // 添加播放列表项
-        final playlistItem = PlaylistItem(
-          source: widget.source,
-          title: widget.title,
-          artist: widget.artist,
-          album: widget.album,
-          isVfsPath: widget.isVfsPath,
-        );
-        
-        _audioService.clearPlaylist();
-        _audioService.addToPlaylist(playlistItem);
-        
-        // 如果配置要求自动播放
-        if (widget.autoPlay) {
-          await _audioService.playFromPlaylist(0);
-        }
-      }
-      
       setState(() {
         _isInitialized = true;
       });
+      // 自动播放
+      if (widget.autoPlay || widget.config.autoPlay) {
+        _playWithTempQueue(position: _tempProgress);
+      }
     } catch (e) {
       widget.onError?.call('初始化音频播放器失败: $e');
     }
   }
 
-  /// 检查当前播放状态（连接到现有播放器时使用）
-  Future<void> _checkCurrentPlayingState() async {
+  /// 使用临时队列播放
+  Future<void> _playWithTempQueue({Duration? position}) async {
+    final item = PlaylistItem(
+      source: widget.source,
+      title: widget.title,
+      artist: widget.artist,
+      album: widget.album,
+      isVfsPath: widget.isVfsPath,
+    );
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    await _audioService.updateTempQueue(item, startPosition: position, id: id, ownerId: _playerId);
+    setState(() {});
+  }
+
+  /// 切换播放/暂停
+  void _togglePlayPause() async {
     try {
-      // 如果当前正在播放的音频不是我们要播放的，则添加到播放列表
-      final currentSource = _audioService.currentSource;
-      if (currentSource != widget.source) {
-        final playlistItem = PlaylistItem(
-          source: widget.source,
-          title: widget.title,
-          artist: widget.artist,
-          album: widget.album,
-          isVfsPath: widget.isVfsPath,
-        );
-        
-        // 检查是否已经在播放列表中
-        int existingIndex = -1;
-        for (int i = 0; i < _audioService.playlist.length; i++) {
-          if (_audioService.playlist[i].source == widget.source) {
-            existingIndex = i;
-            break;
-          }
-        }
-        
-        if (existingIndex == -1) {
-          // 如果不在播放列表中，添加它
-          _audioService.addToPlaylist(playlistItem);
-          existingIndex = _audioService.playlist.length - 1;
-        }
-        
-        // 如果配置要求自动播放，切换到这个音频
-        if (widget.autoPlay) {
-          await _audioService.playFromPlaylist(existingIndex);
-        }
+      if (_audioService.isPlaying) {
+        await _audioService.pause();
+        // 记录当前进度
+        _tempProgress = _audioService.currentPosition;
+      } else {
+        // 继续播放临时队列，带上进度
+        await _playWithTempQueue(position: _tempProgress);
       }
-      
-      print('🎵 嵌入式播放器连接到现有播放器，当前播放: ${_audioService.currentSource}');
     } catch (e) {
-      widget.onError?.call('连接到播放器失败: $e');
+      print('播放/暂停操作失败: $e');
+      widget.onError?.call('播放操作失败: $e');
     }
   }
 
-  /// 切换展开/折叠状态
+  /// 拖动进度条
+  void _onSeek(double value) {
+    if (_audioService.totalDuration.inSeconds > 0) {
+      final position = Duration(
+        seconds: (value * _audioService.totalDuration.inSeconds).round(),
+      );
+      _audioService.seek(position).then((_) {
+        _tempProgress = position;
+        setState(() {});
+      }).catchError((e) {
+        print('进度条拖拽跳转失败: $e');
+      });
+    }
+  }
+
+  /// 修复 _toggleExpanded 未定义，补充方法定义
   void _toggleExpanded() {
     setState(() {
       _isExpanded = !_isExpanded;
     });
-    
     if (_isExpanded) {
       _expandController.forward();
     } else {
@@ -438,14 +423,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             ? _audioService.currentPosition.inSeconds.toDouble() /
                 _audioService.totalDuration.inSeconds.toDouble()
             : 0.0,
-        onChanged: (value) {
-          final position = Duration(
-            seconds: (value * _audioService.totalDuration.inSeconds).round(),
-          );
-          _audioService.seek(position).catchError((e) {
-            print('进度条拖拽跳转失败: $e');
-          });
-        },
+        onChanged: _onSeek,
       ),
     );
   }
@@ -476,8 +454,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         _buildControlButton(
           icon: Icons.replay_10,
           onTap: () {
-            final newPosition = _audioService.currentPosition - const Duration(seconds: 10);
-            _audioService.seek(newPosition.isNegative ? Duration.zero : newPosition).catchError((e) {
+            _audioService.seek(_audioService.currentPosition - const Duration(seconds: 10)).then((_) {
+              _tempProgress = _audioService.currentPosition;
+              setState(() {});
+            }).catchError((e) {
               print('快退操作失败: $e');
             });
           },
@@ -512,7 +492,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
           onTap: () {
             final newPosition = _audioService.currentPosition + const Duration(seconds: 10);
             if (newPosition < _audioService.totalDuration) {
-              _audioService.seek(newPosition).catchError((e) {
+              _audioService.seek(newPosition).then((_) {
+                _tempProgress = newPosition;
+                setState(() {});
+              }).catchError((e) {
                 print('快进操作失败: $e');
               });
             }
@@ -586,24 +569,6 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         ),
       ],
     );
-  }
-
-  /// 切换播放/暂停
-  void _togglePlayPause() async {
-    try {
-      if (_audioService.isPlaying) {
-        await _audioService.pause();
-      } else {
-        if (_audioService.currentSource == null) {
-          await _audioService.playFromPlaylist(0);
-        } else {
-          await _audioService.play();
-        }
-      }
-    } catch (e) {
-      print('播放/暂停操作失败: $e');
-      widget.onError?.call('播放操作失败: $e');
-    }
   }
 
   /// 获取音量图标

@@ -195,6 +195,19 @@ class AudioPlayerService extends ChangeNotifier {
   PlaybackMode _playbackMode = PlaybackMode.sequential;
   bool _backgroundPlayback = false;
   
+  // 临时队列（只存一个）
+  PlaylistItem? _tempQueueItem;
+  String? _tempQueueId;
+  Duration? _tempQueueStartPosition;
+  String? _tempQueueOwnerId; // 新增：临时队列归属组件id
+  // 保存主队列播放状态
+  int? _savedIndex;
+  Duration? _savedPosition;
+  String? _savedSource;
+
+  // 组件暂停监听
+  final Map<String, VoidCallback> _tempQueuePauseListeners = {};
+
   // 流订阅
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
@@ -270,24 +283,43 @@ class AudioPlayerService extends ChangeNotifier {
     String? source,
     AudioPlayerConfig config = AudioPlayerConfig.defaultConfig,
   }) async {
+    // 如果有临时队列，优先播放
+    if (_tempQueueItem != null && (source == null || source == _tempQueueItem!.source)) {
+      try {
+        _setState(AudioPlaybackState.loading);
+        _clearError();
+        await _applyConfig(config);
+        await _loadAudioSource(_tempQueueItem!.source);
+        _currentSource = _tempQueueItem!.source;
+        await _player.resume().timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('🎵 AudioPlayerService: 临时队列播放超时，但继续处理');
+            _setState(AudioPlaybackState.playing);
+          },
+        );
+        print('🎵 AudioPlayerService: 临时队列开始播放 - ${_tempQueueItem!.title}');
+        return true;
+      } catch (e) {
+        print('🎵 AudioPlayerService: 临时队列播放失败 - $e');
+        _setError('临时队列播放失败: $e');
+        return false;
+      }
+    }
+
     try {
       String? audioSource = source ?? _currentSource;
       if (audioSource == null) {
         _setError('没有指定音频源');
         return false;
       }
-
       _setState(AudioPlaybackState.loading);
       _clearError();
-
-      // 应用配置
       await _applyConfig(config);
-
-      // 如果是新的音频源，需要加载
       if (audioSource != _currentSource) {
         await _loadAudioSource(audioSource);
         _currentSource = audioSource;
-      }      // 开始播放
+      }
       await _player.resume().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
@@ -295,7 +327,6 @@ class AudioPlayerService extends ChangeNotifier {
           _setState(AudioPlaybackState.playing);
         },
       );
-      
       print('🎵 AudioPlayerService: 开始播放 - $audioSource');
       return true;
     } catch (e) {
@@ -703,7 +734,25 @@ class AudioPlayerService extends ChangeNotifier {
   /// 播放完成处理
   void _onPlaybackCompleted() {
     print('🎵 AudioPlayerService: 播放完成');
-    
+    // 如果是临时队列，播放完后清空并恢复主队列
+    if (_tempQueueItem != null) {
+      clearTempQueue();
+      // 恢复主队列
+      if (_savedIndex != null && _savedIndex! >= 0 && _savedIndex! < _playlist.length) {
+        _currentIndex = _savedIndex!;
+        _currentSource = _savedSource;
+        notifyListeners();
+        playFromPlaylist(_currentIndex);
+        if (_savedPosition != null && _savedPosition! > Duration.zero) {
+          seek(_savedPosition!);
+        }
+      }
+      _savedIndex = null;
+      _savedPosition = null;
+      _savedSource = null;
+      return;
+    }
+
     // 根据播放模式决定下一步操作
     if (_playbackMode != PlaybackMode.loopOne) {
       final nextIndex = _getNextIndex();
@@ -760,5 +809,71 @@ class AudioPlayerService extends ChangeNotifier {
     _positionSubscription = null;
     await _durationSubscription?.cancel();
     _durationSubscription = null;
+  }
+
+  /// 注册临时队列暂停监听
+  void registerTempQueuePauseListener(String ownerId, VoidCallback onPause) {
+    _tempQueuePauseListeners[ownerId] = onPause;
+  }
+
+  /// 注销监听
+  void unregisterTempQueuePauseListener(String ownerId) {
+    _tempQueuePauseListeners.remove(ownerId);
+  }
+
+  /// 更新临时队列
+  /// [item] 临时播放项
+  /// [startPosition] 可选，起始播放进度
+  /// [id] 可选，临时队列id，默认时间戳
+  /// [ownerId] 必须，归属组件id
+  Future<void> updateTempQueue(PlaylistItem item, {Duration? startPosition, String? id, required String ownerId}) async {
+    // 如果已有临时队列且ownerId不同，通知旧owner暂停
+    if (_tempQueueOwnerId != null && _tempQueueOwnerId != ownerId) {
+      final oldListener = _tempQueuePauseListeners[_tempQueueOwnerId!];
+      if (oldListener != null) {
+        oldListener();
+      }
+    }
+    _tempQueueItem = item;
+    _tempQueueId = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    _tempQueueStartPosition = startPosition;
+    _tempQueueOwnerId = ownerId;
+    // 保存主队列状态
+    _savedIndex = _currentIndex;
+    _savedPosition = _currentPosition;
+    _savedSource = _currentSource;
+    notifyListeners();
+    await _playTempQueue();
+  }
+
+  /// 清空临时队列
+  void clearTempQueue() {
+    _tempQueueItem = null;
+    _tempQueueId = null;
+    _tempQueueStartPosition = null;
+    _tempQueueOwnerId = null;
+    notifyListeners();
+  }
+
+  /// 查询临时队列
+  Map<String, dynamic>? getTempQueue() {
+    if (_tempQueueItem == null) return null;
+    return {
+      'item': _tempQueueItem,
+      'id': _tempQueueId,
+      'startPosition': _tempQueueStartPosition,
+      'ownerId': _tempQueueOwnerId,
+    };
+  }
+
+  /// 内部方法：播放临时队列
+  Future<void> _playTempQueue() async {
+    if (_tempQueueItem == null) return;
+    // 播放临时队列项
+    await play(source: _tempQueueItem!.source);
+    // 跳转到指定进度
+    if (_tempQueueStartPosition != null) {
+      await seek(_tempQueueStartPosition!);
+    }
   }
 }
