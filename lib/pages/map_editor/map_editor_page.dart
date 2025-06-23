@@ -2764,6 +2764,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     _initialSelectedLegendItemId, // 传递初始选中的图例项ID
                                 selectedElementId:
                                     _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
+                                scripts: newReactiveScriptManager
+                                    .scripts, // 修正：传递正确的脚本列表
                               ),
                             ),
                           ), // Z层级检视器覆盖层
@@ -3476,6 +3478,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               _previewStickyNoteOpacityValues[noteId] = opacity;
             });
           },
+          scriptManager: newReactiveScriptManager,
         );
       },
     );

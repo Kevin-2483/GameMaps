@@ -5,6 +5,7 @@ import '../../../models/legend_item.dart' as legend_db;
 import '../../../components/vfs/vfs_file_picker_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../components/common/tags_manager.dart';
+import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -19,6 +20,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final List<MapLayer>? selectedLayerGroup; // 当前选中的图层组
   final String? initialSelectedLegendItemId; // 初始选中的图例项ID
   final String? selectedElementId; // 外部传入的选中元素ID，用于同步状态
+  final List<ScriptData> scripts; // 新增：脚本列表
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -33,6 +35,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.selectedLayerGroup,
     this.initialSelectedLegendItemId,
     this.selectedElementId,
+    required this.scripts, // 新增：必传脚本列表
   });
 
   @override
@@ -773,9 +776,10 @@ class _LegendGroupManagementDrawerState
                         TextField(
                           decoration: InputDecoration(
                             labelText: '图例链接 (可选)',
-                            hintText: '输入网络链接或选择VFS文件',
+                            hintText: '输入网络链接、选择VFS文件或绑定脚本',
                             border: const OutlineInputBorder(),
                             isDense: true,
+                            // 合并所有操作按钮
                             suffixIcon: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -797,6 +801,22 @@ class _LegendGroupManagementDrawerState
                                     if (selectedFile != null) {
                                       _updateLegendItem(
                                         item.copyWith(url: selectedFile),
+                                      );
+                                    }
+                                  },
+                                ),
+                                // 新增：选择脚本按钮
+                                IconButton(
+                                  icon: const Icon(Icons.code, size: 16),
+                                  tooltip: '选择脚本',
+                                  onPressed: () async {
+                                    final selectedScript =
+                                        await _showScriptPickerDialog();
+                                    if (selectedScript != null) {
+                                      _updateLegendItem(
+                                        item.copyWith(
+                                          url: 'script://${selectedScript.id}',
+                                        ),
                                       );
                                     }
                                   },
@@ -1625,5 +1645,44 @@ class _LegendGroupManagementDrawerState
         );
       }
     }
+  }
+
+  // 新增：脚本选择弹窗
+  Future<ScriptData?> _showScriptPickerDialog() async {
+    // 中文注释：弹出脚本选择对话框，选中后返回ScriptData
+    return await showDialog<ScriptData>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('选择要绑定的脚本'),
+          content: SizedBox(
+            width: 350,
+            height: 400,
+            child: widget.scripts.isEmpty
+                ? const Center(child: Text('暂无可用脚本'))
+                : ListView(
+                    children: widget.scripts.map((script) {
+                      return ListTile(
+                        leading: const Icon(Icons.code),
+                        title: Text(script.name),
+                        subtitle: Text(
+                          script.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () => Navigator.of(context).pop(script),
+                      );
+                    }).toList(),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

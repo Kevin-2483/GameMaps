@@ -116,7 +116,6 @@ void hetuScriptWorkerFunction(dynamic params) {
 
 // Worker 内部的全局变量
 Hetu? _hetuEngine;
-Map<String, dynamic> _currentMapData = {};
 final Map<String, Completer<dynamic>> _externalFunctionCalls = {};
 final List<String> _workerLogs = [];
 
@@ -173,7 +172,6 @@ Future<void> _handleCustomMessage(
         break;
 
       case 'mapDataUpdate':
-        _currentMapData = data['data'] as Map<String, dynamic>? ?? {};
         _addWorkerLog('地图数据更新，任务ID: $executionId');
         _sendCustomMessage(controller, {
           'type': 'ack',
@@ -361,9 +359,6 @@ Future<void> _executeScript(
     for (final entry in context.entries) {
       _hetuEngine!.define(entry.key, entry.value);
     }
-    
-    // 设置地图数据
-    _hetuEngine!.define('mapData', _currentMapData);
 
     // 只需要绑定外部函数（不包括内部函数，因为它们已经在初始化时绑定了）
     final uniqueExternalFunctions = externalFunctions.where(
@@ -627,7 +622,6 @@ void _disposeHetuEngine(IsolateManagerController controller) {
   }
 
   _hetuEngine = null;
-  _currentMapData.clear();
   _externalFunctionCalls.clear();
   _workerLogs.clear();
 

@@ -21,6 +21,8 @@ import '../renderers/background_renderer.dart';
 // 导入绘制工具管理器
 import '../tools/drawing_tool_manager.dart';
 import '../tools/element_interaction_manager.dart';
+import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
+import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -111,6 +113,7 @@ class MapCanvas extends StatefulWidget {
   final Function(List<StickyNote>)? onStickyNotesReordered; // 便签重排回调
   // 便签透明度更新回调
   final Function(String, double)? onStickyNoteOpacityChanged;
+  final NewReactiveScriptManager? scriptManager; // 新增：脚本管理器参数
 
   const MapCanvas({
     super.key,
@@ -151,6 +154,7 @@ class MapCanvas extends StatefulWidget {
     this.onStickyNoteSelected,
     this.onStickyNotesReordered,
     this.onStickyNoteOpacityChanged,
+    this.scriptManager, // 新增：脚本管理器参数
   });
 
   @override
@@ -1312,8 +1316,50 @@ class MapCanvasState extends State<MapCanvas> {
     // 选中图例项，高亮显示
     widget.onLegendItemSelected.call(item.id);
 
-    // 如果图例项有URL链接，打开链接
+    // 如果图例项有URL链接
     if (item.url != null && item.url!.isNotEmpty) {
+      // 新增：支持脚本绑定
+      if (item.url!.startsWith('script://')) {
+        final scriptId = item.url!.substring('script://'.length);
+        // 查找脚本并执行
+        if (widget.scriptManager != null) {
+          final scripts = widget.scriptManager!.scripts;
+          final script = scripts.where((s) => s.id == scriptId).isNotEmpty
+              ? scripts.firstWhere((s) => s.id == scriptId)
+              : null;
+          if (script != null) {
+            widget.scriptManager!.executeScript(script.id).catchError((error) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('脚本执行失败: $error'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              }
+            });
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('未找到绑定的脚本'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('脚本管理器未初始化，无法执行脚本'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+        return;
+      }
       _openLegendUrl(item.url!);
     }
   }

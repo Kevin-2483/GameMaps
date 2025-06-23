@@ -273,24 +273,6 @@ class ExternalFunctionRegistry {
         content,
       ]);
     };
-
-    // say 函数 - 语音合成，不需要等待结果
-    // 支持可选参数：language, speechRate, volume, pitch, voice
-    functions['say'] =
-        (
-          dynamic tagFilter,
-          String filterType,
-          String text, [
-          Map<String, dynamic>? options,
-        ]) {
-          callFireAndForgetFunction('say', [
-            tagFilter,
-            filterType,
-            text,
-            options, // 传递可选参数映射
-          ]);
-          return null; // 立即返回，不等待结果
-        };
   }
 
   /// 注册文件操作函数
@@ -422,6 +404,20 @@ class ExternalFunctionRegistry {
     functions['ttsGetSpeechRateRange'] = () async {
       return await callAwaitableFunction('ttsGetSpeechRateRange', []);
     };
+
+    // say 函数 - 语音合成，不需要等待结果
+    // 支持可选参数：language, speechRate, volume, pitch, voice
+    functions['say'] =
+        (
+          String text, [
+          Map<String, dynamic>? options,
+        ]) {
+          callFireAndForgetFunction('say', [
+            text,
+            options, // 传递可选参数映射
+          ]);
+          return null; // 立即返回，不等待结果
+        };
   }
 
   /// 生成唯一的调用ID

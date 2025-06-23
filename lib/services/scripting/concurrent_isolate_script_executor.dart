@@ -215,7 +215,8 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
           if (kDebugMode) {
             debugPrint('[Script] $logMessage');
           }
-          break;        case ScriptMessageType.externalFunctionCall:
+          break;
+        case ScriptMessageType.externalFunctionCall:
           _handleExternalFunctionCall(message);
           break;
 
@@ -238,7 +239,9 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
     try {
       if (_externalFunctionHandlers.containsKey(call.functionName)) {
         final handler = _externalFunctionHandlers[call.functionName]!;
-        final result = Function.apply(handler, call.arguments);
+        // 统一参数处理，保证为List
+        final args = call.arguments is List ? call.arguments : [call.arguments];
+        final result = Function.apply(handler, args);
 
         // 发送响应
         final response = ExternalFunctionResponse(
@@ -289,11 +292,17 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
     try {
       if (_externalFunctionHandlers.containsKey(call.functionName)) {
         final handler = _externalFunctionHandlers[call.functionName]!;
+        // 统一参数处理，保证为List
+        final args = call.arguments;
         // Fire and Forget - 调用函数但不发送响应
-        Function.apply(handler, call.arguments);
-        debugPrint('Fire-and-forget function ${call.functionName} executed successfully');
+        Function.apply(handler, args);
+        debugPrint(
+          'Fire-and-forget function ${call.functionName} executed successfully',
+        );
       } else {
-        debugPrint('Warning: Fire-and-forget function ${call.functionName} not found');
+        debugPrint(
+          'Warning: Fire-and-forget function ${call.functionName} not found',
+        );
       }
     } catch (e) {
       debugPrint('Error in fire-and-forget function ${call.functionName}: $e');
@@ -422,6 +431,7 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       }
     });
   }
+
   /// 在隔离中处理脚本执行
   static void _handleExecuteInIsolate(
     ScriptMessage message,
@@ -612,9 +622,10 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
     );
 
     // 带返回值的延迟函数 - 返回 Future
-    functions['delayThen'] = (int milliseconds, dynamic value) => Future.delayed(
-      Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
-      () => value,
-    );
+    functions['delayThen'] = (int milliseconds, dynamic value) =>
+        Future.delayed(
+          Duration(milliseconds: milliseconds < 0 ? 0 : milliseconds),
+          () => value,
+        );
   }
 }
