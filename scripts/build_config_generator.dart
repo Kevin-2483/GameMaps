@@ -101,7 +101,24 @@ class BuildConfigGenerator {
       // 写入到文件供构建脚本使用
       final outputFile = File('scripts/build_params_$targetPlatform.txt');
       await outputFile.writeAsString(buildParams.join('\n'));
-      print('\nBuild parameters saved to: ${outputFile.path}');
+      print('\nBuild parameters saved to: [32m${outputFile.path}[0m');
+
+      // 额外输出.env文件（仅包含KEY=VALUE，不带--dart-define）
+      final envLines = buildParams
+          .map((e) => e.replaceFirst('--dart-define=', ''))
+          .map((e) {
+            final idx = e.indexOf('=');
+            if (idx > 0) {
+              final key = e.substring(0, idx);
+              final value = e.substring(idx + 1);
+              return '$key=$value';
+            }
+            return e;
+          })
+          .toList();
+      final envFile = File('build/.env');
+      await envFile.writeAsString(envLines.join('\n'));
+      print('Env file saved to: [32m${envFile.path}[0m');
 
       // 明确退出成功
       exit(0);
