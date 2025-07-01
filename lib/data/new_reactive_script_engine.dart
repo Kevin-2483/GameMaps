@@ -177,7 +177,6 @@ class NewReactiveScriptEngine {
   void _registerExternalFunctions(IScriptExecutor executor) {
     // 基础函数
     executor.registerExternalFunction('log', _functionHandler.handleLog);
-    executor.registerExternalFunction('print', _functionHandler.handleLog);
 
     // 数学函数
     executor.registerExternalFunction('sin', _functionHandler.handleSin);
@@ -202,12 +201,18 @@ class NewReactiveScriptEngine {
       _functionHandler.handleGetAllElements,
     );
     executor.registerExternalFunction(
-      'countElements',
-      _functionHandler.handleCountElements,
+      'getElementsInLayer',
+      _functionHandler.handleGetElementsInLayer,
+    );
+
+    // 文本元素函数
+    executor.registerExternalFunction(
+      'getTextElements',
+      _functionHandler.handleGetTextElements,
     );
     executor.registerExternalFunction(
-      'calculateTotalArea',
-      _functionHandler.handleCalculateTotalArea,
+      'findTextElementsByContent',
+      _functionHandler.handleFindTextElementsByContent,
     );
 
     // 文件操作函数
@@ -229,6 +234,18 @@ class NewReactiveScriptEngine {
       'getStickyNoteById',
       _functionHandler.handleGetStickyNoteById,
     );
+    executor.registerExternalFunction(
+      'getElementsInStickyNote',
+      _functionHandler.handleGetElementsInStickyNote,
+    );
+    executor.registerExternalFunction(
+      'filterStickyNotesByTags',
+      _functionHandler.handleFilterStickyNotesByTags,
+    );
+    executor.registerExternalFunction(
+      'filterStickyNoteElementsByTags',
+      _functionHandler.handleFilterStickyNoteElementsByTags,
+    );
 
     // 图例相关函数
     executor.registerExternalFunction(
@@ -238,6 +255,36 @@ class NewReactiveScriptEngine {
     executor.registerExternalFunction(
       'getLegendGroupById',
       _functionHandler.handleGetLegendGroupById,
+    );
+    executor.registerExternalFunction(
+      'getLegendItems',
+      _functionHandler.handleGetLegendItems,
+    );
+    executor.registerExternalFunction(
+      'getLegendItemById',
+      _functionHandler.handleGetLegendItemById,
+    );
+    executor.registerExternalFunction(
+      'filterLegendGroupsByTags',
+      _functionHandler.handleFilterLegendGroupsByTags,
+    );
+    executor.registerExternalFunction(
+      'filterLegendItemsByTags',
+      _functionHandler.handleFilterLegendItemsByTags,
+    );
+
+    // 标签筛选函数
+    executor.registerExternalFunction(
+      'filterElementsByTags',
+      _functionHandler.handleFilterElementsByTags,
+    );
+    executor.registerExternalFunction(
+      'filterElementsInStickyNotesByTags',
+      _functionHandler.handleFilterElementsInStickyNotesByTags,
+    );
+    executor.registerExternalFunction(
+      'filterLegendItemsInGroupByTags',
+      _functionHandler.handleFilterLegendItemsInGroupByTags,
     );    // 语音合成函数
     executor.registerExternalFunction(
       'say',

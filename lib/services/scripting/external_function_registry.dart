@@ -60,6 +60,13 @@ class ExternalFunctionRegistry {
       callFireAndForgetFunction,
     );
 
+    // 标签筛选函数
+    _registerTagFilterFunctions(
+      functions,
+      callAwaitableFunction,
+      callFireAndForgetFunction,
+    );
+
     // TTS相关函数
     _registerTtsFunctions(
       functions,
@@ -75,7 +82,6 @@ class ExternalFunctionRegistry {
     return [
       // 地图数据访问函数（读取类）
       'getLayers', 'getLayerById', 'getElementsInLayer', 'getAllElements',
-      'countElements', 'calculateTotalArea',
 
       // 文本元素查询函数（读取类）
       'getTextElements', 'findTextElementsByContent',
@@ -98,6 +104,10 @@ class ExternalFunctionRegistry {
       'getLegendItemById',
       'filterLegendGroupsByTags',
       'filterLegendItemsByTags',
+
+      // 标签筛选函数（读取类）
+      'filterElementsByTags', 'filterElementsInStickyNotesByTags',
+      'filterLegendItemsInGroupByTags',
     ];
   }
 
@@ -105,7 +115,7 @@ class ExternalFunctionRegistry {
   static List<String> getFireAndForgetFunctionNames() {
     return [
       // 基础函数（日志类）
-      'log', 'print',
+      'log',
 
       // 元素修改函数（修改类）
       'updateElementProperty', 'moveElement',
@@ -180,14 +190,9 @@ class ExternalFunctionRegistry {
     Future<dynamic> Function(String, List<dynamic>) callAwaitableFunction,
     void Function(String, List<dynamic>) callFireAndForgetFunction,
   ) {
-    // log 和 print 是不需要等待结果的函数
+    // log 是不需要等待结果的函数
     functions['log'] = (dynamic message) {
       callFireAndForgetFunction('log', [message]);
-      return null; // 立即返回，不等待结果
-    };
-
-    functions['print'] = (dynamic message) {
-      callFireAndForgetFunction('print', [message]);
       return null; // 立即返回，不等待结果
     };
   }
@@ -215,12 +220,9 @@ class ExternalFunctionRegistry {
       return await callAwaitableFunction('getAllElements', []);
     };
 
-    functions['countElements'] = ([String? type]) async {
-      return await callAwaitableFunction('countElements', [type]);
-    };
-
-    functions['calculateTotalArea'] = () async {
-      return await callAwaitableFunction('calculateTotalArea', []);
+    // 新增：获取图层中的元素
+    functions['getElementsInLayer'] = (String layerId) async {
+      return await callAwaitableFunction('getElementsInLayer', [layerId]);
     };
 
     // 元素修改函数 - 这些都是修改类函数，不需要等待结果
@@ -418,6 +420,28 @@ class ExternalFunctionRegistry {
           ]);
           return null; // 立即返回，不等待结果
         };
+  }
+
+  /// 注册标签筛选函数
+  static void _registerTagFilterFunctions(
+    Map<String, Function> functions,
+    Future<dynamic> Function(String, List<dynamic>) callAwaitableFunction,
+    void Function(String, List<dynamic>) callFireAndForgetFunction,
+  ) {
+    // 通用元素标签筛选函数
+    functions['filterElementsByTags'] = (List<String> tags, [String? mode]) async {
+      return await callAwaitableFunction('filterElementsByTags', [tags, mode ?? 'contains']);
+    };
+
+    // 便签中元素标签筛选函数
+    functions['filterElementsInStickyNotesByTags'] = (List<String> tags, [String? mode]) async {
+      return await callAwaitableFunction('filterElementsInStickyNotesByTags', [tags, mode ?? 'contains']);
+    };
+
+    // 指定图例组中的图例项标签筛选函数
+    functions['filterLegendItemsInGroupByTags'] = (String groupId, List<String> tags, [String? mode]) async {
+      return await callAwaitableFunction('filterLegendItemsInGroupByTags', [groupId, tags, mode ?? 'contains']);
+    };
   }
 
   /// 生成唯一的调用ID

@@ -12,15 +12,13 @@ class ExternalFunctionHandler {
   final MapDataBloc _mapDataBloc;
   final List<String> _executionLogs = [];
   final String? _scriptId; // 脚本标识符
-  
+
   // TTS 服务实例
   late final TtsService _ttsService;
 
-  ExternalFunctionHandler({
-    required MapDataBloc mapDataBloc,
-    String? scriptId,
-  }) : _mapDataBloc = mapDataBloc,
-       _scriptId = scriptId {
+  ExternalFunctionHandler({required MapDataBloc mapDataBloc, String? scriptId})
+    : _mapDataBloc = mapDataBloc,
+      _scriptId = scriptId {
     _ttsService = TtsService();
     // 初始化 TTS 服务
     _initializeTtsService();
@@ -34,12 +32,14 @@ class ExternalFunctionHandler {
     } catch (e) {
       debugPrint('TTS 服务初始化失败: $e');
     }
-  }  /// 处理语音合成函数
+  }
+
+  /// 处理语音合成函数
   /// 参数: text, [可选参数映射]
   void handleSay(String text, [Map<String, dynamic>? options]) async {
     try {
       debugPrint('处理语音合成: text="$text"');
-      
+
       if (text.isEmpty) {
         debugPrint('语音合成: 文本为空，跳过');
         return;
@@ -58,7 +58,7 @@ class ExternalFunctionHandler {
         volume = options['volume'] as double?;
         pitch = options['pitch'] as double?;
         voice = options['voice'] as Map<String, String>?;
-      }      // 调用 TTS 服务进行语音合成
+      } // 调用 TTS 服务进行语音合成
       await _ttsService.speak(
         text,
         language: language,
@@ -76,14 +76,14 @@ class ExternalFunctionHandler {
       if (volume != null) logMessage += ', volume: $volume';
       if (pitch != null) logMessage += ', pitch: $pitch';
       if (voice != null) logMessage += ', voice: $voice';
-      
+
       addExecutionLog(logMessage);
-      
     } catch (e) {
       debugPrint('语音合成失败: $e');
       addExecutionLog('语音合成失败: $e');
     }
   }
+
   /// 停止当前脚本的所有TTS播放
   Future<void> stopScriptTts() async {
     try {
@@ -184,6 +184,31 @@ class ExternalFunctionHandler {
   Map<String, dynamic>? handleGetLayerById(String layerId) {
     final layer = _getLayerById(layerId);
     return layer != null ? ScriptDataConverter.layerToMap(layer) : null;
+  }
+
+  /// 处理获取图层中的元素
+  List<Map<String, dynamic>> handleGetElementsInLayer(String layerId) {
+    final layer = _getLayerById(layerId);
+    if (layer == null) return [];
+
+    return layer.elements
+        .map((element) => ScriptDataConverter.elementToMap(element))
+        .toList();
+  }
+
+  /// 处理获取便签中的元素
+  List<Map<String, dynamic>> handleGetElementsInStickyNote(String noteId) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        if (note.id == noteId) {
+          return note.elements
+              .map((element) => ScriptDataConverter.elementToMap(element))
+              .toList();
+        }
+      }
+    }
+    return [];
   }
 
   /// 处理获取所有元素函数
@@ -323,5 +348,301 @@ class ExternalFunctionHandler {
   void addExecutionLog(String message) {
     _executionLogs.add(message);
     debugPrint('[Script] $message');
+  }
+
+  /// 处理根据内容查找文本元素
+  List<Map<String, dynamic>> handleFindTextElementsByContent(String content) {
+    final layers = _getCurrentLayers();
+    final textElements = <Map<String, dynamic>>[];
+
+    // 搜索图层中的文本元素
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.text &&
+            element.text != null &&
+            element.text!.contains(content)) {
+          final elementMap = ScriptDataConverter.elementToMap(element);
+          elementMap['layerId'] = layer.id; // 标记来源图层
+          textElements.add(elementMap);
+        }
+      }
+    }
+
+    // 搜索便签中的文本元素
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          if (element.type == DrawingElementType.text &&
+              element.text != null &&
+              element.text!.contains(content)) {
+            final elementMap = ScriptDataConverter.elementToMap(element);
+            elementMap['stickyNoteId'] = note.id; // 标记来源便签
+            textElements.add(elementMap);
+          }
+        }
+      }
+    }
+
+    return textElements;
+  }
+
+  /// 处理获取所有图例项
+  List<Map<String, dynamic>> handleGetLegendItems() {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      final allItems = <Map<String, dynamic>>[];
+
+      for (final group in state.legendGroups) {
+        for (final item in group.legendItems) {
+          final itemMap = ScriptDataConverter.legendItemToMap(item);
+          itemMap['groupId'] = group.id; // 添加组ID信息
+          allItems.add(itemMap);
+        }
+      }
+
+      return allItems;
+    }
+    return [];
+  }
+
+  /// 处理根据ID获取图例项
+  Map<String, dynamic>? handleGetLegendItemById(String itemId) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+
+      for (final group in state.legendGroups) {
+        for (final item in group.legendItems) {
+          if (item.id == itemId) {
+            final itemMap = ScriptDataConverter.legendItemToMap(item);
+            itemMap['groupId'] = group.id; // 添加组ID信息
+            return itemMap;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /// 处理根据标签筛选便签
+  List<Map<String, dynamic>> handleFilterStickyNotesByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      return state.mapItem.stickyNotes
+          .where((note) => _matchTags(note.tags, tags, mode))
+          .map((note) => ScriptDataConverter.stickyNoteToMap(note))
+          .toList();
+    }
+    return [];
+  }
+
+  /// 处理根据标签筛选便签中的元素
+  List<Map<String, dynamic>> handleFilterStickyNoteElementsByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      final filteredElements = <Map<String, dynamic>>[];
+
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          if (_matchTags(element.tags, tags, mode)) {
+            final elementMap = ScriptDataConverter.elementToMap(element);
+            elementMap['stickyNoteId'] = note.id; // 标记来源便签
+            filteredElements.add(elementMap);
+          }
+        }
+      }
+
+      return filteredElements;
+    }
+    return [];
+  }
+
+  /// 处理根据标签筛选图例组
+  List<Map<String, dynamic>> handleFilterLegendGroupsByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      return state.legendGroups
+          .where((group) => _matchTags(group.tags, tags, mode))
+          .map((group) => ScriptDataConverter.legendGroupToMap(group))
+          .toList();
+    }
+    return [];
+  }
+
+  /// 处理根据标签筛选图例项
+  List<Map<String, dynamic>> handleFilterLegendItemsByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      final filteredItems = <Map<String, dynamic>>[];
+
+      for (final group in state.legendGroups) {
+        for (final item in group.legendItems) {
+          if (_matchTags(item.tags, tags, mode)) {
+            final itemMap = ScriptDataConverter.legendItemToMap(item);
+            itemMap['groupId'] = group.id; // 添加组ID信息
+            filteredItems.add(itemMap);
+          }
+        }
+      }
+
+      return filteredItems;
+    }
+    return [];
+  }
+
+  /// 处理根据标签筛选所有元素（包括画布中的和便签中的）
+  List<Map<String, dynamic>> handleFilterElementsByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    final filteredElements = <Map<String, dynamic>>[];
+
+    // 筛选画布图层中的元素
+    final layers = _getCurrentLayers();
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        if (_matchTags(element.tags, tags, mode)) {
+          final elementMap = ScriptDataConverter.elementToMap(element);
+          elementMap['layerId'] = layer.id; // 标记来源图层
+          filteredElements.add(elementMap);
+        }
+      }
+    }
+
+    // 筛选便签中的元素
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          if (_matchTags(element.tags, tags, mode)) {
+            final elementMap = ScriptDataConverter.elementToMap(element);
+            elementMap['stickyNoteId'] = note.id; // 标记来源便签
+            filteredElements.add(elementMap);
+          }
+        }
+      }
+    }
+
+    return filteredElements;
+  }
+
+  /// 处理根据标签筛选便签中的元素（独立函数）
+  List<Map<String, dynamic>> handleFilterElementsInStickyNotesByTags(
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      final filteredElements = <Map<String, dynamic>>[];
+
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          if (_matchTags(element.tags, tags, mode)) {
+            final elementMap = ScriptDataConverter.elementToMap(element);
+            elementMap['stickyNoteId'] = note.id; // 标记来源便签
+            filteredElements.add(elementMap);
+          }
+        }
+      }
+
+      return filteredElements;
+    }
+    return [];
+  }
+
+  /// 处理根据标签筛选指定图例组中的图例项
+  List<Map<String, dynamic>> handleFilterLegendItemsInGroupByTags(
+    String groupId,
+    List<String> tags, [
+    String mode = 'contains',
+  ]) {
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+
+      for (final group in state.legendGroups) {
+        if (group.id == groupId) {
+          return group.legendItems
+              .where((item) => _matchTags(item.tags, tags, mode))
+              .map((item) {
+                final itemMap = ScriptDataConverter.legendItemToMap(item);
+                itemMap['groupId'] = group.id; // 添加组ID信息
+                return itemMap;
+              })
+              .toList();
+        }
+      }
+    }
+    return [];
+  }
+
+  /// 标签匹配逻辑
+  /// mode: 'contains' (包含), 'equals' (等于), 'excludes' (排除)
+  bool _matchTags(
+    List<String>? itemTags,
+    List<String> filterTags,
+    String mode,
+  ) {
+    if (itemTags == null || itemTags.isEmpty) {
+      return mode == 'excludes'; // 如果没有标签，只有排除模式匹配
+    }
+
+    switch (mode) {
+      case 'contains':
+        // 包含模式：元素标签包含任何一个筛选标签
+        return filterTags.any((tag) => itemTags.contains(tag));
+      case 'equals':
+        // 等于模式：元素标签完全匹配筛选标签
+        if (itemTags.length != filterTags.length) return false;
+        return filterTags.every((tag) => itemTags.contains(tag));
+      case 'excludes':
+        // 排除模式：元素标签不包含任何筛选标签
+        return !filterTags.any((tag) => itemTags.contains(tag));
+      default:
+        return false;
+    }
+  }
+
+  /// 处理获取文本元素
+  List<Map<String, dynamic>> handleGetTextElements() {
+    final layers = _getCurrentLayers();
+    final textElements = <Map<String, dynamic>>[];
+
+    for (final layer in layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.text) {
+          final elementMap = ScriptDataConverter.elementToMap(element);
+          elementMap['layerId'] = layer.id; // 标记来源图层
+          textElements.add(elementMap);
+        }
+      }
+    }
+
+    // 还要包括便签中的文本元素
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          if (element.type == DrawingElementType.text) {
+            final elementMap = ScriptDataConverter.elementToMap(element);
+            elementMap['stickyNoteId'] = note.id; // 标记来源便签
+            textElements.add(elementMap);
+          }
+        }
+      }
+    }
+
+    return textElements;
   }
 }

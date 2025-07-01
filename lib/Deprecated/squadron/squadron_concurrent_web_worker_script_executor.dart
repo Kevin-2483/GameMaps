@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import '../script_executor_base.dart';
-import '../external_function_registry.dart';
-import '../../../models/script_data.dart';
+import '../../services/scripting/script_executor_base.dart';
+import '../../services/scripting/external_function_registry.dart';
+import '../../models/script_data.dart';
 import 'script_worker_service.dart';
 
 /// 基于Squadron的并发Web Worker脚本执行器 - 简化版本
