@@ -1,7 +1,9 @@
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../../data/map_data_bloc.dart';
 import '../../data/map_data_state.dart';
+import '../../data/map_data_event.dart';
 import '../../models/map_layer.dart';
 import '../../utils/script_data_converter.dart';
 import '../tts_service.dart';
@@ -215,52 +217,31 @@ class ExternalFunctionHandler {
   List<Map<String, dynamic>> handleGetAllElements() {
     final layers = _getCurrentLayers();
     final allElements = <Map<String, dynamic>>[];
-
+  
+    // 获取图层中的元素
     for (final layer in layers) {
       for (final element in layer.elements) {
-        allElements.add(ScriptDataConverter.elementToMap(element));
+        final elementMap = ScriptDataConverter.elementToMap(element);
+        elementMap['layerId'] = layer.id; // 标记来源图层
+        allElements.add(elementMap);
       }
     }
-
+  
+    // 获取便签中的元素
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      for (final note in state.mapItem.stickyNotes) {
+        for (final element in note.elements) {
+          final elementMap = ScriptDataConverter.elementToMap(element);
+          elementMap['stickyNoteId'] = note.id; // 标记来源便签
+          allElements.add(elementMap);
+        }
+      }
+    }
+  
     return allElements;
   }
 
-  /// 处理统计元素
-  int handleCountElements([String? type]) {
-    final layers = _getCurrentLayers();
-    int count = 0;
-
-    for (final layer in layers) {
-      for (final element in layer.elements) {
-        if (type == null || element.type.name == type) {
-          count++;
-        }
-      }
-    }
-
-    return count;
-  }
-
-  /// 处理计算总面积
-  double handleCalculateTotalArea() {
-    final layers = _getCurrentLayers();
-    double totalArea = 0.0;
-
-    for (final layer in layers) {
-      for (final element in layer.elements) {
-        if (element.type == DrawingElementType.rectangle ||
-            element.type == DrawingElementType.hollowRectangle) {
-          if (element.points.length >= 2) {
-            final width = (element.points[1].dx - element.points[0].dx).abs();
-            final height = (element.points[1].dy - element.points[0].dy).abs();
-            totalArea += width * height;
-          }
-        }
-      }
-    }
-
-    return totalArea;
-  }
 
   /// 处理获取便签
   List<Map<String, dynamic>> handleGetStickyNotes() {
@@ -644,5 +625,230 @@ class ExternalFunctionHandler {
     }
 
     return textElements;
+  }
+
+    /// 处理更新元素属性
+  void handleUpdateElementProperty(String elementId, String property, dynamic value) {
+    if (_mapDataBloc.state is! MapDataLoaded) return;
+    
+    final state = _mapDataBloc.state as MapDataLoaded;
+    
+    // 在图层中查找元素
+    for (final layer in state.layers) {
+      final elementIndex = layer.elements.indexWhere((e) => e.id == elementId);
+      if (elementIndex != -1) {
+        final updatedElement = _updateElementProperty(layer.elements[elementIndex], property, value);
+        _mapDataBloc.add(UpdateLayer(layer: layer.copyWith(
+          elements: List.from(layer.elements)..[elementIndex] = updatedElement,
+        )));
+        addExecutionLog('更新图层 ${layer.id} 中元素 $elementId 的属性 $property');
+        return;
+      }
+    }
+    
+    // 在便签中查找元素
+    for (final note in state.mapItem.stickyNotes) {
+      final elementIndex = note.elements.indexWhere((e) => e.id == elementId);
+      if (elementIndex != -1) {
+        final updatedElement = _updateElementProperty(note.elements[elementIndex], property, value);
+        final updatedNote = note.copyWith(
+          elements: List.from(note.elements)..[elementIndex] = updatedElement,
+        );
+        _mapDataBloc.add(UpdateStickyNote(stickyNote: updatedNote));
+        addExecutionLog('更新便签 ${note.id} 中元素 $elementId 的属性 $property');
+        return;
+      }
+    }
+    
+    addExecutionLog('未找到元素 $elementId');
+  }
+
+  /// 处理移动元素
+  void handleMoveElement(String elementId, double deltaX, double deltaY) {
+    if (_mapDataBloc.state is! MapDataLoaded) return;
+    
+    final state = _mapDataBloc.state as MapDataLoaded;
+    
+    // 在图层中查找元素
+    for (final layer in state.layers) {
+      final elementIndex = layer.elements.indexWhere((e) => e.id == elementId);
+      if (elementIndex != -1) {
+        final element = layer.elements[elementIndex];
+        // MapDrawingElement 使用 points 数组，需要移动所有点
+        final newPoints = element.points.map((point) => 
+          Offset(point.dx + deltaX, point.dy + deltaY)
+        ).toList();
+        final updatedElement = element.copyWith(points: newPoints);
+        
+        _mapDataBloc.add(UpdateLayer(layer: layer.copyWith(
+          elements: List.from(layer.elements)..[elementIndex] = updatedElement,
+        )));
+        addExecutionLog('移动图层 ${layer.id} 中元素 $elementId 偏移 ($deltaX, $deltaY)');
+        return;
+      }
+    }
+    
+    // 在便签中查找元素
+    for (final note in state.mapItem.stickyNotes) {
+      final elementIndex = note.elements.indexWhere((e) => e.id == elementId);
+      if (elementIndex != -1) {
+        final element = note.elements[elementIndex];
+        // MapDrawingElement 使用 points 数组，需要移动所有点
+        final newPoints = element.points.map((point) => 
+          Offset(point.dx + deltaX, point.dy + deltaY)
+        ).toList();
+        final updatedElement = element.copyWith(points: newPoints);
+        
+        final updatedNote = note.copyWith(
+          elements: List.from(note.elements)..[elementIndex] = updatedElement,
+        );
+        _mapDataBloc.add(UpdateStickyNote(stickyNote: updatedNote));
+        addExecutionLog('移动便签 ${note.id} 中元素 $elementId 偏移 ($deltaX, $deltaY)');
+        return;
+      }
+    }
+    
+    addExecutionLog('未找到元素 $elementId');
+  }
+
+  /// 处理创建文本元素
+  void handleCreateTextElement(String text, double x, double y, [Map<String, dynamic>? options]) {
+    final textElement = MapDrawingElement(
+      id: 'text_${DateTime.now().millisecondsSinceEpoch}',
+      type: DrawingElementType.text,
+      points: [Offset(x, y)], // 文本元素只需要一个位置点
+      text: text,
+      fontSize: options?['fontSize']?.toDouble() ?? 16.0,
+      color: options?['color'] != null 
+          ? Color(options!['color'] as int)
+          : Colors.black,
+      tags: options?['tags']?.cast<String>(),
+      createdAt: DateTime.now(),
+    );
+    
+    // 默认添加到第一个图层
+    if (_mapDataBloc.state is MapDataLoaded) {
+      final state = _mapDataBloc.state as MapDataLoaded;
+      if (state.layers.isNotEmpty) {
+        final firstLayer = state.layers.first;
+        final updatedLayer = firstLayer.copyWith(
+          elements: [...firstLayer.elements, textElement],
+        );
+        _mapDataBloc.add(UpdateLayer(layer: updatedLayer));
+        addExecutionLog('创建文本元素: "$text" 在位置 ($x, $y)');
+      }
+    }
+  }
+
+  /// 处理更新文本内容
+  void handleUpdateTextContent(String elementId, String newText) {
+    handleUpdateElementProperty(elementId, 'text', newText);
+    addExecutionLog('更新元素 $elementId 的文本内容为: "$newText"');
+  }
+
+  /// 处理更新文本大小
+  void handleUpdateTextSize(String elementId, double newSize) {
+    handleUpdateElementProperty(elementId, 'fontSize', newSize);
+    addExecutionLog('更新元素 $elementId 的文本大小为: $newSize');
+  }
+
+  /// 处理更新图例组
+  void handleUpdateLegendGroup(String groupId, Map<String, dynamic> updates) {
+    if (_mapDataBloc.state is! MapDataLoaded) return;
+    
+    final state = _mapDataBloc.state as MapDataLoaded;
+    final groupIndex = state.legendGroups.indexWhere((g) => g.id == groupId);
+    
+    if (groupIndex == -1) {
+      addExecutionLog('未找到图例组 $groupId');
+      return;
+    }
+    
+    final group = state.legendGroups[groupIndex];
+    final updatedGroup = group.copyWith(
+      name: updates['name'] ?? group.name,
+      isVisible: updates['isVisible'] ?? group.isVisible,
+      opacity: updates['opacity']?.toDouble() ?? group.opacity,
+      tags: updates['tags']?.cast<String>() ?? group.tags,
+    );
+    
+    _mapDataBloc.add(UpdateLegendGroup(legendGroup: updatedGroup));
+    addExecutionLog('更新图例组 $groupId');
+  }
+
+  /// 处理更新图例组可见性
+  void handleUpdateLegendGroupVisibility(String groupId, bool isVisible) {
+    handleUpdateLegendGroup(groupId, {'isVisible': isVisible});
+    addExecutionLog('设置图例组 $groupId 可见性为: $isVisible');
+  }
+
+  /// 处理更新图例组透明度
+  void handleUpdateLegendGroupOpacity(String groupId, double opacity) {
+    handleUpdateLegendGroup(groupId, {'opacity': opacity});
+    addExecutionLog('设置图例组 $groupId 透明度为: $opacity');
+  }
+
+  /// 处理更新图例项
+  void handleUpdateLegendItem(String itemId, Map<String, dynamic> updates) {
+    if (_mapDataBloc.state is! MapDataLoaded) return;
+    
+    final state = _mapDataBloc.state as MapDataLoaded;
+    
+    for (final group in state.legendGroups) {
+      final itemIndex = group.legendItems.indexWhere((item) => item.id == itemId);
+      if (itemIndex != -1) {
+        final item = group.legendItems[itemIndex];
+        final updatedItem = item.copyWith(
+          legendId: updates['legendId'] ?? item.legendId,
+          position: updates['position'] != null
+              ? Offset(updates['position']['x']?.toDouble() ?? item.position.dx,
+                       updates['position']['y']?.toDouble() ?? item.position.dy)
+              : item.position,
+          size: updates['size']?.toDouble() ?? item.size,
+          rotation: updates['rotation']?.toDouble() ?? item.rotation,
+          opacity: updates['opacity']?.toDouble() ?? item.opacity,
+          isVisible: updates['isVisible'] ?? item.isVisible,
+          url: updates['url'] ?? item.url,
+          tags: updates['tags']?.cast<String>() ?? item.tags,
+        );
+        
+        final updatedGroup = group.copyWith(
+          legendItems: List.from(group.legendItems)..[itemIndex] = updatedItem,
+        );
+        
+        _mapDataBloc.add(UpdateLegendGroup(legendGroup: updatedGroup));
+        addExecutionLog('更新图例项 $itemId');
+        return;
+      }
+    }
+    
+    addExecutionLog('未找到图例项 $itemId');
+  }
+
+  /// 辅助方法：更新元素属性
+  MapDrawingElement _updateElementProperty(MapDrawingElement element, String property, dynamic value) {
+    switch (property) {
+      case 'text':
+        return element.copyWith(text: value as String?);
+      case 'fontSize':
+        return element.copyWith(fontSize: (value as num).toDouble());
+      case 'color':
+        return element.copyWith(color: value is int ? Color(value) : value as Color);
+      case 'strokeWidth':
+        return element.copyWith(strokeWidth: (value as num).toDouble());
+      case 'density':
+        return element.copyWith(density: (value as num).toDouble());
+      case 'rotation':
+        return element.copyWith(rotation: (value as num).toDouble());
+      case 'curvature':
+        return element.copyWith(curvature: (value as num).toDouble());
+      case 'zIndex':
+        return element.copyWith(zIndex: (value as int));
+      case 'tags':
+        return element.copyWith(tags: (value as List).cast<String>());
+      default:
+        addExecutionLog('不支持的属性: $property');
+        return element;
+    }
   }
 }
