@@ -9,6 +9,7 @@ import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
+  final String? mapId; // 地图ID，用于扩展设置隔离
   final LegendGroup legendGroup;
   final List<legend_db.LegendItem> availableLegends;
   final Function(LegendGroup) onLegendGroupUpdated;
@@ -21,9 +22,12 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final String? initialSelectedLegendItemId; // 初始选中的图例项ID
   final String? selectedElementId; // 外部传入的选中元素ID，用于同步状态
   final List<ScriptData> scripts; // 新增：脚本列表
+  final Function(String, bool)? onSmartHideStateChanged;
+  final bool Function(String)? getSmartHideState;
 
   const LegendGroupManagementDrawer({
     super.key,
+    this.mapId, // 地图ID参数
     required this.legendGroup,
     required this.availableLegends,
     required this.onLegendGroupUpdated,
@@ -36,6 +40,8 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.initialSelectedLegendItemId,
     this.selectedElementId,
     required this.scripts, // 新增：必传脚本列表
+    this.onSmartHideStateChanged, // 新增：智能隐藏状态变更回调
+    this.getSmartHideState, // 新增：获取智能隐藏状态的函数
   });
 
   @override
@@ -47,7 +53,12 @@ class _LegendGroupManagementDrawerState
     extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
-  bool _isSmartHidingEnabled = false; // 智能隐藏开关状态  @override
+  
+  // 通过getter访问智能隐藏状态
+  bool get _isSmartHidingEnabled =>
+      widget.getSmartHideState?.call(widget.legendGroup.id) ?? true;
+
+  @override
   void initState() {
     super.initState();
     _currentGroup = widget.legendGroup;
@@ -55,6 +66,7 @@ class _LegendGroupManagementDrawerState
     _selectedLegendItemId = widget.initialSelectedLegendItemId;
     // 延迟执行检查，避免在初始化期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSmartHidingStateFromExtensionSettings();
       _checkSmartHiding();
     });
   }
@@ -70,6 +82,15 @@ class _LegendGroupManagementDrawerState
       _selectedLegendItemId = null;
       // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadSmartHidingStateFromExtensionSettings();
+        _checkSmartHiding();
+      });
+    }
+
+    // 如果地图ID发生变化，重新加载扩展设置
+    if (oldWidget.mapId != widget.mapId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadSmartHidingStateFromExtensionSettings();
         _checkSmartHiding();
       });
     }
@@ -1364,11 +1385,16 @@ class _LegendGroupManagementDrawerState
     }).toList();
   }
 
+  /// 从扩展设置加载智能隐藏状态
+  void _loadSmartHidingStateFromExtensionSettings() {
+    // 智能隐藏状态现在由地图编辑器管理，不需要在这里处理
+    // 状态通过 widget.getSmartHideState 回调获取
+  }
+
   /// 切换智能隐藏开关
   void _toggleSmartHiding(bool enabled) {
-    setState(() {
-      _isSmartHidingEnabled = enabled;
-    });
+    // 通过回调更新智能隐藏状态，由地图编辑器管理
+    widget.onSmartHideStateChanged?.call(_currentGroup.id, enabled);
 
     // 如果启用智能隐藏，立即应用双向逻辑
     if (enabled) {

@@ -49,6 +49,9 @@ class UserPreferences {
   /// 工具设置
   final ToolPreferences tools;
 
+  /// 扩展设置存储区域 (JSON格式存储临时偏好设置)
+  final Map<String, dynamic> extensionSettings;
+
   /// 语言设置
   final String locale;
 
@@ -69,6 +72,7 @@ class UserPreferences {
     required this.mapEditor,
     required this.layout,
     required this.tools,
+    this.extensionSettings = const {},
     this.locale = 'zh_CN',
     required this.createdAt,
     required this.updatedAt,
@@ -85,6 +89,7 @@ class UserPreferences {
       mapEditor: MapEditorPreferences.createDefault(),
       layout: LayoutPreferences.createDefault(),
       tools: ToolPreferences.createDefault(),
+      extensionSettings: const {},
       createdAt: now,
       updatedAt: now,
       lastLoginAt: now,
@@ -101,6 +106,7 @@ class UserPreferences {
     MapEditorPreferences? mapEditor,
     LayoutPreferences? layout,
     ToolPreferences? tools,
+    Map<String, dynamic>? extensionSettings,
     String? locale,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -115,6 +121,7 @@ class UserPreferences {
       mapEditor: mapEditor ?? this.mapEditor,
       layout: layout ?? this.layout,
       tools: tools ?? this.tools,
+      extensionSettings: extensionSettings ?? this.extensionSettings,
       locale: locale ?? this.locale,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -271,6 +278,9 @@ class LayoutPreferences {
   /// 是否自动恢复面板状态
   final bool autoRestorePanelStates;
 
+  /// 是否启用扩展储存功能
+  final bool enableExtensionStorage;
+
   const LayoutPreferences({
     required this.panelCollapsedStates,
     required this.panelAutoCloseStates,
@@ -280,6 +290,7 @@ class LayoutPreferences {
     this.animationDuration = 300,
     this.enableAnimations = true,
     this.autoRestorePanelStates = true,
+    this.enableExtensionStorage = false,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -304,6 +315,7 @@ class LayoutPreferences {
       animationDuration: 300,
       enableAnimations: true,
       autoRestorePanelStates: true,
+      enableExtensionStorage: false, // 明确设置默认值
     );
   }
   LayoutPreferences copyWith({
@@ -315,6 +327,7 @@ class LayoutPreferences {
     int? animationDuration,
     bool? enableAnimations,
     bool? autoRestorePanelStates,
+    bool? enableExtensionStorage,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -326,6 +339,8 @@ class LayoutPreferences {
       enableAnimations: enableAnimations ?? this.enableAnimations,
       autoRestorePanelStates:
           autoRestorePanelStates ?? this.autoRestorePanelStates,
+      enableExtensionStorage:
+          enableExtensionStorage ?? this.enableExtensionStorage,
     );
   }
 

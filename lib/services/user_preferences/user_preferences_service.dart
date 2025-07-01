@@ -234,6 +234,12 @@ class UserPreferencesService {
     await savePreferences(current.copyWith(tools: tools));
   }
 
+  /// 更新扩展设置
+  Future<void> updateExtensionSettings(Map<String, dynamic> extensionSettings) async {
+    final current = await getCurrentPreferences();
+    await savePreferences(current.copyWith(extensionSettings: extensionSettings));
+  }
+
   /// 更新用户信息
   Future<void> updateUserInfo({
     String? displayName,

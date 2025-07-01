@@ -16,6 +16,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart' as legend_db;
 import '../../components/layout/main_layout.dart';
 import '../../components/web/web_readonly_components.dart';
+import '../../utils/extension_settings_managers.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
@@ -161,12 +162,23 @@ class _MapEditorContentState extends State<_MapEditorContent>
   // 便签管理状态
   StickyNote? _selectedStickyNote; // 当前选中的便签
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
+
+  // 智能隐藏状态管理（从抽屉迁移到地图编辑器）
+  Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
+
   @override
   void dispose() {
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
       _savePanelStatesOnExit().catchError((e) {
         print('在dispose中保存面板状态失败: $e');
+      });
+    }
+
+    // 保存智能隐藏状态到扩展存储（现在使用保存的引用，不访问context）
+    if (_currentMap != null) {
+      _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
+        print('在dispose中保存智能隐藏状态失败: $e');
       });
     }
 
@@ -185,6 +197,107 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _initializeMapAndReactiveSystem();
     _initializeLayoutFromPreferences();
     // 脚本管理器现在通过响应式系统自动初始化
+  }
+
+
+  // 添加用户偏好设置提供者的引用
+  UserPreferencesProvider? _userPreferencesProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 在这里安全地获取UserPreferencesProvider的引用
+    _userPreferencesProvider = context.read<UserPreferencesProvider>();
+  }
+
+  /// 初始化图例组智能隐藏状态
+  void _initializeLegendGroupSmartHideStates() {
+    if (_currentMap == null) return;
+
+    // 使用保存的引用而不是context.read
+    final enableExtensionStorage =
+        _userPreferencesProvider?.layout.enableExtensionStorage ?? false;
+
+    if (enableExtensionStorage) {
+      // 扩展储存功能开启时，从扩展设置加载状态
+      for (final group in _currentMap!.legendGroups) {
+        final savedState = LegendGroupSmartHideManager.getSmartHideEnabled(
+          _currentMap!.title,
+          group.id,
+        );
+        _legendGroupSmartHideStates[group.id] = savedState;
+      }
+    } else {
+      // 扩展储存功能关闭时，所有图例组默认开启智能隐藏
+      for (final group in _currentMap!.legendGroups) {
+        _legendGroupSmartHideStates[group.id] = true;
+      }
+    }
+
+    debugPrint('图例组智能隐藏状态已初始化: $_legendGroupSmartHideStates');
+  }
+
+
+  /// 获取图例组智能隐藏状态
+  bool getLegendGroupSmartHideState(String legendGroupId) {
+    return _legendGroupSmartHideStates[legendGroupId] ?? true;
+  }
+
+  /// 设置图例组智能隐藏状态
+  void setLegendGroupSmartHideState(String legendGroupId, bool enabled) {
+    setState(() {
+      _legendGroupSmartHideStates[legendGroupId] = enabled;
+    });
+
+    // 使用保存的引用而不是context.read
+    final enableExtensionStorage =
+        _userPreferencesProvider?.layout.enableExtensionStorage ?? false;
+
+    // 只有扩展储存功能开启时才保存到扩展设置
+    if (enableExtensionStorage && _currentMap != null) {
+      LegendGroupSmartHideManager.setSmartHideEnabled(
+        _currentMap!.title,
+        legendGroupId,
+        enabled,
+      );
+    }
+
+    debugPrint('图例组 $legendGroupId 智能隐藏状态已更新: $enabled');
+  }
+
+    /// 退出时保存智能隐藏状态
+  Future<void> _saveLegendGroupSmartHideStatesOnExit() async {
+    if (_currentMap == null || _userPreferencesProvider == null) return;
+
+    final enableExtensionStorage =
+        _userPreferencesProvider!.layout.enableExtensionStorage;
+
+    if (!enableExtensionStorage) return;
+
+    try {
+      // 清理此地图的旧设置
+      await LegendGroupSmartHideManager.clearAllSmartHideSettings(
+        _currentMap!.title,
+      );
+
+      // 重新序列化当前状态，只保存当前存在的图例组
+      final currentGroupIds = _currentMap!.legendGroups
+          .map((g) => g.id)
+          .toSet();
+      for (final entry in _legendGroupSmartHideStates.entries) {
+        if (currentGroupIds.contains(entry.key)) {
+          await LegendGroupSmartHideManager.setSmartHideEnabled(
+            _currentMap!.title,
+            entry.key,
+            entry.value,
+          );
+        }
+      }
+
+      debugPrint('地图 ${_currentMap!.title} 的图例组智能隐藏状态已保存');
+    } catch (e) {
+      debugPrint('保存图例组智能隐藏状态失败: $e');
+    }
   }
 
   /// 同步初始化地图和响应式系统
@@ -252,6 +365,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 新的脚本管理器会通过响应式系统自动获取地图数据
       // 无需手动设置地图标题
+
+      // 初始化图例组智能隐藏状态（在地图数据加载完成后）
+      _initializeLegendGroupSmartHideStates();
 
       debugPrint('地图数据加载完成: ${_currentMap!.title}');
     } catch (e) {
@@ -1753,6 +1869,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       addLegendGroupReactive(newGroup);
       debugPrint('使用响应式系统添加图例组: ${newGroup.name}');
 
+      // 为新图例组设置默认的智能隐藏状态
+      setLegendGroupSmartHideState(newGroup.id, true);
+
       // 显示成功消息
       _showSuccessSnackBar('已添加图例组 "${newGroup.name}"');
     } catch (e) {
@@ -2751,6 +2870,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                               elevation: 8,
                               borderRadius: BorderRadius.circular(12),
                               child: LegendGroupManagementDrawer(
+                                mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
                                 legendGroup: _currentLegendGroupForManagement!,
                                 availableLegends: _availableLegends,
                                 onLegendGroupUpdated: _updateLegendGroup,
@@ -2766,6 +2886,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                                 scripts: newReactiveScriptManager
                                     .scripts, // 修正：传递正确的脚本列表
+                                onSmartHideStateChanged:
+                                    setLegendGroupSmartHideState,
+                                getSmartHideState: getLegendGroupSmartHideState,
                               ),
                             ),
                           ), // Z层级检视器覆盖层

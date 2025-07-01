@@ -7,16 +7,17 @@ part of 'legend_item.dart';
 // **************************************************************************
 
 LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
-  id: (json['id'] as num?)?.toInt(),
-  title: json['title'] as String,
-  imageData: const Uint8ListConverter().fromJson(json['imageData'] as String?),
-  centerX: (json['centerX'] as num).toDouble(),
-  centerY: (json['centerY'] as num).toDouble(),
-  version: (json['version'] as num).toInt(),
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
-);
+      id: (json['id'] as num?)?.toInt(),
+      title: json['title'] as String,
+      imageData:
+          const Uint8ListConverter().fromJson(json['imageData'] as String?),
+      centerX: (json['centerX'] as num).toDouble(),
+      centerY: (json['centerY'] as num).toDouble(),
+      version: (json['version'] as num).toInt(),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
 
 Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
     <String, dynamic>{
@@ -34,10 +35,9 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
 LegendDatabase _$LegendDatabaseFromJson(Map<String, dynamic> json) =>
     LegendDatabase(
       version: (json['version'] as num).toInt(),
-      legends:
-          (json['legends'] as List<dynamic>)
-              .map((e) => LegendItem.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      legends: (json['legends'] as List<dynamic>)
+          .map((e) => LegendItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       exportedAt: DateTime.parse(json['exportedAt'] as String),
     );
 

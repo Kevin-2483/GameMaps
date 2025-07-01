@@ -409,17 +409,13 @@ class ExternalFunctionRegistry {
 
     // say 函数 - 语音合成，不需要等待结果
     // 支持可选参数：language, speechRate, volume, pitch, voice
-    functions['say'] =
-        (
-          String text, [
-          Map<String, dynamic>? options,
-        ]) {
-          callFireAndForgetFunction('say', [
-            text,
-            options, // 传递可选参数映射
-          ]);
-          return null; // 立即返回，不等待结果
-        };
+    functions['say'] = (String text, [Map<String, dynamic>? options]) {
+      callFireAndForgetFunction('say', [
+        text,
+        options, // 传递可选参数映射
+      ]);
+      return null; // 立即返回，不等待结果
+    };
   }
 
   /// 注册标签筛选函数
@@ -429,19 +425,32 @@ class ExternalFunctionRegistry {
     void Function(String, List<dynamic>) callFireAndForgetFunction,
   ) {
     // 通用元素标签筛选函数
-    functions['filterElementsByTags'] = (List<String> tags, [String? mode]) async {
-      return await callAwaitableFunction('filterElementsByTags', [tags, mode ?? 'contains']);
-    };
+    functions['filterElementsByTags'] =
+        (List<String> tags, [String? mode]) async {
+          return await callAwaitableFunction('filterElementsByTags', [
+            tags,
+            mode ?? 'contains',
+          ]);
+        };
 
     // 便签中元素标签筛选函数
-    functions['filterElementsInStickyNotesByTags'] = (List<String> tags, [String? mode]) async {
-      return await callAwaitableFunction('filterElementsInStickyNotesByTags', [tags, mode ?? 'contains']);
-    };
+    functions['filterElementsInStickyNotesByTags'] =
+        (List<String> tags, [String? mode]) async {
+          return await callAwaitableFunction(
+            'filterElementsInStickyNotesByTags',
+            [tags, mode ?? 'contains'],
+          );
+        };
 
     // 指定图例组中的图例项标签筛选函数
-    functions['filterLegendItemsInGroupByTags'] = (String groupId, List<String> tags, [String? mode]) async {
-      return await callAwaitableFunction('filterLegendItemsInGroupByTags', [groupId, tags, mode ?? 'contains']);
-    };
+    functions['filterLegendItemsInGroupByTags'] =
+        (String groupId, List<String> tags, [String? mode]) async {
+          return await callAwaitableFunction('filterLegendItemsInGroupByTags', [
+            groupId,
+            tags,
+            mode ?? 'contains',
+          ]);
+        };
   }
 
   /// 生成唯一的调用ID

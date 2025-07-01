@@ -10,6 +10,7 @@ import 'widgets/map_editor_settings_section.dart';
 import 'widgets/layout_settings_section.dart';
 import 'widgets/tool_settings_section.dart';
 import 'widgets/user_management_section.dart';
+import 'widgets/extension_settings_section.dart';
 
 class UserPreferencesPage extends BasePage {
   const UserPreferencesPage({super.key});
@@ -286,6 +287,12 @@ class _UserPreferencesPageContentState
 
                   // 工具设置
                   ToolSettingsSection(
+                    preferences: provider.currentPreferences!,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 扩展设置
+                  ExtensionSettingsSection(
                     preferences: provider.currentPreferences!,
                   ),
                   const SizedBox(height: 16),

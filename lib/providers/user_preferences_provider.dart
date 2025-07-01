@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_preferences.dart';
 import '../services/user_preferences/user_preferences_service.dart';
+import '../utils/extension_settings_helper.dart';
 import 'theme_provider.dart';
 
 /// 用户偏好设置状态管理Provider
@@ -51,6 +53,10 @@ class UserPreferencesProvider extends ChangeNotifier {
   /// 用户头像路径
   String? get avatarPath => _currentPreferences?.avatarPath;
 
+  /// 扩展设置
+  Map<String, dynamic> get extensionSettings =>
+      _currentPreferences?.extensionSettings ?? {};
+
   /// 初始化用户偏好设置
   Future<void> initialize() async {
     if (_isLoading) return;
@@ -62,8 +68,12 @@ class UserPreferencesProvider extends ChangeNotifier {
       await _service.initialize();
       _currentPreferences = await _service.getCurrentPreferences();
 
+      // 初始化扩展设置管理器
+      ExtensionSettingsManager.initialize(this);
+
       if (kDebugMode) {
         print('用户偏好设置初始化完成: ${_currentPreferences?.displayName}');
+        print('扩展设置管理器已初始化');
       }
     } catch (e) {
       _setError('初始化用户偏好设置失败: ${e.toString()}');
@@ -155,6 +165,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     int? animationDuration,
     bool? enableAnimations,
     bool? autoRestorePanelStates,
+    bool? enableExtensionStorage,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -168,6 +179,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         animationDuration: animationDuration,
         enableAnimations: enableAnimations,
         autoRestorePanelStates: autoRestorePanelStates,
+        enableExtensionStorage: enableExtensionStorage,
       );
 
       await _service.updateLayout(updatedLayout);
@@ -499,6 +511,70 @@ class UserPreferencesProvider extends ChangeNotifier {
   /// 获取主色调
   Color getPrimaryColor() {
     return Color(theme.primaryColor);
+  }
+
+  /// 更新扩展设置
+  Future<void> updateExtensionSettings(Map<String, dynamic> settings) async {
+    if (_currentPreferences == null) return;
+
+    try {
+      await _service.updateExtensionSettings(settings);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('更新扩展设置失败: ${e.toString()}');
+    }
+  }
+
+  /// 获取扩展设置中的特定值
+  T? getExtensionSetting<T>(String key, [T? defaultValue]) {
+    final value = extensionSettings[key];
+    return value is T ? value : defaultValue;
+  }
+
+  /// 设置扩展设置中的特定值
+  Future<void> setExtensionSetting<T>(String key, T value) async {
+    final newSettings = Map<String, dynamic>.from(extensionSettings);
+    newSettings[key] = value;
+    await updateExtensionSettings(newSettings);
+  }
+
+  /// 移除扩展设置中的特定键
+  Future<void> removeExtensionSetting(String key) async {
+    final newSettings = Map<String, dynamic>.from(extensionSettings);
+    newSettings.remove(key);
+    await updateExtensionSettings(newSettings);
+  }
+
+  /// 清空所有扩展设置
+  Future<void> clearExtensionSettings() async {
+    await updateExtensionSettings({});
+  }
+
+  /// 获取扩展设置的JSON字符串表示
+  String getExtensionSettingsJson() {
+    return jsonEncode(extensionSettings);
+  }
+
+  /// 从JSON字符串更新扩展设置
+  Future<void> updateExtensionSettingsFromJson(String jsonString) async {
+    try {
+      final Map<String, dynamic> settings = jsonDecode(jsonString);
+      await updateExtensionSettings(settings);
+    } catch (e) {
+      _setError('解析扩展设置JSON失败: ${e.toString()}');
+      rethrow;
+    }
+  }
+
+  /// 获取扩展设置的大小（字节数）
+  int getExtensionSettingsSize() {
+    return utf8.encode(getExtensionSettingsJson()).length;
+  }
+
+  /// 检查扩展设置是否包含特定键
+  bool hasExtensionSetting(String key) {
+    return extensionSettings.containsKey(key);
   }
 
   @override
