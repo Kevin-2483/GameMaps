@@ -11,7 +11,8 @@ class ExtensionSettingsSection extends StatefulWidget {
   const ExtensionSettingsSection({super.key, required this.preferences});
 
   @override
-  State<ExtensionSettingsSection> createState() => _ExtensionSettingsSectionState();
+  State<ExtensionSettingsSection> createState() =>
+      _ExtensionSettingsSectionState();
 }
 
 class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
@@ -48,11 +49,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
   Future<void> _toggleExtensionStorage() async {
     final provider = context.read<UserPreferencesProvider>();
     final currentValue = provider.layout.enableExtensionStorage;
-    
-    await provider.updateLayout(
-      enableExtensionStorage: !currentValue,
-    );
-    
+
+    await provider.updateLayout(enableExtensionStorage: !currentValue);
+
     if (!provider.layout.enableExtensionStorage) {
       // 如果禁用扩展储存，清空设置
       await provider.clearExtensionSettings();
@@ -65,12 +64,12 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
       title: '清空扩展设置',
       content: '确定要清空所有扩展设置吗？此操作不可撤销。',
     );
-    
+
     if (confirmed) {
       final provider = context.read<UserPreferencesProvider>();
       await provider.clearExtensionSettings();
       _updateJsonController();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -86,11 +85,11 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
     try {
       final provider = context.read<UserPreferencesProvider>();
       await provider.updateExtensionSettingsFromJson(_jsonController.text);
-      
+
       setState(() {
         _isEditing = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -121,10 +120,7 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _jsonController.text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('已复制到剪贴板'),
-        duration: Duration(seconds: 1),
-      ),
+      const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 1)),
     );
   }
 
@@ -182,9 +178,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // 说明文字
             Text(
               '用于存储临时的地图相关偏好设置，如图例组智能隐藏状态等。这些设置不会影响地图数据本身。',
@@ -192,9 +188,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             if (isEnabled) ...[
               // 统计信息
               Container(
@@ -221,9 +217,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // 操作按钮
               Wrap(
                 spacing: 8,
@@ -274,16 +270,16 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                     ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // JSON编辑器
               if (hasSettings || _isEditing) ...[
                 Text(
                   'JSON数据',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Container(
@@ -317,9 +313,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                 child: Text(
                   '扩展设置存储已禁用',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
                 ),
               ),
             ],

@@ -379,7 +379,11 @@ class ReactiveVersionAdapter {
       } else {
         // 4. 如果没有会话数据，从VFS加载指定版本
         _mapDataBloc.add(
-          LoadMapData(mapTitle: _versionManager.mapTitle, version: versionId),
+          LoadMapData(
+            mapTitle: _versionManager.mapTitle, 
+            version: versionId,
+            folderPath: _versionManager.folderPath,
+          ),
         );
         debugPrint('从VFS加载版本数据 [$versionId] 到响应式系统');
       }
@@ -750,8 +754,12 @@ mixin ReactiveVersionMixin<T extends StatefulWidget> on State<T> {
   void initializeVersionManagement({
     required String mapTitle,
     required MapDataBloc mapDataBloc,
+    String? folderPath,
   }) {
-    final versionManager = ReactiveVersionManager(mapTitle: mapTitle);
+    final versionManager = ReactiveVersionManager(
+      mapTitle: mapTitle,
+      folderPath: folderPath,
+    );
     _versionAdapter = ReactiveVersionAdapter(
       versionManager: versionManager,
       mapDataBloc: mapDataBloc,

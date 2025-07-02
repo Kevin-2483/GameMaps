@@ -92,7 +92,10 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       _currentVersion = event.version ?? 'default';
 
       // 从VFS服务加载地图数据
-      final mapItem = await _mapService.getMapByTitle(event.mapTitle);
+      final mapItem = await _mapService.getMapByTitle(
+        event.mapTitle,
+        event.folderPath,
+      );
       if (mapItem == null) {
         emit(const MapDataError(message: '地图不存在'));
         return;
@@ -100,18 +103,21 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       final layers = await _mapService.getMapLayers(
         event.mapTitle,
         event.version ?? 'default',
+        event.folderPath,
       );
 
       // 加载图例组数据
       final legendGroups = await _mapService.getMapLegendGroups(
         event.mapTitle,
         event.version ?? 'default',
+        event.folderPath,
       );
 
       // 加载便签数据
       final stickyNotes = await _mapService.getMapStickyNotes(
         event.mapTitle,
         event.version ?? 'default',
+        event.folderPath,
       );
 
       // 更新mapItem以包含版本特定的数据

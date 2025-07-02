@@ -15,11 +15,16 @@ abstract class MapDataEvent extends Equatable {
 class LoadMapData extends MapDataEvent {
   final String mapTitle;
   final String? version;
+  final String? folderPath;
 
-  const LoadMapData({required this.mapTitle, this.version = 'default'});
+  const LoadMapData({
+    required this.mapTitle, 
+    this.version = 'default',
+    this.folderPath,
+  });
 
   @override
-  List<Object?> get props => [mapTitle, version];
+  List<Object?> get props => [mapTitle, version, folderPath];
 }
 
 /// 初始化地图数据（从已有的MapItem）

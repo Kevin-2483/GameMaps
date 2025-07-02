@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
-import '../../services/map_database_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/legend_vfs/legend_vfs_service.dart';
@@ -39,12 +38,14 @@ import '../../data/new_reactive_script_manager.dart';
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
   final String? mapTitle; // 地图标题，用于按需加载
+  final String? folderPath; // 地图所在文件夹路径
   final bool isPreviewMode;
 
   const MapEditorPage({
     super.key,
     this.mapItem,
     this.mapTitle,
+    this.folderPath,
     this.isPreviewMode = false,
   }) : assert(
          mapItem != null || mapTitle != null,
@@ -60,6 +61,7 @@ class MapEditorPage extends BasePage {
       child: _MapEditorContent(
         mapItem: mapItem,
         mapTitle: mapTitle,
+        folderPath: folderPath,
         // isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
         isPreviewMode: isPreviewMode,
       ),
@@ -70,11 +72,13 @@ class MapEditorPage extends BasePage {
 class _MapEditorContent extends StatefulWidget {
   final MapItem? mapItem;
   final String? mapTitle;
+  final String? folderPath;
   final bool isPreviewMode;
 
   const _MapEditorContent({
     this.mapItem,
     this.mapTitle,
+    this.folderPath,
     this.isPreviewMode = false,
   });
 
@@ -86,8 +90,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     with MapEditorReactiveMixin, ReactiveVersionMixin {
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
-  final MapDatabaseService _mapDatabaseService =
-      VfsMapServiceFactory.createMapDatabaseService();
   final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
   final LegendVfsService _legendDatabaseService = LegendVfsService();
@@ -199,7 +201,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 脚本管理器现在通过响应式系统自动初始化
   }
 
-
   // 添加用户偏好设置提供者的引用
   UserPreferencesProvider? _userPreferencesProvider;
 
@@ -237,7 +238,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('图例组智能隐藏状态已初始化: $_legendGroupSmartHideStates');
   }
 
-
   /// 获取图例组智能隐藏状态
   bool getLegendGroupSmartHideState(String legendGroupId) {
     return _legendGroupSmartHideStates[legendGroupId] ?? true;
@@ -265,7 +265,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('图例组 $legendGroupId 智能隐藏状态已更新: $enabled');
   }
 
-    /// 退出时保存智能隐藏状态
+  /// 退出时保存智能隐藏状态
   Future<void> _saveLegendGroupSmartHideStatesOnExit() async {
     if (_currentMap == null || _userPreferencesProvider == null) return;
 
@@ -340,8 +340,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       if (widget.mapItem != null) {
         _currentMap = widget.mapItem!;
       } else if (widget.mapTitle != null) {
-        final loadedMap = await _mapDatabaseService.getMapByTitle(
+        final loadedMap = await _vfsMapService.getMapByTitle(
           widget.mapTitle!,
+          widget.folderPath,
         );
         if (loadedMap == null) {
           throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
@@ -390,6 +391,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       initializeVersionManagement(
         mapTitle: _currentMap!.title,
         mapDataBloc: reactiveIntegration.mapDataBloc,
+        folderPath: widget.folderPath,
       );
 
       debugPrint('响应式版本管理器已创建');
@@ -510,12 +512,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 获取VFS中所有版本ID
       final versionIds = await _vfsMapService.getMapVersions(
         _currentMap!.title,
+        widget.folderPath,
       );
       debugPrint('找到 ${versionIds.length} 个已存储的版本: $versionIds');
 
       // 获取所有版本的元数据（包含版本名称）
       final versionNames = await _vfsMapService.getAllVersionNames(
         _currentMap!.title,
+        widget.folderPath,
       );
       debugPrint('版本名称映射: $versionNames');
 
@@ -566,14 +570,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final versionLayers = await _vfsMapService.getMapLayers(
         _currentMap!.title,
         versionId,
+        widget.folderPath,
       );
       final versionLegendGroups = await _vfsMapService.getMapLegendGroups(
         _currentMap!.title,
         versionId,
+        widget.folderPath,
       );
       final versionStickyNotes = await _vfsMapService.getMapStickyNotes(
         _currentMap!.title,
         versionId,
+        widget.folderPath,
       );
 
       // 构建该版本的完整MapItem数据
@@ -2198,20 +2205,24 @@ class _MapEditorContentState extends State<_MapEditorContent>
           final versionExists = await _vfsMapService.mapVersionExists(
             baseMap.title,
             versionId,
+            widget.folderPath,
           );
           if (versionExists) {
             // 从VFS加载该版本的数据
             final mapLayers = await _vfsMapService.getMapLayers(
               baseMap.title,
               versionId,
+              widget.folderPath,
             );
             final legendGroups = await _vfsMapService.getMapLegendGroups(
               baseMap.title,
               versionId,
+              widget.folderPath,
             );
             final stickyNotes = await _vfsMapService.getMapStickyNotes(
               baseMap.title,
               versionId,
+              widget.folderPath,
             );
             versionMapData = baseMap.copyWith(
               layers: mapLayers,
@@ -2249,6 +2260,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         versionState.versionName,
         createdAt: versionState.createdAt,
         updatedAt: versionState.lastModified,
+        folderPath: widget.folderPath,
       );
     }
 
@@ -2269,13 +2281,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       if (isDefault) {
         // 默认版本：使用完整的saveMap方法（包含清理逻辑）
-        await _vfsMapService.saveMap(versionData);
+        await _vfsMapService.saveMap(versionData, widget.folderPath);
         debugPrint('默认版本已保存 (完整重建)');
       } else {
         // 其他版本：确保版本目录存在
         final versionExists = await _vfsMapService.mapVersionExists(
           versionData.title,
           versionId,
+          widget.folderPath,
         );
         if (!versionExists) {
           // 创建空的版本目录，不从默认版本复制
@@ -2283,10 +2296,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
             versionData.title,
             versionId,
             null, // 不从其他版本复制，创建空目录
+            widget.folderPath,
           );
         } // 保存版本特定的图层数据（保存该版本实际的数据）
         for (final layer in versionData.layers) {
-          await _vfsMapService.saveLayer(versionData.title, layer, versionId);
+          await _vfsMapService.saveLayer(versionData.title, layer, versionId, widget.folderPath);
         }
 
         // 保存版本特定的图例组数据（保存该版本实际的数据）
@@ -2295,6 +2309,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             versionData.title,
             group,
             versionId,
+            widget.folderPath,
           );
         }
 
@@ -2304,6 +2319,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             versionData.title,
             stickyNote,
             versionId,
+            widget.folderPath,
           );
         }
 
@@ -2373,6 +2389,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             name,
             createdAt: newVersionState.createdAt,
             updatedAt: newVersionState.lastModified,
+            folderPath: widget.folderPath,
           );
           debugPrint('版本名称已保存到元数据: $name (ID: $versionId)');
         } catch (e) {
@@ -2441,7 +2458,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 1. 删除VFS中的版本数据
       try {
-        await _vfsMapService.deleteMapVersion(_currentMap!.title, versionId);
+        await _vfsMapService.deleteMapVersion(_currentMap!.title, versionId, widget.folderPath);
         debugPrint('VFS版本数据删除成功: $versionId');
       } catch (e) {
         debugPrint('删除VFS版本数据失败: $e');
@@ -2453,6 +2470,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         await _vfsMapService.deleteVersionMetadata(
           _currentMap!.title,
           versionId,
+          widget.folderPath,
         );
         debugPrint('版本元数据删除成功: $versionId');
       } catch (e) {

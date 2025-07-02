@@ -76,6 +76,7 @@ class ReactiveVersionState {
 /// 只处理会话状态，不涉及数据持久化
 class ReactiveVersionManager extends ChangeNotifier {
   final String mapTitle;
+  final String? folderPath;
 
   // 版本会话状态管理
   final Map<String, ReactiveVersionState> _versionStates = {};
@@ -85,7 +86,10 @@ class ReactiveVersionManager extends ChangeNotifier {
   // 版本隔离的数据管理
   final Map<String, MapItem> _versionDataCache = {};
 
-  ReactiveVersionManager({required this.mapTitle});
+  ReactiveVersionManager({
+    required this.mapTitle,
+    this.folderPath,
+  });
 
   /// 获取所有版本状态
   List<ReactiveVersionState> get allVersionStates =>

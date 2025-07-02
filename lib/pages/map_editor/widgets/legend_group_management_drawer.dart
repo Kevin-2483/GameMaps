@@ -53,7 +53,7 @@ class _LegendGroupManagementDrawerState
     extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
-  
+
   // 通过getter访问智能隐藏状态
   bool get _isSmartHidingEnabled =>
       widget.getSmartHideState?.call(widget.legendGroup.id) ?? true;
