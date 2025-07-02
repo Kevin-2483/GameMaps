@@ -9,10 +9,8 @@ import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
-import '../../services/legend_vfs/legend_vfs_service.dart';
 import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/legend_item.dart' as legend_db;
 import '../../components/layout/main_layout.dart';
 import '../../components/web/web_readonly_components.dart';
 import '../../utils/extension_settings_managers.dart';
@@ -92,8 +90,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   MapItem? _currentMap; // 可能为空，需要加载
   final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
-  final LegendVfsService _legendDatabaseService = LegendVfsService();
-  List<legend_db.LegendItem> _availableLegends = [];
+  // 移除图例数据库服务，改为按需载入
   bool _isLoading = false;
   // 当前选中的图层和绘制工具
   MapLayer? _selectedLayer;
@@ -352,8 +349,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         throw Exception('mapItem 和 mapTitle 都为空');
       }
 
-      // 加载可用图例
-      await _loadAvailableLegends();
+      // 移除预载图例，改为按需载入
 
       // 如果没有图层，创建一个默认图层
       if (_currentMap!.layers.isEmpty) {
@@ -387,10 +383,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       debugPrint('开始初始化响应式版本管理，地图标题: ${_currentMap!.title}');
 
-      // 初始化响应式版本管理
+      // 初始化响应式版本管理（重构后通过集成适配器）
       initializeVersionManagement(
         mapTitle: _currentMap!.title,
-        mapDataBloc: reactiveIntegration.mapDataBloc,
+        integrationAdapter: reactiveIntegration.adapter,
         folderPath: widget.folderPath,
       );
 
@@ -1166,20 +1162,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //   // 显示删除成功消息
   //   _showSuccessSnackBar('已删除绘制元素（传统模式）');
   // }
-
-  Future<void> _loadAvailableLegends() async {
-    setState(() => _isLoading = true);
-    try {
-      final legends = await _legendDatabaseService.getAllLegends();
-      setState(() {
-        _availableLegends = legends;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      _showErrorSnackBar('加载图例失败: ${e.toString()}');
-    }
-  }
 
   void _addDefaultLayer() {
     if (_currentMap == null) return;
@@ -2899,7 +2881,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                               child: LegendGroupManagementDrawer(
                                 mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
                                 legendGroup: _currentLegendGroupForManagement!,
-                                availableLegends: _availableLegends,
+                                availableLegends: [], // 不再需要预载图例列表
                                 onLegendGroupUpdated: _updateLegendGroup,
                                 isPreviewMode: widget.isPreviewMode,
                                 onClose: _closeLegendGroupManagementDrawer,
@@ -3239,7 +3221,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             ? null
             : LegendPanel(
                 legendGroups: _currentMap?.legendGroups ?? [],
-                availableLegends: _availableLegends,
+                availableLegends: [], // 不再需要预载图例列表
                 isPreviewMode: widget.isPreviewMode,
                 onLegendGroupUpdated: _updateLegendGroup,
                 onLegendGroupDeleted: _deleteLegendGroup,
@@ -3585,7 +3567,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
           selectedStrokeWidth: _selectedStrokeWidth,
           selectedDensity: _selectedDensity,
           selectedCurvature: _selectedCurvature,
-          availableLegends: _availableLegends,
+          availableLegends: [], // 不再需要预载图例列表
+          legendSessionManager: versionAdapter?.legendSessionManager, // 传递图例会话管理器
           isPreviewMode: widget.isPreviewMode,
           onLayerUpdated: _updateLayer,
           onLegendGroupUpdated: _updateLegendGroup,

@@ -799,6 +799,7 @@ class ExternalFunctionHandler {
       if (itemIndex != -1) {
         final item = group.legendItems[itemIndex];
         final updatedItem = item.copyWith(
+          legendPath: updates['legendPath'] ?? item.legendPath,
           legendId: updates['legendId'] ?? item.legendId,
           position: updates['position'] != null
               ? Offset(updates['position']['x']?.toDouble() ?? item.position.dx,

@@ -63,7 +63,8 @@ class ScriptDataConverter {
   static Map<String, dynamic> legendItemToMap(LegendItem item) {
     return {
       'id': item.id,
-      'legendId': item.legendId,
+      'legendPath': item.legendPath,
+      'legendId': item.legendId, // 保留向后兼容
       'position': {'x': item.position.dx, 'y': item.position.dy},
       'size': item.size,
       'rotation': item.rotation,

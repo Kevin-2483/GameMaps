@@ -4,6 +4,9 @@ import '../services/reactive_version/reactive_version_manager.dart';
 import '../services/reactive_version/reactive_version_adapter.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_state.dart';
+import '../data/map_editor_integration_adapter.dart';
+import '../data/new_reactive_script_manager.dart';
+import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../models/map_item.dart';
 
 /// 响应式版本管理集成示例
@@ -33,10 +36,17 @@ class _ReactiveVersionIntegrationExampleState
       // 1. 创建地图数据BLoC（实际使用中从外部传入）
       // _mapDataBloc = MapDataBloc(mapService: yourMapService);
 
-      // 2. 初始化版本管理（与现有地图编辑器集成）
+      // 2. 创建临时集成适配器用于示例
+      final exampleIntegrationAdapter = MapEditorIntegrationAdapter(
+        mapDataBloc: _mapDataBloc,
+        scriptManager: NewReactiveScriptManager(mapDataBloc: _mapDataBloc),
+        mapService: VfsMapServiceFactory.createVfsMapService(),
+      );
+
+      // 3. 初始化版本管理（重构后通过集成适配器）
       initializeVersionManagement(
         mapTitle: 'Test Map',
-        mapDataBloc: _mapDataBloc,
+        integrationAdapter: exampleIntegrationAdapter,
       );
 
       // 3. 初始化默认版本

@@ -4,6 +4,7 @@ import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../components/vfs/vfs_file_picker_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
+import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VFS服务
 import '../../../components/common/tags_manager.dart';
 import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
 
@@ -584,350 +585,409 @@ class _LegendGroupManagementDrawerState
   }
 
   Widget _buildLegendItemTile(LegendItem item) {
-    final legend = widget.availableLegends.firstWhere(
-      (l) => l.id.toString() == item.legendId,
-      orElse: () => legend_db.LegendItem(
-        title: '未知图例',
-        centerX: 0.0,
-        centerY: 0.0,
-        version: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+    return FutureBuilder<legend_db.LegendItem?>(
+      future: _loadLegendFromPath(item.legendPath),
+      builder: (context, snapshot) {
+        final legend =
+            snapshot.data ??
+            legend_db.LegendItem(
+              title: '载入中...',
+              centerX: 0.5,
+              centerY: 0.5,
+              version: 1,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: _isLegendItemSelected(item)
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : null,
-        borderRadius: BorderRadius.circular(12),
-        border: _isLegendItemSelected(item)
-            ? Border.all(color: Theme.of(context).colorScheme.primary)
-            : Border.all(color: Colors.grey.shade300),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () => _selectLegendItem(item),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 图例标题和操作按钮
-                Row(
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: _isLegendItemSelected(item)
+                ? Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+                : null,
+            borderRadius: BorderRadius.circular(12),
+            border: _isLegendItemSelected(item)
+                ? Border.all(color: Theme.of(context).colorScheme.primary)
+                : Border.all(color: Colors.grey.shade300),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () => _selectLegendItem(item),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 图例图片预览
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _isLegendItemSelected(item)
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey.shade300,
-                          width: _isLegendItemSelected(item) ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: legend.hasImageData
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: Image.memory(
-                                legend.imageData!,
-                                fit: BoxFit.contain,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.image,
-                              size: 24,
-                              color: Colors.grey,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 标题和信息
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            legend.title,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                    // 图例标题和操作按钮
+                    Row(
+                      children: [
+                        // 图例图片预览
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            border: Border.all(
                               color: _isLegendItemSelected(item)
                                   ? Theme.of(context).colorScheme.primary
-                                  : null,
+                                  : Colors.grey.shade300,
+                              width: _isLegendItemSelected(item) ? 2 : 1,
                             ),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '位置: (${item.position.dx.toStringAsFixed(2)}, ${item.position.dy.toStringAsFixed(2)})',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 可见性切换
-                    IconButton(
-                      icon: Icon(
-                        item.isVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        size: 18,
-                        color: item.isVisible ? null : Colors.grey,
-                      ),
-                      onPressed: () => _updateLegendItem(
-                        item.copyWith(isVisible: !item.isVisible),
-                      ),
-                      // onPressed: widget.isPreviewMode
-                      //     ? null
-                      //     : () => _updateLegendItem(
-                      //         item.copyWith(isVisible: !item.isVisible),
-                      //       ),
-                      tooltip: item.isVisible ? '隐藏' : '显示',
-                    ),
-                    // 更多操作
-                    // if (!widget.isPreviewMode)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, size: 16),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
+                          child: legend.hasImageData
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Image.memory(
+                                    legend.imageData!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.image,
+                                  size: 24,
+                                  color: Colors.grey,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        // 标题和信息
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.delete, size: 14, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('删除', style: TextStyle(color: Colors.red)),
+                              Text(
+                                legend.title,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _isLegendItemSelected(item)
+                                      ? Theme.of(context).colorScheme.primary
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '位置: (${item.position.dx.toStringAsFixed(2)}, ${item.position.dy.toStringAsFixed(2)})',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ],
-                      onSelected: (value) {
-                        if (value == 'delete') {
-                          _deleteLegendItem(item);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // 控制滑块
-                // if (!widget.isPreviewMode)
-                ...[
-                  // 大小控制
-                  _buildSliderControl(
-                    label: '大小',
-                    value: item.size,
-                    min: 0.1,
-                    max: 3.0,
-                    divisions: 29,
-                    displayValue: '${item.size.toStringAsFixed(1)}x',
-                    onChanged: (value) =>
-                        _updateLegendItem(item.copyWith(size: value)),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // 旋转角度控制
-                  _buildSliderControl(
-                    label: '旋转',
-                    value: item.rotation,
-                    min: 0.0,
-                    max: 360.0,
-                    divisions: 72,
-                    displayValue: '${item.rotation.toStringAsFixed(0)}°',
-                    onChanged: (value) =>
-                        _updateLegendItem(item.copyWith(rotation: value)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // 透明度控制
-                  _buildSliderControl(
-                    label: '透明度',
-                    value: item.opacity,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 10,
-                    displayValue: '${(item.opacity * 100).round()}%',
-                    onChanged: (value) =>
-                        _updateLegendItem(item.copyWith(opacity: value)),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // URL编辑字段
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '链接设置',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.primary,
+                        // 可见性切换
+                        IconButton(
+                          icon: Icon(
+                            item.isVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            size: 18,
+                            color: item.isVisible ? null : Colors.grey,
                           ),
+                          onPressed: () => _updateLegendItem(
+                            item.copyWith(isVisible: !item.isVisible),
+                          ),
+                          // onPressed: widget.isPreviewMode
+                          //     ? null
+                          //     : () => _updateLegendItem(
+                          //         item.copyWith(isVisible: !item.isVisible),
+                          //       ),
+                          tooltip: item.isVisible ? '隐藏' : '显示',
                         ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: '图例链接 (可选)',
-                            hintText: '输入网络链接、选择VFS文件或绑定脚本',
-                            border: const OutlineInputBorder(),
-                            isDense: true,
-                            // 合并所有操作按钮
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (item.url != null && item.url!.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.open_in_new,
-                                      size: 16,
-                                    ),
-                                    tooltip: '打开链接',
-                                    onPressed: () => _openUrl(item.url!),
+                        // 更多操作
+                        // if (!widget.isPreviewMode)
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, size: 16),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 14,
+                                    color: Colors.red,
                                   ),
-                                IconButton(
-                                  icon: const Icon(Icons.folder, size: 16),
-                                  tooltip: '选择VFS文件',
-                                  onPressed: () async {
-                                    final selectedFile =
-                                        await _showVfsFilePicker();
-                                    if (selectedFile != null) {
-                                      _updateLegendItem(
-                                        item.copyWith(url: selectedFile),
-                                      );
-                                    }
-                                  },
-                                ),
-                                // 新增：选择脚本按钮
-                                IconButton(
-                                  icon: const Icon(Icons.code, size: 16),
-                                  tooltip: '选择脚本',
-                                  onPressed: () async {
-                                    final selectedScript =
-                                        await _showScriptPickerDialog();
-                                    if (selectedScript != null) {
-                                      _updateLegendItem(
-                                        item.copyWith(
-                                          url: 'script://${selectedScript.id}',
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          controller: TextEditingController(
-                            text: item.url ?? '',
-                          ),
-                          onChanged: (value) {
-                            _updateLegendItem(
-                              item.copyWith(
-                                url: value.trim().isEmpty ? null : value.trim(),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    '删除',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
                               ),
-                            );
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _deleteLegendItem(item);
+                            }
                           },
-                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // 标签管理
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                    // 控制滑块
+                    // if (!widget.isPreviewMode)
+                    ...[
+                      // 大小控制
+                      _buildSliderControl(
+                        label: '大小',
+                        value: item.size,
+                        min: 0.1,
+                        max: 3.0,
+                        divisions: 29,
+                        displayValue: '${item.size.toStringAsFixed(1)}x',
+                        onChanged: (value) =>
+                            _updateLegendItem(item.copyWith(size: value)),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+
+                      const SizedBox(height: 8),
+
+                      // 旋转角度控制
+                      _buildSliderControl(
+                        label: '旋转',
+                        value: item.rotation,
+                        min: 0.0,
+                        max: 360.0,
+                        divisions: 72,
+                        displayValue: '${item.rotation.toStringAsFixed(0)}°',
+                        onChanged: (value) =>
+                            _updateLegendItem(item.copyWith(rotation: value)),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 透明度控制
+                      _buildSliderControl(
+                        label: '透明度',
+                        value: item.opacity,
+                        min: 0.0,
+                        max: 1.0,
+                        divisions: 10,
+                        displayValue: '${(item.opacity * 100).round()}%',
+                        onChanged: (value) =>
+                            _updateLegendItem(item.copyWith(opacity: value)),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // URL编辑字段
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withAlpha((0.2 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline
+                                .withAlpha((0.2 * 255).toInt()),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.label,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 6),
                             Text(
-                              '标签',
+                              '链接设置',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                            const Spacer(),
-                            TextButton.icon(
-                              onPressed: () => _editLegendItemTags(item),
-                              icon: const Icon(Icons.edit, size: 12),
-                              label: const Text(
-                                '编辑',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
+                            const SizedBox(height: 8),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: '图例链接 (可选)',
+                                hintText: '输入网络链接、选择VFS文件或绑定脚本',
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                // 合并所有操作按钮
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (item.url != null &&
+                                        item.url!.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.open_in_new,
+                                          size: 16,
+                                        ),
+                                        tooltip: '打开链接',
+                                        onPressed: () => _openUrl(item.url!),
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.folder, size: 16),
+                                      tooltip: '选择VFS文件',
+                                      onPressed: () async {
+                                        final selectedFile =
+                                            await _showVfsFilePicker();
+                                        if (selectedFile != null) {
+                                          _updateLegendItem(
+                                            item.copyWith(url: selectedFile),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    // 新增：选择脚本按钮
+                                    IconButton(
+                                      icon: const Icon(Icons.code, size: 16),
+                                      tooltip: '选择脚本',
+                                      onPressed: () async {
+                                        final selectedScript =
+                                            await _showScriptPickerDialog();
+                                        if (selectedScript != null) {
+                                          _updateLegendItem(
+                                            item.copyWith(
+                                              url:
+                                                  'script://${selectedScript.id}',
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
+                              controller: TextEditingController(
+                                text: item.url ?? '',
+                              ),
+                              onChanged: (value) {
+                                _updateLegendItem(
+                                  item.copyWith(
+                                    url: value.trim().isEmpty
+                                        ? null
+                                        : value.trim(),
+                                  ),
+                                );
+                              },
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        _buildLegendItemTagsDisplay(item.tags ?? []),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // 标签管理
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withAlpha((0.2 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline
+                                .withAlpha((0.2 * 255).toInt()),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.label,
+                                  size: 14,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '标签',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                                const Spacer(),
+                                TextButton.icon(
+                                  onPressed: () => _editLegendItemTags(item),
+                                  icon: const Icon(Icons.edit, size: 12),
+                                  label: const Text(
+                                    '编辑',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            _buildLegendItemTagsDisplay(item.tags ?? []),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  /// 从VFS路径载入图例数据
+  Future<legend_db.LegendItem?> _loadLegendFromPath(String legendPath) async {
+    if (legendPath.isEmpty || !legendPath.endsWith('.legend')) {
+      return null;
+    }
+
+    try {
+      final legendService = LegendVfsService();
+      
+      // 处理完整的VFS路径
+      String actualPath = legendPath;
+      
+      // 如果是完整的VFS路径，需要提取相对路径部分
+      if (legendPath.startsWith('indexeddb://')) {
+        // 格式: indexeddb://r6box/legends/[folderPath/]title.legend
+        final uri = Uri.parse(legendPath);
+        final pathSegments = uri.pathSegments;
+        
+        // pathSegments 应该是 ['legends', ...folderPath, 'title.legend']
+        if (pathSegments.length >= 2 && pathSegments[0] == 'legends') {
+          // 移除 'legends' 前缀，剩下的就是相对路径
+          actualPath = pathSegments.skip(1).join('/');
+        }
+      }
+      
+      // 从相对路径解析图例标题和文件夹路径
+      final pathParts = actualPath.split('/');
+      if (pathParts.isEmpty) return null;
+
+      final fileName = pathParts.last;
+      final title = fileName.replaceAll('.legend', '');
+      final folderPath = pathParts.length > 1
+          ? pathParts.sublist(0, pathParts.length - 1).join('/')
+          : null;
+
+      debugPrint('加载图例: title=$title, folderPath=$folderPath, 原始路径=$legendPath');
+      return await legendService.getLegend(title, folderPath);
+    } catch (e) {
+      debugPrint('载入图例失败: $legendPath, 错误: $e');
+      return null;
+    }
   }
 
   Widget _buildSliderControl({
@@ -1051,13 +1111,7 @@ class _LegendGroupManagementDrawerState
   }
 
   void _showAddLegendDialog() {
-    if (widget.availableLegends.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('暂无可用图例，请先在图例管理页面添加图例')));
-      return;
-    }
-    legend_db.LegendItem? selectedLegend;
+    String selectedLegendPath = '';
     // 设置更合理的默认位置 - 避免总是在中心，使用较为随机的初始位置
     final baseX = 0.2; // 左侧起始位置
     final baseY = 0.2; // 顶部起始位置
@@ -1072,6 +1126,9 @@ class _LegendGroupManagementDrawerState
     String url = ''; // 图例链接URL
     List<String> itemTags = []; // 图例项标签
     final urlController = TextEditingController(text: url);
+    final legendPathController = TextEditingController(
+      text: selectedLegendPath,
+    );
 
     showDialog(
       context: context,
@@ -1083,20 +1140,39 @@ class _LegendGroupManagementDrawerState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButtonFormField<legend_db.LegendItem>(
-                  value: selectedLegend,
-                  decoration: const InputDecoration(
-                    labelText: '选择图例',
-                    border: OutlineInputBorder(),
+                // VFS图例路径选择
+                TextField(
+                  controller: legendPathController,
+                  decoration: InputDecoration(
+                    labelText: '图例路径 (.legend)',
+                    hintText: '选择或输入.legend文件路径',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.folder_open),
+                      tooltip: '选择图例文件',
+                      onPressed: () async {
+                        final selectedFile =
+                            await VfsFileManagerWindow.showFilePicker(
+                              context,
+                              allowDirectorySelection: true,
+                              selectionType: SelectionType.directoriesOnly,
+                            );
+                        if (selectedFile != null &&
+                            selectedFile.endsWith('.legend')) {
+                          setState(() {
+                            selectedLegendPath = selectedFile;
+                            legendPathController.text = selectedFile;
+                          });
+                        } else if (selectedFile != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('请选择.legend文件')),
+                          );
+                        }
+                      },
+                    ),
                   ),
-                  items: widget.availableLegends.map((legend) {
-                    return DropdownMenuItem(
-                      value: legend,
-                      child: Text(legend.title),
-                    );
-                  }).toList(),
                   onChanged: (value) {
-                    setState(() => selectedLegend = value);
+                    selectedLegendPath = value;
                   },
                 ),
                 const SizedBox(height: 16),
@@ -1267,11 +1343,18 @@ class _LegendGroupManagementDrawerState
               child: const Text('取消'),
             ),
             ElevatedButton(
-              onPressed: selectedLegend != null
+              onPressed: selectedLegendPath.isNotEmpty
                   ? () {
+                      // 从路径生成唯一的legendId
+                      final pathSegments = selectedLegendPath.split('/');
+                      final fileName = pathSegments.last.replaceAll('.legend', '');
+                      final timestamp = DateTime.now().microsecondsSinceEpoch;
+                      final legendId = 'path_${fileName}_${timestamp}';
+                      
                       final newItem = LegendItem(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        legendId: selectedLegend!.id.toString(),
+                        legendPath: selectedLegendPath,
+                        legendId: legendId, // 生成向后兼容的legendId
                         position: Offset(positionX, positionY),
                         size: size,
                         rotation: rotation,

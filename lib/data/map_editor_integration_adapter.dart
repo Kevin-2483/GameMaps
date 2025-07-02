@@ -29,6 +29,12 @@ class MapEditorIntegrationAdapter {
   /// 获取VFS地图服务实例
   VfsMapService get mapService => _mapService;
 
+  /// 获取地图数据BLoC实例
+  MapDataBloc get mapDataBloc => _mapDataBloc;
+
+  /// 获取脚本管理器实例
+  NewReactiveScriptManager get scriptManager => _scriptManager;
+
   /// 初始化地图数据
   Future<void> initializeMap(MapItem mapItem) async {
     debugPrint('初始化地图: ${mapItem.title}');
@@ -156,22 +162,22 @@ class MapEditorIntegrationAdapter {
 
   // ==================== 图例组操作 ====================
 
-  /// 更新图例组
-  void updateLegendGroup(LegendGroup legendGroup) {
-    debugPrint('更新图例组: ${legendGroup.name}');
-    _mapDataBloc.add(UpdateLegendGroup(legendGroup: legendGroup));
-  }
-
   /// 添加图例组
   void addLegendGroup(LegendGroup legendGroup) {
-    debugPrint('添加图例组: ${legendGroup.name}');
+    debugPrint('集成适配器: 添加图例组 ${legendGroup.name}');
     _mapDataBloc.add(AddLegendGroup(legendGroup: legendGroup));
   }
 
+  /// 更新图例组
+  void updateLegendGroup(LegendGroup legendGroup) {
+    debugPrint('集成适配器: 更新图例组 ${legendGroup.name}');
+    _mapDataBloc.add(UpdateLegendGroup(legendGroup: legendGroup));
+  }
+
   /// 删除图例组
-  void deleteLegendGroup(String groupId) {
-    debugPrint('删除图例组: $groupId');
-    _mapDataBloc.add(DeleteLegendGroup(groupId: groupId));
+  void deleteLegendGroup(String legendGroupId) {
+    debugPrint('集成适配器: 删除图例组 $legendGroupId');
+    _mapDataBloc.add(DeleteLegendGroup(groupId: legendGroupId));
   }
 
   /// 设置图例组可见性
@@ -296,9 +302,6 @@ class MapEditorIntegrationAdapter {
   }
 
   // ==================== 脚本管理操作 ====================
-  /// 获取脚本管理器
-  NewReactiveScriptManager get scriptManager => _scriptManager;
-
   /// 重置脚本引擎（当地图数据发生重大变更时调用）
   Future<void> resetScriptEngine() async {
     debugPrint('重置脚本引擎');

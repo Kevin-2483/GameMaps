@@ -1,3 +1,5 @@
+import '../../../services/legend_session_manager.dart';
+import '../../../services/legend_cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -12,6 +14,7 @@ import '../../../models/user_preferences.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
+import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VFS服务
 import 'sticky_note_display.dart'; // 导入便签显示组件
 // 导入渲染器
 import '../renderers/highlight_renderer.dart';
@@ -22,7 +25,6 @@ import '../renderers/background_renderer.dart';
 import '../tools/drawing_tool_manager.dart';
 import '../tools/element_interaction_manager.dart';
 import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
-import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -83,7 +85,8 @@ class MapCanvas extends StatefulWidget {
   final double selectedStrokeWidth;
   final double selectedDensity;
   final double selectedCurvature;
-  final List<legend_db.LegendItem> availableLegends;
+  final List<legend_db.LegendItem> availableLegends; // 保留兼容性，但已弃用
+  final LegendSessionManager? legendSessionManager; // 新的图例会话管理器
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
   final Function(LegendGroup) onLegendGroupUpdated;
@@ -124,7 +127,8 @@ class MapCanvas extends StatefulWidget {
     required this.selectedStrokeWidth,
     required this.selectedDensity,
     required this.selectedCurvature,
-    required this.availableLegends,
+    required this.availableLegends, // 兼容性参数，已弃用
+    this.legendSessionManager, // 新的图例会话管理器
     required this.isPreviewMode,
     required this.onLayerUpdated,
     required this.onLegendGroupUpdated,
@@ -543,20 +547,67 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   Widget _buildLegendSticker(LegendItem item) {
-    // 获取对应的图例数据
-    final legend = widget.availableLegends.firstWhere(
-      (l) => l.id.toString() == item.legendId,
-      orElse: () => legend_db.LegendItem(
-        title: '未知图例',
-        centerX: 0.0,
-        centerY: 0.0,
-        version: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+    // 优先使用图例会话管理器
+    if (widget.legendSessionManager != null) {
+      return _buildLegendStickerFromSession(item);
+    }
+    
+    // 回退到旧的异步加载方式（兼容性）
+    return FutureBuilder<legend_db.LegendItem?>(
+      future: _loadLegendFromPath(item.legendPath),
+      builder: (context, snapshot) {
+        // 使用默认的未知图例作为fallback
+        final legend = snapshot.data ?? legend_db.LegendItem(
+          title: '未知图例',
+          centerX: 0.5,
+          centerY: 0.5,
+          version: 1,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-    if (!legend.hasImageData) return const SizedBox.shrink();
+        return _buildLegendStickerWidget(item, legend, snapshot.connectionState == ConnectionState.waiting);
+      },
+    );
+  }
+
+  /// 使用图例会话管理器构建图例贴纸
+  Widget _buildLegendStickerFromSession(LegendItem item) {
+    return ListenableBuilder(
+      listenable: widget.legendSessionManager!,
+      builder: (context, child) {
+        final legendData = widget.legendSessionManager!.getLegendData(item.legendPath);
+        final loadingState = widget.legendSessionManager!.getLoadingState(item.legendPath);
+        
+        if (legendData != null) {
+          // 图例已加载
+          return _buildLegendStickerWidget(item, legendData, false);
+        } else {
+          // 图例未加载或加载失败
+          final isLoading = loadingState == LegendLoadingState.loading;
+          final legend = legend_db.LegendItem(
+            title: isLoading ? '加载中...' : '未知图例',
+            centerX: 0.5,
+            centerY: 0.5,
+            version: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          
+          // 触发异步加载
+          if (loadingState == LegendLoadingState.notLoaded) {
+            Future.microtask(() => widget.legendSessionManager!.addLegendToSession(item.legendPath));
+          }
+          
+          return _buildLegendStickerWidget(item, legend, isLoading);
+        }
+      },
+    );
+  }
+
+  /// 构建图例贴纸组件的通用方法
+  Widget _buildLegendStickerWidget(LegendItem item, legend_db.LegendItem legend, bool isLoading) {
+    if (!legend.hasImageData && !isLoading) return const SizedBox.shrink();
 
     // 转换相对坐标到画布坐标
     final canvasPosition = Offset(
@@ -570,79 +621,102 @@ class MapCanvasState extends State<MapCanvas> {
       imageSize * legend.centerX,
       imageSize * legend.centerY,
     );
+
+    Widget stickerWidget = Container(
+      width: imageSize,
+      height: imageSize,
+      decoration: BoxDecoration(
+        border: widget.selectedElementId == item.id
+            ? Border.all(color: Colors.blue, width: 2)
+            : null,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Stack(
+        children: [
+          if (legend.hasImageData && !isLoading)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.memory(
+                legend.imageData!,
+                width: imageSize,
+                height: imageSize,
+                fit: BoxFit.contain,
+                opacity: AlwaysStoppedAnimation(item.opacity),
+              ),
+            )
+          else
+            Container(
+              width: imageSize,
+              height: imageSize,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: Center(
+                child: isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.help_outline,
+                        size: imageSize * 0.3,
+                        color: Colors.grey[600],
+                      ),
+              ),
+            ),
+        ],
+      ),
+    );
+
     return Positioned(
       left: canvasPosition.dx - centerOffset.dx,
       top: canvasPosition.dy - centerOffset.dy,
       child: GestureDetector(
-        onPanStart: (details) => _onLegendDragStart(item, details),
-        onPanUpdate: (details) => _onLegendDragUpdate(item, details),
-        onPanEnd: (details) => _onLegendDragEnd(item, details),
-        // onPanStart: widget.isPreviewMode
-        //     ? null
-        //     : (details) => _onLegendDragStart(item, details),
-        // onPanUpdate: widget.isPreviewMode
-        //     ? null
-        //     : (details) => _onLegendDragUpdate(item, details),
-        // onPanEnd: widget.isPreviewMode
-        //     ? null
-        //     : (details) => _onLegendDragEnd(item, details),
+        onPanStart: widget.isPreviewMode ? null : (details) => _onLegendDragStart(item, details),
+        onPanUpdate: widget.isPreviewMode ? null : (details) => _onLegendDragUpdate(item, details),
+        onPanEnd: widget.isPreviewMode ? null : (details) => _onLegendDragEnd(item, details),
         onTap: () => _onLegendTap(item),
         onDoubleTap: () => _onLegendDoubleTap(item),
         child: Transform.rotate(
           angle: item.rotation * (3.14159 / 180), // 转换为弧度
-          child: Container(
-            width: imageSize,
-            height: imageSize,
-            decoration: BoxDecoration(
-              border: widget.selectedElementId == item.id
-                  ? Border.all(color: Colors.blue, width: 2)
-                  : null,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Opacity(
-              opacity: item.isVisible ? item.opacity : 0.0,
-              child: Stack(
-                children: [
-                  // 图例图片
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.memory(
-                      legend.imageData!,
-                      width: imageSize,
-                      height: imageSize,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  // 中心点指示器（选中时显示）
-                  if (widget.selectedElementId == item.id)
-                    Positioned(
-                      left: centerOffset.dx - 4,
-                      top: centerOffset.dy - 4,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 2,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+          child: Opacity(
+            opacity: item.isVisible ? 1.0 : 0.3,
+            child: stickerWidget,
           ),
         ),
       ),
     );
-  } // 图例拖拽相关方法
+  }
 
+  /// 从VFS路径载入图例数据（兼容性方法）
+  Future<legend_db.LegendItem?> _loadLegendFromPath(String legendPath) async {
+    if (legendPath.isEmpty || !legendPath.endsWith('.legend')) {
+      return null;
+    }
+
+    try {
+      final legendService = LegendVfsService();
+      // 从VFS路径解析图例标题和文件夹路径
+      final pathParts = legendPath.split('/');
+      if (pathParts.isEmpty) return null;
+      
+      final fileName = pathParts.last;
+      final title = fileName.replaceAll('.legend', '');
+      final folderPath = pathParts.length > 1 
+          ? pathParts.sublist(0, pathParts.length - 1).join('/')
+          : null;
+      
+      return await legendService.getLegend(title, folderPath);
+    } catch (e) {
+      debugPrint('载入图例失败: $legendPath, 错误: $e');
+      return null;
+    }
+  }
+
+  // 图例拖拽相关方法
   LegendItem? _draggingLegendItem;
   Offset? _dragStartOffset; // 记录拖拽开始时的偏移量
 
@@ -911,20 +985,18 @@ class MapCanvasState extends State<MapCanvas> {
       for (final item in legendGroup.legendItems.reversed) {
         if (!item.isVisible) continue;
 
-        // 获取对应的图例数据
-        final legend = widget.availableLegends.firstWhere(
-          (l) => l.id.toString() == item.legendId,
-          orElse: () => legend_db.LegendItem(
-            title: '未知图例',
-            centerX: 0.0,
-            centerY: 0.0,
-            version: 1,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
+        // 尝试从VFS路径载入图例数据（使用同步缓存或默认图例）
+        // 注意：这里为了保持同步性，我们使用一个简化的处理
+        // 实际的图例数据将在_buildLegendSticker中异步载入
+        final legend = legend_db.LegendItem(
+          title: '图例',
+          centerX: 0.5,
+          centerY: 0.5,
+          version: 1,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          imageData: Uint8List(0), // 假设有图像数据，实际载入在渲染时进行
         );
-
-        if (!legend.hasImageData) continue;
 
         // 转换相对坐标到画布坐标
         final canvasItemPosition = Offset(

@@ -255,7 +255,8 @@ class LegendGroup {
 @JsonSerializable()
 class LegendItem {
   final String id;
-  final String legendId; // 关联的图例数据库中的图例ID
+  final String legendPath; // VFS图例文件路径（.legend结尾）
+  final String? legendId; // 保留原legendId字段以向后兼容，可能为空
   @OffsetConverter()
   final Offset position; // 在地图上的位置 (相对坐标 0.0-1.0)
   final double size; // 大小缩放比例
@@ -267,7 +268,8 @@ class LegendItem {
   final DateTime createdAt;
   const LegendItem({
     required this.id,
-    required this.legendId,
+    required this.legendPath,
+    this.legendId, // 可选的向后兼容字段
     required this.position,
     this.size = 1.0,
     this.rotation = 0.0,
@@ -283,6 +285,7 @@ class LegendItem {
   Map<String, dynamic> toJson() => _$LegendItemToJson(this);
   LegendItem copyWith({
     String? id,
+    String? legendPath,
     String? legendId,
     Offset? position,
     double? size,
@@ -295,6 +298,7 @@ class LegendItem {
   }) {
     return LegendItem(
       id: id ?? this.id,
+      legendPath: legendPath ?? this.legendPath,
       legendId: legendId ?? this.legendId,
       position: position ?? this.position,
       size: size ?? this.size,

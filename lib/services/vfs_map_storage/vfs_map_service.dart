@@ -46,6 +46,7 @@ abstract class VfsMapService {
     String mapTitle,
     String layerId, [
     String version = 'default',
+    String? folderPath,
   ]);
   Future<void> updateLayerOrder(
     String mapTitle,
@@ -76,6 +77,7 @@ abstract class VfsMapService {
     String layerId,
     String elementId, [
     String version = 'default',
+    String? folderPath,
   ]);
   Future<void> updateElementsOrder(
     String mapTitle,
@@ -105,6 +107,7 @@ abstract class VfsMapService {
     String mapTitle,
     String groupId, [
     String version = 'default',
+    String? folderPath,
   ]);
 
   // 图例项操作 - 使用mapTitle作为地图标识符
@@ -130,6 +133,7 @@ abstract class VfsMapService {
     String groupId,
     String itemId, [
     String version = 'default',
+    String? folderPath,
   ]);
 
   // 便签数据操作 - 使用mapTitle作为地图标识符
@@ -154,6 +158,7 @@ abstract class VfsMapService {
     String mapTitle,
     String stickyNoteId, [
     String version = 'default',
+    String? folderPath,
   ]);
 
   // 版本管理
@@ -225,14 +230,18 @@ abstract class VfsMapService {
   ]);
 
   // 本地化支持 - 使用mapTitle作为地图标识符
-  Future<Map<String, String>> getMapLocalizations(String mapTitle);
+  Future<Map<String, String>> getMapLocalizations(
+    String mapTitle, [
+    String? folderPath,
+  ]);
   Future<void> saveMapLocalizations(
     String mapTitle,
-    Map<String, String> localizations,
-  );
+    Map<String, String> localizations, [
+    String? folderPath,
+  ]);
 
   // 工具方法 - 兼容性方法，支持ID和标题查找
-  Future<bool> mapExists(String idOrTitle);
+  Future<bool> mapExists(String idOrTitle, [String? folderPath]);
   Future<Map<String, dynamic>> getMapStats(String idOrTitle);
   Future<void> validateMapIntegrity(String idOrTitle);
 

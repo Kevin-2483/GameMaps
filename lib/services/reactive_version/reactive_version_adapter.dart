@@ -1,41 +1,50 @@
 import 'package:flutter/widgets.dart';
 import 'reactive_version_manager.dart';
 import '../../data/map_data_bloc.dart';
-import '../../data/map_data_event.dart';
 import '../../data/map_data_state.dart';
+import '../../data/map_editor_integration_adapter.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
+import '../legend_session_manager.dart';
 import 'dart:async';
 
 /// 响应式版本管理适配器
 /// 将响应式版本管理器与地图数据BLoC系统集成
 /// 负责版本间的数据隔离和状态同步
+/// 【重构后】：通过 MapEditorIntegrationAdapter 统一数据操作，避免直接操作 MapDataBloc
 class ReactiveVersionAdapter {
   final ReactiveVersionManager _versionManager;
-  final MapDataBloc _mapDataBloc;
+  final MapEditorIntegrationAdapter _integrationAdapter;
+  final LegendSessionManager _legendSessionManager = LegendSessionManager();
 
   StreamSubscription<MapDataState>? _mapDataSubscription;
   bool _isUpdating = false; // 防止循环更新的标志
 
   ReactiveVersionAdapter({
     required ReactiveVersionManager versionManager,
-    required MapDataBloc mapDataBloc,
+    required MapEditorIntegrationAdapter integrationAdapter,
   }) : _versionManager = versionManager,
-       _mapDataBloc = mapDataBloc {
+       _integrationAdapter = integrationAdapter {
     _setupListeners();
   }
 
   /// 获取版本管理器
   ReactiveVersionManager get versionManager => _versionManager;
 
-  /// 获取地图数据BLoC
-  MapDataBloc get mapDataBloc => _mapDataBloc;
+  /// 获取集成适配器
+  MapEditorIntegrationAdapter get integrationAdapter => _integrationAdapter;
+
+  /// 获取地图数据BLoC（通过集成适配器访问）
+  MapDataBloc get mapDataBloc => _integrationAdapter.mapDataBloc;
+
+  /// 获取图例会话管理器
+  LegendSessionManager get legendSessionManager => _legendSessionManager;
 
   /// 设置监听器
   void _setupListeners() {
     // 监听地图数据变化，同步到当前编辑版本
-    _mapDataSubscription = _mapDataBloc.stream.listen(_onMapDataChanged);
+    _mapDataSubscription = _integrationAdapter.mapDataStream.listen(_onMapDataChanged);
 
     // 监听版本管理器变化，同步到地图数据BLoC
     _versionManager.addListener(_onVersionManagerChanged);
@@ -78,7 +87,7 @@ class ReactiveVersionAdapter {
         );
 
         debugPrint(
-          '同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}, 便签数: ${newMapItem.stickyNotes.length}',
+          '同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}, 便签数: ${newMapItem.stickyNotes.length}, 图例组数: ${newMapItem.legendGroups.length}',
         );
 
         // 详细日志：便签绘画元素数量
@@ -86,9 +95,30 @@ class ReactiveVersionAdapter {
           final note = newMapItem.stickyNotes[i];
           debugPrint('  便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
         }
+
+        // 详细日志：图例组和图例项数量
+        for (int i = 0; i < newMapItem.legendGroups.length; i++) {
+          final group = newMapItem.legendGroups[i];
+          debugPrint('  图例组[$i] ${group.name}: ${group.legendItems.length}个图例项');
+        }
+
+        // 异步初始化图例会话（不阻塞版本更新）
+        Future.microtask(() async {
+          await _initializeLegendSession(newMapItem);
+        });
       } finally {
         _isUpdating = false;
       }
+    }
+  }
+
+  /// 初始化图例会话（异步）
+  Future<void> _initializeLegendSession(MapItem mapItem) async {
+    try {
+      await _legendSessionManager.initializeSession(mapItem);
+      debugPrint('图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}');
+    } catch (e) {
+      debugPrint('图例会话初始化失败: $e');
     }
   }
 
@@ -96,8 +126,9 @@ class ReactiveVersionAdapter {
   bool _isSameMapData(MapItem data1, MapItem data2) {
     if (data1.layers.length != data2.layers.length) return false;
     if (data1.legendGroups.length != data2.legendGroups.length) return false;
-    if (data1.stickyNotes.length != data2.stickyNotes.length)
-      return false; // 检查图层ID和所有属性（包括背景图片相关属性）
+    if (data1.stickyNotes.length != data2.stickyNotes.length) return false;
+    
+    // 检查图层ID和所有属性（包括背景图片相关属性）
     for (int i = 0; i < data1.layers.length; i++) {
       final layer1 = data1.layers[i];
       final layer2 = data2.layers[i];
@@ -224,7 +255,11 @@ class ReactiveVersionAdapter {
         final item1 = group1.legendItems[j];
         final item2 = group2.legendItems[j];
         if (item1.id != item2.id ||
-            item1.legendId != item2.legendId ||
+            item1.legendPath != item2.legendPath || // 主要比较路径
+            // 兼容性比较：如果两者都有legendId且路径相同，则比较legendId
+            (item1.legendPath == item2.legendPath &&
+             item1.legendId != null && item2.legendId != null &&
+             item1.legendId != item2.legendId) ||
             item1.position != item2.position ||
             item1.size != item2.size ||
             item1.rotation != item2.rotation ||
@@ -365,8 +400,8 @@ class ReactiveVersionAdapter {
       // 2. 获取版本的会话数据
       final versionData = _versionManager.getVersionSessionData(versionId);
       if (versionData != null) {
-        // 3. 将版本数据加载到地图数据BLoC
-        _mapDataBloc.add(InitializeMapData(mapItem: versionData));
+        // 3. 将版本数据加载到地图数据BLoC（通过集成适配器）
+        await _integrationAdapter.initializeMap(versionData);
         debugPrint(
           '切换并加载版本数据 [$versionId] 到响应式系统，图层数: ${versionData.layers.length}, 便签数: ${versionData.stickyNotes.length}',
         );
@@ -376,14 +411,15 @@ class ReactiveVersionAdapter {
           final note = versionData.stickyNotes[i];
           debugPrint('  加载便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
         }
+
+        // 初始化图例会话（等待完成，确保图例状态同步）
+        await _initializeLegendSession(versionData);
       } else {
-        // 4. 如果没有会话数据，从VFS加载指定版本
-        _mapDataBloc.add(
-          LoadMapData(
-            mapTitle: _versionManager.mapTitle,
-            version: versionId,
-            folderPath: _versionManager.folderPath,
-          ),
+        // 4. 如果没有会话数据，从VFS加载指定版本（通过集成适配器）
+        await _integrationAdapter.loadMap(
+          _versionManager.mapTitle,
+          version: versionId,
+          folderPath: _versionManager.folderPath,
         );
         debugPrint('从VFS加载版本数据 [$versionId] 到响应式系统');
       }
@@ -425,8 +461,8 @@ class ReactiveVersionAdapter {
       }
 
       // 如果没有源版本数据，使用当前BLoC的数据
-      if (initialData == null && _mapDataBloc.state is MapDataLoaded) {
-        final currentState = _mapDataBloc.state as MapDataLoaded;
+      if (initialData == null && _integrationAdapter.currentState is MapDataLoaded) {
+        final currentState = _integrationAdapter.currentState as MapDataLoaded;
         initialData = currentState.mapItem.copyWith(
           layers: List.from(currentState.layers), // 深度复制图层列表
           legendGroups: List.from(currentState.legendGroups), // 深度复制图例组列表
@@ -485,8 +521,8 @@ class ReactiveVersionAdapter {
     }
 
     try {
-      // 触发地图数据保存（会使用当前版本ID作为VFS版本参数）
-      _mapDataBloc.add(const SaveMapData());
+      // 触发地图数据保存（通过集成适配器）
+      await _integrationAdapter.saveMapData();
 
       // 标记版本已保存
       _versionManager.markVersionSaved(activeVersionId);
@@ -600,124 +636,136 @@ class ReactiveVersionAdapter {
 
   // ==================== 图层操作支持 ====================
 
-  /// 更新图层（响应式版本管理支持）
+  /// 更新图层（响应式版本管理支持，通过集成适配器）
   void updateLayer(MapLayer layer) {
     debugPrint('响应式版本管理器: 更新图层 ${layer.name}');
-    _mapDataBloc.add(UpdateLayer(layer: layer));
+    _integrationAdapter.updateLayer(layer);
   }
 
-  /// 批量更新图层（响应式版本管理支持）
+  /// 批量更新图层（响应式版本管理支持，通过集成适配器）
   void updateLayers(List<MapLayer> layers) {
     debugPrint('响应式版本管理器: 批量更新图层，数量: ${layers.length}');
-    _mapDataBloc.add(UpdateLayers(layers: layers));
+    _integrationAdapter.updateLayers(layers);
   }
 
-  /// 添加图层（响应式版本管理支持）
+  /// 添加图层（响应式版本管理支持，通过集成适配器）
   void addLayer(MapLayer layer) {
     debugPrint('响应式版本管理器: 添加图层 ${layer.name}');
-    _mapDataBloc.add(AddLayer(layer: layer));
+    _integrationAdapter.addLayer(layer);
   }
 
-  /// 删除图层（响应式版本管理支持）
+  /// 删除图层（响应式版本管理支持，通过集成适配器）
   void deleteLayer(String layerId) {
     debugPrint('响应式版本管理器: 删除图层 $layerId');
-    _mapDataBloc.add(DeleteLayer(layerId: layerId));
+    _integrationAdapter.deleteLayer(layerId);
   }
 
-  /// 设置图层可见性（响应式版本管理支持）
+  /// 设置图层可见性（响应式版本管理支持，通过集成适配器）
   void setLayerVisibility(String layerId, bool isVisible) {
     debugPrint('响应式版本管理器: 设置图层可见性 $layerId = $isVisible');
-    _mapDataBloc.add(
-      SetLayerVisibility(layerId: layerId, isVisible: isVisible),
-    );
+    _integrationAdapter.setLayerVisibility(layerId, isVisible);
   }
 
-  /// 设置图层透明度（响应式版本管理支持）
+  /// 设置图层透明度（响应式版本管理支持，通过集成适配器）
   void setLayerOpacity(String layerId, double opacity) {
     debugPrint('响应式版本管理器: 设置图层透明度 $layerId = $opacity');
-    _mapDataBloc.add(SetLayerOpacity(layerId: layerId, opacity: opacity));
+    _integrationAdapter.setLayerOpacity(layerId, opacity);
   }
 
-  /// 重新排序图层（响应式版本管理支持）
+  /// 重新排序图层（响应式版本管理支持，通过集成适配器）
   void reorderLayers(int oldIndex, int newIndex) {
     debugPrint('响应式版本管理器: 重新排序图层 $oldIndex -> $newIndex');
-    _mapDataBloc.add(ReorderLayers(oldIndex: oldIndex, newIndex: newIndex));
+    _integrationAdapter.reorderLayers(oldIndex, newIndex);
   }
 
   // ==================== 便签操作支持 ====================
 
-  /// 添加便签（响应式版本管理支持）
+  /// 添加便签（响应式版本管理支持，通过集成适配器）
   void addStickyNote(StickyNote note) {
     debugPrint('响应式版本管理器: 添加便签 ${note.title}');
-    _mapDataBloc.add(AddStickyNote(stickyNote: note));
+    _integrationAdapter.addStickyNote(note);
   }
 
-  /// 更新便签（响应式版本管理支持）
+  /// 更新便签（响应式版本管理支持，通过集成适配器）
   void updateStickyNote(StickyNote note) {
     debugPrint('响应式版本管理器: 更新便签 ${note.title}');
-    _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
+    _integrationAdapter.updateStickyNote(note);
   }
 
-  /// 删除便签（响应式版本管理支持）
+  /// 删除便签（响应式版本管理支持，通过集成适配器）
   void deleteStickyNote(String noteId) {
     debugPrint('响应式版本管理器: 删除便签 $noteId');
-    _mapDataBloc.add(DeleteStickyNote(stickyNoteId: noteId));
+    _integrationAdapter.deleteStickyNote(noteId);
   }
 
-  /// 重新排序便签（响应式版本管理支持）
+  /// 重新排序便签（响应式版本管理支持，通过集成适配器）
   void reorderStickyNotes(int oldIndex, int newIndex) {
     debugPrint('响应式版本管理器: 重新排序便签 $oldIndex -> $newIndex');
-    _mapDataBloc.add(
-      ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex),
-    );
+    _integrationAdapter.reorderStickyNotes(oldIndex, newIndex);
   }
 
-  /// 根据拖拽重新排序便签（响应式版本管理支持）
+  /// 根据拖拽重新排序便签（响应式版本管理支持，通过集成适配器）
   void reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
     debugPrint('响应式版本管理器: 拖拽重新排序便签，数量: ${reorderedNotes.length}');
-    _mapDataBloc.add(ReorderStickyNotesByDrag(reorderedNotes: reorderedNotes));
+    _integrationAdapter.reorderStickyNotesByDrag(reorderedNotes);
   }
 
-  /// 根据ID获取便签（响应式版本管理支持）
+  /// 根据ID获取便签（响应式版本管理支持，通过集成适配器）
   StickyNote? getStickyNoteById(String noteId) {
-    final currentState = _mapDataBloc.state;
-    if (currentState is MapDataLoaded) {
-      return currentState.mapItem.stickyNotes
-          .where((note) => note.id == noteId)
-          .firstOrNull;
-    }
-    return null;
+    return _integrationAdapter.getStickyNoteById(noteId);
   }
 
-  /// 获取所有便签（响应式版本管理支持）
+  /// 获取所有便签（响应式版本管理支持，通过集成适配器）
   List<StickyNote> getStickyNotes() {
-    final currentState = _mapDataBloc.state;
-    if (currentState is MapDataLoaded) {
-      return currentState.mapItem.stickyNotes;
-    }
-    return [];
+    return _integrationAdapter.getStickyNotes();
+  }
+
+  // ==================== 图例组操作支持 ====================
+
+  /// 添加图例组（响应式版本管理支持，通过集成适配器）
+  void addLegendGroup(LegendGroup legendGroup) {
+    debugPrint('响应式版本管理器: 添加图例组 ${legendGroup.name}');
+    _integrationAdapter.addLegendGroup(legendGroup);
+  }
+
+  /// 更新图例组（响应式版本管理支持，通过集成适配器）
+  void updateLegendGroup(LegendGroup legendGroup) {
+    debugPrint('响应式版本管理器: 更新图例组 ${legendGroup.name}');
+    _integrationAdapter.updateLegendGroup(legendGroup);
+  }
+
+  /// 删除图例组（响应式版本管理支持，通过集成适配器）
+  void deleteLegendGroup(String legendGroupId) {
+    debugPrint('响应式版本管理器: 删除图例组 $legendGroupId');
+    _integrationAdapter.deleteLegendGroup(legendGroupId);
+  }
+
+  /// 设置图例组可见性（响应式版本管理支持，通过集成适配器）
+  void setLegendGroupVisibility(String groupId, bool isVisible) {
+    debugPrint('响应式版本管理器: 设置图例组可见性 $groupId = $isVisible');
+    _integrationAdapter.setLegendGroupVisibility(groupId, isVisible);
+  }
+
+  /// 根据ID获取图例组（响应式版本管理支持，通过集成适配器）
+  LegendGroup? getLegendGroupById(String groupId) {
+    return _integrationAdapter.getLegendGroupById(groupId);
+  }
+
+  /// 获取所有图例组（响应式版本管理支持，通过集成适配器）
+  List<LegendGroup> getLegendGroups() {
+    return _integrationAdapter.getLegendGroups();
   }
 
   // ==================== 状态查询支持 ====================
 
-  /// 根据ID获取图层（响应式版本管理支持）
+  /// 根据ID获取图层（响应式版本管理支持，通过集成适配器）
   MapLayer? getLayerById(String layerId) {
-    final currentState = _mapDataBloc.state;
-    if (currentState is MapDataLoaded) {
-      return currentState.layers
-          .where((layer) => layer.id == layerId)
-          .firstOrNull;
-    }
-    return null;
+    return _integrationAdapter.getLayerById(layerId);
   }
 
-  /// 获取所有图层（响应式版本管理支持）
+  /// 获取所有图层（响应式版本管理支持，通过集成适配器）
   List<MapLayer> getLayers() {
-    final currentState = _mapDataBloc.state;
-    if (currentState is MapDataLoaded) {
-      return currentState.layers;
-    }
-    return [];
+    return _integrationAdapter.getLayers();
   }
 
   // ==================== 资源管理 ====================
@@ -727,8 +775,30 @@ class ReactiveVersionAdapter {
     return {
       'isUpdating': _isUpdating,
       'hasMapDataSubscription': _mapDataSubscription != null,
-      'currentMapDataState': _mapDataBloc.state.runtimeType.toString(),
+      'currentMapDataState': _integrationAdapter.currentState.runtimeType.toString(),
       'versionManagerInfo': _versionManager.getDebugInfo(),
+      'legendSessionInfo': {
+        'loadedLegendsCount': _legendSessionManager.sessionData.loadedLegends.length,
+        'loadingStatesCount': _legendSessionManager.sessionData.loadingStates.length,
+        'failedPathsCount': _legendSessionManager.sessionData.failedPaths.length,
+      },
+    };
+  }
+
+  /// 诊断图例会话管理器状态
+  Map<String, dynamic> diagnoseLegendSessionManager() {
+    final sessionData = _legendSessionManager.sessionData;
+    final stats = sessionData.getStats();
+    
+    return {
+      'session_manager_initialized': true,
+      'loaded_legends_count': stats['loaded'] ?? 0,
+      'loading_legends_count': stats['loading'] ?? 0,
+      'failed_legends_count': stats['failed'] ?? 0,
+      'total_legends_count': stats['total'] ?? 0,
+      'loaded_legend_paths': sessionData.loadedLegends.keys.toList(),
+      'failed_legend_paths': sessionData.failedPaths.toList(),
+      'loading_states': sessionData.loadingStates.map((k, v) => MapEntry(k, v.toString())),
     };
   }
 
@@ -737,6 +807,7 @@ class ReactiveVersionAdapter {
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;
     _versionManager.removeListener(_onVersionManagerChanged);
+    _legendSessionManager.dispose();
 
     debugPrint('响应式版本管理适配器已释放资源');
   }
@@ -750,10 +821,10 @@ mixin ReactiveVersionMixin<T extends StatefulWidget> on State<T> {
   /// 获取版本适配器
   ReactiveVersionAdapter? get versionAdapter => _versionAdapter;
 
-  /// 初始化版本管理
+  /// 初始化版本管理（重构后通过集成适配器）
   void initializeVersionManagement({
     required String mapTitle,
-    required MapDataBloc mapDataBloc,
+    required MapEditorIntegrationAdapter integrationAdapter,
     String? folderPath,
   }) {
     final versionManager = ReactiveVersionManager(
@@ -762,7 +833,7 @@ mixin ReactiveVersionMixin<T extends StatefulWidget> on State<T> {
     );
     _versionAdapter = ReactiveVersionAdapter(
       versionManager: versionManager,
-      mapDataBloc: mapDataBloc,
+      integrationAdapter: integrationAdapter,
     );
   }
 
