@@ -603,7 +603,7 @@ class VfsMapServiceImpl implements VfsMapService {
       await _storageService.delete(layerPath);
 
       // 清除缓存
-      final cacheKey = folderPath == null 
+      final cacheKey = folderPath == null
           ? '$mapTitle:$version'
           : '$folderPath/$mapTitle:$version';
       _layerCache.remove(cacheKey);
@@ -622,7 +622,12 @@ class VfsMapServiceImpl implements VfsMapService {
   ]) async {
     // 重新排序图层
     for (int i = 0; i < layerIds.length; i++) {
-      final layer = await getLayerById(mapTitle, layerIds[i], version, folderPath);
+      final layer = await getLayerById(
+        mapTitle,
+        layerIds[i],
+        version,
+        folderPath,
+      );
       if (layer != null) {
         final updatedLayer = layer.copyWith(order: i);
         await saveLayer(mapTitle, updatedLayer, version, folderPath);
@@ -858,7 +863,12 @@ class VfsMapServiceImpl implements VfsMapService {
           jsonDecode(utf8.decode(configData.data)) as Map<String, dynamic>;
 
       // 加载图例项
-      final items = await getLegendGroupItems(mapTitle, groupId, version, folderPath);
+      final items = await getLegendGroupItems(
+        mapTitle,
+        groupId,
+        version,
+        folderPath,
+      );
       return LegendGroup(
         id: configJson['id'] as String,
         name: configJson['name'] as String,
@@ -941,23 +951,27 @@ class VfsMapServiceImpl implements VfsMapService {
     String? folderPath,
   ]) async {
     try {
-      debugPrint('开始加载图例组项: mapTitle=$mapTitle, groupId=$groupId, version=$version, folderPath=$folderPath');
-      
+      debugPrint(
+        '开始加载图例组项: mapTitle=$mapTitle, groupId=$groupId, version=$version, folderPath=$folderPath',
+      );
+
       final itemsPath = _buildVfsPath(
         _getLegendItemsPath(mapTitle, groupId, version, folderPath),
       );
       debugPrint('图例项路径: $itemsPath');
-      
+
       final files = await _storageService.listDirectory(itemsPath);
-      debugPrint('找到 ${files.length} 个文件: ${files.map((f) => f.name).join(', ')}');
-      
+      debugPrint(
+        '找到 ${files.length} 个文件: ${files.map((f) => f.name).join(', ')}',
+      );
+
       final items = <LegendItem>[];
 
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final itemId = file.name.replaceAll('.json', '');
           debugPrint('正在加载图例项: $itemId');
-          
+
           try {
             final item = await getLegendItemById(
               mapTitle,
@@ -967,13 +981,17 @@ class VfsMapServiceImpl implements VfsMapService {
               folderPath,
             );
             if (item != null) {
-              debugPrint('成功加载图例项: $itemId, legendPath=${item.legendPath}, legendId=${item.legendId}');
+              debugPrint(
+                '成功加载图例项: $itemId, legendPath=${item.legendPath}, legendId=${item.legendId}',
+              );
               items.add(item);
             } else {
               debugPrint('图例项加载失败: $itemId (返回null)');
             }
           } catch (itemError) {
-            debugPrint('加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $itemError');
+            debugPrint(
+              '加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $itemError',
+            );
           }
         } else {
           debugPrint('跳过非JSON文件: ${file.name}');
@@ -997,13 +1015,15 @@ class VfsMapServiceImpl implements VfsMapService {
     String? folderPath,
   ]) async {
     try {
-      debugPrint('开始加载图例项: mapTitle=$mapTitle, groupId=$groupId, itemId=$itemId, version=$version, folderPath=$folderPath');
-      
+      debugPrint(
+        '开始加载图例项: mapTitle=$mapTitle, groupId=$groupId, itemId=$itemId, version=$version, folderPath=$folderPath',
+      );
+
       final itemPath = _buildVfsPath(
         _getLegendItemPath(mapTitle, groupId, itemId, version, folderPath),
       );
       debugPrint('图例项文件路径: $itemPath');
-      
+
       final itemData = await _storageService.readFile(itemPath);
 
       if (itemData == null) {
@@ -1015,10 +1035,12 @@ class VfsMapServiceImpl implements VfsMapService {
       final itemJson =
           jsonDecode(utf8.decode(itemData.data)) as Map<String, dynamic>;
       debugPrint('图例项JSON内容: $itemJson');
-      
+
       final item = LegendItem.fromJson(itemJson);
-      debugPrint('成功解析图例项: id=${item.id}, legendPath=${item.legendPath}, legendId=${item.legendId}');
-      
+      debugPrint(
+        '成功解析图例项: id=${item.id}, legendPath=${item.legendPath}, legendId=${item.legendId}',
+      );
+
       return item;
     } catch (e) {
       debugPrint('加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
@@ -1676,7 +1698,9 @@ class VfsMapServiceImpl implements VfsMapService {
     String? folderPath,
   ]) async {
     try {
-      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle, folderPath));
+      final localizationPath = _buildVfsPath(
+        _getMapLocalizationPath(mapTitle, folderPath),
+      );
       final localizationData = await _storageService.readFile(localizationPath);
 
       if (localizationData == null) {
@@ -1700,7 +1724,9 @@ class VfsMapServiceImpl implements VfsMapService {
     String? folderPath,
   ]) async {
     try {
-      final localizationPath = _buildVfsPath(_getMapLocalizationPath(mapTitle, folderPath));
+      final localizationPath = _buildVfsPath(
+        _getMapLocalizationPath(mapTitle, folderPath),
+      );
       final localizationJson = jsonEncode(localizations);
       await _storageService.writeFile(
         localizationPath,

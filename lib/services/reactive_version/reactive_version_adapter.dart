@@ -44,7 +44,9 @@ class ReactiveVersionAdapter {
   /// 设置监听器
   void _setupListeners() {
     // 监听地图数据变化，同步到当前编辑版本
-    _mapDataSubscription = _integrationAdapter.mapDataStream.listen(_onMapDataChanged);
+    _mapDataSubscription = _integrationAdapter.mapDataStream.listen(
+      _onMapDataChanged,
+    );
 
     // 监听版本管理器变化，同步到地图数据BLoC
     _versionManager.addListener(_onVersionManagerChanged);
@@ -99,7 +101,9 @@ class ReactiveVersionAdapter {
         // 详细日志：图例组和图例项数量
         for (int i = 0; i < newMapItem.legendGroups.length; i++) {
           final group = newMapItem.legendGroups[i];
-          debugPrint('  图例组[$i] ${group.name}: ${group.legendItems.length}个图例项');
+          debugPrint(
+            '  图例组[$i] ${group.name}: ${group.legendItems.length}个图例项',
+          );
         }
 
         // 异步初始化图例会话（不阻塞版本更新）
@@ -116,7 +120,9 @@ class ReactiveVersionAdapter {
   Future<void> _initializeLegendSession(MapItem mapItem) async {
     try {
       await _legendSessionManager.initializeSession(mapItem);
-      debugPrint('图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}');
+      debugPrint(
+        '图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}',
+      );
     } catch (e) {
       debugPrint('图例会话初始化失败: $e');
     }
@@ -127,7 +133,7 @@ class ReactiveVersionAdapter {
     if (data1.layers.length != data2.layers.length) return false;
     if (data1.legendGroups.length != data2.legendGroups.length) return false;
     if (data1.stickyNotes.length != data2.stickyNotes.length) return false;
-    
+
     // 检查图层ID和所有属性（包括背景图片相关属性）
     for (int i = 0; i < data1.layers.length; i++) {
       final layer1 = data1.layers[i];
@@ -258,8 +264,9 @@ class ReactiveVersionAdapter {
             item1.legendPath != item2.legendPath || // 主要比较路径
             // 兼容性比较：如果两者都有legendId且路径相同，则比较legendId
             (item1.legendPath == item2.legendPath &&
-             item1.legendId != null && item2.legendId != null &&
-             item1.legendId != item2.legendId) ||
+                item1.legendId != null &&
+                item2.legendId != null &&
+                item1.legendId != item2.legendId) ||
             item1.position != item2.position ||
             item1.size != item2.size ||
             item1.rotation != item2.rotation ||
@@ -461,7 +468,8 @@ class ReactiveVersionAdapter {
       }
 
       // 如果没有源版本数据，使用当前BLoC的数据
-      if (initialData == null && _integrationAdapter.currentState is MapDataLoaded) {
+      if (initialData == null &&
+          _integrationAdapter.currentState is MapDataLoaded) {
         final currentState = _integrationAdapter.currentState as MapDataLoaded;
         initialData = currentState.mapItem.copyWith(
           layers: List.from(currentState.layers), // 深度复制图层列表
@@ -775,12 +783,16 @@ class ReactiveVersionAdapter {
     return {
       'isUpdating': _isUpdating,
       'hasMapDataSubscription': _mapDataSubscription != null,
-      'currentMapDataState': _integrationAdapter.currentState.runtimeType.toString(),
+      'currentMapDataState': _integrationAdapter.currentState.runtimeType
+          .toString(),
       'versionManagerInfo': _versionManager.getDebugInfo(),
       'legendSessionInfo': {
-        'loadedLegendsCount': _legendSessionManager.sessionData.loadedLegends.length,
-        'loadingStatesCount': _legendSessionManager.sessionData.loadingStates.length,
-        'failedPathsCount': _legendSessionManager.sessionData.failedPaths.length,
+        'loadedLegendsCount':
+            _legendSessionManager.sessionData.loadedLegends.length,
+        'loadingStatesCount':
+            _legendSessionManager.sessionData.loadingStates.length,
+        'failedPathsCount':
+            _legendSessionManager.sessionData.failedPaths.length,
       },
     };
   }
@@ -789,7 +801,7 @@ class ReactiveVersionAdapter {
   Map<String, dynamic> diagnoseLegendSessionManager() {
     final sessionData = _legendSessionManager.sessionData;
     final stats = sessionData.getStats();
-    
+
     return {
       'session_manager_initialized': true,
       'loaded_legends_count': stats['loaded'] ?? 0,
@@ -798,7 +810,9 @@ class ReactiveVersionAdapter {
       'total_legends_count': stats['total'] ?? 0,
       'loaded_legend_paths': sessionData.loadedLegends.keys.toList(),
       'failed_legend_paths': sessionData.failedPaths.toList(),
-      'loading_states': sessionData.loadingStates.map((k, v) => MapEntry(k, v.toString())),
+      'loading_states': sessionData.loadingStates.map(
+        (k, v) => MapEntry(k, v.toString()),
+      ),
     };
   }
 

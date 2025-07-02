@@ -489,7 +489,26 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   Widget _buildLegendWidget(LegendGroup legendGroup) {
-    if (!legendGroup.isVisible) return const SizedBox.shrink();
+    debugPrint('=== 构建图例组: ${legendGroup.name} ===');
+    debugPrint('图例组可见性: ${legendGroup.isVisible}');
+    debugPrint('图例项数量: ${legendGroup.legendItems.length}');
+
+    if (!legendGroup.isVisible) {
+      debugPrint('图例组不可见，返回空Widget');
+      return const SizedBox.shrink();
+    }
+
+    if (legendGroup.legendItems.isEmpty) {
+      debugPrint('图例组没有图例项');
+      return const SizedBox.shrink();
+    }
+
+    for (int i = 0; i < legendGroup.legendItems.length; i++) {
+      final item = legendGroup.legendItems[i];
+      debugPrint(
+        '图例项 $i: ${item.id}, 路径: ${item.legendPath}, 位置: (${item.position.dx}, ${item.position.dy})',
+      );
+    }
 
     return Positioned.fill(
       child: Opacity(
@@ -547,26 +566,44 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   Widget _buildLegendSticker(LegendItem item) {
+    debugPrint('--- 构建图例贴纸: ${item.id} ---');
+    debugPrint('图例路径: ${item.legendPath}');
+    debugPrint('图例位置: (${item.position.dx}, ${item.position.dy})');
+    debugPrint('图例可见性: ${item.isVisible}');
+    debugPrint('图例会话管理器是否存在: ${widget.legendSessionManager != null}');
+
     // 优先使用图例会话管理器
     if (widget.legendSessionManager != null) {
+      debugPrint('使用图例会话管理器构建');
       return _buildLegendStickerFromSession(item);
     }
-    
+
+    debugPrint('回退到异步加载方式');
     // 回退到旧的异步加载方式（兼容性）
     return FutureBuilder<legend_db.LegendItem?>(
       future: _loadLegendFromPath(item.legendPath),
       builder: (context, snapshot) {
-        // 使用默认的未知图例作为fallback
-        final legend = snapshot.data ?? legend_db.LegendItem(
-          title: '未知图例',
-          centerX: 0.5,
-          centerY: 0.5,
-          version: 1,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+        debugPrint('FutureBuilder 状态: ${snapshot.connectionState}');
+        debugPrint('FutureBuilder 数据: ${snapshot.data}');
+        debugPrint('FutureBuilder 错误: ${snapshot.error}');
 
-        return _buildLegendStickerWidget(item, legend, snapshot.connectionState == ConnectionState.waiting);
+        // 使用默认的未知图例作为fallback
+        final legend =
+            snapshot.data ??
+            legend_db.LegendItem(
+              title: '未知图例',
+              centerX: 0.5,
+              centerY: 0.5,
+              version: 1,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+
+        return _buildLegendStickerWidget(
+          item,
+          legend,
+          snapshot.connectionState == ConnectionState.waiting,
+        );
       },
     );
   }
@@ -576,15 +613,26 @@ class MapCanvasState extends State<MapCanvas> {
     return ListenableBuilder(
       listenable: widget.legendSessionManager!,
       builder: (context, child) {
-        final legendData = widget.legendSessionManager!.getLegendData(item.legendPath);
-        final loadingState = widget.legendSessionManager!.getLoadingState(item.legendPath);
-        
+        final legendData = widget.legendSessionManager!.getLegendData(
+          item.legendPath,
+        );
+        final loadingState = widget.legendSessionManager!.getLoadingState(
+          item.legendPath,
+        );
+
+        debugPrint('图例会话管理器状态:');
+        debugPrint('  - 图例数据: ${legendData != null ? "已加载" : "未加载"}');
+        debugPrint('  - 加载状态: $loadingState');
+
         if (legendData != null) {
+          debugPrint('  - 使用已加载的图例数据');
           // 图例已加载
           return _buildLegendStickerWidget(item, legendData, false);
         } else {
           // 图例未加载或加载失败
           final isLoading = loadingState == LegendLoadingState.loading;
+          debugPrint('  - 图例未加载，是否正在加载: $isLoading');
+
           final legend = legend_db.LegendItem(
             title: isLoading ? '加载中...' : '未知图例',
             centerX: 0.5,
@@ -593,12 +641,16 @@ class MapCanvasState extends State<MapCanvas> {
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           );
-          
+
           // 触发异步加载
           if (loadingState == LegendLoadingState.notLoaded) {
-            Future.microtask(() => widget.legendSessionManager!.addLegendToSession(item.legendPath));
+            Future.microtask(
+              () => widget.legendSessionManager!.addLegendToSession(
+                item.legendPath,
+              ),
+            );
           }
-          
+
           return _buildLegendStickerWidget(item, legend, isLoading);
         }
       },
@@ -606,8 +658,26 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   /// 构建图例贴纸组件的通用方法
-  Widget _buildLegendStickerWidget(LegendItem item, legend_db.LegendItem legend, bool isLoading) {
-    if (!legend.hasImageData && !isLoading) return const SizedBox.shrink();
+  Widget _buildLegendStickerWidget(
+    LegendItem item,
+    legend_db.LegendItem legend,
+    bool isLoading,
+  ) {
+    debugPrint('*** 构建图例贴纸Widget ***');
+    debugPrint('图例ID: ${item.id}');
+    debugPrint('图例是否可见: ${item.isVisible}');
+    debugPrint('图例数据有图片: ${legend.hasImageData}');
+    debugPrint('是否正在加载: $isLoading');
+
+    if (!item.isVisible) {
+      debugPrint('图例不可见，返回空Widget');
+      return const SizedBox.shrink();
+    }
+
+    if (!legend.hasImageData && !isLoading) {
+      debugPrint('图例没有图片数据且不在加载中，返回空Widget');
+      return const SizedBox.shrink();
+    }
 
     // 转换相对坐标到画布坐标
     final canvasPosition = Offset(
@@ -615,11 +685,17 @@ class MapCanvasState extends State<MapCanvas> {
       item.position.dy * kCanvasHeight,
     );
 
+    debugPrint('画布位置: (${canvasPosition.dx}, ${canvasPosition.dy})');
+
     // 计算图例的中心点（基于图例的中心点坐标）
     final imageSize = 60.0 * item.size; // 基础大小60像素
     final centerOffset = Offset(
       imageSize * legend.centerX,
       imageSize * legend.centerY,
+    );
+
+    debugPrint(
+      '图片大小: $imageSize, 中心偏移: (${centerOffset.dx}, ${centerOffset.dy})',
     );
 
     Widget stickerWidget = Container(
@@ -675,9 +751,15 @@ class MapCanvasState extends State<MapCanvas> {
       left: canvasPosition.dx - centerOffset.dx,
       top: canvasPosition.dy - centerOffset.dy,
       child: GestureDetector(
-        onPanStart: widget.isPreviewMode ? null : (details) => _onLegendDragStart(item, details),
-        onPanUpdate: widget.isPreviewMode ? null : (details) => _onLegendDragUpdate(item, details),
-        onPanEnd: widget.isPreviewMode ? null : (details) => _onLegendDragEnd(item, details),
+        onPanStart: widget.isPreviewMode
+            ? null
+            : (details) => _onLegendDragStart(item, details),
+        onPanUpdate: widget.isPreviewMode
+            ? null
+            : (details) => _onLegendDragUpdate(item, details),
+        onPanEnd: widget.isPreviewMode
+            ? null
+            : (details) => _onLegendDragEnd(item, details),
         onTap: () => _onLegendTap(item),
         onDoubleTap: () => _onLegendDoubleTap(item),
         child: Transform.rotate(
@@ -702,13 +784,13 @@ class MapCanvasState extends State<MapCanvas> {
       // 从VFS路径解析图例标题和文件夹路径
       final pathParts = legendPath.split('/');
       if (pathParts.isEmpty) return null;
-      
+
       final fileName = pathParts.last;
       final title = fileName.replaceAll('.legend', '');
-      final folderPath = pathParts.length > 1 
+      final folderPath = pathParts.length > 1
           ? pathParts.sublist(0, pathParts.length - 1).join('/')
           : null;
-      
+
       return await legendService.getLegend(title, folderPath);
     } catch (e) {
       debugPrint('载入图例失败: $legendPath, 错误: $e');

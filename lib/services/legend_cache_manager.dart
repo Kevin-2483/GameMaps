@@ -5,10 +5,10 @@ import 'dart:async';
 
 /// 图例缓存状态
 enum LegendLoadingState {
-  notLoaded,    // 未加载
-  loading,      // 加载中
-  loaded,       // 已加载
-  error,        // 加载失败
+  notLoaded, // 未加载
+  loading, // 加载中
+  loaded, // 已加载
+  error, // 加载失败
 }
 
 /// 缓存的图例项
@@ -44,7 +44,7 @@ class CachedLegendItem {
     if (state == LegendLoadingState.error) return true;
     if (state != LegendLoadingState.loaded) return false;
     if (loadedAt == null) return true;
-    
+
     final now = DateTime.now();
     final elapsed = now.difference(loadedAt!);
     return elapsed.inMinutes > 5; // 5分钟后重新加载
@@ -137,7 +137,9 @@ class LegendCacheManager extends ChangeNotifier {
   /// 获取错误信息
   String? getErrorMessage(String legendPath) {
     final cached = _cache[legendPath];
-    return cached?.state == LegendLoadingState.error ? cached?.errorMessage : null;
+    return cached?.state == LegendLoadingState.error
+        ? cached?.errorMessage
+        : null;
   }
 
   /// 清除特定图例的缓存
@@ -192,7 +194,9 @@ class LegendCacheManager extends ChangeNotifier {
     }
 
     // 设置加载状态
-    _cache[legendPath] = const CachedLegendItem(state: LegendLoadingState.loading);
+    _cache[legendPath] = const CachedLegendItem(
+      state: LegendLoadingState.loading,
+    );
     notifyListeners();
 
     // 创建加载Completer
@@ -201,20 +205,38 @@ class LegendCacheManager extends ChangeNotifier {
 
     try {
       // 从VFS路径解析图例标题和文件夹路径
-      final pathParts = legendPath.split('/');
+      String actualPath = legendPath;
+
+      // 如果是完整的VFS路径，需要提取相对路径部分
+      if (legendPath.startsWith('indexeddb://')) {
+        // 格式: indexeddb://r6box/legends/[folderPath/]title.legend
+        final uri = Uri.parse(legendPath);
+        final pathSegments = uri.pathSegments;
+
+        // pathSegments 应该是 ['legends', ...folderPath, 'title.legend']
+        if (pathSegments.length >= 2 && pathSegments[0] == 'legends') {
+          // 移除 'legends' 前缀，剩下的就是相对路径
+          actualPath = pathSegments.skip(1).join('/');
+        }
+      }
+
+      final pathParts = actualPath.split('/');
       if (pathParts.isEmpty) {
         throw Exception('无效的图例路径');
       }
-      
+
       final fileName = pathParts.last;
       final title = fileName.replaceAll('.legend', '');
-      final folderPath = pathParts.length > 1 
+      final folderPath = pathParts.length > 1
           ? pathParts.sublist(0, pathParts.length - 1).join('/')
           : null;
-      
+
       // 加载图例数据
+      debugPrint(
+        '图例缓存: 解析路径 $legendPath -> title=$title, folderPath=$folderPath, actualPath=$actualPath',
+      );
       final legendData = await _legendService.getLegend(title, folderPath);
-      
+
       if (legendData != null) {
         // 加载成功
         _cache[legendPath] = CachedLegendItem(
@@ -257,7 +279,7 @@ class LegendCacheManager extends ChangeNotifier {
     if (completer != null) {
       return await completer.future;
     }
-    
+
     // 如果没有找到加载器，返回缓存的数据
     final cached = _cache[legendPath];
     return cached?.legendData;

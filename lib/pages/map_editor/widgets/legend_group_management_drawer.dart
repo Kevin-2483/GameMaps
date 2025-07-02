@@ -955,23 +955,23 @@ class _LegendGroupManagementDrawerState
 
     try {
       final legendService = LegendVfsService();
-      
+
       // 处理完整的VFS路径
       String actualPath = legendPath;
-      
+
       // 如果是完整的VFS路径，需要提取相对路径部分
       if (legendPath.startsWith('indexeddb://')) {
         // 格式: indexeddb://r6box/legends/[folderPath/]title.legend
         final uri = Uri.parse(legendPath);
         final pathSegments = uri.pathSegments;
-        
+
         // pathSegments 应该是 ['legends', ...folderPath, 'title.legend']
         if (pathSegments.length >= 2 && pathSegments[0] == 'legends') {
           // 移除 'legends' 前缀，剩下的就是相对路径
           actualPath = pathSegments.skip(1).join('/');
         }
       }
-      
+
       // 从相对路径解析图例标题和文件夹路径
       final pathParts = actualPath.split('/');
       if (pathParts.isEmpty) return null;
@@ -982,7 +982,9 @@ class _LegendGroupManagementDrawerState
           ? pathParts.sublist(0, pathParts.length - 1).join('/')
           : null;
 
-      debugPrint('加载图例: title=$title, folderPath=$folderPath, 原始路径=$legendPath');
+      debugPrint(
+        '加载图例: title=$title, folderPath=$folderPath, 原始路径=$legendPath',
+      );
       return await legendService.getLegend(title, folderPath);
     } catch (e) {
       debugPrint('载入图例失败: $legendPath, 错误: $e');
@@ -1347,10 +1349,13 @@ class _LegendGroupManagementDrawerState
                   ? () {
                       // 从路径生成唯一的legendId
                       final pathSegments = selectedLegendPath.split('/');
-                      final fileName = pathSegments.last.replaceAll('.legend', '');
+                      final fileName = pathSegments.last.replaceAll(
+                        '.legend',
+                        '',
+                      );
                       final timestamp = DateTime.now().microsecondsSinceEpoch;
                       final legendId = 'path_${fileName}_${timestamp}';
-                      
+
                       final newItem = LegendItem(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
                         legendPath: selectedLegendPath,

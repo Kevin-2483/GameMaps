@@ -57,7 +57,9 @@ class LegendSessionData {
   Map<String, int> getStats() {
     return {
       'loaded': loadedLegends.length,
-      'loading': loadingStates.values.where((s) => s == LegendLoadingState.loading).length,
+      'loading': loadingStates.values
+          .where((s) => s == LegendLoadingState.loading)
+          .length,
       'failed': failedPaths.length,
       'total': loadingStates.length,
     };
@@ -80,7 +82,7 @@ class LegendSessionManager extends ChangeNotifier {
   /// 初始化会话（预加载地图中的所有图例）
   Future<void> initializeSession(MapItem mapItem) async {
     final allLegendPaths = <String>{};
-    
+
     // 收集所有图例组中的图例路径
     for (final legendGroup in mapItem.legendGroups) {
       for (final legendItem in legendGroup.legendItems) {
@@ -92,7 +94,7 @@ class LegendSessionManager extends ChangeNotifier {
 
     // 预加载所有图例
     await preloadLegends(allLegendPaths.toList());
-    
+
     debugPrint('图例会话管理器: 初始化完成，预加载图例数量: ${allLegendPaths.length}');
   }
 
@@ -128,7 +130,7 @@ class LegendSessionManager extends ChangeNotifier {
     try {
       // 从缓存管理器获取数据
       final legendData = await _cacheManager.getLegendData(legendPath);
-      
+
       if (legendData != null) {
         // 加载成功，添加到会话
         _addLegendToSession(legendPath, legendData);
@@ -152,9 +154,14 @@ class LegendSessionManager extends ChangeNotifier {
     if (legendPaths.isEmpty) return;
 
     // 过滤已加载的图例
-    final pathsToLoad = legendPaths.where((path) => 
-      path.isNotEmpty && !_sessionData.isLoaded(path) && !_sessionData.isLoading(path)
-    ).toList();
+    final pathsToLoad = legendPaths
+        .where(
+          (path) =>
+              path.isNotEmpty &&
+              !_sessionData.isLoaded(path) &&
+              !_sessionData.isLoading(path),
+        )
+        .toList();
 
     if (pathsToLoad.isEmpty) return;
 
@@ -183,8 +190,12 @@ class LegendSessionManager extends ChangeNotifier {
   void removeLegendFromSession(String legendPath) {
     if (legendPath.isEmpty) return;
 
-    final newLoadedLegends = Map<String, legend_db.LegendItem>.from(_sessionData.loadedLegends);
-    final newLoadingStates = Map<String, LegendLoadingState>.from(_sessionData.loadingStates);
+    final newLoadedLegends = Map<String, legend_db.LegendItem>.from(
+      _sessionData.loadedLegends,
+    );
+    final newLoadingStates = Map<String, LegendLoadingState>.from(
+      _sessionData.loadingStates,
+    );
     final newFailedPaths = Set<String>.from(_sessionData.failedPaths);
 
     newLoadedLegends.remove(legendPath);
@@ -215,17 +226,17 @@ class LegendSessionManager extends ChangeNotifier {
   /// 重新加载失败的图例
   Future<void> retryFailedLegends() async {
     final failedPaths = _sessionData.failedPaths.toList();
-    
+
     // 清除失败状态
     final newFailedPaths = Set<String>.from(_sessionData.failedPaths);
     newFailedPaths.clear();
-    
+
     _sessionData = _sessionData.copyWith(failedPaths: newFailedPaths);
     notifyListeners();
 
     // 重新加载
     await preloadLegends(failedPaths);
-    
+
     debugPrint('图例会话管理器: 重试失败的图例，数量: ${failedPaths.length}');
   }
 
@@ -237,7 +248,9 @@ class LegendSessionManager extends ChangeNotifier {
   /// 检查是否所有图例都已加载完成
   bool get isAllLoaded {
     return _sessionData.loadingStates.values.every(
-      (state) => state == LegendLoadingState.loaded || state == LegendLoadingState.error
+      (state) =>
+          state == LegendLoadingState.loaded ||
+          state == LegendLoadingState.error,
     );
   }
 
@@ -245,11 +258,15 @@ class LegendSessionManager extends ChangeNotifier {
   double get loadingProgress {
     final total = _sessionData.loadingStates.length;
     if (total == 0) return 1.0;
-    
-    final completed = _sessionData.loadingStates.values.where(
-      (state) => state == LegendLoadingState.loaded || state == LegendLoadingState.error
-    ).length;
-    
+
+    final completed = _sessionData.loadingStates.values
+        .where(
+          (state) =>
+              state == LegendLoadingState.loaded ||
+              state == LegendLoadingState.error,
+        )
+        .length;
+
     return completed / total;
   }
 
@@ -257,7 +274,7 @@ class LegendSessionManager extends ChangeNotifier {
   Future<void> _loadSingleLegend(String legendPath) async {
     try {
       final legendData = await _cacheManager.getLegendData(legendPath);
-      
+
       if (legendData != null) {
         _addLegendToSession(legendPath, legendData);
       } else {
@@ -271,8 +288,12 @@ class LegendSessionManager extends ChangeNotifier {
 
   /// 内部方法：添加图例到会话
   void _addLegendToSession(String legendPath, legend_db.LegendItem legendData) {
-    final newLoadedLegends = Map<String, legend_db.LegendItem>.from(_sessionData.loadedLegends);
-    final newLoadingStates = Map<String, LegendLoadingState>.from(_sessionData.loadingStates);
+    final newLoadedLegends = Map<String, legend_db.LegendItem>.from(
+      _sessionData.loadedLegends,
+    );
+    final newLoadingStates = Map<String, LegendLoadingState>.from(
+      _sessionData.loadingStates,
+    );
 
     newLoadedLegends[legendPath] = legendData;
     newLoadingStates[legendPath] = LegendLoadingState.loaded;
@@ -287,7 +308,9 @@ class LegendSessionManager extends ChangeNotifier {
 
   /// 内部方法：标记图例加载失败
   void _markLegendFailed(String legendPath) {
-    final newLoadingStates = Map<String, LegendLoadingState>.from(_sessionData.loadingStates);
+    final newLoadingStates = Map<String, LegendLoadingState>.from(
+      _sessionData.loadingStates,
+    );
     final newFailedPaths = Set<String>.from(_sessionData.failedPaths);
 
     newLoadingStates[legendPath] = LegendLoadingState.error;
@@ -303,7 +326,9 @@ class LegendSessionManager extends ChangeNotifier {
 
   /// 内部方法：更新加载状态
   void _updateLoadingState(String legendPath, LegendLoadingState state) {
-    final newLoadingStates = Map<String, LegendLoadingState>.from(_sessionData.loadingStates);
+    final newLoadingStates = Map<String, LegendLoadingState>.from(
+      _sessionData.loadingStates,
+    );
     newLoadingStates[legendPath] = state;
 
     _sessionData = _sessionData.copyWith(loadingStates: newLoadingStates);

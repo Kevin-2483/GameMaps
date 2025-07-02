@@ -1958,7 +1958,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _initialSelectedLegendItemId = null;
 
       // 打开图层图例绑定抽屉
-
+      _currentLayerForBinding = layer;
       _allLegendGroupsForBinding = allLegendGroups;
       _isLayerLegendBindingDrawerOpen = true;
     });
@@ -3557,6 +3557,23 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
+        // 添加调试信息
+        debugPrint('=== 构建地图画布 ===');
+        debugPrint('当前地图: ${_currentMap?.title}');
+        debugPrint('图例组数量: ${_currentMap?.legendGroups.length ?? 0}');
+        if (_currentMap?.legendGroups != null) {
+          for (int i = 0; i < _currentMap!.legendGroups.length; i++) {
+            final group = _currentMap!.legendGroups[i];
+            debugPrint(
+              '图例组 $i: ${group.name}, 可见: ${group.isVisible}, 图例项: ${group.legendItems.length}',
+            );
+          }
+        }
+        debugPrint('版本适配器存在: ${versionAdapter != null}');
+        debugPrint(
+          '图例会话管理器存在: ${versionAdapter?.legendSessionManager != null}',
+        );
+
         // 创建用于显示的地图副本，使用重新排序的图层
         return MapCanvas(
           key: _mapCanvasKey, // 添加这一行
@@ -3568,7 +3585,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
           selectedDensity: _selectedDensity,
           selectedCurvature: _selectedCurvature,
           availableLegends: [], // 不再需要预载图例列表
-          legendSessionManager: versionAdapter?.legendSessionManager, // 传递图例会话管理器
+          legendSessionManager:
+              versionAdapter?.legendSessionManager, // 传递图例会话管理器
           isPreviewMode: widget.isPreviewMode,
           onLayerUpdated: _updateLayer,
           onLegendGroupUpdated: _updateLegendGroup,
