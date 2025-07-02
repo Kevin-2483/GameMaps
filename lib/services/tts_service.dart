@@ -37,11 +37,11 @@ class TtsService {
 
   FlutterTts? _flutterTts;
   final UserPreferencesService _preferencesService = UserPreferencesService();
-  
+
   bool _isInitialized = false;
   List<dynamic>? _availableLanguages;
   List<dynamic>? _availableVoices;
-  
+
   // 队列管理
   final Queue<TtsRequest> _requestQueue = Queue<TtsRequest>();
   bool _isProcessing = false;
@@ -53,15 +53,15 @@ class TtsService {
 
     try {
       _flutterTts = FlutterTts();
-      
+
       // 设置事件回调
       _setupCallbacks();
-      
+
       // 获取可用语言和语音
       await _loadAvailableOptions();
-      
+
       _isInitialized = true;
-      
+
       if (kDebugMode) {
         print('TTS服务初始化完成');
       }
@@ -72,6 +72,7 @@ class TtsService {
       rethrow;
     }
   }
+
   /// 设置事件回调
   void _setupCallbacks() {
     if (_flutterTts == null) return;
@@ -168,7 +169,9 @@ class TtsService {
       await _flutterTts!.setLanguage(defaultTtsPrefs.language!);
     }
 
-    await _flutterTts!.setSpeechRate(request.speechRate ?? defaultTtsPrefs.speechRate);
+    await _flutterTts!.setSpeechRate(
+      request.speechRate ?? defaultTtsPrefs.speechRate,
+    );
     await _flutterTts!.setVolume(request.volume ?? defaultTtsPrefs.volume);
     await _flutterTts!.setPitch(request.pitch ?? defaultTtsPrefs.pitch);
 
@@ -193,7 +196,7 @@ class TtsService {
     try {
       _availableLanguages = await _flutterTts!.getLanguages;
       _availableVoices = await _flutterTts!.getVoices;
-      
+
       if (kDebugMode) {
         print('可用语言: $_availableLanguages');
         print('可用语音: $_availableVoices');
@@ -202,14 +205,15 @@ class TtsService {
       if (kDebugMode) {
         print('加载TTS选项失败: $e');
       }
-    }  }
+    }
+  }
 
   /// 语音合成文本 (使用队列管理)
-  /// 
+  ///
   /// [text] 要合成的文本
   /// [language] 可选的语言设置，如果不提供则使用用户偏好设置
   /// [speechRate] 可选的语音速度设置 (0.0-1.0)
-  /// [volume] 可选的音量设置 (0.0-1.0)  
+  /// [volume] 可选的音量设置 (0.0-1.0)
   /// [pitch] 可选的音调设置 (0.5-2.0)
   /// [voice] 可选的语音设置
   /// [sourceId] 请求来源标识，用于调试和日志
@@ -254,7 +258,9 @@ class TtsService {
     _requestQueue.add(request);
 
     if (kDebugMode) {
-      print('TTS请求已加入队列: "$text" (来源: ${sourceId ?? "未知"}, 队列长度: ${_requestQueue.length})');
+      print(
+        'TTS请求已加入队列: "$text" (来源: ${sourceId ?? "未知"}, 队列长度: ${_requestQueue.length})',
+      );
     }
 
     // 开始处理队列
@@ -269,7 +275,7 @@ class TtsService {
     if (_flutterTts != null) {
       await _flutterTts!.stop();
     }
-    
+
     // 清空队列
     while (_requestQueue.isNotEmpty) {
       final request = _requestQueue.removeFirst();
@@ -277,10 +283,10 @@ class TtsService {
         request.completer.complete();
       }
     }
-    
+
     _currentRequest = null;
     _isProcessing = false;
-    
+
     if (kDebugMode) {
       print('TTS已停止，队列已清空');
     }
@@ -295,19 +301,19 @@ class TtsService {
         toRemove.add(request);
       }
     }
-    
+
     for (final request in toRemove) {
       _requestQueue.remove(request);
       if (!request.completer.isCompleted) {
         request.completer.complete();
       }
     }
-    
+
     // 如果当前播放的是该来源的请求，停止播放
     if (_currentRequest?.sourceId == sourceId) {
       await _flutterTts?.stop();
     }
-    
+
     if (kDebugMode && toRemove.isNotEmpty) {
       print('已停止来源为 $sourceId 的 ${toRemove.length} 个TTS请求');
     }
@@ -323,7 +329,7 @@ class TtsService {
   /// 获取可用语言列表
   List<dynamic>? get availableLanguages => _availableLanguages;
 
-  /// 获取可用语音列表  
+  /// 获取可用语音列表
   List<dynamic>? get availableVoices => _availableVoices;
 
   /// 检查是否支持指定语言
@@ -346,11 +352,7 @@ class TtsService {
 
     try {
       final range = await _flutterTts!.getSpeechRateValidRange;
-      return {
-        'min': range.min,
-        'normal': range.normal,
-        'max': range.max,
-      };
+      return {'min': range.min, 'normal': range.normal, 'max': range.max};
     } catch (e) {
       if (kDebugMode) {
         print('获取语音速度范围失败: $e');

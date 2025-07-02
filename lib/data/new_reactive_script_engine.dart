@@ -285,11 +285,8 @@ class NewReactiveScriptEngine {
     executor.registerExternalFunction(
       'filterLegendItemsInGroupByTags',
       _functionHandler.handleFilterLegendItemsInGroupByTags,
-    );    // 语音合成函数
-    executor.registerExternalFunction(
-      'say',
-      _functionHandler.handleSay,
-    );
+    ); // 语音合成函数
+    executor.registerExternalFunction('say', _functionHandler.handleSay);
     executor.registerExternalFunction(
       'ttsStop',
       _functionHandler.handleTtsStop,

@@ -59,32 +59,37 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     try {
       _currentPath = folderPath ?? '';
       _updateBreadcrumbs();
-      
+
       final items = <MapDirectoryItem>[];
-      
+
       // 获取文件夹列表
-      final folders = await _vfsMapService.getFolders(_currentPath.isEmpty ? null : _currentPath);
+      final folders = await _vfsMapService.getFolders(
+        _currentPath.isEmpty ? null : _currentPath,
+      );
       for (final folderName in folders) {
-        final fullPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
+        final fullPath = _currentPath.isEmpty
+            ? folderName
+            : '$_currentPath/$folderName';
         // 计算该文件夹中的地图数量（包括子文件夹）
         final mapCount = await _countMapsInFolder(fullPath);
-        
-        items.add(MapFolderItem(
-          name: folderName,
-          path: fullPath,
-          mapCount: mapCount,
-        ));
+
+        items.add(
+          MapFolderItem(name: folderName, path: fullPath, mapCount: mapCount),
+        );
       }
-      
+
       // 获取当前目录下的地图
-      final maps = await _vfsMapService.getAllMaps(_currentPath.isEmpty ? null : _currentPath);
-      
+      final maps = await _vfsMapService.getAllMaps(
+        _currentPath.isEmpty ? null : _currentPath,
+      );
+
       for (final map in maps) {
         // 读取封面图片
         Uint8List? coverImage;
         try {
           final basePath = _currentPath.isEmpty ? '' : _currentPath + '/';
-          final coverPath = 'indexeddb://r6box/maps/${basePath}${FilenameSanitizer.sanitize(map.title)}.mapdata/cover.png';
+          final coverPath =
+              'indexeddb://r6box/maps/${basePath}${FilenameSanitizer.sanitize(map.title)}.mapdata/cover.png';
           if (await _storageService.exists(coverPath)) {
             final coverFile = await _storageService.readFile(coverPath);
             coverImage = coverFile?.data;
@@ -102,11 +107,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           updatedAt: map.updatedAt,
         );
 
-        items.add(MapFileItem(
-          name: map.title,
-          path: _currentPath,
-          mapSummary: mapSummary,
-        ));
+        items.add(
+          MapFileItem(
+            name: map.title,
+            path: _currentPath,
+            mapSummary: mapSummary,
+          ),
+        );
       }
 
       // 加载本地化标题
@@ -137,13 +144,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       // 递归计算文件夹中的地图数量
       final maps = await _vfsMapService.getAllMaps(folderPath);
       int count = maps.length;
-      
+
       final subFolders = await _vfsMapService.getFolders(folderPath);
       for (final subFolder in subFolders) {
         final subFolderPath = '$folderPath/$subFolder';
         count += await _countMapsInFolder(subFolderPath);
       }
-      
+
       return count;
     } catch (e) {
       return 0;
@@ -151,14 +158,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   }
 
   void _updateBreadcrumbs() {
-    _breadcrumbs = [
-      const BreadcrumbItem(name: '首页', path: ''),
-    ];
-    
+    _breadcrumbs = [const BreadcrumbItem(name: '首页', path: '')];
+
     if (_currentPath.isNotEmpty) {
       final parts = _currentPath.split('/');
       String currentPath = '';
-      
+
       for (final part in parts) {
         currentPath = currentPath.isEmpty ? part : '$currentPath/$part';
         _breadcrumbs.add(BreadcrumbItem(name: part, path: currentPath));
@@ -204,8 +209,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             );
 
             // 使用VFS直接保存地图
-            await _vfsMapService.saveMap(mapItem, _currentPath.isEmpty ? null : _currentPath);
-            await _loadDirectoryContents(_currentPath.isEmpty ? null : _currentPath);
+            await _vfsMapService.saveMap(
+              mapItem,
+              _currentPath.isEmpty ? null : _currentPath,
+            );
+            await _loadDirectoryContents(
+              _currentPath.isEmpty ? null : _currentPath,
+            );
             _showSuccessSnackBar(l10n.mapAddedSuccessfully);
           } catch (e) {
             _showErrorSnackBar(l10n.addMapFailed(e.toString()));
@@ -309,8 +319,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     if (confirmed == true) {
       try {
         // 使用VFS直接删除整个地图目录
-        await _vfsMapService.deleteMap(map.title, _currentPath.isEmpty ? null : _currentPath);
-        await _loadDirectoryContents(_currentPath.isEmpty ? null : _currentPath);
+        await _vfsMapService.deleteMap(
+          map.title,
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
         _showSuccessSnackBar(l10n.mapDeletedSuccessfully);
       } catch (e) {
         _showErrorSnackBar(l10n.deleteMapFailed(e.toString()));
@@ -323,7 +338,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       final success = await localizationService.importLocalizationFile();
 
       if (success) {
-        await _loadDirectoryContents(_currentPath.isEmpty ? null : _currentPath); // 重新加载以应用新的本地化
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        ); // 重新加载以应用新的本地化
         _showSuccessSnackBar('本地化文件上传成功');
       } else {
         _showErrorSnackBar('本地化文件版本过低或取消上传');
@@ -384,7 +401,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             onPressed: _uploadLocalizationFile,
             icon: const Icon(Icons.translate),
             tooltip: '上传本地化文件',
-          ),                  // 调试模式功能
+          ), // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
             action: PopupMenuButton<String>(
@@ -441,31 +458,53 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 // 面包屑导航
                 if (_breadcrumbs.length > 1)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
-                              children: _breadcrumbs.asMap().entries.map((entry) {
+                              children: _breadcrumbs.asMap().entries.map((
+                                entry,
+                              ) {
                                 final index = entry.key;
                                 final breadcrumb = entry.value;
                                 final isLast = index == _breadcrumbs.length - 1;
-                                
+
                                 return Row(
                                   children: [
-                                    if (index > 0) 
-                                      const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+                                    if (index > 0)
+                                      const Icon(
+                                        Icons.chevron_right,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      ),
                                     InkWell(
-                                      onTap: isLast ? null : () => _loadDirectoryContents(breadcrumb.path.isEmpty ? null : breadcrumb.path),
+                                      onTap: isLast
+                                          ? null
+                                          : () => _loadDirectoryContents(
+                                              breadcrumb.path.isEmpty
+                                                  ? null
+                                                  : breadcrumb.path,
+                                            ),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
                                         child: Text(
                                           breadcrumb.name,
                                           style: TextStyle(
-                                            color: isLast ? Colors.black : Colors.blue,
-                                            fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+                                            color: isLast
+                                                ? Colors.black
+                                                : Colors.blue,
+                                            fontWeight: isLast
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
                                           ),
                                         ),
                                       ),
@@ -486,11 +525,19 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                              const Icon(
+                                Icons.folder_open,
+                                size: 64,
+                                color: Colors.grey,
+                              ),
                               const SizedBox(height: 16),
                               Text(
-                                _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
-                                style: Theme.of(context).textTheme.headlineSmall,
+                                _currentPath.isEmpty
+                                    ? l10n.mapAtlasEmpty
+                                    : '此文件夹为空',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 8),
                               const Text('点击右上角菜单添加地图或创建文件夹'),
@@ -500,29 +547,37 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                       : Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: _calculateCrossAxisCount(context),
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 2.5, // 长方形卡片比例
-                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: _calculateCrossAxisCount(
+                                    context,
+                                  ),
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 2.5, // 长方形卡片比例
+                                ),
                             itemCount: _items.length,
                             itemBuilder: (context, index) {
                               final item = _items[index];
-                              
+
                               if (item is MapFolderItem) {
                                 return _FolderCard(
                                   folder: item,
-                                  onTap: () => _loadDirectoryContents(item.path),
-                                  onDelete: kIsWeb 
-                                    ? () => WebReadOnlyDialog.show(context, '删除文件夹')
-                                    : () => _deleteFolder(item),
+                                  onTap: () =>
+                                      _loadDirectoryContents(item.path),
+                                  onDelete: kIsWeb
+                                      ? () => WebReadOnlyDialog.show(
+                                          context,
+                                          '删除文件夹',
+                                        )
+                                      : () => _deleteFolder(item),
                                 );
                               } else if (item is MapFileItem) {
                                 final map = item.mapSummary;
                                 return _MapCard(
                                   map: map,
-                                  localizedTitle: _localizedTitles[map.title] ?? map.title,
+                                  localizedTitle:
+                                      _localizedTitles[map.title] ?? map.title,
                                   onDelete: () {
                                     if (kIsWeb) {
                                       WebReadOnlyDialog.show(context, '删除地图');
@@ -533,7 +588,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                                   onTap: () => _openMapEditor(map.title),
                                 );
                               }
-                              
+
                               return const SizedBox(); // 不应该到达这里
                             },
                           ),
@@ -581,9 +636,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
     if (folderName != null && folderName.isNotEmpty) {
       try {
-        final newFolderPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
+        final newFolderPath = _currentPath.isEmpty
+            ? folderName
+            : '$_currentPath/$folderName';
         await _vfsMapService.createFolder(newFolderPath);
-        await _loadDirectoryContents(_currentPath.isEmpty ? null : _currentPath);
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
         _showSuccessSnackBar('文件夹创建成功');
       } catch (e) {
         _showErrorSnackBar('创建文件夹失败: ${e.toString()}');
@@ -611,11 +670,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         );
       },
     );
-    
+
     if (confirmed == true) {
       try {
         await _vfsMapService.deleteFolder(folder.path);
-        await _loadDirectoryContents(_currentPath.isEmpty ? null : _currentPath);
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
         _showSuccessSnackBar('文件夹删除成功');
       } catch (e) {
         _showErrorSnackBar('删除文件夹失败: ${e.toString()}');
@@ -747,11 +808,7 @@ class _FolderCard extends StatelessWidget {
                 aspectRatio: 1,
                 child: Container(
                   color: Colors.blue[50],
-                  child: Icon(
-                    Icons.folder,
-                    size: 48,
-                    color: Colors.blue[700],
-                  ),
+                  child: Icon(Icons.folder, size: 48, color: Colors.blue[700]),
                 ),
               ),
             ),

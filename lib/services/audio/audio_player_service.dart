@@ -7,19 +7,19 @@ import '../virtual_file_system/vfs_service_provider.dart';
 class AudioPlayerConfig {
   /// 自动播放
   final bool autoPlay;
-  
+
   /// 循环播放
   final bool looping;
-  
+
   /// 初始音量 (0.0 - 1.0)
   final double volume;
-  
+
   /// 播放速度 (0.25 - 4.0)
   final double playbackRate;
-  
+
   /// 平衡 (-1.0 左声道, 0.0 中央, 1.0 右声道)
   final double balance;
-  
+
   /// 是否静音
   final bool muted;
 
@@ -34,15 +34,19 @@ class AudioPlayerConfig {
 
   /// 默认配置
   static const AudioPlayerConfig defaultConfig = AudioPlayerConfig();
-  
+
   /// 静音配置
   static const AudioPlayerConfig mutedConfig = AudioPlayerConfig(muted: true);
-  
+
   /// 自动播放配置
-  static const AudioPlayerConfig autoPlayConfig = AudioPlayerConfig(autoPlay: true);
-  
+  static const AudioPlayerConfig autoPlayConfig = AudioPlayerConfig(
+    autoPlay: true,
+  );
+
   /// 循环播放配置
-  static const AudioPlayerConfig loopingConfig = AudioPlayerConfig(looping: true);
+  static const AudioPlayerConfig loopingConfig = AudioPlayerConfig(
+    looping: true,
+  );
 
   AudioPlayerConfig copyWith({
     bool? autoPlay,
@@ -67,22 +71,22 @@ class AudioPlayerConfig {
 class PlaylistItem {
   /// 音频源（VFS路径或网络URL）
   final String source;
-  
+
   /// 显示标题
   final String title;
-  
+
   /// 艺术家
   final String? artist;
-  
+
   /// 专辑
   final String? album;
-  
+
   /// 时长（秒）
   final Duration? duration;
-  
+
   /// 是否为VFS路径
   final bool isVfsPath;
-  
+
   /// 封面图片URL
   final String? artworkUrl;
 
@@ -100,16 +104,17 @@ class PlaylistItem {
   factory PlaylistItem.fromVfsPath(String vfsPath, {String? title}) {
     final fileName = vfsPath.split('/').last;
     final displayTitle = title ?? fileName.split('.').first;
-    
-    return PlaylistItem(
-      source: vfsPath,
-      title: displayTitle,
-      isVfsPath: true,
-    );
+
+    return PlaylistItem(source: vfsPath, title: displayTitle, isVfsPath: true);
   }
-  
+
   /// 从网络URL创建播放列表项
-  factory PlaylistItem.fromUrl(String url, {required String title, String? artist, String? album}) {
+  factory PlaylistItem.fromUrl(
+    String url, {
+    required String title,
+    String? artist,
+    String? album,
+  }) {
     return PlaylistItem(
       source: url,
       title: title,
@@ -144,14 +149,19 @@ class PlaylistItem {
 enum AudioPlaybackState {
   /// 已停止
   stopped,
+
   /// 播放中
   playing,
+
   /// 已暂停
   paused,
+
   /// 加载中
   loading,
+
   /// 错误
   error,
+
   /// 已完成
   completed,
 }
@@ -160,10 +170,13 @@ enum AudioPlaybackState {
 enum PlaybackMode {
   /// 顺序播放
   sequential,
+
   /// 循环播放整个列表
   loopAll,
+
   /// 循环播放当前歌曲
   loopOne,
+
   /// 随机播放
   shuffle,
 }
@@ -177,7 +190,7 @@ class AudioPlayerService extends ChangeNotifier {
 
   final AudioPlayer _player = AudioPlayer();
   final VfsServiceProvider _vfsService = VfsServiceProvider();
-  
+
   // 播放状态
   AudioPlaybackState _state = AudioPlaybackState.stopped;
   String? _currentSource;
@@ -188,13 +201,13 @@ class AudioPlayerService extends ChangeNotifier {
   double _balance = 0.0;
   bool _muted = false;
   String? _errorMessage;
-  
+
   // 播放队列
   final List<PlaylistItem> _playlist = [];
   int _currentIndex = -1;
   PlaybackMode _playbackMode = PlaybackMode.sequential;
   bool _backgroundPlayback = false;
-  
+
   // 临时队列（只存一个）
   PlaylistItem? _tempQueueItem;
   String? _tempQueueId;
@@ -225,8 +238,10 @@ class AudioPlayerService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<PlaylistItem> get playlist => List.unmodifiable(_playlist);
   int get currentIndex => _currentIndex;
-  PlaylistItem? get currentItem => _currentIndex >= 0 && _currentIndex < _playlist.length 
-      ? _playlist[_currentIndex] : null;
+  PlaylistItem? get currentItem =>
+      _currentIndex >= 0 && _currentIndex < _playlist.length
+      ? _playlist[_currentIndex]
+      : null;
   PlaybackMode get playbackMode => _playbackMode;
   bool get backgroundPlayback => _backgroundPlayback;
   bool get isPlaying => _state == AudioPlaybackState.playing;
@@ -235,7 +250,8 @@ class AudioPlayerService extends ChangeNotifier {
 
   /// 初始化音频播放器
   Future<void> initialize() async {
-    try {      // 设置音频会话
+    try {
+      // 设置音频会话
       await _player.setAudioContext(
         AudioContext(
           iOS: AudioContextIOS(
@@ -256,9 +272,15 @@ class AudioPlayerService extends ChangeNotifier {
       );
 
       // 订阅播放状态变化
-      _playerStateSubscription = _player.onPlayerStateChanged.listen(_onPlayerStateChanged);
-      _positionSubscription = _player.onPositionChanged.listen(_onPositionChanged);
-      _durationSubscription = _player.onDurationChanged.listen(_onDurationChanged);
+      _playerStateSubscription = _player.onPlayerStateChanged.listen(
+        _onPlayerStateChanged,
+      );
+      _positionSubscription = _player.onPositionChanged.listen(
+        _onPositionChanged,
+      );
+      _durationSubscription = _player.onDurationChanged.listen(
+        _onDurationChanged,
+      );
 
       print('🎵 AudioPlayerService: 音频播放器初始化完成');
     } catch (e) {
@@ -284,7 +306,8 @@ class AudioPlayerService extends ChangeNotifier {
     AudioPlayerConfig config = AudioPlayerConfig.defaultConfig,
   }) async {
     // 如果有临时队列，优先播放
-    if (_tempQueueItem != null && (source == null || source == _tempQueueItem!.source)) {
+    if (_tempQueueItem != null &&
+        (source == null || source == _tempQueueItem!.source)) {
       try {
         _setState(AudioPlaybackState.loading);
         _clearError();
@@ -335,6 +358,7 @@ class AudioPlayerService extends ChangeNotifier {
       return false;
     }
   }
+
   /// 暂停播放
   Future<void> pause() async {
     try {
@@ -363,6 +387,7 @@ class AudioPlayerService extends ChangeNotifier {
       _setError('停止失败: $e');
     }
   }
+
   /// 跳转到指定位置
   Future<void> seek(Duration position) async {
     try {
@@ -375,23 +400,26 @@ class AudioPlayerService extends ChangeNotifier {
       }
 
       // 添加超时保护，最多等待5秒
-      await _player.seek(position).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          print('🎵 AudioPlayerService: 跳转操作超时，使用备选方案');
-          // 直接更新位置，不等待播放器响应
-          _currentPosition = position;
-          notifyListeners();
-        },
-      );
-      
+      await _player
+          .seek(position)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              print('🎵 AudioPlayerService: 跳转操作超时，使用备选方案');
+              // 直接更新位置，不等待播放器响应
+              _currentPosition = position;
+              notifyListeners();
+            },
+          );
+
       print('🎵 AudioPlayerService: 跳转到 ${position.inSeconds}秒');
     } catch (e) {
       print('🎵 AudioPlayerService: 跳转失败 - $e');
       _setError('跳转失败: $e');
-      
+
       // 即使跳转失败，也尝试更新本地位置状态
-      if (!position.isNegative && (_totalDuration <= Duration.zero || position <= _totalDuration)) {
+      if (!position.isNegative &&
+          (_totalDuration <= Duration.zero || position <= _totalDuration)) {
         _currentPosition = position;
         notifyListeners();
       }
@@ -491,7 +519,7 @@ class AudioPlayerService extends ChangeNotifier {
   void removeFromPlaylist(int index) {
     if (index >= 0 && index < _playlist.length) {
       final item = _playlist.removeAt(index);
-      
+
       // 如果移除的是当前播放的项目
       if (index == _currentIndex) {
         _currentIndex = -1;
@@ -499,7 +527,7 @@ class AudioPlayerService extends ChangeNotifier {
       } else if (index < _currentIndex) {
         _currentIndex--;
       }
-      
+
       notifyListeners();
       print('🎵 AudioPlayerService: 从播放队列移除 - ${item.title}');
     }
@@ -590,10 +618,11 @@ class AudioPlayerService extends ChangeNotifier {
     notifyListeners();
     print('🎵 AudioPlayerService: 后台播放 ${enabled ? "已启用" : "已禁用"}');
   }
+
   /// 加载音频源
   Future<void> _loadAudioSource(String source) async {
     print('🎵 AudioPlayerService: 开始加载音频源 - $source');
-    
+
     if (_isNetworkUrl(source)) {
       // 网络URL直接播放
       print('🎵 AudioPlayerService: 使用网络URL播放');
@@ -620,7 +649,7 @@ class AudioPlayerService extends ChangeNotifier {
         }
       }
     }
-    
+
     print('🎵 AudioPlayerService: 音频源加载完成');
   }
 
@@ -630,10 +659,10 @@ class AudioPlayerService extends ChangeNotifier {
     await setPlaybackRate(config.playbackRate);
     await setBalance(config.balance);
     await setMuted(config.muted);
-    
+
     // 循环播放设置
     await _player.setReleaseMode(
-      config.looping ? ReleaseMode.loop : ReleaseMode.release
+      config.looping ? ReleaseMode.loop : ReleaseMode.release,
     );
   }
 
@@ -649,18 +678,19 @@ class AudioPlayerService extends ChangeNotifier {
     switch (_playbackMode) {
       case PlaybackMode.sequential:
         return _currentIndex + 1 < _playlist.length ? _currentIndex + 1 : -1;
-      
+
       case PlaybackMode.loopAll:
         return (_currentIndex + 1) % _playlist.length;
-      
+
       case PlaybackMode.loopOne:
         return _currentIndex;
-      
+
       case PlaybackMode.shuffle:
         if (_playlist.length <= 1) return _currentIndex;
         int nextIndex;
         do {
-          nextIndex = (DateTime.now().millisecondsSinceEpoch % _playlist.length);
+          nextIndex =
+              (DateTime.now().millisecondsSinceEpoch % _playlist.length);
         } while (nextIndex == _currentIndex);
         return nextIndex;
     }
@@ -673,22 +703,27 @@ class AudioPlayerService extends ChangeNotifier {
     switch (_playbackMode) {
       case PlaybackMode.sequential:
         return _currentIndex - 1 >= 0 ? _currentIndex - 1 : -1;
-      
+
       case PlaybackMode.loopAll:
-        return _currentIndex - 1 >= 0 ? _currentIndex - 1 : _playlist.length - 1;
-      
+        return _currentIndex - 1 >= 0
+            ? _currentIndex - 1
+            : _playlist.length - 1;
+
       case PlaybackMode.loopOne:
         return _currentIndex;
-      
+
       case PlaybackMode.shuffle:
         if (_playlist.length <= 1) return _currentIndex;
         int prevIndex;
         do {
-          prevIndex = (DateTime.now().millisecondsSinceEpoch % _playlist.length);
+          prevIndex =
+              (DateTime.now().millisecondsSinceEpoch % _playlist.length);
         } while (prevIndex == _currentIndex);
         return prevIndex;
     }
-  }  /// 播放器状态变化回调
+  }
+
+  /// 播放器状态变化回调
   void _onPlayerStateChanged(PlayerState state) {
     // 使用Future.microtask确保在主线程中处理状态变化
     Future.microtask(() {
@@ -738,7 +773,9 @@ class AudioPlayerService extends ChangeNotifier {
     if (_tempQueueItem != null) {
       clearTempQueue();
       // 恢复主队列
-      if (_savedIndex != null && _savedIndex! >= 0 && _savedIndex! < _playlist.length) {
+      if (_savedIndex != null &&
+          _savedIndex! >= 0 &&
+          _savedIndex! < _playlist.length) {
         _currentIndex = _savedIndex!;
         _currentSource = _savedSource;
         notifyListeners();
@@ -796,9 +833,15 @@ class AudioPlayerService extends ChangeNotifier {
 
   /// 确保流监听已注册（多次调用安全）
   void ensureListeners() {
-    _playerStateSubscription ??= _player.onPlayerStateChanged.listen(_onPlayerStateChanged);
-    _positionSubscription ??= _player.onPositionChanged.listen(_onPositionChanged);
-    _durationSubscription ??= _player.onDurationChanged.listen(_onDurationChanged);
+    _playerStateSubscription ??= _player.onPlayerStateChanged.listen(
+      _onPlayerStateChanged,
+    );
+    _positionSubscription ??= _player.onPositionChanged.listen(
+      _onPositionChanged,
+    );
+    _durationSubscription ??= _player.onDurationChanged.listen(
+      _onDurationChanged,
+    );
   }
 
   /// 注销流监听（不销毁底层播放器）
@@ -826,7 +869,12 @@ class AudioPlayerService extends ChangeNotifier {
   /// [startPosition] 可选，起始播放进度
   /// [id] 可选，临时队列id，默认时间戳
   /// [ownerId] 必须，归属组件id
-  Future<void> updateTempQueue(PlaylistItem item, {Duration? startPosition, String? id, required String ownerId}) async {
+  Future<void> updateTempQueue(
+    PlaylistItem item, {
+    Duration? startPosition,
+    String? id,
+    required String ownerId,
+  }) async {
     // 如果已有临时队列且ownerId不同，通知旧owner暂停
     if (_tempQueueOwnerId != null && _tempQueueOwnerId != ownerId) {
       final oldListener = _tempQueuePauseListeners[_tempQueueOwnerId!];

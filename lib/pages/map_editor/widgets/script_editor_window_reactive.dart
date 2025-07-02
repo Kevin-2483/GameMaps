@@ -338,7 +338,8 @@ class _ReactiveScriptEditorWindowState
                         controller: _scrollController,
                         physics: const BouncingScrollPhysics(),
                         child: Padding(
-                          padding: EdgeInsets.only(bottom: bottomPadding),                          child: CodeField(
+                          padding: EdgeInsets.only(bottom: bottomPadding),
+                          child: CodeField(
                             controller: _codeController,
                             textStyle: const TextStyle(
                               fontFamily: 'Consolas', // 使用更好的等宽字体

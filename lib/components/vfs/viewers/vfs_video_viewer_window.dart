@@ -72,7 +72,7 @@ class VfsVideoViewerWindow extends StatefulWidget {
       // 显示文件大小
       if (fileInfo.size > 0) {
         parts.add(_formatFileSize(fileInfo.size));
-      }      // 显示修改时间
+      } // 显示修改时间
       parts.add('修改于 ${_formatDateTime(fileInfo.modifiedAt)}');
     }
 
@@ -184,10 +184,7 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
@@ -195,14 +192,14 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
           // 播放控制
           _buildPlaybackControls(),
           const Spacer(),
-          
+
           // 音量控制
           IconButton(
             onPressed: () => setState(() => _muted = !_muted),
             icon: Icon(_muted ? Icons.volume_off : Icons.volume_up),
             tooltip: _muted ? '取消静音' : '静音',
           ),
-          
+
           // 循环播放
           IconButton(
             onPressed: () => setState(() => _looping = !_looping),
@@ -269,14 +266,18 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
                 Icon(
                   Icons.play_circle_outline,
                   size: 16,
-                  color: _autoPlay ? Theme.of(context).colorScheme.primary : null,
+                  color: _autoPlay
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '自动播放',
                   style: TextStyle(
                     fontSize: 12,
-                    color: _autoPlay ? Theme.of(context).colorScheme.primary : null,
+                    color: _autoPlay
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
                   ),
                 ),
               ],
@@ -408,11 +409,21 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoRow('文件名', widget.vfsPath.split('/').last),
-            _buildInfoRow('路径', widget.vfsPath),            if (_fileInfo != null) ...[
-              _buildInfoRow('大小', VfsVideoViewerWindow._formatFileSize(_fileInfo!.size)),
-              _buildInfoRow('修改时间', VfsVideoViewerWindow._formatDateTime(_fileInfo!.modifiedAt)),
+            _buildInfoRow('路径', widget.vfsPath),
+            if (_fileInfo != null) ...[
+              _buildInfoRow(
+                '大小',
+                VfsVideoViewerWindow._formatFileSize(_fileInfo!.size),
+              ),
+              _buildInfoRow(
+                '修改时间',
+                VfsVideoViewerWindow._formatDateTime(_fileInfo!.modifiedAt),
+              ),
             ],
-            _buildInfoRow('文件类型', widget.vfsPath.split('.').last.toUpperCase() + ' 视频文件'),
+            _buildInfoRow(
+              '文件类型',
+              widget.vfsPath.split('.').last.toUpperCase() + ' 视频文件',
+            ),
           ],
         ),
         actions: [
@@ -440,10 +451,7 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(value, style: const TextStyle(color: Colors.grey)),
           ),
         ],
       ),

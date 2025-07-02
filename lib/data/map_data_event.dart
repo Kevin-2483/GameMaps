@@ -18,7 +18,7 @@ class LoadMapData extends MapDataEvent {
   final String? folderPath;
 
   const LoadMapData({
-    required this.mapTitle, 
+    required this.mapTitle,
     this.version = 'default',
     this.folderPath,
   });

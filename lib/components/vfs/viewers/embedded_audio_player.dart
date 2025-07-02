@@ -6,13 +6,13 @@ import '../../../services/audio/audio_player_service.dart';
 class EmbeddedAudioConfig {
   /// 是否自动播放
   final bool autoPlay;
-  
+
   /// 是否显示完整信息
   final bool showFullInfo;
-  
+
   /// 默认是否折叠
   final bool defaultCollapsed;
-  
+
   /// 主题色
   final Color? accentColor;
 
@@ -31,22 +31,31 @@ class EmbeddedAudioConfig {
 class EmbeddedAudioPlayer extends StatefulWidget {
   /// 音频源（VFS路径或网络URL）
   final String source;
+
   /// 标题
   final String title;
+
   /// 艺术家
   final String? artist;
+
   /// 专辑
   final String? album;
+
   /// 是否为VFS路径
   final bool isVfsPath;
+
   /// 是否自动播放
   final bool autoPlay;
+
   /// 是否连接到现有播放器实例
   final bool connectToExisting;
+
   /// 配置
   final EmbeddedAudioConfig config;
+
   /// 错误回调
   final Function(String)? onError;
+
   /// 唯一播放器ID（可选，外部传入uuid）
   final String? playerId;
 
@@ -95,12 +104,14 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
     _audioService.registerTempQueuePauseListener(_playerId, _onPauseByService);
     _initializePlayer();
   }
+
   @override
   void dispose() {
     _expandController.dispose();
     _audioService.unregisterTempQueuePauseListener(_playerId);
     super.dispose();
   }
+
   /// 被服务通知暂停
   void _onPauseByService() async {
     if (_audioService.isPlaying) {
@@ -136,7 +147,12 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       isVfsPath: widget.isVfsPath,
     );
     final id = DateTime.now().millisecondsSinceEpoch.toString();
-    await _audioService.updateTempQueue(item, startPosition: position, id: id, ownerId: _playerId);
+    await _audioService.updateTempQueue(
+      item,
+      startPosition: position,
+      id: id,
+      ownerId: _playerId,
+    );
     setState(() {});
   }
 
@@ -163,12 +179,15 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       final position = Duration(
         seconds: (value * _audioService.totalDuration.inSeconds).round(),
       );
-      _audioService.seek(position).then((_) {
-        _tempProgress = position;
-        setState(() {});
-      }).catchError((e) {
-        print('进度条拖拽跳转失败: $e');
-      });
+      _audioService
+          .seek(position)
+          .then((_) {
+            _tempProgress = position;
+            setState(() {});
+          })
+          .catchError((e) {
+            print('进度条拖拽跳转失败: $e');
+          });
     }
   }
 
@@ -196,7 +215,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(context).dividerColor.withOpacity(0.5),
@@ -207,14 +228,16 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             children: [
               // 折叠状态的播放器
               _buildCollapsedPlayer(),
-              
+
               // 展开状态的详细控制
               AnimatedBuilder(
                 animation: _expandController,
                 builder: (context, child) {
                   return SizeTransition(
                     sizeFactor: _expandController,
-                    child: _isExpanded ? _buildExpandedControls() : const SizedBox.shrink(),
+                    child: _isExpanded
+                        ? _buildExpandedControls()
+                        : const SizedBox.shrink(),
                   );
                 },
               ),
@@ -247,10 +270,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 12),
-          Text(
-            '正在加载音频...',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text('正在加载音频...', style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
@@ -267,18 +287,22 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: widget.config.accentColor ?? Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color:
+                  widget.config.accentColor ??
+                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.music_note,
-              color: widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
+              color:
+                  widget.config.accentColor ??
+                  Theme.of(context).colorScheme.primary,
               size: 20,
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // 音频信息
           Expanded(
             child: Column(
@@ -286,9 +310,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
               children: [
                 Text(
                   widget.title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -297,7 +321,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                   Text(
                     widget.artist!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.color?.withOpacity(0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -306,12 +332,12 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
               ],
             ),
           ),
-          
+
           // 播放按钮
           _buildPlayButton(),
-          
+
           const SizedBox(width: 8),
-          
+
           // 展开/折叠按钮
           InkWell(
             onTap: _toggleExpanded,
@@ -344,7 +370,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
+          color:
+              widget.config.accentColor ??
+              Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(
@@ -367,22 +395,22 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             color: Theme.of(context).dividerColor.withOpacity(0.3),
             height: 1,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // 详细信息
           if (widget.config.showFullInfo) _buildDetailedInfo(),
-          
+
           // 进度条
           _buildProgressSlider(),
-          
+
           const SizedBox(height: 8),
-          
+
           // 时间显示
           _buildTimeDisplay(),
-          
+
           const SizedBox(height: 12),
-          
+
           // 扩展控制按钮
           _buildExtendedControls(),
         ],
@@ -398,7 +426,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
           Text(
             widget.album!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+              color: Theme.of(
+                context,
+              ).textTheme.bodySmall?.color?.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -414,14 +444,18 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       data: SliderTheme.of(context).copyWith(
         trackHeight: 3,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-        activeTrackColor: widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
-        inactiveTrackColor: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-        thumbColor: widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
+        activeTrackColor:
+            widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
+        inactiveTrackColor: Theme.of(
+          context,
+        ).colorScheme.outline.withOpacity(0.3),
+        thumbColor:
+            widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
       ),
       child: Slider(
         value: _audioService.totalDuration.inSeconds > 0
             ? _audioService.currentPosition.inSeconds.toDouble() /
-                _audioService.totalDuration.inSeconds.toDouble()
+                  _audioService.totalDuration.inSeconds.toDouble()
             : 0.0,
         onChanged: _onSeek,
       ),
@@ -454,16 +488,21 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         _buildControlButton(
           icon: Icons.replay_10,
           onTap: () {
-            _audioService.seek(_audioService.currentPosition - const Duration(seconds: 10)).then((_) {
-              _tempProgress = _audioService.currentPosition;
-              setState(() {});
-            }).catchError((e) {
-              print('快退操作失败: $e');
-            });
+            _audioService
+                .seek(
+                  _audioService.currentPosition - const Duration(seconds: 10),
+                )
+                .then((_) {
+                  _tempProgress = _audioService.currentPosition;
+                  setState(() {});
+                })
+                .catchError((e) {
+                  print('快退操作失败: $e');
+                });
           },
           tooltip: '快退10秒',
         ),
-        
+
         // 播放速度
         PopupMenuButton<double>(
           icon: Icon(
@@ -482,22 +521,26 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             const PopupMenuItem(value: 2.0, child: Text('2.0x')),
           ],
         ),
-        
+
         // 音量控制
         _buildVolumeControl(),
-        
+
         // 快进10秒
         _buildControlButton(
           icon: Icons.forward_10,
           onTap: () {
-            final newPosition = _audioService.currentPosition + const Duration(seconds: 10);
+            final newPosition =
+                _audioService.currentPosition + const Duration(seconds: 10);
             if (newPosition < _audioService.totalDuration) {
-              _audioService.seek(newPosition).then((_) {
-                _tempProgress = newPosition;
-                setState(() {});
-              }).catchError((e) {
-                print('快进操作失败: $e');
-              });
+              _audioService
+                  .seek(newPosition)
+                  .then((_) {
+                    _tempProgress = newPosition;
+                    setState(() {});
+                  })
+                  .catchError((e) {
+                    print('快进操作失败: $e');
+                  });
             }
           },
           tooltip: '快进10秒',

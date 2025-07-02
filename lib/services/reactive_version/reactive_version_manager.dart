@@ -86,10 +86,7 @@ class ReactiveVersionManager extends ChangeNotifier {
   // 版本隔离的数据管理
   final Map<String, MapItem> _versionDataCache = {};
 
-  ReactiveVersionManager({
-    required this.mapTitle,
-    this.folderPath,
-  });
+  ReactiveVersionManager({required this.mapTitle, this.folderPath});
 
   /// 获取所有版本状态
   List<ReactiveVersionState> get allVersionStates =>

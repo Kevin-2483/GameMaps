@@ -29,7 +29,10 @@ class _LegendManagerContent extends StatefulWidget {
 class _LegendManagerContentState extends State<_LegendManagerContent> {
   final LegendVfsService _vfsService = LegendVfsService();
   List<LegendItem> _legends = [];
+  List<String> _folders = [];
   bool _isLoading = true;
+  String _currentPath = ''; // 当前文件夹路径
+  List<String> _pathHistory = []; // 路径历史，用于面包屑导航
 
   @override
   void initState() {
@@ -40,9 +43,13 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   Future<void> _loadLegends() async {
     setState(() => _isLoading = true);
     try {
-      final legends = await _vfsService.getAllLegends();
+      final legends = await _vfsService.getAllLegends(
+        _currentPath.isEmpty ? null : _currentPath,
+      );
+      final folders = await _loadFolders();
       setState(() {
         _legends = legends;
+        _folders = folders;
         _isLoading = false;
       });
     } catch (e) {
@@ -51,6 +58,27 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         final l10n = AppLocalizations.of(context)!;
         _showErrorSnackBar(l10n.loadLegendsFailed(e.toString()));
       }
+    }
+  }
+
+  Future<List<String>> _loadFolders() async {
+    try {
+      final allFolders = await _vfsService.getAllFolders();
+
+      // 只返回当前路径下的直接子文件夹
+      if (_currentPath.isEmpty) {
+        return allFolders.where((folder) => !folder.contains('/')).toList();
+      } else {
+        final prefix = '$_currentPath/';
+        return allFolders
+            .where((folder) => folder.startsWith(prefix))
+            .map((folder) => folder.substring(prefix.length))
+            .where((relativePath) => !relativePath.contains('/'))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('加载文件夹失败: $e');
+      return [];
     }
   }
 
@@ -93,7 +121,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             );
-            await _vfsService.saveLegend(legendItem);
+            await _vfsService.saveLegend(
+              legendItem,
+              _currentPath.isEmpty ? null : _currentPath,
+            );
             await _loadLegends();
             _showSuccessSnackBar(l10n.legendAddedSuccessfully);
           } catch (e) {
@@ -232,13 +263,107 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     if (confirmed == true) {
       try {
-        await _vfsService.deleteLegend(legend.title);
+        await _vfsService.deleteLegend(
+          legend.title,
+          _currentPath.isEmpty ? null : _currentPath,
+        );
         await _loadLegends();
         _showSuccessSnackBar(l10n.legendDeletedSuccessfully);
       } catch (e) {
         _showErrorSnackBar(l10n.deleteLegendFailed(e.toString()));
       }
     }
+  }
+
+  /// 导航到指定文件夹
+  void _navigateToFolder(String folderName) {
+    setState(() {
+      _pathHistory.add(_currentPath);
+      if (_currentPath.isEmpty) {
+        _currentPath = folderName;
+      } else {
+        _currentPath = '$_currentPath/$folderName';
+      }
+    });
+    _loadLegends();
+  }
+
+  /// 返回上级文件夹
+  void _navigateBack() {
+    if (_pathHistory.isNotEmpty) {
+      setState(() {
+        _currentPath = _pathHistory.removeLast();
+      });
+      _loadLegends();
+    }
+  }
+
+  /// 导航到根目录
+  void _navigateToRoot() {
+    setState(() {
+      _currentPath = '';
+      _pathHistory.clear();
+    });
+    _loadLegends();
+  }
+
+  /// 创建新文件夹
+  Future<void> _createFolder() async {
+    final l10n = AppLocalizations.of(context)!;
+    final folderName = await _showCreateFolderDialog(l10n);
+
+    if (folderName != null && folderName.isNotEmpty) {
+      try {
+        final fullPath = _currentPath.isEmpty
+            ? folderName
+            : '$_currentPath/$folderName';
+        final success = await _vfsService.createFolder(fullPath);
+
+        if (success) {
+          _showSuccessSnackBar('文件夹创建成功');
+          await _loadLegends();
+        } else {
+          _showErrorSnackBar('文件夹创建失败');
+        }
+      } catch (e) {
+        _showErrorSnackBar('文件夹创建失败: ${e.toString()}');
+      }
+    }
+  }
+
+  /// 显示创建文件夹对话框
+  Future<String?> _showCreateFolderDialog(AppLocalizations l10n) async {
+    final TextEditingController controller = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('创建文件夹'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: '文件夹名称',
+            hintText: '输入文件夹名称',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.of(context).pop(name);
+              }
+            },
+            child: const Text('创建'),
+          ),
+        ],
+      ),
+    );
   }
 
   int _calculateCrossAxisCount(BuildContext context) {
@@ -254,6 +379,15 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       appBar: AppBar(
         title: Text(l10n.legendManager),
         actions: [
+          // 创建文件夹按钮
+          ConfigAwareAppBarAction(
+            featureId: 'DebugMode',
+            action: IconButton(
+              onPressed: _createFolder,
+              icon: const Icon(Icons.create_new_folder),
+              tooltip: '创建文件夹',
+            ),
+          ),
           // 调试模式功能
           ConfigAwareAppBarAction(
             featureId: 'DebugMode',
@@ -262,6 +396,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                 switch (value) {
                   case 'add':
                     _addLegend();
+                    break;
+                  case 'root':
+                    _navigateToRoot();
                     break;
                 }
               },
@@ -273,51 +410,104 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                     title: Text('添加图例'),
                   ),
                 ),
+                const PopupMenuItem(
+                  value: 'root',
+                  child: ListTile(
+                    leading: Icon(Icons.home),
+                    title: Text('回到根目录'),
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _legends.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          // 面包屑导航
+          if (_currentPath.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
                 children: [
-                  const Icon(Icons.legend_toggle, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.legendManagerEmpty,
-                    style: const TextStyle(fontSize: 18),
+                  IconButton(
+                    onPressed: _navigateBack,
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: '返回上级',
                   ),
-                  const SizedBox(height: 8),
-                  Text(l10n.addLegend),
+                  Expanded(
+                    child: Text(
+                      '当前位置: ${_currentPath.isEmpty ? '根目录' : _currentPath}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _navigateToRoot,
+                    child: const Text('根目录'),
+                  ),
                 ],
               ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: _calculateCrossAxisCount(context),
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 2.5, // 长方形卡片比例
-                ),
-                itemCount: _legends.length,
-                itemBuilder: (context, index) {
-                  final legend = _legends[index];
-                  return _LegendCard(
-                    legend: legend,
-                    onDelete: () => _deleteLegend(legend),
-                    onTap: () {
-                      // 暂时不实现点击事件
-                    },
-                  );
-                },
-              ),
             ),
+          // 内容区域
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _legends.isEmpty && _folders.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.legend_toggle,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.legendManagerEmpty,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(l10n.addLegend),
+                      ],
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: _calculateCrossAxisCount(context),
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 2.5, // 长方形卡片比例
+                      ),
+                      itemCount: _folders.length + _legends.length,
+                      itemBuilder: (context, index) {
+                        if (index < _folders.length) {
+                          // 文件夹项
+                          final folderName = _folders[index];
+                          return _FolderCard(
+                            folderName: folderName,
+                            onTap: () => _navigateToFolder(folderName),
+                          );
+                        } else {
+                          // 图例项
+                          final legendIndex = index - _folders.length;
+                          final legend = _legends[legendIndex];
+                          return _LegendCard(
+                            legend: legend,
+                            onDelete: () => _deleteLegend(legend),
+                            onTap: () {
+                              // 暂时不实现点击事件
+                            },
+                          );
+                        }
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -430,6 +620,75 @@ class _LegendCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FolderCard extends StatelessWidget {
+  final String folderName;
+  final VoidCallback onTap;
+
+  const _FolderCard({required this.folderName, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          ),
+          child: Row(
+            children: [
+              // 左半部分：文件夹图标
+              Expanded(
+                flex: 1,
+                child: Container(
+                  height: double.infinity,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  child: const Icon(
+                    Icons.folder,
+                    size: 48,
+                    color: Colors.amber,
+                  ),
+                ),
+              ),
+              // 右半部分：文件夹名称
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        folderName,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '文件夹',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -64,6 +64,7 @@ class VfsFileOpenConfig {
     resizable: true,
     barrierDismissible: true,
   );
+
   /// 为Markdown查看器创建默认配置
   static const VfsFileOpenConfig forMarkdown = VfsFileOpenConfig(
     widthRatio: 0.85,
@@ -159,7 +160,8 @@ class VfsFileOpenerService {
   }) async {
     final fileType = _getFileType(vfsPath);
     final defaultConfig = _getDefaultConfig(fileType);
-    final finalConfig = config ?? defaultConfig;    switch (fileType) {
+    final finalConfig = config ?? defaultConfig;
+    switch (fileType) {
       case VfsFileType.image:
         await _openImageFile(context, vfsPath, finalConfig, fileInfo);
         break;
@@ -210,6 +212,7 @@ class VfsFileOpenerService {
       config: config,
     );
   }
+
   /// 打开Markdown文件
   Future<void> _openMarkdownFile(
     BuildContext context,
@@ -288,7 +291,8 @@ class VfsFileOpenerService {
       case 'avi':
       case 'mov':
       case 'wmv':
-        return VfsFileType.video;      case 'mp3':
+        return VfsFileType.video;
+      case 'mp3':
       case 'wav':
       case 'flac':
       case 'aac':
@@ -310,6 +314,7 @@ class VfsFileOpenerService {
         return VfsFileType.unknown;
     }
   }
+
   /// 获取默认配置
   VfsFileOpenConfig _getDefaultConfig(VfsFileType fileType) {
     switch (fileType) {
@@ -348,7 +353,8 @@ class VfsFileOpenerService {
           children: [
             Text('文件名: $fileName'),
             Text('文件类型: .$extension'),
-            const SizedBox(height: 16),            const Text('当前支持的文件类型:'),
+            const SizedBox(height: 16),
+            const Text('当前支持的文件类型:'),
             const Text('• 图片: png, jpg, jpeg, gif, bmp, webp, svg'),
             const Text('• 视频: mp4, avi, mov, wmv'),
             const Text('• 文本: txt, log, csv, json'),

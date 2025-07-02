@@ -103,7 +103,8 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
           _addLog('Parsed response: $response');
           _addLog('Received response from worker: ${response['type']}');
 
-          final responseType = response['type'] as String?;          if (responseType == 'externalFunctionCall') {
+          final responseType = response['type'] as String?;
+          if (responseType == 'externalFunctionCall') {
             _addLog(
               'Processing external function call: ${response['functionName']}',
             );

@@ -13,14 +13,18 @@ abstract class VfsMapService {
   Future<MapItem?> getMapByTitle(String title, [String? folderPath]);
   Future<String> saveMap(MapItem map, [String? folderPath]); // 返回标题作为标识符
   Future<void> deleteMap(String mapTitle, [String? folderPath]);
-  
+
   // 目录操作
   Future<List<String>> getFolders([String? parentPath]);
   Future<void> createFolder(String folderPath);
   Future<void> deleteFolder(String folderPath);
   Future<void> moveMap(String mapTitle, String? fromFolder, String? toFolder);
-  
-  Future<void> updateMapMeta(String mapTitle, MapItem map, [String? folderPath]);
+
+  Future<void> updateMapMeta(
+    String mapTitle,
+    MapItem map, [
+    String? folderPath,
+  ]);
   // 图层操作 - 使用mapTitle作为地图标识符
   Future<List<MapLayer>> getMapLayers(
     String mapTitle, [
@@ -160,8 +164,16 @@ abstract class VfsMapService {
     String? sourceVersion,
     String? folderPath,
   ]);
-  Future<void> deleteMapVersion(String mapTitle, String version, [String? folderPath]);
-  Future<bool> mapVersionExists(String mapTitle, String version, [String? folderPath]);
+  Future<void> deleteMapVersion(
+    String mapTitle,
+    String version, [
+    String? folderPath,
+  ]);
+  Future<bool> mapVersionExists(
+    String mapTitle,
+    String version, [
+    String? folderPath,
+  ]);
   Future<void> copyVersionData(
     String mapTitle,
     String sourceVersion,
@@ -178,16 +190,39 @@ abstract class VfsMapService {
     DateTime? updatedAt,
     String? folderPath,
   });
-  Future<String?> getVersionName(String mapTitle, String versionId, [String? folderPath]);
-  Future<Map<String, String>> getAllVersionNames(String mapTitle, [String? folderPath]);
-  Future<void> deleteVersionMetadata(String mapTitle, String versionId, [String? folderPath]);
+  Future<String?> getVersionName(
+    String mapTitle,
+    String versionId, [
+    String? folderPath,
+  ]);
+  Future<Map<String, String>> getAllVersionNames(
+    String mapTitle, [
+    String? folderPath,
+  ]);
+  Future<void> deleteVersionMetadata(
+    String mapTitle,
+    String versionId, [
+    String? folderPath,
+  ]);
 
   // 资产管理 - 每个地图独立的资产存储
-  Future<String> saveAsset(String mapTitle, Uint8List data, String? mimeType, [String? folderPath]);
-  Future<Uint8List?> getAsset(String mapTitle, String hash, [String? folderPath]);
+  Future<String> saveAsset(
+    String mapTitle,
+    Uint8List data,
+    String? mimeType, [
+    String? folderPath,
+  ]);
+  Future<Uint8List?> getAsset(
+    String mapTitle,
+    String hash, [
+    String? folderPath,
+  ]);
   Future<void> deleteAsset(String mapTitle, String hash, [String? folderPath]);
   Future<void> cleanupUnusedAssets(String mapTitle, [String? folderPath]);
-  Future<Map<String, int>> getAssetUsageStats(String mapTitle, [String? folderPath]);
+  Future<Map<String, int>> getAssetUsageStats(
+    String mapTitle, [
+    String? folderPath,
+  ]);
 
   // 本地化支持 - 使用mapTitle作为地图标识符
   Future<Map<String, String>> getMapLocalizations(String mapTitle);

@@ -5,27 +5,28 @@ import '../../../services/audio/audio_player_service.dart';
 class AudioPlayerWidget extends StatefulWidget {
   /// 音频源（VFS路径或网络URL）
   final String source;
-  
+
   /// 标题
   final String title;
-  
+
   /// 艺术家
   final String? artist;
-  
+
   /// 专辑
   final String? album;
-  
+
   /// 是否为VFS路径
   final bool isVfsPath;
-    /// 播放配置
+
+  /// 播放配置
   final AudioPlayerConfig config;
-  
+
   /// 是否连接到现有播放器实例（而不是创建新实例）
   final bool connectToExisting;
-  
+
   /// 错误回调
   final Function(String)? onError;
-  
+
   /// 是否插播到队列最前并立即播放
   final bool forcePlayFirst;
 
@@ -51,9 +52,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   late final AudioPlayerService _audioService;
   late final AnimationController _progressAnimationController;
   late final AnimationController _volumeAnimationController;
-    bool _showVolumeSlider = false;
+  bool _showVolumeSlider = false;
   bool _showEqualizerPanel = false;
-  bool _isMinimized = false;  
+  bool _isMinimized = false;
   bool _showPlaylistPanel = false; // 播放列表面板显示状态
 
   @override
@@ -99,11 +100,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     _volumeAnimationController.dispose();
     super.dispose();
   }
+
   /// 初始化播放器
   Future<void> _initializePlayer() async {
     try {
       await _audioService.initialize();
-      
+
       // 添加播放列表项
       final playlistItem = PlaylistItem(
         source: widget.source,
@@ -112,10 +114,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         album: widget.album,
         isVfsPath: widget.isVfsPath,
       );
-      
+
       _audioService.clearPlaylist();
       _audioService.addToPlaylist(playlistItem);
-      
+
       // 如果配置要求自动播放
       if (widget.config.autoPlay) {
         await _audioService.playFromPlaylist(0);
@@ -123,7 +125,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     } catch (e) {
       widget.onError?.call('初始化播放器失败: $e');
     }
-  }  /// 检查当前播放状态（连接到现有播放器时使用）
+  }
+
+  /// 检查当前播放状态（连接到现有播放器时使用）
   Future<void> _checkCurrentPlayingState() async {
     try {
       _audioService.forceRefreshUI();
@@ -163,7 +167,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       print('🎵 连接到现有播放器完成:');
       print('  - 当前播放: ${_audioService.currentSource}');
       print('  - 播放状态: ${_audioService.state}');
-      print('  - 播放进度: ${_audioService.currentPosition}/${_audioService.totalDuration}');
+      print(
+        '  - 播放进度: ${_audioService.currentPosition}/${_audioService.totalDuration}',
+      );
       print('  - 播放列表长度: ${_audioService.playlist.length}');
       print('  - 当前索引: ${_audioService.currentIndex}');
       print('  - 是否播放我们的音频: ${_isPlayingOurAudio()}');
@@ -191,28 +197,24 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         children: [
           // 播放器头部
           _buildPlayerHeader(),
-          
+
           // 专辑封面/可视化区域
-          Expanded(
-            flex: 3,
-            child: _buildArtworkArea(),
-          ),
-          
+          Expanded(flex: 3, child: _buildArtworkArea()),
+
           // 音频信息区域
           _buildAudioInfo(),
-          
+
           // 进度条区域
           _buildProgressArea(),
-          
+
           // 主控制按钮
           _buildMainControls(),
-          
+
           // 功能按钮区域
           _buildFunctionButtons(),
-          
+
           // 音量/均衡器面板
-          if (_showVolumeSlider || _showEqualizerPanel)
-            _buildControlPanels(),
+          if (_showVolumeSlider || _showEqualizerPanel) _buildControlPanels(),
         ],
       ),
     );
@@ -226,10 +228,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
@@ -244,9 +243,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             ),
             child: const Icon(Icons.music_note, size: 32),
           ),
-          
+
           const SizedBox(width: 12),
-            // 音频信息
+          // 音频信息
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +257,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (_audioService.currentItem?.artist != null || widget.artist != null)
+                if (_audioService.currentItem?.artist != null ||
+                    widget.artist != null)
                   Text(
                     _audioService.currentItem?.artist ?? widget.artist!,
                     style: Theme.of(context).textTheme.bodySmall,
@@ -268,10 +268,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               ],
             ),
           ),
-          
+
           // 播放控制按钮
           _buildMiniControls(),
-          
+
           // 展开按钮
           IconButton(
             onPressed: () => setState(() => _isMinimized = false),
@@ -289,10 +289,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text(
-            '音频播放器',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('音频播放器', style: Theme.of(context).textTheme.titleMedium),
           const Spacer(),
           // 播放列表按钮
           IconButton(
@@ -361,7 +358,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               children: [
                 const Icon(Icons.queue_music),
                 const SizedBox(width: 8),
-                const Text('播放列表', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  '播放列表',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -372,7 +372,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             const Divider(),
             if (playlist.isEmpty)
               const Expanded(
-                child: Center(child: Text('播放列表为空', style: TextStyle(color: Colors.grey))),
+                child: Center(
+                  child: Text('播放列表为空', style: TextStyle(color: Colors.grey)),
+                ),
               )
             else
               Expanded(
@@ -389,8 +391,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                     });
                     // 拖拽后自动播放当前曲目的新索引
                     if (currentSource != null) {
-                      final newIndexInList = _audioService.playlist.indexWhere((e) => e.source == currentSource);
-                      if (newIndexInList != -1 && _audioService.currentIndex != newIndexInList) {
+                      final newIndexInList = _audioService.playlist.indexWhere(
+                        (e) => e.source == currentSource,
+                      );
+                      if (newIndexInList != -1 &&
+                          _audioService.currentIndex != newIndexInList) {
                         await _audioService.playFromPlaylist(newIndexInList);
                         setState(() {});
                       }
@@ -401,9 +406,24 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                     final isCurrent = _audioService.currentIndex == index;
                     return ListTile(
                       key: ValueKey(item.source),
-                      leading: Icon(isCurrent ? Icons.play_arrow : Icons.music_note, color: isCurrent ? Theme.of(context).colorScheme.primary : null),
-                      title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: item.artist != null ? Text(item.artist!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                      leading: Icon(
+                        isCurrent ? Icons.play_arrow : Icons.music_note,
+                        color: isCurrent
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      title: Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: item.artist != null
+                          ? Text(
+                              item.artist!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : null,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -412,7 +432,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                             tooltip: '移除',
                             onPressed: () {
                               setState(() {
-                                _audioService.removeFromPlaylistBySource(item.source);
+                                _audioService.removeFromPlaylistBySource(
+                                  item.source,
+                                );
                               });
                             },
                           ),
@@ -470,11 +492,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           ],
         ),
       ),
-      child: const Center(
-        child: Icon(Icons.equalizer, size: 80),
-      ),
+      child: const Center(child: Icon(Icons.equalizer, size: 80)),
     );
   }
+
   /// 构建音频信息
   Widget _buildAudioInfo() {
     // 获取当前正在播放的音频信息，如果没有则使用widget的信息
@@ -482,7 +503,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     final displayTitle = currentItem?.title ?? widget.title;
     final displayArtist = currentItem?.artist ?? widget.artist;
     final displayAlbum = currentItem?.album ?? widget.album;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
@@ -524,7 +545,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
-        children: [          // 进度条
+        children: [
+          // 进度条
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 4,
@@ -533,21 +555,27 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             child: Slider(
               value: _audioService.totalDuration.inSeconds > 0
                   ? (_audioService.currentPosition.inSeconds.toDouble() /
-                      _audioService.totalDuration.inSeconds.toDouble()).clamp(0.0, 1.0)
+                            _audioService.totalDuration.inSeconds.toDouble())
+                        .clamp(0.0, 1.0)
                   : 0.0,
-              onChanged: _audioService.totalDuration.inSeconds > 0 ? (value) {
-                final position = Duration(
-                  seconds: (value * _audioService.totalDuration.inSeconds).round(),
-                );
-                print('🎵 进度条拖拽到: ${_formatDuration(position)} / ${_formatDuration(_audioService.totalDuration)}');
-                // 异步调用seek，不阻塞UI
-                _audioService.seek(position).catchError((e) {
-                  print('进度条拖拽跳转失败: $e');
-                });
-              } : null, // 如果没有总时长，禁用拖拽
+              onChanged: _audioService.totalDuration.inSeconds > 0
+                  ? (value) {
+                      final position = Duration(
+                        seconds: (value * _audioService.totalDuration.inSeconds)
+                            .round(),
+                      );
+                      print(
+                        '🎵 进度条拖拽到: ${_formatDuration(position)} / ${_formatDuration(_audioService.totalDuration)}',
+                      );
+                      // 异步调用seek，不阻塞UI
+                      _audioService.seek(position).catchError((e) {
+                        print('进度条拖拽跳转失败: $e');
+                      });
+                    }
+                  : null, // 如果没有总时长，禁用拖拽
             ),
           ),
-          
+
           // 时间显示
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -576,24 +604,29 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         children: [
           // 上一首
           IconButton(
-            onPressed: _audioService.hasPlaylist ? _audioService.playPrevious : null,
+            onPressed: _audioService.hasPlaylist
+                ? _audioService.playPrevious
+                : null,
             icon: const Icon(Icons.skip_previous),
             iconSize: 36,
             tooltip: '上一首',
           ),
-            // 快退
+          // 快退
           IconButton(
             onPressed: () {
-              final newPosition = _audioService.currentPosition - const Duration(seconds: 10);
-              _audioService.seek(newPosition.isNegative ? Duration.zero : newPosition).catchError((e) {
-                print('快退操作失败: $e');
-              });
+              final newPosition =
+                  _audioService.currentPosition - const Duration(seconds: 10);
+              _audioService
+                  .seek(newPosition.isNegative ? Duration.zero : newPosition)
+                  .catchError((e) {
+                    print('快退操作失败: $e');
+                  });
             },
             icon: const Icon(Icons.replay_10),
             iconSize: 28,
             tooltip: '快退10秒',
           ),
-          
+
           // 播放/暂停
           Container(
             decoration: BoxDecoration(
@@ -610,10 +643,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               tooltip: _audioService.isPlaying ? '暂停' : '播放',
             ),
           ),
-            // 快进
+          // 快进
           IconButton(
             onPressed: () {
-              final newPosition = _audioService.currentPosition + const Duration(seconds: 10);
+              final newPosition =
+                  _audioService.currentPosition + const Duration(seconds: 10);
               if (newPosition < _audioService.totalDuration) {
                 _audioService.seek(newPosition).catchError((e) {
                   print('快进操作失败: $e');
@@ -624,10 +658,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             iconSize: 28,
             tooltip: '快进10秒',
           ),
-          
+
           // 下一首
           IconButton(
-            onPressed: _audioService.hasPlaylist ? _audioService.playNext : null,
+            onPressed: _audioService.hasPlaylist
+                ? _audioService.playNext
+                : null,
             icon: const Icon(Icons.skip_next),
             iconSize: 36,
             tooltip: '下一首',
@@ -646,11 +682,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         children: [
           // 音量控制
           IconButton(
-            onPressed: () => setState(() => _showVolumeSlider = !_showVolumeSlider),
+            onPressed: () =>
+                setState(() => _showVolumeSlider = !_showVolumeSlider),
             icon: Icon(_getVolumeIcon()),
             tooltip: '音量控制',
           ),
-          
+
           // 播放速度
           PopupMenuButton<double>(
             icon: const Icon(Icons.speed),
@@ -665,21 +702,24 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               const PopupMenuItem(value: 2.0, child: Text('2.0x')),
             ],
           ),
-          
+
           // 音频平衡
           IconButton(
-            onPressed: () => setState(() => _showEqualizerPanel = !_showEqualizerPanel),
+            onPressed: () =>
+                setState(() => _showEqualizerPanel = !_showEqualizerPanel),
             icon: const Icon(Icons.tune),
             tooltip: '音频均衡器',
           ),
-          
+
           // 静音切换
           IconButton(
             onPressed: _audioService.toggleMute,
-            icon: Icon(_audioService.muted ? Icons.volume_off : Icons.volume_up),
+            icon: Icon(
+              _audioService.muted ? Icons.volume_off : Icons.volume_up,
+            ),
             tooltip: _audioService.muted ? '取消静音' : '静音',
           ),
-          
+
           // 更多选项
           PopupMenuButton<String>(
             onSelected: _handleMenuAction,
@@ -723,10 +763,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -743,10 +780,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '音量控制',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('音量控制', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -774,10 +808,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        Text(
-          '音频平衡',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('音频平衡', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -848,15 +879,15 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          onPressed: _audioService.hasPlaylist ? _audioService.playPrevious : null,
+          onPressed: _audioService.hasPlaylist
+              ? _audioService.playPrevious
+              : null,
           icon: const Icon(Icons.skip_previous),
           iconSize: 20,
         ),
         IconButton(
           onPressed: _togglePlayPause,
-          icon: Icon(
-            _audioService.isPlaying ? Icons.pause : Icons.play_arrow,
-          ),
+          icon: Icon(_audioService.isPlaying ? Icons.pause : Icons.play_arrow),
           iconSize: 24,
         ),
         IconButton(
@@ -866,7 +897,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         ),
       ],
     );
-  }  /// 切换播放/暂停
+  }
+
+  /// 切换播放/暂停
   void _togglePlayPause() async {
     try {
       if (_audioService.isPlaying) {
@@ -894,7 +927,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         } else {
           // 如果当前音频源不是我们的音频，找到我们的音频并播放
           int targetIndex = _getOurAudioIndex();
-          
+
           if (targetIndex >= 0) {
             await _audioService.playFromPlaylist(targetIndex);
           } else {
@@ -907,7 +940,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               isVfsPath: widget.isVfsPath,
             );
             _audioService.addToPlaylist(playlistItem);
-            await _audioService.playFromPlaylist(_audioService.playlist.length - 1);
+            await _audioService.playFromPlaylist(
+              _audioService.playlist.length - 1,
+            );
           }
         }
       }
@@ -991,7 +1026,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             if (widget.album != null) _buildInfoRow('专辑', widget.album!),
             _buildInfoRow('源', widget.isVfsPath ? 'VFS文件' : '网络URL'),
             _buildInfoRow('时长', _formatDuration(_audioService.totalDuration)),
-            _buildInfoRow('当前位置', _formatDuration(_audioService.currentPosition)),
+            _buildInfoRow(
+              '当前位置',
+              _formatDuration(_audioService.currentPosition),
+            ),
             _buildInfoRow('播放速度', '${_audioService.playbackRate}x'),
             _buildInfoRow('音量', '${(_audioService.volume * 100).round()}%'),
           ],
@@ -1021,10 +1059,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(value, style: const TextStyle(color: Colors.grey)),
           ),
         ],
       ),
@@ -1035,12 +1070,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   bool _isPlayingOurAudio() {
     return _audioService.currentSource == widget.source;
   }
-  
+
   /// 检查我们的音频是否在播放列表中
   bool _isInPlaylist() {
     return _audioService.playlist.any((item) => item.source == widget.source);
   }
-  
+
   /// 获取我们的音频在播放列表中的索引
   int _getOurAudioIndex() {
     for (int i = 0; i < _audioService.playlist.length; i++) {

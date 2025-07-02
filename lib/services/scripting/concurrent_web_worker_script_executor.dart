@@ -308,8 +308,9 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       if (responseExecutionId == null) {
         _addLog('Received message without executionId, ignoring');
         return;
-      }      final responseType = response['type'] as String?;
-      
+      }
+      final responseType = response['type'] as String?;
+
       // 对于 fire-and-forget 函数调用，即使任务已完成也要处理
       if (responseType == 'fireAndForgetFunctionCall') {
         _addLog(
@@ -330,7 +331,8 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
 
       _addLog(
         'Received message type: $responseType for task: $responseExecutionId, content: $response',
-      );      switch (responseType) {
+      );
+      switch (responseType) {
         case 'started':
           _handleTaskStarted(responseExecutionId);
           break;
@@ -898,6 +900,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
     _externalFunctions.clear();
     _addLog('All external functions cleared');
   }
+
   @override
   void sendMapDataUpdate(Map<String, dynamic> data) {
     // 向所有Worker发送地图数据更新

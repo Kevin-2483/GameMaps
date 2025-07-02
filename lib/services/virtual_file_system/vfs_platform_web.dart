@@ -22,7 +22,11 @@ class VfsPlatformIO {
   }
 
   /// Web平台不支持生成临时文件
-  static Future<String?> generateTempFile(String vfsPath, List<int> data, String? mimeType) async {
+  static Future<String?> generateTempFile(
+    String vfsPath,
+    List<int> data,
+    String? mimeType,
+  ) async {
     // Web平台不支持生成临时文件，应该使用Data URI或Blob URL
     throw UnsupportedError('Web平台不支持生成临时文件，请使用Data URI或Blob URL');
   }

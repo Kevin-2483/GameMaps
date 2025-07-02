@@ -283,23 +283,25 @@ void _sendErrorMessage(
 Future<void> _initializeHetuEngine(IsolateManagerController controller) async {
   try {
     _hetuEngine = Hetu();
-    
+
     // 准备所有外部函数（包括内部函数）
     final Map<String, Function> allExternalFunctions = {};
-    
+
     // 添加同步内部函数
     allExternalFunctions.addAll(_internalFunctions);
-    
+
     // 添加异步内部函数
-    allExternalFunctions.addAll(_asyncInternalFunctions);    // 使用标准的方式初始化 Hetu 引擎（包含所有内置绑定）
+    allExternalFunctions.addAll(
+      _asyncInternalFunctions,
+    ); // 使用标准的方式初始化 Hetu 引擎（包含所有内置绑定）
     _hetuEngine!.init(
       externalFunctions: allExternalFunctions,
       // 确保加载所有标准的类绑定和扩展方法
     );
-      // 自动检测并注册混淆后的类型名
+    // 自动检测并注册混淆后的类型名
     _autoRegisterObfuscatedTypes();
     _addWorkerLog('自动类型别名注册完成');
-    
+
     _addWorkerLog('Hetu script engine initialized successfully');
 
     // 记录可用的函数
@@ -361,12 +363,15 @@ Future<void> _executeScript(
     }
 
     // 只需要绑定外部函数（不包括内部函数，因为它们已经在初始化时绑定了）
-    final uniqueExternalFunctions = externalFunctions.where(
-      (name) => !_internalFunctions.containsKey(name) && 
-                !_asyncInternalFunctions.containsKey(name),
-    ).toList();
+    final uniqueExternalFunctions = externalFunctions
+        .where(
+          (name) =>
+              !_internalFunctions.containsKey(name) &&
+              !_asyncInternalFunctions.containsKey(name),
+        )
+        .toList();
 
-    _addWorkerLog('需要绑定的外部函数: $uniqueExternalFunctions');    // 绑定外部函数（需要跨线程通信的）
+    _addWorkerLog('需要绑定的外部函数: $uniqueExternalFunctions'); // 绑定外部函数（需要跨线程通信的）
     for (final functionName in uniqueExternalFunctions) {
       // 检查是否是需要等待结果的函数
       final awaitableFunctions = [
@@ -381,8 +386,10 @@ Future<void> _executeScript(
         'getStickyNotes', 'getStickyNoteById', 'getElementsInStickyNote',
         'filterStickyNotesByTags', 'filterStickyNoteElementsByTags',
         // 图例相关函数（读取类）
-        'getLegendGroups', 'getLegendGroupById', 'getLegendItems', 
-        'getLegendItemById', 'filterLegendGroupsByTags', 'filterLegendItemsByTags',
+        'getLegendGroups', 'getLegendGroupById', 'getLegendItems',
+        'getLegendItemById',
+        'filterLegendGroupsByTags',
+        'filterLegendItemsByTags',
       ];
 
       final isAwaitableFunction = awaitableFunctions.contains(functionName);
@@ -634,17 +641,17 @@ void _disposeHetuEngine(IsolateManagerController controller) {
     'timestamp': DateTime.now().millisecondsSinceEpoch,
   });
 }
+
 void _autoRegisterObfuscatedTypes() {
   if (_hetuEngine == null) return;
 
-  final typeInstances = <String, dynamic>{
-    'Future': Future.value(),
-  };
+  final typeInstances = <String, dynamic>{'Future': Future.value()};
 
   for (final entry in typeInstances.entries) {
     final logicalName = entry.key;
     final instance = entry.value;
-    final fullTypeName = instance.runtimeType.toString(); // 如 minified:Q<dynamic>
+    final fullTypeName = instance.runtimeType
+        .toString(); // 如 minified:Q<dynamic>
     _addWorkerLog('类型映射: $logicalName -> $fullTypeName');
 
     // 提取核心混淆名，如 "minified:Q"
@@ -672,7 +679,9 @@ void _autoRegisterObfuscatedTypes() {
         _addWorkerLog('注册核心混淆名: $coreTypeName -> $logicalName');
       }
     } catch (e) {
-      _addWorkerLog('注册类型失败: $fullTypeName/$coreTypeName -> $logicalName, 错误: $e');
+      _addWorkerLog(
+        '注册类型失败: $fullTypeName/$coreTypeName -> $logicalName, 错误: $e',
+      );
     }
   }
 }

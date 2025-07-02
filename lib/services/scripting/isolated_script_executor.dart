@@ -202,7 +202,9 @@ class IsolateScriptExecutor implements IScriptExecutor {
         final function = _externalFunctionHandlers[functionName]!;
         // Fire and Forget - 调用函数但不发送响应回 Worker
         Function.apply(function, arguments);
-        debugPrint('Fire-and-forget function $functionName executed successfully');
+        debugPrint(
+          'Fire-and-forget function $functionName executed successfully',
+        );
       } else {
         debugPrint('Warning: Fire-and-forget function $functionName not found');
       }

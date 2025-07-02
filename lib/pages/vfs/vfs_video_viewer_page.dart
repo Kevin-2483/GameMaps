@@ -51,7 +51,7 @@ class _VfsVideoViewerPageContent extends StatefulWidget {
 class _VfsVideoViewerPageContentState
     extends State<_VfsVideoViewerPageContent> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
-  
+
   bool _isLoading = true;
   String? _errorMessage;
   VfsFileInfo? _fileInfo;
@@ -195,11 +195,7 @@ class _VfsVideoViewerPageContentState
             const PopupMenuItem(
               value: 'copy_url',
               child: Row(
-                children: [
-                  Icon(Icons.copy),
-                  SizedBox(width: 8),
-                  Text('复制链接'),
-                ],
+                children: [Icon(Icons.copy), SizedBox(width: 8), Text('复制链接')],
               ),
             ),
           ],
@@ -244,10 +240,7 @@ class _VfsVideoViewerPageContentState
           children: [
             CircularProgressIndicator(color: Colors.white),
             SizedBox(height: 16),
-            Text(
-              '正在加载视频...',
-              style: TextStyle(color: Colors.white),
-            ),
+            Text('正在加载视频...', style: TextStyle(color: Colors.white)),
           ],
         ),
       ),
@@ -357,7 +350,10 @@ class _VfsVideoViewerPageContentState
               _buildInfoRow('大小', _formatFileSize(_fileInfo!.size)),
               _buildInfoRow('修改时间', _formatDateTime(_fileInfo!.modifiedAt)),
             ],
-            _buildInfoRow('文件类型', widget.vfsPath.split('.').last.toUpperCase() + ' 视频文件'),
+            _buildInfoRow(
+              '文件类型',
+              widget.vfsPath.split('.').last.toUpperCase() + ' 视频文件',
+            ),
           ],
         ),
         actions: [
@@ -385,10 +381,7 @@ class _VfsVideoViewerPageContentState
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(value, style: const TextStyle(color: Colors.grey)),
           ),
         ],
       ),

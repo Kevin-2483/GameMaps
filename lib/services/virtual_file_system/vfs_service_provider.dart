@@ -6,7 +6,9 @@ import 'vfs_permission_system.dart';
 import 'vfs_storage_service.dart';
 
 // 条件导入：分别导入不同平台的实现
-import 'vfs_platform_io.dart' if (dart.library.html) 'vfs_platform_web.dart' as platform;
+import 'vfs_platform_io.dart'
+    if (dart.library.html) 'vfs_platform_web.dart'
+    as platform;
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -220,7 +222,9 @@ class VfsServiceProvider {
     } catch (e) {
       debugPrint('Error during cache cleanup: $e');
     }
-  }  /// 清理临时文件（静态方法）
+  }
+
+  /// 清理临时文件（静态方法）
   static Future<void> cleanupTempFiles() async {
     await platform.VfsPlatformIO.cleanupTempFiles();
   }
@@ -467,13 +471,19 @@ class VfsServiceProvider {
         return _generateDataUri(fileContent.data, fileContent.mimeType);
       } else {
         // 客户端平台：生成临时文件路径
-        return await _generateTempFile(vfsPath, fileContent.data, fileContent.mimeType);
+        return await _generateTempFile(
+          vfsPath,
+          fileContent.data,
+          fileContent.mimeType,
+        );
       }
     } catch (e) {
       print('🔗 VfsServiceProvider: 生成文件URL失败 - $e');
       return null;
     }
-  }  /// Web平台：生成Data URI
+  }
+
+  /// Web平台：生成Data URI
   String _generateDataUri(Uint8List data, String? mimeType) {
     final mime = mimeType ?? 'application/octet-stream';
     final fileSizeMB = data.length / (1024 * 1024);
@@ -481,12 +491,16 @@ class VfsServiceProvider {
     // 对于大文件限制Data URI的使用
     if (data.length > 4 * 1024 * 1024) {
       // 4MB限制，提高Web端性能
-      throw Exception('文件过大（${fileSizeMB.toStringAsFixed(1)}MB，超过4MB限制），无法在Web平台生成URL');
+      throw Exception(
+        '文件过大（${fileSizeMB.toStringAsFixed(1)}MB，超过4MB限制），无法在Web平台生成URL',
+      );
     }
 
     // 对于接近限制的文件给出警告
     if (data.length > 2 * 1024 * 1024) {
-      print('🔗 VfsServiceProvider: 警告 - 文件较大（${fileSizeMB.toStringAsFixed(1)}MB），可能影响性能');
+      print(
+        '🔗 VfsServiceProvider: 警告 - 文件较大（${fileSizeMB.toStringAsFixed(1)}MB），可能影响性能',
+      );
     }
 
     final base64Data = _encodeBase64(data);
@@ -494,21 +508,32 @@ class VfsServiceProvider {
     print('🔗 VfsServiceProvider: 生成Data URI, 长度: ${dataUri.length}');
     return dataUri;
   }
+
   /// 客户端平台：生成临时文件路径
-  Future<String?> _generateTempFile(String vfsPath, Uint8List data, String? mimeType) async {
+  Future<String?> _generateTempFile(
+    String vfsPath,
+    Uint8List data,
+    String? mimeType,
+  ) async {
     // 这个方法只在客户端平台调用，Web平台不会执行到这里
     if (kIsWeb) return null;
 
     try {
-      return await platform.VfsPlatformIO.generateTempFile(vfsPath, data, mimeType);
+      return await platform.VfsPlatformIO.generateTempFile(
+        vfsPath,
+        data,
+        mimeType,
+      );
     } catch (e) {
       print('🔗 VfsServiceProvider: 生成临时文件失败 - $e');
       return null;
     }
   }
+
   /// Base64编码
   String _encodeBase64(Uint8List data) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     String result = '';
 
     for (int i = 0; i < data.length; i += 3) {

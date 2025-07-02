@@ -380,7 +380,7 @@ class ReactiveVersionAdapter {
         // 4. 如果没有会话数据，从VFS加载指定版本
         _mapDataBloc.add(
           LoadMapData(
-            mapTitle: _versionManager.mapTitle, 
+            mapTitle: _versionManager.mapTitle,
             version: versionId,
             folderPath: _versionManager.folderPath,
           ),

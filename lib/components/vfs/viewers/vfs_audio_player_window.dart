@@ -49,7 +49,8 @@ class VfsAudioPlayerWindow extends StatefulWidget {
       maxSize: finalConfig.maxSize,
       draggable: finalConfig.draggable,
       resizable: finalConfig.resizable,
-      barrierDismissible: finalConfig.barrierDismissible,      child: VfsAudioPlayerWindow(
+      barrierDismissible: finalConfig.barrierDismissible,
+      child: VfsAudioPlayerWindow(
         vfsPath: vfsPath,
         fileInfo: fileInfo,
         config: finalConfig,
@@ -120,7 +121,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
   void initState() {
     super.initState();
     _loadAudioInfo();
-    
+
     // 添加定期UI刷新机制，确保状态同步
     _uiRefreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
@@ -136,10 +137,11 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
     // 不在dispose中调用onClose，避免在组件销毁后操作Navigator
     super.dispose();
   }
+
   /// 加载音频信息
   Future<void> _loadAudioInfo() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -185,17 +187,15 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
 
     if (_isLoading) {
       return _buildLoadingWidget();
-    }    return AudioPlayerWidget(
+    }
+    return AudioPlayerWidget(
       source: widget.vfsPath,
       title: _getTitleFromFileInfo(),
       artist: _getArtistFromFileInfo(),
       isVfsPath: true,
       connectToExisting: true, // 连接到现有播放器实例
-      forcePlayFirst: true,    // 插播到队列最前并立即播放
-      config: const AudioPlayerConfig(
-        autoPlay: false,
-        looping: false,
-      ),
+      forcePlayFirst: true, // 插播到队列最前并立即播放
+      config: const AudioPlayerConfig(autoPlay: false, looping: false),
       onError: (message) {
         if (mounted) {
           setState(() {
@@ -299,6 +299,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
       ),
     );
   }
+
   /// 重试加载
   void _retryLoading() {
     if (mounted) {

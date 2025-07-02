@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 /// IO平台（移动端/桌面端）的VFS平台接口实现
-class VfsPlatformIO {  /// 获取临时目录
+class VfsPlatformIO {
+  /// 获取临时目录
   static Future<Directory> getTempDirectory() async {
     return await getTemporaryDirectory();
   }
@@ -16,6 +17,7 @@ class VfsPlatformIO {  /// 获取临时目录
   static File createFile(String path) {
     return File(path);
   }
+
   /// 清理VFS临时文件
   static Future<void> cleanupTempFiles() async {
     try {
@@ -30,8 +32,13 @@ class VfsPlatformIO {  /// 获取临时目录
       print('🔗 VfsPlatformIO: 清理临时文件失败 - $e');
     }
   }
+
   /// 生成临时文件
-  static Future<String?> generateTempFile(String vfsPath, List<int> data, String? mimeType) async {
+  static Future<String?> generateTempFile(
+    String vfsPath,
+    List<int> data,
+    String? mimeType,
+  ) async {
     try {
       print('🔗 VfsPlatformIO: 开始创建临时文件');
 
@@ -82,7 +89,8 @@ class VfsPlatformIO {  /// 获取临时目录
         extension = '.webm';
       } else if (mimeType.contains('video/ogg')) {
         extension = '.ogg';
-      } else if (mimeType.contains('video/quicktime') || mimeType.contains('video/mov')) {
+      } else if (mimeType.contains('video/quicktime') ||
+          mimeType.contains('video/mov')) {
         extension = '.mov';
       } else if (mimeType.contains('video/x-msvideo')) {
         extension = '.avi';

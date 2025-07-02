@@ -11,13 +11,16 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String?,
       displayName: json['displayName'] as String,
       avatarPath: json['avatarPath'] as String?,
-      avatarData:
-          const Uint8ListConverter().fromJson(json['avatarData'] as String?),
+      avatarData: const Uint8ListConverter().fromJson(
+        json['avatarData'] as String?,
+      ),
       theme: ThemePreferences.fromJson(json['theme'] as Map<String, dynamic>),
       mapEditor: MapEditorPreferences.fromJson(
-          json['mapEditor'] as Map<String, dynamic>),
-      layout:
-          LayoutPreferences.fromJson(json['layout'] as Map<String, dynamic>),
+        json['mapEditor'] as Map<String, dynamic>,
+      ),
+      layout: LayoutPreferences.fromJson(
+        json['layout'] as Map<String, dynamic>,
+      ),
       tools: ToolPreferences.fromJson(json['tools'] as Map<String, dynamic>),
       extensionSettings:
           json['extensionSettings'] as Map<String, dynamic>? ?? const {},
@@ -65,26 +68,28 @@ Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
     };
 
 MapEditorPreferences _$MapEditorPreferencesFromJson(
-        Map<String, dynamic> json) =>
-    MapEditorPreferences(
-      undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
-      zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
-      backgroundPattern: $enumDecodeNullable(
-              _$BackgroundPatternEnumMap, json['backgroundPattern']) ??
-          BackgroundPattern.checkerboard,
-      canvasBoundaryMargin:
-          (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
-    );
+  Map<String, dynamic> json,
+) => MapEditorPreferences(
+  undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
+  zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
+  backgroundPattern:
+      $enumDecodeNullable(
+        _$BackgroundPatternEnumMap,
+        json['backgroundPattern'],
+      ) ??
+      BackgroundPattern.checkerboard,
+  canvasBoundaryMargin:
+      (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
+);
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
-        MapEditorPreferences instance) =>
-    <String, dynamic>{
-      'undoHistoryLimit': instance.undoHistoryLimit,
-      'zoomSensitivity': instance.zoomSensitivity,
-      'backgroundPattern':
-          _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
-      'canvasBoundaryMargin': instance.canvasBoundaryMargin,
-    };
+  MapEditorPreferences instance,
+) => <String, dynamic>{
+  'undoHistoryLimit': instance.undoHistoryLimit,
+  'zoomSensitivity': instance.zoomSensitivity,
+  'backgroundPattern': _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
+  'canvasBoundaryMargin': instance.canvasBoundaryMargin,
+};
 
 const _$BackgroundPatternEnumMap = {
   BackgroundPattern.blank: 'blank',
@@ -94,10 +99,12 @@ const _$BackgroundPatternEnumMap = {
 
 LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
     LayoutPreferences(
-      panelCollapsedStates:
-          Map<String, bool>.from(json['panelCollapsedStates'] as Map),
-      panelAutoCloseStates:
-          Map<String, bool>.from(json['panelAutoCloseStates'] as Map),
+      panelCollapsedStates: Map<String, bool>.from(
+        json['panelCollapsedStates'] as Map,
+      ),
+      panelAutoCloseStates: Map<String, bool>.from(
+        json['panelAutoCloseStates'] as Map,
+      ),
       sidebarWidth: (json['sidebarWidth'] as num?)?.toDouble() ?? 300.0,
       compactMode: json['compactMode'] as bool? ?? false,
       showTooltips: json['showTooltips'] as bool? ?? true,
@@ -137,11 +144,13 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
-      customTags: (json['customTags'] as List<dynamic>?)
+      customTags:
+          (json['customTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      recentTags: (json['recentTags'] as List<dynamic>?)
+      recentTags:
+          (json['recentTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

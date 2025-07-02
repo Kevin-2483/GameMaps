@@ -148,9 +148,19 @@ class LegendVfsService {
   // }
 
   /// 构建图例文件夹路径
-  String _buildLegendPath(String title) {
+  String _buildLegendPath(String title, [String? folderPath]) {
     final sanitizedTitle = _sanitizeFileName(title);
-    return 'indexeddb://$_database/$_collection/$sanitizedTitle.legend';
+    final pathPrefix = 'indexeddb://$_database/$_collection';
+
+    if (folderPath != null && folderPath.isNotEmpty) {
+      // 清理文件夹路径，移除前后斜杠
+      final cleanFolderPath = folderPath.replaceAll(RegExp(r'^/+|/+$'), '');
+      if (cleanFolderPath.isNotEmpty) {
+        return '$pathPrefix/$cleanFolderPath/$sanitizedTitle.legend';
+      }
+    }
+
+    return '$pathPrefix/$sanitizedTitle.legend';
   }
 
   /// 清理文件名，确保符合文件系统要求
@@ -195,8 +205,8 @@ class LegendVfsService {
   }
 
   /// 添加或更新图例
-  Future<String> saveLegend(LegendItem legend) async {
-    final legendPath = _buildLegendPath(legend.title);
+  Future<String> saveLegend(LegendItem legend, [String? folderPath]) async {
+    final legendPath = _buildLegendPath(legend.title, folderPath);
 
     // 确保目录存在
     await _vfs.createDirectory(legendPath);
@@ -238,8 +248,8 @@ class LegendVfsService {
   }
 
   /// 获取图例
-  Future<LegendItem?> getLegend(String title) async {
-    final legendPath = _buildLegendPath(title);
+  Future<LegendItem?> getLegend(String title, [String? folderPath]) async {
+    final legendPath = _buildLegendPath(title, folderPath);
 
     try {
       // 检查目录是否存在
@@ -283,11 +293,14 @@ class LegendVfsService {
     }
   }
 
-  /// 获取所有图例标题
-  Future<List<String>> getAllLegendTitles() async {
+  /// 获取指定文件夹下的所有图例标题
+  Future<List<String>> getAllLegendTitles([String? folderPath]) async {
     try {
-      final rootPath = 'indexeddb://$_database/$_collection';
-      final entries = await _vfs.listDirectory(rootPath);
+      final basePath = folderPath != null && folderPath.isNotEmpty
+          ? 'indexeddb://$_database/$_collection/${folderPath.replaceAll(RegExp(r'^/+|/+$'), '')}'
+          : 'indexeddb://$_database/$_collection';
+
+      final entries = await _vfs.listDirectory(basePath);
 
       return entries
           .where((entry) => entry.isDirectory && entry.name.endsWith('.legend'))
@@ -300,13 +313,13 @@ class LegendVfsService {
     }
   }
 
-  /// 获取所有图例
-  Future<List<LegendItem>> getAllLegends() async {
-    final titles = await getAllLegendTitles();
+  /// 获取指定文件夹下的所有图例
+  Future<List<LegendItem>> getAllLegends([String? folderPath]) async {
+    final titles = await getAllLegendTitles(folderPath);
     final List<LegendItem> legends = [];
 
     for (final title in titles) {
-      final legend = await getLegend(title);
+      final legend = await getLegend(title, folderPath);
       if (legend != null) {
         legends.add(legend);
       }
@@ -316,8 +329,8 @@ class LegendVfsService {
   }
 
   /// 删除图例
-  Future<bool> deleteLegend(String title) async {
-    final legendPath = _buildLegendPath(title);
+  Future<bool> deleteLegend(String title, [String? folderPath]) async {
+    final legendPath = _buildLegendPath(title, folderPath);
 
     try {
       if (await _vfs.exists(legendPath)) {
@@ -344,8 +357,8 @@ class LegendVfsService {
   }
 
   /// 检查图例是否存在
-  Future<bool> exists(String title) async {
-    final legendPath = _buildLegendPath(title);
+  Future<bool> exists(String title, [String? folderPath]) async {
+    final legendPath = _buildLegendPath(title, folderPath);
     return await _vfs.exists(legendPath);
   }
 
@@ -383,5 +396,88 @@ class LegendVfsService {
       'database': _database,
       'collection': _collection,
     };
+  }
+
+  /// 获取所有文件夹
+  Future<List<String>> getAllFolders() async {
+    try {
+      final basePath = 'indexeddb://$_database/$_collection';
+      final entries = await _vfs.listDirectory(basePath);
+
+      final folders = <String>[];
+
+      for (final entry in entries) {
+        if (entry.isDirectory && !entry.name.endsWith('.legend')) {
+          folders.add(entry.name);
+          // 递归获取子文件夹
+          final subFolders = await _getSubFolders(entry.name);
+          folders.addAll(subFolders);
+        }
+      }
+
+      return folders..sort();
+    } catch (e) {
+      debugPrint('获取文件夹列表失败: $e');
+      return [];
+    }
+  }
+
+  /// 递归获取子文件夹
+  Future<List<String>> _getSubFolders(String parentPath) async {
+    try {
+      final fullPath = 'indexeddb://$_database/$_collection/$parentPath';
+      final entries = await _vfs.listDirectory(fullPath);
+
+      final subFolders = <String>[];
+
+      for (final entry in entries) {
+        if (entry.isDirectory && !entry.name.endsWith('.legend')) {
+          final subPath = '$parentPath/${entry.name}';
+          subFolders.add(subPath);
+          // 继续递归
+          final subSubFolders = await _getSubFolders(subPath);
+          subFolders.addAll(subSubFolders);
+        }
+      }
+
+      return subFolders;
+    } catch (e) {
+      debugPrint('获取子文件夹失败: $parentPath, 错误: $e');
+      return [];
+    }
+  }
+
+  /// 创建文件夹
+  Future<bool> createFolder(String folderPath) async {
+    try {
+      final fullPath =
+          'indexeddb://$_database/$_collection/${folderPath.replaceAll(RegExp(r'^/+|/+$'), '')}';
+      await _vfs.createDirectory(fullPath);
+      return true;
+    } catch (e) {
+      debugPrint('创建文件夹失败: $folderPath, 错误: $e');
+      return false;
+    }
+  }
+
+  /// 删除文件夹（仅当文件夹为空时）
+  Future<bool> deleteFolder(String folderPath) async {
+    try {
+      final fullPath =
+          'indexeddb://$_database/$_collection/${folderPath.replaceAll(RegExp(r'^/+|/+$'), '')}';
+
+      // 检查文件夹是否为空
+      final entries = await _vfs.listDirectory(fullPath);
+      if (entries.isNotEmpty) {
+        debugPrint('文件夹不为空，无法删除: $folderPath');
+        return false;
+      }
+
+      await _vfs.delete(fullPath);
+      return true;
+    } catch (e) {
+      debugPrint('删除文件夹失败: $folderPath, 错误: $e');
+      return false;
+    }
   }
 }

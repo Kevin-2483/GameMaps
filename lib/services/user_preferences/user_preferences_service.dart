@@ -235,9 +235,13 @@ class UserPreferencesService {
   }
 
   /// 更新扩展设置
-  Future<void> updateExtensionSettings(Map<String, dynamic> extensionSettings) async {
+  Future<void> updateExtensionSettings(
+    Map<String, dynamic> extensionSettings,
+  ) async {
     final current = await getCurrentPreferences();
-    await savePreferences(current.copyWith(extensionSettings: extensionSettings));
+    await savePreferences(
+      current.copyWith(extensionSettings: extensionSettings),
+    );
   }
 
   /// 更新用户信息

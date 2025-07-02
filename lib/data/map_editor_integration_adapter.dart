@@ -42,11 +42,9 @@ class MapEditorIntegrationAdapter {
     String? folderPath,
   }) async {
     debugPrint('加载地图: $mapTitle, 版本: $version, 文件夹: $folderPath');
-    _mapDataBloc.add(LoadMapData(
-      mapTitle: mapTitle, 
-      version: version,
-      folderPath: folderPath,
-    ));
+    _mapDataBloc.add(
+      LoadMapData(mapTitle: mapTitle, version: version, folderPath: folderPath),
+    );
   }
 
   /// 获取当前地图数据

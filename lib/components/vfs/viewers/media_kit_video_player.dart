@@ -103,18 +103,20 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
         _errorMessage = '网络视频加载失败: $e';
       });
     }
-  }  /// 初始化VFS视频
+  }
+
+  /// 初始化VFS视频
   Future<void> _initializeVfsVideo() async {
     try {
       print('🎥 MediaKitVideoPlayer: 开始初始化VFS视频 - ${widget.url}');
-      
+
       // 使用VFS服务生成可播放的URL
       final playableUrl = await _vfsService.generateFileUrl(widget.url);
-      
+
       if (playableUrl == null) {
         throw Exception('无法为VFS视频文件生成可播放URL 注意:超过4MB无法生成');
       }
-      
+
       print('🎥 MediaKitVideoPlayer: 成功生成VFS视频URL - $playableUrl');
       _convertedUrl = playableUrl;
 
@@ -130,7 +132,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
       if (config?.autoPlay ?? false) {
         await _player.play();
       }
-      
+
       print('🎥 MediaKitVideoPlayer: VFS视频初始化完成');
     } catch (e) {
       print('🎥 MediaKitVideoPlayer: VFS视频初始化失败 - $e');
@@ -278,6 +280,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
       ),
     );
   }
+
   @override
   void dispose() {
     // 清理资源
@@ -289,7 +292,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
         print('🎥 MediaKitVideoPlayer: 释放资源 - $_convertedUrl');
       }
     }
-    
+
     _player.dispose();
     super.dispose();
   }

@@ -47,7 +47,7 @@ class AudioProcessor {
       tag: audioTag,
       generator: (e, config, visitor) {
         final playerId = audioUuidMap[e.attributes['src']];
-                print(
+        print(
           '🎵 AudioProcessor: 生成AudioNode - tag: \\${e.tag}, attributes: \\${e.attributes}, textContent: \\${e.textContent}, uuid: $playerId',
         );
         return AudioNode(e.attributes, e.textContent, playerId);

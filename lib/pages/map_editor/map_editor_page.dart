@@ -2300,7 +2300,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
           );
         } // 保存版本特定的图层数据（保存该版本实际的数据）
         for (final layer in versionData.layers) {
-          await _vfsMapService.saveLayer(versionData.title, layer, versionId, widget.folderPath);
+          await _vfsMapService.saveLayer(
+            versionData.title,
+            layer,
+            versionId,
+            widget.folderPath,
+          );
         }
 
         // 保存版本特定的图例组数据（保存该版本实际的数据）
@@ -2458,7 +2463,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 1. 删除VFS中的版本数据
       try {
-        await _vfsMapService.deleteMapVersion(_currentMap!.title, versionId, widget.folderPath);
+        await _vfsMapService.deleteMapVersion(
+          _currentMap!.title,
+          versionId,
+          widget.folderPath,
+        );
         debugPrint('VFS版本数据删除成功: $versionId');
       } catch (e) {
         debugPrint('删除VFS版本数据失败: $e');
