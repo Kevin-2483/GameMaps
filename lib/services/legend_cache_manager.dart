@@ -156,6 +156,43 @@ class LegendCacheManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 清除特定目录下的图例缓存
+  void clearCacheByFolder(String folderPath, {Set<String>? excludePaths}) {
+    final keysToRemove = <String>[];
+
+    for (final path in _cache.keys) {
+      // 检查路径是否属于指定文件夹
+      bool shouldRemove = false;
+
+      if (folderPath.isEmpty) {
+        // 根目录：只清理没有"/"的路径
+        shouldRemove = !path.contains('/');
+      } else {
+        // 特定目录：清理以"folderPath/"开头的路径
+        shouldRemove = path.startsWith('$folderPath/');
+      }
+
+      // 如果在排除列表中，则不清理
+      if (shouldRemove && excludePaths?.contains(path) == true) {
+        shouldRemove = false;
+      }
+
+      if (shouldRemove) {
+        keysToRemove.add(path);
+      }
+    }
+
+    for (final key in keysToRemove) {
+      _cache.remove(key);
+      _loadingCompleters.remove(key);
+    }
+
+    if (keysToRemove.isNotEmpty) {
+      debugPrint('图例缓存: 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项');
+      notifyListeners();
+    }
+  }
+
   /// 获取缓存统计信息
   Map<String, int> getCacheStats() {
     final stats = <String, int>{
@@ -184,6 +221,18 @@ class LegendCacheManager extends ChangeNotifier {
     }
 
     return stats;
+  }
+
+  /// 获取所有已缓存的图例路径
+  List<String> getAllCachedLegends() {
+    return _cache.keys
+        .where((path) => _cache[path]?.state == LegendLoadingState.loaded)
+        .toList();
+  }
+
+  /// 获取所有缓存项（包括各种状态）
+  Map<String, CachedLegendItem> getAllCacheItems() {
+    return Map.unmodifiable(_cache);
   }
 
   /// 加载图例的内部实现

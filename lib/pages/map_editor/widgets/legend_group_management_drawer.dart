@@ -7,6 +7,8 @@ import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VFS服务
 import '../../../components/common/tags_manager.dart';
 import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
+import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
+import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -54,6 +56,12 @@ class _LegendGroupManagementDrawerState
     extends State<LegendGroupManagementDrawer> {
   late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
+
+  // 新增：折叠区域状态控制
+  bool _isSettingsExpanded = true; // 设置选项是否展开
+  bool _isLegendListExpanded = true; // 图例列表是否展开
+  bool _isVfsTreeExpanded = false; // VFS目录树是否展开
+  bool _isCacheDisplayExpanded = false; // 缓存显示是否展开
 
   // 通过getter访问智能隐藏状态
   bool get _isSmartHidingEnabled =>
@@ -371,210 +379,82 @@ class _LegendGroupManagementDrawerState
               ],
             ),
           ),
-          const Divider(height: 1), // 图例组设置
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 可见性和透明度控制
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        _currentGroup.isVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        size: 18,
-                      ),
-                      onPressed: () => _updateGroup(
-                        _currentGroup.copyWith(
-                          isVisible: !_currentGroup.isVisible,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('透明度:', style: TextStyle(fontSize: 12)),
-                    Expanded(
-                      child: Slider(
-                        value: _currentGroup.opacity,
-                        min: 0.0,
-                        max: 1.0,
-                        divisions: 10,
-                        label: '${(_currentGroup.opacity * 100).round()}%',
-                        onChanged: (value) => _updateGroup(
-                          _currentGroup.copyWith(opacity: value),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
 
-                // 智能隐藏设置
-                if (widget.allLayers != null &&
-                    widget.allLayers!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withAlpha((0.3 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '智能隐藏',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            Switch(
-                              value: _isSmartHidingEnabled,
-                              onChanged: _toggleSmartHiding,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _buildSmartHidingDescription(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                // 标签管理
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.label,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '图例组标签',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!widget.isPreviewMode)
-                      TextButton.icon(
-                        onPressed: _showTagsManagerDialog,
-                        icon: const Icon(Icons.edit, size: 14),
-                        label: const Text('管理', style: TextStyle(fontSize: 12)),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _buildTagsDisplay(),
-              ],
-            ),
-          ),
-
-          const Divider(),
-
-          // 图例列表
+          // 可折叠的内容区域
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Text(
-                        '图例列表 (${_currentGroup.legendItems.length})',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      // if (!widget.isPreviewMode)
-                      ElevatedButton.icon(
-                        onPressed: _showAddLegendDialog,
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text('添加图例'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                      ),
-                    ],
+                // 设置选项 (可折叠)
+                _buildCollapsibleSection(
+                  title: '设置选项',
+                  icon: Icons.settings,
+                  isExpanded: _isSettingsExpanded,
+                  onToggle: () {
+                    setState(() {
+                      _isSettingsExpanded = !_isSettingsExpanded;
+                    });
+                  },
+                  child: _buildSettingsContent(),
+                ),
+
+                // VFS目录树 (可折叠)
+                _buildCollapsibleSection(
+                  title: 'VFS图例目录',
+                  icon: Icons.folder_outlined,
+                  isExpanded: _isVfsTreeExpanded,
+                  onToggle: () {
+                    setState(() {
+                      _isVfsTreeExpanded = !_isVfsTreeExpanded;
+                    });
+                  },
+                  child: Container(
+                    height: 300,
+                    padding: const EdgeInsets.all(8),
+                    child: const VfsDirectoryTreeDisplay(),
                   ),
                 ),
-                Expanded(
-                  child: _currentGroup.legendItems.isEmpty
-                      ? const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.legend_toggle_outlined,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                '此图例组暂无图例',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _currentGroup.legendItems.length,
-                          itemBuilder: (context, index) {
-                            return _buildLegendItemTile(
-                              _currentGroup.legendItems[index],
-                            );
-                          },
-                        ),
+
+                // 缓存图例 (可折叠)
+                _buildCollapsibleSection(
+                  title: '缓存图例',
+                  icon: Icons.storage,
+                  isExpanded: _isCacheDisplayExpanded,
+                  onToggle: () {
+                    setState(() {
+                      _isCacheDisplayExpanded = !_isCacheDisplayExpanded;
+                    });
+                  },
+                  child: Container(
+                    height: 300,
+                    padding: const EdgeInsets.all(8),
+                    child: CachedLegendsDisplay(
+                      onLegendSelected: _onCachedLegendSelected,
+                    ),
+                  ),
+                ),
+
+                // 图例列表 (可折叠)
+                _buildCollapsibleSection(
+                  title: '图例列表 (${_currentGroup.legendItems.length})',
+                  icon: Icons.legend_toggle,
+                  isExpanded: _isLegendListExpanded,
+                  onToggle: () {
+                    setState(() {
+                      _isLegendListExpanded = !_isLegendListExpanded;
+                    });
+                  },
+                  child: _buildLegendListContent(),
+                  trailing: ElevatedButton.icon(
+                    onPressed: _showAddLegendDialog,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('添加图例'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1798,5 +1678,243 @@ class _LegendGroupManagementDrawerState
         );
       },
     );
+  }
+
+  /// 构建可折叠区域
+  Widget _buildCollapsibleSection({
+    required String title,
+    required IconData icon,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required Widget child,
+    Widget? trailing,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    trailing,
+                    const SizedBox(width: 8),
+                  ],
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded) ...[
+            const Divider(height: 1),
+            child,
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 构建设置内容
+  Widget _buildSettingsContent() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 可见性和透明度控制
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  _currentGroup.isVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  size: 18,
+                ),
+                onPressed: () => _updateGroup(
+                  _currentGroup.copyWith(
+                    isVisible: !_currentGroup.isVisible,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text('透明度:', style: TextStyle(fontSize: 12)),
+              Expanded(
+                child: Slider(
+                  value: _currentGroup.opacity,
+                  min: 0.0,
+                  max: 1.0,
+                  divisions: 10,
+                  label: '${(_currentGroup.opacity * 100).round()}%',
+                  onChanged: (value) => _updateGroup(
+                    _currentGroup.copyWith(opacity: value),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // 智能隐藏设置
+          if (widget.allLayers != null && widget.allLayers!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withAlpha((0.3 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '智能隐藏',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _isSmartHidingEnabled,
+                        onChanged: _toggleSmartHiding,
+                        materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _buildSmartHidingDescription(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // 标签管理
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                Icons.label,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '图例组标签',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const Spacer(),
+              if (!widget.isPreviewMode)
+                TextButton.icon(
+                  onPressed: _showTagsManagerDialog,
+                  icon: const Icon(Icons.edit, size: 14),
+                  label: const Text('管理', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildTagsDisplay(),
+        ],
+      ),
+    );
+  }
+
+  /// 构建图例列表内容
+  Widget _buildLegendListContent() {
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(16),
+      child: _currentGroup.legendItems.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.legend_toggle_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    '此图例组暂无图例',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: _currentGroup.legendItems.length,
+              itemBuilder: (context, index) {
+                return _buildLegendItemTile(
+                  _currentGroup.legendItems[index],
+                );
+              },
+            ),
+    );
+  }
+
+  /// 处理缓存图例选择
+  void _onCachedLegendSelected(String legendPath) {
+    // 这里可以添加将缓存图例添加到当前图例组的逻辑
+    // 或者直接应用图例到地图的逻辑
+    debugPrint('选择了缓存图例: $legendPath');
+    
+    // 通知父组件选中状态变化
+    widget.onLegendItemSelected?.call(legendPath);
   }
 }
