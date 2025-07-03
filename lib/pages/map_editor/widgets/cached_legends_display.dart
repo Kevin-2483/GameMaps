@@ -148,24 +148,29 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     final totalUnselected = _unselectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
     
     if (totalOwnSelected + totalOtherSelected + totalUnselected == 0) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.storage_outlined,
               size: 48,
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               '暂无缓存图例',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               '选择VFS目录来加载图例到缓存',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -247,20 +252,28 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   Widget _buildDirectorySection(String directory, List<String> legends, [Color? backgroundColor]) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
-      color: backgroundColor,
+      color: backgroundColor?.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0),
       child: ExpansionTile(
         title: Text(
           directory,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           '${legends.length} 个图例',
-          style: const TextStyle(fontSize: 11),
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
-        leading: const Icon(Icons.folder, size: 20),
+        leading: Icon(
+          Icons.folder,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.all(8),
@@ -316,7 +329,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     border: Border.all(
                       color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
                     ),
@@ -334,7 +347,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                               return Icon(
                                 Icons.image_not_supported,
                                 size: 12,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               );
                             },
                           ),
@@ -342,14 +355,17 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                       : Icon(
                           Icons.legend_toggle,
                           size: 12,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                 ),
                 const SizedBox(height: 4),
                 // 图例标题
                 Text(
                   legend?.title ?? _extractLegendName(legendPath),
-                  style: const TextStyle(fontSize: 10),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

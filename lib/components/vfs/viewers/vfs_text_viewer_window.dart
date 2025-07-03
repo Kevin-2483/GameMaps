@@ -111,13 +111,29 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   // 代码编辑器相关
   late CodeController _codeController;
   bool _isReadOnly = true;
-  bool _isDarkTheme = false;
+  bool? _isDarkTheme; // 使用null表示自动模式
 
   @override
   void initState() {
     super.initState();
     _codeController = CodeController();
     _loadTextFile();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 如果是自动模式，根据Material主题更新
+    if (_isDarkTheme == null) {
+      setState(() {
+        // 自动模式保持null，在使用时动态获取
+      });
+    }
+  }
+
+  /// 获取当前主题模式（自动模式时使用Material主题，手动模式时使用设定值）
+  bool get _effectiveIsDarkTheme {
+    return _isDarkTheme ?? Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -252,8 +268,10 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           // 主题切换
           IconButton(
             onPressed: _toggleTheme,
-            icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
-            tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
+            icon: Icon(_effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode),
+            tooltip: _isDarkTheme == null 
+              ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
+              : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
           ),
 
           const SizedBox(width: 16),
@@ -322,9 +340,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       );
     }
     return Container(
-      color: _isDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
+      color: _effectiveIsDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
       child: CodeTheme(
-        data: _isDarkTheme
+        data: _effectiveIsDarkTheme
             ? CodeThemeData(styles: monokaiSublimeTheme)
             : CodeThemeData(styles: githubTheme),
         child: SingleChildScrollView(
@@ -335,7 +353,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               fontFamily: 'Courier New',
               fontSize: 14,
               height: 1.4,
-              color: _isDarkTheme ? Colors.white : Colors.black,
+              color: _effectiveIsDarkTheme ? Colors.white : Colors.black,
             ),
             gutterStyle: GutterStyle(
               showLineNumbers: true,
@@ -343,11 +361,11 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               showFoldingHandles: true,
               margin: 8,
               width: 60,
-              background: _isDarkTheme
+              background: _effectiveIsDarkTheme
                   ? const Color(0xFF3C3C3C)
                   : const Color(0xFFF5F5F5),
               textStyle: TextStyle(
-                color: _isDarkTheme ? Colors.white70 : Colors.black54,
+                color: _effectiveIsDarkTheme ? Colors.white70 : Colors.black54,
                 fontSize: 12,
               ),
             ),
@@ -356,23 +374,23 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               width: 60,
               margin: 8,
               textAlign: TextAlign.right,
-              background: _isDarkTheme
+              background: _effectiveIsDarkTheme
                   ? const Color(0xFF3C3C3C)
                   : const Color(0xFFF5F5F5),
               textStyle: TextStyle(
-                color: _isDarkTheme ? Colors.white70 : Colors.black54,
+                color: _effectiveIsDarkTheme ? Colors.white70 : Colors.black54,
                 fontSize: 12,
               ),
             ),
-            background: _isDarkTheme
+            background: _effectiveIsDarkTheme
                 ? const Color(0xFF2B2B2B)
                 : const Color(0xFFFAFAFA),
             decoration: BoxDecoration(
-              color: _isDarkTheme
+              color: _effectiveIsDarkTheme
                   ? const Color(0xFF2B2B2B)
                   : const Color(0xFFFAFAFA),
               border: Border.all(
-                color: _isDarkTheme
+                color: _effectiveIsDarkTheme
                     ? Colors.grey.shade700.withOpacity(0.3)
                     : Theme.of(context).dividerColor.withOpacity(0.2),
               ),
@@ -426,7 +444,13 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   /// 切换主题
   void _toggleTheme() {
     setState(() {
-      _isDarkTheme = !_isDarkTheme;
+      if (_isDarkTheme == null) {
+        // 从自动模式切换到手动模式，设置为与当前自动主题相反的状态
+        _isDarkTheme = !_effectiveIsDarkTheme;
+      } else {
+        // 在手动模式下切换，或者切换回自动模式
+        _isDarkTheme = _isDarkTheme! ? false : null;
+      }
     });
   }
 

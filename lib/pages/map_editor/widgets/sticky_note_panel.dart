@@ -67,7 +67,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
               child: Text(
                 '暂无便签\n点击上方按钮添加新便签',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(fontSize: 14),
               ),
             ),
           ),
@@ -144,7 +144,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         borderRadius: BorderRadius.circular(8),
         border: isSelected
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
-            : Border.all(color: Colors.grey.shade300, width: 1),
+            : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3), width: 1),
       ),
       child: GestureDetector(
         onSecondaryTapDown: widget.isPreviewMode
@@ -187,7 +187,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         size: 18,
-                        color: note.isVisible ? null : Colors.grey,
+                        color: note.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       onPressed: widget.isPreviewMode
                           ? null
@@ -283,7 +283,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                         (0.3 * 255).toInt(),
                       ),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                     ),
                     child: Text(
                       note.content,
@@ -314,9 +314,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(4),
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       child: TextField(
         controller: controller,
@@ -741,9 +741,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -831,7 +831,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         '暂无标签',
         style: TextStyle(
           fontSize: 11,
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );

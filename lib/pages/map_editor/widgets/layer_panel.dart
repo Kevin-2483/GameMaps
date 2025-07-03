@@ -215,10 +215,10 @@ class _LayerPanelState extends State<LayerPanel> {
   @override
   Widget build(BuildContext context) {
     return widget.layers.isEmpty
-        ? const Center(
+        ? Center(
             child: Text(
               '暂无图层',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
             ),
           )
         : _buildGroupedLayerList();
@@ -229,8 +229,8 @@ class _LayerPanelState extends State<LayerPanel> {
     final groups = _groupLinkedLayers();
 
     if (groups.isEmpty) {
-      return const Center(
-        child: Text('暂无图层', style: TextStyle(color: Colors.grey, fontSize: 14)),
+      return Center(
+        child: Text('暂无图层', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
       );
     }
 
@@ -279,7 +279,7 @@ class _LayerPanelState extends State<LayerPanel> {
         border: Border.all(
           color: isGroupSelected
               ? Theme.of(context).colorScheme.primary
-              : Colors.grey.shade300,
+              : Theme.of(context).colorScheme.outline.withOpacity(0.3),
           width: isGroupSelected ? 2 : 1,
         ),
         color: isGroupSelected
@@ -346,12 +346,12 @@ class _LayerPanelState extends State<LayerPanel> {
             ? Theme.of(
                 context,
               ).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
-            : Colors.grey.shade50,
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+        border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.3))),
       ),
       child: Row(
         children: [
@@ -363,7 +363,7 @@ class _LayerPanelState extends State<LayerPanel> {
               child: Icon(
                 Icons.drag_handle,
                 size: 16,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -388,7 +388,7 @@ class _LayerPanelState extends State<LayerPanel> {
                             ? Icons.keyboard_arrow_right
                             : Icons.keyboard_arrow_down,
                         size: 20,
-                        color: Colors.grey.shade700,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -409,7 +409,7 @@ class _LayerPanelState extends State<LayerPanel> {
                                   : FontWeight.w500,
                               color: isGroupSelected
                                   ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey.shade800,
+                                  : Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -417,7 +417,7 @@ class _LayerPanelState extends State<LayerPanel> {
                             group.map((l) => l.name).join(', '),
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -436,7 +436,7 @@ class _LayerPanelState extends State<LayerPanel> {
             icon: Icon(
               _isGroupVisible(group) ? Icons.visibility : Icons.visibility_off,
               size: 16,
-              color: _isGroupVisible(group) ? null : Colors.grey,
+              color: _isGroupVisible(group) ? null : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             onPressed: () => _toggleGroupVisibility(group),
             constraints: const BoxConstraints(),
@@ -608,7 +608,7 @@ class _LayerPanelState extends State<LayerPanel> {
                   child: _buildLayerTile(context, layer, group, index, true),
                 ),
                 if (!isLastInGroup)
-                  Divider(height: 1, color: Colors.grey.shade300),
+                  Divider(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
               ],
             ),
           );
@@ -696,7 +696,7 @@ class _LayerPanelState extends State<LayerPanel> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         size: 18,
-                        color: layer.isVisible ? null : Colors.grey,
+                        color: layer.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () {
                         final updatedLayer = layer.copyWith(
@@ -895,8 +895,8 @@ class _LayerPanelState extends State<LayerPanel> {
         isLinked ? Icons.link : Icons.link_off,
         size: 16,
         color: isLastLayer
-            ? Colors.grey.shade400
-            : (isLinked ? Colors.blue : Colors.grey.shade600),
+            ? Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)
+            : (isLinked ? Colors.blue : Theme.of(context).colorScheme.onSurfaceVariant),
       ),
       onPressed: isLastLayer
           ? null
@@ -1388,14 +1388,14 @@ class _LayerPanelState extends State<LayerPanel> {
               ? Theme.of(
                   context,
                 ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-              : Colors.grey.shade100,
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: boundGroupsCount > 0
                 ? Theme.of(
                     context,
                   ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                : Colors.grey.shade300,
+                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1406,7 +1406,7 @@ class _LayerPanelState extends State<LayerPanel> {
               size: 12,
               color: boundGroupsCount > 0
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.grey,
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 4),
             Text(
@@ -1417,7 +1417,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 fontSize: 10,
                 color: boundGroupsCount > 0
                     ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade600,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
               ),
             ),
@@ -1442,14 +1442,14 @@ class _LayerPanelState extends State<LayerPanel> {
               ? Theme.of(
                   context,
                 ).colorScheme.secondaryContainer.withAlpha((0.3 * 255).toInt())
-              : Colors.grey.shade100,
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasAllTags
                 ? Theme.of(
                     context,
                   ).colorScheme.secondary.withAlpha((0.3 * 255).toInt())
-                : Colors.grey.shade300,
+                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1460,7 +1460,7 @@ class _LayerPanelState extends State<LayerPanel> {
               size: 12,
               color: hasAllTags
                   ? Theme.of(context).colorScheme.secondary
-                  : Colors.grey,
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 4),
             Text(
@@ -1469,7 +1469,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 fontSize: 10,
                 color: hasAllTags
                     ? Theme.of(context).colorScheme.secondary
-                    : Colors.grey.shade600,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: hasAllTags ? FontWeight.w500 : null,
               ),
             ),
@@ -1546,9 +1546,9 @@ class _LayerPanelState extends State<LayerPanel> {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(4),
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       child: TextField(
         controller: controller,

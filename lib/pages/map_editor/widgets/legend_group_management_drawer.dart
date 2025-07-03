@@ -64,10 +64,10 @@ class _LegendGroupManagementDrawerState
   String? _selectedLegendItemId; // 当前选中的图例项ID
 
   // 新增：折叠区域状态控制
-  bool _isSettingsExpanded = true; // 设置选项是否展开
-  bool _isLegendListExpanded = true; // 图例列表是否展开
+  bool _isSettingsExpanded = false; // 设置选项是否展开
+  bool _isLegendListExpanded = false; // 图例列表是否展开
   bool _isVfsTreeExpanded = false; // VFS目录树是否展开
-  bool _isCacheDisplayExpanded = false; // 缓存显示是否展开
+  bool _isCacheDisplayExpanded = true; // 缓存显示是否展开
 
   // 通过getter访问智能隐藏状态
   bool get _isSmartHidingEnabled =>
@@ -519,7 +519,7 @@ class _LegendGroupManagementDrawerState
             borderRadius: BorderRadius.circular(12),
             border: _isLegendItemSelected(item)
                 ? Border.all(color: Theme.of(context).colorScheme.primary)
-                : Border.all(color: Colors.grey.shade300),
+                : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -543,7 +543,7 @@ class _LegendGroupManagementDrawerState
                             border: Border.all(
                               color: _isLegendItemSelected(item)
                                   ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey.shade300,
+                                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
                               width: _isLegendItemSelected(item) ? 2 : 1,
                             ),
                             borderRadius: BorderRadius.circular(6),
@@ -556,10 +556,10 @@ class _LegendGroupManagementDrawerState
                                     fit: BoxFit.contain,
                                   ),
                                 )
-                              : const Icon(
+                              : Icon(
                                   Icons.image,
                                   size: 24,
-                                  color: Colors.grey,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                         ),
                         const SizedBox(width: 12),
@@ -583,7 +583,7 @@ class _LegendGroupManagementDrawerState
                                 '位置: (${item.position.dx.toStringAsFixed(2)}, ${item.position.dy.toStringAsFixed(2)})',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -596,7 +596,7 @@ class _LegendGroupManagementDrawerState
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                             size: 18,
-                            color: item.isVisible ? null : Colors.grey,
+                            color: item.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                           onPressed: () => _updateLegendItem(
                             item.copyWith(isVisible: !item.isVisible),
@@ -1119,7 +1119,7 @@ class _LegendGroupManagementDrawerState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -1520,7 +1520,7 @@ class _LegendGroupManagementDrawerState
         '暂无标签',
         style: TextStyle(
           fontSize: 11,
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -1590,7 +1590,7 @@ class _LegendGroupManagementDrawerState
         '暂无标签',
         style: TextStyle(
           fontSize: 11,
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -1955,17 +1955,20 @@ class _LegendGroupManagementDrawerState
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: _currentGroup.legendItems.isEmpty
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.legend_toggle_outlined,
                       size: 48,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    SizedBox(height: 16),
-                    Text('此图例组暂无图例', style: TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 16),
+                    Text(
+                      '此图例组暂无图例', 
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
                   ],
                 ),
               )

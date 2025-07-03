@@ -114,7 +114,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   String _markdownContent = '';
   VfsFileInfo? _fileInfo;
   // 显示配置
-  bool _isDarkTheme = false;
+  bool? _isDarkTheme; // 使用null表示自动模式
   bool _showToc = false;
   double _contentScale = 1.0;
   bool _enableHtmlRendering = true;
@@ -129,6 +129,22 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   void initState() {
     super.initState();
     _loadMarkdownFile();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 如果是自动模式，根据Material主题更新
+    if (_isDarkTheme == null) {
+      setState(() {
+        // 自动模式保持null，在使用时动态获取
+      });
+    }
+  }
+
+  /// 获取当前主题模式（自动模式时使用Material主题，手动模式时使用设定值）
+  bool get _effectiveIsDarkTheme {
+    return _isDarkTheme ?? Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -283,8 +299,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 主题切换
       IconButton(
         onPressed: _toggleTheme,
-        icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
-        tooltip: _isDarkTheme ? '浅色主题' : '深色主题',
+        icon: Icon(_effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode),
+        tooltip: _isDarkTheme == null 
+          ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
+          : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
       ),
 
       const SizedBox(width: 16), // HTML渲染切换
@@ -562,7 +580,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     }
 
     return Container(
-      color: _isDarkTheme ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
+      color: _effectiveIsDarkTheme ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
       padding: const EdgeInsets.all(24),
       child: Transform.scale(
         scale: _contentScale,
@@ -579,7 +597,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 构建Markdown配置
   MarkdownConfig _buildMarkdownConfig() {
-    final isDark = _isDarkTheme; // 如果启用HTML、LaTeX、视频和音频渲染，使用混合配置
+    final isDark = _effectiveIsDarkTheme; // 如果启用HTML、LaTeX、视频和音频渲染，使用混合配置
     if (_enableHtmlRendering &&
         _enableLatexRendering &&
         _enableVideoRendering &&
@@ -1400,7 +1418,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   /// 切换主题
   void _toggleTheme() {
     setState(() {
-      _isDarkTheme = !_isDarkTheme;
+      if (_isDarkTheme == null) {
+        // 从自动模式切换到手动模式，设置为与当前自动主题相反的状态
+        _isDarkTheme = !_effectiveIsDarkTheme;
+      } else {
+        // 在手动模式下切换，或者切换回自动模式
+        _isDarkTheme = _isDarkTheme! ? false : null;
+      }
     });
   }
 

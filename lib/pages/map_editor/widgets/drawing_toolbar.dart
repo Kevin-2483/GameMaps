@@ -575,14 +575,14 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '点击调色盘按钮添加自定义颜色',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -739,7 +739,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   ),
                   Text(
                     _getTriangleCutLabel(_effectiveTriangleCut),
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
                   ),
                 ],
               ),
@@ -803,20 +803,20 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected
-                  ? Theme.of(context).primaryColor
-                  : Colors.grey.shade300,
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).dividerColor,
               width: isSelected ? 2 : 1,
             ),
             color: isSelected
-                ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+                ? Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt())
                 : Colors.transparent,
           ),
           child: Icon(
             icon,
             size: 20,
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade600,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).iconTheme.color?.withOpacity(0.6),
           ),
         ),
       ),
@@ -836,13 +836,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.grey.shade300,
+            color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
             width: isSelected ? 3 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withAlpha((0.3 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                     blurRadius: 6,
                     spreadRadius: 2,
                   ),
@@ -871,13 +871,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               color: color,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? Colors.white : Colors.grey.shade300,
+                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
                 width: isSelected ? 3 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: color.withAlpha((0.3 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                         blurRadius: 6,
                         spreadRadius: 2,
                       ),
@@ -917,13 +917,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.grey.shade400,
+            color: Theme.of(context).dividerColor,
             width: 2,
             style: BorderStyle.solid,
           ),
           color: Colors.transparent,
         ),
-        child: Icon(Icons.palette, size: 16, color: Colors.grey.shade600),
+        child: Icon(Icons.palette, size: 16, color: Theme.of(context).iconTheme.color?.withOpacity(0.6)),
       ),
     );
   }
@@ -998,7 +998,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             children: [
               Text(
                 '当前数量: ${currentWidths.length}/5',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
               ),
               const SizedBox(height: 16),
               if (currentWidths.isNotEmpty) ...[
@@ -1030,13 +1030,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '还没有添加常用线条宽度',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6), fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1173,12 +1173,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade300,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+              ? Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt())
               : Colors.transparent,
         ),
         child: Text(
@@ -1187,8 +1187,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade700,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
       ),
@@ -1260,9 +1260,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1272,7 +1272,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -1280,7 +1280,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -1293,7 +1293,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 '4. 可通过Z层级检视器调整',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
                   height: 1.3,
                 ),
               ),
@@ -1338,12 +1338,12 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade300,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+              ? Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt())
               : Colors.transparent,
         ),
         child: Text(
@@ -1352,8 +1352,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade700,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
       ),
@@ -1389,7 +1389,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           width: double.infinity,
           height: 120,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: Theme.of(context).dividerColor),
             borderRadius: BorderRadius.circular(8),
           ),
           child: ClipRRect(
@@ -1399,7 +1399,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               fit: widget.imageBufferFit,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -1474,11 +1474,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           height: 120,
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.grey.shade300,
+              color: Theme.of(context).dividerColor,
               style: BorderStyle.solid,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: Colors.grey.shade50,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1486,13 +1486,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               Icon(
                 Icons.cloud_upload_outlined,
                 size: 32,
-                color: Colors.grey.shade400,
+                color: Theme.of(context).iconTheme.color?.withOpacity(0.4),
               ),
               const SizedBox(height: 8),
               Text(
                 '点击上传图片到缓冲区',
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1500,7 +1500,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               const SizedBox(height: 4),
               Text(
                 '支持 JPG、PNG、GIF 格式',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6), fontSize: 12),
               ),
             ],
           ),
