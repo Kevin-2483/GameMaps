@@ -166,6 +166,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     bool? enableAnimations,
     bool? autoRestorePanelStates,
     bool? enableExtensionStorage,
+    double? drawerWidth,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -180,6 +181,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         enableAnimations: enableAnimations,
         autoRestorePanelStates: autoRestorePanelStates,
         enableExtensionStorage: enableExtensionStorage,
+        drawerWidth: drawerWidth,
       );
 
       await _service.updateLayout(updatedLayout);

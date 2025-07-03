@@ -148,6 +148,36 @@ class LayoutSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // 抽屉宽度设置
+            Text(
+              '抽屉宽度设置',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              title: Text('抽屉宽度'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('设置图层图例绑定、图例组管理和Z层级检视器的宽度'),
+                  const SizedBox(height: 8),
+                  Slider(
+                    value: layout.drawerWidth,
+                    min: 300.0,
+                    max: 600.0,
+                    divisions: 12,
+                    label: '${layout.drawerWidth.round()}px',
+                    onChanged: (value) =>
+                        provider.updateLayout(drawerWidth: value),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // 重置布局按钮
             Row(
               children: [

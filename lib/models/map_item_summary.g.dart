@@ -10,9 +10,8 @@ MapItemSummary _$MapItemSummaryFromJson(Map<String, dynamic> json) =>
     MapItemSummary(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
-      imageData: const Uint8ListConverter().fromJson(
-        json['imageData'] as String?,
-      ),
+      imageData:
+          const Uint8ListConverter().fromJson(json['imageData'] as String?),
       version: (json['version'] as num).toInt(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),

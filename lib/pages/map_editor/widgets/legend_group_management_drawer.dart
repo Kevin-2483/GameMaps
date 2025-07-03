@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
@@ -8,6 +9,7 @@ import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VF
 import '../../../services/legend_cache_manager.dart'; // 导入图例缓存管理器
 import '../../../components/common/tags_manager.dart';
 import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
+import '../../../providers/user_preferences_provider.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart'; // 使用ReactiveVersionManager
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
@@ -323,8 +325,11 @@ class _LegendGroupManagementDrawerState
 
   @override
   Widget build(BuildContext context) {
+    final userPrefs = context.watch<UserPreferencesProvider>();
+    final drawerWidth = userPrefs.layout.drawerWidth;
+    
     return Container(
-      width: 400, // 管理图例组宽度
+      width: drawerWidth, // 使用用户偏好设置的抽屉宽度
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Theme.of(context).dividerColor),

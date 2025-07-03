@@ -281,6 +281,9 @@ class LayoutPreferences {
   /// 是否启用扩展储存功能
   final bool enableExtensionStorage;
 
+  /// 抽屉宽度设置
+  final double drawerWidth;
+
   const LayoutPreferences({
     required this.panelCollapsedStates,
     required this.panelAutoCloseStates,
@@ -291,6 +294,7 @@ class LayoutPreferences {
     this.enableAnimations = true,
     this.autoRestorePanelStates = true,
     this.enableExtensionStorage = false,
+    this.drawerWidth = 400.0,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -316,6 +320,7 @@ class LayoutPreferences {
       enableAnimations: true,
       autoRestorePanelStates: true,
       enableExtensionStorage: false, // 明确设置默认值
+      drawerWidth: 400.0,
     );
   }
   LayoutPreferences copyWith({
@@ -328,6 +333,7 @@ class LayoutPreferences {
     bool? enableAnimations,
     bool? autoRestorePanelStates,
     bool? enableExtensionStorage,
+    double? drawerWidth,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -341,6 +347,7 @@ class LayoutPreferences {
           autoRestorePanelStates ?? this.autoRestorePanelStates,
       enableExtensionStorage:
           enableExtensionStorage ?? this.enableExtensionStorage,
+      drawerWidth: drawerWidth ?? this.drawerWidth,
     );
   }
 

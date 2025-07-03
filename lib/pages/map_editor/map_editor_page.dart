@@ -2922,7 +2922,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                               elevation: 8,
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
-                                width: 400, //Z层级检视器宽度
+                                width: userPrefsProvider.layout.drawerWidth, // 使用用户偏好设置的抽屉宽度
                                 decoration: BoxDecoration(
                                   color: Theme.of(
                                     context,

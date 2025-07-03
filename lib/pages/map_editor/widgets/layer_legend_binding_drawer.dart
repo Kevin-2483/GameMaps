@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
+import '../../../providers/user_preferences_provider.dart';
 
 /// 图层图例组绑定抽屉
 class LayerLegendBindingDrawer extends StatefulWidget {
@@ -34,6 +36,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final userPrefs = context.watch<UserPreferencesProvider>();
+    final drawerWidth = userPrefs.layout.drawerWidth;
+    
     // 分离已绑定和未绑定的图例组
     final boundGroups = widget.allLegendGroups
         .where((group) => _selectedLegendGroupIds.contains(group.id))
@@ -43,7 +48,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
         .toList();
 
     return Container(
-      width: 400, // 图层图例宽度
+      width: drawerWidth, // 使用用户偏好设置的抽屉宽度
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Theme.of(context).dividerColor),
