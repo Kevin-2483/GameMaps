@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:media_kit/media_kit.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
@@ -57,6 +58,18 @@ void main() async {
   }
 
   runApp(const R6BoxApp());
+  
+  // Initialize bitsdojo_window for desktop platforms
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    doWhenWindowReady(() {
+      const initialSize = Size(1280, 720);
+      appWindow.size = initialSize;
+      appWindow.minSize = const Size(800, 600);
+      appWindow.alignment = Alignment.center;
+      appWindow.title = 'R6Box';
+      appWindow.show();
+    });
+  }
 }
 
 class R6BoxApp extends StatelessWidget {
