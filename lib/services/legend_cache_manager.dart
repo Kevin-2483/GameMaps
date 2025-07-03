@@ -142,6 +142,29 @@ class LegendCacheManager extends ChangeNotifier {
         : null;
   }
 
+  /// 批量加载指定目录下的所有图例到缓存
+Future<void> loadDirectoryToCache(String directoryPath) async {
+  try {
+    debugPrint('开始批量加载目录到缓存: $directoryPath');
+    
+    final legendService = LegendVfsService();
+    final legendFiles = await legendService.getLegendsInFolder(directoryPath);
+    
+    for (final legendFile in legendFiles) {
+      final legendPath = directoryPath.isEmpty 
+          ? legendFile 
+          : '$directoryPath/$legendFile';
+      
+      // 异步加载图例数据
+      await getLegendData(legendPath);
+    }
+    
+    debugPrint('批量加载完成: $directoryPath, 共 ${legendFiles.length} 个图例');
+  } catch (e) {
+    debugPrint('批量加载目录失败: $directoryPath, 错误: $e');
+  }
+}
+
   /// 清除特定图例的缓存
   void clearCache(String legendPath) {
     _cache.remove(legendPath);
@@ -190,6 +213,60 @@ class LegendCacheManager extends ChangeNotifier {
     if (keysToRemove.isNotEmpty) {
       debugPrint('图例缓存: 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项');
       notifyListeners();
+    }
+  }
+
+  /// 步进型清除特定目录下的图例缓存（只清理精确匹配的路径，不递归清理子目录）
+  void clearCacheByFolderStepwise(String folderPath, {Set<String>? excludePaths}) {
+    final keysToRemove = <String>[];
+
+    debugPrint('步进型缓存清理开始: 目标目录="$folderPath"');
+    debugPrint('当前缓存键: ${_cache.keys.toList()}');
+
+    for (final path in _cache.keys) {
+      // 步进型清理：只清理精确匹配该目录的图例
+      bool shouldRemove = false;
+
+      if (folderPath.isEmpty) {
+        // 根目录：只清理没有"/"的路径（不包括子目录中的文件）
+        shouldRemove = !path.contains('/');
+        debugPrint('根目录检查: 路径="$path", 包含/=${path.contains('/')}, 应移除=$shouldRemove');
+      } else {
+        // 特定目录：只清理以"folderPath/"开头但下一级没有更多"/"的路径
+        // 即只清理直接在该目录下的文件，不清理子目录中的文件
+        if (path.startsWith('$folderPath/')) {
+          final relativePath = path.substring(folderPath.length + 1);
+          // 如果相对路径中不包含"/"，说明是直接在该目录下的文件
+          shouldRemove = !relativePath.contains('/');
+          debugPrint('子目录检查: 路径="$path", 相对路径="$relativePath", 包含/=${relativePath.contains('/')}, 应移除=$shouldRemove');
+        } else {
+          debugPrint('路径不匹配: 路径="$path", 不以"$folderPath/"开头');
+        }
+      }
+
+      // 如果在排除列表中，则不清理
+      if (shouldRemove && excludePaths?.contains(path) == true) {
+        shouldRemove = false;
+        debugPrint('排除列表跳过: 路径="$path"');
+      }
+
+      if (shouldRemove) {
+        keysToRemove.add(path);
+        debugPrint('标记移除: 路径="$path"');
+      }
+    }
+
+    for (final key in keysToRemove) {
+      _cache.remove(key);
+      _loadingCompleters.remove(key);
+    }
+
+    if (keysToRemove.isNotEmpty) {
+      debugPrint('图例缓存 (步进型): 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项（不包括子目录）');
+      debugPrint('被清理的路径: $keysToRemove');
+      notifyListeners();
+    } else {
+      debugPrint('图例缓存 (步进型): 目录 "$folderPath" 下没有需要清理的缓存项');
     }
   }
 

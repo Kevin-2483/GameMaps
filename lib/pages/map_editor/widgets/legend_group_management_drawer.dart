@@ -77,9 +77,9 @@ class _LegendGroupManagementDrawerState
     _currentGroup = widget.legendGroup;
     // 设置初始选中的图例项
     _selectedLegendItemId = widget.initialSelectedLegendItemId;
-    
+
     // 版本管理器已通过widget传入，无需额外设置
-    
+
     // 延迟执行检查，避免在初始化期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSmartHidingStateFromExtensionSettings();
@@ -106,12 +106,12 @@ class _LegendGroupManagementDrawerState
     // 如果地图ID发生变化，更新路径选择管理器的当前版本
     if (oldWidget.mapId != widget.mapId && widget.mapId != null) {
       debugPrint('地图ID变更: ${oldWidget.mapId} -> ${widget.mapId}');
-      
+
       // 强制刷新VFS目录树状态
       setState(() {
         _isVfsTreeExpanded = true; // 自动展开目录树以便用户查看更新后的状态
       });
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
         _checkSmartHiding();
@@ -394,16 +394,16 @@ class _LegendGroupManagementDrawerState
             ),
           ),
 
-          // 可折叠的内容区域
+          // 可折叠的内容区域 - 使用平分空间的布局
           Expanded(
-            child: ListView(
+            child: Column(
               children: [
                 // 设置选项 (可折叠)
-                _buildCollapsibleSection(
+                _buildCollapsiblePanel(
                   title: '设置选项',
                   icon: Icons.settings,
-                  isExpanded: _isSettingsExpanded,
-                  onToggle: () {
+                  isCollapsed: !_isSettingsExpanded,
+                  onToggleCollapsed: () {
                     setState(() {
                       _isSettingsExpanded = !_isSettingsExpanded;
                     });
@@ -412,69 +412,73 @@ class _LegendGroupManagementDrawerState
                 ),
 
                 // VFS目录树 (可折叠)
-                _buildCollapsibleSection(
+                _buildCollapsiblePanel(
                   title: 'VFS图例目录',
                   icon: Icons.folder_outlined,
-                  isExpanded: _isVfsTreeExpanded,
-                  onToggle: () {
+                  isCollapsed: !_isVfsTreeExpanded,
+                  onToggleCollapsed: () {
                     setState(() {
                       _isVfsTreeExpanded = !_isVfsTreeExpanded;
                     });
                   },
-                  child: Container(
-                    height: 300,
-                    padding: const EdgeInsets.all(8),
-                    child: VfsDirectoryTreeDisplay(
-                      legendGroupId: _currentGroup.id,
-                      versionManager: widget.versionManager,
-                      onCacheCleared: _clearLegendCacheForFolder,
+                  child: Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: VfsDirectoryTreeDisplay(
+                        legendGroupId: _currentGroup.id,
+                        versionManager: widget.versionManager,
+                        onCacheCleared: _clearLegendCacheForFolder,
+                      ),
                     ),
                   ),
                 ),
 
                 // 缓存图例 (可折叠)
-                _buildCollapsibleSection(
+                _buildCollapsiblePanel(
                   title: '缓存图例',
                   icon: Icons.storage,
-                  isExpanded: _isCacheDisplayExpanded,
-                  onToggle: () {
+                  isCollapsed: !_isCacheDisplayExpanded,
+                  onToggleCollapsed: () {
                     setState(() {
                       _isCacheDisplayExpanded = !_isCacheDisplayExpanded;
                     });
                   },
-                  child: Container(
-                    height: 300,
-                    padding: const EdgeInsets.all(8),
-                    child: CachedLegendsDisplay(
-                      onLegendSelected: _onCachedLegendSelected,
-                      versionManager: widget.versionManager,
-                      currentLegendGroupId: _currentGroup.id,
+                  child: Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CachedLegendsDisplay(
+                        onLegendSelected: _onCachedLegendSelected,
+                        versionManager: widget.versionManager,
+                        currentLegendGroupId: _currentGroup.id,
+                      ),
                     ),
                   ),
                 ),
 
                 // 图例列表 (可折叠)
-                _buildCollapsibleSection(
+                _buildCollapsiblePanel(
                   title: '图例列表 (${_currentGroup.legendItems.length})',
                   icon: Icons.legend_toggle,
-                  isExpanded: _isLegendListExpanded,
-                  onToggle: () {
+                  isCollapsed: !_isLegendListExpanded,
+                  onToggleCollapsed: () {
                     setState(() {
                       _isLegendListExpanded = !_isLegendListExpanded;
                     });
                   },
                   child: _buildLegendListContent(),
-                  trailing: ElevatedButton.icon(
-                    onPressed: _showAddLegendDialog,
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('添加图例'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                  actions: [
+                    ElevatedButton.icon(
+                      onPressed: _showAddLegendDialog,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('添加图例'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -1700,271 +1704,336 @@ class _LegendGroupManagementDrawerState
     );
   }
 
-  /// 构建可折叠区域
-  Widget _buildCollapsibleSection({
+  /// 构建可折叠面板，使用与地图编辑器主页面相同的模式
+  Widget _buildCollapsiblePanel({
     required String title,
     required IconData icon,
-    required bool isExpanded,
-    required VoidCallback onToggle,
-    required Widget child,
-    Widget? trailing,
+    required bool isCollapsed,
+    required VoidCallback onToggleCollapsed,
+    Widget? child,
+    List<Widget>? actions,
+    String? collapsedSubtitle, // 折叠状态下显示的附加信息
+    bool compactMode = false,
   }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(icon, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
+    final double headerHeight = compactMode ? 40.0 : 48.0;
+
+    if (isCollapsed) {
+      return Container(
+        height: headerHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: InkWell(
+          onTap: onToggleCollapsed,
+          child: Row(
+            children: [
+              Icon(icon, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    if (collapsedSubtitle != null &&
+                        collapsedSubtitle.isNotEmpty)
+                      Text(
+                        collapsedSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.expand_more, size: 20),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Expanded(
+      child: Card(
+        margin: const EdgeInsets.all(4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 标题栏
+            Container(
+              height: headerHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withAlpha((0.3 * 255).toInt()),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+              ),
+              child: InkWell(
+                onTap: onToggleCollapsed,
+                child: Row(
+                  children: [
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                  ),
-                  if (trailing != null) ...[
-                    trailing,
+                    // 动作按钮
+                    if (actions != null) ...actions,
                     const SizedBox(width: 8),
+                    const Icon(Icons.expand_less, size: 20),
                   ],
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 20,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-          if (isExpanded) ...[
-            const Divider(height: 1),
-            child,
+            // 内容区域
+            if (child != null) child,
           ],
-        ],
+        ),
       ),
     );
   }
 
   /// 构建设置内容
   Widget _buildSettingsContent() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 可见性和透明度控制
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(
-                  _currentGroup.isVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                  size: 18,
-                ),
-                onPressed: () => _updateGroup(
-                  _currentGroup.copyWith(
-                    isVisible: !_currentGroup.isVisible,
+    return Expanded(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 可见性和透明度控制
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    _currentGroup.isVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    size: 18,
+                  ),
+                  onPressed: () => _updateGroup(
+                    _currentGroup.copyWith(isVisible: !_currentGroup.isVisible),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Text('透明度:', style: TextStyle(fontSize: 12)),
-              Expanded(
-                child: Slider(
-                  value: _currentGroup.opacity,
-                  min: 0.0,
-                  max: 1.0,
-                  divisions: 10,
-                  label: '${(_currentGroup.opacity * 100).round()}%',
-                  onChanged: (value) => _updateGroup(
-                    _currentGroup.copyWith(opacity: value),
+                const SizedBox(width: 8),
+                const Text('透明度:', style: TextStyle(fontSize: 12)),
+                Expanded(
+                  child: Slider(
+                    value: _currentGroup.opacity,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 10,
+                    label: '${(_currentGroup.opacity * 100).round()}%',
+                    onChanged: (value) =>
+                        _updateGroup(_currentGroup.copyWith(opacity: value)),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          // 智能隐藏设置
-          if (widget.allLayers != null && widget.allLayers!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withAlpha((0.3 * 255).toInt()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+            // 智能隐藏设置
+            if (widget.allLayers != null && widget.allLayers!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest
+                      .withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '智能隐藏',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.primary,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '智能隐藏',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
-                      ),
-                      Switch(
-                        value: _isSmartHidingEnabled,
-                        onChanged: _toggleSmartHiding,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _buildSmartHidingDescription(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant,
+                        Switch(
+                          value: _isSmartHidingEnabled,
+                          onChanged: _toggleSmartHiding,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      _buildSmartHidingDescription(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
 
-          // 标签管理
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(
-                Icons.label,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '图例组标签',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+            // 标签管理
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.label,
+                  size: 16,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-              ),
-              const Spacer(),
-              if (!widget.isPreviewMode)
-                TextButton.icon(
-                  onPressed: _showTagsManagerDialog,
-                  icon: const Icon(Icons.edit, size: 14),
-                  label: const Text('管理', style: TextStyle(fontSize: 12)),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                const SizedBox(width: 8),
+                Text(
+                  '图例组标签',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildTagsDisplay(),
-        ],
+                const Spacer(),
+                if (!widget.isPreviewMode)
+                  TextButton.icon(
+                    onPressed: _showTagsManagerDialog,
+                    icon: const Icon(Icons.edit, size: 14),
+                    label: const Text('管理', style: TextStyle(fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildTagsDisplay(),
+          ],
+        ),
       ),
     );
   }
 
   /// 构建图例列表内容
   Widget _buildLegendListContent() {
-    return Container(
-      height: 300,
-      padding: const EdgeInsets.all(16),
-      child: _currentGroup.legendItems.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.legend_toggle_outlined,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    '此图例组暂无图例',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _currentGroup.legendItems.isEmpty
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.legend_toggle_outlined,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text('此图例组暂无图例', style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                itemCount: _currentGroup.legendItems.length,
+                itemBuilder: (context, index) {
+                  return _buildLegendItemTile(_currentGroup.legendItems[index]);
+                },
               ),
-            )
-          : ListView.builder(
-              itemCount: _currentGroup.legendItems.length,
-              itemBuilder: (context, index) {
-                return _buildLegendItemTile(
-                  _currentGroup.legendItems[index],
-                );
-              },
-            ),
+      ),
     );
   }
 
-  /// 清理指定目录下的图例缓存
+  /// 清理指定目录下的图例缓存 - 步进型清理，智能排除正在使用的图例
   void _clearLegendCacheForFolder(String folderPath) {
-    // 检查目录中的图例是否在当前图例组中使用
-    final usedPaths = _currentGroup.legendItems
+    // 获取当前图例组中正在使用的图例路径
+    final usedLegendPaths = _currentGroup.legendItems
         .map((item) => item.legendPath)
-        .where((path) => path.startsWith(folderPath))
-        .toList();
-    
-    if (usedPaths.isNotEmpty) {
-      // 如果有图例在使用，显示警告
+        .toSet();
+
+    // 检查目录中的图例是否在当前图例组中使用（精确匹配该目录）
+    final usedPathsInThisFolder = usedLegendPaths.where((path) {
+      // 检查路径是否属于当前清理的目录
+      if (folderPath.isEmpty) {
+        // 根目录：检查路径是否没有"/"（即直接在根目录下）
+        return !path.contains('/');
+      } else {
+        // 特定目录：检查路径是否以"folderPath/"开头，且是直接在该目录下
+        if (path.startsWith('$folderPath/')) {
+          final relativePath = path.substring(folderPath.length + 1);
+          // 只考虑直接在该目录下的文件（不包含子目录）
+          return !relativePath.contains('/');
+        }
+        return false;
+      }
+    }).toList();
+
+    if (usedPathsInThisFolder.isNotEmpty) {
+      // 如果有图例在使用，显示信息但继续清理（排除正在使用的）
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('无法清理缓存：当前图例组中有 ${usedPaths.length} 个图例正在使用此目录'),
-          backgroundColor: Colors.orange,
+          content: Text(
+            '目录 "$folderPath" 中有 ${usedPathsInThisFolder.length} 个图例正在使用，将排除这些图例进行清理',
+          ),
+          backgroundColor: Colors.blue,
           duration: const Duration(seconds: 3),
         ),
       );
-      return;
     }
-    
+
     try {
-      // 使用缓存管理器清理该目录下的图例缓存
-      // 排除当前正在使用的路径
-      final allUsedPaths = _currentGroup.legendItems
-          .map((item) => item.legendPath)
-          .toSet();
-          
-      LegendCacheManager().clearCacheByFolder(folderPath, excludePaths: allUsedPaths);
-      
+      // 使用步进型缓存管理器清理该目录下的图例缓存（不递归清理子目录）
+      // 排除当前图例组正在使用的路径
+      LegendCacheManager().clearCacheByFolderStepwise(
+        folderPath,
+        excludePaths: usedLegendPaths,
+      );
+
       // 通知用户清理完成
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('已清理目录 "$folderPath" 下的图例缓存'),
+          content: Text(
+            '已清理目录 "$folderPath" 下的图例缓存（步进型，已排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
+          ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
         ),
       );
+
+      debugPrint(
+        '智能清理完成: 目录=$folderPath, 排除=${usedPathsInThisFolder.length}个正在使用的图例',
+      );
+      debugPrint('排除的图例路径: $usedPathsInThisFolder');
     } catch (e) {
       // 清理失败显示错误消息
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1982,7 +2051,7 @@ class _LegendGroupManagementDrawerState
     // 这里可以添加将缓存图例添加到当前图例组的逻辑
     // 或者直接应用图例到地图的逻辑
     debugPrint('选择了缓存图例: $legendPath');
-    
+
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../services/legend_cache_manager.dart';
+import '../legend_vfs/legend_vfs_service.dart';
 
 /// 版本会话状态（响应式）
 class ReactiveVersionState {
@@ -202,14 +204,15 @@ class ReactiveVersionManager extends ChangeNotifier {
     }
 
     // 复制源版本的路径选择状态（如果存在）
-    if (sourceVersionId != null && _versionPathSelections.containsKey(sourceVersionId)) {
+    if (sourceVersionId != null &&
+        _versionPathSelections.containsKey(sourceVersionId)) {
       final Map<String, Set<String>> newVersionPathSelections = {};
       final sourcePathSelections = _versionPathSelections[sourceVersionId]!;
-      
+
       for (final entry in sourcePathSelections.entries) {
         newVersionPathSelections[entry.key] = Set<String>.from(entry.value);
       }
-      
+
       _versionPathSelections[versionId] = newVersionPathSelections;
       debugPrint('从版本 $sourceVersionId 复制路径选择状态到 $versionId');
     } else {
@@ -274,6 +277,201 @@ class ReactiveVersionManager extends ChangeNotifier {
 
     debugPrint('切换版本 [$mapTitle]: $previousVersionId -> $versionId');
     notifyListeners();
+  }
+
+  /// 比较两个版本的路径选择差异并执行相应的缓存操作
+  /// [fromVersionId] 源版本ID
+  /// [toVersionId] 目标版本ID
+  /// [onPathAdded] 当路径被添加时的回调（加载到缓存）
+  /// [onPathRemoved] 当路径被移除时的回调（从缓存清理）
+  void compareVersionPathsAndUpdateCache(
+    String fromVersionId,
+    String toVersionId, {
+    Function(String legendGroupId, String path)? onPathAdded,
+    Function(String legendGroupId, String path)? onPathRemoved,
+  }) {
+    debugPrint('开始比较版本路径差异: $fromVersionId -> $toVersionId');
+
+    // 确保两个版本的路径选择数据存在
+    _ensureVersionPathSelectionExists(fromVersionId);
+    _ensureVersionPathSelectionExists(toVersionId);
+
+    final fromPaths = _getVersionAllPaths(fromVersionId);
+    final toPaths = _getVersionAllPaths(toVersionId);
+
+    // 验证路径数据
+    if (fromPaths.isEmpty && toPaths.isEmpty) {
+      debugPrint('警告: 两个版本都没有路径选择数据');
+      return;
+    }
+
+    // 找出新增的路径（目标版本有，源版本没有）
+    final addedPaths = <String, Set<String>>{};
+    for (final entry in toPaths.entries) {
+      final legendGroupId = entry.key;
+      final paths = entry.value;
+      final previousPaths = fromPaths[legendGroupId] ?? <String>{};
+
+      final newPaths = paths.difference(previousPaths);
+      if (newPaths.isNotEmpty) {
+        addedPaths[legendGroupId] = newPaths;
+      }
+    }
+
+    // 找出移除的路径（源版本有，目标版本没有）
+    final removedPaths = <String, Set<String>>{};
+    for (final entry in fromPaths.entries) {
+      final legendGroupId = entry.key;
+      final paths = entry.value;
+      final currentPaths = toPaths[legendGroupId] ?? <String>{};
+
+      final deletedPaths = paths.difference(currentPaths);
+      if (deletedPaths.isNotEmpty) {
+        removedPaths[legendGroupId] = deletedPaths;
+      }
+    }
+
+    debugPrint('路径差异分析完成:');
+    debugPrint(
+      '  新增路径: ${addedPaths.values.fold(0, (sum, set) => sum + set.length)} 个',
+    );
+    debugPrint(
+      '  移除路径: ${removedPaths.values.fold(0, (sum, set) => sum + set.length)} 个',
+    );
+
+    // 处理新增的路径（加载到缓存）
+    for (final entry in addedPaths.entries) {
+      final legendGroupId = entry.key;
+      for (final path in entry.value) {
+        debugPrint('加载路径到缓存: $legendGroupId -> $path');
+        onPathAdded?.call(legendGroupId, path);
+        _loadPathToCache(path);
+      }
+    }
+
+    // 处理移除的路径（从缓存清理）
+    for (final entry in removedPaths.entries) {
+      final legendGroupId = entry.key;
+      for (final path in entry.value) {
+        // 检查该路径是否还被目标版本的其他图例组使用
+        final stillUsed = toPaths.values.any((paths) => paths.contains(path));
+        if (!stillUsed) {
+          debugPrint('从缓存清理路径: $legendGroupId -> $path');
+          onPathRemoved?.call(legendGroupId, path);
+          _clearPathFromCache(path);
+        } else {
+          debugPrint('路径仍被其他图例组使用，跳过清理: $path');
+        }
+      }
+    }
+  }
+
+  /// 获取指定版本的所有路径选择
+  Map<String, Set<String>> _getVersionAllPaths(String versionId) {
+    _ensureVersionPathSelectionExists(versionId);
+    final versionData = _versionPathSelections[versionId]!;
+
+    // 返回深拷贝以避免修改原数据
+    final result = <String, Set<String>>{};
+    for (final entry in versionData.entries) {
+      result[entry.key] = Set<String>.from(entry.value);
+    }
+
+    return result;
+  }
+
+  /// 将路径加载到缓存
+  Future<void> _loadPathToCache(String path) async {
+    try {
+      debugPrint('正在加载路径到缓存: $path');
+
+      final cacheManager = LegendCacheManager();
+      final legendService = LegendVfsService();
+
+      // 获取目录下的所有图例文件
+      final legendFiles = await legendService.getLegendsInFolder(path);
+
+      debugPrint('在路径 $path 中找到 ${legendFiles.length} 个图例文件');
+
+      // 逐个加载图例到缓存
+      for (final legendFile in legendFiles) {
+        try {
+          final legendPath = path.isEmpty ? legendFile : '$path/$legendFile';
+
+          // 使用缓存管理器的异步加载方法
+          await cacheManager.getLegendData(legendPath);
+          debugPrint('已加载到缓存: $legendPath');
+        } catch (e) {
+          debugPrint('加载图例失败: $legendFile, 错误: $e');
+        }
+      }
+
+      debugPrint('路径加载完成: $path');
+    } catch (e) {
+      debugPrint('加载路径到缓存失败: $path, 错误: $e');
+    }
+  }
+
+  /// 从缓存清理路径
+  void _clearPathFromCache(String path) {
+    try {
+      final cacheManager = LegendCacheManager();
+
+      // 使用已有的步进型清理方法
+      cacheManager.clearCacheByFolderStepwise(path);
+      debugPrint('已从缓存清理路径: $path');
+    } catch (e) {
+      debugPrint('从缓存清理路径失败: $path, 错误: $e');
+    }
+  }
+
+  /// 智能版本切换（包含缓存管理）
+  void switchToVersionWithCacheManagement(String versionId) {
+    if (!_versionStates.containsKey(versionId)) {
+      throw ArgumentError('版本不存在: $versionId');
+    }
+
+    final previousVersionId = _currentVersionId;
+    debugPrint('开始智能版本切换: $previousVersionId -> $versionId');
+
+    // 如果有之前的版本，比较路径差异并更新缓存
+    if (previousVersionId != null && previousVersionId != versionId) {
+      debugPrint('比较版本路径差异: $previousVersionId vs $versionId');
+
+      // 输出当前版本的路径选择状态
+      final fromPaths = _getVersionAllPaths(previousVersionId);
+      final toPaths = _getVersionAllPaths(versionId);
+
+      debugPrint('源版本 $previousVersionId 路径选择:');
+      for (final entry in fromPaths.entries) {
+        debugPrint('  图例组 ${entry.key}: ${entry.value.join(", ")}');
+      }
+
+      debugPrint('目标版本 $versionId 路径选择:');
+      for (final entry in toPaths.entries) {
+        debugPrint('  图例组 ${entry.key}: ${entry.value.join(", ")}');
+      }
+
+      compareVersionPathsAndUpdateCache(
+        previousVersionId,
+        versionId,
+        onPathAdded: (legendGroupId, path) {
+          debugPrint('版本切换-加载路径: [$legendGroupId] $path');
+        },
+        onPathRemoved: (legendGroupId, path) {
+          debugPrint('版本切换-清理路径: [$legendGroupId] $path');
+        },
+      );
+    } else {
+      debugPrint(
+        '无需比较路径差异: previousVersionId=$previousVersionId, versionId=$versionId',
+      );
+    }
+
+    // 执行版本切换
+    switchToVersion(versionId);
+
+    debugPrint('智能版本切换完成: $previousVersionId -> $versionId');
   }
 
   /// 开始编辑指定版本
@@ -564,14 +762,14 @@ class ReactiveVersionManager extends ChangeNotifier {
   Set<String> getAllSelectedPaths() {
     final versionId = _currentVersionId ?? 'default';
     _ensureVersionPathSelectionExists(versionId);
-    
+
     final Set<String> allPaths = {};
     final versionData = _versionPathSelections[versionId]!;
-    
+
     for (final paths in versionData.values) {
       allPaths.addAll(paths);
     }
-    
+
     return allPaths;
   }
 
@@ -579,19 +777,19 @@ class ReactiveVersionManager extends ChangeNotifier {
   bool isPathSelectedByOtherGroups(String path, String currentGroupId) {
     final versionId = _currentVersionId ?? 'default';
     _ensureVersionPathSelectionExists(versionId);
-    
+
     final versionData = _versionPathSelections[versionId]!;
-    
+
     for (final entry in versionData.entries) {
       final groupId = entry.key;
       final paths = entry.value;
-      
+
       // 如果不是当前组，但包含该路径，则返回true
       if (groupId != currentGroupId && paths.contains(path)) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -599,14 +797,16 @@ class ReactiveVersionManager extends ChangeNotifier {
   void setPathSelected(String legendGroupId, String path, bool selected) {
     final versionId = _currentVersionId ?? 'default';
     _ensureVersionPathSelectionExists(versionId, legendGroupId);
-    
+
     if (selected) {
       _versionPathSelections[versionId]![legendGroupId]!.add(path);
     } else {
       _versionPathSelections[versionId]![legendGroupId]!.remove(path);
     }
-    
-    debugPrint('版本 $versionId 图例组 $legendGroupId ${selected ? '选中' : '取消选中'} 路径: $path');
+
+    debugPrint(
+      '版本 $versionId 图例组 $legendGroupId ${selected ? '选中' : '取消选中'} 路径: $path',
+    );
     notifyListeners();
   }
 
@@ -621,33 +821,68 @@ class ReactiveVersionManager extends ChangeNotifier {
   void resetLegendGroupSelections(String legendGroupId) {
     final versionId = _currentVersionId ?? 'default';
     _ensureVersionPathSelectionExists(versionId, legendGroupId);
-    
+
     // 清空当前图例组在当前版本的选择
     _versionPathSelections[versionId]![legendGroupId]!.clear();
-    
+
     debugPrint('重置版本 $versionId 图例组 $legendGroupId 的选择');
     notifyListeners();
   }
 
-  /// 清除缓存
-  void clearUnusedCache(String legendGroupId, String folderPath, Function(String) onClearCache) {
-    // 检查该路径是否还被当前版本中的任何图例组使用
-    if (isPathSelectedByOtherGroups(folderPath, legendGroupId) || 
+  /// 清除缓存 - 步进型清理（只清理直接路径，不递归清理子路径）
+  void clearUnusedCache(
+    String legendGroupId,
+    String folderPath,
+    Function(String) onClearCache,
+  ) {
+    // 只检查精确路径匹配，不检查父子关系
+    if (isPathSelectedByOtherGroups(folderPath, legendGroupId) ||
         getSelectedPaths(legendGroupId).contains(folderPath)) {
       // 路径仍在使用中，不清理
+      debugPrint('步进型清理: 路径 $folderPath 仍被使用，跳过清理');
       return;
     }
-    
-    // 通知清理缓存
+
+    // 通知清理缓存（只清理该路径本身，不递归清理子路径）
+    debugPrint('步进型清理: 清理路径 $folderPath 的缓存');
     onClearCache(folderPath);
   }
 
+  /// 步进型检查路径是否被其他组选中（只检查精确匹配）
+  bool isPathSelectedByOtherGroupsStepwise(String path, String currentGroupId) {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId);
+
+    final versionData = _versionPathSelections[versionId]!;
+
+    for (final entry in versionData.entries) {
+      final groupId = entry.key;
+      final paths = entry.value;
+
+      // 只检查精确路径匹配，不检查父子关系
+      if (groupId != currentGroupId && paths.contains(path)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /// 确保版本的路径选择数据结构存在
-  void _ensureVersionPathSelectionExists(String versionId, [String? legendGroupId]) {
-    _versionPathSelections.putIfAbsent(versionId, () => <String, Set<String>>{});
-    
+  void _ensureVersionPathSelectionExists(
+    String versionId, [
+    String? legendGroupId,
+  ]) {
+    _versionPathSelections.putIfAbsent(
+      versionId,
+      () => <String, Set<String>>{},
+    );
+
     if (legendGroupId != null) {
-      _versionPathSelections[versionId]!.putIfAbsent(legendGroupId, () => <String>{});
+      _versionPathSelections[versionId]!.putIfAbsent(
+        legendGroupId,
+        () => <String>{},
+      );
     }
   }
 
@@ -655,5 +890,67 @@ class ReactiveVersionManager extends ChangeNotifier {
   void dispose() {
     clearAllSessions();
     super.dispose();
+  }
+
+  /// 获取选择了指定路径的图例组ID列表
+  List<String> getGroupsSelectingPath(String path) {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId);
+    
+    final versionData = _versionPathSelections[versionId]!;
+    final groups = <String>[];
+    
+    for (final entry in versionData.entries) {
+      final groupId = entry.key;
+      final paths = entry.value;
+      
+      if (paths.contains(path)) {
+        groups.add(groupId);
+      }
+    }
+    
+    return groups;
+  }
+
+  /// 获取选择了指定路径的其他图例组ID列表（排除当前图例组）
+  List<String> getOtherGroupsSelectingPath(String path, String currentGroupId) {
+    final allGroups = getGroupsSelectingPath(path);
+    return allGroups.where((groupId) => groupId != currentGroupId).toList();
+  }
+
+  /// 获取图例组名称
+  String? getLegendGroupName(String groupId) {
+    final versionId = _currentVersionId ?? 'default';
+    final versionState = _versionStates[versionId];
+    final sessionData = versionState?.sessionData;
+    
+    if (sessionData == null) return null;
+    
+    // 在图例组列表中查找对应的图例组
+    for (final group in sessionData.legendGroups) {
+      if (group.id == groupId) {
+        return group.name;
+      }
+    }
+    
+    return null; // 如果找不到图例组，返回null
+  }
+
+  /// 获取选择了指定路径的其他图例组名称列表（排除当前图例组）
+  List<String> getOtherGroupNamesSelectingPath(String path, String currentGroupId) {
+    final otherGroupIds = getOtherGroupsSelectingPath(path, currentGroupId);
+    final groupNames = <String>[];
+    
+    for (final groupId in otherGroupIds) {
+      final groupName = getLegendGroupName(groupId);
+      if (groupName != null) {
+        groupNames.add(groupName);
+      } else {
+        // 如果找不到名称，使用ID作为后备
+        groupNames.add(groupId);
+      }
+    }
+    
+    return groupNames;
   }
 }

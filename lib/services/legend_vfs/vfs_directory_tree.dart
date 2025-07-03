@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'legend_vfs_service.dart';
-import '../legend_cache_manager.dart';
 
 /// VFS目录节点
 class VfsDirectoryNode {

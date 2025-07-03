@@ -402,7 +402,7 @@ class ReactiveVersionAdapter {
     _isUpdating = true;
     try {
       // 1. 切换版本管理器的当前版本
-      _versionManager.switchToVersion(versionId);
+      _versionManager.switchToVersionWithCacheManagement(versionId);
 
       // 2. 获取版本的会话数据
       final versionData = _versionManager.getVersionSessionData(versionId);

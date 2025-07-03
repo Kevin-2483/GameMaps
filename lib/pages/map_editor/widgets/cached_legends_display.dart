@@ -35,6 +35,23 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   }
 
   @override
+  void didUpdateWidget(CachedLegendsDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // 如果版本管理器变化，需要重新监听
+    if (widget.versionManager != oldWidget.versionManager) {
+      oldWidget.versionManager?.removeListener(_updateCachedLegends);
+      widget.versionManager?.addListener(_updateCachedLegends);
+    }
+    
+    // 如果当前图例组ID变化，需要重新计算分类
+    if (widget.currentLegendGroupId != oldWidget.currentLegendGroupId) {
+      print('[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示');
+      _updateCachedLegends();
+    }
+  }
+
+  @override
   void dispose() {
     _cacheManager.removeListener(_updateCachedLegends);
     widget.versionManager?.removeListener(_updateCachedLegends);
@@ -43,7 +60,10 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
 
   /// 更新缓存图例列表
   void _updateCachedLegends() {
+    print('[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}');
+    
     final cachedItems = _cacheManager.getAllCachedLegends();
+    print('[CachedLegendsDisplay] 当前缓存图例数量: ${cachedItems.length}');
     
     final Map<String, List<String>> ownSelected = {};
     final Map<String, List<String>> otherSelected = {};
@@ -57,6 +77,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       ownSelectedPaths = widget.versionManager!.getSelectedPaths(widget.currentLegendGroupId!);
       final allSelectedPaths = widget.versionManager!.getAllSelectedPaths();
       otherSelectedPaths = Set<String>.from(allSelectedPaths)..removeAll(ownSelectedPaths);
+      
+      print('[CachedLegendsDisplay] 自己组选中路径: $ownSelectedPaths');
+      print('[CachedLegendsDisplay] 其他组选中路径: $otherSelectedPaths');
     }
     
     for (final legendPath in cachedItems) {
@@ -110,6 +133,12 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       _otherSelectedLegends = otherSelected;
       _unselectedLegends = unselected;
     });
+    
+    // 输出分类结果
+    final totalOwnSelected = ownSelected.values.fold<int>(0, (sum, list) => sum + list.length);
+    final totalOtherSelected = otherSelected.values.fold<int>(0, (sum, list) => sum + list.length);
+    final totalUnselected = unselected.values.fold<int>(0, (sum, list) => sum + list.length);
+    print('[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected');
   }
 
   @override

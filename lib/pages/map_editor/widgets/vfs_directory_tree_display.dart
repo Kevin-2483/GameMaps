@@ -5,6 +5,12 @@ import '../../../services/legend_cache_manager.dart';
 import '../../../services/legend_vfs/legend_vfs_service.dart';
 
 /// VFS目录树显示组件
+/// 
+/// 实现步进型递归选择逻辑：
+/// - 选择目录时，只影响当前选中的目录，不会自动选择子目录
+/// - 取消选择时，只清理当前目录的缓存，不会递归清理子目录缓存
+/// - 如果组1选择了目录2，组2选择了目录2/3，两者互不干扰
+/// - 取消选择目录2时，不会影响目录2/3的选择状态和缓存
 class VfsDirectoryTreeDisplay extends StatefulWidget {
   final String legendGroupId; // 当前图例组ID
   final ReactiveVersionManager versionManager; // 版本管理器
@@ -58,7 +64,7 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     _syncTreeWithSelectionManager();
   }
   
-  // 同步树状态与选择管理器
+  // 同步树状态与选择管理器 - 步进型递归
   void _syncTreeWithSelectionManager() {
     if (_treeManager.rootNode == null) return;
     
@@ -70,30 +76,32 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     final otherSelectedPaths = Set<String>.from(allSelectedPaths)
       ..removeAll(selectedPaths);
     
-    // 递归更新节点状态
-    _updateNodeSelectionState(_treeManager.rootNode!, selectedPaths, otherSelectedPaths);
+    // 步进型更新节点状态（只针对精确匹配的路径）
+    _updateNodeSelectionStateStepwise(_treeManager.rootNode!, selectedPaths, otherSelectedPaths);
     
     // 调试信息，帮助排查问题
-    debugPrint('同步树状态 - 当前图例组: ${widget.legendGroupId}');
+    debugPrint('同步树状态（步进型）- 当前图例组: ${widget.legendGroupId}');
     debugPrint('当前组选中路径: ${selectedPaths.length} 个，其他组选中: ${otherSelectedPaths.length} 个');
     debugPrint('当前版本: ${widget.versionManager.currentVersionId}');
   }
   
-  // 递归更新节点选中状态
-  void _updateNodeSelectionState(
+  // 步进型更新节点选中状态 - 只针对精确匹配的路径，不递归子目录
+  void _updateNodeSelectionStateStepwise(
     VfsDirectoryNode node, 
     Set<String> selectedPaths,
     Set<String> otherSelectedPaths
   ) {
-    // 更新当前节点状态
-    if (node.path.isNotEmpty) {  // 排除根节点
-      node.isSelected = selectedPaths.contains(node.path);
-      node.isDisabled = otherSelectedPaths.contains(node.path);
-    }
+    // 更新当前节点状态（包括根节点）
+    // 根节点的路径为空字符串，用空字符串表示根目录
+    final nodePath = node.path.isEmpty ? "" : node.path;
     
-    // 递归更新子节点
+    // 精确匹配检查：只有当路径完全匹配时才设置选中状态
+    node.isSelected = selectedPaths.contains(nodePath);
+    node.isDisabled = otherSelectedPaths.contains(nodePath);
+    
+    // 递归处理子节点，但只传递状态检查，不传递父级选择状态
     for (final child in node.children) {
-      _updateNodeSelectionState(child, selectedPaths, otherSelectedPaths);
+      _updateNodeSelectionStateStepwise(child, selectedPaths, otherSelectedPaths);
     }
   }
 
@@ -145,6 +153,15 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const Spacer(),
+              Tooltip(
+                message: '步进型选择模式：只选择当前目录，不会递归选择子目录',
+                child: Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.refresh, size: 18),
                 onPressed: _loadDirectoryTree,
@@ -198,20 +215,18 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
                         )
                       : null,
                 ),
-                // 复选框（只有非根节点才显示）
-                if (!node.isRoot) ...[
-                  Checkbox(
-                    value: node.isSelected,
-                    onChanged: node.isDisabled ? null : (value) => _toggleSelected(node),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    // 如果是禁用状态（被其他组选中），则使用特殊样式
-                    fillColor: node.isDisabled 
-                        ? MaterialStateProperty.resolveWith<Color>(
-                            (states) => Colors.grey.withOpacity(0.6),
-                          )
-                        : null,
-                  ),
-                ],
+                // 复选框（所有节点都显示，包括根节点）
+                Checkbox(
+                  value: node.isSelected,
+                  onChanged: node.isDisabled ? null : (value) => _toggleSelected(node),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  // 如果是禁用状态（被其他组选中），则使用特殊样式
+                  fillColor: node.isDisabled 
+                      ? MaterialStateProperty.resolveWith<Color>(
+                          (states) => Colors.grey.withOpacity(0.6),
+                        )
+                      : null,
+                ),
                 // 文件夹图标
                 Icon(
                   Icons.folder,
@@ -239,9 +254,9 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
                   ),
                 ),
                 // 显示该目录被哪个图例组选中（如果被其他组选中）
-                if (node.isDisabled && !node.isRoot)
+                if (node.isDisabled)
                   Tooltip(
-                    message: '此目录已被其他图例组选择',
+                    message: _getOtherGroupsMessage(node.path),
                     child: Icon(
                       Icons.info_outline,
                       size: 14,
@@ -264,17 +279,17 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     _treeManager.toggleExpanded(node.path);
   }
 
-  /// 切换节点选中状态
+  /// 切换节点选中状态 - 步进型递归（只影响当前目录）
   void _toggleSelected(VfsDirectoryNode node) {
     if (node.isDisabled) return; // 如果是禁用状态，不允许切换
     
     // 切换选中状态
     final newSelectedState = !node.isSelected;
     
-    // 更新树状态
+    // 更新树状态（只更新当前节点）
     _treeManager.toggleSelected(node.path);
     
-    // 更新选择管理器状态
+    // 更新选择管理器状态（只更新当前路径）
     widget.versionManager.setPathSelected(
       widget.legendGroupId, 
       node.path, 
@@ -284,20 +299,21 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     // 如果选中目录，加载其中的图例到缓存系统
     if (newSelectedState) {
       _loadLegendsFromDirectoryToCache(node.path);
+      debugPrint('步进型选择: 选中目录 ${node.path}');
     }
     
-    // 如果取消选中，清理相关缓存
+    // 如果取消选中，清理相关缓存（只清理当前路径的缓存）
     if (!newSelectedState) {
       widget.versionManager.clearUnusedCache(
         widget.legendGroupId, 
         node.path, 
         (path) {
-          // 清理缓存
-          LegendCacheManager().clearCacheByFolder(path);
-          // 通知上层组件缓存已清理
+          // 通知上层组件缓存已清理，让上层组件处理具体的清理逻辑
           widget.onCacheCleared?.call(path);
+          debugPrint('步进型取消: 通知上层清理路径 $path 的缓存');
         }
       );
+      debugPrint('步进型取消: 取消选中目录 ${node.path}');
     }
   }
 
@@ -347,11 +363,21 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
         }
       }
       
-      // 通知缓存已更新
-      widget.onCacheCleared?.call(directoryPath);
-      
     } catch (e) {
       debugPrint('从目录加载图例失败: $directoryPath, 错误: $e');
+    }
+  }
+
+  /// 获取其他图例组的提示信息
+  String _getOtherGroupsMessage(String path) {
+    final otherGroupNames = widget.versionManager.getOtherGroupNamesSelectingPath(path, widget.legendGroupId);
+    
+    if (otherGroupNames.isEmpty) {
+      return '此目录已被其他图例组选择';
+    } else if (otherGroupNames.length == 1) {
+      return '此目录已被图例组 "${otherGroupNames.first}" 选择';
+    } else {
+      return '此目录已被以下图例组选择：${otherGroupNames.join(", ")}';
     }
   }
 

@@ -32,6 +32,7 @@ import 'widgets/reactive_script_panel.dart';
 import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/new_reactive_script_manager.dart';
+import '../../services/legend_cache_manager.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -181,10 +182,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
     }
 
+    // 清理图例缓存管理器的所有缓存
+    try {
+      LegendCacheManager().clearAllCache();
+      debugPrint('地图编辑器退出：已清理所有图例缓存');
+    } catch (e) {
+      print('在dispose中清理图例缓存失败: $e');
+    }
+
     // 释放响应式系统资源
     disposeReactiveIntegration();
 
-    // 释放响应式版本管理资源
+    // 释放响应式版本管理资源（包括路径选择状态清理）
     disposeVersionManagement();
 
     super.dispose();
