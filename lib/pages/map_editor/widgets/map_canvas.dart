@@ -444,54 +444,57 @@ class MapCanvasState extends State<MapCanvas> {
                         },
                         builder: (context, candidateData, rejectedData) {
                           final isHovering = candidateData.isNotEmpty;
-                          return Container(
-                            color: isHovering
-                                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                                : Colors.transparent,
-                            child: isHovering
-                                ? Center(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          width: 2,
+                          return IgnorePointer(
+                            ignoring: !isHovering, // 只有在悬停时才接收指针事件
+                            child: Container(
+                              color: isHovering
+                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                                  : Colors.transparent,
+                              child: isHovering
+                                  ? Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 12,
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            width: 2,
                                           ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.add_circle_outline,
-                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '释放以添加图例到此位置',
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.add_circle_outline,
+                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '释放以添加图例到此位置',
+                                              style: TextStyle(
+                                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                : null,
+                                    )
+                                  : null,
+                            ),
                           );
                         },
                       ),
