@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vector_math/vector_math_64.dart' show Matrix4; // 添加Matrix4导入
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/sticky_note.dart'; // 导入便签模型
@@ -117,6 +118,7 @@ class MapCanvas extends StatefulWidget {
   // 便签透明度更新回调
   final Function(String, double)? onStickyNoteOpacityChanged;
   final NewReactiveScriptManager? scriptManager; // 新增：脚本管理器参数
+  final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽图例到画布的回调
 
   const MapCanvas({
     super.key,
@@ -159,6 +161,7 @@ class MapCanvas extends StatefulWidget {
     this.onStickyNotesReordered,
     this.onStickyNoteOpacityChanged,
     this.scriptManager, // 新增：脚本管理器参数
+    this.onLegendDragToCanvas, // 新增：拖拽图例到画布的回调
   });
 
   @override
@@ -363,6 +366,7 @@ class MapCanvasState extends State<MapCanvas> {
                       ],
                     ),
                   ),
+
                   // Touch handler for drawing - 覆盖整个画布区域
                   if (_effectiveDrawingTool != null)
                     Positioned(
@@ -388,7 +392,7 @@ class MapCanvasState extends State<MapCanvas> {
                               onPanEnd: _onDrawingEnd,
                               behavior: HitTestBehavior.translucent,
                             ),
-                    ), // Touch handler for element interaction - 当没有绘制工具选中时
+                    ),                  // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
@@ -403,6 +407,95 @@ class MapCanvasState extends State<MapCanvas> {
                         behavior: HitTestBehavior.translucent,
                       ),
                     ),
+                  
+                  // DragTarget for receiving legend drags from cache
+                  if (!widget.isPreviewMode)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: kCanvasWidth,
+                      height: kCanvasHeight,
+                      child: DragTarget<String>(
+                        onWillAccept: (data) => data != null && data.isNotEmpty,
+                        onAccept: (legendPath) {
+                          // 这个方法主要用于兼容性，实际处理在onAcceptWithDetails中
+                          debugPrint('接收到拖拽的图例(onAccept): $legendPath');
+                        },
+                        onAcceptWithDetails: (details) {
+                          // 获取拖拽释放的位置并转换为画布坐标
+                          final globalPosition = details.offset;
+                          // 将全局坐标转换为画布坐标
+                          final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+                          if (renderBox != null) {
+                            final localPosition = renderBox.globalToLocal(globalPosition);
+                            debugPrint('拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition');
+                            
+                            // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
+                            final canvasPosition = _transformLocalToCanvasPosition(localPosition);
+                            debugPrint('转换后的画布坐标: $canvasPosition');
+                            
+                            _handleLegendDragAccept(details.data, canvasPosition);
+                          } else {
+                            debugPrint('警告：无法获取RenderBox，使用默认位置处理拖拽');
+                            // 使用默认位置(画布中心)
+                            final defaultPosition = const Offset(kCanvasWidth / 2, kCanvasHeight / 2);
+                            _handleLegendDragAccept(details.data, defaultPosition);
+                          }
+                        },
+                        builder: (context, candidateData, rejectedData) {
+                          final isHovering = candidateData.isNotEmpty;
+                          return Container(
+                            color: isHovering
+                                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                                : Colors.transparent,
+                            child: isHovering
+                                ? Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.add_circle_outline,
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '释放以添加图例到此位置',
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -410,6 +503,54 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       ),
     );
+  }
+
+  /// 处理接收到的图例拖拽数据
+  void _handleLegendDragAccept(String legendPath, Offset canvasPosition) {
+    // 转换画布像素坐标到相对坐标
+    final relativePosition = Offset(
+      canvasPosition.dx / kCanvasWidth,
+      canvasPosition.dy / kCanvasHeight,
+    );
+
+    // 将拖拽事件传递给图例组管理抽屉处理
+    widget.onLegendDragToCanvas?.call(legendPath, relativePosition);
+  }
+
+  /// 将本地坐标转换为画布坐标，考虑 InteractiveViewer 的变换矩阵
+  Offset _transformLocalToCanvasPosition(Offset localPosition) {
+    try {
+      // 获取当前的变换矩阵
+      final Matrix4 transform = _transformationController.value;
+      
+      // 提取缩放和平移信息
+      final double scaleX = transform.entry(0, 0); // X轴缩放
+      final double scaleY = transform.entry(1, 1); // Y轴缩放
+      final double translateX = transform.entry(0, 3); // X轴平移
+      final double translateY = transform.entry(1, 3); // Y轴平移
+      
+      // 逆向变换：从视口坐标转换为画布坐标
+      final double canvasX = (localPosition.dx - translateX) / scaleX;
+      final double canvasY = (localPosition.dy - translateY) / scaleY;
+      
+      // 限制在画布边界内
+      final clampedPosition = Offset(
+        canvasX.clamp(0.0, kCanvasWidth),
+        canvasY.clamp(0.0, kCanvasHeight),
+      );
+      
+      debugPrint('坐标转换: 本地($localPosition) -> 画布($clampedPosition)');
+      debugPrint('变换信息: 缩放($scaleX, $scaleY), 平移($translateX, $translateY)');
+      
+      return clampedPosition;
+    } catch (e) {
+      debugPrint('坐标转换失败: $e，使用原始坐标');
+      // 如果转换失败，返回限制在画布范围内的原始坐标
+      return Offset(
+        localPosition.dx.clamp(0.0, kCanvasWidth),
+        localPosition.dy.clamp(0.0, kCanvasHeight),
+      );
+    }
   }
 
   Widget _buildLayerImageWidget(MapLayer layer) {

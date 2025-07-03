@@ -8,12 +8,18 @@ class CachedLegendsDisplay extends StatefulWidget {
   final Function(String)? onLegendSelected; // 图例选中回调
   final ReactiveVersionManager? versionManager; // 版本管理器
   final String? currentLegendGroupId; // 当前图例组ID
+  final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽到画布的回调
+  final VoidCallback? onDragStart; // 新增：拖拽开始回调（用于关闭抽屉）
+  final VoidCallback? onDragEnd; // 新增：拖拽结束回调（用于重新打开抽屉）
 
   const CachedLegendsDisplay({
     super.key,
     this.onLegendSelected,
     this.versionManager,
     this.currentLegendGroupId,
+    this.onLegendDragToCanvas, // 新增参数
+    this.onDragStart, // 新增参数
+    this.onDragEnd, // 新增参数
   });
 
   @override
@@ -310,12 +316,88 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       builder: (context, snapshot) {
         final legend = snapshot.data;
         
-        return InkWell(
-          onTap: () => widget.onLegendSelected?.call(legendPath),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
+        return Draggable<String>(
+          data: legendPath,
+          onDragStarted: () {
+            debugPrint('开始拖拽图例: $legendPath');
+            // 通知抽屉关闭
+            widget.onDragStart?.call();
+          },
+          onDragEnd: (details) {
+            debugPrint('结束拖拽图例: $legendPath, 是否被接受: ${details.wasAccepted}');
+          },
+          onDragCompleted: () {
+            debugPrint('拖拽完成: $legendPath');
+            widget.onDragEnd?.call();
+          },
+          feedback: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.9),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: legend?.hasImageData == true
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: Image.memory(
+                              legend!.imageData!,
+                              fit: BoxFit.cover,
+                              width: 30,
+                              height: 30,
+                            ),
+                          )
+                        : Icon(
+                            Icons.legend_toggle,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    legend?.title ?? _extractLegendName(legendPath),
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          childWhenDragging: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
               ),
@@ -324,53 +406,96 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 图例预览图标 (小正方形)
                 Container(
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: legend?.hasImageData == true
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: Image.memory(
-                            legend!.imageData!,
-                            fit: BoxFit.cover,
-                            width: 22,
-                            height: 22,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.image_not_supported,
-                                size: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              );
-                            },
-                          ),
-                        )
-                      : Icon(
-                          Icons.legend_toggle,
-                          size: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                  child: Icon(
+                    Icons.drag_indicator,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  ),
                 ),
                 const SizedBox(height: 4),
-                // 图例标题
                 Text(
-                  legend?.title ?? _extractLegendName(legendPath),
+                  '拖拽中...',
                   style: TextStyle(
                     fontSize: 10,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
+            ),
+          ),
+          child: InkWell(
+            onTap: () => widget.onLegendSelected?.call(legendPath),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 图例预览图标 (小正方形)
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: legend?.hasImageData == true
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: Image.memory(
+                              legend!.imageData!,
+                              fit: BoxFit.cover,
+                              width: 22,
+                              height: 22,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.image_not_supported,
+                                  size: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                );
+                              },
+                            ),
+                          )
+                        : Icon(
+                            Icons.legend_toggle,
+                            size: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                  const SizedBox(height: 4),
+                  // 图例标题
+                  Text(
+                    legend?.title ?? _extractLegendName(legendPath),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ),
         );

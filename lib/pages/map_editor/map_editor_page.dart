@@ -166,6 +166,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   // 智能隐藏状态管理（从抽屉迁移到地图编辑器）
   Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
 
+  bool _isDragTemporaryHidden = false; // 标记抽屉是否因拖拽而临时隐藏
+  LegendGroup? _hiddenLegendGroupForDrag; // 保存因拖拽而隐藏的图例组
+  bool _wasDrawerOpenBeforeDrag = false; // 保存拖拽前抽屉的开启状态
+
   @override
   void dispose() {
     // 在页面销毁时尝试保存面板状态（异步但不等待）
@@ -269,6 +273,105 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     debugPrint('图例组 $legendGroupId 智能隐藏状态已更新: $enabled');
+  }
+
+  /// 处理从缓存拖拽图例到画布
+  void _handleLegendDragToCanvas(String legendPath, Offset canvasPosition) {
+    // 找到当前打开的图例组管理抽屉对应的图例组
+    if (_currentLegendGroupForManagement != null) {
+      // 生成完全唯一的ID - 使用更高精度的时间戳和随机数
+      final now = DateTime.now();
+      final timestamp = now.millisecondsSinceEpoch;
+      final randomSuffix = (now.microsecond * 1000 + (timestamp % 1000))
+          .toString();
+
+      // 从路径生成legendId - 确保每次都不同
+      final pathSegments = legendPath.split('/');
+      final fileName = pathSegments.last.replaceAll('.legend', '');
+      final legendId = 'drag_${fileName}_${timestamp}_${randomSuffix}';
+      final itemId = 'item_${timestamp}_${randomSuffix}';
+
+      // 创建新的图例项
+      final newItem = LegendItem(
+        id: itemId,
+        legendPath: legendPath,
+        legendId: legendId,
+        position: canvasPosition, // 使用拖拽的位置
+        size: 1.0, // 默认大小
+        rotation: 0.0, // 默认旋转
+        opacity: 1.0, // 默认透明度
+        isVisible: true, // 默认可见
+        createdAt: now,
+      );
+
+      // 创建新的图例项列表 - 确保是新的列表实例
+      final currentItems = List<LegendItem>.from(
+        _currentLegendGroupForManagement!.legendItems,
+      );
+      currentItems.add(newItem);
+
+      // 添加到当前图例组
+      final updatedGroup = _currentLegendGroupForManagement!.copyWith(
+        legendItems: currentItems,
+        updatedAt: now,
+      );
+
+      debugPrint(
+        '拖拽添加图例项到地图编辑器: ID=${newItem.id}, legendId=${newItem.legendId}',
+      );
+      debugPrint(
+        '更新前图例数量: ${_currentLegendGroupForManagement!.legendItems.length}',
+      );
+      debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
+
+      // 更新图例组
+      _updateLegendGroup(updatedGroup);
+
+      // 显示成功提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '已将图例添加到 ${updatedGroup.name} (${updatedGroup.legendItems.length}个图例)',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');
+    }
+  }
+
+  /// 处理拖拽开始 - 临时关闭抽屉
+  void _handleDragStart() {
+    if (_isLegendGroupManagementDrawerOpen && !_isDragTemporaryHidden) {
+      debugPrint('拖拽开始：临时关闭图例组管理抽屉');
+      setState(() {
+        _isDragTemporaryHidden = true;
+        _hiddenLegendGroupForDrag = _currentLegendGroupForManagement;
+        _wasDrawerOpenBeforeDrag = true;
+      });
+    }
+  }
+
+  /// 处理拖拽结束 - 重新打开抽屉
+  void _handleDragEnd() {
+    debugPrint('拖拽结束：检查是否需要重新打开图例组管理抽屉');
+    debugPrint('  _isDragTemporaryHidden: $_isDragTemporaryHidden');
+    debugPrint('  _wasDrawerOpenBeforeDrag: $_wasDrawerOpenBeforeDrag');
+    debugPrint('  _hiddenLegendGroupForDrag: $_hiddenLegendGroupForDrag');
+    
+    if (_isDragTemporaryHidden && _wasDrawerOpenBeforeDrag) {
+      debugPrint('拖拽结束：重新打开图例组管理抽屉');
+      setState(() {
+        _isDragTemporaryHidden = false;
+        // 保持原来的状态不变，只取消临时隐藏
+        _wasDrawerOpenBeforeDrag = false;
+        _hiddenLegendGroupForDrag = null;
+      });
+    }
   }
 
   /// 退出时保存智能隐藏状态
@@ -1930,6 +2033,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
+    debugPrint('地图编辑器：更新图例组 ${updatedGroup.name}');
+    debugPrint('更新的图例项数量: ${updatedGroup.legendItems.length}');
+
+    // 如果当前正在管理这个图例组，同时更新管理抽屉的状态
+    if (_currentLegendGroupForManagement?.id == updatedGroup.id) {
+      debugPrint('同步更新图例组管理抽屉的状态');
+      setState(() {
+        _currentLegendGroupForManagement = updatedGroup;
+      });
+    }
+
     // 使用响应式系统更新图例组
     try {
       updateLegendGroupReactive(updatedGroup);
@@ -2876,10 +2990,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     _showLegendGroupManagementDrawer,
                                 onClose: _closeLayerLegendBindingDrawer,
                               ),
-                            ),
-                          ), // 图例组管理抽屉覆盖层
+                            ),),
+                        // 图例组管理抽屉覆盖层
                         if (_isLegendGroupManagementDrawerOpen &&
-                            _currentLegendGroupForManagement != null)
+                            _currentLegendGroupForManagement != null &&
+                            !_isDragTemporaryHidden) // 添加拖拽临时隐藏条件
                           Positioned(
                             top: 16,
                             bottom: 16,
@@ -2907,7 +3022,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                 onSmartHideStateChanged:
                                     setLegendGroupSmartHideState,
                                 getSmartHideState: getLegendGroupSmartHideState,
-                                versionManager: versionAdapter!.versionManager, // 传递版本管理器
+                                versionManager:
+                                    versionAdapter!.versionManager, // 传递版本管理器
+                                onLegendDragToCanvas:
+                                    _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
+                                onDragStart: _handleDragStart, // 添加这行
+                                onDragEnd: _handleDragEnd, // 添加这行
                               ),
                             ),
                           ), // Z层级检视器覆盖层
@@ -2922,7 +3042,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                               elevation: 8,
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
-                                width: userPrefsProvider.layout.drawerWidth, // 使用用户偏好设置的抽屉宽度
+                                width: userPrefsProvider
+                                    .layout
+                                    .drawerWidth, // 使用用户偏好设置的抽屉宽度
                                 decoration: BoxDecoration(
                                   color: Theme.of(
                                     context,
@@ -3640,6 +3762,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             });
           },
           scriptManager: newReactiveScriptManager,
+          onLegendDragToCanvas: _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
         );
       },
     );

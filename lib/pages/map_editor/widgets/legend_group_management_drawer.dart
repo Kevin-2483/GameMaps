@@ -32,6 +32,9 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(String, bool)? onSmartHideStateChanged;
   final bool Function(String)? getSmartHideState;
   final ReactiveVersionManager versionManager; // 版本管理器
+  final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽到画布的回调
+  final VoidCallback? onDragStart; // 新增：拖拽开始回调（用于关闭抽屉）
+  final VoidCallback? onDragEnd; // 新增：拖拽结束回调（用于重新打开抽屉）
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -51,6 +54,9 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onSmartHideStateChanged, // 新增：智能隐藏状态变更回调
     this.getSmartHideState, // 新增：获取智能隐藏状态的函数
     required this.versionManager, // 版本管理器参数
+    this.onLegendDragToCanvas, // 新增：拖拽到画布的回调
+    this.onDragStart, // 新增：拖拽开始回调
+    this.onDragEnd, // 新增：拖拽结束回调
   });
 
   @override
@@ -93,11 +99,31 @@ class _LegendGroupManagementDrawerState
   void didUpdateWidget(LegendGroupManagementDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // 如果传入的图例组发生变化，更新当前组
+    // 检查图例组是否发生变化（ID变化或内容变化）
+    bool needsUpdate = false;
+    String reason = '';
+    
     if (oldWidget.legendGroup.id != widget.legendGroup.id) {
-      _currentGroup = widget.legendGroup;
+      needsUpdate = true;
+      reason = 'ID变化';
       // 清除选中的图例项，因为切换到了新的图例组
       _selectedLegendItemId = null;
+    } else if (oldWidget.legendGroup.legendItems.length != widget.legendGroup.legendItems.length) {
+      needsUpdate = true;
+      reason = '图例项数量变化: ${oldWidget.legendGroup.legendItems.length} -> ${widget.legendGroup.legendItems.length}';
+    } else if (oldWidget.legendGroup.updatedAt != widget.legendGroup.updatedAt) {
+      needsUpdate = true;
+      reason = '更新时间变化';
+    }
+
+    if (needsUpdate) {
+      debugPrint('图例组管理抽屉更新: $reason');
+      debugPrint('新图例组有 ${widget.legendGroup.legendItems.length} 个图例项');
+      
+      setState(() {
+        _currentGroup = widget.legendGroup;
+      });
+      
       // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
@@ -455,6 +481,9 @@ class _LegendGroupManagementDrawerState
                         onLegendSelected: _onCachedLegendSelected,
                         versionManager: widget.versionManager,
                         currentLegendGroupId: _currentGroup.id,
+                        onLegendDragToCanvas: _onLegendDragToCanvas, // 使用本地方法处理拖拽
+                        onDragStart: widget.onDragStart, // 传递拖拽开始回调
+                        onDragEnd: widget.onDragEnd, // 传递拖拽结束回调
                       ),
                     ),
                   ),
@@ -941,9 +970,17 @@ class _LegendGroupManagementDrawerState
   }
 
   void _updateGroup(LegendGroup updatedGroup) {
+    debugPrint('图例组管理抽屉：更新组 ${updatedGroup.name}');
+    debugPrint('更新前图例项数量: ${_currentGroup.legendItems.length}');
+    debugPrint('更新后图例项数量: ${updatedGroup.legendItems.length}');
+    
     setState(() {
       _currentGroup = updatedGroup.copyWith(updatedAt: DateTime.now());
     });
+    
+    debugPrint('本地状态已更新，当前组图例项数量: ${_currentGroup.legendItems.length}');
+    
+    // 通知父组件更新
     widget.onLegendGroupUpdated(_currentGroup);
 
     // 延迟执行检查，避免在setState期间再次调用setState
@@ -2062,6 +2099,66 @@ class _LegendGroupManagementDrawerState
 
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
+  }
+
+  /// 处理从缓存拖拽图例到画布
+  void _onLegendDragToCanvas(String legendPath, Offset canvasPosition) {
+    // 自动将拖拽的图例添加到当前图例组
+    _addLegendFromPath(legendPath, canvasPosition);
+  }
+
+  /// 从图例路径添加图例到当前组
+  void _addLegendFromPath(String legendPath, Offset canvasPosition) {
+    // 生成完全唯一的ID - 使用更高精度的时间戳和随机数
+    final now = DateTime.now();
+    final timestamp = now.millisecondsSinceEpoch;
+    final randomSuffix = (now.microsecond * 1000 + (timestamp % 1000)).toString();
+    
+    // 从路径生成legendId - 确保每次都不同
+    final pathSegments = legendPath.split('/');
+    final fileName = pathSegments.last.replaceAll('.legend', '');
+    final legendId = 'drag_${fileName}_${timestamp}_${randomSuffix}';
+    final itemId = 'item_${timestamp}_${randomSuffix}';
+
+    // 创建新的图例项
+    final newItem = LegendItem(
+      id: itemId,
+      legendPath: legendPath,
+      legendId: legendId,
+      position: canvasPosition, // 使用拖拽的位置
+      size: 1.0, // 默认大小
+      rotation: 0.0, // 默认旋转
+      opacity: 1.0, // 默认透明度
+      isVisible: true, // 默认可见
+      createdAt: now,
+    );
+
+    // 创建新的图例项列表 - 确保是新的列表实例
+    final currentItems = List<LegendItem>.from(_currentGroup.legendItems);
+    currentItems.add(newItem);
+
+    // 添加到当前图例组
+    final updatedGroup = _currentGroup.copyWith(
+      legendItems: currentItems,
+      updatedAt: now,
+    );
+    
+    debugPrint('拖拽添加图例项: ID=${newItem.id}, legendId=${newItem.legendId}');
+    debugPrint('更新前图例数量: ${_currentGroup.legendItems.length}');
+    debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
+    
+    _updateGroup(updatedGroup);
+
+    // 显示成功提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('已将图例添加到 ${_currentGroup.name} (${updatedGroup.legendItems.length}个图例)'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');
   }
 
   @override
