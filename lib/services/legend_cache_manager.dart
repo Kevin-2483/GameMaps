@@ -235,6 +235,18 @@ class LegendCacheManager extends ChangeNotifier {
     return Map.unmodifiable(_cache);
   }
 
+  /// 直接将图例数据添加到缓存
+  void cacheLegend(String legendPath, legend_db.LegendItem legendData, {Map<String, dynamic>? metadata}) {
+    _cache[legendPath] = CachedLegendItem(
+      state: LegendLoadingState.loaded,
+      legendData: legendData,
+      loadedAt: DateTime.now(),
+    );
+    
+    debugPrint('图例已添加到缓存: $legendPath');
+    notifyListeners();
+  }
+
   /// 加载图例的内部实现
   Future<legend_db.LegendItem?> _loadLegend(String legendPath) async {
     // 如果已经在加载中，等待现有的加载完成

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../services/legend_cache_manager.dart';
+import '../../../services/reactive_version/reactive_version_manager.dart';
 import '../../../models/legend_item.dart' as legend_db;
 
 /// 缓存图例展示组件
 class CachedLegendsDisplay extends StatefulWidget {
   final Function(String)? onLegendSelected; // 图例选中回调
+  final ReactiveVersionManager? versionManager; // 版本管理器
+  final String? currentLegendGroupId; // 当前图例组ID
 
   const CachedLegendsDisplay({
     super.key,
     this.onLegendSelected,
+    this.versionManager,
+    this.currentLegendGroupId,
   });
 
   @override
@@ -17,51 +22,103 @@ class CachedLegendsDisplay extends StatefulWidget {
 
 class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   final LegendCacheManager _cacheManager = LegendCacheManager();
-  Map<String, List<String>> _groupedLegends = {};
+  Map<String, List<String>> _ownSelectedLegends = {}; // 自己组选中的图例
+  Map<String, List<String>> _otherSelectedLegends = {}; // 其他组选中的图例
+  Map<String, List<String>> _unselectedLegends = {}; // 未选中但已加载的图例
 
   @override
   void initState() {
     super.initState();
     _cacheManager.addListener(_updateCachedLegends);
+    widget.versionManager?.addListener(_updateCachedLegends);
     _updateCachedLegends();
   }
 
   @override
   void dispose() {
     _cacheManager.removeListener(_updateCachedLegends);
+    widget.versionManager?.removeListener(_updateCachedLegends);
     super.dispose();
   }
 
   /// 更新缓存图例列表
   void _updateCachedLegends() {
     final cachedItems = _cacheManager.getAllCachedLegends();
-    final Map<String, List<String>> grouped = {};
+    
+    final Map<String, List<String>> ownSelected = {};
+    final Map<String, List<String>> otherSelected = {};
+    final Map<String, List<String>> unselected = {};
+    
+    // 获取选中状态信息
+    Set<String> ownSelectedPaths = {};
+    Set<String> otherSelectedPaths = {};
+    
+    if (widget.versionManager != null && widget.currentLegendGroupId != null) {
+      ownSelectedPaths = widget.versionManager!.getSelectedPaths(widget.currentLegendGroupId!);
+      final allSelectedPaths = widget.versionManager!.getAllSelectedPaths();
+      otherSelectedPaths = Set<String>.from(allSelectedPaths)..removeAll(ownSelectedPaths);
+    }
     
     for (final legendPath in cachedItems) {
-      // 提取目录路径
+      // 从路径确定目录
       String directory = '';
       final lastSlashIndex = legendPath.lastIndexOf('/');
       if (lastSlashIndex != -1) {
         directory = legendPath.substring(0, lastSlashIndex);
       }
-      
-      // 如果目录为空，使用"根目录"
       final displayDirectory = directory.isEmpty ? '根目录' : directory;
       
-      if (!grouped.containsKey(displayDirectory)) {
-        grouped[displayDirectory] = [];
+      // 判断图例属于哪个分类
+      bool isOwnSelected = false;
+      bool isOtherSelected = false;
+      
+      // 检查图例路径是否属于选中的目录
+      for (final selectedPath in ownSelectedPaths) {
+        if (directory == selectedPath || directory.startsWith('$selectedPath/')) {
+          isOwnSelected = true;
+          break;
+        }
       }
-      grouped[displayDirectory]!.add(legendPath);
+      
+      if (!isOwnSelected) {
+        for (final selectedPath in otherSelectedPaths) {
+          if (directory == selectedPath || directory.startsWith('$selectedPath/')) {
+            isOtherSelected = true;
+            break;
+          }
+        }
+      }
+      
+      // 分类存储
+      Map<String, List<String>> targetMap;
+      if (isOwnSelected) {
+        targetMap = ownSelected;
+      } else if (isOtherSelected) {
+        targetMap = otherSelected;
+      } else {
+        targetMap = unselected;
+      }
+      
+      if (!targetMap.containsKey(displayDirectory)) {
+        targetMap[displayDirectory] = [];
+      }
+      targetMap[displayDirectory]!.add(legendPath);
     }
     
     setState(() {
-      _groupedLegends = grouped;
+      _ownSelectedLegends = ownSelected;
+      _otherSelectedLegends = otherSelected;
+      _unselectedLegends = unselected;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_groupedLegends.isEmpty) {
+    final totalOwnSelected = _ownSelectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
+    final totalOtherSelected = _otherSelectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
+    final totalUnselected = _unselectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
+    
+    if (totalOwnSelected + totalOtherSelected + totalUnselected == 0) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -86,22 +143,82 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       );
     }
 
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      itemCount: _groupedLegends.keys.length,
-      itemBuilder: (context, index) {
-        final directory = _groupedLegends.keys.elementAt(index);
-        final legends = _groupedLegends[directory]!;
+      children: [
+        // 1. 自己组选中的图例（最上方，绿色主题）
+        if (_ownSelectedLegends.isNotEmpty) ...[
+          _buildCategoryHeader(
+            '自己组选中',
+            totalOwnSelected,
+            Colors.green,
+            Icons.check_circle,
+          ),
+          ..._ownSelectedLegends.entries.map((entry) => 
+            _buildDirectorySection(entry.key, entry.value, Colors.green.shade50)),
+          const SizedBox(height: 8),
+        ],
         
-        return _buildDirectorySection(directory, legends);
-      },
+        // 2. 其他组选中的图例（中间，橙色主题）
+        if (_otherSelectedLegends.isNotEmpty) ...[
+          _buildCategoryHeader(
+            '其他组选中',
+            totalOtherSelected,
+            Colors.orange,
+            Icons.group,
+          ),
+          ..._otherSelectedLegends.entries.map((entry) => 
+            _buildDirectorySection(entry.key, entry.value, Colors.orange.shade50)),
+          const SizedBox(height: 8),
+        ],
+        
+        // 3. 未选中但已加载的图例（最下方，灰色主题）
+        if (_unselectedLegends.isNotEmpty) ...[
+          _buildCategoryHeader(
+            '未选中但已加载',
+            totalUnselected,
+            Colors.grey,
+            Icons.storage,
+          ),
+          ..._unselectedLegends.entries.map((entry) => 
+            _buildDirectorySection(entry.key, entry.value, Colors.grey.shade50)),
+        ],
+      ],
+    );
+  }
+
+  /// 构建分类标题
+  Widget _buildCategoryHeader(String title, int count, Color color, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Text(
+            '$title ($count)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              indent: 8,
+              color: color.withOpacity(0.3),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   /// 构建目录段落
-  Widget _buildDirectorySection(String directory, List<String> legends) {
+  Widget _buildDirectorySection(String directory, List<String> legends, [Color? backgroundColor]) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      color: backgroundColor,
       child: ExpansionTile(
         title: Text(
           directory,

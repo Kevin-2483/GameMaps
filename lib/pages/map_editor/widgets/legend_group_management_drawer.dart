@@ -5,8 +5,10 @@ import '../../../models/legend_item.dart' as legend_db;
 import '../../../components/vfs/vfs_file_picker_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VFS服务
+import '../../../services/legend_cache_manager.dart'; // 导入图例缓存管理器
 import '../../../components/common/tags_manager.dart';
 import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
+import '../../../services/reactive_version/reactive_version_manager.dart'; // 使用ReactiveVersionManager
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 
@@ -27,6 +29,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final List<ScriptData> scripts; // 新增：脚本列表
   final Function(String, bool)? onSmartHideStateChanged;
   final bool Function(String)? getSmartHideState;
+  final ReactiveVersionManager versionManager; // 版本管理器
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -45,6 +48,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     required this.scripts, // 新增：必传脚本列表
     this.onSmartHideStateChanged, // 新增：智能隐藏状态变更回调
     this.getSmartHideState, // 新增：获取智能隐藏状态的函数
+    required this.versionManager, // 版本管理器参数
   });
 
   @override
@@ -73,6 +77,9 @@ class _LegendGroupManagementDrawerState
     _currentGroup = widget.legendGroup;
     // 设置初始选中的图例项
     _selectedLegendItemId = widget.initialSelectedLegendItemId;
+    
+    // 版本管理器已通过widget传入，无需额外设置
+    
     // 延迟执行检查，避免在初始化期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSmartHidingStateFromExtensionSettings();
@@ -96,8 +103,15 @@ class _LegendGroupManagementDrawerState
       });
     }
 
-    // 如果地图ID发生变化，重新加载扩展设置
-    if (oldWidget.mapId != widget.mapId) {
+    // 如果地图ID发生变化，更新路径选择管理器的当前版本
+    if (oldWidget.mapId != widget.mapId && widget.mapId != null) {
+      debugPrint('地图ID变更: ${oldWidget.mapId} -> ${widget.mapId}');
+      
+      // 强制刷新VFS目录树状态
+      setState(() {
+        _isVfsTreeExpanded = true; // 自动展开目录树以便用户查看更新后的状态
+      });
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
         _checkSmartHiding();
@@ -410,7 +424,11 @@ class _LegendGroupManagementDrawerState
                   child: Container(
                     height: 300,
                     padding: const EdgeInsets.all(8),
-                    child: const VfsDirectoryTreeDisplay(),
+                    child: VfsDirectoryTreeDisplay(
+                      legendGroupId: _currentGroup.id,
+                      versionManager: widget.versionManager,
+                      onCacheCleared: _clearLegendCacheForFolder,
+                    ),
                   ),
                 ),
 
@@ -429,6 +447,8 @@ class _LegendGroupManagementDrawerState
                     padding: const EdgeInsets.all(8),
                     child: CachedLegendsDisplay(
                       onLegendSelected: _onCachedLegendSelected,
+                      versionManager: widget.versionManager,
+                      currentLegendGroupId: _currentGroup.id,
                     ),
                   ),
                 ),
@@ -1908,6 +1928,55 @@ class _LegendGroupManagementDrawerState
     );
   }
 
+  /// 清理指定目录下的图例缓存
+  void _clearLegendCacheForFolder(String folderPath) {
+    // 检查目录中的图例是否在当前图例组中使用
+    final usedPaths = _currentGroup.legendItems
+        .map((item) => item.legendPath)
+        .where((path) => path.startsWith(folderPath))
+        .toList();
+    
+    if (usedPaths.isNotEmpty) {
+      // 如果有图例在使用，显示警告
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('无法清理缓存：当前图例组中有 ${usedPaths.length} 个图例正在使用此目录'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    
+    try {
+      // 使用缓存管理器清理该目录下的图例缓存
+      // 排除当前正在使用的路径
+      final allUsedPaths = _currentGroup.legendItems
+          .map((item) => item.legendPath)
+          .toSet();
+          
+      LegendCacheManager().clearCacheByFolder(folderPath, excludePaths: allUsedPaths);
+      
+      // 通知用户清理完成
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已清理目录 "$folderPath" 下的图例缓存'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // 清理失败显示错误消息
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('清理缓存失败: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   /// 处理缓存图例选择
   void _onCachedLegendSelected(String legendPath) {
     // 这里可以添加将缓存图例添加到当前图例组的逻辑
@@ -1916,5 +1985,11 @@ class _LegendGroupManagementDrawerState
     
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
+  }
+
+  @override
+  void dispose() {
+    // 清理工作，例如取消可能的订阅等
+    super.dispose();
   }
 }

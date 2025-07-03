@@ -2898,6 +2898,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                 onSmartHideStateChanged:
                                     setLegendGroupSmartHideState,
                                 getSmartHideState: getLegendGroupSmartHideState,
+                                versionManager: versionAdapter!.versionManager, // 传递版本管理器
                               ),
                             ),
                           ), // Z层级检视器覆盖层

@@ -86,6 +86,9 @@ class ReactiveVersionManager extends ChangeNotifier {
   // 版本隔离的数据管理
   final Map<String, MapItem> _versionDataCache = {};
 
+  // 版本隔离的图例路径选择管理
+  final Map<String, Map<String, Set<String>>> _versionPathSelections = {};
+
   ReactiveVersionManager({required this.mapTitle, this.folderPath});
 
   /// 获取所有版本状态
@@ -198,6 +201,22 @@ class ReactiveVersionManager extends ChangeNotifier {
       );
     }
 
+    // 复制源版本的路径选择状态（如果存在）
+    if (sourceVersionId != null && _versionPathSelections.containsKey(sourceVersionId)) {
+      final Map<String, Set<String>> newVersionPathSelections = {};
+      final sourcePathSelections = _versionPathSelections[sourceVersionId]!;
+      
+      for (final entry in sourcePathSelections.entries) {
+        newVersionPathSelections[entry.key] = Set<String>.from(entry.value);
+      }
+      
+      _versionPathSelections[versionId] = newVersionPathSelections;
+      debugPrint('从版本 $sourceVersionId 复制路径选择状态到 $versionId');
+    } else {
+      // 创建空的路径选择状态
+      _versionPathSelections[versionId] = <String, Set<String>>{};
+    }
+
     final state = initializeVersion(
       versionId,
       versionName: versionName,
@@ -226,6 +245,7 @@ class ReactiveVersionManager extends ChangeNotifier {
 
     _versionStates.remove(versionId);
     _versionDataCache.remove(versionId);
+    _versionPathSelections.remove(versionId); // 删除路径选择数据
 
     // 如果删除的是当前版本，切换到其他版本
     if (_currentVersionId == versionId) {
@@ -458,6 +478,7 @@ class ReactiveVersionManager extends ChangeNotifier {
   void clearAllSessions() {
     _versionStates.clear();
     _versionDataCache.clear();
+    _versionPathSelections.clear(); // 清理路径选择数据
     _currentVersionId = null;
     _activeEditingVersionId = null;
 
@@ -525,6 +546,109 @@ class ReactiveVersionManager extends ChangeNotifier {
         }),
       ),
     };
+  }
+
+  /// 获取指定版本下指定图例组选中的路径
+  Set<String> getVersionSelectedPaths(String versionId, String legendGroupId) {
+    _ensureVersionPathSelectionExists(versionId, legendGroupId);
+    return _versionPathSelections[versionId]![legendGroupId]!;
+  }
+
+  /// 获取当前版本下指定图例组选中的路径
+  Set<String> getSelectedPaths(String legendGroupId) {
+    final versionId = _currentVersionId ?? 'default';
+    return getVersionSelectedPaths(versionId, legendGroupId);
+  }
+
+  /// 获取当前版本下所有图例组选中的路径
+  Set<String> getAllSelectedPaths() {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId);
+    
+    final Set<String> allPaths = {};
+    final versionData = _versionPathSelections[versionId]!;
+    
+    for (final paths in versionData.values) {
+      allPaths.addAll(paths);
+    }
+    
+    return allPaths;
+  }
+
+  /// 检查路径是否被其他图例组选中
+  bool isPathSelectedByOtherGroups(String path, String currentGroupId) {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId);
+    
+    final versionData = _versionPathSelections[versionId]!;
+    
+    for (final entry in versionData.entries) {
+      final groupId = entry.key;
+      final paths = entry.value;
+      
+      // 如果不是当前组，但包含该路径，则返回true
+      if (groupId != currentGroupId && paths.contains(path)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /// 设置路径选中状态
+  void setPathSelected(String legendGroupId, String path, bool selected) {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId, legendGroupId);
+    
+    if (selected) {
+      _versionPathSelections[versionId]![legendGroupId]!.add(path);
+    } else {
+      _versionPathSelections[versionId]![legendGroupId]!.remove(path);
+    }
+    
+    debugPrint('版本 $versionId 图例组 $legendGroupId ${selected ? '选中' : '取消选中'} 路径: $path');
+    notifyListeners();
+  }
+
+  /// 获取当前版本下所有图例组ID
+  Set<String> getCurrentVersionLegendGroupIds() {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId);
+    return Set.from(_versionPathSelections[versionId]!.keys);
+  }
+
+  /// 重置图例组选择
+  void resetLegendGroupSelections(String legendGroupId) {
+    final versionId = _currentVersionId ?? 'default';
+    _ensureVersionPathSelectionExists(versionId, legendGroupId);
+    
+    // 清空当前图例组在当前版本的选择
+    _versionPathSelections[versionId]![legendGroupId]!.clear();
+    
+    debugPrint('重置版本 $versionId 图例组 $legendGroupId 的选择');
+    notifyListeners();
+  }
+
+  /// 清除缓存
+  void clearUnusedCache(String legendGroupId, String folderPath, Function(String) onClearCache) {
+    // 检查该路径是否还被当前版本中的任何图例组使用
+    if (isPathSelectedByOtherGroups(folderPath, legendGroupId) || 
+        getSelectedPaths(legendGroupId).contains(folderPath)) {
+      // 路径仍在使用中，不清理
+      return;
+    }
+    
+    // 通知清理缓存
+    onClearCache(folderPath);
+  }
+
+  /// 确保版本的路径选择数据结构存在
+  void _ensureVersionPathSelectionExists(String versionId, [String? legendGroupId]) {
+    _versionPathSelections.putIfAbsent(versionId, () => <String, Set<String>>{});
+    
+    if (legendGroupId != null) {
+      _versionPathSelections[versionId]!.putIfAbsent(legendGroupId, () => <String>{});
+    }
   }
 
   @override

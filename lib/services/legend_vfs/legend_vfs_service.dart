@@ -328,6 +328,30 @@ class LegendVfsService {
     return legends;
   }
 
+  /// 获取指定文件夹中的所有图例文件
+  Future<List<String>> getLegendsInFolder(String folderPath) async {
+    try {
+      final cleanFolderPath = folderPath.replaceAll(RegExp(r'^/+|/+$'), '');
+      final fullPath = cleanFolderPath.isEmpty
+          ? 'indexeddb://$_database/$_collection'
+          : 'indexeddb://$_database/$_collection/$cleanFolderPath';
+
+      final entries = await _vfs.listDirectory(fullPath);
+      final legendFiles = <String>[];
+
+      for (final entry in entries) {
+        if (entry.isDirectory && entry.name.endsWith('.legend')) {
+          legendFiles.add(entry.name);
+        }
+      }
+
+      return legendFiles..sort();
+    } catch (e) {
+      debugPrint('获取文件夹中的图例失败: $folderPath, 错误: $e');
+      return [];
+    }
+  }
+
   /// 删除图例
   Future<bool> deleteLegend(String title, [String? folderPath]) async {
     final legendPath = _buildLegendPath(title, folderPath);

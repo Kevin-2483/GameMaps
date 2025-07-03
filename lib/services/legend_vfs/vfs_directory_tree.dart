@@ -10,6 +10,7 @@ class VfsDirectoryNode {
   final List<VfsDirectoryNode> children; // 改为可修改的列表
   bool isExpanded;
   bool isSelected;
+  bool isDisabled; // 添加禁用状态，表示被其他图例组选中
 
   VfsDirectoryNode({
     required this.name,
@@ -18,6 +19,7 @@ class VfsDirectoryNode {
     List<VfsDirectoryNode>? children, // 改为可选参数
     this.isExpanded = false,
     this.isSelected = false,
+    this.isDisabled = false, // 初始化禁用状态
   }) : children = children ?? <VfsDirectoryNode>[]; // 创建可修改的列表
 
   VfsDirectoryNode copyWith({
@@ -27,6 +29,7 @@ class VfsDirectoryNode {
     List<VfsDirectoryNode>? children,
     bool? isExpanded,
     bool? isSelected,
+    bool? isDisabled,
   }) {
     return VfsDirectoryNode(
       name: name ?? this.name,
@@ -35,6 +38,7 @@ class VfsDirectoryNode {
       children: children ?? List<VfsDirectoryNode>.from(this.children), // 复制列表
       isExpanded: isExpanded ?? this.isExpanded,
       isSelected: isSelected ?? this.isSelected,
+      isDisabled: isDisabled ?? this.isDisabled, // 复制禁用状态
     );
   }
 
@@ -66,15 +70,21 @@ class VfsDirectoryNode {
   }
 
   /// 递归更新节点状态
-  void updateNode(String targetPath, {bool? isExpanded, bool? isSelected}) {
+  void updateNode(String targetPath, {bool? isExpanded, bool? isSelected, bool? isDisabled}) {
     if (path == targetPath) {
       if (isExpanded != null) this.isExpanded = isExpanded;
       if (isSelected != null) this.isSelected = isSelected;
+      if (isDisabled != null) this.isDisabled = isDisabled;
       return;
     }
     
     for (final child in children) {
-      child.updateNode(targetPath, isExpanded: isExpanded, isSelected: isSelected);
+      child.updateNode(
+        targetPath, 
+        isExpanded: isExpanded, 
+        isSelected: isSelected,
+        isDisabled: isDisabled
+      );
     }
   }
 }
@@ -202,64 +212,14 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
       node.isSelected = !node.isSelected;
       notifyListeners();
       
-      // 通知缓存管理器更新
-      _updateCacheForNode(node);
+      // 注意：原先的缓存管理已移至LegendPathSelectionManager
+      // 这里只触发状态变化通知，不再直接管理缓存
     }
   }
 
   /// 获取所有选中的节点路径
   List<String> getSelectedPaths() {
     return _rootNode?.getSelectedPaths() ?? [];
-  }
-
-  /// 更新缓存系统
-  void _updateCacheForNode(VfsDirectoryNode node) {
-    if (node.isSelected) {
-      // 预加载该目录下的所有图例
-      _preloadLegends(node.path);
-    } else {
-      // 清理该目录下的图例缓存（但保留正在使用的）
-      _clearUnusedLegends(node.path);
-    }
-  }
-
-  /// 预加载指定目录下的图例
-  Future<void> _preloadLegends(String folderPath) async {
-    try {
-      final legendTitles = await _legendService.getAllLegendTitles(
-        folderPath.isEmpty ? null : folderPath,
-      );
-      
-      final legendPaths = legendTitles.map((title) {
-        if (folderPath.isEmpty) {
-          return '$title.legend';
-        } else {
-          return '$folderPath/$title.legend';
-        }
-      }).toList();
-
-      // 使用缓存管理器预加载
-      LegendCacheManager().preloadLegends(legendPaths);
-      
-      debugPrint('VFS目录树: 预加载目录 "$folderPath" 下的 ${legendPaths.length} 个图例');
-    } catch (e) {
-      debugPrint('VFS目录树: 预加载目录 "$folderPath" 失败: $e');
-    }
-  }
-
-  /// 清理未使用的图例缓存
-  Future<void> _clearUnusedLegends(String folderPath) async {
-    try {
-      // TODO: 这里应该获取当前地图正在使用的图例路径列表
-      // 目前暂时不实现智能清理，只做简单的文件夹清理
-      
-      // 使用缓存管理器的按文件夹清理功能
-      LegendCacheManager().clearCacheByFolder(folderPath);
-      
-      debugPrint('VFS目录树: 清理了目录 "$folderPath" 下的图例缓存');
-    } catch (e) {
-      debugPrint('VFS目录树: 清理目录 "$folderPath" 失败: $e');
-    }
   }
 
   /// 刷新目录树
