@@ -167,6 +167,16 @@ class UserPreferencesProvider extends ChangeNotifier {
     bool? autoRestorePanelStates,
     bool? enableExtensionStorage,
     double? drawerWidth,
+    bool? autoSaveWindowSize,
+    double? windowWidth,
+    double? windowHeight,
+    double? minWindowWidth,
+    double? minWindowHeight,
+    bool? rememberMaximizedState,
+    bool? isMaximized,
+    bool? rememberWindowPosition,
+    double? windowX,
+    double? windowY,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -182,6 +192,16 @@ class UserPreferencesProvider extends ChangeNotifier {
         autoRestorePanelStates: autoRestorePanelStates,
         enableExtensionStorage: enableExtensionStorage,
         drawerWidth: drawerWidth,
+        autoSaveWindowSize: autoSaveWindowSize,
+        windowWidth: windowWidth,
+        windowHeight: windowHeight,
+        minWindowWidth: minWindowWidth,
+        minWindowHeight: minWindowHeight,
+        rememberMaximizedState: rememberMaximizedState,
+        isMaximized: isMaximized,
+        rememberWindowPosition: rememberWindowPosition,
+        windowX: windowX,
+        windowY: windowY,
       );
 
       await _service.updateLayout(updatedLayout);
@@ -189,6 +209,31 @@ class UserPreferencesProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('更新界面布局设置失败: ${e.toString()}');
+    }
+  }
+
+  /// 更新窗口大小和位置设置
+  Future<void> updateWindowSize({
+    required double width,
+    required double height,
+    bool? isMaximized,
+    double? x,
+    double? y,
+  }) async {
+    if (_currentPreferences == null || !layout.autoSaveWindowSize) return;
+
+    try {
+      await updateLayout(
+        windowWidth: width,
+        windowHeight: height,
+        isMaximized: isMaximized,
+        windowX: x,
+        windowY: y,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('更新窗口大小和位置失败: $e');
+      }
     }
   }
 

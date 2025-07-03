@@ -17,6 +17,7 @@ import 'services/web_database_importer.dart';
 import 'services/virtual_file_system/vfs_database_initializer.dart';
 import 'components/web/web_context_menu_handler.dart';
 import 'services/legend_vfs/legend_compatibility_service.dart';
+import 'services/window_manager_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,10 +63,11 @@ void main() async {
   // Initialize bitsdojo_window for desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     doWhenWindowReady(() {
+      // 默认窗口大小，稍后会被用户偏好设置覆盖
       const initialSize = Size(1280, 720);
       appWindow.size = initialSize;
       appWindow.minSize = const Size(800, 600);
-      appWindow.alignment = Alignment.center;
+      // 不设置 alignment，让窗口保持在操作系统默认位置或用户偏好位置
       appWindow.title = 'R6Box';
       appWindow.show();
     });
@@ -108,6 +110,16 @@ class R6BoxApp extends StatelessWidget {
               fontScale: theme.fontScale,
               highContrast: theme.highContrast,
             );
+
+            // 初始化窗口管理服务
+            WindowManagerService().initialize(userPrefsProvider);
+            
+            // 应用保存的窗口大小（仅在桌面平台）
+            if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+              Future.microtask(() {
+                WindowManagerService().applyWindowSize();
+              });
+            }
           } // Use the pre-created router instance
           return WebContextMenuHandler(
             child: MaterialApp.router(

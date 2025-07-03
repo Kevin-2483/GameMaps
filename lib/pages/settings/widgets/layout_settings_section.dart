@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../services/window_manager_service.dart';
 
 class LayoutSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -148,6 +151,109 @@ class LayoutSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // 窗口设置（仅在桌面平台显示）
+            if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) ...[
+              Text(
+                '窗口设置',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              
+              // 自动保存窗口大小
+              SwitchListTile(
+                title: Text('自动保存窗口大小'),
+                subtitle: Text('自动记录窗口大小变化并在下次启动时恢复'),
+                value: layout.autoSaveWindowSize,
+                onChanged: (value) => provider.updateLayout(autoSaveWindowSize: value),
+              ),
+              
+              // 记住最大化状态
+              SwitchListTile(
+                title: Text('记住最大化状态'),
+                subtitle: Text('启动时恢复窗口的最大化状态'),
+                value: layout.rememberMaximizedState,
+                onChanged: (value) => provider.updateLayout(rememberMaximizedState: value),
+              ),
+              
+              // 记住窗口位置
+              SwitchListTile(
+                title: Text('记住窗口位置'),
+                subtitle: Text('启动时恢复窗口的位置，关闭后窗口将在系统默认位置打开'),
+                value: layout.rememberWindowPosition,
+                onChanged: (value) => provider.updateLayout(rememberWindowPosition: value),
+              ),
+              
+              // 自定义窗口大小
+              ExpansionTile(
+                title: Text('自定义窗口大小'),
+                subtitle: Text('手动设置窗口的默认大小'),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        // 窗口宽度
+                        ListTile(
+                          title: Text('窗口宽度'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('当前设置: ${layout.windowWidth.round()}px'),
+                              const SizedBox(height: 8),
+                              Slider(
+                                value: layout.windowWidth,
+                                min: 800.0,
+                                max: 9999.0,
+                                divisions: 88,
+                                label: '${layout.windowWidth.round()}px',
+                                onChanged: (value) => provider.updateLayout(windowWidth: value),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // 窗口高度
+                        ListTile(
+                          title: Text('窗口高度'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('当前设置: ${layout.windowHeight.round()}px'),
+                              const SizedBox(height: 8),
+                              Slider(
+                                value: layout.windowHeight,
+                                min: 600.0,
+                                max: 9999.0,
+                                divisions: 84,
+                                label: '${layout.windowHeight.round()}px',
+                                onChanged: (value) => provider.updateLayout(windowHeight: value),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // 操作按钮
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => _resetWindowSize(context, provider),
+                              icon: Icon(Icons.restore),
+                              label: Text('重置为默认'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+            ],
+
             // 抽屉宽度设置
             Text(
               '抽屉宽度设置',
@@ -250,6 +356,45 @@ class LayoutSettingsSection extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('布局设置已重置'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+  /// 重置窗口大小
+  void _resetWindowSize(BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('重置窗口大小'),
+        content: Text('确定要将窗口大小重置为默认值吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.updateLayout(
+                windowWidth: 1280.0,
+                windowHeight: 720.0,
+              );
+              Navigator.of(context).pop();
+              if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+                WindowManagerService().resetToDefaultSize();
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('窗口大小已重置为默认值'),
                   backgroundColor: Colors.green,
                 ),
               );

@@ -284,6 +284,36 @@ class LayoutPreferences {
   /// 抽屉宽度设置
   final double drawerWidth;
 
+  /// 是否自动保存窗口大小
+  final bool autoSaveWindowSize;
+
+  /// 窗口宽度（桌面平台）
+  final double windowWidth;
+
+  /// 窗口高度（桌面平台）
+  final double windowHeight;
+
+  /// 窗口最小宽度
+  final double minWindowWidth;
+
+  /// 窗口最小高度
+  final double minWindowHeight;
+
+  /// 窗口是否记住最大化状态
+  final bool rememberMaximizedState;
+
+  /// 窗口是否处于最大化状态
+  final bool isMaximized;
+
+  /// 是否记住窗口位置
+  final bool rememberWindowPosition;
+
+  /// 窗口X坐标
+  final double windowX;
+
+  /// 窗口Y坐标
+  final double windowY;
+
   const LayoutPreferences({
     required this.panelCollapsedStates,
     required this.panelAutoCloseStates,
@@ -295,6 +325,16 @@ class LayoutPreferences {
     this.autoRestorePanelStates = true,
     this.enableExtensionStorage = false,
     this.drawerWidth = 400.0,
+    this.autoSaveWindowSize = true,
+    this.windowWidth = 1280.0,
+    this.windowHeight = 720.0,
+    this.minWindowWidth = 800.0,
+    this.minWindowHeight = 600.0,
+    this.rememberMaximizedState = true,
+    this.isMaximized = false,
+    this.rememberWindowPosition = true,
+    this.windowX = -1, // -1 表示居中
+    this.windowY = -1, // -1 表示居中
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -321,6 +361,16 @@ class LayoutPreferences {
       autoRestorePanelStates: true,
       enableExtensionStorage: false, // 明确设置默认值
       drawerWidth: 400.0,
+      autoSaveWindowSize: true,
+      windowWidth: 1280.0,
+      windowHeight: 720.0,
+      minWindowWidth: 800.0,
+      minWindowHeight: 600.0,
+      rememberMaximizedState: true,
+      isMaximized: false,
+      rememberWindowPosition: true,
+      windowX: -1, // -1 表示居中
+      windowY: -1, // -1 表示居中
     );
   }
   LayoutPreferences copyWith({
@@ -334,6 +384,16 @@ class LayoutPreferences {
     bool? autoRestorePanelStates,
     bool? enableExtensionStorage,
     double? drawerWidth,
+    bool? autoSaveWindowSize,
+    double? windowWidth,
+    double? windowHeight,
+    double? minWindowWidth,
+    double? minWindowHeight,
+    bool? rememberMaximizedState,
+    bool? isMaximized,
+    bool? rememberWindowPosition,
+    double? windowX,
+    double? windowY,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -348,6 +408,16 @@ class LayoutPreferences {
       enableExtensionStorage:
           enableExtensionStorage ?? this.enableExtensionStorage,
       drawerWidth: drawerWidth ?? this.drawerWidth,
+      autoSaveWindowSize: autoSaveWindowSize ?? this.autoSaveWindowSize,
+      windowWidth: windowWidth ?? this.windowWidth,
+      windowHeight: windowHeight ?? this.windowHeight,
+      minWindowWidth: minWindowWidth ?? this.minWindowWidth,
+      minWindowHeight: minWindowHeight ?? this.minWindowHeight,
+      rememberMaximizedState: rememberMaximizedState ?? this.rememberMaximizedState,
+      isMaximized: isMaximized ?? this.isMaximized,
+      rememberWindowPosition: rememberWindowPosition ?? this.rememberWindowPosition,
+      windowX: windowX ?? this.windowX,
+      windowY: windowY ?? this.windowY,
     );
   }
 

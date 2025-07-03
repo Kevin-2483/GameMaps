@@ -106,6 +106,16 @@ LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
       autoRestorePanelStates: json['autoRestorePanelStates'] as bool? ?? true,
       enableExtensionStorage: json['enableExtensionStorage'] as bool? ?? false,
       drawerWidth: (json['drawerWidth'] as num?)?.toDouble() ?? 400.0,
+      autoSaveWindowSize: json['autoSaveWindowSize'] as bool? ?? true,
+      windowWidth: (json['windowWidth'] as num?)?.toDouble() ?? 1280.0,
+      windowHeight: (json['windowHeight'] as num?)?.toDouble() ?? 720.0,
+      minWindowWidth: (json['minWindowWidth'] as num?)?.toDouble() ?? 800.0,
+      minWindowHeight: (json['minWindowHeight'] as num?)?.toDouble() ?? 600.0,
+      rememberMaximizedState: json['rememberMaximizedState'] as bool? ?? true,
+      isMaximized: json['isMaximized'] as bool? ?? false,
+      rememberWindowPosition: json['rememberWindowPosition'] as bool? ?? true,
+      windowX: (json['windowX'] as num?)?.toDouble() ?? -1,
+      windowY: (json['windowY'] as num?)?.toDouble() ?? -1,
     );
 
 Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
@@ -120,6 +130,16 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'autoRestorePanelStates': instance.autoRestorePanelStates,
       'enableExtensionStorage': instance.enableExtensionStorage,
       'drawerWidth': instance.drawerWidth,
+      'autoSaveWindowSize': instance.autoSaveWindowSize,
+      'windowWidth': instance.windowWidth,
+      'windowHeight': instance.windowHeight,
+      'minWindowWidth': instance.minWindowWidth,
+      'minWindowHeight': instance.minWindowHeight,
+      'rememberMaximizedState': instance.rememberMaximizedState,
+      'isMaximized': instance.isMaximized,
+      'rememberWindowPosition': instance.rememberWindowPosition,
+      'windowX': instance.windowX,
+      'windowY': instance.windowY,
     };
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>

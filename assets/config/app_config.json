@@ -14,8 +14,8 @@
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
       "features": [ "DebugMode", "TrayNavigation" ]
     },    "Web": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "VfsFileManagerPage"],
-      "features": [ "WebReadOnlyMode", "TrayNavigation" ]
+      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
+      "features": [ "TrayNavigation" ]
     }
   },
   "build": {

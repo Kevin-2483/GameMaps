@@ -66,12 +66,12 @@ class AppRouter {
     registry.register(UserPreferencesPageModule());
     registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
-    registry.register(ConfigEditorModule());
+    // registry.register(ConfigEditorModule());
     // registry.register(FullscreenTestPageModule());
     registry.register(VfsFileManagerPageModule());
 
-    // 注册演示页面模块
-    registry.register(MarkdownRendererDemoPageModule());
+    // // 注册演示页面模块
+    // registry.register(MarkdownRendererDemoPageModule());
     // WebContextMenuDemoPageModule.register();
   }
 }

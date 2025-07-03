@@ -36,6 +36,9 @@ class UserPreferencesPageModule extends PageModule {
   int get priority => 100; // 设置页面的子页面，优先级较低
 
   @override
+  bool get showInNavigation => false; // 不在导航栏中显示
+
+  @override
   Widget buildPage(BuildContext context) {
     return const UserPreferencesPage();
   }

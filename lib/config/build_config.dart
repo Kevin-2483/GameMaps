@@ -32,7 +32,7 @@ class BuildTimeConfig {
       defaultValue: true,
     ))
       'VfsFileManagerPage',
-    if (bool.fromEnvironment('ENABLE_FULLSCREEN_TEST_PAGE', defaultValue: true))
+    if (bool.fromEnvironment('ENABLE_FULLSCREEN_TEST_PAGE', defaultValue: false))
       'FullscreenTestPage',
   ];
 
