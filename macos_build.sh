@@ -15,4 +15,6 @@ fi
 cp pubspec.macos.yaml pubspec.yaml
 flutter pub get
 
+pod install
+
 open macos/Runner.xcworkspace
