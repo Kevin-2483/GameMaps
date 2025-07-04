@@ -83,7 +83,8 @@ dependencies:
   visibility_detector: ^0.4.0+2
   flutter_math_fork: ^0.7.2
   html: ^0.15.4
-  
+    # Package info
+  package_info_plus: ^8.0.2
   # Audio player
   audioplayers: ^6.2.0  # 更新到较新版本，可能修复了线程问题
   hetu_script: ^0.4.2
@@ -154,6 +155,7 @@ flutter:
     - assets/config/
     - assets/data/
     - assets/images/
+    - LICENSE
 
   # To add assets to your application, add an assets section, like this:
   # assets:

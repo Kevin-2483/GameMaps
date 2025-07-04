@@ -35,6 +35,8 @@ class _SettingsPageContent extends StatelessWidget {
                   _buildUserPreferencesSection(context, l10n),
                   const SizedBox(height: 16),
                   _buildResourceSection(context, l10n),
+                  const SizedBox(height: 16),
+                  _buildAboutSection(context, l10n),
                 ],
               ),
             ),
@@ -90,6 +92,31 @@ class _SettingsPageContent extends StatelessWidget {
               subtitle: const Text('导入、导出和浏览应用数据'),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/external-resources'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutSection(BuildContext context, AppLocalizations l10n) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '关于',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('关于 R6BOX'),
+              subtitle: const Text('软件信息、许可证和开源项目致谢'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () => context.go('/about'),
             ),
           ],
         ),

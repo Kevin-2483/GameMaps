@@ -8,6 +8,7 @@ import '../features/page-modules/user_preferences_page_module.dart';
 import '../features/page-modules/map_atlas_page_module.dart';
 import '../features/page-modules/legend_manager_page_module.dart';
 import '../features/page-modules/config_editor_module.dart';
+import '../features/page-modules/about_page_module.dart';
 // import '../features/page-modules/fullscreen_test_page_module.dart';
 // import '../features/page-modules/web_context_menu_demo_page_module.dart';
 import '../features/page-modules/vfs_file_manager_page_module.dart';
@@ -66,6 +67,7 @@ class AppRouter {
     registry.register(UserPreferencesPageModule());
     registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
+    registry.register(AboutPageModule());
     // registry.register(ConfigEditorModule());
     // registry.register(FullscreenTestPageModule());
     registry.register(VfsFileManagerPageModule());
