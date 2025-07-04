@@ -1,0 +1,3 @@
+[submodule "assets/images/r6operators"]
+	path = assets/images/r6operators
+	url = https://github.com/marcopixel/r6operators.git

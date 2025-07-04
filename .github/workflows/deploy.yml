@@ -28,6 +28,24 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        # 启用子模块支持
+        submodules: recursive
+        # 确保获取完整的 Git 历史记录（用于子模块）
+        fetch-depth: 0
+        
+    - name: Setup Git for submodules
+      run: |
+        # 配置 Git 用户信息（CI 环境需要）
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        
+    - name: Update submodules
+      run: |
+        # 确保子模块是最新的
+        git submodule update --init --recursive --remote
+        # 显示子模块状态
+        git submodule status
       
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
