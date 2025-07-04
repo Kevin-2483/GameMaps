@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
   flutter_tts
   irondash_engine_context
+  media_kit_libs_windows_video
   media_kit_video
   super_native_extensions
   url_launcher_windows

@@ -153,6 +153,7 @@ flutter:
   assets:
     - assets/config/
     - assets/data/
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -184,3 +185,30 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  # Flutter Launcher Icons 配置
+flutter_launcher_icons:
+  android: "launcher_icon"        # Android 应用图标
+  ios: true                       # iOS 应用图标
+  remove_alpha_ios: true          # 移除 iOS 图标的透明通道
+  web:
+    generate: true                # Web 应用图标
+    image_path: "assets/icons/app_icon.png"
+    background_color: "#hexcode"  # 背景颜色（可选）
+    theme_color: "#hexcode"       # 主题颜色（可选）
+  windows:
+    generate: true                # Windows 应用图标
+    image_path: "assets/icons/app_icon.png"
+    icon_size: 48                 # Windows 图标大小（可选）
+  macos:
+    generate: true                # macOS 应用图标
+    image_path: "assets/icons/app_icon.png"
+  linux:
+    generate: true                # Linux 应用图标
+    image_path: "assets/icons/app_icon.png"
+  image_path: "assets/icons/app_icon.png"  # 主图标路径
+  min_sdk_android: 21             # Android 最小 SDK 版本
+  # 自适应图标配置 (Android)
+  adaptive_icon_background: "assets/icons/app_icon.png"  # 自适应图标背景
+  adaptive_icon_foreground: "assets/icons/app_icon.png"  # 自适应图标前景
+
