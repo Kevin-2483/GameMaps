@@ -13,7 +13,12 @@ class MainFlutterWindow: BitsdojoWindow {
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
-
+      
+    //隐藏红绿灯按钮
+    self.standardWindowButton(.closeButton)?.isHidden = true
+    self.standardWindowButton(.miniaturizeButton)?.isHidden = true
+    self.standardWindowButton(.zoomButton)?.isHidden = true
+      
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
