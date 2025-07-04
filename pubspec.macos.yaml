@@ -133,6 +133,8 @@ dev_dependencies:
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
   isolate_manager_generator: ^0.0.13
+  # App icon generation
+  flutter_launcher_icons: ^0.14.1
   
 
 # For information on the generic Dart part of this file, see the
