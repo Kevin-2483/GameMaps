@@ -225,6 +225,27 @@ class _HomePageContentState extends State<_HomePageContent>
               );
             },
           ),
+          // 软件标题层 - 左下角显示
+          Positioned(
+            left: 40,
+            bottom: 60,
+            child: Text(
+              'R6BOX',
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width * 0.12, // 占屏幕宽度约1/8，显示效果约1/4
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+                color: Theme.of(context).colorScheme.primary,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(2, 2),
+                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                ],
+              ),
+            ),
+          ),
           // 内容层
           Container(),
         ],
@@ -354,7 +375,7 @@ class RippleBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(
-      size.width * 0.8,
+      size.width * 0.9,
       size.height * 0.9,
     );
     final maxRadius = math.sqrt(size.width * size.width + size.height * size.height) / 2;
@@ -416,18 +437,12 @@ class RippleBackgroundPainter extends CustomPainter {
     final iconSize = size.height * 0.9;
     final iconColor = colorScheme.primary;
 
-    final paint = Paint()
-      ..color = iconColor
-      ..style = PaintingStyle.fill;
-
     final circleRadius = iconSize * 0.3;
     final triangleHeight = iconSize * 0.25;
     final circleCenter = Offset(
         center.dx,
         center.dy - triangleHeight - circleRadius
     );
-
-    canvas.drawCircle(circleCenter, circleRadius, paint);
 
     final r = circleRadius;
     final d = center.dy - circleCenter.dy;
@@ -442,19 +457,38 @@ class RippleBackgroundPainter extends CustomPainter {
     path.lineTo(center.dx, center.dy);
     path.lineTo(rightTangentPoint.dx, rightTangentPoint.dy);
     path.close();
-    canvas.drawPath(path, paint);
 
-    final innerCirclePaint = Paint()
-      ..color = colorScheme.surface
+    // 创建合成层以支持透明剪切
+    canvas.saveLayer(
+      Rect.fromCircle(center: circleCenter, radius: circleRadius * 1.2),
+      Paint(),
+    );
+
+    final paint = Paint()
+      ..color = iconColor
       ..style = PaintingStyle.fill;
+
+    // 绘制圆形
+    canvas.drawCircle(circleCenter, circleRadius, paint);
+
+    // 使用 BlendMode.clear 剪切出透明的内圆
+    final innerCirclePaint = Paint()
+      ..blendMode = BlendMode.clear;
     final innerCircleRadius = circleRadius * 0.4;
     canvas.drawCircle(circleCenter, innerCircleRadius, innerCirclePaint);
 
+    // 绘制圆形边框
     final borderPaint = Paint()
       ..color = colorScheme.primary
       ..style = PaintingStyle.stroke
       ..strokeWidth = iconSize * 0.008;
     canvas.drawCircle(circleCenter, circleRadius, borderPaint);
+
+    // 恢复合成层
+    canvas.restore();
+
+    // 绘制三角形（在合成层外部，不受透明剪切影响）
+    canvas.drawPath(path, paint);
     canvas.drawPath(path, borderPaint);
   }
 
