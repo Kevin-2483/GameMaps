@@ -189,7 +189,7 @@ class _HomePageContentState extends State<_HomePageContent>
       body: Stack(
         children: [
           // 背景图片层 - 具有透视变换效果
-          if (_imageLoaded && _currentResolvedImage != null)
+          if (_imageLoaded && _currentResolvedImage != null && false)
             AnimatedBuilder(
               animation: _backgroundAnimation,
               builder: (context, child) {
