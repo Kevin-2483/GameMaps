@@ -19,6 +19,7 @@ import '../../components/layout/main_layout.dart';
 import '../../services/virtual_file_system/vfs_database_initializer.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
+import '../../components/common/draggable_title_bar.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -664,79 +665,63 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
   /// 构建头部
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.folder_special,
-            color: Theme.of(context).colorScheme.primary,
-            size: 28,
+    return DraggableTitleBar(
+      title: 'VFS 文件管理器',
+      icon: Icons.folder_special,
+      actions: [
+        // 数据库选择
+        SizedBox(
+          width: 200,
+          child: DropdownButton<String>(
+            value: _selectedDatabase,
+            hint: const Text('选择数据库'),
+            isExpanded: true,
+            underline: Container(), // 移除下划线以获得更清洁的外观
+            items: _databases.map((db) {
+              return DropdownMenuItem(value: db, child: Text(db));
+            }).toList(),
+            onChanged: (value) async {
+              if (value != null) {
+                setState(() {
+                  _selectedDatabase = value;
+                  _selectedCollection = null;
+                  _currentFiles.clear();
+                  _selectedFiles.clear();
+                });
+                await _loadCollections(value);
+              }
+            },
           ),
-          const SizedBox(width: 12),
-          Text(
-            'VFS 文件管理器',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+        ),
+        const SizedBox(width: 16),
+        // 集合选择
+        SizedBox(
+          width: 200,
+          child: DropdownButton<String>(
+            value: _selectedCollection,
+            hint: const Text('选择集合'),
+            isExpanded: true,
+            underline: Container(), // 移除下划线以获得更清洁的外观
+            items:
+                _collections[_selectedDatabase]?.map((collection) {
+                  return DropdownMenuItem(
+                    value: collection,
+                    child: Text(collection),
+                  );
+                }).toList() ??
+                [],
+            onChanged: (value) async {
+              if (value != null) {
+                setState(() {
+                  _selectedCollection = value;
+                  _selectedFiles.clear();
+                });
+                await _navigateToPath('');
+              }
+            },
           ),
-          const SizedBox(width: 24),
-          // 数据库选择
-          Expanded(
-            flex: 2,
-            child: DropdownButton<String>(
-              value: _selectedDatabase,
-              hint: const Text('选择数据库'),
-              isExpanded: true,
-              items: _databases.map((db) {
-                return DropdownMenuItem(value: db, child: Text(db));
-              }).toList(),
-              onChanged: (value) async {
-                if (value != null) {
-                  setState(() {
-                    _selectedDatabase = value;
-                    _selectedCollection = null;
-                    _currentFiles.clear();
-                    _selectedFiles.clear();
-                  });
-                  await _loadCollections(value);
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          // 集合选择
-          Expanded(
-            flex: 2,
-            child: DropdownButton<String>(
-              value: _selectedCollection,
-              hint: const Text('选择集合'),
-              isExpanded: true,
-              items:
-                  _collections[_selectedDatabase]?.map((collection) {
-                    return DropdownMenuItem(
-                      value: collection,
-                      child: Text(collection),
-                    );
-                  }).toList() ??
-                  [],
-              onChanged: (value) async {
-                if (value != null) {
-                  setState(() {
-                    _selectedCollection = value;
-                    _selectedFiles.clear();
-                  });
-                  await _navigateToPath('');
-                }
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

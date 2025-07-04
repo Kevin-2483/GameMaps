@@ -11,6 +11,7 @@ import 'widgets/layout_settings_section.dart';
 import 'widgets/tool_settings_section.dart';
 import 'widgets/user_management_section.dart';
 import 'widgets/extension_settings_section.dart';
+import '../../components/common/draggable_title_bar.dart';
 
 class UserPreferencesPage extends BasePage {
   const UserPreferencesPage({super.key});
@@ -64,7 +65,6 @@ class _UserPreferencesPageContentState
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('导出失败：${e.toString()}'),
@@ -166,21 +166,13 @@ class _UserPreferencesPageContentState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      children: [
-        // 标题和操作栏
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.userPreferences,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+    return Scaffold(
+      body: Column(
+        children: [
+          DraggableTitleBar(
+            title: l10n.userPreferences,
+            icon: Icons.tune,
+            actions: [
               PopupMenuButton<String>(
                 onSelected: (value) {
                   switch (value) {
@@ -234,79 +226,79 @@ class _UserPreferencesPageContentState
               ),
             ],
           ),
-        ),
-        // 内容区域
-        Expanded(
-          child: Consumer<UserPreferencesProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          // 内容区域
+          Expanded(
+            child: Consumer<UserPreferencesProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (provider.error != null) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(
-                        '加载用户偏好设置失败: ${provider.error}',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => provider.initialize(),
-                        child: const Text('重试'),
-                      ),
-                    ],
-                  ),
+                if (provider.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          '加载用户偏好设置失败: ${provider.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => provider.initialize(),
+                          child: const Text('重试'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.all(16.0),
+                  children: [
+                    // 主题设置
+                    ThemeSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 地图编辑器设置
+                    MapEditorSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 界面布局设置
+                    LayoutSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 工具设置
+                    ToolSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 扩展设置
+                    ExtensionSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 用户管理
+                    UserManagementSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                  ],
                 );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  // 主题设置
-                  ThemeSettingsSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 地图编辑器设置
-                  MapEditorSettingsSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 界面布局设置
-                  LayoutSettingsSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 工具设置
-                  ToolSettingsSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 扩展设置
-                  ExtensionSettingsSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 用户管理
-                  UserManagementSection(
-                    preferences: provider.currentPreferences!,
-                  ),
-                ],
-              );
-            },
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/web/web_readonly_components.dart';
+import '../../components/common/draggable_title_bar.dart';
 import '../../utils/extension_settings_managers.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
@@ -33,6 +35,7 @@ import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/new_reactive_script_manager.dart';
 import '../../services/legend_cache_manager.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -362,7 +365,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('  _isDragTemporaryHidden: $_isDragTemporaryHidden');
     debugPrint('  _wasDrawerOpenBeforeDrag: $_wasDrawerOpenBeforeDrag');
     debugPrint('  _hiddenLegendGroupForDrag: $_hiddenLegendGroupForDrag');
-    
+
     if (_isDragTemporaryHidden && _wasDrawerOpenBeforeDrag) {
       debugPrint('拖拽结束：重新打开图例组管理抽屉');
       setState(() {
@@ -2875,12 +2878,185 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _panelStatesChanged = true;
   }
 
+  /// 构建窗口控制按钮
+  Widget _buildWindowButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+    bool isCloseButton = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: isCloseButton
+            ? Colors.red.withOpacity(0.1)
+            : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+        child: Tooltip(
+          message: tooltip,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.inverseSurface,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onInverseSurface,
+            fontSize: 12,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 36,
+            height: 36,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: isCloseButton
+                  ? Colors.red
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建窗口控制按钮组
+  List<Widget> _buildWindowControls() {
+    // 只在桌面平台显示窗口控制按钮
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      return [];
+    }
+
+    return [
+      _buildWindowButton(
+        icon: Icons.minimize,
+        onPressed: () => appWindow.minimize(),
+        tooltip: '最小化',
+      ),
+      const SizedBox(width: 4),
+      _buildWindowButton(
+        icon: Icons.fullscreen,
+        onPressed: () => appWindow.maximizeOrRestore(),
+        tooltip: '最大化/还原',
+      ),
+      const SizedBox(width: 4),
+    ];
+  }
+
+  /// 构建地图编辑器标题
+  String _buildMapEditorTitle() {
+    final l10n = AppLocalizations.of(context)!;
+    final baseTitle = widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor;
+    return '$baseTitle - ${widget.mapTitle}';
+  }
+
+  /// 构建标题栏操作按钮
+  List<Widget> _buildTitleBarActions() {
+    return [
+      // 窗口控制按钮
+      ..._buildWindowControls(),
+
+      // 地图信息按钮
+      IconButton(
+        icon: const Icon(Icons.info_outline),
+        onPressed: _showMapInfo,
+        tooltip: '地图信息',
+      ),
+
+      // 保存按钮（仅在编辑模式下显示）
+      if (!widget.isPreviewMode)
+        IconButton(
+          icon: const Icon(Icons.save),
+          onPressed: _saveMap,
+          tooltip: '保存',
+        ),
+    ];
+  }
+
+  /// 显示地图信息对话框
+  void _showMapInfo() {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.map, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text('地图信息'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildInfoRow('地图名称', widget.mapTitle ?? '未知地图'),
+                _buildInfoRow('编辑模式', widget.isPreviewMode ? '预览模式' : '编辑模式'),
+                if (widget.folderPath != null)
+                  _buildInfoRow('文件夹路径', widget.folderPath ?? ''),
+                _buildInfoRow('当前版本', 'default'),
+                const SizedBox(height: 16),
+                Text(
+                  '编辑器状态',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                _buildInfoRow('是否有未保存更改', _hasUnsavedChanges ? '是' : '否'),
+                _buildInfoRow('面板状态已更改', _panelStatesChanged ? '是' : '否'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.close),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 构建信息行
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
-        final l10n = AppLocalizations.of(context)!;
-
         return PopScope(
           canPop: false, // 阻止默认的返回行为
           onPopInvoked: (didPop) async {
@@ -2896,244 +3072,233 @@ class _MapEditorContentState extends State<_MapEditorContent>
             onKey: _handleKeyEvent,
             child: Scaffold(
               appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(
-                  kToolbarHeight + 50,
-                ), // 增加高度以容纳版本标签栏
-                child: AppBar(
-                  title: Text(
-                    widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor,
-                  ),
-                  actions: [
-                    ...[
-                      WebFeatureRestriction(
-                        operationName: '保存地图',
-                        enabled: !kIsWeb,
-                        child: IconButton(
-                          onPressed: _isLoading || kIsWeb ? null : _saveMap,
-                          icon: const Icon(Icons.save),
-                          tooltip: kIsWeb ? 'Web版本为只读模式' : '保存地图',
-                        ),
+                preferredSize: const Size.fromHeight(64), // 只有标题栏高度
+                child: DraggableTitleBar(
+                  title: _buildMapEditorTitle(),
+                  leading: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () async {
+                          final shouldExit = await _showExitConfirmDialog();
+                          if (shouldExit && context.mounted) {
+                            context.pop(); // 使用 go_router 的方式退出
+                          }
+                        },
+                        tooltip: '返回',
+                      ),
+                      Icon(
+                        Icons.edit_location,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 28,
                       ),
                     ],
-                    IconButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('地图信息'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('标题: ${_currentMap?.title ?? "未知"}'),
-                                Text('版本: v${_currentMap?.version ?? "0"}'),
-                                Text(
-                                  '图层数量: ${_currentMap?.layers.length ?? 0}',
-                                ),
-                                Text(
-                                  '图例组数量: ${_currentMap?.legendGroups.length ?? 0}',
-                                ),
-                                Text(
-                                  '模式: ${widget.isPreviewMode ? "预览模式" : "编辑模式"}',
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('关闭'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.info),
-                      tooltip: '地图信息',
-                    ),
-                  ],
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(50),
-                    child: ReactiveVersionTabBar(
-                      versions: allVersionStates,
-                      currentVersionId: currentVersionId,
-                      onVersionSelected: _switchVersion,
-                      onVersionCreated: _createVersion,
-                      onVersionDeleted: _deleteVersion,
-                      isPreviewMode: widget.isPreviewMode,
-                    ),
                   ),
+                  actions: _buildTitleBarActions(),
                 ),
               ),
-              body: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Stack(
-                      children: [
-                        // 主要内容 - 使用统一的布局，支持侧边栏折叠
-                        _buildMainLayout(userPrefsProvider),
+              body: Column(
+                children: [
+                  // 版本管理标签栏，紧贴标题栏
+                  ReactiveVersionTabBar(
+                    versions: allVersionStates,
+                    currentVersionId: currentVersionId,
+                    onVersionSelected: _switchVersion,
+                    onVersionCreated: _createVersion,
+                    onVersionDeleted: _deleteVersion,
+                    isPreviewMode: widget.isPreviewMode,
+                  ),
+                  // 主体内容区域
+                  Expanded(
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : Stack(
+                            children: [
+                              // 主要内容 - 使用统一的布局，支持侧边栏折叠
+                              _buildMainLayout(userPrefsProvider),
 
-                        // 图层图例绑定抽屉覆盖层
-                        if (_isLayerLegendBindingDrawerOpen &&
-                            _currentLayerForBinding != null &&
-                            _allLegendGroupsForBinding != null)
-                          Positioned(
-                            top: 16,
-                            bottom: 16,
-                            right: 16,
-                            child: Material(
-                              elevation: 8,
-                              borderRadius: BorderRadius.circular(12),
-                              child: LayerLegendBindingDrawer(
-                                layer: _currentLayerForBinding!,
-                                allLegendGroups: _allLegendGroupsForBinding!,
-                                onLayerUpdated: _updateLayer,
-                                onLegendGroupTapped:
-                                    _showLegendGroupManagementDrawer,
-                                onClose: _closeLayerLegendBindingDrawer,
-                              ),
-                            ),),
-                        // 图例组管理抽屉覆盖层
-                        if (_isLegendGroupManagementDrawerOpen &&
-                            _currentLegendGroupForManagement != null &&
-                            !_isDragTemporaryHidden) // 添加拖拽临时隐藏条件
-                          Positioned(
-                            top: 16,
-                            bottom: 16,
-                            right: 16,
-                            child: Material(
-                              elevation: 8,
-                              borderRadius: BorderRadius.circular(12),
-                              child: LegendGroupManagementDrawer(
-                                mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
-                                legendGroup: _currentLegendGroupForManagement!,
-                                availableLegends: [], // 不再需要预载图例列表
-                                onLegendGroupUpdated: _updateLegendGroup,
-                                isPreviewMode: widget.isPreviewMode,
-                                onClose: _closeLegendGroupManagementDrawer,
-                                onLegendItemSelected: _selectLegendItem,
-                                allLayers:
-                                    _currentMap?.layers, // 传递所有图层用于智能隐藏功能
-                                selectedLayer: _selectedLayer, // 传递当前选中的图层
-                                initialSelectedLegendItemId:
-                                    _initialSelectedLegendItemId, // 传递初始选中的图例项ID
-                                selectedElementId:
-                                    _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
-                                scripts: newReactiveScriptManager
-                                    .scripts, // 修正：传递正确的脚本列表
-                                onSmartHideStateChanged:
-                                    setLegendGroupSmartHideState,
-                                getSmartHideState: getLegendGroupSmartHideState,
-                                versionManager:
-                                    versionAdapter!.versionManager, // 传递版本管理器
-                                onLegendDragToCanvas:
-                                    _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
-                                onDragStart: _handleDragStart, // 添加这行
-                                onDragEnd: _handleDragEnd, // 添加这行
-                              ),
-                            ),
-                          ), // Z层级检视器覆盖层
-                        if (_isZIndexInspectorOpen &&
-                            (_selectedLayer != null ||
-                                _selectedStickyNote != null))
-                          Positioned(
-                            top: 16,
-                            bottom: 16,
-                            right: 16,
-                            child: Material(
-                              elevation: 8,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                width: userPrefsProvider
-                                    .layout
-                                    .drawerWidth, // 使用用户偏好设置的抽屉宽度
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).scaffoldBackgroundColor,
-                                  border: Border.all(
-                                    color: Theme.of(context).dividerColor,
+                              // 图层图例绑定抽屉覆盖层
+                              if (_isLayerLegendBindingDrawerOpen &&
+                                  _currentLayerForBinding != null &&
+                                  _allLegendGroupsForBinding != null)
+                                Positioned(
+                                  top: 16,
+                                  bottom: 16,
+                                  right: 16,
+                                  child: Material(
+                                    elevation: 8,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: LayerLegendBindingDrawer(
+                                      layer: _currentLayerForBinding!,
+                                      allLegendGroups:
+                                          _allLegendGroupsForBinding!,
+                                      onLayerUpdated: _updateLayer,
+                                      onLegendGroupTapped:
+                                          _showLegendGroupManagementDrawer,
+                                      onClose: _closeLayerLegendBindingDrawer,
+                                    ),
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // 标题栏
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
+                              // 图例组管理抽屉覆盖层
+                              if (_isLegendGroupManagementDrawerOpen &&
+                                  _currentLegendGroupForManagement != null &&
+                                  !_isDragTemporaryHidden) // 添加拖拽临时隐藏条件
+                                Positioned(
+                                  top: 16,
+                                  bottom: 16,
+                                  right: 16,
+                                  child: Material(
+                                    elevation: 8,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: LegendGroupManagementDrawer(
+                                      mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
+                                      legendGroup:
+                                          _currentLegendGroupForManagement!,
+                                      availableLegends: [], // 不再需要预载图例列表
+                                      onLegendGroupUpdated: _updateLegendGroup,
+                                      isPreviewMode: widget.isPreviewMode,
+                                      onClose:
+                                          _closeLegendGroupManagementDrawer,
+                                      onLegendItemSelected: _selectLegendItem,
+                                      allLayers:
+                                          _currentMap?.layers, // 传递所有图层用于智能隐藏功能
+                                      selectedLayer:
+                                          _selectedLayer, // 传递当前选中的图层
+                                      initialSelectedLegendItemId:
+                                          _initialSelectedLegendItemId, // 传递初始选中的图例项ID
+                                      selectedElementId:
+                                          _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
+                                      scripts: newReactiveScriptManager
+                                          .scripts, // 修正：传递正确的脚本列表
+                                      onSmartHideStateChanged:
+                                          setLegendGroupSmartHideState,
+                                      getSmartHideState:
+                                          getLegendGroupSmartHideState,
+                                      versionManager: versionAdapter!
+                                          .versionManager, // 传递版本管理器
+                                      onLegendDragToCanvas:
+                                          _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
+                                      onDragStart: _handleDragStart, // 添加这行
+                                      onDragEnd: _handleDragEnd, // 添加这行
+                                    ),
+                                  ),
+                                ), // Z层级检视器覆盖层
+                              if (_isZIndexInspectorOpen &&
+                                  (_selectedLayer != null ||
+                                      _selectedStickyNote != null))
+                                Positioned(
+                                  top: 16,
+                                  bottom: 16,
+                                  right: 16,
+                                  child: Material(
+                                    elevation: 8,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: userPrefsProvider
+                                          .layout
+                                          .drawerWidth, // 使用用户偏好设置的抽屉宽度
                                       decoration: BoxDecoration(
                                         color: Theme.of(
                                           context,
-                                        ).colorScheme.secondaryContainer,
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(12),
-                                          topRight: Radius.circular(12),
+                                        ).scaffoldBackgroundColor,
+                                        border: Border.all(
+                                          color: Theme.of(context).dividerColor,
                                         ),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Row(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.layers,
-                                            size: 20,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSecondaryContainer,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            _selectedStickyNote != null
-                                                ? '便签元素检视器 - ${_selectedStickyNote!.title}'
-                                                : 'Z层级检视器',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondaryContainer,
+                                          // 标题栏
+                                          Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondaryContainer,
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                    topLeft: Radius.circular(
+                                                      12,
+                                                    ),
+                                                    topRight: Radius.circular(
+                                                      12,
+                                                    ),
+                                                  ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.layers,
+                                                  size: 20,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSecondaryContainer,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  _selectedStickyNote != null
+                                                      ? '便签元素检视器 - ${_selectedStickyNote!.title}'
+                                                      : 'Z层级检视器',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSecondaryContainer,
+                                                  ),
+                                                ),
+                                                const Spacer(),
+                                                IconButton(
+                                                  icon: const Icon(Icons.close),
+                                                  onPressed:
+                                                      _closeZIndexInspector,
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const Spacer(),
-                                          IconButton(
-                                            icon: const Icon(Icons.close),
-                                            onPressed: _closeZIndexInspector,
+                                          const Divider(height: 1),
+
+                                          // Z层级检视器内容
+                                          Expanded(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: SingleChildScrollView(
+                                                physics:
+                                                    const BouncingScrollPhysics(),
+                                                child: ZIndexInspector(
+                                                  selectedLayer: _selectedLayer,
+                                                  selectedStickyNote:
+                                                      _selectedStickyNote,
+                                                  onElementDeleted:
+                                                      _deleteElement,
+                                                  selectedElementId:
+                                                      _selectedElementId,
+                                                  onElementSelected: (elementId) {
+                                                    setState(
+                                                      () => _selectedElementId =
+                                                          elementId,
+                                                    );
+                                                  },
+                                                  onElementUpdated:
+                                                      _updateElement,
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    const Divider(height: 1),
-
-                                    // Z层级检视器内容
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: SingleChildScrollView(
-                                          physics:
-                                              const BouncingScrollPhysics(),
-                                          child: ZIndexInspector(
-                                            selectedLayer: _selectedLayer,
-                                            selectedStickyNote:
-                                                _selectedStickyNote,
-                                            onElementDeleted: _deleteElement,
-                                            selectedElementId:
-                                                _selectedElementId,
-                                            onElementSelected: (elementId) {
-                                              setState(
-                                                () => _selectedElementId =
-                                                    elementId,
-                                              );
-                                            },
-                                            onElementUpdated: _updateElement,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
+                            ],
                           ),
-                      ],
-                    ),
-            ), // 关闭 PopScope 的 child 参数
+                  ), // 关闭 PopScope 的 child 参数
+                ],
+              ),
+            ),
           ),
         );
       },

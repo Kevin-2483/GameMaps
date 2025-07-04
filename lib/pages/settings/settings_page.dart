@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
+import '../../components/common/draggable_title_bar.dart';
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
@@ -20,23 +21,25 @@ class _SettingsPageContent extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // 标题区域（移除了AppBar）
-            Text(
-              l10n.settings,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+      body: Column(
+        children: [
+          DraggableTitleBar(
+            title: l10n.settings,
+            icon: Icons.settings,
+          ),
+          Expanded(
+            child: SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  _buildUserPreferencesSection(context, l10n),
+                  const SizedBox(height: 16),
+                  _buildResourceSection(context, l10n),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            _buildUserPreferencesSection(context, l10n),
-            const SizedBox(height: 16),
-            _buildResourceSection(context, l10n),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

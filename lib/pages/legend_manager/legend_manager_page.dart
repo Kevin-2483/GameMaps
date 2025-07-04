@@ -9,6 +9,7 @@ import '../../models/legend_item.dart';
 import '../../services/legend_vfs/legend_vfs_service.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../../components/common/center_point_selector.dart';
+import '../../components/common/draggable_title_bar.dart';
 
 class LegendManagerPage extends BasePage {
   const LegendManagerPage({super.key});
@@ -376,54 +377,55 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.legendManager),
-        actions: [
-          // 创建文件夹按钮
-          ConfigAwareAppBarAction(
-            featureId: 'DebugMode',
-            action: IconButton(
-              onPressed: _createFolder,
-              icon: const Icon(Icons.create_new_folder),
-              tooltip: '创建文件夹',
-            ),
-          ),
-          // 调试模式功能
-          ConfigAwareAppBarAction(
-            featureId: 'DebugMode',
-            action: PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'add':
-                    _addLegend();
-                    break;
-                  case 'root':
-                    _navigateToRoot();
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'add',
-                  child: ListTile(
-                    leading: Icon(Icons.add),
-                    title: Text('添加图例'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'root',
-                  child: ListTile(
-                    leading: Icon(Icons.home),
-                    title: Text('回到根目录'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          DraggableTitleBar(
+            title: l10n.legendManager,
+            icon: Icons.legend_toggle,
+            actions: [
+              // 创建文件夹按钮
+              ConfigAwareAppBarAction(
+                featureId: 'DebugMode',
+                action: IconButton(
+                  onPressed: _createFolder,
+                  icon: const Icon(Icons.create_new_folder),
+                  tooltip: '创建文件夹',
+                ),
+              ),
+              // 调试模式功能
+              ConfigAwareAppBarAction(
+                featureId: 'DebugMode',
+                action: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'add':
+                        _addLegend();
+                        break;
+                      case 'root':
+                        _navigateToRoot();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'add',
+                      child: ListTile(
+                        leading: Icon(Icons.add),
+                        title: Text('添加图例'),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'root',
+                      child: ListTile(
+                        leading: Icon(Icons.home),
+                        title: Text('回到根目录'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           // 面包屑导航
           if (_currentPath.isNotEmpty)
             Container(
@@ -452,61 +454,68 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _legends.isEmpty && _folders.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.legend_toggle,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.legendManagerEmpty,
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(l10n.addLegend),
-                      ],
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: _calculateCrossAxisCount(context),
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 2.5, // 长方形卡片比例
-                      ),
-                      itemCount: _folders.length + _legends.length,
-                      itemBuilder: (context, index) {
-                        if (index < _folders.length) {
-                          // 文件夹项
-                          final folderName = _folders[index];
-                          return _FolderCard(
-                            folderName: folderName,
-                            onTap: () => _navigateToFolder(folderName),
-                          );
-                        } else {
-                          // 图例项
-                          final legendIndex = index - _folders.length;
-                          final legend = _legends[legendIndex];
-                          return _LegendCard(
-                            legend: legend,
-                            onDelete: () => _deleteLegend(legend),
-                            onTap: () {
-                              // 暂时不实现点击事件
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
+                : _buildContent(context, l10n),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 构建内容区域
+  Widget _buildContent(BuildContext context, AppLocalizations l10n) {
+    if (_legends.isEmpty && _folders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.legend_toggle,
+              size: 64,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.legendManagerEmpty,
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(l10n.addLegend),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: _calculateCrossAxisCount(context),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 2.5, // 长方形卡片比例
+        ),
+        itemCount: _folders.length + _legends.length,
+        itemBuilder: (context, index) {
+          if (index < _folders.length) {
+            // 文件夹项
+            final folderName = _folders[index];
+            return _FolderCard(
+              folderName: folderName,
+              onTap: () => _navigateToFolder(folderName),
+            );
+          } else {
+            // 图例项
+            final legendIndex = index - _folders.length;
+            final legend = _legends[legendIndex];
+            return _LegendCard(
+              legend: legend,
+              onDelete: () => _deleteLegend(legend),
+              onTap: () {
+                // 暂时不实现点击事件
+              },
+            );
+          }
+        },
       ),
     );
   }

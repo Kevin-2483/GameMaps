@@ -18,6 +18,7 @@ import '../../mixins/map_localization_mixin.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../map_editor/map_editor_page.dart';
 import '../../utils/filename_sanitizer.dart';
+import '../../components/common/draggable_title_bar.dart';
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -393,209 +394,203 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.mapAtlas),
-        actions: [
-          // 上传本地化文件按钮
-          IconButton(
-            onPressed: _uploadLocalizationFile,
-            icon: const Icon(Icons.translate),
-            tooltip: '上传本地化文件',
-          ), // 调试模式功能
-          ConfigAwareAppBarAction(
-            featureId: 'DebugMode',
-            action: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (kIsWeb) {
-                  // Web平台显示只读模式提示
-                  String operationName;
-                  switch (value) {
-                    case 'add':
-                      operationName = '添加地图';
-                      break;
-                    case 'add_folder':
-                      operationName = '创建文件夹';
-                      break;
-                    default:
-                      operationName = '操作';
-                  }
-                  WebReadOnlyDialog.show(context, operationName);
-                  return;
-                }
-                switch (value) {
-                  case 'add':
-                    _addMap();
-                    break;
-                  case 'add_folder':
-                    _showCreateFolderDialog();
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'add',
-                  child: ListTile(
-                    leading: const Icon(Icons.add),
-                    title: Text(l10n.addMap),
-                  ),
+      body: Column(
+        children: [
+          DraggableTitleBar(
+            title: l10n.mapAtlas,
+            icon: Icons.map,
+            actions: [
+              // 上传本地化文件按钮
+              IconButton(
+                onPressed: _uploadLocalizationFile,
+                icon: const Icon(Icons.translate),
+                tooltip: '上传本地化文件',
+              ), // 调试模式功能
+              ConfigAwareAppBarAction(
+                featureId: 'DebugMode',
+                action: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (kIsWeb) {
+                      // Web平台显示只读模式提示
+                      String operationName;
+                      switch (value) {
+                        case 'add':
+                          operationName = '添加地图';
+                          break;
+                        case 'add_folder':
+                          operationName = '创建文件夹';
+                          break;
+                        default:
+                          operationName = '操作';
+                      }
+                      WebReadOnlyDialog.show(context, operationName);
+                      return;
+                    }
+                    switch (value) {
+                      case 'add':
+                        _addMap();
+                        break;
+                      case 'add_folder':
+                        _showCreateFolderDialog();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'add',
+                      child: ListTile(
+                        leading: const Icon(Icons.add),
+                        title: Text(l10n.addMap),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'add_folder',
+                      child: const ListTile(
+                        leading: Icon(Icons.create_new_folder),
+                        title: Text('创建文件夹'),
+                      ),
+                    ),
+                  ],
                 ),
-                PopupMenuItem(
-                  value: 'add_folder',
-                  child: const ListTile(
-                    leading: Icon(Icons.create_new_folder),
-                    title: Text('创建文件夹'),
+              ),
+            ],
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildContent(context, l10n),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建内容区域
+  Widget _buildContent(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      children: [
+        // 面包屑导航
+        if (_breadcrumbs.length > 1)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _breadcrumbs.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final breadcrumb = entry.value;
+                        final isLast = index == _breadcrumbs.length - 1;
+
+                        return Row(
+                          children: [
+                            if (index > 0)
+                              const Icon(
+                                Icons.chevron_right,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                            InkWell(
+                              onTap: isLast
+                                  ? null
+                                  : () => _loadDirectoryContents(
+                                      breadcrumb.path.isEmpty
+                                          ? null
+                                          : breadcrumb.path,
+                                    ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                child: Text(
+                                  breadcrumb.name,
+                                  style: TextStyle(
+                                    color: isLast ? Colors.black : Colors.blue,
+                                    fontWeight: isLast
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // 面包屑导航
-                if (_breadcrumbs.length > 1)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: _breadcrumbs.asMap().entries.map((
-                                entry,
-                              ) {
-                                final index = entry.key;
-                                final breadcrumb = entry.value;
-                                final isLast = index == _breadcrumbs.length - 1;
-
-                                return Row(
-                                  children: [
-                                    if (index > 0)
-                                      const Icon(
-                                        Icons.chevron_right,
-                                        size: 16,
-                                        color: Colors.grey,
-                                      ),
-                                    InkWell(
-                                      onTap: isLast
-                                          ? null
-                                          : () => _loadDirectoryContents(
-                                              breadcrumb.path.isEmpty
-                                                  ? null
-                                                  : breadcrumb.path,
-                                            ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 2,
-                                        ),
-                                        child: Text(
-                                          breadcrumb.name,
-                                          style: TextStyle(
-                                            color: isLast
-                                                ? Colors.black
-                                                : Colors.blue,
-                                            fontWeight: isLast
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+        // 内容区域
+        Expanded(
+          child: _items.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.folder_open,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('点击右上角菜单添加地图或创建文件夹'),
+                    ],
                   ),
-                // 内容区域
-                Expanded(
-                  child: _items.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.folder_open,
-                                size: 64,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _currentPath.isEmpty
-                                    ? l10n.mapAtlasEmpty
-                                    : '此文件夹为空',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 8),
-                              const Text('点击右上角菜单添加地图或创建文件夹'),
-                            ],
-                          ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: GridView.builder(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: _calculateCrossAxisCount(
-                                    context,
-                                  ),
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                  childAspectRatio: 2.5, // 长方形卡片比例
-                                ),
-                            itemCount: _items.length,
-                            itemBuilder: (context, index) {
-                              final item = _items[index];
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _calculateCrossAxisCount(context),
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 2.5, // 长方形卡片比例
+                    ),
+                    itemCount: _items.length,
+                    itemBuilder: (context, index) {
+                      final item = _items[index];
 
-                              if (item is MapFolderItem) {
-                                return _FolderCard(
-                                  folder: item,
-                                  onTap: () =>
-                                      _loadDirectoryContents(item.path),
-                                  onDelete: kIsWeb
-                                      ? () => WebReadOnlyDialog.show(
-                                          context,
-                                          '删除文件夹',
-                                        )
-                                      : () => _deleteFolder(item),
-                                );
-                              } else if (item is MapFileItem) {
-                                final map = item.mapSummary;
-                                return _MapCard(
-                                  map: map,
-                                  localizedTitle:
-                                      _localizedTitles[map.title] ?? map.title,
-                                  onDelete: () {
-                                    if (kIsWeb) {
-                                      WebReadOnlyDialog.show(context, '删除地图');
-                                    } else {
-                                      _deleteMap(map);
-                                    }
-                                  },
-                                  onTap: () => _openMapEditor(map.title),
-                                );
-                              }
+                      if (item is MapFolderItem) {
+                        return _FolderCard(
+                          folder: item,
+                          onTap: () => _loadDirectoryContents(item.path),
+                          onDelete: kIsWeb
+                              ? () => WebReadOnlyDialog.show(context, '删除文件夹')
+                              : () => _deleteFolder(item),
+                        );
+                      } else if (item is MapFileItem) {
+                        final map = item.mapSummary;
+                        return _MapCard(
+                          map: map,
+                          localizedTitle:
+                              _localizedTitles[map.title] ?? map.title,
+                          onDelete: () {
+                            if (kIsWeb) {
+                              WebReadOnlyDialog.show(context, '删除地图');
+                            } else {
+                              _deleteMap(map);
+                            }
+                          },
+                          onTap: () => _openMapEditor(map.title),
+                        );
+                      }
 
-                              return const SizedBox(); // 不应该到达这里
-                            },
-                          ),
-                        ),
+                      return const SizedBox(); // 不应该到达这里
+                    },
+                  ),
                 ),
-              ],
-            ),
+        ),
+      ],
     );
   }
 
