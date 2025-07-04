@@ -26,5 +26,8 @@ class AboutPageModule extends PageModule {
   int get priority => 800; // 优先级较低，在设置页之前
 
   @override
+  bool get showInNavigation => false; // 不在托盘导航中显示，但可以通过设置页面访问
+
+  @override
   Widget buildPage(BuildContext context) => const AboutPage();
 }
