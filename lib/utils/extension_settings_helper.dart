@@ -51,7 +51,7 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, isHidden);
 
     if (kDebugMode) {
-      print('扩展设置: 地图 $mapId 的图例组 $legendGroupId 智能隐藏状态已设置为 $isHidden');
+      debugPrint('扩展设置: 地图 $mapId 的图例组 $legendGroupId 智能隐藏状态已设置为 $isHidden');
     }
   }
 
@@ -84,7 +84,7 @@ class ExtensionSettingsHelper {
     }
 
     if (kDebugMode) {
-      print('扩展设置: 已清除地图 $mapId 的所有图例组智能隐藏设置');
+      debugPrint('扩展设置: 已清除地图 $mapId 的所有图例组智能隐藏设置');
     }
   }
 
@@ -107,7 +107,7 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, presets);
 
     if (kDebugMode) {
-      print('扩展设置: 地图 $mapId 的图层 $layerId 透明度预设已设置: $presets');
+      debugPrint('扩展设置: 地图 $mapId 的图层 $layerId 透明度预设已设置: $presets');
     }
   }
 
@@ -138,7 +138,7 @@ class ExtensionSettingsHelper {
       await _provider.setExtensionSetting(key, currentLevels);
 
       if (kDebugMode) {
-        print('扩展设置: 地图 $mapId 添加缩放级别记录 $zoomLevel');
+        debugPrint('扩展设置: 地图 $mapId 添加缩放级别记录 $zoomLevel');
       }
     }
   }
@@ -171,7 +171,7 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, position);
 
     if (kDebugMode) {
-      print('扩展设置: 工具栏 $toolbarId 位置已设置为 ($x, $y)');
+      debugPrint('扩展设置: 工具栏 $toolbarId 位置已设置为 ($x, $y)');
     }
   }
 
@@ -201,7 +201,7 @@ class ExtensionSettingsHelper {
     }
 
     if (kDebugMode) {
-      print('扩展设置: 已清除前缀为 $prefix 的所有设置');
+      debugPrint('扩展设置: 已清除前缀为 $prefix 的所有设置');
     }
   }
 

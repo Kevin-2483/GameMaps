@@ -93,7 +93,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
       }
     } catch (e) {
       // LICENSE 文件不存在或无法读取
-      print('无法加载 LICENSE 文件: $e');
+      debugPrint('无法加载 LICENSE 文件: $e');
     }
   }
 

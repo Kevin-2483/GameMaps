@@ -108,7 +108,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
   /// 初始化VFS视频
   Future<void> _initializeVfsVideo() async {
     try {
-      print('🎥 MediaKitVideoPlayer: 开始初始化VFS视频 - ${widget.url}');
+      debugPrint('🎥 MediaKitVideoPlayer: 开始初始化VFS视频 - ${widget.url}');
 
       // 使用VFS服务生成可播放的URL
       final playableUrl = await _vfsService.generateFileUrl(widget.url);
@@ -117,7 +117,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
         throw Exception('无法为VFS视频文件生成可播放URL 注意:超过4MB无法生成');
       }
 
-      print('🎥 MediaKitVideoPlayer: 成功生成VFS视频URL - $playableUrl');
+      debugPrint('🎥 MediaKitVideoPlayer: 成功生成VFS视频URL - $playableUrl');
       _convertedUrl = playableUrl;
 
       // 使用转换后的URL初始化播放器
@@ -133,9 +133,9 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
         await _player.play();
       }
 
-      print('🎥 MediaKitVideoPlayer: VFS视频初始化完成');
+      debugPrint('🎥 MediaKitVideoPlayer: VFS视频初始化完成');
     } catch (e) {
-      print('🎥 MediaKitVideoPlayer: VFS视频初始化失败 - $e');
+      debugPrint('🎥 MediaKitVideoPlayer: VFS视频初始化失败 - $e');
       setState(() {
         _errorMessage = 'VFS视频加载失败: $e';
       });
@@ -272,7 +272,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    print('复制视频链接: ${widget.url}');
+    debugPrint('复制视频链接: ${widget.url}');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('视频链接已复制到剪贴板'),
@@ -289,7 +289,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
       // 对于客户端平台的临时文件，可以选择保留用于缓存
       if (kIsWeb && _convertedUrl!.startsWith('blob:')) {
         // Web平台的Blob URL清理将在VFS视频服务中处理
-        print('🎥 MediaKitVideoPlayer: 释放资源 - $_convertedUrl');
+        debugPrint('🎥 MediaKitVideoPlayer: 释放资源 - $_convertedUrl');
       }
     }
 

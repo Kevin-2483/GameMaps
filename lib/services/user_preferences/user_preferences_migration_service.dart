@@ -67,13 +67,13 @@ class UserPreferencesMigrationService {
       _needsMigration = hasLegacyData;
 
       if (kDebugMode && hasLegacyData) {
-        print('检测到需要迁移的旧数据');
+        debugPrint('检测到需要迁移的旧数据');
       }
 
       return hasLegacyData;
     } catch (e) {
       if (kDebugMode) {
-        print('检查迁移状态失败: $e');
+        debugPrint('检查迁移状态失败: $e');
       }
       _migrationChecked = true;
       _needsMigration = false;
@@ -89,7 +89,7 @@ class UserPreferencesMigrationService {
       // 如果已经迁移过，跳过
       if (prefs.getBool(_migrationCompleteKey) == true) {
         if (kDebugMode) {
-          print('数据已经迁移过，跳过迁移');
+          debugPrint('数据已经迁移过，跳过迁移');
         }
         return true;
       }
@@ -112,12 +112,12 @@ class UserPreferencesMigrationService {
             migratedUsersCount++;
 
             if (kDebugMode) {
-              print('迁移用户配置: ${preferences.displayName}');
+              debugPrint('迁移用户配置: ${preferences.displayName}');
             }
           }
         } catch (e) {
           if (kDebugMode) {
-            print('迁移用户配置文件失败: $e');
+            debugPrint('迁移用户配置文件失败: $e');
           }
         }
       }
@@ -143,11 +143,11 @@ class UserPreferencesMigrationService {
           migratedUsersCount++;
 
           if (kDebugMode) {
-            print('迁移传统用户偏好设置: ${preferences.displayName}');
+            debugPrint('迁移传统用户偏好设置: ${preferences.displayName}');
           }
         } catch (e) {
           if (kDebugMode) {
-            print('迁移传统用户偏好设置失败: $e');
+            debugPrint('迁移传统用户偏好设置失败: $e');
           }
         }
       }
@@ -159,7 +159,7 @@ class UserPreferencesMigrationService {
         if (userExists) {
           await _dbService.setCurrentUser(currentUserId);
           if (kDebugMode) {
-            print('设置当前用户: $currentUserId');
+            debugPrint('设置当前用户: $currentUserId');
           }
         }
       }
@@ -168,13 +168,13 @@ class UserPreferencesMigrationService {
       await prefs.setBool(_migrationCompleteKey, true);
 
       if (kDebugMode) {
-        print('用户偏好设置迁移完成，迁移了 $migratedUsersCount 个用户');
+        debugPrint('用户偏好设置迁移完成，迁移了 $migratedUsersCount 个用户');
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('数据迁移失败: $e');
+        debugPrint('数据迁移失败: $e');
       }
       return false;
     }
@@ -191,11 +191,11 @@ class UserPreferencesMigrationService {
       await prefs.remove(_legacyCurrentUserKey);
 
       if (kDebugMode) {
-        print('旧数据清理完成');
+        debugPrint('旧数据清理完成');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('清理旧数据失败: $e');
+        debugPrint('清理旧数据失败: $e');
       }
     }
   }
@@ -207,11 +207,11 @@ class UserPreferencesMigrationService {
       await prefs.remove(_migrationCompleteKey);
 
       if (kDebugMode) {
-        print('迁移状态已重置');
+        debugPrint('迁移状态已重置');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('重置迁移状态失败: $e');
+        debugPrint('重置迁移状态失败: $e');
       }
     }
   }
@@ -231,7 +231,7 @@ class UserPreferencesMigrationService {
       };
     } catch (e) {
       if (kDebugMode) {
-        print('获取迁移统计信息失败: $e');
+        debugPrint('获取迁移统计信息失败: $e');
       }
       return {'error': e.toString()};
     }

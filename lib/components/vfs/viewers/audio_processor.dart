@@ -34,7 +34,7 @@ class AudioProcessor {
         caseSensitive: false,
       ),
     );
-    print(
+    debugPrint(
       '🎵 AudioProcessor.containsAudio: text长度=${text.length}, 包含音频=$result',
     );
     return result;
@@ -42,12 +42,12 @@ class AudioProcessor {
 
   /// 创建音频节点生成器
   static SpanNodeGeneratorWithTag createGenerator(audioUuidMap) {
-    print('🎵 AudioProcessor: 创建音频生成器');
+    debugPrint('🎵 AudioProcessor: 创建音频生成器');
     return SpanNodeGeneratorWithTag(
       tag: audioTag,
       generator: (e, config, visitor) {
         final playerId = audioUuidMap[e.attributes['src']];
-        print(
+        debugPrint(
           '🎵 AudioProcessor: 生成AudioNode - tag: \\${e.tag}, attributes: \\${e.attributes}, textContent: \\${e.textContent}, uuid: $playerId',
         );
         return AudioNode(e.attributes, e.textContent, playerId);
@@ -112,7 +112,7 @@ class AudioProcessor {
 
   /// 转换Markdown图片语法为音频（如果是音频文件）
   static String convertMarkdownAudios(String content) {
-    print('🎵 AudioProcessor.convertMarkdownAudios: 开始转换');
+    debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 开始转换');
     // 将Markdown图片语法中的音频文件转换为audio标签
     final pattern = RegExp(
       r'!\[(.*?)\]\(([^)]*\.(mp3|wav|ogg|aac|m4a|flac|wma|opus))\)',
@@ -122,7 +122,7 @@ class AudioProcessor {
     final result = content.replaceAllMapped(pattern, (match) {
       final alt = match.group(1) ?? '';
       final src = match.group(2) ?? '';
-      print('🎵 AudioProcessor.convertMarkdownAudios: 转换 $src');
+      debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 转换 $src');
 
       // 从alt文本中解析参数
       final controls = 'controls';
@@ -141,11 +141,11 @@ class AudioProcessor {
       // 构建audio标签
       final audioTag =
           '<audio src="$src" $controls $autoplay $loop title="$title" artist="$artist" album="$album"></audio>';
-      print('🎵 AudioProcessor.convertMarkdownAudios: 生成标签 $audioTag');
+      debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 生成标签 $audioTag');
       return audioTag;
     });
 
-    print('🎵 AudioProcessor.convertMarkdownAudios: 转换完成');
+    debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 转换完成');
     return result;
   }
 
@@ -213,10 +213,10 @@ class AudioNode extends SpanNode {
 
   @override
   InlineSpan build() {
-    print(
+    debugPrint(
       '🎵 AudioNode.build: src=[200m${attributes['src']}[0m, playerId=$playerId',
     );
-    print('🎵 AudioNode.build: 开始构建 - src: \\${attributes['src']}');
+    debugPrint('🎵 AudioNode.build: 开始构建 - src: \\${attributes['src']}');
     final src = attributes['src'] ?? '';
     final title = attributes['title'] ?? AudioProcessor._extractFileName(src);
     final artist = attributes['artist'];
@@ -236,7 +236,7 @@ class AudioNode extends SpanNode {
           autoPlay: autoplay,
           playerId: playerId, // 传递uuid
           onError: (error) {
-            print('🎵 AudioNode: 播放器错误 - $error');
+            debugPrint('🎵 AudioNode: 播放器错误 - $error');
           },
         ),
       ),
@@ -257,7 +257,7 @@ class AudioSyntax extends m.InlineSyntax {
   @override
   bool onMatch(m.InlineParser parser, Match match) {
     final audioHtml = match.group(0)!;
-    print('🎵 AudioSyntax.onMatch: 匹配到音频标签 - $audioHtml'); // 解析audio标签属性
+    debugPrint('🎵 AudioSyntax.onMatch: 匹配到音频标签 - $audioHtml'); // 解析audio标签属性
     final srcMatch = RegExp(r'''src=["']([^"']*)["']''').firstMatch(audioHtml);
     final titleMatch = RegExp(
       r'''title=["']([^"']*)["']''',
@@ -280,7 +280,7 @@ class AudioSyntax extends m.InlineSyntax {
     if (audioHtml.contains('loop')) attributes['loop'] = 'loop';
     if (audioHtml.contains('controls')) attributes['controls'] = 'controls';
 
-    print('🎵 AudioSyntax.onMatch: 解析属性 - $attributes');
+    debugPrint('🎵 AudioSyntax.onMatch: 解析属性 - $attributes');
 
     // 创建audio元素
     final element = m.Element.text(AudioProcessor.audioTag, '');

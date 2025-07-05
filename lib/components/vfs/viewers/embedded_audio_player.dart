@@ -168,7 +168,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         await _playWithTempQueue(position: _tempProgress);
       }
     } catch (e) {
-      print('播放/暂停操作失败: $e');
+      debugPrint('播放/暂停操作失败: $e');
       widget.onError?.call('播放操作失败: $e');
     }
   }
@@ -186,7 +186,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             setState(() {});
           })
           .catchError((e) {
-            print('进度条拖拽跳转失败: $e');
+            debugPrint('进度条拖拽跳转失败: $e');
           });
     }
   }
@@ -497,7 +497,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                   setState(() {});
                 })
                 .catchError((e) {
-                  print('快退操作失败: $e');
+                  debugPrint('快退操作失败: $e');
                 });
           },
           tooltip: '快退10秒',
@@ -539,7 +539,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                     setState(() {});
                   })
                   .catchError((e) {
-                    print('快进操作失败: $e');
+                    debugPrint('快进操作失败: $e');
                   });
             }
           },

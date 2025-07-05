@@ -63,11 +63,11 @@ class TtsService {
       _isInitialized = true;
 
       if (kDebugMode) {
-        print('TTS服务初始化完成');
+        debugPrint('TTS服务初始化完成');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('TTS服务初始化失败: $e');
+        debugPrint('TTS服务初始化失败: $e');
       }
       rethrow;
     }
@@ -79,27 +79,27 @@ class TtsService {
 
     _flutterTts!.setStartHandler(() {
       if (kDebugMode) {
-        print('TTS开始播放');
+        debugPrint('TTS开始播放');
       }
     });
 
     _flutterTts!.setCompletionHandler(() {
       if (kDebugMode) {
-        print('TTS播放完成');
+        debugPrint('TTS播放完成');
       }
       _onSpeechComplete();
     });
 
     _flutterTts!.setErrorHandler((msg) {
       if (kDebugMode) {
-        print('TTS错误: $msg');
+        debugPrint('TTS错误: $msg');
       }
       _onSpeechError(msg);
     });
 
     _flutterTts!.setCancelHandler(() {
       if (kDebugMode) {
-        print('TTS播放取消');
+        debugPrint('TTS播放取消');
       }
       _onSpeechComplete();
     });
@@ -137,7 +137,7 @@ class TtsService {
       await _playCurrent();
     } catch (e) {
       if (kDebugMode) {
-        print('处理TTS请求失败: $e');
+        debugPrint('处理TTS请求失败: $e');
       }
       _onSpeechError(e.toString());
     }
@@ -156,7 +156,7 @@ class TtsService {
     // 如果TTS被禁用，则直接完成
     if (!defaultTtsPrefs.enabled) {
       if (kDebugMode) {
-        print('TTS已禁用，跳过播放请求');
+        debugPrint('TTS已禁用，跳过播放请求');
       }
       _onSpeechComplete();
       return;
@@ -185,7 +185,7 @@ class TtsService {
     await _flutterTts!.speak(request.text);
 
     if (kDebugMode) {
-      print('TTS开始播放文本: ${request.text} (来源: ${request.sourceId ?? "未知"})');
+      debugPrint('TTS开始播放文本: ${request.text} (来源: ${request.sourceId ?? "未知"})');
     }
   }
 
@@ -198,12 +198,12 @@ class TtsService {
       _availableVoices = await _flutterTts!.getVoices;
 
       if (kDebugMode) {
-        print('可用语言: $_availableLanguages');
-        print('可用语音: $_availableVoices');
+        debugPrint('可用语言: $_availableLanguages');
+        debugPrint('可用语音: $_availableVoices');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('加载TTS选项失败: $e');
+        debugPrint('加载TTS选项失败: $e');
       }
     }
   }
@@ -232,14 +232,14 @@ class TtsService {
 
     if (_flutterTts == null) {
       if (kDebugMode) {
-        print('TTS未初始化，无法播放');
+        debugPrint('TTS未初始化，无法播放');
       }
       return;
     }
 
     if (text.trim().isEmpty) {
       if (kDebugMode) {
-        print('TTS文本为空，跳过播放');
+        debugPrint('TTS文本为空，跳过播放');
       }
       return;
     }
@@ -258,7 +258,7 @@ class TtsService {
     _requestQueue.add(request);
 
     if (kDebugMode) {
-      print(
+      debugPrint(
         'TTS请求已加入队列: "$text" (来源: ${sourceId ?? "未知"}, 队列长度: ${_requestQueue.length})',
       );
     }
@@ -288,7 +288,7 @@ class TtsService {
     _isProcessing = false;
 
     if (kDebugMode) {
-      print('TTS已停止，队列已清空');
+      debugPrint('TTS已停止，队列已清空');
     }
   }
 
@@ -315,7 +315,7 @@ class TtsService {
     }
 
     if (kDebugMode && toRemove.isNotEmpty) {
-      print('已停止来源为 $sourceId 的 ${toRemove.length} 个TTS请求');
+      debugPrint('已停止来源为 $sourceId 的 ${toRemove.length} 个TTS请求');
     }
   }
 
@@ -340,7 +340,7 @@ class TtsService {
       return await _flutterTts!.isLanguageAvailable(language);
     } catch (e) {
       if (kDebugMode) {
-        print('检查语言可用性失败: $e');
+        debugPrint('检查语言可用性失败: $e');
       }
       return false;
     }
@@ -355,7 +355,7 @@ class TtsService {
       return {'min': range.min, 'normal': range.normal, 'max': range.max};
     } catch (e) {
       if (kDebugMode) {
-        print('获取语音速度范围失败: $e');
+        debugPrint('获取语音速度范围失败: $e');
       }
       return null;
     }

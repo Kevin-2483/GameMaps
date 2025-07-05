@@ -80,7 +80,7 @@ class UserPreferencesDatabaseService {
     });
 
     if (kDebugMode) {
-      print('用户偏好设置数据库表创建完成');
+      debugPrint('用户偏好设置数据库表创建完成');
     }
   }
 
@@ -94,12 +94,12 @@ class UserPreferencesDatabaseService {
       ''');
       
       if (kDebugMode) {
-        print('数据库升级：添加 home_page_data 字段');
+        debugPrint('数据库升级：添加 home_page_data 字段');
       }
     }
     
     if (kDebugMode) {
-      print('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
+      debugPrint('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
     }
   }
 
@@ -141,7 +141,7 @@ class UserPreferencesDatabaseService {
     await _setCurrentUserId(userId);
 
     if (kDebugMode) {
-      print('用户偏好设置已保存到数据库: ${updatedPreferences.displayName}');
+      debugPrint('用户偏好设置已保存到数据库: ${updatedPreferences.displayName}');
     }
   }
 
@@ -198,7 +198,7 @@ class UserPreferencesDatabaseService {
     }
 
     if (kDebugMode) {
-      print('用户配置已删除: $userId');
+      debugPrint('用户配置已删除: $userId');
     }
   }
 
@@ -266,7 +266,7 @@ class UserPreferencesDatabaseService {
     await _setCurrentUserId('');
 
     if (kDebugMode) {
-      print('所有用户偏好设置数据已清除');
+      debugPrint('所有用户偏好设置数据已清除');
     }
   }
 

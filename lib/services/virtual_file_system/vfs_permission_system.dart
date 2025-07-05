@@ -361,7 +361,7 @@ class VfsPermissionManager {
 
         // 系统保护目录不能创建文件
         if (parentPermissions.isSystemProtected) {
-          print('DEBUG canWrite: Parent is system protected, returning false');
+          debugPrint('DEBUG canWrite: Parent is system protected, returning false');
           return false;
         }
 
@@ -369,11 +369,11 @@ class VfsPermissionManager {
           VfsPermissionType.user,
           VfsPermission.write,
         );
-        print('DEBUG canWrite: Parent write permission = $canWrite');
+        debugPrint('DEBUG canWrite: Parent write permission = $canWrite');
         return canWrite;
       } catch (e) {
         // 如果父目录也不存在，使用默认权限（允许）
-        print('DEBUG canWrite: Parent permissions failed: $e, returning true');
+        debugPrint('DEBUG canWrite: Parent permissions failed: $e, returning true');
         return true;
       }
     }

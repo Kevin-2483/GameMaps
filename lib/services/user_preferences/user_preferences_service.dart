@@ -46,13 +46,13 @@ class UserPreferencesService {
       // 只在真正需要时执行迁移
       if (await _migrationService.needsMigration()) {
         if (kDebugMode) {
-          print('执行用户偏好设置数据迁移...');
+          debugPrint('执行用户偏好设置数据迁移...');
         }
 
         final migrationSuccess = await _migrationService.performMigration();
         if (migrationSuccess) {
           if (kDebugMode) {
-            print('数据迁移完成');
+            debugPrint('数据迁移完成');
           }
           // 迁移成功后可选择清理旧数据
           // await _migrationService.cleanupLegacyData();
@@ -64,11 +64,11 @@ class UserPreferencesService {
       _initialized = true;
 
       if (kDebugMode) {
-        print('用户偏好设置服务初始化完成');
+        debugPrint('用户偏好设置服务初始化完成');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('用户偏好设置服务初始化失败: $e');
+        debugPrint('用户偏好设置服务初始化失败: $e');
       }
       // 即使迁移失败，也要继续初始化服务
       await _loadCurrentUser();
@@ -138,11 +138,11 @@ class UserPreferencesService {
       await _dbService.savePreferences(preferences);
 
       if (kDebugMode) {
-        print('用户偏好设置已保存: ${preferences.displayName}');
+        debugPrint('用户偏好设置已保存: ${preferences.displayName}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('保存用户偏好设置失败: $e');
+        debugPrint('保存用户偏好设置失败: $e');
       }
       rethrow;
     }
@@ -304,7 +304,7 @@ class UserPreferencesService {
     await updateTools(updatedTools);
 
     if (kDebugMode) {
-      print('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
+      debugPrint('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
     }
   }
 
@@ -330,7 +330,7 @@ class UserPreferencesService {
     await updateTools(updatedTools);
 
     if (kDebugMode) {
-      print('常用线条宽度已添加: ${strokeWidth}px');
+      debugPrint('常用线条宽度已添加: ${strokeWidth}px');
     }
   }
 
@@ -393,7 +393,7 @@ class UserPreferencesService {
       await savePreferences(importedPreferences, immediate: true);
     } catch (e) {
       if (kDebugMode) {
-        print('导入设置失败: $e');
+        debugPrint('导入设置失败: $e');
       }
       rethrow;
     }
@@ -416,7 +416,7 @@ class UserPreferencesService {
       _currentPreferences = await _dbService.getCurrentPreferences();
     } catch (e) {
       if (kDebugMode) {
-        print('加载当前用户偏好设置失败: $e');
+        debugPrint('加载当前用户偏好设置失败: $e');
       }
     }
   }

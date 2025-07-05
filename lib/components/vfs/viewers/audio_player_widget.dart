@@ -87,14 +87,14 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   void dispose() {
     if (!widget.connectToExisting) {
       _audioService.stop().catchError((e) {
-        print('停止音频播放失败: $e');
+        debugPrint('停止音频播放失败: $e');
       });
       _audioService.dispose().catchError((e) {
-        print('清理音频服务失败: $e');
+        debugPrint('清理音频服务失败: $e');
       });
     } else {
       _audioService.removeListeners(); // 只注销监听，不销毁底层播放器
-      print('🎵 窗口关闭，音频继续在后台播放');
+      debugPrint('🎵 窗口关闭，音频继续在后台播放');
     }
     _progressAnimationController.dispose();
     _volumeAnimationController.dispose();
@@ -132,7 +132,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     try {
       _audioService.forceRefreshUI();
       final currentSource = _audioService.currentSource;
-      print('🎵 检查播放状态 - 当前源: $currentSource, 目标源: ${widget.source}');
+      debugPrint('🎵 检查播放状态 - 当前源: $currentSource, 目标源: ${widget.source}');
       final playlistItem = PlaylistItem(
         source: widget.source,
         title: widget.title,
@@ -146,7 +146,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         if (_audioService.currentSource == widget.source) {
           // 已经在播放同一个音频，直接刷新UI即可
           _audioService.forceRefreshUI();
-          print('🎵 插播请求与当前播放源一致，跳过插播。');
+          debugPrint('🎵 插播请求与当前播放源一致，跳过插播。');
           return;
         }
         _audioService.removeFromPlaylistBySource(widget.source);
@@ -164,18 +164,18 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       }
       await Future.delayed(const Duration(milliseconds: 100));
       _audioService.forceRefreshUI();
-      print('🎵 连接到现有播放器完成:');
-      print('  - 当前播放: ${_audioService.currentSource}');
-      print('  - 播放状态: ${_audioService.state}');
-      print(
+      debugPrint('🎵 连接到现有播放器完成:');
+      debugPrint('  - 当前播放: ${_audioService.currentSource}');
+      debugPrint('  - 播放状态: ${_audioService.state}');
+      debugPrint(
         '  - 播放进度: ${_audioService.currentPosition}/${_audioService.totalDuration}',
       );
-      print('  - 播放列表长度: ${_audioService.playlist.length}');
-      print('  - 当前索引: ${_audioService.currentIndex}');
-      print('  - 是否播放我们的音频: ${_isPlayingOurAudio()}');
-      print('  - 是否在播放列表中: ${_isInPlaylist()}');
+      debugPrint('  - 播放列表长度: ${_audioService.playlist.length}');
+      debugPrint('  - 当前索引: ${_audioService.currentIndex}');
+      debugPrint('  - 是否播放我们的音频: ${_isPlayingOurAudio()}');
+      debugPrint('  - 是否在播放列表中: ${_isInPlaylist()}');
     } catch (e) {
-      print('🎵 连接到播放器失败: $e');
+      debugPrint('🎵 连接到播放器失败: $e');
       widget.onError?.call('连接到播放器失败: $e');
     }
   }
@@ -564,12 +564,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                         seconds: (value * _audioService.totalDuration.inSeconds)
                             .round(),
                       );
-                      print(
+                      debugPrint(
                         '🎵 进度条拖拽到: ${_formatDuration(position)} / ${_formatDuration(_audioService.totalDuration)}',
                       );
                       // 异步调用seek，不阻塞UI
                       _audioService.seek(position).catchError((e) {
-                        print('进度条拖拽跳转失败: $e');
+                        debugPrint('进度条拖拽跳转失败: $e');
                       });
                     }
                   : null, // 如果没有总时长，禁用拖拽
@@ -619,7 +619,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               _audioService
                   .seek(newPosition.isNegative ? Duration.zero : newPosition)
                   .catchError((e) {
-                    print('快退操作失败: $e');
+                    debugPrint('快退操作失败: $e');
                   });
             },
             icon: const Icon(Icons.replay_10),
@@ -650,7 +650,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                   _audioService.currentPosition + const Duration(seconds: 10);
               if (newPosition < _audioService.totalDuration) {
                 _audioService.seek(newPosition).catchError((e) {
-                  print('快进操作失败: $e');
+                  debugPrint('快进操作失败: $e');
                 });
               }
             },
@@ -947,7 +947,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         }
       }
     } catch (e) {
-      print('播放/暂停操作失败: $e');
+      debugPrint('播放/暂停操作失败: $e');
       widget.onError?.call('播放操作失败: $e');
     }
   }

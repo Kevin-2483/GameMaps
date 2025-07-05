@@ -140,7 +140,7 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
             });
           }
         } catch (e) {
-          print('获取VFS文件信息失败: $e');
+          debugPrint('获取VFS文件信息失败: $e');
         }
       } else {
         _fileInfo = widget.fileInfo;
@@ -466,7 +466,7 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    print('复制视频链接: ${widget.vfsPath}');
+    debugPrint('复制视频链接: ${widget.vfsPath}');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('视频链接已复制到剪贴板'),

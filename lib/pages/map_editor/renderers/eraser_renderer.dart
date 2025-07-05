@@ -82,7 +82,7 @@ class EraserRenderer {
           eraser,
           size,
         );
-        // print(doesEraserAffectElement);
+        // debugPrint(doesEraserAffectElement);
         if (doesEraserAffectElement) {
           // *** 修改在这里：调用 getFinalEraserPath 并传入 triangleCut ***
           final Path singleEraserPath = getFinalEraserPath(

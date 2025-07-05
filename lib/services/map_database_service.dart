@@ -167,15 +167,15 @@ class MapDatabaseService {
   /// 更新地图
   Future<void> updateMap(MapItem map) async {
     try {
-      print('MapDatabaseService.updateMap 开始执行');
-      print('- 地图ID: ${map.id}');
-      print('- 地图标题: ${map.title}');
+      debugPrint('MapDatabaseService.updateMap 开始执行');
+      debugPrint('- 地图ID: ${map.id}');
+      debugPrint('- 地图标题: ${map.title}');
 
       final db = await database;
-      print('数据库连接成功');
+      debugPrint('数据库连接成功');
 
       final databaseData = map.toDatabase();
-      print('数据序列化完成，字段: ${databaseData.keys.toList()}');
+      debugPrint('数据序列化完成，字段: ${databaseData.keys.toList()}');
 
       // 检查图层数据序列化
       if (map.layers.isNotEmpty) {
@@ -183,9 +183,9 @@ class MapDatabaseService {
           final layersJson = json.encode(
             map.layers.map((e) => e.toJson()).toList(),
           );
-          print('图层数据序列化成功，长度: ${layersJson.length}');
+          debugPrint('图层数据序列化成功，长度: ${layersJson.length}');
         } catch (e) {
-          print('图层数据序列化失败: $e');
+          debugPrint('图层数据序列化失败: $e');
           throw Exception('图层数据序列化失败: $e');
         }
       }
@@ -196,9 +196,9 @@ class MapDatabaseService {
           final legendGroupsJson = json.encode(
             map.legendGroups.map((e) => e.toJson()).toList(),
           );
-          print('图例组数据序列化成功，长度: ${legendGroupsJson.length}');
+          debugPrint('图例组数据序列化成功，长度: ${legendGroupsJson.length}');
         } catch (e) {
-          print('图例组数据序列化失败: $e');
+          debugPrint('图例组数据序列化失败: $e');
           throw Exception('图例组数据序列化失败: $e');
         }
       }
@@ -210,15 +210,15 @@ class MapDatabaseService {
         whereArgs: [map.id],
       );
 
-      print('数据库更新完成，影响行数: $updateResult');
+      debugPrint('数据库更新完成，影响行数: $updateResult');
 
       if (updateResult == 0) {
         throw Exception('没有找到要更新的地图记录，ID: ${map.id}');
       }
     } catch (e, stackTrace) {
-      print('MapDatabaseService.updateMap 错误:');
-      print('错误: $e');
-      print('堆栈: $stackTrace');
+      debugPrint('MapDatabaseService.updateMap 错误:');
+      debugPrint('错误: $e');
+      debugPrint('堆栈: $stackTrace');
       rethrow;
     }
   }

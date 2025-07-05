@@ -16,7 +16,7 @@ class WebDatabaseImporter {
   /// 从assets中导入预设的数据库数据
   static Future<void> importFromAssets() async {
     if (!kIsWeb) {
-      print('WebDatabaseImporter: 只能在Web平台使用');
+      debugPrint('WebDatabaseImporter: 只能在Web平台使用');
       return;
     }
 
@@ -26,9 +26,9 @@ class WebDatabaseImporter {
       final data = json.decode(jsonString) as Map<String, dynamic>;
 
       await _importData(data);
-      print('WebDatabaseImporter: 数据导入完成');
+      debugPrint('WebDatabaseImporter: 数据导入完成');
     } catch (e) {
-      print('WebDatabaseImporter: 导入失败 - $e');
+      debugPrint('WebDatabaseImporter: 导入失败 - $e');
       // 如果没有导出数据，使用示例数据
       await _createSampleData();
     }
@@ -54,9 +54,9 @@ class WebDatabaseImporter {
             final mapItem = MapItem.fromJson(mapData as Map<String, dynamic>);
             // 直接调用强制插入方法，绕过Web平台的只读限制
             await mapService.forceInsertMap(mapItem);
-            print('WebDatabaseImporter: 成功导入地图: ${mapItem.title}');
+            debugPrint('WebDatabaseImporter: 成功导入地图: ${mapItem.title}');
           } catch (e) {
-            print('WebDatabaseImporter: 导入地图失败 - $e');
+            debugPrint('WebDatabaseImporter: 导入地图失败 - $e');
           }
         }
       }
@@ -75,9 +75,9 @@ class WebDatabaseImporter {
             );
             // 直接调用强制插入方法，绕过重复检查
             await legendService.forceInsertLegend(legendItem);
-            print('WebDatabaseImporter: 成功导入图例: ${legendItem.title}');
+            debugPrint('WebDatabaseImporter: 成功导入图例: ${legendItem.title}');
           } catch (e) {
-            print('WebDatabaseImporter: 导入图例失败 - $e');
+            debugPrint('WebDatabaseImporter: 导入图例失败 - $e');
           }
         }
       }
@@ -86,7 +86,7 @@ class WebDatabaseImporter {
 
   /// 创建示例数据（当没有导出数据时使用）
   static Future<void> _createSampleData() async {
-    print('WebDatabaseImporter: 创建示例数据');
+    debugPrint('WebDatabaseImporter: 创建示例数据');
     final mapService = VfsMapServiceFactory.createMapDatabaseService();
 
     // 创建示例地图
@@ -102,9 +102,9 @@ class WebDatabaseImporter {
 
     try {
       await mapService.forceInsertMap(sampleMap);
-      print('WebDatabaseImporter: 示例数据创建完成');
+      debugPrint('WebDatabaseImporter: 示例数据创建完成');
     } catch (e) {
-      print('WebDatabaseImporter: 创建示例数据失败 - $e');
+      debugPrint('WebDatabaseImporter: 创建示例数据失败 - $e');
     }
   }
 

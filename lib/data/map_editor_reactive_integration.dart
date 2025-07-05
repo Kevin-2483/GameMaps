@@ -251,7 +251,7 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   /// 3. 数据一致性：最终状态正确同步
   void updateLegendGroupReactive(LegendGroup legendGroup) {
     reactiveIntegration.throttled<LegendGroup>(
-      'updateLegendGroup',
+      'updateLegendGroup_${legendGroup.id}', // 使用图例组ID作为唯一标识
       (value) => reactiveIntegration._adapter.updateLegendGroup(value!),
       value: legendGroup,
     );

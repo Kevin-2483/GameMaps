@@ -52,7 +52,7 @@ class WindowManagerService {
         }
       } catch (e) {
         if (kDebugMode) {
-          print('检查窗口大小变化时出错: $e');
+          debugPrint('检查窗口大小变化时出错: $e');
         }
       }
     });
@@ -90,11 +90,11 @@ class WindowManagerService {
       );
       
       if (kDebugMode) {
-        print('窗口大小和位置已保存: ${size.width}x${size.height} at (${position.dx}, ${position.dy}), 最大化: $isMaximized');
+        debugPrint('窗口大小和位置已保存: ${size.width}x${size.height} at (${position.dx}, ${position.dy}), 最大化: $isMaximized');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('保存窗口大小和位置失败: $e');
+        debugPrint('保存窗口大小和位置失败: $e');
       }
     }
   }
@@ -133,11 +133,11 @@ class WindowManagerService {
         _isMaximized = layout.isMaximized;
         
         if (kDebugMode) {
-          print('窗口大小和位置已应用: ${size.width}x${size.height} at (${layout.windowX}, ${layout.windowY}), 最大化: ${layout.isMaximized}');
+          debugPrint('窗口大小和位置已应用: ${size.width}x${size.height} at (${layout.windowX}, ${layout.windowY}), 最大化: ${layout.isMaximized}');
         }
       } catch (e) {
         if (kDebugMode) {
-          print('应用窗口大小失败: $e');
+          debugPrint('应用窗口大小失败: $e');
         }
       }
     }
@@ -153,7 +153,7 @@ class WindowManagerService {
         _saveWindowSize(currentSize, currentPosition, currentMaximized);
       } catch (e) {
         if (kDebugMode) {
-          print('手动保存窗口大小失败: $e');
+          debugPrint('手动保存窗口大小失败: $e');
         }
       }
     }
@@ -174,11 +174,11 @@ class WindowManagerService {
         }
         
         if (kDebugMode) {
-          print('窗口大小已重置为默认值');
+          debugPrint('窗口大小已重置为默认值');
         }
       } catch (e) {
         if (kDebugMode) {
-          print('重置窗口大小失败: $e');
+          debugPrint('重置窗口大小失败: $e');
         }
       }
     }

@@ -457,12 +457,12 @@ class VfsServiceProvider {
   /// 对于客户端平台：生成临时文件路径
   Future<String?> generateFileUrl(String vfsPath) async {
     try {
-      print('🔗 VfsServiceProvider: 生成文件URL - $vfsPath');
+      debugPrint('🔗 VfsServiceProvider: 生成文件URL - $vfsPath');
 
       // 读取文件内容
       final fileContent = await _vfs.readFile(vfsPath);
       if (fileContent == null) {
-        print('🔗 VfsServiceProvider: 文件不存在 - $vfsPath');
+        debugPrint('🔗 VfsServiceProvider: 文件不存在 - $vfsPath');
         return null;
       }
 
@@ -478,7 +478,7 @@ class VfsServiceProvider {
         );
       }
     } catch (e) {
-      print('🔗 VfsServiceProvider: 生成文件URL失败 - $e');
+      debugPrint('🔗 VfsServiceProvider: 生成文件URL失败 - $e');
       return null;
     }
   }
@@ -498,14 +498,14 @@ class VfsServiceProvider {
 
     // 对于接近限制的文件给出警告
     if (data.length > 2 * 1024 * 1024) {
-      print(
+      debugPrint(
         '🔗 VfsServiceProvider: 警告 - 文件较大（${fileSizeMB.toStringAsFixed(1)}MB），可能影响性能',
       );
     }
 
     final base64Data = _encodeBase64(data);
     final dataUri = 'data:$mime;base64,$base64Data';
-    print('🔗 VfsServiceProvider: 生成Data URI, 长度: ${dataUri.length}');
+    debugPrint('🔗 VfsServiceProvider: 生成Data URI, 长度: ${dataUri.length}');
     return dataUri;
   }
 
@@ -525,7 +525,7 @@ class VfsServiceProvider {
         mimeType,
       );
     } catch (e) {
-      print('🔗 VfsServiceProvider: 生成临时文件失败 - $e');
+      debugPrint('🔗 VfsServiceProvider: 生成临时文件失败 - $e');
       return null;
     }
   }

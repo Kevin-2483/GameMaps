@@ -158,7 +158,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
             });
           }
         } catch (e) {
-          print('获取VFS文件信息失败: $e');
+          debugPrint('获取VFS文件信息失败: $e');
         }
       } else {
         _fileInfo = widget.fileInfo;
@@ -310,7 +310,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    print('复制音频链接: ${widget.vfsPath}');
+    debugPrint('复制音频链接: ${widget.vfsPath}');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

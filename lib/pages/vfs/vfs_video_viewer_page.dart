@@ -92,7 +92,7 @@ class _VfsVideoViewerPageContentState
             });
           }
         } catch (e) {
-          print('获取VFS文件信息失败: $e');
+          debugPrint('获取VFS文件信息失败: $e');
         }
       } else {
         _fileInfo = widget.fileInfo;
@@ -331,7 +331,7 @@ class _VfsVideoViewerPageContentState
     // 导入视频窗口查看器并在窗口中打开
     Navigator.of(context).pop(); // 关闭当前页面
     // 这里应该调用窗口版本的视频查看器
-    print('在窗口中打开视频: ${widget.vfsPath}');
+    debugPrint('在窗口中打开视频: ${widget.vfsPath}');
   }
 
   /// 显示视频信息
@@ -391,7 +391,7 @@ class _VfsVideoViewerPageContentState
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    print('复制视频链接: ${widget.vfsPath}');
+    debugPrint('复制视频链接: ${widget.vfsPath}');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('视频链接已复制到剪贴板'),

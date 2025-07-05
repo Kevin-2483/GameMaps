@@ -237,7 +237,7 @@ class _LayerPanelState extends State<LayerPanel> {
     return ReorderableListView.builder(
       itemCount: groups.length,
       onReorder: (oldIndex, newIndex) {
-        print('组重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
+        debugPrint('组重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
         _handleGroupReorder(oldIndex, newIndex);
       },
       buildDefaultDragHandles: false,
@@ -467,7 +467,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 处理图层组选择
   void _handleGroupSelection(List<MapLayer> group) {
-    print('选择图层组: ${group.map((l) => l.name).toList()}');
+    debugPrint('选择图层组: ${group.map((l) => l.name).toList()}');
 
     // 修改：检查是否已经选中，支持同时选择
     if (_isGroupSelected(group)) {
@@ -586,7 +586,7 @@ class _LayerPanelState extends State<LayerPanel> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: group.length,
         onReorder: (oldIndex, newIndex) {
-          print('组内重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
+          debugPrint('组内重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
           _handleInGroupReorder(group, oldIndex, newIndex);
         },
         buildDefaultDragHandles: false,
@@ -858,7 +858,7 @@ class _LayerPanelState extends State<LayerPanel> {
       widget.onSuccess?.call('图层 "${layer.name}" 的背景图片设置已更新'); // 调用成功回调
     } else {
       // 用户可能取消了对话框 (例如 BackgroundImageSettingsDialog 调用了 Navigator.pop(context) 而没有结果)
-      print('背景图片设置对话框已关闭，没有应用更改。');
+      debugPrint('背景图片设置对话框已关闭，没有应用更改。');
     }
   }
 
@@ -1020,18 +1020,18 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 处理组内重排序（修正版）
   void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
-    print('=== 组内重排序 ===');
-    print('组内oldIndex: $oldIndex, newIndex: $newIndex');
-    print('组大小: ${group.length}');
-    print('组内图层: ${group.map((l) => l.name).toList()}');
+    debugPrint('=== 组内重排序 ===');
+    debugPrint('组内oldIndex: $oldIndex, newIndex: $newIndex');
+    debugPrint('组大小: ${group.length}');
+    debugPrint('组内图层: ${group.map((l) => l.name).toList()}');
 
     if (oldIndex == newIndex) {
-      print('索引相同，跳过');
+      debugPrint('索引相同，跳过');
       return;
     }
 
     if (oldIndex >= group.length || oldIndex < 0) {
-      print('oldIndex 超出范围，跳过');
+      debugPrint('oldIndex 超出范围，跳过');
       return;
     }
 
@@ -1041,31 +1041,31 @@ class _LayerPanelState extends State<LayerPanel> {
     // 重要修正：调整 newIndex 的边界
     if (newIndex > group.length) {
       newIndex = group.length;
-      print('调整 newIndex 到: $newIndex');
+      debugPrint('调整 newIndex 到: $newIndex');
     }
     if (newIndex < 0) {
       newIndex = 0;
-      print('调整 newIndex 到: $newIndex');
+      debugPrint('调整 newIndex 到: $newIndex');
     }
 
     // 重新检查调整后的索引
     if (oldIndex == newIndex) {
-      print('调整后索引相同，跳过');
+      debugPrint('调整后索引相同，跳过');
       return;
     }
 
     // 安全地获取图层
     final oldLayer = group.elementAtOrNull(oldIndex);
     if (oldLayer == null) {
-      print('图层为空，跳过');
+      debugPrint('图层为空，跳过');
       return;
     }
 
     // 检查移动的图层是否是组内最后一个（连接状态为否）
     final isMovingLastElement = !(oldLayer.isLinkedToNext);
 
-    print('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
-    print('调整后的 newIndex: $newIndex');
+    debugPrint('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
+    debugPrint('调整后的 newIndex: $newIndex');
 
     // 计算当前图层的全局索引
     final oldGlobalIndex = widget.layers.indexOf(oldLayer);
@@ -1080,11 +1080,11 @@ class _LayerPanelState extends State<LayerPanel> {
     // 如果原始 newIndex 大于等于组长度，说明要移动到最后
     if (originalNewIndex >= group.length) {
       adjustedNewIndex = group.length - 1; // 移动到最后位置
-      print('目标位置调整为组内最后位置: $adjustedNewIndex');
+      debugPrint('目标位置调整为组内最后位置: $adjustedNewIndex');
     } else {
       // 正常情况的调整
       adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-      print('正常位置调整: $adjustedNewIndex');
+      debugPrint('正常位置调整: $adjustedNewIndex');
     }
 
     reorderedGroup.insert(adjustedNewIndex, movedLayer);
@@ -1093,9 +1093,9 @@ class _LayerPanelState extends State<LayerPanel> {
     final groupStartIndex = widget.layers.indexOf(group.first);
     final newGlobalIndex = groupStartIndex + adjustedNewIndex;
 
-    print('组在全局的起始位置: $groupStartIndex');
-    print('目标位置在组内: $adjustedNewIndex');
-    print('计算出的新全局索引: $newGlobalIndex');
+    debugPrint('组在全局的起始位置: $groupStartIndex');
+    debugPrint('目标位置在组内: $adjustedNewIndex');
+    debugPrint('计算出的新全局索引: $newGlobalIndex');
 
     // 需要更新的图层列表
     List<MapLayer> layersToUpdate = [];
@@ -1111,7 +1111,7 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    print('原组是否为完整连接组: $wasCompleteGroup');
+    debugPrint('原组是否为完整连接组: $wasCompleteGroup');
 
     // 如果原来是一个完整的组，重排序后也应该保持完整
     if (wasCompleteGroup) {
@@ -1125,7 +1125,7 @@ class _LayerPanelState extends State<LayerPanel> {
             updatedAt: DateTime.now(),
           );
           layersToUpdate.add(updatedLayer);
-          print('开启图层链接以保持组完整性: ${layer.name}');
+          debugPrint('开启图层链接以保持组完整性: ${layer.name}');
         }
       }
 
@@ -1138,7 +1138,7 @@ class _LayerPanelState extends State<LayerPanel> {
           updatedAt: DateTime.now(),
         );
         layersToUpdate.add(updatedLastLayer);
-        print('关闭组内最后元素的链接: ${lastLayer.name}');
+        debugPrint('关闭组内最后元素的链接: ${lastLayer.name}');
       }
     } else {
       // 如果不是完整组，使用原来的逻辑处理
@@ -1151,7 +1151,7 @@ class _LayerPanelState extends State<LayerPanel> {
           oldLayer,
         );
 
-        print('检测结果 - 应该开启链接: $shouldEnableLink');
+        debugPrint('检测结果 - 应该开启链接: $shouldEnableLink');
 
         // 如果需要开启当前移动图层的链接（不是移动到组内最后一个位置）
         if (shouldEnableLink && adjustedNewIndex < group.length - 1) {
@@ -1160,7 +1160,7 @@ class _LayerPanelState extends State<LayerPanel> {
             updatedAt: DateTime.now(),
           );
           layersToUpdate.add(updatedMovedLayer);
-          print('开启移动图层的链接: ${oldLayer.name}');
+          debugPrint('开启移动图层的链接: ${oldLayer.name}');
         }
 
         // 重要：当组内最后一个元素移动到其他位置时，
@@ -1178,7 +1178,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 updatedAt: DateTime.now(),
               );
               layersToUpdate.add(updatedNewLastLayer);
-              print('关闭新的组内最后元素的链接: ${newLastLayer.name}');
+              debugPrint('关闭新的组内最后元素的链接: ${newLastLayer.name}');
             }
           }
         }
@@ -1196,7 +1196,7 @@ class _LayerPanelState extends State<LayerPanel> {
               updatedAt: DateTime.now(),
             );
             layersToUpdate.add(updatedMovedLayer);
-            print('关闭移动到最后位置的图层链接: ${oldLayer.name}');
+            debugPrint('关闭移动到最后位置的图层链接: ${oldLayer.name}');
           }
         }
       }
@@ -1207,14 +1207,14 @@ class _LayerPanelState extends State<LayerPanel> {
       widget.onLayerUpdated(layerToUpdate);
     }
 
-    print(
+    debugPrint(
       '全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
     );
 
     if (oldGlobalIndex == -1 ||
         newGlobalIndex == -1 ||
         newGlobalIndex >= widget.layers.length) {
-      print('找不到图层的全局索引或索引超出范围');
+      debugPrint('找不到图层的全局索引或索引超出范围');
       return;
     }
 
@@ -1224,11 +1224,11 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 处理组重排序
   void _handleGroupReorder(int oldIndex, int newIndex) {
-    print('=== 组重排序 ===');
-    print('组oldIndex: $oldIndex, newIndex: $newIndex');
+    debugPrint('=== 组重排序 ===');
+    debugPrint('组oldIndex: $oldIndex, newIndex: $newIndex');
 
     if (oldIndex == newIndex) {
-      print('索引相同，跳过');
+      debugPrint('索引相同，跳过');
       return;
     }
 
@@ -1238,14 +1238,14 @@ class _LayerPanelState extends State<LayerPanel> {
         newIndex > groups.length ||
         oldIndex < 0 ||
         newIndex < 0) {
-      print('组索引超出范围');
+      debugPrint('组索引超出范围');
       return;
     }
 
     // 安全地获取组
     final oldGroup = groups.elementAtOrNull(oldIndex);
     if (oldGroup == null || oldGroup.isEmpty) {
-      print('源组为空');
+      debugPrint('源组为空');
       return;
     }
 
@@ -1270,9 +1270,9 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    print('移动组大小: ${oldGroup.length}');
-    print('移动组图层: ${oldGroup.map((l) => l.name).toList()}');
-    print(
+    debugPrint('移动组大小: ${oldGroup.length}');
+    debugPrint('移动组图层: ${oldGroup.map((l) => l.name).toList()}');
+    debugPrint(
       '组全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
     );
 
@@ -1294,11 +1294,11 @@ class _LayerPanelState extends State<LayerPanel> {
     int oldGroupIndex,
     int newGroupIndex,
   ) {
-    print('=== 移动组 ===');
-    print(
+    debugPrint('=== 移动组 ===');
+    debugPrint(
       'oldStartIndex: $oldStartIndex, groupSize: $groupSize, newStartIndex: $newStartIndex',
     );
-    print('oldGroupIndex: $oldGroupIndex, newGroupIndex: $newGroupIndex');
+    debugPrint('oldGroupIndex: $oldGroupIndex, newGroupIndex: $newGroupIndex');
 
     // 使用批量更新方式
     final List<MapLayer> currentLayers = List.from(widget.layers);
@@ -1324,15 +1324,15 @@ class _LayerPanelState extends State<LayerPanel> {
     // 在新位置插入组
     currentLayers.insertAll(adjustedNewIndex, movedGroup);
 
-    print('移动后图层名称: ${currentLayers.map((l) => l.name).toList()}');
+    debugPrint('移动后图层名称: ${currentLayers.map((l) => l.name).toList()}');
 
     // 通知父组件更新图层顺序
     if (widget.onLayersBatchUpdated != null) {
       widget.onLayersBatchUpdated!(currentLayers);
     } else {
       // 如果没有批量更新回调，使用传统方式
-      print('使用传统重排序方式');
-      print('警告：没有批量更新接口，无法正确移动组');
+      debugPrint('使用传统重排序方式');
+      debugPrint('警告：没有批量更新接口，无法正确移动组');
     }
   }
 

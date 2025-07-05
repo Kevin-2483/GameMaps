@@ -178,14 +178,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
       _savePanelStatesOnExit().catchError((e) {
-        print('在dispose中保存面板状态失败: $e');
+        debugPrint('在dispose中保存面板状态失败: $e');
       });
     }
 
     // 保存智能隐藏状态到扩展存储（现在使用保存的引用，不访问context）
     if (_currentMap != null) {
       _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
-        print('在dispose中保存智能隐藏状态失败: $e');
+        debugPrint('在dispose中保存智能隐藏状态失败: $e');
       });
     }
 
@@ -194,7 +194,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       LegendCacheManager().clearAllCache();
       debugPrint('地图编辑器退出：已清理所有图例缓存');
     } catch (e) {
-      print('在dispose中清理图例缓存失败: $e');
+      debugPrint('在dispose中清理图例缓存失败: $e');
     }
 
     // 释放响应式系统资源
@@ -1477,7 +1477,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 修改：新的优先显示逻辑，支持图层和图层组的组合显示
   void _prioritizeLayerAndGroupDisplay() {
-    print('优先显示图层和图层组的组合');
+    debugPrint('优先显示图层和图层组的组合');
 
     if (_currentMap == null) return;
 
@@ -1523,14 +1523,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // （后绘制的显示在上层）
       _displayOrderLayers = [...otherLayers, ...groupLayers, ...priorityLayers];
 
-      print('重新排列后的显示顺序:');
-      print(
+      debugPrint('重新排列后的显示顺序:');
+      debugPrint(
         '- 其他图层: ${otherLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
-      print(
+      debugPrint(
         '- 组内图层: ${groupLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
-      print(
+      debugPrint(
         '- 优先图层: ${priorityLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
     });
@@ -1551,7 +1551,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   void _prioritizeLayerGroup(List<MapLayer> group) {
-    print('优先显示图层组: ${group.map((l) => l.name).toList()}');
+    debugPrint('优先显示图层组: ${group.map((l) => l.name).toList()}');
 
     if (_currentMap == null) return;
 
@@ -1576,14 +1576,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 重新组织显示顺序：非组图层在前，组图层在后（后绘制的显示在上层）
       _displayOrderLayers = [...nonGroupLayers, ...groupLayers];
 
-      print(
+      debugPrint(
         '重新排列后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
     });
   }
 
   void _restoreNormalLayerOrder() {
-    print('恢复正常图层绘制顺序');
+    debugPrint('恢复正常图层绘制顺序');
 
     if (_currentMap == null) return;
 
@@ -1592,7 +1592,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _displayOrderLayers = List<MapLayer>.from(_currentMap!.layers)
         ..sort((a, b) => a.order.compareTo(b.order));
 
-      print(
+      debugPrint(
         '恢复后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
     });
@@ -1604,7 +1604,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedDrawingTool = null; // 清除选中的绘制工具
       _selectedElementId = null; // 清除选中的元素
     });
-    print('绘制工具已禁用');
+    debugPrint('绘制工具已禁用');
   }
 
   /// 检查绘制工具是否应该被禁用
@@ -1679,10 +1679,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _reorderLayers(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
 
-    print('=== _reorderLayers 开始 ===');
-    print('oldIndex: $oldIndex, newIndex: $newIndex');
-    print('当前图层数量: ${_currentMap!.layers.length}');
-    print('重排序前图层名称: ${_currentMap!.layers.map((l) => l.name).toList()}');
+    debugPrint('=== _reorderLayers 开始 ===');
+    debugPrint('oldIndex: $oldIndex, newIndex: $newIndex');
+    debugPrint('当前图层数量: ${_currentMap!.layers.length}');
+    debugPrint('重排序前图层名称: ${_currentMap!.layers.map((l) => l.name).toList()}');
 
     // 验证索引范围
     if (oldIndex < 0 ||
@@ -1690,7 +1690,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         newIndex < 0 ||
         newIndex >= _currentMap!.layers.length ||
         oldIndex == newIndex) {
-      print('索引无效，跳过重排序');
+      debugPrint('索引无效，跳过重排序');
       return;
     }
 
@@ -1760,13 +1760,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //       newIndex,
   //     );
 
-  //     print('是否为组内移动: $isGroupInternalMove');
+  //     debugPrint('是否为组内移动: $isGroupInternalMove');
 
   //     // 执行重排序 - 不需要调整newIndex，直接使用
   //     final item = layers.removeAt(oldIndex);
   //     layers.insert(newIndex, item);
 
-  //     print('重排序后图层名称: ${layers.map((l) => l.name).toList()}');
+  //     debugPrint('重排序后图层名称: ${layers.map((l) => l.name).toList()}');
 
   //     // 重新分配order
   //     for (int i = 0; i < layers.length; i++) {
@@ -1780,8 +1780,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   //     _currentMap = _currentMap!.copyWith(layers: layers);
 
-  //     print('更新后的_currentMap图层数量: ${_currentMap!.layers.length}');
-  //     print('=== _reorderLayers 结束 ===');
+  //     debugPrint('更新后的_currentMap图层数量: ${_currentMap!.layers.length}');
+  //     debugPrint('=== _reorderLayers 结束 ===');
 
   //     // 更新选中图层的引用
   //     if (_selectedLayer != null) {
@@ -1909,18 +1909,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //   MapLayer movedLayer,
   //   int newIndex,
   // ) {
-  //   print('保持组内链接完整性');
+  //   debugPrint('保持组内链接完整性');
 
   //   // 重新找到移动后的组边界
   //   int groupStart = _findGroupStart(layers, newIndex);
   //   int groupEnd = _findGroupEnd(layers, newIndex);
 
-  //   print('组边界: start=$groupStart, end=$groupEnd, newIndex=$newIndex');
+  //   debugPrint('组边界: start=$groupStart, end=$groupEnd, newIndex=$newIndex');
 
   //   // 确保组内所有图层（除了最后一个）都保持链接状态
   //   for (int i = groupStart; i < groupEnd; i++) {
   //     if (!layers[i].isLinkedToNext) {
-  //       print('修复图层 ${layers[i].name} 的链接状态');
+  //       debugPrint('修复图层 ${layers[i].name} 的链接状态');
   //       layers[i] = layers[i].copyWith(
   //         isLinkedToNext: true,
   //         updatedAt: DateTime.now(),
@@ -1939,7 +1939,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   //     }
 
   //     if (!shouldLinkToNext) {
-  //       print('断开组最后图层 ${layers[groupEnd].name} 的链接');
+  //       debugPrint('断开组最后图层 ${layers[groupEnd].name} 的链接');
   //       layers[groupEnd] = layers[groupEnd].copyWith(
   //         isLinkedToNext: false,
   //         updatedAt: DateTime.now(),
@@ -2715,10 +2715,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         );
 
         _panelStatesChanged = false;
-        print('面板状态已在退出时保存');
+        debugPrint('面板状态已在退出时保存');
       }
     } catch (e) {
-      print('保存面板状态失败: $e');
+      debugPrint('保存面板状态失败: $e');
     }
   } // 处理工具栏自动关闭逻辑
 

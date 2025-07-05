@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Web平台的VFS平台接口实现
 class VfsPlatformIO {
   /// Web平台不支持获取临时目录
@@ -18,7 +20,7 @@ class VfsPlatformIO {
   /// Web平台不需要清理临时文件
   static Future<void> cleanupTempFiles() async {
     // Web平台不需要清理临时文件，因为不会创建临时文件
-    print('🔗 VfsPlatformWeb: Web平台不需要清理临时文件');
+    debugPrint('🔗 VfsPlatformWeb: Web平台不需要清理临时文件');
   }
 
   /// Web平台不支持生成临时文件

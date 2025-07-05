@@ -22,7 +22,7 @@ class WebDatabasePreloader {
       // 检查是否已有示例数据
       final existingMaps = await mapService.getAllMapsSummary();
       if (existingMaps.isNotEmpty) {
-        print('Web平台已有地图数据，跳过示例数据初始化');
+        debugPrint('Web平台已有地图数据，跳过示例数据初始化');
         return;
       }
 
@@ -32,9 +32,9 @@ class WebDatabasePreloader {
       // 插入示例数据（这里我们直接调用底层数据库方法）
       await _insertSampleMapDirectly(sampleMap);
 
-      print('Web平台示例数据初始化完成');
+      debugPrint('Web平台示例数据初始化完成');
     } catch (e) {
-      print('Web平台示例数据初始化失败: $e');
+      debugPrint('Web平台示例数据初始化失败: $e');
     }
   }
 
@@ -85,7 +85,7 @@ class WebDatabasePreloader {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      print('直接插入示例地图失败: $e');
+      debugPrint('直接插入示例地图失败: $e');
     }
   }
 
@@ -100,9 +100,9 @@ class WebDatabasePreloader {
         where: 'title = ?',
         whereArgs: [_sampleMapTitle],
       );
-      print('Web平台示例数据清理完成');
+      debugPrint('Web平台示例数据清理完成');
     } catch (e) {
-      print('Web平台示例数据清理失败: $e');
+      debugPrint('Web平台示例数据清理失败: $e');
     }
   }
 }

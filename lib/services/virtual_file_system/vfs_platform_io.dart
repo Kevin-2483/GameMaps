@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// IO平台（移动端/桌面端）的VFS平台接口实现
@@ -26,10 +27,10 @@ class VfsPlatformIO {
 
       if (await vfsFilesDir.exists()) {
         await vfsFilesDir.delete(recursive: true);
-        print('🔗 VfsPlatformIO: 已清理临时文件');
+        debugPrint('🔗 VfsPlatformIO: 已清理临时文件');
       }
     } catch (e) {
-      print('🔗 VfsPlatformIO: 清理临时文件失败 - $e');
+      debugPrint('🔗 VfsPlatformIO: 清理临时文件失败 - $e');
     }
   }
 
@@ -40,7 +41,7 @@ class VfsPlatformIO {
     String? mimeType,
   ) async {
     try {
-      print('🔗 VfsPlatformIO: 开始创建临时文件');
+      debugPrint('🔗 VfsPlatformIO: 开始创建临时文件');
 
       // 获取临时目录
       final tempDir = await getTempDirectory();
@@ -59,18 +60,18 @@ class VfsPlatformIO {
       if (await tempFile.exists()) {
         final existingData = await tempFile.readAsBytes();
         if (_bytesEqual(existingData, data)) {
-          print('🔗 VfsPlatformIO: 临时文件已存在，直接返回路径');
+          debugPrint('🔗 VfsPlatformIO: 临时文件已存在，直接返回路径');
           return tempFile.path;
         }
       }
 
       // 写入临时文件
       await tempFile.writeAsBytes(data);
-      print('🔗 VfsPlatformIO: 成功创建临时文件 - ${tempFile.path}');
+      debugPrint('🔗 VfsPlatformIO: 成功创建临时文件 - ${tempFile.path}');
 
       return tempFile.path;
     } catch (e) {
-      print('🔗 VfsPlatformIO: 生成临时文件失败 - $e');
+      debugPrint('🔗 VfsPlatformIO: 生成临时文件失败 - $e');
       return null;
     }
   }

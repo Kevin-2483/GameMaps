@@ -29,7 +29,7 @@ class LegendGroupSmartHideManager {
     );
 
     if (kDebugMode) {
-      print('图例组智能隐藏状态已保存: $mapId/$legendGroupId = $enabled');
+      debugPrint('图例组智能隐藏状态已保存: $mapId/$legendGroupId = $enabled');
     }
   }
 
@@ -47,7 +47,7 @@ class LegendGroupSmartHideManager {
     await ExtensionSettingsManager.instance.clearLegendGroupSmartHide(mapId);
 
     if (kDebugMode) {
-      print('已清除地图 $mapId 的所有图例组智能隐藏设置');
+      debugPrint('已清除地图 $mapId 的所有图例组智能隐藏设置');
     }
   }
 
@@ -77,7 +77,7 @@ class LegendGroupSmartHideManager {
     }
 
     if (kDebugMode) {
-      print('已导入地图 $mapId 的图例组智能隐藏设置: ${settings.length} 项');
+      debugPrint('已导入地图 $mapId 的图例组智能隐藏设置: ${settings.length} 项');
     }
   }
 }
@@ -239,7 +239,7 @@ class ExtensionSettingsUsageExample {
     );
 
     if (kDebugMode) {
-      print('图例组 $legendGroupId 智能隐藏状态: $isEnabled');
+      debugPrint('图例组 $legendGroupId 智能隐藏状态: $isEnabled');
     }
 
     // 在组件中设置智能隐藏状态
@@ -260,7 +260,7 @@ class ExtensionSettingsUsageExample {
     );
 
     if (kDebugMode) {
-      print('智能隐藏状态已保存: $enabled');
+      debugPrint('智能隐藏状态已保存: $enabled');
     }
   }
 
@@ -270,7 +270,7 @@ class ExtensionSettingsUsageExample {
     await CanvasViewManager.recordZoomLevel(mapId, zoomLevel);
 
     if (kDebugMode) {
-      print('缩放级别已记录: $zoomLevel');
+      debugPrint('缩放级别已记录: $zoomLevel');
     }
   }
 
@@ -284,7 +284,7 @@ class ExtensionSettingsUsageExample {
     await ToolbarLayoutManager.saveToolbarPosition(toolbarId, x, y);
 
     if (kDebugMode) {
-      print('工具栏 $toolbarId 位置已保存: ($x, $y)');
+      debugPrint('工具栏 $toolbarId 位置已保存: ($x, $y)');
     }
   }
 

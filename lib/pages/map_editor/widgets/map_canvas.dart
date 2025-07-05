@@ -1420,7 +1420,7 @@ class MapCanvasState extends State<MapCanvas> {
         // 这种情况通常是用户点击了一个新的、未选中的元素。
         // 你可以在这里处理选中新元素的操作。
         // 例如: widget.onSelectElement(hitElementIdFromTop);
-        print(
+        debugPrint(
           "Hit a new element by z-order: $hitElementId. Consider selecting it.",
         );
         _startSelectionDrag(canvasPosition);
@@ -2082,7 +2082,7 @@ class MapCanvasState extends State<MapCanvas> {
 
   /// 构建按层级排序的所有元素（支持增量更新）
   List<Widget> _buildLayeredElements() {
-    print('=== 开始构建图层元素 (增量更新模式) ===');
+    debugPrint('=== 开始构建图层元素 (增量更新模式) ===');
 
     final List<_LayeredElement> allElements = [];
 
@@ -2093,23 +2093,23 @@ class MapCanvasState extends State<MapCanvas> {
     // 如果没有传入显示顺序，则按 order 排序
     if (widget.displayOrderLayers == null) {
       sortedLayers.sort((a, b) => a.order.compareTo(b.order));
-      print('使用默认图层排序（按 order 字段）');
+      debugPrint('使用默认图层排序（按 order 字段）');
     } else {
-      print('使用传入的显示顺序图层列表');
+      debugPrint('使用传入的显示顺序图层列表');
     } // 收集所有图层及其元素（按照排序后的顺序）- 支持增量更新
     for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
       final layer = sortedLayers[layerIndex];
       if (!layer.isVisible) {
-        print('跳过不可见图层: ${layer.name}');
+        debugPrint('跳过不可见图层: ${layer.name}');
         continue;
       }
 
       final isSelectedLayer = widget.selectedLayer?.id == layer.id;
 
-      print(
+      debugPrint(
         '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}',
       );
-      print('是否选中: $isSelectedLayer');
+      debugPrint('是否选中: $isSelectedLayer');
 
       // 关键修改：使用 layerIndex 作为渲染顺序，而不是 layer.order
       final renderOrder = layerIndex;
@@ -2118,7 +2118,7 @@ class MapCanvasState extends State<MapCanvas> {
 
       // 添加图层图片（如果有）
       if (layer.imageData != null) {
-        print(
+        debugPrint(
           '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
         );
         allElements.add(
@@ -2131,7 +2131,7 @@ class MapCanvasState extends State<MapCanvas> {
       }
 
       // 添加图层绘制元素
-      print(
+      debugPrint(
         '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
       );
       allElements.add(
@@ -2142,11 +2142,11 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    print('--- 处理图例组 (增量更新) ---');
+    debugPrint('--- 处理图例组 (增量更新) ---');
     // 收集所有图例组 - 支持增量更新
     for (final legendGroup in widget.mapItem.legendGroups) {
       if (!legendGroup.isVisible) {
-        print('跳过不可见图例组: ${legendGroup.name}');
+        debugPrint('跳过不可见图例组: ${legendGroup.name}');
         continue;
       }
 
@@ -2167,17 +2167,17 @@ class MapCanvasState extends State<MapCanvas> {
         }
       }
 
-      print('绑定的图层: $boundLayerNames');
-      print('计算得到的 legendRenderOrder: $legendRenderOrder');
-      print('是否选中: $isLegendSelected');
+      debugPrint('绑定的图层: $boundLayerNames');
+      debugPrint('计算得到的 legendRenderOrder: $legendRenderOrder');
+      debugPrint('是否选中: $isLegendSelected');
 
       // 如果图例组没有绑定到任何图层，使用默认位置
       if (legendRenderOrder == -1) {
         legendRenderOrder = 0;
-        print('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
+        debugPrint('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
       }
 
-      print(
+      debugPrint(
         '添加图例组元素 - renderOrder=$legendRenderOrder, selected=$isLegendSelected',
       );
       allElements.add(
@@ -2188,7 +2188,7 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    print('--- 处理便签 (增量更新) ---');
+    debugPrint('--- 处理便签 (增量更新) ---');
     // 收集所有便签（按zIndex排序）- 支持增量更新
     final sortedStickyNotes = List<StickyNote>.from(widget.mapItem.stickyNotes)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -2196,20 +2196,20 @@ class MapCanvasState extends State<MapCanvas> {
     for (int noteIndex = 0; noteIndex < sortedStickyNotes.length; noteIndex++) {
       final note = sortedStickyNotes[noteIndex];
       if (!note.isVisible) {
-        print('跳过不可见便签: ${note.title}');
+        debugPrint('跳过不可见便签: ${note.title}');
         continue;
       }
 
       final isSelectedNote = widget.selectedStickyNote?.id == note.id;
 
-      print(
+      debugPrint(
         '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}',
       );
-      print('是否选中: $isSelectedNote'); // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
+      debugPrint('是否选中: $isSelectedNote'); // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
       // 使用 1000000 + noteIndex 确保便签始终在所有其他元素之上
       final renderOrder = 1000000 + noteIndex;
 
-      print(
+      debugPrint(
         '添加便签元素 - renderOrder=$renderOrder (原zIndex=${note.zIndex}), selected=$isSelectedNote',
       );
       allElements.add(
@@ -2220,8 +2220,8 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    print('--- 排序前的元素列表 ---');
-    print('本次构建的组件数量: ${allElements.length}');
+    debugPrint('--- 排序前的元素列表 ---');
+    debugPrint('本次构建的组件数量: ${allElements.length}');
     for (int i = 0; i < allElements.length; i++) {
       final element = allElements[i];
       final typeDescription =
@@ -2234,7 +2234,7 @@ class MapCanvasState extends State<MapCanvas> {
           : element.widget.runtimeType.toString().contains('StickyNoteWidget')
           ? '便签'
           : '未知类型';
-      print(
+      debugPrint(
         '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
       );
     } // 按 renderOrder 排序，但便签始终在最上层
@@ -2256,7 +2256,7 @@ class MapCanvasState extends State<MapCanvas> {
       if (!a.isSelected && b.isSelected) return -1;
       return a.order.compareTo(b.order);
     });
-    print('--- 排序后的渲染顺序 (从底层到顶层) ---');
+    debugPrint('--- 排序后的渲染顺序 (从底层到顶层) ---');
     for (int i = 0; i < allElements.length; i++) {
       final element = allElements[i];
       final typeDescription =
@@ -2269,12 +2269,12 @@ class MapCanvasState extends State<MapCanvas> {
           : element.widget.runtimeType.toString().contains('StickyNoteWidget')
           ? '便签'
           : '未知类型';
-      print(
+      debugPrint(
         '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
       );
     }
 
-    print('=== 图层元素构建完成 ===');
+    debugPrint('=== 图层元素构建完成 ===');
     return allElements.map((e) => e.widget).toList();
   }
 
@@ -2321,7 +2321,7 @@ class MapCanvasState extends State<MapCanvas> {
     _imageCache.clear();
     _imageDecodingFutures.clear();
 
-    print('已清理所有图片缓存');
+    debugPrint('已清理所有图片缓存');
   }
 
   /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
@@ -2358,7 +2358,7 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     if (orphanedCacheKeys.isNotEmpty) {
-      print('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
+      debugPrint('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
 
       // 触发重绘以反映缓存清理的结果
       if (mounted) {
@@ -2437,7 +2437,7 @@ class MapCanvasState extends State<MapCanvas> {
 
       return frame.image;
     } catch (e) {
-      print('Failed to decode image for element $cacheKey: $e');
+      debugPrint('Failed to decode image for element $cacheKey: $e');
       _imageDecodingFutures.remove(cacheKey);
       return null;
     }
@@ -2480,7 +2480,7 @@ class MapCanvasState extends State<MapCanvas> {
 
       return frame.image;
     } catch (e) {
-      print('Failed to decode image buffer: $e');
+      debugPrint('Failed to decode image buffer: $e');
       return null;
     }
   }

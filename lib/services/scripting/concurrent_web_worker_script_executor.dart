@@ -249,7 +249,7 @@ class ConcurrentWebWorkerScriptExecutor implements IScriptExecutor {
       // 监听日志
       _logController.stream.listen((log) {
         if (kDebugMode) {
-          print('[ConcurrentWebWorkerScriptExecutor] $log');
+          debugPrint('[ConcurrentWebWorkerScriptExecutor] $log');
         }
       });
     } catch (e) {

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'map_layer.dart';
 import 'sticky_note.dart'; // 导入StickyNote
@@ -73,7 +74,7 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        print('解析图层数据失败: $e');
+        debugPrint('解析图层数据失败: $e');
         // 如果解析失败，继续使用空列表
       }
     }
@@ -87,7 +88,7 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        print('解析图例组数据失败: $e');
+        debugPrint('解析图例组数据失败: $e');
         // 如果解析失败，继续使用空列表
       }
     }
@@ -101,7 +102,7 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        print('解析便签数据失败: $e');
+        debugPrint('解析便签数据失败: $e');
         // 如果解析失败，继续使用空列表
       }
     }

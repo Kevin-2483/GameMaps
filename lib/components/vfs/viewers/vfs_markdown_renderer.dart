@@ -152,10 +152,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 清理VFS临时文件
     VfsServiceProvider.cleanupTempFiles()
         .then((_) {
-          print('🔗 VfsMarkdownRenderer: 已清理临时文件');
+          debugPrint('🔗 VfsMarkdownRenderer: 已清理临时文件');
         })
         .catchError((e) {
-          print('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
+          debugPrint('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
         });
     _audioUuidMap.clear();
     _tocController.dispose();
@@ -179,26 +179,26 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           textContent = latin1.decode(fileContent.data);
         } // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
-          print('🔧 _loadMarkdownFile: 预处理HTML内容');
+          debugPrint('🔧 _loadMarkdownFile: 预处理HTML内容');
           textContent = _preprocessHtmlContent(textContent);
         }
 
         // 如果启用LaTeX渲染，预处理LaTeX内容
         if (_enableLatexRendering &&
             LatexProcessor.containsLatex(textContent)) {
-          print('🔧 _loadMarkdownFile: 预处理LaTeX内容');
+          debugPrint('🔧 _loadMarkdownFile: 预处理LaTeX内容');
           textContent = _preprocessLatexContent(textContent);
         } // 如果启用视频渲染，预处理视频内容
         if (_enableVideoRendering &&
             VideoProcessor.containsVideo(textContent)) {
-          print('🎥 _loadMarkdownFile: 预处理视频内容');
+          debugPrint('🎥 _loadMarkdownFile: 预处理视频内容');
           textContent = _preprocessVideoContent(textContent);
         }
 
         // 如果启用音频渲染，预处理音频内容
         if (_enableAudioRendering &&
             AudioProcessor.containsAudio(textContent)) {
-          print('🎵 _loadMarkdownFile: 预处理音频内容');
+          debugPrint('🎵 _loadMarkdownFile: 预处理音频内容');
           textContent = _preprocessAudioContent(textContent);
         }
 
@@ -208,7 +208,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         for (final src in audioSources) {
           _audioUuidMap[src] = const Uuid().v4();
         }
-        print('🎵 渲染器: _audioUuidMap=$_audioUuidMap');
+        debugPrint('🎵 渲染器: _audioUuidMap=$_audioUuidMap');
 
         setState(() {
           _markdownContent = textContent;
@@ -532,14 +532,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 构建Markdown内容
   Widget _buildMarkdownContent() {
-    print('🔧 _buildMarkdownContent: 开始构建');
-    print(
+    debugPrint('🔧 _buildMarkdownContent: 开始构建');
+    debugPrint(
       '🔧 _buildMarkdownContent: _enableVideoRendering = $_enableVideoRendering',
     );
-    print(
+    debugPrint(
       '🔧 _buildMarkdownContent: _enableHtmlRendering = $_enableHtmlRendering',
     );
-    print(
+    debugPrint(
       '🔧 _buildMarkdownContent: _enableLatexRendering = $_enableLatexRendering',
     );
 
@@ -556,21 +556,21 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       generators.add(LatexProcessor.createGenerator());
     } // 添加视频支持
     if (_enableVideoRendering) {
-      print('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
+      debugPrint('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
       inlineSyntaxList.add(VideoProcessor.createSyntax());
       generators.add(VideoProcessor.createGenerator());
     }
 
     // 添加音频支持
     if (_enableAudioRendering) {
-      print('🎵 _buildMarkdownContent: 添加音频语法解析器和生成器');
+      debugPrint('🎵 _buildMarkdownContent: 添加音频语法解析器和生成器');
       inlineSyntaxList.add(AudioProcessor.createSyntax());
       generators.add(AudioProcessor.createGenerator(_audioUuidMap));
     }
 
     // 如果有任何自定义生成器或语法，创建MarkdownGenerator
     if (generators.isNotEmpty || inlineSyntaxList.isNotEmpty) {
-      print(
+      debugPrint(
         '🔧 _buildMarkdownContent: 创建MarkdownGenerator - generators: ${generators.length}, syntaxes: ${inlineSyntaxList.length}',
       );
       markdownGenerator = MarkdownGenerator(
@@ -1401,7 +1401,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       final fileContent = await _vfsService.vfs.readFile(vfsUrl);
       return fileContent?.data;
     } catch (e) {
-      print('加载VFS图片失败: $e');
+      debugPrint('加载VFS图片失败: $e');
       return null;
     }
   }
@@ -1956,7 +1956,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         return HtmlProcessor.stripHtmlTags(sanitizedContent);
       }
     } catch (e) {
-      print('HTML预处理失败: $e');
+      debugPrint('HTML预处理失败: $e');
       // 如果预处理失败，返回原内容
       return content;
     }
@@ -1985,7 +1985,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         'images': images,
       };
     } catch (e) {
-      print('HTML统计失败: $e');
+      debugPrint('HTML统计失败: $e');
       return {'hasHtml': true, 'error': e.toString()};
     }
   }
@@ -2003,7 +2003,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         return _stripLatexSyntax(content);
       }
     } catch (e) {
-      print('LaTeX预处理失败: $e');
+      debugPrint('LaTeX预处理失败: $e');
       return content;
     }
   }
@@ -2064,27 +2064,27 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 预处理视频内容
   String _preprocessVideoContent(String content) {
-    print('🎥 _preprocessVideoContent: 开始处理');
+    debugPrint('🎥 _preprocessVideoContent: 开始处理');
     if (!_enableVideoRendering) {
-      print('🎥 _preprocessVideoContent: 视频渲染已禁用');
+      debugPrint('🎥 _preprocessVideoContent: 视频渲染已禁用');
       return content;
     }
 
     final result = VideoProcessor.convertMarkdownVideos(content);
-    print('🎥 _preprocessVideoContent: 转换完成');
+    debugPrint('🎥 _preprocessVideoContent: 转换完成');
     return result;
   }
 
   /// 预处理音频内容
   String _preprocessAudioContent(String content) {
-    print('🎵 _preprocessAudioContent: 开始处理');
+    debugPrint('🎵 _preprocessAudioContent: 开始处理');
     if (!_enableAudioRendering) {
-      print('🎵 _preprocessAudioContent: 音频渲染已禁用');
+      debugPrint('🎵 _preprocessAudioContent: 音频渲染已禁用');
       return content;
     }
 
     final result = AudioProcessor.convertMarkdownAudios(content);
-    print('🎵 _preprocessAudioContent: 转换完成');
+    debugPrint('🎵 _preprocessAudioContent: 转换完成');
     return result;
   }
 

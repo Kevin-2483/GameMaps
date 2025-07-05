@@ -31,7 +31,7 @@ class VideoProcessor {
         caseSensitive: false,
       ),
     );
-    print(
+    debugPrint(
       '🎥 VideoProcessor.containsVideo: text长度=${text.length}, 包含视频=$result',
     );
     return result;
@@ -39,11 +39,11 @@ class VideoProcessor {
 
   /// 创建视频节点生成器
   static SpanNodeGeneratorWithTag createGenerator() {
-    print('🎥 VideoProcessor: 创建视频生成器');
+    debugPrint('🎥 VideoProcessor: 创建视频生成器');
     return SpanNodeGeneratorWithTag(
       tag: videoTag,
       generator: (e, config, visitor) {
-        print(
+        debugPrint(
           '🎥 VideoProcessor: 生成VideoNode - tag: ${e.tag}, attributes: ${e.attributes}, textContent: ${e.textContent}',
         );
         return VideoNode(e.attributes, e.textContent);
@@ -108,7 +108,7 @@ class VideoProcessor {
 
   /// 转换Markdown图片语法为视频（如果是视频文件）
   static String convertMarkdownVideos(String content) {
-    print('🎥 VideoProcessor.convertMarkdownVideos: 开始转换');
+    debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 开始转换');
     // 将Markdown图片语法中的视频文件转换为video标签
     final pattern = RegExp(
       r'!\[(.*?)\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)',
@@ -118,7 +118,7 @@ class VideoProcessor {
     final result = content.replaceAllMapped(pattern, (match) {
       final alt = match.group(1) ?? '';
       final src = match.group(2) ?? '';
-      print('🎥 VideoProcessor.convertMarkdownVideos: 转换 $src');
+      debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 转换 $src');
 
       // 构建video标签
       final controls = 'controls';
@@ -130,11 +130,11 @@ class VideoProcessor {
           : '';
 
       final videoTag = '<video src="$src" $controls $width $height></video>';
-      print('🎥 VideoProcessor.convertMarkdownVideos: 生成标签 $videoTag');
+      debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 生成标签 $videoTag');
       return videoTag;
     });
 
-    print('🎥 VideoProcessor.convertMarkdownVideos: 转换完成');
+    debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 转换完成');
     return result;
   }
 }
@@ -165,13 +165,13 @@ class VideoNode extends SpanNode {
   final String textContent;
 
   VideoNode(this.attributes, this.textContent) {
-    print(
+    debugPrint(
       '🎥 VideoNode: 创建节点 - attributes: $attributes, textContent: $textContent',
     );
   }
   @override
   InlineSpan build() {
-    print('🎥 VideoNode.build: 开始构建 - src: ${attributes['src']}');
+    debugPrint('🎥 VideoNode.build: 开始构建 - src: ${attributes['src']}');
 
     double? width;
     double? height;
@@ -204,7 +204,7 @@ class VideoNode extends SpanNode {
       maxHeight: height ?? 450,
     );
 
-    print('🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)');
+    debugPrint('🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)');
 
     return WidgetSpan(
       child: MediaKitVideoPlayer(url: src, config: config, muted: muted),
@@ -275,7 +275,7 @@ class VideoSyntax extends m.InlineSyntax {
     final input = match.input;
     final matchValue = input.substring(match.start, match.end);
 
-    print('🎥 VideoSyntax.onMatch: 匹配到视频标签 - $matchValue');
+    debugPrint('🎥 VideoSyntax.onMatch: 匹配到视频标签 - $matchValue');
 
     // 解析video标签属性
     final attributes = <String, String>{};
@@ -328,7 +328,7 @@ class VideoSyntax extends m.InlineSyntax {
     final element = m.Element.text(VideoProcessor.videoTag, matchValue);
     element.attributes.addAll(attributes);
 
-    print(
+    debugPrint(
       '🎥 VideoSyntax.onMatch: 创建视频元素 - tag: ${element.tag}, attributes: ${element.attributes}',
     );
 

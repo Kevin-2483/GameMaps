@@ -118,7 +118,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
           await rootBundle.load('assets/images/r6operators_flat/$fileName');
           validFiles.add(fileName);
         } catch (e) {
-          print('文件不存在: $fileName');
+          debugPrint('文件不存在: $fileName');
         }
       }
 

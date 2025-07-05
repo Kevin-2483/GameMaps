@@ -62,7 +62,7 @@ class HtmlProcessor {
     WidgetVisitor? visitor,
     TextStyle? parentStyle,
   }) {
-    print(
+    debugPrint(
       '🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: ${node.textContent.substring(0, node.textContent.length > 100 ? 100 : node.textContent.length)}...',
     );
 
@@ -74,16 +74,16 @@ class HtmlProcessor {
 
       // 如果不包含HTML标签，直接返回文本节点
       if (!text.contains(htmlRep)) {
-        print('🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点');
+        debugPrint('🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点');
         return [TextNode(text: node.text)];
       }
 
-      print('🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析');
+      debugPrint('🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析');
 
       // 解析HTML片段
       h.DocumentFragment document = parseFragment(text);
 
-      print('🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}');
+      debugPrint('🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}');
 
       // 使用HTML转SpanNode访问器处理
       final result = HtmlToSpanVisitor(
@@ -91,10 +91,10 @@ class HtmlProcessor {
         parentStyle: parentStyle,
       ).toVisit(document.nodes.toList());
 
-      print('🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}');
+      debugPrint('🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}');
       return result;
     } catch (e) {
-      print('🔧 HtmlProcessor.parseHtml: 解析失败 - $e');
+      debugPrint('🔧 HtmlProcessor.parseHtml: 解析失败 - $e');
       onError?.call(e);
       return [TextNode(text: node.text)];
     }
@@ -202,7 +202,7 @@ class HtmlProcessor {
 
       return result;
     } catch (e) {
-      print('HTML转Markdown失败: $e');
+      debugPrint('HTML转Markdown失败: $e');
       return content;
     }
   }
@@ -784,18 +784,18 @@ class HtmlToSpanVisitor extends TreeVisitor {
   @override
   void visitElement(h.Element node) {
     final localName = node.localName ?? '';
-    print(
+    debugPrint(
       '🔧 HtmlToSpanVisitor.visitElement: 处理标签 - $localName, attributes: ${node.attributes}',
     );
 
     // 特殊处理video标签 - 直接创建VideoNode
     if (localName == 'video') {
-      print('🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode');
+      debugPrint('🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode');
       final videoNode = _createVideoNode(node);
       final last = _spansStack.last;
       if (last is ElementNode) {
         last.accept(videoNode);
-        print('🎥 HtmlToSpanVisitor: VideoNode已添加到父节点');
+        debugPrint('🎥 HtmlToSpanVisitor: VideoNode已添加到父节点');
       }
       return; // video标签不需要处理子节点
     }
@@ -840,7 +840,7 @@ class HtmlToSpanVisitor extends TreeVisitor {
     // 提取text content
     final textContent = videoElement.text;
 
-    print(
+    debugPrint(
       '🎥 HtmlToSpanVisitor._createVideoNode: attributes: $attributes, textContent: $textContent',
     );
 
@@ -1137,7 +1137,7 @@ class HtmlUtils {
     try {
       return parseFragment(html);
     } catch (e) {
-      print('HTML解析失败: $e');
+      debugPrint('HTML解析失败: $e');
       return null;
     }
   }

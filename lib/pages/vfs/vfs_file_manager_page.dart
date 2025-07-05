@@ -562,7 +562,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       _showInfoSnackBar('文件夹创建成功');
     } catch (e) {
       _showErrorSnackBar('创建文件夹失败: $e');
-      print('创建文件夹失败: $e');
+      debugPrint('创建文件夹失败: $e');
     } finally {
       setState(() {
         _isLoading = false;

@@ -53,7 +53,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     
     // 如果当前图例组ID变化，需要重新计算分类
     if (widget.currentLegendGroupId != oldWidget.currentLegendGroupId) {
-      print('[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示');
+      debugPrint('[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示');
       _updateCachedLegends();
     }
   }
@@ -67,10 +67,10 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
 
   /// 更新缓存图例列表
   void _updateCachedLegends() {
-    print('[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}');
+    debugPrint('[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}');
     
     final cachedItems = _cacheManager.getAllCachedLegends();
-    print('[CachedLegendsDisplay] 当前缓存图例数量: ${cachedItems.length}');
+    debugPrint('[CachedLegendsDisplay] 当前缓存图例数量: ${cachedItems.length}');
     
     final Map<String, List<String>> ownSelected = {};
     final Map<String, List<String>> otherSelected = {};
@@ -85,8 +85,8 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       final allSelectedPaths = widget.versionManager!.getAllSelectedPaths();
       otherSelectedPaths = Set<String>.from(allSelectedPaths)..removeAll(ownSelectedPaths);
       
-      print('[CachedLegendsDisplay] 自己组选中路径: $ownSelectedPaths');
-      print('[CachedLegendsDisplay] 其他组选中路径: $otherSelectedPaths');
+      debugPrint('[CachedLegendsDisplay] 自己组选中路径: $ownSelectedPaths');
+      debugPrint('[CachedLegendsDisplay] 其他组选中路径: $otherSelectedPaths');
     }
     
     for (final legendPath in cachedItems) {
@@ -145,7 +145,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     final totalOwnSelected = ownSelected.values.fold<int>(0, (sum, list) => sum + list.length);
     final totalOtherSelected = otherSelected.values.fold<int>(0, (sum, list) => sum + list.length);
     final totalUnselected = unselected.values.fold<int>(0, (sum, list) => sum + list.length);
-    print('[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected');
+    debugPrint('[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected');
   }
 
   @override

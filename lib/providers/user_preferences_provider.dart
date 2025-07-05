@@ -76,13 +76,13 @@ class UserPreferencesProvider extends ChangeNotifier {
       ExtensionSettingsManager.initialize(this);
 
       if (kDebugMode) {
-        print('用户偏好设置初始化完成: ${_currentPreferences?.displayName}');
-        print('扩展设置管理器已初始化');
+        debugPrint('用户偏好设置初始化完成: ${_currentPreferences?.displayName}');
+        debugPrint('扩展设置管理器已初始化');
       }
     } catch (e) {
       _setError('初始化用户偏好设置失败: ${e.toString()}');
       if (kDebugMode) {
-        print('初始化用户偏好设置失败: $e');
+        debugPrint('初始化用户偏好设置失败: $e');
       }
     } finally {
       _setLoading(false);
@@ -236,7 +236,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       );
     } catch (e) {
       if (kDebugMode) {
-        print('更新窗口大小和位置失败: $e');
+        debugPrint('更新窗口大小和位置失败: $e');
       }
     }
   }
@@ -323,20 +323,20 @@ class UserPreferencesProvider extends ChangeNotifier {
   Future<void> addCustomColor(int color) async {
     try {
       if (kDebugMode) {
-        print('开始添加自定义颜色: ${color.toRadixString(16).padLeft(8, '0')}');
+        debugPrint('开始添加自定义颜色: ${color.toRadixString(16).padLeft(8, '0')}');
       }
       await _service.addCustomColor(color);
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
       if (kDebugMode) {
-        print(
+        debugPrint(
           '自定义颜色添加成功，当前自定义颜色数量: ${_currentPreferences!.tools.customColors.length}',
         );
       }
     } catch (e) {
       _setError('添加自定义颜色失败: ${e.toString()}');
       if (kDebugMode) {
-        print('添加自定义颜色失败: $e');
+        debugPrint('添加自定义颜色失败: $e');
       }
       rethrow; // 重新抛出错误，让调用方能够处理
     }
