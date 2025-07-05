@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:jovial_svg/jovial_svg.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
 import '../../../components/vfs/vfs_file_picker_window.dart';
@@ -580,10 +581,7 @@ class _LegendGroupManagementDrawerState
                           child: legend.hasImageData
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(4),
-                                  child: Image.memory(
-                                    legend.imageData!,
-                                    fit: BoxFit.contain,
-                                  ),
+                                  child: _buildLegendThumbnail(legend),
                                 )
                               : Icon(
                                   Icons.image,
@@ -883,6 +881,52 @@ class _LegendGroupManagementDrawerState
         );
       },
     );
+  }
+
+  /// 构建图例缩略图组件
+  Widget _buildLegendThumbnail(legend_db.LegendItem legend) {
+    if (!legend.hasImageData) {
+      return Icon(
+        Icons.image,
+        size: 24,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+    }
+
+    // 检查是否为SVG格式
+    if (legend.fileType == legend_db.LegendFileType.svg) {
+      try {
+        return ScalableImageWidget.fromSISource(
+          si: ScalableImageSource.fromSvgHttpUrl(
+            Uri.dataFromBytes(
+              legend.imageData!,
+              mimeType: 'image/svg+xml',
+            ),
+          ),
+          fit: BoxFit.contain,
+        );
+      } catch (e) {
+        debugPrint('SVG图例缩略图加载失败: $e');
+        return Icon(
+          Icons.image_not_supported,
+          size: 24,
+          color: Theme.of(context).colorScheme.error,
+        );
+      }
+    } else {
+      // 普通图片格式
+      return Image.memory(
+        legend.imageData!,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.image_not_supported,
+            size: 24,
+            color: Theme.of(context).colorScheme.error,
+          );
+        },
+      );
+    }
   }
 
   /// 从VFS路径载入图例数据

@@ -307,7 +307,10 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -315,7 +318,7 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ],

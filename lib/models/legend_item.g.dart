@@ -11,6 +11,9 @@ LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
       title: json['title'] as String,
       imageData:
           const Uint8ListConverter().fromJson(json['imageData'] as String?),
+      fileType:
+          $enumDecodeNullable(_$LegendFileTypeEnumMap, json['fileType']) ??
+              LegendFileType.png,
       centerX: (json['centerX'] as num).toDouble(),
       centerY: (json['centerY'] as num).toDouble(),
       version: (json['version'] as num).toInt(),
@@ -24,6 +27,7 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'id': instance.id,
       'title': instance.title,
       'imageData': const Uint8ListConverter().toJson(instance.imageData),
+      'fileType': _$LegendFileTypeEnumMap[instance.fileType]!,
       'centerX': instance.centerX,
       'centerY': instance.centerY,
       'version': instance.version,
@@ -31,6 +35,13 @@ Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };
+
+const _$LegendFileTypeEnumMap = {
+  LegendFileType.png: 'png',
+  LegendFileType.jpg: 'jpg',
+  LegendFileType.jpeg: 'jpeg',
+  LegendFileType.svg: 'svg',
+};
 
 LegendDatabase _$LegendDatabaseFromJson(Map<String, dynamic> json) =>
     LegendDatabase(

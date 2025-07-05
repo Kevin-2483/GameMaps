@@ -1,8 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:jovial_svg/jovial_svg.dart';
+import '../../models/legend_item.dart';
 
 class CenterPointSelector extends StatefulWidget {
   final Uint8List imageData;
+  final LegendFileType fileType;
   final double initialX;
   final double initialY;
   final Function(double x, double y) onCenterChanged;
@@ -10,6 +13,7 @@ class CenterPointSelector extends StatefulWidget {
   const CenterPointSelector({
     super.key,
     required this.imageData,
+    required this.fileType,
     required this.initialX,
     required this.initialY,
     required this.onCenterChanged,
@@ -38,6 +42,45 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
     widget.onCenterChanged(_centerX, _centerY);
   }
 
+  Widget _buildImageWidget() {
+    switch (widget.fileType) {
+      case LegendFileType.svg:
+        try {
+          return ScalableImageWidget.fromSISource(
+             si: ScalableImageSource.fromSvgHttpUrl(
+               Uri.dataFromBytes(
+                 widget.imageData,
+                 mimeType: 'image/svg+xml',
+               ),
+             ),
+             fit: BoxFit.contain,
+           );
+        } catch (e) {
+          return Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.red),
+            ),
+          );
+        }
+      case LegendFileType.png:
+      case LegendFileType.jpg:
+      case LegendFileType.jpeg:
+      return Image.memory(
+          widget.imageData,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[200],
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red),
+              ),
+            );
+          },
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -56,7 +99,7 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
               children: [
                 // 图片
                 Positioned.fill(
-                  child: Image.memory(widget.imageData, fit: BoxFit.contain),
+                  child: _buildImageWidget(),
                 ),
                 // 中心点指示器
                 Positioned.fill(

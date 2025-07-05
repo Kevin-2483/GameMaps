@@ -21,6 +21,14 @@ class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
   }
 }
 
+/// 图例文件类型枚举
+enum LegendFileType {
+  png,
+  jpg,
+  jpeg,
+  svg,
+}
+
 /// 图例项数据模型
 @JsonSerializable()
 class LegendItem {
@@ -28,6 +36,7 @@ class LegendItem {
   final String title;
   @Uint8ListConverter()
   final Uint8List? imageData; // 图片二进制数据
+  final LegendFileType fileType; // 文件类型
   final double centerX; // 中心点X坐标 (0.0-1.0)
   final double centerY; // 中心点Y坐标 (0.0-1.0)
   final int version; // 图例版本
@@ -38,6 +47,7 @@ class LegendItem {
     this.id,
     required this.title,
     this.imageData,
+    this.fileType = LegendFileType.png, // 默认为PNG
     required this.centerX,
     required this.centerY,
     required this.version,
@@ -59,6 +69,10 @@ class LegendItem {
       id: map['id'] as int?,
       title: map['title'] as String,
       imageData: map['image_data'] as Uint8List?,
+      fileType: LegendFileType.values.firstWhere(
+        (type) => type.name == (map['file_type'] as String? ?? 'png'),
+        orElse: () => LegendFileType.png,
+      ),
       centerX: map['center_x'] as double,
       centerY: map['center_y'] as double,
       version: map['version'] as int,
@@ -73,6 +87,7 @@ class LegendItem {
       if (id != null) 'id': id,
       'title': title,
       'image_data': imageData,
+      'file_type': fileType.name,
       'center_x': centerX,
       'center_y': centerY,
       'version': version,
@@ -86,6 +101,7 @@ class LegendItem {
     int? id,
     String? title,
     Uint8List? imageData,
+    LegendFileType? fileType,
     double? centerX,
     double? centerY,
     int? version,
@@ -97,6 +113,7 @@ class LegendItem {
       id: id ?? this.id,
       title: title ?? this.title,
       imageData: imageData ?? this.imageData,
+      fileType: fileType ?? this.fileType,
       centerX: centerX ?? this.centerX,
       centerY: centerY ?? this.centerY,
       version: version ?? this.version,

@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4; // 添加Matrix4导入
+import 'package:jovial_svg/jovial_svg.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/sticky_note.dart'; // 导入便签模型
@@ -856,13 +857,29 @@ class MapCanvasState extends State<MapCanvas> {
           if (legend.hasImageData && !isLoading)
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: Image.memory(
-                legend.imageData!,
-                width: imageSize,
-                height: imageSize,
-                fit: BoxFit.contain,
-                opacity: AlwaysStoppedAnimation(item.opacity),
-              ),
+              child: legend.fileType == legend_db.LegendFileType.svg
+                  ? Opacity(
+                      opacity: item.opacity,
+                      child: SizedBox(
+                        width: imageSize,
+                        height: imageSize,
+                        child: ScalableImageWidget.fromSISource(
+                          si: ScalableImageSource.fromSvgHttpUrl(
+                            Uri.dataFromBytes(
+                              legend.imageData!,
+                              mimeType: 'image/svg+xml',
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Image.memory(
+                      legend.imageData!,
+                      width: imageSize,
+                      height: imageSize,
+                      fit: BoxFit.contain,
+                      opacity: AlwaysStoppedAnimation(item.opacity),
+                    ),
             )
           else
             Container(

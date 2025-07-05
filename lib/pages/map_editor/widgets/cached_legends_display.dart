@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jovial_svg/jovial_svg.dart';
 import '../../../services/legend_cache_manager.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart';
 import '../../../models/legend_item.dart' as legend_db;
@@ -366,12 +367,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     child: legend?.hasImageData == true
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(3),
-                            child: Image.memory(
-                              legend!.imageData!,
-                              fit: BoxFit.cover,
-                              width: 30,
-                              height: 30,
-                            ),
+                            child: _buildLegendThumbnail(legend!, 30, 30),
                           )
                         : Icon(
                             Icons.legend_toggle,
@@ -462,19 +458,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     child: legend?.hasImageData == true
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(3),
-                            child: Image.memory(
-                              legend!.imageData!,
-                              fit: BoxFit.cover,
-                              width: 22,
-                              height: 22,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(
-                                  Icons.image_not_supported,
-                                  size: 12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                );
-                              },
-                            ),
+                            child: _buildLegendThumbnail(legend!, 22, 22),
                           )
                         : Icon(
                             Icons.legend_toggle,
@@ -501,6 +485,54 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         );
       },
     );
+  }
+
+  /// 构建图例缩略图组件
+  Widget _buildLegendThumbnail(legend_db.LegendItem legend, double width, double height) {
+    if (!legend.hasImageData) {
+      return Icon(
+        Icons.image,
+        size: width * 0.6,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+    }
+
+    // 检查是否为SVG格式
+    if (legend.fileType == legend_db.LegendFileType.svg) {
+      try {
+        return ScalableImageWidget.fromSISource(
+          si: ScalableImageSource.fromSvgHttpUrl(
+            Uri.dataFromBytes(
+              legend.imageData!,
+              mimeType: 'image/svg+xml',
+            ),
+          ),
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        debugPrint('SVG图例缩略图加载失败: $e');
+        return Icon(
+          Icons.image_not_supported,
+          size: width * 0.6,
+          color: Theme.of(context).colorScheme.error,
+        );
+      }
+    } else {
+      // 普通图片格式
+      return Image.memory(
+        legend.imageData!,
+        fit: BoxFit.cover,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.image_not_supported,
+            size: width * 0.6,
+            color: Theme.of(context).colorScheme.error,
+          );
+        },
+      );
+    }
   }
 
   /// 从路径中提取图例名称

@@ -45,10 +45,11 @@ class VfsLegendMeta {
   }
 }
 
-/// 图例存储数据结构
+/// VFS图例数据
 class VfsLegendData {
   final String title;
-  final String imagePath; // 相对于图例文件夹的图像路径
+  final String imagePath;
+  final String fileType; // 添加文件类型字段
   final double centerX;
   final double centerY;
   final int version;
@@ -58,6 +59,7 @@ class VfsLegendData {
   const VfsLegendData({
     required this.title,
     required this.imagePath,
+    required this.fileType,
     required this.centerX,
     required this.centerY,
     required this.version,
@@ -69,6 +71,7 @@ class VfsLegendData {
     return VfsLegendData(
       title: json['title'] as String,
       imagePath: json['imagePath'] as String,
+      fileType: json['fileType'] as String? ?? 'png', // 默认为png以兼容旧数据
       centerX: (json['centerX'] as num).toDouble(),
       centerY: (json['centerY'] as num).toDouble(),
       version: json['version'] as int,
@@ -81,6 +84,7 @@ class VfsLegendData {
     return {
       'title': title,
       'imagePath': imagePath,
+      'fileType': fileType,
       'centerX': centerX,
       'centerY': centerY,
       'version': version,
@@ -211,14 +215,33 @@ class LegendVfsService {
     // 确保目录存在
     await _vfs.createDirectory(legendPath);
 
+    // 根据文件类型确定文件扩展名和MIME类型
+    String fileExtension;
+    String mimeType;
+    switch (legend.fileType) {
+      case LegendFileType.svg:
+        fileExtension = 'svg';
+        mimeType = 'image/svg+xml';
+        break;
+      case LegendFileType.jpg:
+      case LegendFileType.jpeg:
+        fileExtension = 'jpg';
+        mimeType = 'image/jpeg';
+        break;
+      case LegendFileType.png:
+        fileExtension = 'png';
+        mimeType = 'image/png';
+        break;
+    }
+
     // 保存图像数据
-    String imagePath = 'image.png';
+    String imagePath = 'image.$fileExtension';
     if (legend.imageData != null && legend.imageData!.isNotEmpty) {
-      final imageFilePath = '$legendPath/image.png';
+      final imageFilePath = '$legendPath/$imagePath';
       await _vfs.writeBinaryFile(
         imageFilePath,
         legend.imageData!,
-        mimeType: 'image/png',
+        mimeType: mimeType,
       );
     }
 
@@ -226,6 +249,7 @@ class LegendVfsService {
     final legendData = VfsLegendData(
       title: legend.title,
       imagePath: imagePath,
+      fileType: legend.fileType.name,
       centerX: legend.centerX,
       centerY: legend.centerY,
       version: legend.version,
@@ -278,6 +302,17 @@ class LegendVfsService {
         imageData = content?.data;
       }
 
+      // 将字符串转换为LegendFileType枚举
+      LegendFileType fileType;
+      try {
+        fileType = LegendFileType.values.firstWhere(
+          (type) => type.name == legendData.fileType,
+        );
+      } catch (e) {
+        // 如果找不到匹配的类型，默认为png
+        fileType = LegendFileType.png;
+      }
+
       return LegendItem(
         title: legendData.title,
         imageData: imageData,
@@ -286,6 +321,7 @@ class LegendVfsService {
         version: legendData.version,
         createdAt: legendData.createdAt,
         updatedAt: legendData.updatedAt,
+        fileType: fileType,
       );
     } catch (e) {
       debugPrint('获取图例失败: $title, 错误: $e');

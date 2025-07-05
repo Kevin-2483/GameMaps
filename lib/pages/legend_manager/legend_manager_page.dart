@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:jovial_svg/jovial_svg.dart';
 import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart';
@@ -97,25 +98,40 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   Future<void> _addLegend() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
+      type: FileType.custom,
+      allowedExtensions: ['png', 'jpg', 'jpeg', 'svg'],
       allowMultiple: false,
     );
 
     if (result != null) {
       final file = File(result.files.single.path!);
+      final fileName = result.files.single.name.toLowerCase();
       final imageBytes = await file.readAsBytes();
 
-      // 压缩图片
-      final compressedImage = _compressImage(imageBytes);
+      // 确定文件类型
+      LegendFileType fileType;
+      if (fileName.endsWith('.svg')) {
+        fileType = LegendFileType.svg;
+      } else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+        fileType = LegendFileType.jpg;
+      } else {
+        fileType = LegendFileType.png;
+      }
+
+      // 对于非SVG文件进行压缩
+      final processedImage = fileType == LegendFileType.svg 
+          ? imageBytes 
+          : _compressImage(imageBytes);
 
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        final legendInfo = await _showAddLegendDialog(l10n, compressedImage);
+        final legendInfo = await _showAddLegendDialog(l10n, processedImage, fileType);
         if (legendInfo != null && legendInfo['title']?.isNotEmpty == true) {
           try {
             final legendItem = LegendItem(
               title: legendInfo['title'],
-              imageData: compressedImage,
+              imageData: processedImage,
+              fileType: fileType,
               centerX: legendInfo['centerX'] ?? 0.5,
               centerY: legendInfo['centerY'] ?? 0.5,
               version: legendInfo['version'] ?? 1,
@@ -150,9 +166,11 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     return imageBytes;
   }
 
+  /// 根据文件类型构建图像组件
   Future<Map<String, dynamic>?> _showAddLegendDialog(
     AppLocalizations l10n,
     Uint8List imageData,
+    LegendFileType fileType,
   ) async {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController versionController = TextEditingController(
@@ -201,6 +219,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                       const SizedBox(height: 8),
                       CenterPointSelector(
                         imageData: imageData,
+                        fileType: fileType,
                         initialX: centerX,
                         initialY: centerY,
                         onCenterChanged: (x, y) {
@@ -532,6 +551,44 @@ class _LegendCard extends StatelessWidget {
     required this.onTap,
   });
 
+  Widget _buildImageWidget(LegendItem legend) {
+    if (legend.fileType == LegendFileType.svg) {
+      try {
+        return ScalableImageWidget.fromSISource(
+          si: ScalableImageSource.fromSvgHttpUrl(
+            Uri.dataFromBytes(legend.imageData!, mimeType: 'image/svg+xml'),
+          ),
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        return Container(
+          color: Colors.grey[300],
+          child: const Icon(
+            Icons.error,
+            size: 48,
+            color: Colors.red,
+          ),
+        );
+      }
+    } else {
+      try {
+        return Image.memory(
+          legend.imageData!,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        return Container(
+          color: Colors.grey[300],
+          child: const Icon(
+            Icons.error,
+            size: 48,
+            color: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -550,10 +607,10 @@ class _LegendCard extends StatelessWidget {
                   children: [
                     // 图片
                     Positioned.fill(
-                      child: legend.imageData != null
-                          ? Image.memory(legend.imageData!, fit: BoxFit.cover)
-                          : Container(
-                              color: Colors.grey[300],
+                       child: legend.imageData != null
+                           ? _buildImageWidget(legend)
+                           : Container(
+                               color: Colors.grey[300],
                               child: const Icon(
                                 Icons.image_not_supported,
                                 size: 48,
