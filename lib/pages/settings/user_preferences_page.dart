@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
 import '../../providers/user_preferences_provider.dart';
 import 'widgets/theme_settings_section.dart';
+import 'widgets/home_page_settings_section.dart';
 import 'widgets/map_editor_settings_section.dart';
 import 'widgets/layout_settings_section.dart';
 import 'widgets/tool_settings_section.dart';
@@ -260,6 +261,12 @@ class _UserPreferencesPageContentState
                   children: [
                     // 主题设置
                     ThemeSettingsSection(
+                      preferences: provider.currentPreferences!,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 主页设置
+                    HomePageSettingsSection(
                       preferences: provider.currentPreferences!,
                     ),
                     const SizedBox(height: 16),

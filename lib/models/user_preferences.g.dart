@@ -14,6 +14,8 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       avatarData:
           const Uint8ListConverter().fromJson(json['avatarData'] as String?),
       theme: ThemePreferences.fromJson(json['theme'] as Map<String, dynamic>),
+      homePage: HomePagePreferences.fromJson(
+          json['homePage'] as Map<String, dynamic>),
       mapEditor: MapEditorPreferences.fromJson(
           json['mapEditor'] as Map<String, dynamic>),
       layout:
@@ -36,6 +38,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'avatarPath': instance.avatarPath,
       'avatarData': const Uint8ListConverter().toJson(instance.avatarData),
       'theme': instance.theme,
+      'homePage': instance.homePage,
       'mapEditor': instance.mapEditor,
       'layout': instance.layout,
       'tools': instance.tools,
@@ -140,6 +143,47 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'rememberWindowPosition': instance.rememberWindowPosition,
       'windowX': instance.windowX,
       'windowY': instance.windowY,
+    };
+
+HomePagePreferences _$HomePagePreferencesFromJson(Map<String, dynamic> json) =>
+    HomePagePreferences(
+      displayAreaMultiplier:
+          (json['displayAreaMultiplier'] as num?)?.toDouble() ?? 1.5,
+      baseBufferMultiplier:
+          (json['baseBufferMultiplier'] as num?)?.toDouble() ?? 1.5,
+      perspectiveBufferFactor:
+          (json['perspectiveBufferFactor'] as num?)?.toDouble() ?? 1.0,
+      windowScalingFactor:
+          (json['windowScalingFactor'] as num?)?.toDouble() ?? 0.5,
+      baseNodeSpacing: (json['baseNodeSpacing'] as num?)?.toDouble() ?? 200.0,
+      baseSvgRenderSize:
+          (json['baseSvgRenderSize'] as num?)?.toDouble() ?? 150.0,
+      enableThemeColorFilter: json['enableThemeColorFilter'] as bool? ?? true,
+      titleText: json['titleText'] as String? ?? 'R6BOX',
+      titleFontSizeMultiplier:
+          (json['titleFontSizeMultiplier'] as num?)?.toDouble() ?? 0.12,
+      recentSvgHistorySize:
+          (json['recentSvgHistorySize'] as num?)?.toInt() ?? 20,
+      cameraSpeed: (json['cameraSpeed'] as num?)?.toDouble() ?? 50.0,
+      iconEnlargementFactor:
+          (json['iconEnlargementFactor'] as num?)?.toDouble() ?? 1.0,
+    );
+
+Map<String, dynamic> _$HomePagePreferencesToJson(
+        HomePagePreferences instance) =>
+    <String, dynamic>{
+      'displayAreaMultiplier': instance.displayAreaMultiplier,
+      'baseBufferMultiplier': instance.baseBufferMultiplier,
+      'perspectiveBufferFactor': instance.perspectiveBufferFactor,
+      'windowScalingFactor': instance.windowScalingFactor,
+      'baseNodeSpacing': instance.baseNodeSpacing,
+      'baseSvgRenderSize': instance.baseSvgRenderSize,
+      'enableThemeColorFilter': instance.enableThemeColorFilter,
+      'titleText': instance.titleText,
+      'titleFontSizeMultiplier': instance.titleFontSizeMultiplier,
+      'recentSvgHistorySize': instance.recentSvgHistorySize,
+      'cameraSpeed': instance.cameraSpeed,
+      'iconEnlargementFactor': instance.iconEnlargementFactor,
     };
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>

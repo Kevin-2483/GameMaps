@@ -13,6 +13,7 @@ import '../features/page-modules/about_page_module.dart';
 // import '../features/page-modules/web_context_menu_demo_page_module.dart';
 import '../features/page-modules/vfs_file_manager_page_module.dart';
 import '../features/page-modules/markdown_renderer_demo_page_module.dart';
+import '../features/page-modules/svg_test_page_module.dart';
 import '../components/layout/app_shell.dart';
 
 class AppRouter {
@@ -71,6 +72,7 @@ class AppRouter {
     // registry.register(ConfigEditorModule());
     // registry.register(FullscreenTestPageModule());
     registry.register(VfsFileManagerPageModule());
+    registry.register(SvgTestPageModule());
 
     // // 注册演示页面模块
     // registry.register(MarkdownRendererDemoPageModule());

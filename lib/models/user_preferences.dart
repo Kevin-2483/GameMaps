@@ -40,6 +40,9 @@ class UserPreferences {
   /// 主题设置
   final ThemePreferences theme;
 
+  /// 主页设置
+  final HomePagePreferences homePage;
+
   /// 地图编辑器设置
   final MapEditorPreferences mapEditor;
 
@@ -69,6 +72,7 @@ class UserPreferences {
     this.avatarPath,
     this.avatarData,
     required this.theme,
+    required this.homePage,
     required this.mapEditor,
     required this.layout,
     required this.tools,
@@ -86,6 +90,7 @@ class UserPreferences {
       userId: userId,
       displayName: displayName ?? '用户',
       theme: ThemePreferences.createDefault(),
+      homePage: HomePagePreferences.createDefault(),
       mapEditor: MapEditorPreferences.createDefault(),
       layout: LayoutPreferences.createDefault(),
       tools: ToolPreferences.createDefault(),
@@ -103,6 +108,7 @@ class UserPreferences {
     String? avatarPath,
     Uint8List? avatarData,
     ThemePreferences? theme,
+    HomePagePreferences? homePage,
     MapEditorPreferences? mapEditor,
     LayoutPreferences? layout,
     ToolPreferences? tools,
@@ -118,6 +124,7 @@ class UserPreferences {
       avatarPath: avatarPath ?? this.avatarPath,
       avatarData: avatarData ?? this.avatarData,
       theme: theme ?? this.theme,
+      homePage: homePage ?? this.homePage,
       mapEditor: mapEditor ?? this.mapEditor,
       layout: layout ?? this.layout,
       tools: tools ?? this.tools,
@@ -425,6 +432,100 @@ class LayoutPreferences {
       _$LayoutPreferencesFromJson(json);
 
   Map<String, dynamic> toJson() => _$LayoutPreferencesToJson(this);
+}
+
+/// 主页偏好设置
+@JsonSerializable()
+class HomePagePreferences {
+  /// 显示区域倍数
+  final double displayAreaMultiplier;
+  
+  /// 基础缓冲区倍数
+  final double baseBufferMultiplier;
+  
+  /// 透视缓冲调节系数
+  final double perspectiveBufferFactor;
+  
+  /// 窗口大小随动系数
+  final double windowScalingFactor;
+  
+  /// 基础网格间距
+  final double baseNodeSpacing;
+  
+  /// 基础SVG渲染大小
+  final double baseSvgRenderSize;
+  
+  /// 是否启用主题颜色滤镜
+  final bool enableThemeColorFilter;
+  
+  /// 主页标题文字
+  final String titleText;
+  
+  /// 标题字体大小倍数
+  final double titleFontSizeMultiplier;
+  
+  /// 最近使用SVG记录数量
+  final int recentSvgHistorySize;
+  
+  /// 摄像机移动速度
+  final double cameraSpeed;
+  
+  /// 图标放大系数
+  final double iconEnlargementFactor;
+
+  const HomePagePreferences({
+    this.displayAreaMultiplier = 1.5,
+    this.baseBufferMultiplier = 1.5,
+    this.perspectiveBufferFactor = 1.0,
+    this.windowScalingFactor = 0.5,
+    this.baseNodeSpacing = 200.0,
+    this.baseSvgRenderSize = 150.0,
+    this.enableThemeColorFilter = true,
+    this.titleText = 'R6BOX',
+    this.titleFontSizeMultiplier = 0.12,
+    this.recentSvgHistorySize = 20,
+    this.cameraSpeed = 50.0,
+    this.iconEnlargementFactor = 1.0,
+  });
+
+  factory HomePagePreferences.createDefault() {
+    return const HomePagePreferences();
+  }
+
+  HomePagePreferences copyWith({
+    double? displayAreaMultiplier,
+    double? baseBufferMultiplier,
+    double? perspectiveBufferFactor,
+    double? windowScalingFactor,
+    double? baseNodeSpacing,
+    double? baseSvgRenderSize,
+    bool? enableThemeColorFilter,
+    String? titleText,
+    double? titleFontSizeMultiplier,
+    int? recentSvgHistorySize,
+    double? cameraSpeed,
+    double? iconEnlargementFactor,
+  }) {
+    return HomePagePreferences(
+      displayAreaMultiplier: displayAreaMultiplier ?? this.displayAreaMultiplier,
+      baseBufferMultiplier: baseBufferMultiplier ?? this.baseBufferMultiplier,
+      perspectiveBufferFactor: perspectiveBufferFactor ?? this.perspectiveBufferFactor,
+      windowScalingFactor: windowScalingFactor ?? this.windowScalingFactor,
+      baseNodeSpacing: baseNodeSpacing ?? this.baseNodeSpacing,
+      baseSvgRenderSize: baseSvgRenderSize ?? this.baseSvgRenderSize,
+      enableThemeColorFilter: enableThemeColorFilter ?? this.enableThemeColorFilter,
+      titleText: titleText ?? this.titleText,
+      titleFontSizeMultiplier: titleFontSizeMultiplier ?? this.titleFontSizeMultiplier,
+      recentSvgHistorySize: recentSvgHistorySize ?? this.recentSvgHistorySize,
+      cameraSpeed: cameraSpeed ?? this.cameraSpeed,
+      iconEnlargementFactor: iconEnlargementFactor ?? this.iconEnlargementFactor,
+    );
+  }
+
+  factory HomePagePreferences.fromJson(Map<String, dynamic> json) =>
+      _$HomePagePreferencesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$HomePagePreferencesToJson(this);
 }
 
 /// 工具偏好设置

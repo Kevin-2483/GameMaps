@@ -57,6 +57,10 @@ class UserPreferencesProvider extends ChangeNotifier {
   Map<String, dynamic> get extensionSettings =>
       _currentPreferences?.extensionSettings ?? {};
 
+  /// 主页偏好设置
+  HomePagePreferences get homePage =>
+      _currentPreferences?.homePage ?? HomePagePreferences.createDefault();
+
   /// 初始化用户偏好设置
   Future<void> initialize() async {
     if (_isLoading) return;
@@ -624,6 +628,24 @@ class UserPreferencesProvider extends ChangeNotifier {
   /// 检查扩展设置是否包含特定键
   bool hasExtensionSetting(String key) {
     return extensionSettings.containsKey(key);
+  }
+
+  /// 更新主页设置
+  Future<void> updateHomePage(HomePagePreferences homePageSettings) async {
+    if (_currentPreferences == null) return;
+
+    try {
+      final updated = _currentPreferences!.copyWith(
+        homePage: homePageSettings,
+        updatedAt: DateTime.now(),
+      );
+      
+      await _service.savePreferences(updated);
+      _currentPreferences = await _service.getCurrentPreferences();
+      notifyListeners();
+    } catch (e) {
+      _setError('更新主页设置失败: ${e.toString()}');
+    }
   }
 
   @override

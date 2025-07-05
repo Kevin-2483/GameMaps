@@ -16,7 +16,7 @@ class UserPreferencesDatabaseService {
   static const String _databaseName = 'user_preferences.db';
   static const String _preferencesTable = 'user_preferences';
   static const String _metadataTable = 'preferences_metadata';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
 
   Database? _database;
 
@@ -50,6 +50,7 @@ class UserPreferencesDatabaseService {
         map_editor_data TEXT NOT NULL,
         layout_data TEXT NOT NULL,
         tools_data TEXT NOT NULL,
+        home_page_data TEXT NOT NULL,
         locale TEXT NOT NULL DEFAULT 'zh_CN',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -85,7 +86,18 @@ class UserPreferencesDatabaseService {
 
   /// 数据库升级
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // 未来版本升级逻辑
+    if (oldVersion < 2) {
+      // 添加 home_page_data 字段
+      await db.execute('''
+        ALTER TABLE $_preferencesTable 
+        ADD COLUMN home_page_data TEXT NOT NULL DEFAULT '{}'
+      ''');
+      
+      if (kDebugMode) {
+        print('数据库升级：添加 home_page_data 字段');
+      }
+    }
+    
     if (kDebugMode) {
       print('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
     }
@@ -112,6 +124,7 @@ class UserPreferencesDatabaseService {
       'map_editor_data': jsonEncode(updatedPreferences.mapEditor.toJson()),
       'layout_data': jsonEncode(updatedPreferences.layout.toJson()),
       'tools_data': jsonEncode(updatedPreferences.tools.toJson()),
+      'home_page_data': jsonEncode(updatedPreferences.homePage.toJson()),
       'locale': updatedPreferences.locale,
       'created_at': updatedPreferences.createdAt.millisecondsSinceEpoch,
       'updated_at': updatedPreferences.updatedAt.millisecondsSinceEpoch,
@@ -303,6 +316,9 @@ class UserPreferencesDatabaseService {
       ),
       tools: ToolPreferences.fromJson(
         jsonDecode(row['tools_data'] as String) as Map<String, dynamic>,
+      ),
+      homePage: HomePagePreferences.fromJson(
+        jsonDecode(row['home_page_data'] as String) as Map<String, dynamic>,
       ),
       locale: row['locale'] as String,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int),
