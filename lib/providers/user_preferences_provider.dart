@@ -96,6 +96,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     bool? useMaterialYou,
     double? fontScale,
     bool? highContrast,
+    bool? canvasThemeAdaptation,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -106,6 +107,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         useMaterialYou: useMaterialYou,
         fontScale: fontScale,
         highContrast: highContrast,
+        canvasThemeAdaptation: canvasThemeAdaptation,
       );
 
       // 先更新数据，但不立即通知监听器

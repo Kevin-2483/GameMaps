@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/background_image_settings_dialog.dart';
+import '../../../components/color_filter_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import 'dart:async';
 
@@ -796,6 +797,15 @@ class _LayerPanelState extends State<LayerPanel> {
                   _handleImageUpload(layer);
                 },
               ),
+              // 色彩滤镜对所有图层都可用
+              ListTile(
+                leading: const Icon(Icons.palette, size: 20),
+                title: const Text('色彩滤镜'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showColorFilterDialog(context, layer);
+                },
+              ),
               if (layer.imageData != null) ...[
                 ListTile(
                   leading: const Icon(Icons.settings, size: 20),
@@ -859,6 +869,61 @@ class _LayerPanelState extends State<LayerPanel> {
     } else {
       // 用户可能取消了对话框 (例如 BackgroundImageSettingsDialog 调用了 Navigator.pop(context) 而没有结果)
       debugPrint('背景图片设置对话框已关闭，没有应用更改。');
+    }
+  }
+
+  /// 显示色彩滤镜设置对话框
+  Future<void> _showColorFilterDialog(
+    BuildContext context,
+    MapLayer layer,
+  ) async {
+    final filterManager = ColorFilterSessionManager();
+    final currentSettings = filterManager.getLayerFilter(layer.id) ?? const ColorFilterSettings();
+
+    final ColorFilterSettings? result = await showDialog<ColorFilterSettings>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return ColorFilterDialog(
+          initialSettings: currentSettings,
+          title: '"${layer.name}" 色彩滤镜设置',
+          layerId: layer.id,
+        );
+      },
+    );
+
+    // 处理对话框返回的结果
+    if (result != null) {
+      // 应用滤镜设置到会话管理器
+      filterManager.setLayerFilter(layer.id, result);
+      
+      final filterName = result.type == ColorFilterType.none ? '已移除' : _getFilterTypeName(result.type);
+      widget.onSuccess?.call('图层 "${layer.name}" 的色彩滤镜已设置为：$filterName');
+    }
+    
+    // 无论是否有返回结果，都触发界面更新以确保主题滤镜的变化能够显示
+    widget.onLayerUpdated(layer.copyWith(updatedAt: DateTime.now()));
+  }
+
+  /// 获取滤镜类型名称
+  String _getFilterTypeName(ColorFilterType type) {
+    switch (type) {
+      case ColorFilterType.none:
+        return '无滤镜';
+      case ColorFilterType.grayscale:
+        return '灰度';
+      case ColorFilterType.sepia:
+        return '棕褐色';
+      case ColorFilterType.invert:
+        return '反色';
+      case ColorFilterType.brightness:
+        return '亮度';
+      case ColorFilterType.contrast:
+        return '对比度';
+      case ColorFilterType.saturation:
+        return '饱和度';
+      case ColorFilterType.hue:
+        return '色相';
     }
   }
 

@@ -27,6 +27,7 @@ import '../renderers/background_renderer.dart';
 import '../tools/drawing_tool_manager.dart';
 import '../tools/element_interaction_manager.dart';
 import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
+import '../../../components/color_filter_dialog.dart'; // 导入色彩滤镜组件
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -321,6 +322,7 @@ class MapCanvasState extends State<MapCanvas> {
                           child: CustomPaint(
                             painter: _BackgroundPatternPainter(
                               widget.backgroundPattern,
+                              context: context,
                             ),
                           ),
                         ),
@@ -581,6 +583,26 @@ class MapCanvasState extends State<MapCanvas> {
     final double actualOffsetX = layer.xOffset * maxOffsetX;
     final double actualOffsetY = layer.yOffset * maxOffsetY;
 
+    // 获取图层的色彩滤镜设置（只获取用户手动设置的滤镜，不包含主题适配滤镜）
+    final userFilterSettings = ColorFilterSessionManager().getUserLayerFilter(layer.id);
+    final colorFilter = userFilterSettings?.toColorFilter();
+    
+    Widget imageWidget = Image.memory(
+      layer.imageData!,
+      width: kCanvasWidth,
+      height: kCanvasHeight,
+      fit: imageFit,
+      // opacity: 1.0, // 透明度已经通过Opacity widget控制
+    );
+    
+    // 只有用户手动设置的滤镜才应用到背景图片，主题适配滤镜不影响背景图片
+    if (colorFilter != null) {
+      imageWidget = ColorFiltered(
+        colorFilter: colorFilter,
+        child: imageWidget,
+      );
+    }
+
     return Positioned.fill(
       child: Opacity(
         opacity: layer.isVisible ? effectiveOpacity : 0.0,
@@ -588,13 +610,7 @@ class MapCanvasState extends State<MapCanvas> {
           offset: Offset(actualOffsetX, actualOffsetY),
           child: Transform.scale(
             scale: scale,
-            child: Image.memory(
-              layer.imageData!,
-              width: kCanvasWidth,
-              height: kCanvasHeight,
-              fit: imageFit,
-              // opacity: 1.0, // 透明度已经通过Opacity widget控制
-            ),
+            child: imageWidget,
           ),
         ),
       ),
@@ -627,6 +643,7 @@ class MapCanvasState extends State<MapCanvas> {
             imageBufferCachedImage: _imageBufferCachedImage, // 传递缓冲区图片
             currentImageBufferData: widget.imageBufferData,
             imageBufferFit: widget.imageBufferFit,
+            context: context,
           ),
         ),
       ),
@@ -2580,6 +2597,7 @@ class _LayerPainter extends CustomPainter {
   final ui.Image? imageBufferCachedImage; // 图片缓冲区缓存
   final Uint8List? currentImageBufferData; // 当前图片缓冲区数据
   final BoxFit imageBufferFit; // 图片缓冲区适应方式
+  final BuildContext? context; // 添加context用于主题适配
 
   _LayerPainter({
     required this.layer,
@@ -2590,10 +2608,62 @@ class _LayerPainter extends CustomPainter {
     this.imageBufferCachedImage,
     this.currentImageBufferData,
     this.imageBufferFit = BoxFit.contain,
+    this.context,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 检查是否启用了画布主题适配
+    bool shouldApplyThemeAdaptation = false;
+    if (context != null) {
+      final theme = Theme.of(context!);
+      final isDarkMode = theme.brightness == Brightness.dark;
+      
+      try {
+        final userPrefs = Provider.of<UserPreferencesProvider>(context!, listen: false);
+        final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
+        shouldApplyThemeAdaptation = canvasThemeAdaptation && isDarkMode;
+        
+        // 调试信息
+        debugPrint('=== 画布主题适配调试 ===');
+        debugPrint('isDarkMode: $isDarkMode');
+        debugPrint('canvasThemeAdaptation: $canvasThemeAdaptation');
+        debugPrint('shouldApplyThemeAdaptation: $shouldApplyThemeAdaptation');
+      } catch (e) {
+        // 如果无法获取用户偏好，使用默认值
+        debugPrint('获取用户偏好失败: $e');
+        shouldApplyThemeAdaptation = false;
+      }
+    } else {
+      debugPrint('context为null，无法获取主题信息');
+    }
+    
+    // 根据主题适配状态设置或移除滤镜
+    if (!ColorFilterSessionManager().isThemeAdaptationUserDisabled(layer.id)) {
+      if (shouldApplyThemeAdaptation) {
+        final themeAdaptationSettings = const ColorFilterSettings(
+          type: ColorFilterType.brightness,
+          intensity: 1.0,
+          brightness: 0.5, // 提高亮度
+        );
+        
+        // 始终设置主题适配滤镜（如果需要的话）
+        ColorFilterSessionManager().setThemeAdaptationFilter(layer.id, themeAdaptationSettings);
+        debugPrint('为图层 ${layer.id} 设置主题适配滤镜');
+      } else {
+        // 如果主题适配被禁用，移除主题适配滤镜
+        ColorFilterSessionManager().setThemeAdaptationFilter(layer.id, null);
+        debugPrint('移除图层 ${layer.id} 的主题适配滤镜');
+      }
+    }
+    
+    // 获取图层的色彩滤镜设置（包含主题适配和用户设置）
+    final filterSettings = ColorFilterSessionManager().getLayerFilter(layer.id);
+    final combinedColorFilter = filterSettings?.toColorFilter();
+    
+    // 调试信息
+    debugPrint('图层ID: ${layer.id}, 应用滤镜: ${combinedColorFilter != null}');
+    
     // 按 z 值排序元素
     final sortedElements = List<MapDrawingElement>.from(layer.elements)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -2602,12 +2672,23 @@ class _LayerPainter extends CustomPainter {
     final eraserElements = sortedElements
         .where((e) => e.type == DrawingElementType.eraser)
         .toList();
+        
+    // 图层元素统计
+    final nonEraserCount = sortedElements.where((e) => e.type != DrawingElementType.eraser).length;
+    debugPrint('图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}');
 
-    // 首先绘制所有常规元素
+    // 如果有色彩滤镜，对整个图层应用滤镜
+    if (combinedColorFilter != null) {
+      canvas.saveLayer(Offset.zero & size, Paint()..colorFilter = combinedColorFilter);
+    }
+
+    // 绘制所有常规元素
     for (final element in sortedElements) {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
-      } // 使用裁剪来实现选择性遮挡
+      }
+      
+      // 使用裁剪来实现选择性遮挡
       EraserRenderer.drawElementWithEraserMask(
         canvas,
         element,
@@ -2618,7 +2699,14 @@ class _LayerPainter extends CustomPainter {
         currentImageBufferData: currentImageBufferData,
         imageBufferFit: imageBufferFit,
       );
-    } // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡
+    }
+    
+    // 如果应用了色彩滤镜，恢复画布状态
+    if (combinedColorFilter != null) {
+      canvas.restore();
+    }
+    
+    // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡（不应用滤镜）
     if (selectedElementId != null) {
       final selectedElement = sortedElements
           .where((e) => e.id == selectedElementId)
@@ -2803,11 +2891,18 @@ class _CurrentDrawingPainter extends CustomPainter {
 /// 背景图案画笔，支持多种背景模式
 class _BackgroundPatternPainter extends CustomPainter {
   final BackgroundPattern pattern;
+  final BuildContext? context;
 
-  _BackgroundPatternPainter(this.pattern);
+  _BackgroundPatternPainter(this.pattern, {this.context});
+  
   @override
   void paint(Canvas canvas, Size size) {
-    BackgroundRenderer.drawBackgroundPattern(canvas, size, pattern);
+    BackgroundRenderer.drawBackgroundPattern(
+      canvas, 
+      size, 
+      pattern,
+      context: context,
+    );
   }
 
   @override

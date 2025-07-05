@@ -35,6 +35,7 @@ import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/new_reactive_script_manager.dart';
 import '../../services/legend_cache_manager.dart';
+import '../../components/color_filter_dialog.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 class MapEditorPage extends BasePage {
@@ -195,6 +196,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('地图编辑器退出：已清理所有图例缓存');
     } catch (e) {
       debugPrint('在dispose中清理图例缓存失败: $e');
+    }
+
+    // 清理颜色滤镜会话管理器的所有滤镜
+    try {
+      ColorFilterSessionManager().clearAllFilters();
+      debugPrint('地图编辑器退出：已清理所有颜色滤镜');
+    } catch (e) {
+      debugPrint('在dispose中清理颜色滤镜失败: $e');
     }
 
     // 释放响应式系统资源

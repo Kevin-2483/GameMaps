@@ -93,6 +93,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../components/layout/main_layout.dart'; // 请确保这个路径是正确的
+import '../../components/common/edge_drag_area.dart'; // 边缘拖动区域组件
 import '../../providers/user_preferences_provider.dart';
 import '../../models/user_preferences.dart';
 
@@ -404,71 +405,74 @@ class _HomePageContentState extends State<_HomePageContent>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // 动态SVG背景层 - 无限滚动的SVG网格
-          if (_svgsCached)
+      body: TopEdgeDragArea(
+        dragHeight: 30.0, // 顶部30像素高度的拖动区域
+        child: Stack(
+          children: [
+            // 动态SVG背景层 - 无限滚动的SVG网格
+            if (_svgsCached)
+              AnimatedBuilder(
+                animation: _backgroundAnimation,
+                builder: (context, child) {
+                  // 更新摄像机位置
+                  _updateCameraPosition();
+                  // 更新可见的SVG节点
+                  _updateVisibleNodes();
+                  
+                  return CustomPaint(
+                    painter: InfiniteGridBackgroundPainter(
+                      activeNodes: _activeNodes,
+                      cameraPosition: _currentCameraPosition,
+                      nodeSpacing: _nodeSpacing,
+                      svgRenderSize: _svgRenderSize,
+                      perspectiveAngleX: _perspectiveAngleX,
+                      perspectiveAngleY: _perspectiveAngleY,
+                      colorScheme: Theme.of(context).colorScheme, // 🎨 传递主题颜色
+                      displayAreaMultiplier: _displayAreaMultiplier, // 🎯 传递显示区域倍数
+                      enableSvgFilters: _enableSvgFilters, // 🎨 传递滤镜开关
+                    ),
+                    size: Size.infinite,
+                  );
+                },
+              ),
+            // 动态波纹层
             AnimatedBuilder(
-              animation: _backgroundAnimation,
+              animation: _rippleAnimation,
               builder: (context, child) {
-                // 更新摄像机位置
-                _updateCameraPosition();
-                // 更新可见的SVG节点
-                _updateVisibleNodes();
-                
                 return CustomPaint(
-                  painter: InfiniteGridBackgroundPainter(
-                    activeNodes: _activeNodes,
-                    cameraPosition: _currentCameraPosition,
-                    nodeSpacing: _nodeSpacing,
-                    svgRenderSize: _svgRenderSize,
-                    perspectiveAngleX: _perspectiveAngleX,
-                    perspectiveAngleY: _perspectiveAngleY,
-                    colorScheme: Theme.of(context).colorScheme, // 🎨 传递主题颜色
-                    displayAreaMultiplier: _displayAreaMultiplier, // 🎯 传递显示区域倍数
-                    enableSvgFilters: _enableSvgFilters, // 🎨 传递滤镜开关
+                  painter: RippleBackgroundPainter(
+                    _rippleAnimation.value,
+                    Theme.of(context).colorScheme,
                   ),
                   size: Size.infinite,
                 );
               },
             ),
-          // 动态波纹层
-          AnimatedBuilder(
-            animation: _rippleAnimation,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: RippleBackgroundPainter(
-                  _rippleAnimation.value,
-                  Theme.of(context).colorScheme,
+            // 软件标题层 - 左下角显示
+            Positioned(
+              left: 40,
+              bottom: 60,
+              child: Text(
+                _homeTitle,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * _titleFontSizeMultiplier, // 使用设置中的字体大小倍数
+                  fontWeight: FontWeight.bold,
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context).colorScheme.primary,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(2, 2),
+                      blurRadius: 4,
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                  ],
                 ),
-                size: Size.infinite,
-              );
-            },
-          ),
-          // 软件标题层 - 左下角显示
-          Positioned(
-            left: 40,
-            bottom: 60,
-            child: Text(
-              _homeTitle,
-              style: TextStyle(
-                fontSize: MediaQuery.of(context).size.width * _titleFontSizeMultiplier, // 使用设置中的字体大小倍数
-                fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic,
-                color: Theme.of(context).colorScheme.primary,
-                shadows: [
-                  Shadow(
-                    offset: const Offset(2, 2),
-                    blurRadius: 4,
-                    color: Colors.black.withOpacity(0.3),
-                  ),
-                ],
               ),
             ),
-          ),
-          // 内容层
-          Container(),
-        ],
+            // 内容层
+            Container(),
+          ],
+        ),
       ),
     );
   }

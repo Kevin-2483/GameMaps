@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../models/user_preferences.dart';
 import '../utils/drawing_utils.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/user_preferences_provider.dart';
 
 /// 背景渲染器 - 负责绘制画布背景图案
 class BackgroundRenderer {
@@ -8,26 +10,76 @@ class BackgroundRenderer {
   static void drawBackgroundPattern(
     Canvas canvas,
     Size size,
-    BackgroundPattern pattern,
-  ) {
+    BackgroundPattern pattern, {
+    BuildContext? context,
+  }) {
+    // 检查是否启用了画布主题适配
+    bool isDarkMode = false;
+    bool canvasThemeAdaptation = false;
+    
+    if (context != null) {
+      final theme = Theme.of(context);
+      isDarkMode = theme.brightness == Brightness.dark;
+      
+      try {
+        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
+      } catch (e) {
+        // 如果无法获取用户偏好，使用默认值
+        canvasThemeAdaptation = false;
+      }
+    }
+    
+    // 如果启用了主题适配且处于暗色模式，绘制暗色背景
+    if (canvasThemeAdaptation && isDarkMode) {
+      _drawDarkBackground(canvas, size);
+    }
     switch (pattern) {
       case BackgroundPattern.blank:
         // 空白背景，不绘制任何图案
         break;
       case BackgroundPattern.grid:
-        _drawGrid(canvas, size);
+        _drawGrid(canvas, size, context: context);
         break;
       case BackgroundPattern.checkerboard:
-        _drawCheckerboard(canvas, size);
+        _drawCheckerboard(canvas, size, context: context);
         break;
     }
   }
 
+  /// 绘制暗色背景
+  static void _drawDarkBackground(Canvas canvas, Size size) {
+    final Paint backgroundPaint = Paint()
+      ..color = const Color(0xFF1A1A1A) // 更暗的背景色
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
+  }
+  
   /// 绘制网格背景
-  static void _drawGrid(Canvas canvas, Size size) {
+  static void _drawGrid(Canvas canvas, Size size, {BuildContext? context}) {
     const double gridSize = 20.0;
+    
+    // 根据主题适配调整网格颜色
+    Color gridColor = Colors.grey.shade300;
+    if (context != null) {
+      final theme = Theme.of(context);
+      final isDarkMode = theme.brightness == Brightness.dark;
+      
+      try {
+        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
+        
+        if (canvasThemeAdaptation && isDarkMode) {
+          gridColor = Colors.grey.shade700; // 暗色模式下使用稍亮的网格线
+        }
+      } catch (e) {
+        // 使用默认颜色
+      }
+    }
+    
     final Paint gridPaint = Paint()
-      ..color = Colors.grey.shade300
+      ..color = gridColor
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
@@ -43,10 +95,32 @@ class BackgroundRenderer {
   }
 
   /// 绘制棋盘格背景
-  static void _drawCheckerboard(Canvas canvas, Size size) {
+  static void _drawCheckerboard(Canvas canvas, Size size, {BuildContext? context}) {
     const double squareSize = 20.0;
-    final Paint lightPaint = Paint()..color = Colors.grey.shade100;
-    final Paint darkPaint = Paint()..color = Colors.grey.shade200;
+    
+    // 根据主题适配调整棋盘格颜色
+    Color lightColor = Colors.grey.shade100;
+    Color darkColor = Colors.grey.shade200;
+    
+    if (context != null) {
+      final theme = Theme.of(context);
+      final isDarkMode = theme.brightness == Brightness.dark;
+      
+      try {
+        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
+        
+        if (canvasThemeAdaptation && isDarkMode) {
+          lightColor = Colors.grey.shade800; // 暗色模式下的浅色方块
+          darkColor = Colors.grey.shade900;  // 暗色模式下的深色方块
+        }
+      } catch (e) {
+        // 使用默认颜色
+      }
+    }
+    
+    final Paint lightPaint = Paint()..color = lightColor;
+    final Paint darkPaint = Paint()..color = darkColor;
 
     for (double x = 0; x < size.width; x += squareSize) {
       for (double y = 0; y < size.height; y += squareSize) {

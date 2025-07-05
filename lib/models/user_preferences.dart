@@ -162,12 +162,16 @@ class ThemePreferences {
   /// 是否启用高对比度
   final bool highContrast;
 
+  /// 是否启用画布主题适配
+  final bool canvasThemeAdaptation;
+
   const ThemePreferences({
     required this.themeMode,
     required this.primaryColor,
     this.useMaterialYou = true,
     this.fontScale = 1.0,
     this.highContrast = false,
+    this.canvasThemeAdaptation = false,
   });
 
   factory ThemePreferences.createDefault() {
@@ -177,6 +181,7 @@ class ThemePreferences {
       useMaterialYou: true,
       fontScale: 1.0,
       highContrast: false,
+      canvasThemeAdaptation: false,
     );
   }
 
@@ -186,6 +191,7 @@ class ThemePreferences {
     bool? useMaterialYou,
     double? fontScale,
     bool? highContrast,
+    bool? canvasThemeAdaptation,
   }) {
     return ThemePreferences(
       themeMode: themeMode ?? this.themeMode,
@@ -193,6 +199,7 @@ class ThemePreferences {
       useMaterialYou: useMaterialYou ?? this.useMaterialYou,
       fontScale: fontScale ?? this.fontScale,
       highContrast: highContrast ?? this.highContrast,
+      canvasThemeAdaptation: canvasThemeAdaptation ?? this.canvasThemeAdaptation,
     );
   }
 

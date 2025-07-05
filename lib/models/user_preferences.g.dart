@@ -56,6 +56,7 @@ ThemePreferences _$ThemePreferencesFromJson(Map<String, dynamic> json) =>
       useMaterialYou: json['useMaterialYou'] as bool? ?? true,
       fontScale: (json['fontScale'] as num?)?.toDouble() ?? 1.0,
       highContrast: json['highContrast'] as bool? ?? false,
+      canvasThemeAdaptation: json['canvasThemeAdaptation'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
@@ -65,6 +66,7 @@ Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
       'useMaterialYou': instance.useMaterialYou,
       'fontScale': instance.fontScale,
       'highContrast': instance.highContrast,
+      'canvasThemeAdaptation': instance.canvasThemeAdaptation,
     };
 
 MapEditorPreferences _$MapEditorPreferencesFromJson(

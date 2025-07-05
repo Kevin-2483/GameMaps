@@ -147,6 +147,16 @@ class ThemeSettingsSection extends StatelessWidget {
               value: preferences.theme.highContrast,
               onChanged: (value) => provider.updateTheme(highContrast: value),
             ),
+
+            const SizedBox(height: 8),
+
+            // 画布主题适配设置
+            SwitchListTile(
+              title: Text('画布主题适配'),
+              subtitle: Text('在暗色主题下调整画布背景和绘制元素的可见性'),
+              value: preferences.theme.canvasThemeAdaptation,
+              onChanged: (value) => provider.updateTheme(canvasThemeAdaptation: value),
+            ),
           ],
         ),
       ),
