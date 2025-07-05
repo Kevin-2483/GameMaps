@@ -312,14 +312,7 @@ class LayoutPreferences {
   /// 窗口是否处于最大化状态
   final bool isMaximized;
 
-  /// 是否记住窗口位置
-  final bool rememberWindowPosition;
 
-  /// 窗口X坐标
-  final double windowX;
-
-  /// 窗口Y坐标
-  final double windowY;
 
   const LayoutPreferences({
     required this.panelCollapsedStates,
@@ -338,10 +331,7 @@ class LayoutPreferences {
     this.minWindowWidth = 800.0,
     this.minWindowHeight = 600.0,
     this.rememberMaximizedState = true,
-    this.isMaximized = false,
-    this.rememberWindowPosition = true,
-    this.windowX = -1, // -1 表示居中
-    this.windowY = -1, // -1 表示居中
+    this.isMaximized = false
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -374,10 +364,7 @@ class LayoutPreferences {
       minWindowWidth: 800.0,
       minWindowHeight: 600.0,
       rememberMaximizedState: true,
-      isMaximized: false,
-      rememberWindowPosition: true,
-      windowX: -1, // -1 表示居中
-      windowY: -1, // -1 表示居中
+      isMaximized: false
     );
   }
   LayoutPreferences copyWith({
@@ -398,9 +385,7 @@ class LayoutPreferences {
     double? minWindowHeight,
     bool? rememberMaximizedState,
     bool? isMaximized,
-    bool? rememberWindowPosition,
-    double? windowX,
-    double? windowY,
+
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -422,9 +407,6 @@ class LayoutPreferences {
       minWindowHeight: minWindowHeight ?? this.minWindowHeight,
       rememberMaximizedState: rememberMaximizedState ?? this.rememberMaximizedState,
       isMaximized: isMaximized ?? this.isMaximized,
-      rememberWindowPosition: rememberWindowPosition ?? this.rememberWindowPosition,
-      windowX: windowX ?? this.windowX,
-      windowY: windowY ?? this.windowY,
     );
   }
 

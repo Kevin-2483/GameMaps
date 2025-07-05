@@ -63,13 +63,12 @@ void main() async {
   // Initialize bitsdojo_window for desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     doWhenWindowReady(() {
-      // 默认窗口大小，稍后会被用户偏好设置覆盖
-      const initialSize = Size(1280, 720);
-      appWindow.size = initialSize;
+      // 设置最小窗口大小
       appWindow.minSize = const Size(800, 600);
-      // 不设置 alignment，让窗口保持在操作系统默认位置或用户偏好位置
+      // 不设置位置和对齐方式，完全让操作系统决定窗口位置
       appWindow.title = 'R6Box';
       appWindow.show();
+      // 注意：不在这里设置窗口大小，让WindowManagerService在用户偏好加载后处理
     });
   }
 }
@@ -81,6 +80,9 @@ class R6BoxApp extends StatelessWidget {
   // so it doesn't get recreated on widget rebuilds.
   // Assuming AppRouter.createRouter() returns a GoRouter instance or similar.
   static final _router = AppRouter.createRouter();
+  
+  // 标记窗口管理服务是否已初始化
+  static bool _windowManagerInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -111,14 +113,18 @@ class R6BoxApp extends StatelessWidget {
               highContrast: theme.highContrast,
             );
 
-            // 初始化窗口管理服务
-            WindowManagerService().initialize(userPrefsProvider);
-            
-            // 应用保存的窗口大小（仅在桌面平台）
-            if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-              Future.microtask(() {
-                WindowManagerService().applyWindowSize();
-              });
+            // 只初始化一次窗口管理服务
+            if (!_windowManagerInitialized) {
+              WindowManagerService().initialize(userPrefsProvider);
+              
+              // 应用保存的窗口大小（仅在桌面平台）
+              if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+                Future.microtask(() {
+                  WindowManagerService().applyWindowSize();
+                });
+              }
+              
+              _windowManagerInitialized = true;
             }
           } // Use the pre-created router instance
           return WebContextMenuHandler(

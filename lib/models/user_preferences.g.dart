@@ -116,9 +116,6 @@ LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
       minWindowHeight: (json['minWindowHeight'] as num?)?.toDouble() ?? 600.0,
       rememberMaximizedState: json['rememberMaximizedState'] as bool? ?? true,
       isMaximized: json['isMaximized'] as bool? ?? false,
-      rememberWindowPosition: json['rememberWindowPosition'] as bool? ?? true,
-      windowX: (json['windowX'] as num?)?.toDouble() ?? -1,
-      windowY: (json['windowY'] as num?)?.toDouble() ?? -1,
     );
 
 Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
@@ -140,9 +137,6 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'minWindowHeight': instance.minWindowHeight,
       'rememberMaximizedState': instance.rememberMaximizedState,
       'isMaximized': instance.isMaximized,
-      'rememberWindowPosition': instance.rememberWindowPosition,
-      'windowX': instance.windowX,
-      'windowY': instance.windowY,
     };
 
 HomePagePreferences _$HomePagePreferencesFromJson(Map<String, dynamic> json) =>

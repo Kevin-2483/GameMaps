@@ -178,9 +178,6 @@ class UserPreferencesProvider extends ChangeNotifier {
     double? minWindowHeight,
     bool? rememberMaximizedState,
     bool? isMaximized,
-    bool? rememberWindowPosition,
-    double? windowX,
-    double? windowY,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -203,9 +200,6 @@ class UserPreferencesProvider extends ChangeNotifier {
         minWindowHeight: minWindowHeight,
         rememberMaximizedState: rememberMaximizedState,
         isMaximized: isMaximized,
-        rememberWindowPosition: rememberWindowPosition,
-        windowX: windowX,
-        windowY: windowY,
       );
 
       await _service.updateLayout(updatedLayout);
@@ -216,28 +210,26 @@ class UserPreferencesProvider extends ChangeNotifier {
     }
   }
 
-  /// 更新窗口大小和位置设置
-  Future<void> updateWindowSize({
+  /// 更新窗口大小设置
+  Future<bool> updateWindowSize({
     required double width,
     required double height,
     bool? isMaximized,
-    double? x,
-    double? y,
   }) async {
-    if (_currentPreferences == null || !layout.autoSaveWindowSize) return;
+    if (_currentPreferences == null || !layout.autoSaveWindowSize) return false;
 
     try {
       await updateLayout(
         windowWidth: width,
         windowHeight: height,
         isMaximized: isMaximized,
-        windowX: x,
-        windowY: y,
       );
+      return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('更新窗口大小和位置失败: $e');
+        debugPrint('更新窗口大小失败: $e');
       }
+      return false;
     }
   }
 
@@ -645,6 +637,17 @@ class UserPreferencesProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('更新主页设置失败: ${e.toString()}');
+    }
+  }
+
+  /// 强制保存所有待处理的更改
+  Future<void> flushPendingChanges() async {
+    try {
+      await _service.flushPendingChanges();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('强制保存待处理更改失败: $e');
+      }
     }
   }
 

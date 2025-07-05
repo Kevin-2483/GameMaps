@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import '../../features/page_registry.dart';
-
+import '../../services/window_manager_service.dart';
+import '../../providers/user_preferences_provider.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
@@ -18,6 +20,27 @@ class _TrayNavigationState extends State<TrayNavigation>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
+  /// 如果启用了自动保存窗口大小，则保存当前窗口大小（仅在非最大化状态下）
+  void _saveWindowSizeIfEnabled(BuildContext context) {
+    try {
+      final userPrefsProvider = context.read<UserPreferencesProvider>();
+      if (userPrefsProvider.isInitialized &&
+          userPrefsProvider.layout.autoSaveWindowSize &&
+          !appWindow.isMaximized) {
+        WindowManagerService().saveCurrentWindowSize();
+        if (kDebugMode) {
+          debugPrint('窗口大小保存请求已发送（非最大化状态）');
+        }
+      } else if (kDebugMode && appWindow.isMaximized) {
+        debugPrint('跳过保存：当前处于最大化状态');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('保存窗口大小失败: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +64,9 @@ class _TrayNavigationState extends State<TrayNavigation>
     bool isVertical,
   ) {
     // 只在桌面平台添加拖拽功能
-    final isDraggable = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-    
+    final isDraggable =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
     Widget navigationContent = Container(
       width: isVertical ? 80 : double.infinity, // 宽屏时固定宽度，窄屏时占满宽度
       height: isVertical ? double.infinity : 80, // 宽屏时占满高度，窄屏时固定高度
@@ -77,7 +101,12 @@ class _TrayNavigationState extends State<TrayNavigation>
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
-                      onPressed: () => appWindow.close(),
+                      onPressed: () async {
+                        // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
+                        final windowManager = WindowManagerService();
+                        await windowManager.saveWindowStateOnExit();
+                        appWindow.close();
+                      },
                       tooltip: '关闭',
                       isCloseButton: true,
                       useNavigationStyle: true,
@@ -97,7 +126,10 @@ class _TrayNavigationState extends State<TrayNavigation>
                     _buildWindowButton(
                       context,
                       icon: Icons.minimize,
-                      onPressed: () => appWindow.minimize(),
+                      onPressed: () {
+                        _saveWindowSizeIfEnabled(context);
+                        appWindow.minimize();
+                      },
                       tooltip: '最小化',
                       useNavigationStyle: true,
                     ),
@@ -105,7 +137,10 @@ class _TrayNavigationState extends State<TrayNavigation>
                     _buildWindowButton(
                       context,
                       icon: Icons.fullscreen,
-                      onPressed: () => appWindow.maximizeOrRestore(),
+                      onPressed: () {
+                        _saveWindowSizeIfEnabled(context);
+                        appWindow.maximizeOrRestore();
+                      },
                       tooltip: '最大化/还原',
                       useNavigationStyle: true,
                     ),
@@ -118,9 +153,7 @@ class _TrayNavigationState extends State<TrayNavigation>
               child: Row(
                 children: [
                   // 左侧：导航按钮
-                  Row(
-                    children: _buildNavigationButtons(context, items, false),
-                  ),
+                  Row(children: _buildNavigationButtons(context, items, false)),
                   // 中间：拖拽区域（占用剩余空间）
                   const Expanded(child: SizedBox()),
                   // 右侧：窗口控制按钮
@@ -140,7 +173,7 @@ class _TrayNavigationState extends State<TrayNavigation>
         child: navigationContent,
       );
     }
-    
+
     return navigationContent;
   }
 
@@ -230,7 +263,8 @@ class _TrayNavigationState extends State<TrayNavigation>
   // 构建窗口控制按钮
   Widget _buildWindowControls(BuildContext context) {
     // 只在桌面平台显示窗口控制按钮
-    if (kIsWeb || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return const SizedBox.shrink();
     }
 
@@ -240,7 +274,10 @@ class _TrayNavigationState extends State<TrayNavigation>
         _buildWindowButton(
           context,
           icon: Icons.minimize,
-          onPressed: () => appWindow.minimize(),
+          onPressed: () {
+            _saveWindowSizeIfEnabled(context);
+            appWindow.minimize();
+          },
           tooltip: '最小化',
           useNavigationStyle: true,
         ),
@@ -248,7 +285,10 @@ class _TrayNavigationState extends State<TrayNavigation>
         _buildWindowButton(
           context,
           icon: Icons.fullscreen,
-          onPressed: () => appWindow.maximizeOrRestore(),
+          onPressed: () {
+            _saveWindowSizeIfEnabled(context);
+            appWindow.maximizeOrRestore();
+          },
           tooltip: '最大化/还原',
           useNavigationStyle: true,
         ),
@@ -256,7 +296,12 @@ class _TrayNavigationState extends State<TrayNavigation>
         _buildWindowButton(
           context,
           icon: Icons.power_settings_new,
-          onPressed: () => appWindow.close(),
+          onPressed: () async {
+            // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
+            final windowManager = WindowManagerService();
+            await windowManager.saveWindowStateOnExit();
+            appWindow.close();
+          },
           tooltip: '关闭',
           isCloseButton: true,
           useNavigationStyle: true,

@@ -12,94 +12,15 @@ class WindowManagerService {
   WindowManagerService._internal();
 
   UserPreferencesProvider? _userPreferencesProvider;
-  Timer? _saveTimer;
-  Size? _lastSize;
-  Offset? _lastPosition;
-  bool _isMaximized = false;
-  
-  /// 防抖延迟时间（毫秒）
-  static const int _debounceDelay = 500;
 
   /// 初始化窗口管理服务
   void initialize(UserPreferencesProvider userPreferencesProvider) {
     _userPreferencesProvider = userPreferencesProvider;
-    
-    // 只在桌面平台初始化
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      _startListening();
-    }
   }
 
-  /// 开始监听窗口大小变化
-  void _startListening() {
-    // 使用定时器定期检查窗口大小变化
-    Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (_userPreferencesProvider?.isInitialized != true) return;
-      
-      try {
-        final currentSize = appWindow.size;
-        final currentPosition = appWindow.position;
-        final currentMaximized = appWindow.isMaximized;
-        
-        // 检查窗口状态是否发生变化
-        if (_lastSize != currentSize || _lastPosition != currentPosition || _isMaximized != currentMaximized) {
-          _lastSize = currentSize;
-          _lastPosition = currentPosition;
-          _isMaximized = currentMaximized;
-          
-          // 防抖处理，避免频繁保存
-          _scheduleAutoSave(currentSize, currentPosition, currentMaximized);
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('检查窗口大小变化时出错: $e');
-        }
-      }
-    });
-  }
 
-  /// 计划自动保存
-  void _scheduleAutoSave(Size size, Offset position, bool isMaximized) {
-    // 取消之前的定时器
-    _saveTimer?.cancel();
-    
-    // 设置新的定时器
-    _saveTimer = Timer(const Duration(milliseconds: _debounceDelay), () {
-      _saveWindowSize(size, position, isMaximized);
-    });
-  }
 
-  /// 保存窗口大小和位置
-  void _saveWindowSize(Size size, Offset position, bool isMaximized) {
-    if (_userPreferencesProvider == null || !_userPreferencesProvider!.isInitialized) {
-      return;
-    }
-    
-    // 检查是否启用了自动保存
-    if (!_userPreferencesProvider!.layout.autoSaveWindowSize) {
-      return;
-    }
-    
-    try {
-      _userPreferencesProvider!.updateWindowSize(
-        width: size.width,
-        height: size.height,
-        isMaximized: isMaximized,
-        x: position.dx,
-        y: position.dy,
-      );
-      
-      if (kDebugMode) {
-        debugPrint('窗口大小和位置已保存: ${size.width}x${size.height} at (${position.dx}, ${position.dy}), 最大化: $isMaximized');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('保存窗口大小和位置失败: $e');
-      }
-    }
-  }
-
-  /// 应用保存的窗口大小和位置
+  /// 应用保存的窗口大小（不控制位置，让系统决定）
   void applyWindowSize() {
     if (_userPreferencesProvider == null || !_userPreferencesProvider!.isInitialized) {
       return;
@@ -109,32 +30,22 @@ class WindowManagerService {
       try {
         final layout = _userPreferencesProvider!.layout;
         
-        // 设置窗口大小
-        final size = Size(layout.windowWidth, layout.windowHeight);
-        appWindow.size = size;
-        
         // 设置最小窗口大小
         appWindow.minSize = Size(layout.minWindowWidth, layout.minWindowHeight);
-        
-        // 设置窗口位置（如果启用了记住位置且不是-1的话）
-        if (layout.rememberWindowPosition && layout.windowX != -1 && layout.windowY != -1) {
-          final position = Offset(layout.windowX, layout.windowY);
-          appWindow.position = position;
-          _lastPosition = position;
-        }
         
         // 如果启用了记住最大化状态并且之前是最大化的，则最大化窗口
         if (layout.rememberMaximizedState && layout.isMaximized) {
           appWindow.maximize();
+        } else {
+          // 只有在非最大化状态下才设置窗口大小
+          final size = Size(layout.windowWidth, layout.windowHeight);
+          appWindow.size = size;
         }
-        
-        // 记录当前状态
-        _lastSize = size;
-        _isMaximized = layout.isMaximized;
         
         if (kDebugMode) {
-          debugPrint('窗口大小和位置已应用: ${size.width}x${size.height} at (${layout.windowX}, ${layout.windowY}), 最大化: ${layout.isMaximized}');
+          debugPrint('窗口大小已应用: ${layout.windowWidth}x${layout.windowHeight}, 位置由系统决定, 最大化: ${layout.isMaximized}');
         }
+        
       } catch (e) {
         if (kDebugMode) {
           debugPrint('应用窗口大小失败: $e');
@@ -143,34 +54,59 @@ class WindowManagerService {
     }
   }
 
-  /// 手动保存当前窗口大小
-  void saveCurrentWindowSize() {
+  /// 手动保存当前窗口大小（不保存位置）
+  Future<bool> saveCurrentWindowSize() async {
+    if (_userPreferencesProvider == null || !_userPreferencesProvider!.isInitialized) {
+      return false;
+    }
+    
     if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       try {
         final currentSize = appWindow.size;
-        final currentPosition = appWindow.position;
         final currentMaximized = appWindow.isMaximized;
-        _saveWindowSize(currentSize, currentPosition, currentMaximized);
+        
+        // 只保存窗口大小，不保存位置
+        final success = await _userPreferencesProvider!.updateWindowSize(
+          width: currentSize.width,
+          height: currentSize.height,
+          isMaximized: currentMaximized,
+        );
+        
+        if (kDebugMode) {
+          if (success) {
+            debugPrint('窗口大小已保存: ${currentSize.width}x${currentSize.height}, 最大化: $currentMaximized (位置由系统决定)');
+          } else {
+            debugPrint('窗口大小保存失败');
+          }
+        }
+        
+        return success;
       } catch (e) {
         if (kDebugMode) {
           debugPrint('手动保存窗口大小失败: $e');
         }
+        return false;
       }
     }
+    
+    return false;
   }
 
   /// 重置窗口大小为默认值
-  void resetToDefaultSize() {
+  Future<void> resetToDefaultSize() async {
     if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       try {
         const defaultSize = Size(1280, 720);
         appWindow.size = defaultSize;
         appWindow.minSize = const Size(800, 600);
         
-        // 如果启用了自动保存，则保存重置后的大小
-        if (_userPreferencesProvider?.layout.autoSaveWindowSize == true) {
-          final currentPosition = appWindow.position;
-          _saveWindowSize(defaultSize, currentPosition, false);
+        // 保存重置后的大小（不保存位置）
+        if (_userPreferencesProvider != null) {
+          await _userPreferencesProvider!.updateWindowSize(
+            width: defaultSize.width,
+            height: defaultSize.height,
+            isMaximized: false,
+          );
         }
         
         if (kDebugMode) {
@@ -184,10 +120,85 @@ class WindowManagerService {
     }
   }
 
+  /// 退出时保存窗口状态（确保完整的读取-保存流程）
+  Future<bool> saveWindowStateOnExit() async {
+    if (_userPreferencesProvider == null || !_userPreferencesProvider!.isInitialized) {
+      return false;
+    }
+    
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      try {
+        // 1. 读取当前窗口状态
+        final currentSize = appWindow.size;
+        final currentMaximized = appWindow.isMaximized;
+        final layout = _userPreferencesProvider!.layout;
+        
+        if (kDebugMode) {
+          debugPrint('退出时读取窗口状态: ${currentSize.width}x${currentSize.height}, 最大化: $currentMaximized');
+        }
+        
+        // 2. 检查是否启用了自动保存窗口大小
+        if (!layout.autoSaveWindowSize) {
+          if (kDebugMode) {
+            debugPrint('自动保存窗口大小已禁用，跳过保存');
+          }
+          return true; // 不保存但返回成功
+        }
+        
+        // 3. 根据设置决定是否保存最大化状态
+        bool shouldSaveMaximizedState = false;
+        if (currentMaximized && layout.rememberMaximizedState) {
+          // 如果当前是最大化状态且开启了记住最大化状态设置，则保存最大化状态
+          shouldSaveMaximizedState = true;
+          if (kDebugMode) {
+            debugPrint('保存最大化状态：已开启记住最大化状态设置');
+          }
+        } else if (!currentMaximized) {
+          // 如果当前不是最大化状态，保存窗口大小
+          shouldSaveMaximizedState = false;
+          if (kDebugMode) {
+            debugPrint('保存窗口大小：当前非最大化状态');
+          }
+        } else {
+          // 当前是最大化状态但未开启记住最大化状态设置，不保存
+          if (kDebugMode) {
+            debugPrint('跳过保存：最大化状态但未开启记住最大化状态设置');
+          }
+          return true;
+        }
+        
+        // 4. 强制立即保存到数据库（绕过防抖机制）
+        final success = await _userPreferencesProvider!.updateWindowSize(
+          width: currentSize.width,
+          height: currentSize.height,
+          isMaximized: shouldSaveMaximizedState ? currentMaximized : false,
+        );
+        
+        // 5. 确保所有待处理的更改都已保存
+        await _userPreferencesProvider!.flushPendingChanges();
+        
+        if (kDebugMode) {
+          if (success) {
+            debugPrint('退出时窗口状态保存成功');
+          } else {
+            debugPrint('退出时窗口状态保存失败');
+          }
+        }
+        
+        return success;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('退出时保存窗口状态异常: $e');
+        }
+        return false;
+      }
+    }
+    
+    return true; // 非桌面平台返回成功
+  }
+
   /// 销毁服务
   void dispose() {
-    _saveTimer?.cancel();
-    _saveTimer = null;
     _userPreferencesProvider = null;
   }
 }

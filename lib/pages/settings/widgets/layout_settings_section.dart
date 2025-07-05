@@ -177,14 +177,7 @@ class LayoutSettingsSection extends StatelessWidget {
                 onChanged: (value) => provider.updateLayout(rememberMaximizedState: value),
               ),
               
-              // 记住窗口位置
-              SwitchListTile(
-                title: Text('记住窗口位置'),
-                subtitle: Text('启动时恢复窗口的位置，关闭后窗口将在系统默认位置打开'),
-                value: layout.rememberWindowPosition,
-                onChanged: (value) => provider.updateLayout(rememberWindowPosition: value),
-              ),
-              
+
               // 自定义窗口大小
               ExpansionTile(
                 title: Text('自定义窗口大小'),
@@ -389,12 +382,9 @@ class LayoutSettingsSection extends StatelessWidget {
                 windowHeight: 720.0,
               );
               Navigator.of(context).pop();
-              if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-                WindowManagerService().resetToDefaultSize();
-              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('窗口大小已重置为默认值'),
+                  content: Text('窗口大小设置已重置为默认值'),
                   backgroundColor: Colors.green,
                 ),
               );

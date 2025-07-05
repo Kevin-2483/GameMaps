@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
-import '../../pages/svg_test_page.dart';
+import '../../pages/test/svg_test_page.dart';
 
 class SvgTestPageModule extends PageModule {
   @override

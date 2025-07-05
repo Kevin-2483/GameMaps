@@ -72,7 +72,7 @@ class AppRouter {
     // registry.register(ConfigEditorModule());
     // registry.register(FullscreenTestPageModule());
     registry.register(VfsFileManagerPageModule());
-    registry.register(SvgTestPageModule());
+    // registry.register(SvgTestPageModule());
 
     // // 注册演示页面模块
     // registry.register(MarkdownRendererDemoPageModule());
