@@ -2,10 +2,11 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
 import '../models/map_item_summary.dart';
+import 'database_path_service.dart';
 
 /// 地图数据库服务
 class MapDatabaseService {
@@ -27,7 +28,7 @@ class MapDatabaseService {
 
   /// 初始化数据库
   Future<Database> _initDatabase() async {
-    final String path = join(await getDatabasesPath(), _databaseName);
+    final String path = await DatabasePathService().getDatabasePath(_databaseName);
     return await openDatabase(
       path,
       version: 1,

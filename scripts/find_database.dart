@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   // 初始化 sqflite FFI
@@ -8,8 +9,9 @@ void main() async {
   databaseFactory = databaseFactoryFfi;
 
   try {
-    // 获取数据库路径
-    final databasesPath = await getDatabasesPath();
+    // 获取自定义数据库路径
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final databasesPath = join(appDocDir.path, 'r6box', 'databases');
     final dbPath = join(databasesPath, 'maps.db');
 
     print('数据库路径: $dbPath');

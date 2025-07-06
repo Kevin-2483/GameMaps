@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 import 'vfs_protocol.dart';
+import '../database_path_service.dart';
 
 /// 虚拟文件系统存储服务
 /// 基于 SQLite/IndexedDB 实现底层数据存储
@@ -26,7 +27,7 @@ class VfsStorageService {
 
   /// 初始化数据库
   Future<Database> _initDatabase() async {
-    final String path = join(await getDatabasesPath(), _databaseName);
+    final String path = await DatabasePathService().getDatabasePath(_databaseName);
     return await openDatabase(
       path,
       version: _databaseVersion,

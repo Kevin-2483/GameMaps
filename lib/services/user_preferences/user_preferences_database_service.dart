@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../models/user_preferences.dart';
+import '../database_path_service.dart';
 
 /// 用户偏好设置数据库服务
 /// 使用SQLite数据库替代SharedPreferences以提升性能
@@ -28,7 +29,7 @@ class UserPreferencesDatabaseService {
 
   /// 初始化数据库
   Future<Database> _initDatabase() async {
-    final String path = join(await getDatabasesPath(), _databaseName);
+    final String path = await DatabasePathService().getDatabasePath(_databaseName);
     return await openDatabase(
       path,
       version: _databaseVersion,

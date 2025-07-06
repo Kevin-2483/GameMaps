@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../features/page_registry.dart';
 import '../../services/window_manager_service.dart';
 import '../../providers/user_preferences_provider.dart';
+import '../../services/cleanup_service.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
@@ -102,9 +103,15 @@ class _TrayNavigationState extends State<TrayNavigation>
                       context,
                       icon: Icons.power_settings_new,
                       onPressed: () async {
+                        // 执行清理操作
+                        final cleanupService = CleanupService();
+                        await cleanupService.performCleanup();
+                        
                         // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
                         final windowManager = WindowManagerService();
                         await windowManager.saveWindowStateOnExit();
+                        
+                        // 关闭应用
                         appWindow.close();
                       },
                       tooltip: '关闭',
@@ -297,9 +304,15 @@ class _TrayNavigationState extends State<TrayNavigation>
           context,
           icon: Icons.power_settings_new,
           onPressed: () async {
+            // 执行清理操作
+            final cleanupService = CleanupService();
+            await cleanupService.performCleanup();
+            
             // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
             final windowManager = WindowManagerService();
             await windowManager.saveWindowStateOnExit();
+            
+            // 关闭应用
             appWindow.close();
           },
           tooltip: '关闭',

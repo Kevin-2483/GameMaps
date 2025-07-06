@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// 数据库导出工具
 /// 将桌面版数据库数据导出为Web平台可用的JSON格式
@@ -12,7 +13,9 @@ class DatabaseExporter {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    final databasesPath = await getDatabasesPath();
+    // 获取自定义数据库路径
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final databasesPath = join(appDocDir.path, 'r6box', 'databases');
 
     // 数据库文件路径
     final mapsDbPath = join(databasesPath, 'maps.db');

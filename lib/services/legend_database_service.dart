@@ -1,10 +1,11 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/legend_item.dart';
+import 'database_path_service.dart';
 
 class LegendDatabaseService {
   static Database? _database;
@@ -20,8 +21,7 @@ class LegendDatabaseService {
   }
 
   Future<Database> _initDatabase() async {
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, _databaseName);
+    final path = await DatabasePathService().getDatabasePath(_databaseName);
 
     return await openDatabase(
       path,

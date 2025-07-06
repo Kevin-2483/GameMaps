@@ -1,12 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 /// IO平台（移动端/桌面端）的VFS平台接口实现
 class VfsPlatformIO {
-  /// 获取临时目录
+  /// 获取临时目录（使用应用运行目录）
   static Future<Directory> getTempDirectory() async {
-    return await getTemporaryDirectory();
+    // 获取应用文档目录作为基础目录
+    final appDocDir = await getApplicationDocumentsDirectory();
+    
+    // 在应用文档目录下创建temp子目录
+    final tempDir = Directory(path.join(appDocDir.path, 'r6box'));
+    
+    // 确保目录存在
+    if (!await tempDir.exists()) {
+      await tempDir.create(recursive: true);
+      debugPrint('🔗 VfsPlatformIO: 创建应用临时目录 - ${tempDir.path}');
+    }
+    
+    return tempDir;
   }
 
   /// 创建目录
