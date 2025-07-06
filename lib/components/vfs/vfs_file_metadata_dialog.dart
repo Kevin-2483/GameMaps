@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 
@@ -38,7 +38,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
@@ -123,7 +123,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                  top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
                 ),
               ),
               child: Row(
@@ -166,7 +166,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+            border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -192,7 +192,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
             child: Text(
               '$label:',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w500,
               ),
             ),

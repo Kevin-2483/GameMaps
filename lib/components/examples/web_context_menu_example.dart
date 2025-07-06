@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../web/web_context_menu_handler.dart';
 
 /// Web兼容的右键菜单组件示例

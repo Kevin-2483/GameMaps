@@ -1,4 +1,4 @@
-/*
+﻿/*
 🎯 R6BOX 智能动态显示系统控制指南 - 解决图标闪烁问题
 
 📋 【核心统一参数】:
@@ -464,7 +464,7 @@ class _HomePageContentState extends State<_HomePageContent>
                     Shadow(
                       offset: const Offset(2, 2),
                       blurRadius: 4,
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                     ),
                   ],
                 ),
@@ -1049,7 +1049,7 @@ class RippleBackgroundPainter extends CustomPainter {
         final opacity = (fadeOut * (1.0 - progress * 0.3)).clamp(0.0, 1.0);
 
         if (opacity > 0.02) {
-          final finalColor = color.withOpacity(opacity);
+          final finalColor = color.withValues(alpha: opacity);
           final paint = Paint()
             ..color = finalColor
             ..style = PaintingStyle.stroke
@@ -1067,8 +1067,8 @@ class RippleBackgroundPainter extends CustomPainter {
     final glowGradient = RadialGradient(
       radius: 0.5,
       colors: [
-        colorScheme.primary.withOpacity(glowOpacity),
-        colorScheme.primary.withOpacity(glowOpacity * 0.5),
+        colorScheme.primary.withValues(alpha: glowOpacity),
+        colorScheme.primary.withValues(alpha: glowOpacity * 0.5),
         Colors.transparent,
       ],
     );
@@ -1080,7 +1080,7 @@ class RippleBackgroundPainter extends CustomPainter {
     canvas.drawCircle(center, glowRadius, glowPaint);
 
     final centerPaint = Paint()
-      ..color = colorScheme.primary.withOpacity(glowOpacity)
+      ..color = colorScheme.primary.withValues(alpha: glowOpacity)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, 3, centerPaint);
   }
@@ -1430,15 +1430,15 @@ class InfiniteGridBackgroundPainter extends CustomPainter {
       // 🌙 暗色主题：从主色调到更暗的色调的微妙渐变
       gradientColors = [
         colorScheme.surface,
-        colorScheme.surface.withOpacity(0.7),
-        colorScheme.onSurface.withOpacity(0.03), // 非常微妙的覆盖
+        colorScheme.surface.withValues(alpha: 0.7),
+        colorScheme.onSurface.withValues(alpha: 0.03), // 非常微妙的覆盖
       ];
     } else {
       // ☀️ 亮色主题：从主色调到更亮的色调的微妙渐变
       gradientColors = [
         colorScheme.surface,
-        colorScheme.surface.withOpacity(0.8),
-        colorScheme.primary.withOpacity(0.02), // 非常微妙的主题色覆盖
+        colorScheme.surface.withValues(alpha: 0.8),
+        colorScheme.primary.withValues(alpha: 0.02), // 非常微妙的主题色覆盖
       ];
     }
 

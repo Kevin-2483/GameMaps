@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -395,8 +395,8 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
                   : const Color(0xFFFAFAFA),
               border: Border.all(
                 color: _effectiveIsDarkTheme
-                    ? Colors.grey.shade700.withOpacity(0.3)
-                    : Theme.of(context).dividerColor.withOpacity(0.2),
+                    ? Colors.grey.shade700.withValues(alpha: 0.3)
+                    : Theme.of(context).dividerColor.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -413,7 +413,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(

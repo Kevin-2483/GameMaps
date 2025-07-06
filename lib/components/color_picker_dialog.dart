@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// 颜色选择操作类型
@@ -351,7 +351,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     _currentHsv.alpha,
                     (value) => _updateColor(_currentHsv.withAlpha(value)),
                     Colors.transparent,
-                    _currentColor.withOpacity(1.0),
+                    _currentColor.withValues(alpha: 1.0),
                   ),
                 ],
 
@@ -416,7 +416,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               _currentHsv.alpha,
               (value) => _updateColor(_currentHsv.withAlpha(value)),
               Colors.transparent,
-              _currentColor.withOpacity(1.0),
+              _currentColor.withValues(alpha: 1.0),
             ),
           ],
 
@@ -447,7 +447,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           border: Border.all(color: Colors.grey.shade300),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -475,7 +475,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       (_currentColor.computeLuminance() > 0.5
                               ? Colors.black
                               : Colors.white)
-                          .withOpacity(0.7),
+                          .withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),

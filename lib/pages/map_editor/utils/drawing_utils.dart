@@ -1,9 +1,9 @@
-// drawing_utils.dart - 绘制工具函数库
+﻿// drawing_utils.dart - 绘制工具函数库
 // 从 map_canvas.dart 中提取的通用绘制工具函数
 
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
+// import 'dart:ui' as ui;
 import '../../../models/map_layer.dart';
 
 /// ================= 路径创建工具函数 =================
@@ -680,7 +680,7 @@ void drawImageEmptyPlaceholder(Canvas canvas, Rect rect, BoxFit fit) {
   final center = rect.center;
 
   final iconPaint = Paint()
-    ..color = Colors.grey.withOpacity(0.5)
+    ..color = Colors.grey.withValues(alpha: 0.5)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0;
 

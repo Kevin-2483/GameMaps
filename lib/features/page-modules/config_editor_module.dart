@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/config/config_editor_page.dart';
-import '../../config/build_config.dart';
-import '../../config/config_manager.dart';
+// import '../../config/build_config.dart';
+// import '../../config/config_manager.dart';
 
 /// 配置编辑器模块
 class ConfigEditorModule extends PageModule {

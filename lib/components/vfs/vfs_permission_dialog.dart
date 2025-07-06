@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_permission_system.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
@@ -120,7 +120,7 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   border: Border.all(color: Colors.orange),
                   borderRadius: BorderRadius.circular(8),
                 ),

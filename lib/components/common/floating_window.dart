@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// 调整大小手柄类型
@@ -201,7 +201,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
             widget.shadows ??
             [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
-import '../../../services/window_manager_service.dart';
+// import '../../../services/window_manager_service.dart';
 
 class LayoutSettingsSection extends StatelessWidget {
   final UserPreferences preferences;

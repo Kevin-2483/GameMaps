@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/map_item.dart';
 import '../models/legend_item.dart';
-import '../services/map_database_service.dart';
+// import '../services/map_database_service.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
 

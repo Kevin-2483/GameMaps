@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../models/legend_item.dart';
 import '../virtual_file_system/virtual_file_system.dart';
-import '../virtual_file_system/vfs_database_initializer.dart';
+// import '../virtual_file_system/vfs_database_initializer.dart';
 
 /// VFS图例元数据
 class VfsLegendMeta {

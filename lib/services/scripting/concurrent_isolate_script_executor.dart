@@ -240,7 +240,7 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       if (_externalFunctionHandlers.containsKey(call.functionName)) {
         final handler = _externalFunctionHandlers[call.functionName]!;
         // 统一参数处理，保证为List
-        final args = call.arguments is List ? call.arguments : [call.arguments];
+        final args = call.arguments;
         final result = Function.apply(handler, args);
 
         // 发送响应

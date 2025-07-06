@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -13,10 +13,10 @@ import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/clipboard_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
-import '../../components/web/web_readonly_components.dart';
+// import '../../components/web/web_readonly_components.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../utils/extension_settings_managers.dart';
-import '../../config/config_manager.dart';
+// import '../../config/config_manager.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
@@ -2898,8 +2898,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
         onTap: onPressed,
         borderRadius: BorderRadius.circular(12),
         hoverColor: isCloseButton
-            ? Colors.red.withOpacity(0.1)
-            : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            ? Colors.red.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
         child: Tooltip(
           message: tooltip,
           decoration: BoxDecoration(
@@ -3799,7 +3799,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.surface.withOpacity(0.9),
+                    ).colorScheme.surface.withValues(alpha: 0.9),
                     border: _isSidebarCollapsed
                         ? null
                         : Border(
@@ -4270,10 +4270,10 @@ class _ReactiveScriptCreateDialogState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.primaryContainer.withOpacity(0.3),
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../models/sticky_note.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/color_picker_dialog.dart';
@@ -145,7 +145,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         border: isSelected
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
             : Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                 width: 1,
               ),
       ),
@@ -291,7 +291,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.outline.withOpacity(0.3),
+                        ).colorScheme.outline.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -324,7 +324,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       height: 32,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -755,7 +755,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(

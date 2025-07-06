@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
@@ -180,12 +180,12 @@ class ZIndexInspector extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.primary.withOpacity(0.1),
+                                ).colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(2),
                                 border: Border.all(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.primary.withOpacity(0.3),
+                                  ).colorScheme.primary.withValues(alpha: 0.3),
                                   width: 0.5,
                                 ),
                               ),
@@ -568,9 +568,9 @@ class ZIndexInspector extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(4),
-          color: Colors.blue.withOpacity(0.1),
+          color: Colors.blue.withValues(alpha: 0.1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

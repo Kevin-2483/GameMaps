@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
-import 'dart:typed_data';
+﻿import 'package:flutter/material.dart';
+// import 'dart:ui' as ui;
+// import 'dart:typed_data';
 import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../utils/drawing_utils.dart';
@@ -181,12 +181,12 @@ class HighlightRenderer {
 
     // 外边框画笔（白色边框）
     final borderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     // 内部填充画笔（蓝色）
     final fillPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.2)
+      ..color = Colors.blue.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     // 使用动态大小计算圆形半径

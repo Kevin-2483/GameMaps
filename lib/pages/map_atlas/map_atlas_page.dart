@@ -15,7 +15,7 @@ import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/virtual_file_system/vfs_storage_service.dart';
 import '../../mixins/map_localization_mixin.dart';
-import '../../components/common/config_aware_widgets.dart';
+// import '../../components/common/config_aware_widgets.dart';
 import '../../config/config_manager.dart';
 import '../map_editor/map_editor_page.dart';
 import '../../utils/filename_sanitizer.dart';

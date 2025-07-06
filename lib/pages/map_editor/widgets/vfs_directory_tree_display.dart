@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../services/legend_vfs/vfs_directory_tree.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart';
 import '../../../services/legend_cache_manager.dart';
@@ -229,7 +229,7 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
                   // 如果是禁用状态（被其他组选中），则使用特殊样式
                   fillColor: node.isDisabled
                       ? MaterialStateProperty.resolveWith<Color>(
-                          (states) => Colors.grey.withOpacity(0.6),
+                          (states) => Colors.grey.withValues(alpha: 0.6),
                         )
                       : null,
                 ),

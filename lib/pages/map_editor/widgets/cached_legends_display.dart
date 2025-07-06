@@ -293,7 +293,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               color: color,
             ),
           ),
-          Expanded(child: Divider(indent: 8, color: color.withOpacity(0.3))),
+          Expanded(child: Divider(indent: 8, color: color.withValues(alpha: 0.3))),
         ],
       ),
     );
@@ -307,8 +307,8 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   ]) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
-      color: backgroundColor?.withOpacity(
-        Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0,
+      color: backgroundColor?.withValues(
+        alpha: Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0,
       ),
       child: ExpansionTile(
         title: Text(
@@ -389,7 +389,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.primaryContainer.withOpacity(0.9),
+                ).colorScheme.primaryContainer.withValues(alpha: 0.9),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary,
                   width: 2,
@@ -397,7 +397,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -445,9 +445,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
           ),
           childWhenDragging: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -460,11 +460,11 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -473,7 +473,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     size: 12,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -483,7 +483,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     fontSize: 10,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -497,7 +497,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -515,7 +515,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.outline.withOpacity(0.5),
+                        ).colorScheme.outline.withValues(alpha: 0.5),
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),

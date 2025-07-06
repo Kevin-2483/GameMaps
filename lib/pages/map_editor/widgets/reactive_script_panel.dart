@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../../models/script_data.dart';
@@ -32,7 +32,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -51,14 +51,14 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -170,9 +170,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -351,11 +351,11 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         border: Border.all(
           color: isSelected
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           width: isSelected ? 2 : 1,
         ),
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
       ),
       child: InkWell(
@@ -453,7 +453,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _getStatusColor(status).withOpacity(0.2),
+        color: _getStatusColor(status).withValues(alpha: 0.2),
         border: Border.all(color: _getStatusColor(status), width: 2),
       ),
       child: Center(
@@ -562,8 +562,8 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: result.success
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: result.success ? Colors.green : Colors.red,
@@ -701,7 +701,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         icon: Icon(icon, size: 12),
         label: Text(label),
         style: FilledButton.styleFrom(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           foregroundColor: color,
           textStyle: const TextStyle(fontSize: 9),
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

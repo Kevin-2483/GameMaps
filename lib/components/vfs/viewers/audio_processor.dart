@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/config/all.dart';
 import 'package:markdown_widget/widget/span_node.dart';

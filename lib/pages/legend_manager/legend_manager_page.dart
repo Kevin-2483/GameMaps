@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,7 +8,7 @@ import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/legend_item.dart';
 import '../../services/legend_vfs/legend_vfs_service.dart';
-import '../../components/common/config_aware_widgets.dart';
+// import '../../components/common/config_aware_widgets.dart';
 import '../../components/common/center_point_selector.dart';
 import '../../components/common/draggable_title_bar.dart';
 
@@ -686,7 +686,7 @@ class _FolderCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           ),
           child: Row(
             children: [
@@ -695,7 +695,7 @@ class _FolderCard extends StatelessWidget {
                 flex: 1,
                 child: Container(
                   height: double.infinity,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   child: const Icon(
                     Icons.folder,
                     size: 48,

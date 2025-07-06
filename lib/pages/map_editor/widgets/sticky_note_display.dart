@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
@@ -109,7 +109,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
             : null, // 未选中时不渲染边框
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -195,7 +195,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
           // 当选中便签且不在预览模式时，添加虚线边框提示可绘制区域
           border: widget.isSelected && !widget.isPreviewMode
               ? Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   width: 1,
                   style: BorderStyle.solid,
                 )
@@ -224,7 +224,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.1),
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -235,7 +235,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
                         size: 32,
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.6),
+                        ).colorScheme.primary.withValues(alpha: 0.6),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -244,7 +244,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
                           fontSize: 12,
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.8),
+                          ).colorScheme.primary.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../services/audio/audio_player_service.dart';
 
@@ -217,10 +217,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withOpacity(0.3),
+            ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.5),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -255,10 +255,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.5),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -289,7 +289,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             decoration: BoxDecoration(
               color:
                   widget.config.accentColor ??
-                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -323,7 +323,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,
-                      ).textTheme.bodySmall?.color?.withOpacity(0.7),
+                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -346,7 +346,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: AnimatedRotation(
@@ -392,7 +392,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         children: [
           // 分隔线
           Divider(
-            color: Theme.of(context).dividerColor.withOpacity(0.3),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
             height: 1,
           ),
 
@@ -428,7 +428,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodySmall?.color?.withOpacity(0.6),
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -448,7 +448,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
         inactiveTrackColor: Theme.of(
           context,
-        ).colorScheme.outline.withOpacity(0.3),
+        ).colorScheme.outline.withValues(alpha: 0.3),
         thumbColor:
             widget.config.accentColor ?? Theme.of(context).colorScheme.primary,
       ),
@@ -508,7 +508,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
           icon: Icon(
             Icons.speed,
             size: 20,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
           tooltip: '播放速度',
           onSelected: (speed) => _audioService.setPlaybackRate(speed),
@@ -562,13 +562,13 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(
           icon,
           size: 16,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -580,7 +580,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       icon: Icon(
         _getVolumeIcon(),
         size: 20,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
       ),
       tooltip: '音量控制',
       itemBuilder: (context) => [

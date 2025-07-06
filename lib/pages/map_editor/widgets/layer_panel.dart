@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/background_image_settings_dialog.dart';
@@ -289,7 +289,7 @@ class _LayerPanelState extends State<LayerPanel> {
         border: Border.all(
           color: isGroupSelected
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           width: isGroupSelected ? 2 : 1,
         ),
         color: isGroupSelected
@@ -363,7 +363,7 @@ class _LayerPanelState extends State<LayerPanel> {
         ),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
       ),
@@ -630,7 +630,7 @@ class _LayerPanelState extends State<LayerPanel> {
                     height: 1,
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.3),
+                    ).colorScheme.outline.withValues(alpha: 0.3),
                   ),
               ],
             ),
@@ -987,7 +987,7 @@ class _LayerPanelState extends State<LayerPanel> {
         isLinked ? Icons.link : Icons.link_off,
         size: 16,
         color: isLastLayer
-            ? Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)
+            ? Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
             : (isLinked
                   ? Colors.blue
                   : Theme.of(context).colorScheme.onSurfaceVariant),
@@ -1489,7 +1489,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 ? Theme.of(
                     context,
                   ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -1543,7 +1543,7 @@ class _LayerPanelState extends State<LayerPanel> {
                 ? Theme.of(
                     context,
                   ).colorScheme.secondary.withAlpha((0.3 * 255).toInt())
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -1641,7 +1641,7 @@ class _LayerPanelState extends State<LayerPanel> {
       height: 32,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,

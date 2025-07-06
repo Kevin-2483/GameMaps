@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../services/audio/audio_player_service.dart';
 
 /// 音频播放器组件
@@ -189,7 +189,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
           ],
         ),
       ),
@@ -328,7 +328,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             child: GestureDetector(
               onTap: () => setState(() => _showPlaylistPanel = false),
               child: Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 child: Center(
                   child: GestureDetector(
                     onTap: () {},
@@ -467,7 +467,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -487,8 +487,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         borderRadius: BorderRadius.circular(16),
         gradient: RadialGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -520,7 +520,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             Text(
               displayArtist,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -530,7 +530,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             Text(
               displayAlbum,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
@@ -761,7 +761,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.5),
         border: Border(
           top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),

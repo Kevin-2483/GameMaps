@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import '../services/reactive_version/reactive_version_manager.dart';
+// import 'package:flutter/foundation.dart';
+// import '../services/reactive_version/reactive_version_manager.dart';
 import '../services/reactive_version/reactive_version_adapter.dart';
 import '../data/map_data_bloc.dart';
-import '../data/map_data_state.dart';
+// import '../data/map_data_state.dart';
 import '../data/map_editor_integration_adapter.dart';
 import '../data/new_reactive_script_manager.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
-import '../models/map_item.dart';
+// import '../models/map_item.dart';
 
 /// 响应式版本管理集成示例
 /// 展示如何在地图编辑器中使用新的版本管理系统

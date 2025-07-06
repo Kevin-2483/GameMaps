@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
 import 'dart:typed_data';
@@ -153,12 +153,12 @@ class _ExternalResourcesPageContentState
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.primaryContainer.withOpacity(0.3),
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.2),
+                    ).colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(
@@ -191,7 +191,7 @@ class _ExternalResourcesPageContentState
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -260,7 +260,7 @@ class _ExternalResourcesPageContentState
                               ?.copyWith(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                         ),
                       ],
@@ -289,7 +289,7 @@ class _ExternalResourcesPageContentState
                               hintStyle: TextStyle(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.4),
+                                ).colorScheme.onSurface.withValues(alpha: 0.4),
                               ),
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
@@ -309,8 +309,8 @@ class _ExternalResourcesPageContentState
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: _isValidTargetPath(mapping.targetPath)
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.red.withOpacity(0.1),
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Icon(
@@ -338,7 +338,7 @@ class _ExternalResourcesPageContentState
                         style: IconButton.styleFrom(
                           backgroundColor: Theme.of(
                             context,
-                          ).colorScheme.primaryContainer.withOpacity(0.3),
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                           foregroundColor: Theme.of(
                             context,
                           ).colorScheme.primary,
@@ -535,10 +535,10 @@ class _ExternalResourcesPageContentState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withOpacity(0.3),
+                ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: Text(
@@ -625,10 +625,10 @@ class _ExternalResourcesPageContentState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withOpacity(0.5),
+                ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(

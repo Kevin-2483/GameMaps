@@ -1,4 +1,4 @@
-import '../../../services/legend_session_manager.dart';
+﻿import '../../../services/legend_session_manager.dart';
 import '../../../services/legend_cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
@@ -468,7 +468,7 @@ class MapCanvasState extends State<MapCanvas> {
                               color: isHovering
                                   ? Theme.of(
                                       context,
-                                    ).colorScheme.primary.withOpacity(0.1)
+                                    ).colorScheme.primary.withValues(alpha: 0.1)
                                   : Colors.transparent,
                               child: isHovering
                                   ? Center(
@@ -495,7 +495,7 @@ class MapCanvasState extends State<MapCanvas> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withOpacity(0.3),
+                                                  .withValues(alpha: 0.3),
                                               blurRadius: 8,
                                               offset: const Offset(0, 2),
                                             ),
@@ -929,7 +929,7 @@ class MapCanvasState extends State<MapCanvas> {
               width: imageSize,
               height: imageSize,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: Colors.grey),
               ),

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -1167,7 +1167,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
             Icon(
               Icons.location_on,
               size: 16,
-              color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+              color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 6),
             Text(
@@ -1176,7 +1176,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                 fontSize: 12,
                 color: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -1201,7 +1201,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           Icon(
             Icons.location_on,
             size: 16,
-            color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+            color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -1222,10 +1222,10 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -1348,18 +1348,18 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                 color: isLast
                     ? Theme.of(
                         context,
-                      ).colorScheme.primaryContainer.withOpacity(0.3)
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                     : isRoot
                     ? Theme.of(
                         context,
-                      ).colorScheme.secondaryContainer.withOpacity(0.3)
+                      ).colorScheme.secondaryContainer.withValues(alpha: 0.3)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: isLast
                     ? Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.5),
+                        ).colorScheme.primary.withValues(alpha: 0.5),
                         width: 1,
                       )
                     : null,
@@ -1372,7 +1372,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                       ? Theme.of(context).colorScheme.primary
                       : isRoot
                       ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                   fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -1389,7 +1389,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
             child: Icon(
               Icons.chevron_right,
               size: 14,
-              color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
+              color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5),
             ),
           ),
         );
@@ -2243,7 +2243,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
@@ -3085,7 +3085,7 @@ class _FileListItemState extends State<_FileListItem> {
               boxShadow: _isHovered
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                         spreadRadius: 0,
@@ -3096,7 +3096,7 @@ class _FileListItemState extends State<_FileListItem> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                         spreadRadius: 0,
@@ -3221,7 +3221,7 @@ class _FileGridItemState extends State<_FileGridItem> {
               boxShadow: _isHovered
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                         spreadRadius: 0,
@@ -3232,7 +3232,7 @@ class _FileGridItemState extends State<_FileGridItem> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                         spreadRadius: 0,

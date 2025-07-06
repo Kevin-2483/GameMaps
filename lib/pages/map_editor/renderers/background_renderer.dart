@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../models/user_preferences.dart';
 import '../utils/drawing_utils.dart';
 import 'package:provider/provider.dart';
@@ -158,13 +158,13 @@ class BackgroundRenderer {
   static void drawSelection(Canvas canvas, Rect selectionRect) {
     // 选区半透明填充
     final selectionFillPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
     canvas.drawRect(selectionRect, selectionFillPaint);
 
     // 选区边框（虚线效果）
     final selectionBorderPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.8)
+      ..color = Colors.blue.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 

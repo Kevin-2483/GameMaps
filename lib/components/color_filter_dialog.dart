@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_preferences_provider.dart';
@@ -424,9 +424,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
     final hasUserFilter =
         _layerId != null &&
         ColorFilterSessionManager().hasUserFilter(_layerId!);
-    final hasThemeFilter =
-        _layerId != null &&
-        ColorFilterSessionManager().hasThemeAdaptationFilter(_layerId!);
+    // final hasThemeFilter =
+    //     _layerId != null &&
+    //     ColorFilterSessionManager().hasThemeAdaptationFilter(_layerId!);
     final themeFilter = _layerId != null
         ? ColorFilterSessionManager().getThemeAdaptationFilter(_layerId!)
         : null;
@@ -459,10 +459,10 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -491,7 +491,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
             statusText,
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),

@@ -142,12 +142,12 @@ class _WebContextMenuDemoContentState
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primaryContainer.withOpacity(0.3),
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.5),
+                      ).colorScheme.primary.withValues(alpha: 0.5),
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -234,7 +234,7 @@ class _WebContextMenuDemoContentState
                         selected: isSelected,
                         selectedTileColor: Theme.of(
                           context,
-                        ).colorScheme.primaryContainer.withOpacity(0.3),
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                         leading: CircleAvatar(
                           backgroundColor: isSelected
                               ? Theme.of(context).colorScheme.primary

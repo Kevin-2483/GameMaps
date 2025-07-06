@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 
 /// VFS文件重命名对话框
@@ -165,9 +165,9 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant.withOpacity(0.3),
+                color: colorScheme.surfaceVariant.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                   Text(
                     '当前名称:',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -229,16 +229,16 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                       vertical: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.3),
+                        color: colorScheme.outline.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
                       _extension,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -251,7 +251,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               Text(
                 '注意: 文件扩展名 "$_extension" 将保持不变',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                   fontStyle: FontStyle.italic,
                 ),
               ),

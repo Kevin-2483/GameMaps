@@ -87,10 +87,10 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -177,8 +177,8 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             color: hasMapData ? Colors.green : Colors.orange,
             boxShadow: [
               BoxShadow(
-                color: (hasMapData ? Colors.green : Colors.orange).withOpacity(
-                  0.3,
+                color: (hasMapData ? Colors.green : Colors.orange).withValues(
+                  alpha: 0.3,
                 ),
                 blurRadius: 4,
                 spreadRadius: 1,
@@ -279,9 +279,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
     Widget chipContent = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -301,7 +301,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
               ),
               Text(
                 label,
-                style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
+                style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8)),
               ),
             ],
           ),
@@ -347,7 +347,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.surfaceVariant.withOpacity(0.3),
+              ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -376,9 +376,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -455,7 +455,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.surfaceVariant.withOpacity(0.3),
+              ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -496,13 +496,13 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: result.success
-            ? Colors.green.withOpacity(0.05)
-            : Colors.red.withOpacity(0.05),
+            ? Colors.green.withValues(alpha: 0.05)
+            : Colors.red.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: result.success
-              ? Colors.green.withOpacity(0.2)
-              : Colors.red.withOpacity(0.2),
+              ? Colors.green.withValues(alpha: 0.2)
+              : Colors.red.withValues(alpha: 0.2),
         ),
       ),
       child: Row(

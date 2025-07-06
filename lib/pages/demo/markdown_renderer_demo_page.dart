@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../pages/vfs/vfs_markdown_viewer_page.dart';
 import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_markdown_renderer.dart';
@@ -181,7 +181,7 @@ class _EmbeddedModeDemo extends StatelessWidget {
             width: 250,
             color: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withOpacity(0.3),
+            ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
             child: Column(
               children: [
                 Padding(

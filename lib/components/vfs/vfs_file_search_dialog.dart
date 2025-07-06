@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
@@ -159,7 +159,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
@@ -304,7 +304,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: colorScheme.outline.withOpacity(0.3),
+                    color: colorScheme.outline.withValues(alpha: 0.3),
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -317,7 +317,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                  top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
                 ),
               ),
               child: Row(
@@ -326,7 +326,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                   Text(
                     '找到 ${_searchResults.length} 个结果',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Row(
@@ -389,7 +389,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
               file.isDirectory ? Icons.folder : Icons.insert_drive_file,
               color: file.isDirectory
                   ? colorScheme.primary
-                  : colorScheme.onSurface.withOpacity(0.7),
+                  : colorScheme.onSurface.withValues(alpha: 0.7),
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -409,7 +409,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
                     Text(
                       file.path,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -421,7 +421,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
               Text(
                 _formatFileSize(file.size),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ],

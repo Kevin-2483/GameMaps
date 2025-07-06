@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
@@ -231,12 +231,12 @@ class _ReactiveScriptEditorWindowState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withOpacity(0.3),
+                ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
                 border: Border(
                   bottom: BorderSide(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.2),
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -387,13 +387,13 @@ class _ReactiveScriptEditorWindowState
   Color _getTypeColor(ScriptType type) {
     switch (type) {
       case ScriptType.automation:
-        return Colors.blue.withOpacity(0.2);
+        return Colors.blue.withValues(alpha: 0.2);
       case ScriptType.animation:
-        return Colors.green.withOpacity(0.2);
+        return Colors.green.withValues(alpha: 0.2);
       case ScriptType.filter:
-        return Colors.orange.withOpacity(0.2);
+        return Colors.orange.withValues(alpha: 0.2);
       case ScriptType.statistics:
-        return Colors.purple.withOpacity(0.2);
+        return Colors.purple.withValues(alpha: 0.2);
     }
   }
 }

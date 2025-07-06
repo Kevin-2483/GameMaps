@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -98,7 +98,7 @@ class EdgeDragArea extends StatelessWidget {
         color: Colors.transparent,
         // 在调试模式下可以显示半透明边框以便调试
         // decoration: kDebugMode ? BoxDecoration(
-        //   border: Border.all(color: Colors.red.withOpacity(0.3), width: 1),
+        //   border: Border.all(color: Colors.red.withValues(alpha: 0.3), width: 1),
         // ) : null,
       ),
     );

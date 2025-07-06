@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jovial_svg/jovial_svg.dart';
@@ -556,7 +556,7 @@ class _LegendGroupManagementDrawerState
                 : Border.all(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.3),
+                    ).colorScheme.outline.withValues(alpha: 0.3),
                   ),
           ),
           child: Material(
@@ -583,7 +583,7 @@ class _LegendGroupManagementDrawerState
                                   ? Theme.of(context).colorScheme.primary
                                   : Theme.of(
                                       context,
-                                    ).colorScheme.outline.withOpacity(0.3),
+                                    ).colorScheme.outline.withValues(alpha: 0.3),
                               width: _isLegendItemSelected(item) ? 2 : 1,
                             ),
                             borderRadius: BorderRadius.circular(6),
@@ -1218,7 +1218,7 @@ class _LegendGroupManagementDrawerState
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),

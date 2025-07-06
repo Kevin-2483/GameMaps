@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -313,7 +313,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         style: IconButton.styleFrom(
           foregroundColor: _enableHtmlRendering
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
 
@@ -327,7 +327,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         style: IconButton.styleFrom(
           foregroundColor: _enableLatexRendering
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
 
@@ -339,7 +339,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         style: IconButton.styleFrom(
           foregroundColor: _enableVideoRendering
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
 
@@ -355,7 +355,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         style: IconButton.styleFrom(
           foregroundColor: _enableAudioRendering
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
     ];
@@ -867,7 +867,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withOpacity(0.3),
+            ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
             border: Border(
               top: BorderSide(color: Theme.of(context).dividerColor),
             ),
@@ -886,13 +886,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: _enableHtmlRendering
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.orange.withOpacity(0.2),
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: _enableHtmlRendering
-                      ? Colors.green.withOpacity(0.5)
-                      : Colors.orange.withOpacity(0.5),
+                      ? Colors.green.withValues(alpha: 0.5)
+                      : Colors.orange.withValues(alpha: 0.5),
                 ),
               ),
               child: Row(
@@ -941,13 +941,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: _enableLatexRendering
-                    ? Colors.blue.withOpacity(0.2)
-                    : Colors.orange.withOpacity(0.2),
+                    ? Colors.blue.withValues(alpha: 0.2)
+                    : Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: _enableLatexRendering
-                      ? Colors.blue.withOpacity(0.5)
-                      : Colors.orange.withOpacity(0.5),
+                      ? Colors.blue.withValues(alpha: 0.5)
+                      : Colors.orange.withValues(alpha: 0.5),
                 ),
               ),
               child: Row(
@@ -990,13 +990,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: _enableVideoRendering
-                    ? Colors.purple.withOpacity(0.2)
-                    : Colors.orange.withOpacity(0.2),
+                    ? Colors.purple.withValues(alpha: 0.2)
+                    : Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: _enableVideoRendering
-                      ? Colors.purple.withOpacity(0.5)
-                      : Colors.orange.withOpacity(0.5),
+                      ? Colors.purple.withValues(alpha: 0.5)
+                      : Colors.orange.withValues(alpha: 0.5),
                 ),
               ),
               child: Row(
@@ -1039,13 +1039,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: _enableAudioRendering
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.orange.withOpacity(0.2),
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: _enableAudioRendering
-                      ? Colors.green.withOpacity(0.5)
-                      : Colors.orange.withOpacity(0.5),
+                      ? Colors.green.withValues(alpha: 0.5)
+                      : Colors.orange.withValues(alpha: 0.5),
                 ),
               ),
               child: Row(
@@ -1299,7 +1299,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -1327,7 +1327,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

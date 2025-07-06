@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/vfs/viewers/vfs_markdown_renderer.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
@@ -133,7 +133,7 @@ class _VfsMarkdownViewerPageContentState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),

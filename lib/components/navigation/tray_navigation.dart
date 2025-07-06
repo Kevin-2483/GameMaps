@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
@@ -328,8 +328,8 @@ class _TrayNavigationState extends State<TrayNavigation>
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
           hoverColor: isCloseButton
-              ? Colors.red.withOpacity(0.1)
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              ? Colors.red.withValues(alpha: 0.1)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           child: Tooltip(
             message: tooltip,
             decoration: BoxDecoration(
@@ -372,8 +372,8 @@ class _TrayNavigationState extends State<TrayNavigation>
             onTap: onPressed,
             borderRadius: BorderRadius.circular(8),
             hoverColor: isCloseButton
-                ? Colors.red.withOpacity(0.1)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                ? Colors.red.withValues(alpha: 0.1)
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
             child: Tooltip(
               message: tooltip,
               decoration: BoxDecoration(

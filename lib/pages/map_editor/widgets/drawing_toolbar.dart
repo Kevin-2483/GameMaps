@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:provider/provider.dart';
@@ -586,7 +586,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                            ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -747,7 +747,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                       fontSize: 12,
                       color: Theme.of(
                         context,
-                      ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -827,7 +827,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             size: 20,
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -945,7 +945,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         child: Icon(
           Icons.palette,
           size: 16,
-          color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -1025,7 +1025,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   fontSize: 12,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1067,7 +1067,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -1307,7 +1307,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                    color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -1330,7 +1330,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   fontSize: 11,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                   height: 1.3,
                 ),
               ),
@@ -1525,7 +1525,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               Icon(
                 Icons.cloud_upload_outlined,
                 size: 32,
-                color: Theme.of(context).iconTheme.color?.withOpacity(0.4),
+                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 8),
               Text(
@@ -1542,7 +1542,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'dart:math' as math;
@@ -320,13 +320,13 @@ class ElementRenderer {
   static void drawImageBufferLoadingPlaceholder(Canvas canvas, Rect rect) {
     // 半透明背景
     final backgroundPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
     canvas.drawRect(rect, backgroundPaint);
 
     // 边框
     final borderPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.5)
+      ..color = Colors.blue.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawRect(rect, borderPaint);
@@ -336,7 +336,7 @@ class ElementRenderer {
     final center = rect.center;
 
     final iconPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
 
     // 简单的加载图标 (圆形)
@@ -346,7 +346,7 @@ class ElementRenderer {
     final textPainter = TextPainter(
       text: TextSpan(
         text: '加载中...',
-        style: TextStyle(color: Colors.blue.withOpacity(0.7), fontSize: 12.0),
+        style: TextStyle(color: Colors.blue.withValues(alpha: 0.7), fontSize: 12.0),
       ),
       textDirection: TextDirection.ltr,
     );

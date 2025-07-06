@@ -16,11 +16,14 @@ import 'config/config_manager.dart';
 import 'services/web_database_importer.dart';
 import 'services/virtual_file_system/vfs_database_initializer.dart';
 import 'components/web/web_context_menu_handler.dart';
-import 'services/legend_vfs/legend_compatibility_service.dart';
 import 'services/window_manager_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
 
   // Initialize database factory (based on platform)
   if (kIsWeb) {

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -1460,7 +1460,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             Icon(
               Icons.location_on,
               size: 16,
-              color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+              color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 6),
             Text(
@@ -1469,7 +1469,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 fontSize: 12,
                 color: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -1494,7 +1494,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           Icon(
             Icons.location_on,
             size: 16,
-            color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+            color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -1515,10 +1515,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -1641,18 +1641,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 color: isLast
                     ? Theme.of(
                         context,
-                      ).colorScheme.primaryContainer.withOpacity(0.3)
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                     : isRoot
                     ? Theme.of(
                         context,
-                      ).colorScheme.secondaryContainer.withOpacity(0.3)
+                      ).colorScheme.secondaryContainer.withValues(alpha: 0.3)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: isLast
                     ? Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.5),
+                        ).colorScheme.primary.withValues(alpha: 0.5),
                         width: 1,
                       )
                     : null,
@@ -1665,7 +1665,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       ? Theme.of(context).colorScheme.primary
                       : isRoot
                       ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                   fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -1682,7 +1682,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             child: Icon(
               Icons.chevron_right,
               size: 14,
-              color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
+              color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5),
             ),
           ),
         );
@@ -2592,7 +2592,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
@@ -2636,7 +2636,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   ? Theme.of(context).colorScheme.primary
                   : isMultipleSelectionAllowed
                   ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const Spacer(),
@@ -3336,21 +3336,21 @@ class _FileListItemState extends State<_FileListItem> {
                   : (!widget.canBeSelected)
                   ? Theme.of(
                       context,
-                    ).colorScheme.surfaceVariant.withOpacity(0.3)
+                    ).colorScheme.surfaceVariant.withValues(alpha: 0.3)
                   : Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected
                     ? Theme.of(context).colorScheme.primary
                     : (!widget.canBeSelected)
-                    ? Theme.of(context).colorScheme.outline.withOpacity(0.3)
+                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)
                     : Theme.of(context).dividerColor,
                 width: widget.isSelected ? 2 : 1,
               ),
               boxShadow: _isHovered && widget.canBeSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                         spreadRadius: 0,
@@ -3361,7 +3361,7 @@ class _FileListItemState extends State<_FileListItem> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                         spreadRadius: 0,
@@ -3502,7 +3502,7 @@ class _FileGridItemState extends State<_FileGridItem> {
               boxShadow: _isHovered
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                         spreadRadius: 0,
@@ -3513,7 +3513,7 @@ class _FileGridItemState extends State<_FileGridItem> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                         spreadRadius: 0,
