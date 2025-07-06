@@ -106,8 +106,16 @@ class MapLocalizationService {
       );
 
       if (result != null) {
-        final file = File(result.files.single.path!);
-        final jsonString = await file.readAsString();
+        String jsonString;
+        if (kIsWeb) {
+          // Web平台使用bytes
+          final bytes = result.files.single.bytes!;
+          jsonString = utf8.decode(bytes);
+        } else {
+          // 桌面平台使用path
+          final file = File(result.files.single.path!);
+          jsonString = await file.readAsString();
+        }
         final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
 
         final localizationDb = MapLocalizationDatabase.fromJson(jsonData);

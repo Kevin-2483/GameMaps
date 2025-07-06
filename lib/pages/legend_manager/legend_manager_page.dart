@@ -1,6 +1,7 @@
 ﻿import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:jovial_svg/jovial_svg.dart';
@@ -104,9 +105,16 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     );
 
     if (result != null) {
-      final file = File(result.files.single.path!);
       final fileName = result.files.single.name.toLowerCase();
-      final imageBytes = await file.readAsBytes();
+      final Uint8List imageBytes;
+      if (kIsWeb) {
+        // Web平台使用bytes
+        imageBytes = result.files.single.bytes!;
+      } else {
+        // 桌面平台使用path
+        final file = File(result.files.single.path!);
+        imageBytes = await file.readAsBytes();
+      }
 
       // 确定文件类型
       LegendFileType fileType;

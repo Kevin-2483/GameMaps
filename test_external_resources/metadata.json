@@ -5,12 +5,10 @@
   "author": "测试用户",
   "created_at": "2024-01-15",
   "file_mappings": {
-    "images/logo.png": "indexeddb://r6box/fs/assets/images/logo.png",
+    "logo.png": "indexeddb://r6box/fs/assets/images/logo.png",
     "images/background.jpg": "indexeddb://r6box/fs/assets/images/backgrounds/main_bg.jpg",
-    "configs/settings.json": "indexeddb://r6box/fs/configs/app_settings.json",
-    "data/operators.json": "indexeddb://r6box/legends/data/r6_operators.json",
-    "sounds/notification.mp3": "indexeddb://r6box/maps/assets/sounds/notification.mp3",
-    "docs/readme.txt": "indexeddb://r6box/fs/docs/readme.txt"
+    "sounds": "indexeddb://r6box/maps/assets/sound",
+    "docs": "indexeddb://r6box/fs/docs"
   },
   "tags": ["测试", "示例", "资源包"],
   "requirements": {

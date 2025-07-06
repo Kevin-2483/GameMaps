@@ -1,8 +1,10 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:io';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
@@ -32,11 +34,13 @@ class FileMapping {
   String targetPath;
   final String fileName;
   late final TextEditingController controller;
+  bool isValidPath; // 标记路径是否有效
 
   FileMapping({
     required this.sourceFile,
     required this.targetPath,
     required this.fileName,
+    this.isValidPath = true, // 默认为有效
   }) {
     controller = TextEditingController(text: targetPath);
   }
@@ -71,7 +75,7 @@ class _ExternalResourcesPageContentState
           DraggableTitleBar(title: '外部资源管理', icon: Icons.cloud_sync),
           Expanded(
             child: SafeArea(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,14 +95,13 @@ class _ExternalResourcesPageContentState
   }
 
   Widget _buildPreviewSection(BuildContext context) {
-    return Expanded(
-      child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               Row(
                 children: [
                   Icon(
@@ -179,16 +182,19 @@ class _ExternalResourcesPageContentState
                 ),
               ),
               const SizedBox(height: 20),
-              Expanded(child: _buildFileMappingTable(context)),
+              SizedBox(
+                height: 400, // 设置固定高度以支持滚动
+                child: _buildFileMappingTable(context),
+              ),
             ],
           ),
         ),
-      ),
     );
   }
 
   Widget _buildFileMappingTable(BuildContext context) {
     return Container(
+      width: double.infinity, // 占满父组件宽度
       decoration: BoxDecoration(
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -197,14 +203,14 @@ class _ExternalResourcesPageContentState
       ),
       child: SingleChildScrollView(
         child: DataTable(
-          columnSpacing: 20,
+          columnSpacing: 16,
           headingRowHeight: 56,
           dataRowHeight: 72,
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
           columns: [
             DataColumn(
-              label: Container(
-                width: 200,
+              label: SizedBox(
+                width: 150, // 调整源文件列宽度
                 child: Text(
                   '源文件',
                   style: Theme.of(
@@ -214,8 +220,8 @@ class _ExternalResourcesPageContentState
               ),
             ),
             DataColumn(
-              label: Container(
-                width: 400,
+              label: SizedBox(
+                width: 300, // 设置目标路径列的固定宽度
                 child: Text(
                   '目标路径',
                   style: Theme.of(
@@ -225,8 +231,8 @@ class _ExternalResourcesPageContentState
               ),
             ),
             DataColumn(
-              label: Container(
-                width: 80,
+              label: SizedBox(
+                width: 60, // 调整操作列宽度
                 child: Text(
                   '操作',
                   style: Theme.of(
@@ -240,38 +246,41 @@ class _ExternalResourcesPageContentState
             return DataRow(
               cells: [
                 DataCell(
-                  Container(
-                    width: 200,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          mapping.fileName,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w500),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '源文件',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                        ),
-                      ],
+                  SizedBox(
+                    width: 150, // 与列标题宽度保持一致
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            mapping.fileName,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '源文件',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 DataCell(
-                  Container(
-                    width: 400,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
+                  SizedBox(
+                    width: 300, // 与列标题宽度保持一致
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
                       children: [
                         Expanded(
                           child: TextFormField(
@@ -295,10 +304,13 @@ class _ExternalResourcesPageContentState
                             style: Theme.of(context).textTheme.bodySmall,
                             onChanged: (value) {
                               mapping.targetPath = value;
+                              mapping.isValidPath = _isValidTargetPath(value);
+                              setState(() {}); // 触发UI更新
                             },
                             onFieldSubmitted: (value) {
                               setState(() {
                                 mapping.targetPath = value;
+                                mapping.isValidPath = _isValidTargetPath(value);
                               });
                             },
                           ),
@@ -324,29 +336,32 @@ class _ExternalResourcesPageContentState
                             ),
                           ),
                       ],
+                      ),
                     ),
                   ),
                 ),
                 DataCell(
-                  Container(
-                    width: 80,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: IconButton(
-                        icon: const Icon(Icons.folder_open),
-                        tooltip: '选择目标文件夹',
-                        style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                  SizedBox(
+                    width: 60, // 与列标题宽度保持一致
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
+                        child: IconButton(
+                          icon: const Icon(Icons.folder_open),
+                          tooltip: '选择目标文件夹',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
+                          onPressed: () => _selectTargetPath(mapping),
                         ),
-                        onPressed: () => _selectTargetPath(mapping),
                       ),
                     ),
                   ),
@@ -359,7 +374,16 @@ class _ExternalResourcesPageContentState
     );
   }
 
-  void _cancelPreview() {
+  void _cancelPreview() async {
+    // 清理临时文件
+    if (_tempPath.isNotEmpty) {
+      try {
+        await _cleanupTempFiles(_tempPath);
+      } catch (e) {
+        debugPrint('清理临时文件失败：$e');
+      }
+    }
+    
     setState(() {
       _showPreview = false;
       // 清理controllers
@@ -372,14 +396,23 @@ class _ExternalResourcesPageContentState
   }
 
   void _confirmAndProcess() async {
+    // 检查是否所有路径都有效
+    final invalidMappings = _fileMappings.where((mapping) => !mapping.isValidPath).toList();
+    if (invalidMappings.isNotEmpty) {
+      _showErrorSnackBar('存在无效路径，请修正后再试。无效路径数量：${invalidMappings.length}');
+      return;
+    }
+
     try {
       setState(() {
         _isUploading = true;
       });
 
-      // 检查路径合法性
+      // 再次检查路径合法性（防止用户手动修改后未更新isValidPath）
       for (final mapping in _fileMappings) {
-        if (!_isValidTargetPath(mapping.targetPath)) {
+        final isValid = _isValidTargetPath(mapping.targetPath);
+        mapping.isValidPath = isValid;
+        if (!isValid) {
           throw Exception('目标路径不合法：${mapping.targetPath}');
         }
       }
@@ -403,7 +436,28 @@ class _ExternalResourcesPageContentState
           0,
           mapping.targetPath.lastIndexOf('/'),
         );
-        await _vfsService.createDirectory('fs', targetDir);
+        
+        // 从完整路径中提取集合和相对路径部分用于创建目录
+        String collection = 'fs';
+        String relativePath = '';
+        
+        if (targetDir.startsWith('indexeddb://r6box/')) {
+          // 提取集合名称和路径部分
+          final pathParts = targetDir.substring('indexeddb://r6box/'.length).split('/');
+          if (pathParts.isNotEmpty) {
+            collection = pathParts[0]; // 第一部分是集合名
+            if (pathParts.length >= 2) {
+              // 跳过数据库名和集合名，获取实际的目录路径
+              relativePath = pathParts.sublist(1).join('/');
+            }
+          }
+        } else {
+          relativePath = targetDir;
+        }
+        
+        if (relativePath.isNotEmpty) {
+          await _vfsService.createDirectory(collection, relativePath);
+        }
 
         // 复制文件
         await _copyFileToTarget(mapping.sourceFile, mapping.targetPath);
@@ -487,17 +541,15 @@ class _ExternalResourcesPageContentState
       );
 
       if (result != null) {
-        // 确保返回的是完整的indexeddb路径
+        // VfsFileManagerWindow 返回的已经是完整的 indexeddb:// 路径
         String folderPath = result;
-        if (!folderPath.startsWith('indexeddb://r6box/')) {
-          folderPath = 'indexeddb://r6box/$result';
-        }
-
+        
         // 拼接文件名形成完整路径
         final fullPath = '$folderPath/${mapping.fileName}';
 
         setState(() {
           mapping.updateTargetPath(fullPath);
+          mapping.isValidPath = _isValidTargetPath(fullPath);
         });
       }
     } catch (e) {
@@ -541,9 +593,12 @@ class _ExternalResourcesPageContentState
                   color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
-              child: Text(
-                '上传包含外部资源的ZIP文件，系统将自动解压并根据元数据文件将资源复制到指定位置。',
-                style: Theme.of(context).textTheme.bodyMedium,
+              child: SizedBox(
+                width: double.infinity, // 占满父组件宽度
+                child: Text(
+                  '上传包含外部资源的ZIP文件，系统将自动解压并根据元数据文件将资源复制到指定位置。',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -632,11 +687,23 @@ class _ExternalResourcesPageContentState
                 ),
               ),
               child: Text(
-                '{\n'
-                '  "target_path": "indexeddb://r6box/fs/assets/images",\n'
-                '  "description": "图片资源更新",\n'
-                '  "version": "1.0.0"\n'
-                '}',
+'{\n'
+'  "name": "测试资源包",\n'
+'  "version": "1.0.0",\n'
+'  "description": "用于测试外部资源上传功能的示例资源包",\n'
+'  "author": "测试用户",\n'
+'  "created_at": "2024-01-15",\n'
+'  "file_mappings": {\n'
+'    "logo.png": "indexeddb://r6box/fs/assets/images/logo.png",\n'
+'    "images/background.jpg": "indexeddb://r6box/fs/assets/images/backgrounds/main_bg.jpg",\n'
+'    "sounds": "indexeddb://r6box/maps/assets/sound",\n'
+'    "docs": "indexeddb://r6box/fs/docs"\n'
+'  },\n'
+'  "tags": ["测试", "示例", "资源包"],\n'
+'  "requirements": {\n'
+'    "min_app_version": "1.0.0"\n'
+'  }\n'
+'}\n',
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 13,
@@ -720,8 +787,26 @@ class _ExternalResourcesPageContentState
       }
 
       final file = result.files.first;
-      if (file.bytes == null) {
-        _showErrorSnackBar('无法读取文件内容');
+      Uint8List? fileBytes;
+      
+      if (file.bytes != null) {
+        // Web平台：使用bytes
+        fileBytes = file.bytes!;
+      } else if (file.path != null) {
+        // 桌面平台：使用path读取文件
+        try {
+          final localFile = File(file.path!);
+          if (localFile.existsSync()) {
+            fileBytes = await localFile.readAsBytes();
+          }
+        } catch (e) {
+          _showErrorSnackBar('读取文件失败：$e');
+          return;
+        }
+      }
+      
+      if (fileBytes == null) {
+        _showErrorSnackBar('无法读取文件内容，请确保文件存在且有读取权限');
         return;
       }
 
@@ -729,7 +814,7 @@ class _ExternalResourcesPageContentState
         _isUploading = true;
       });
 
-      await _processZipFileForPreview(file.bytes!, file.name);
+      await _processZipFileForPreview(fileBytes, file.name);
     } catch (e) {
       _showErrorSnackBar('更新失败：$e');
     } finally {
@@ -835,15 +920,18 @@ class _ExternalResourcesPageContentState
 
     for (final file in tempFiles) {
       if (!file.isDirectory && !file.name.endsWith('metadata.json')) {
-        final sourcePath = file.path.replaceFirst('indexeddb://r6box/fs/', '');
+        // 使用绝对路径
+        final sourcePath = file.path;
         final fileName = file.name;
         final targetFilePath = '$targetPath/$fileName';
 
+        final isValid = _isValidTargetPath(targetFilePath);
         _fileMappings.add(
           FileMapping(
             sourceFile: sourcePath,
             targetPath: targetFilePath,
             fileName: fileName,
+            isValidPath: isValid,
           ),
         );
       }
@@ -859,35 +947,45 @@ class _ExternalResourcesPageContentState
       final sourceFileName = entry.key;
       final targetPath = entry.value as String;
 
-      // 不在这里验证路径合法性，让用户在预览界面中手动修改不合法的路径
+      // 记录路径验证结果，但不阻止处理，让用户在预览界面修改
 
-      final sourcePath = '$tempPath/$sourceFileName';
+      // 构建绝对路径
+      final sourcePath = 'indexeddb://r6box/fs/$tempPath/$sourceFileName';
 
-      // 检查源文件是否存在
-      final fileExists = await _vfsService.fileExists('fs', sourcePath);
-      if (!fileExists) {
-        debugPrint('警告：源文件不存在，跳过：$sourceFileName');
+      // 检查源路径是否存在
+      final exists = await _vfsService.vfs.exists(sourcePath);
+      if (!exists) {
+        debugPrint('警告：源路径不存在，跳过：$sourceFileName');
         continue;
       }
 
-      _fileMappings.add(
-        FileMapping(
-          sourceFile: sourcePath,
-          targetPath: targetPath,
-          fileName: sourceFileName,
-        ),
-      );
+      // 检查是否为文件夹
+      final sourceFiles = await _vfsService.listFiles('fs', '$tempPath/$sourceFileName');
+      final isDirectory = sourceFiles.isNotEmpty;
+
+      if (isDirectory) {
+        // 处理文件夹映射：递归处理文件夹中的所有文件
+        await _processDirectoryMapping(sourcePath, targetPath, sourceFileName);
+      } else {
+        // 处理单个文件映射
+        final isValid = _isValidTargetPath(targetPath);
+        _fileMappings.add(
+          FileMapping(
+            sourceFile: sourcePath,
+            targetPath: targetPath,
+            fileName: sourceFileName,
+            isValidPath: isValid,
+          ),
+        );
+      }
     }
   }
 
   /// 复制单个文件到目标位置
   Future<void> _copyFileToTarget(String sourcePath, String targetPath) async {
-    // 读取源文件
-    final fileContent = await _vfsService.vfs.readFile(
-      'indexeddb://r6box/fs/$sourcePath',
-    );
+    // sourcePath 和 targetPath 都是绝对路径
+    final fileContent = await _vfsService.vfs.readFile(sourcePath);
     if (fileContent != null) {
-      // 直接使用绝对路径（已经是 indexeddb://r6box/fs/ 格式）
       await _vfsService.vfs.writeBinaryFile(
         targetPath,
         fileContent.data,
@@ -995,5 +1093,44 @@ class _ExternalResourcesPageContentState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
+  }
+
+  /// 处理文件夹映射：递归处理文件夹中的所有文件
+  Future<void> _processDirectoryMapping(
+    String sourceFolderPath,
+    String targetFolderPath,
+    String folderName,
+  ) async {
+    try {
+      // 获取文件夹中的所有文件和子文件夹
+      final items = await _vfsService.listFiles('fs', sourceFolderPath.substring('indexeddb://r6box/fs/'.length));
+      
+      for (final item in items) {
+        if (item.isDirectory) {
+          // 递归处理子文件夹
+          final subFolderName = item.name;
+          final subSourcePath = '${sourceFolderPath}/${subFolderName}';
+          final subTargetPath = '${targetFolderPath}/${subFolderName}';
+          await _processDirectoryMapping(subSourcePath, subTargetPath, subFolderName);
+        } else {
+          // 处理文件
+          final fileName = item.name;
+          final fileSourcePath = item.path;
+          final fileTargetPath = '${targetFolderPath}/${fileName}';
+          
+          final isValid = _isValidTargetPath(fileTargetPath);
+          _fileMappings.add(
+            FileMapping(
+              sourceFile: fileSourcePath,
+              targetPath: fileTargetPath,
+              fileName: fileName,
+              isValidPath: isValid,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('处理文件夹映射失败：$folderName, 错误：$e');
+    }
   }
 }

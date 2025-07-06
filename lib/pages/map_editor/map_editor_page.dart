@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -2251,7 +2251,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   Future<void> _saveMap() async {
-    if (widget.isPreviewMode || _currentMap == null || kIsWeb) return;
+    if (widget.isPreviewMode || _currentMap == null) return;
 
     setState(() => _isLoading = true);
     try {
@@ -2646,8 +2646,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 无论是否有未保存的更改，都先保存会话状态和面板状态
     await _savePanelStatesOnExit();
 
-    if (!_hasUnsavedChanges || widget.isPreviewMode || kIsWeb) {
-      return true; // 如果没有未保存更改或在预览模式，直接允许退出
+    // 使用ReactiveVersionTabBar的静态属性检查是否有未保存的版本
+    final hasUnsavedVersions = ReactiveVersionTabBar.hasAnyUnsavedVersions;
+    debugPrint('退出确认检查: _hasUnsavedChanges=$_hasUnsavedChanges, hasUnsavedVersions=$hasUnsavedVersions');
+    
+    // 如果没有未保存更改且没有未保存的版本，或者在预览模式，直接允许退出
+    if ((!_hasUnsavedChanges && !hasUnsavedVersions) || widget.isPreviewMode || kIsWeb) {
+      return true;
     }
 
     final result = await showDialog<bool>(

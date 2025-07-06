@@ -25,10 +25,7 @@ class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
   @override
   Widget buildContent(BuildContext context) {
-    return WebReadOnlyBanner(
-      showBanner: kIsWeb,
-      child: const _MapAtlasContent(),
-    );
+    return const _MapAtlasContent();
   }
 }
 
@@ -192,8 +189,15 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     );
 
     if (result != null) {
-      final file = File(result.files.single.path!);
-      final imageBytes = await file.readAsBytes();
+      final Uint8List imageBytes;
+      if (kIsWeb) {
+        // Web平台使用bytes
+        imageBytes = result.files.single.bytes!;
+      } else {
+        // 桌面平台使用path
+        final file = File(result.files.single.path!);
+        imageBytes = await file.readAsBytes();
+      }
 
       // 压缩图片
       final compressedImage = _compressImage(imageBytes);
@@ -402,7 +406,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 onPressed: _uploadLocalizationFile,
                 icon: const Icon(Icons.translate),
                 tooltip: '上传本地化文件',
-              ), // 功能菜单
+              ),
+              // 功能菜单
               PopupMenuButton<String>(
                 onSelected: (value) async {
                   final isReadOnly = await ConfigManager.instance

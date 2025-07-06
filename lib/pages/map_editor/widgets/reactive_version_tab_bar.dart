@@ -3,6 +3,9 @@ import '../../../services/reactive_version/reactive_version_manager.dart';
 
 /// 响应式版本管理标签页组件
 class ReactiveVersionTabBar extends StatelessWidget {
+  // 静态变量来跟踪未保存的版本状态
+  static bool _hasAnyUnsavedVersions = false;
+  static List<String> _unsavedVersionIds = [];
   final List<ReactiveVersionState> versions;
   final String? currentVersionId;
   final Function(String versionId) onVersionSelected;
@@ -20,10 +23,32 @@ class ReactiveVersionTabBar extends StatelessWidget {
     this.isPreviewMode = false,
   });
 
+  /// 更新未保存版本状态
+  void _updateUnsavedVersionsState() {
+    final unsavedVersions = versions.where((v) => v.hasUnsavedChanges).toList();
+    _hasAnyUnsavedVersions = unsavedVersions.isNotEmpty;
+    _unsavedVersionIds = unsavedVersions.map((v) => v.versionId).toList();
+  }
+
+  /// 获取是否有未保存的版本
+  static bool get hasAnyUnsavedVersions => _hasAnyUnsavedVersions;
+
+  /// 获取未保存的版本ID列表
+  static List<String> get unsavedVersionIds => List.from(_unsavedVersionIds);
+
+  /// 重置未保存版本状态（用于清理）
+  static void resetUnsavedState() {
+    _hasAnyUnsavedVersions = false;
+    _unsavedVersionIds.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // 更新未保存版本状态
+    _updateUnsavedVersionsState();
+    
     // 添加调试信息
-    debugPrint('响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId');
+    debugPrint('响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId, 未保存版本=$_hasAnyUnsavedVersions');
 
     return Container(
       height: 50,
