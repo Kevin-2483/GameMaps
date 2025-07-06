@@ -199,7 +199,8 @@ class ThemePreferences {
       useMaterialYou: useMaterialYou ?? this.useMaterialYou,
       fontScale: fontScale ?? this.fontScale,
       highContrast: highContrast ?? this.highContrast,
-      canvasThemeAdaptation: canvasThemeAdaptation ?? this.canvasThemeAdaptation,
+      canvasThemeAdaptation:
+          canvasThemeAdaptation ?? this.canvasThemeAdaptation,
     );
   }
 
@@ -319,8 +320,6 @@ class LayoutPreferences {
   /// 窗口是否处于最大化状态
   final bool isMaximized;
 
-
-
   const LayoutPreferences({
     required this.panelCollapsedStates,
     required this.panelAutoCloseStates,
@@ -338,7 +337,7 @@ class LayoutPreferences {
     this.minWindowWidth = 800.0,
     this.minWindowHeight = 600.0,
     this.rememberMaximizedState = true,
-    this.isMaximized = false
+    this.isMaximized = false,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -371,7 +370,7 @@ class LayoutPreferences {
       minWindowWidth: 800.0,
       minWindowHeight: 600.0,
       rememberMaximizedState: true,
-      isMaximized: false
+      isMaximized: false,
     );
   }
   LayoutPreferences copyWith({
@@ -392,7 +391,6 @@ class LayoutPreferences {
     double? minWindowHeight,
     bool? rememberMaximizedState,
     bool? isMaximized,
-
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -412,7 +410,8 @@ class LayoutPreferences {
       windowHeight: windowHeight ?? this.windowHeight,
       minWindowWidth: minWindowWidth ?? this.minWindowWidth,
       minWindowHeight: minWindowHeight ?? this.minWindowHeight,
-      rememberMaximizedState: rememberMaximizedState ?? this.rememberMaximizedState,
+      rememberMaximizedState:
+          rememberMaximizedState ?? this.rememberMaximizedState,
       isMaximized: isMaximized ?? this.isMaximized,
     );
   }
@@ -428,37 +427,37 @@ class LayoutPreferences {
 class HomePagePreferences {
   /// 显示区域倍数
   final double displayAreaMultiplier;
-  
+
   /// 基础缓冲区倍数
   final double baseBufferMultiplier;
-  
+
   /// 透视缓冲调节系数
   final double perspectiveBufferFactor;
-  
+
   /// 窗口大小随动系数
   final double windowScalingFactor;
-  
+
   /// 基础网格间距
   final double baseNodeSpacing;
-  
+
   /// 基础SVG渲染大小
   final double baseSvgRenderSize;
-  
+
   /// 是否启用主题颜色滤镜
   final bool enableThemeColorFilter;
-  
+
   /// 主页标题文字
   final String titleText;
-  
+
   /// 标题字体大小倍数
   final double titleFontSizeMultiplier;
-  
+
   /// 最近使用SVG记录数量
   final int recentSvgHistorySize;
-  
+
   /// 摄像机移动速度
   final double cameraSpeed;
-  
+
   /// 图标放大系数
   final double iconEnlargementFactor;
 
@@ -467,8 +466,8 @@ class HomePagePreferences {
     this.baseBufferMultiplier = 1.5,
     this.perspectiveBufferFactor = 1.0,
     this.windowScalingFactor = 0.5,
-    this.baseNodeSpacing = 200.0,
-    this.baseSvgRenderSize = 150.0,
+    this.baseNodeSpacing = 300.0,
+    this.baseSvgRenderSize = 200.0,
     this.enableThemeColorFilter = true,
     this.titleText = 'R6BOX',
     this.titleFontSizeMultiplier = 0.12,
@@ -496,18 +495,23 @@ class HomePagePreferences {
     double? iconEnlargementFactor,
   }) {
     return HomePagePreferences(
-      displayAreaMultiplier: displayAreaMultiplier ?? this.displayAreaMultiplier,
+      displayAreaMultiplier:
+          displayAreaMultiplier ?? this.displayAreaMultiplier,
       baseBufferMultiplier: baseBufferMultiplier ?? this.baseBufferMultiplier,
-      perspectiveBufferFactor: perspectiveBufferFactor ?? this.perspectiveBufferFactor,
+      perspectiveBufferFactor:
+          perspectiveBufferFactor ?? this.perspectiveBufferFactor,
       windowScalingFactor: windowScalingFactor ?? this.windowScalingFactor,
       baseNodeSpacing: baseNodeSpacing ?? this.baseNodeSpacing,
       baseSvgRenderSize: baseSvgRenderSize ?? this.baseSvgRenderSize,
-      enableThemeColorFilter: enableThemeColorFilter ?? this.enableThemeColorFilter,
+      enableThemeColorFilter:
+          enableThemeColorFilter ?? this.enableThemeColorFilter,
       titleText: titleText ?? this.titleText,
-      titleFontSizeMultiplier: titleFontSizeMultiplier ?? this.titleFontSizeMultiplier,
+      titleFontSizeMultiplier:
+          titleFontSizeMultiplier ?? this.titleFontSizeMultiplier,
       recentSvgHistorySize: recentSvgHistorySize ?? this.recentSvgHistorySize,
       cameraSpeed: cameraSpeed ?? this.cameraSpeed,
-      iconEnlargementFactor: iconEnlargementFactor ?? this.iconEnlargementFactor,
+      iconEnlargementFactor:
+          iconEnlargementFactor ?? this.iconEnlargementFactor,
     );
   }
 

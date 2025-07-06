@@ -152,7 +152,10 @@ class LayoutSettingsSection extends StatelessWidget {
             const SizedBox(height: 16),
 
             // 窗口设置（仅在桌面平台显示）
-            if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) ...[
+            if (!kIsWeb &&
+                (Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS)) ...[
               Text(
                 '窗口设置',
                 style: Theme.of(
@@ -160,23 +163,24 @@ class LayoutSettingsSection extends StatelessWidget {
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              
+
               // 自动保存窗口大小
               SwitchListTile(
                 title: Text('自动保存窗口大小'),
                 subtitle: Text('自动记录窗口大小变化并在下次启动时恢复'),
                 value: layout.autoSaveWindowSize,
-                onChanged: (value) => provider.updateLayout(autoSaveWindowSize: value),
+                onChanged: (value) =>
+                    provider.updateLayout(autoSaveWindowSize: value),
               ),
-              
+
               // 记住最大化状态
               SwitchListTile(
                 title: Text('记住最大化状态'),
                 subtitle: Text('启动时恢复窗口的最大化状态'),
                 value: layout.rememberMaximizedState,
-                onChanged: (value) => provider.updateLayout(rememberMaximizedState: value),
+                onChanged: (value) =>
+                    provider.updateLayout(rememberMaximizedState: value),
               ),
-              
 
               // 自定义窗口大小
               ExpansionTile(
@@ -201,12 +205,13 @@ class LayoutSettingsSection extends StatelessWidget {
                                 max: 9999.0,
                                 divisions: 88,
                                 label: '${layout.windowWidth.round()}px',
-                                onChanged: (value) => provider.updateLayout(windowWidth: value),
+                                onChanged: (value) =>
+                                    provider.updateLayout(windowWidth: value),
                               ),
                             ],
                           ),
                         ),
-                        
+
                         // 窗口高度
                         ListTile(
                           title: Text('窗口高度'),
@@ -221,18 +226,20 @@ class LayoutSettingsSection extends StatelessWidget {
                                 max: 9999.0,
                                 divisions: 84,
                                 label: '${layout.windowHeight.round()}px',
-                                onChanged: (value) => provider.updateLayout(windowHeight: value),
+                                onChanged: (value) =>
+                                    provider.updateLayout(windowHeight: value),
                               ),
                             ],
                           ),
                         ),
-                        
+
                         // 操作按钮
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             TextButton.icon(
-                              onPressed: () => _resetWindowSize(context, provider),
+                              onPressed: () =>
+                                  _resetWindowSize(context, provider),
                               icon: Icon(Icons.restore),
                               label: Text('重置为默认'),
                             ),
@@ -243,7 +250,7 @@ class LayoutSettingsSection extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
             ],
 
@@ -363,8 +370,12 @@ class LayoutSettingsSection extends StatelessWidget {
       ),
     );
   }
+
   /// 重置窗口大小
-  void _resetWindowSize(BuildContext context, UserPreferencesProvider provider) {
+  void _resetWindowSize(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -377,10 +388,7 @@ class LayoutSettingsSection extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              provider.updateLayout(
-                windowWidth: 1280.0,
-                windowHeight: 720.0,
-              );
+              provider.updateLayout(windowWidth: 1280.0, windowHeight: 720.0);
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

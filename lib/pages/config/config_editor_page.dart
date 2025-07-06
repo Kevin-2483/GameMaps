@@ -59,7 +59,7 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
   }
 
   List<String> _getAllFeatures() {
-    return ['DebugMode', 'ExperimentalFeatures', 'TrayNavigation'];
+    return ['ExperimentalFeatures', 'TrayNavigation'];
   }
 
   void _updateConfig() {
@@ -104,13 +104,10 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
       appBar: AppBar(
         title: Text(l10n.configEditor),
         actions: [
-          ConfigAwareAppBarAction(
-            featureId: 'DebugMode',
-            action: IconButton(
-              icon: const Icon(Icons.info),
-              onPressed: () => ConfigUtils.instance.printConfigInfo(),
-              tooltip: l10n.printConfigInfo,
-            ),
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () => ConfigUtils.instance.printConfigInfo(),
+            tooltip: l10n.printConfigInfo,
           ),
           IconButton(
             icon: const Icon(Icons.save),
@@ -199,39 +196,6 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-        ConfigAwareWidget(
-          featureId: 'DebugMode',
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.debugInfo,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.currentPlatform(
-                      ConfigManager.instance.getCurrentPlatform(),
-                    ),
-                  ),
-                  Text(
-                    l10n.availablePages(
-                      ConfigUtils.instance.availablePages.join(', '),
-                    ),
-                  ),
-                  Text(
-                    l10n.availableFeatures(
-                      ConfigUtils.instance.availableFeatures.join(', '),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),

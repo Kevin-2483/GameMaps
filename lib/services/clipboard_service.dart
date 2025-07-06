@@ -304,7 +304,9 @@ class ClipboardService {
             });
 
             if (gifData != null) {
-              debugPrint('super_clipboard: 从剪贴板成功读取GIF图片，大小: ${gifData!.length} 字节');
+              debugPrint(
+                'super_clipboard: 从剪贴板成功读取GIF图片，大小: ${gifData!.length} 字节',
+              );
               return gifData;
             }
           }

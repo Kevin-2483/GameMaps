@@ -308,8 +308,8 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),

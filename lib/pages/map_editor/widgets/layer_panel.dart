@@ -219,7 +219,10 @@ class _LayerPanelState extends State<LayerPanel> {
         ? Center(
             child: Text(
               '暂无图层',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
           )
         : _buildGroupedLayerList();
@@ -231,7 +234,13 @@ class _LayerPanelState extends State<LayerPanel> {
 
     if (groups.isEmpty) {
       return Center(
-        child: Text('暂无图层', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
+        child: Text(
+          '暂无图层',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
+        ),
       );
     }
 
@@ -352,7 +361,11 @@ class _LayerPanelState extends State<LayerPanel> {
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
-        border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.3))),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -418,7 +431,9 @@ class _LayerPanelState extends State<LayerPanel> {
                             group.map((l) => l.name).join(', '),
                             style: TextStyle(
                               fontSize: 11,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -437,7 +452,9 @@ class _LayerPanelState extends State<LayerPanel> {
             icon: Icon(
               _isGroupVisible(group) ? Icons.visibility : Icons.visibility_off,
               size: 16,
-              color: _isGroupVisible(group) ? null : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: _isGroupVisible(group)
+                  ? null
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             onPressed: () => _toggleGroupVisibility(group),
             constraints: const BoxConstraints(),
@@ -609,7 +626,12 @@ class _LayerPanelState extends State<LayerPanel> {
                   child: _buildLayerTile(context, layer, group, index, true),
                 ),
                 if (!isLastInGroup)
-                  Divider(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                  Divider(
+                    height: 1,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.3),
+                  ),
               ],
             ),
           );
@@ -697,7 +719,9 @@ class _LayerPanelState extends State<LayerPanel> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         size: 18,
-                        color: layer.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: layer.isVisible
+                            ? null
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () {
                         final updatedLayer = layer.copyWith(
@@ -878,7 +902,8 @@ class _LayerPanelState extends State<LayerPanel> {
     MapLayer layer,
   ) async {
     final filterManager = ColorFilterSessionManager();
-    final currentSettings = filterManager.getLayerFilter(layer.id) ?? const ColorFilterSettings();
+    final currentSettings =
+        filterManager.getLayerFilter(layer.id) ?? const ColorFilterSettings();
 
     final ColorFilterSettings? result = await showDialog<ColorFilterSettings>(
       context: context,
@@ -896,11 +921,13 @@ class _LayerPanelState extends State<LayerPanel> {
     if (result != null) {
       // 应用滤镜设置到会话管理器
       filterManager.setLayerFilter(layer.id, result);
-      
-      final filterName = result.type == ColorFilterType.none ? '已移除' : _getFilterTypeName(result.type);
+
+      final filterName = result.type == ColorFilterType.none
+          ? '已移除'
+          : _getFilterTypeName(result.type);
       widget.onSuccess?.call('图层 "${layer.name}" 的色彩滤镜已设置为：$filterName');
     }
-    
+
     // 无论是否有返回结果，都触发界面更新以确保主题滤镜的变化能够显示
     widget.onLayerUpdated(layer.copyWith(updatedAt: DateTime.now()));
   }
@@ -961,7 +988,9 @@ class _LayerPanelState extends State<LayerPanel> {
         size: 16,
         color: isLastLayer
             ? Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)
-            : (isLinked ? Colors.blue : Theme.of(context).colorScheme.onSurfaceVariant),
+            : (isLinked
+                  ? Colors.blue
+                  : Theme.of(context).colorScheme.onSurfaceVariant),
       ),
       onPressed: isLastLayer
           ? null
@@ -1611,7 +1640,9 @@ class _LayerPanelState extends State<LayerPanel> {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        ),
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),

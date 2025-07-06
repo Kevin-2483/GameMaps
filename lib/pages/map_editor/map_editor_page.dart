@@ -16,6 +16,7 @@ import '../../components/layout/main_layout.dart';
 import '../../components/web/web_readonly_components.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../utils/extension_settings_managers.dart';
+import '../../config/config_manager.dart';
 import 'widgets/map_canvas.dart';
 import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
@@ -59,15 +60,11 @@ class MapEditorPage extends BasePage {
 
   @override
   Widget buildContent(BuildContext context) {
-    return WebReadOnlyBanner(
-      showBanner: kIsWeb,
-      child: _MapEditorContent(
-        mapItem: mapItem,
-        mapTitle: mapTitle,
-        folderPath: folderPath,
-        // isPreviewMode: isPreviewMode || kIsWeb, // Web平台强制预览模式
-        isPreviewMode: isPreviewMode,
-      ),
+    return _MapEditorContent(
+      mapItem: mapItem,
+      mapTitle: mapTitle,
+      folderPath: folderPath,
+      isPreviewMode: isPreviewMode,
     );
   }
 }

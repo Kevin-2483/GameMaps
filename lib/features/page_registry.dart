@@ -9,11 +9,11 @@ abstract class PageModule {
   IconData get icon;
   bool get isEnabled;
   int get priority; // 用于排序，越小越靠前
-  
+
   /// 是否在导航栏中显示，默认为 true
   /// 如果为 false，页面仍然可以通过直接访问路由使用，但不会在导航栏中显示
   bool get showInNavigation => true;
-  
+
   Widget buildPage(BuildContext context);
 
   /// 创建路由配置

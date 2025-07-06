@@ -32,8 +32,9 @@ class EdgeDragArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 只在桌面平台启用拖动功能
-    final isDraggable = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-    
+    final isDraggable =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
     if (!isDraggable) {
       return child;
     }
@@ -42,7 +43,7 @@ class EdgeDragArea extends StatelessWidget {
       children: [
         // 主要内容
         child,
-        
+
         // 顶部拖动区域
         if (enableTopDrag)
           Positioned(
@@ -52,7 +53,7 @@ class EdgeDragArea extends StatelessWidget {
             height: topDragHeight,
             child: _buildDragArea(),
           ),
-        
+
         // 左侧拖动区域
         if (enableLeftDrag)
           Positioned(
@@ -62,7 +63,7 @@ class EdgeDragArea extends StatelessWidget {
             width: leftDragWidth,
             child: _buildDragArea(),
           ),
-        
+
         // 右侧拖动区域
         if (enableRightDrag)
           Positioned(
@@ -72,7 +73,7 @@ class EdgeDragArea extends StatelessWidget {
             width: rightDragWidth,
             child: _buildDragArea(),
           ),
-        
+
         // 底部拖动区域
         if (enableBottomDrag)
           Positioned(

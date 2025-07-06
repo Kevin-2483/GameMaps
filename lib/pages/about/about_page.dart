@@ -34,7 +34,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
       'url': 'https://github.com/marcopixel/r6operators',
       'icon': 'image',
     },
-    
+
     // 示例：您可以取消注释并修改以下项目
     // {
     //   'name': 'Ubisoft 官方资源',
@@ -49,7 +49,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     //   'url': 'https://github.com/your-repo/r6-maps-data',
     //   'icon': 'library_books',
     // },
-    
+
     // 添加更多项目的格式：
     // {
     //   'name': '项目名称',                    // 必需：项目名称
@@ -58,11 +58,11 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     //   'url': 'https://github.com/...',     // 可选：项目链接
     //   'icon': 'code',                     // 可选：图标名称
     // },
-    
+
     // 支持的图标名称：
     // 'folder_special' - 文件夹图标（默认）
     // 'code' - 代码图标
-    // 'image' - 图片图标  
+    // 'image' - 图片图标
     // 'palette' - 调色板图标
     // 'library_books' - 书籍图标
   ];
@@ -102,10 +102,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(
-            title: '关于',
-            icon: Icons.info_outline,
-          ),
+          DraggableTitleBar(title: '关于', icon: Icons.info_outline),
           Expanded(
             child: SafeArea(
               child: ListView(
@@ -148,10 +145,11 @@ class _AboutPageContentState extends State<_AboutPageContent> {
                     children: [
                       Text(
                         _packageInfo?.appName ?? 'R6BOX',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -166,10 +164,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               ],
             ),
             const SizedBox(height: 16),
-            Text(
-              '应用描述',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('应用描述', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               'R6BOX 是一款专为《彩虹六号：围攻》玩家设计的综合工具箱应用。提供地图编辑器、战术分析、数据统计等功能，帮助玩家提升游戏体验和竞技水平。',
@@ -188,10 +183,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '许可证',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('许可证', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.gavel),
@@ -213,10 +205,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '项目地址',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('项目地址', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.code),
@@ -230,14 +219,16 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               title: const Text('问题反馈'),
               subtitle: const Text('报告 Bug 或提出功能建议'),
               trailing: const Icon(Icons.open_in_new),
-              onTap: () => _launchUrl('https://github.com/Kevin-2483/GameMaps/issues'),
+              onTap: () =>
+                  _launchUrl('https://github.com/Kevin-2483/GameMaps/issues'),
             ),
             ListTile(
               leading: const Icon(Icons.description),
               title: const Text('项目文档'),
               subtitle: const Text('查看详细的使用说明和开发文档'),
               trailing: const Icon(Icons.open_in_new),
-              onTap: () => _launchUrl('https://github.com/Kevin-2483/GameMaps/wiki'),
+              onTap: () =>
+                  _launchUrl('https://github.com/Kevin-2483/GameMaps/wiki'),
             ),
           ],
         ),
@@ -252,32 +243,31 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '开源项目致谢',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('开源项目致谢', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               '本项目使用了以下优秀的开源项目和资源：',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            
+
             // 动态生成自定义致谢项目
-            ..._customAcknowledgments.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: _buildCustomAcknowledgment(
-                context,
-                item['name']!,
-                item['description']!,
-                item['subtitle']!,
-                item['url'],
-                item['icon'],
+            ..._customAcknowledgments.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildCustomAcknowledgment(
+                  context,
+                  item['name']!,
+                  item['description']!,
+                  item['subtitle']!,
+                  item['url'],
+                  item['icon'],
+                ),
               ),
-            )),
-            
+            ),
+
             const Divider(height: 24),
-            
+
             Text(
               '此外，本项目还依赖众多 Flutter 生态系统中的优秀开源包，点击下方按钮查看完整的依赖项列表和许可证信息。',
               style: Theme.of(context).textTheme.bodyMedium,
@@ -402,14 +392,12 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               ? SingleChildScrollView(
                   child: Text(
                     _licenseText!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                   ),
                 )
-              : const Center(
-                  child: CircularProgressIndicator(),
-                ),
+              : const Center(child: CircularProgressIndicator()),
         ),
         actions: [
           TextButton(
@@ -421,9 +409,9 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _licenseText!));
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('许可证文本已复制到剪贴板')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('许可证文本已复制到剪贴板')));
               },
               child: const Text('复制'),
             ),

@@ -148,8 +148,7 @@ class ConfigUtils {
 
   /// 检查是否应该显示调试信息
   bool get shouldShowDebugInfo {
-    return BuildTimeConfig.isFeatureEnabled('DebugMode') &&
-        ConfigManager.instance.isCurrentPlatformFeatureEnabled('DebugMode');
+    return false; // DebugMode feature removed
   }
 
   /// 检查是否启用实验性功能

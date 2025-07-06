@@ -32,14 +32,15 @@ class BuildTimeConfig {
       defaultValue: true,
     ))
       'VfsFileManagerPage',
-    if (bool.fromEnvironment('ENABLE_FULLSCREEN_TEST_PAGE', defaultValue: false))
+    if (bool.fromEnvironment(
+      'ENABLE_FULLSCREEN_TEST_PAGE',
+      defaultValue: false,
+    ))
       'FullscreenTestPage',
   ];
 
   /// 从环境变量获取启用的功能列表
   static const List<String> enabledFeatures = [
-    if (bool.fromEnvironment('ENABLE_DEBUG_MODE', defaultValue: true))
-      'DebugMode',
     if (bool.fromEnvironment('ENABLE_TRAY_NAVIGATION', defaultValue: true))
       'TrayNavigation',
     if (bool.fromEnvironment(

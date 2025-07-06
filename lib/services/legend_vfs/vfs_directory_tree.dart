@@ -44,45 +44,50 @@ class VfsDirectoryNode {
   /// 递归查找节点
   VfsDirectoryNode? findNode(String targetPath) {
     if (path == targetPath) return this;
-    
+
     for (final child in children) {
       final found = child.findNode(targetPath);
       if (found != null) return found;
     }
-    
+
     return null;
   }
 
   /// 获取所有选中的节点路径
   List<String> getSelectedPaths() {
     final List<String> selectedPaths = [];
-    
+
     if (isSelected) {
       selectedPaths.add(path);
     }
-    
+
     for (final child in children) {
       selectedPaths.addAll(child.getSelectedPaths());
     }
-    
+
     return selectedPaths;
   }
 
   /// 递归更新节点状态
-  void updateNode(String targetPath, {bool? isExpanded, bool? isSelected, bool? isDisabled}) {
+  void updateNode(
+    String targetPath, {
+    bool? isExpanded,
+    bool? isSelected,
+    bool? isDisabled,
+  }) {
     if (path == targetPath) {
       if (isExpanded != null) this.isExpanded = isExpanded;
       if (isSelected != null) this.isSelected = isSelected;
       if (isDisabled != null) this.isDisabled = isDisabled;
       return;
     }
-    
+
     for (final child in children) {
       child.updateNode(
-        targetPath, 
-        isExpanded: isExpanded, 
+        targetPath,
+        isExpanded: isExpanded,
         isSelected: isSelected,
-        isDisabled: isDisabled
+        isDisabled: isDisabled,
       );
     }
   }
@@ -105,10 +110,10 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
     try {
       // 获取所有文件夹
       final folders = await _legendService.getAllFolders();
-      
+
       // 构建目录树
       _rootNode = _buildDirectoryTree(folders);
-      
+
       debugPrint('VFS目录树: 加载完成，根节点包含 ${_rootNode?.children.length ?? 0} 个子目录');
     } catch (e) {
       debugPrint('VFS目录树: 加载失败 $e');
@@ -136,24 +141,27 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
 
     // 构建节点映射
     final Map<String, VfsDirectoryNode> nodeMap = {'': root};
-    
+
     debugPrint('VFS目录树: 开始构建，输入文件夹数量: ${folders.length}');
     for (final folder in folders) {
       debugPrint('VFS目录树: 处理文件夹路径: $folder');
     }
-    
+
     // 处理所有文件夹路径
     for (final folderPath in folders) {
-      final pathSegments = folderPath.split('/').where((s) => s.isNotEmpty).toList();
+      final pathSegments = folderPath
+          .split('/')
+          .where((s) => s.isNotEmpty)
+          .toList();
       String currentPath = '';
-      
+
       debugPrint('VFS目录树: 处理路径 "$folderPath"，分段: $pathSegments');
-      
+
       for (int i = 0; i < pathSegments.length; i++) {
         final segment = pathSegments[i];
         final parentPath = currentPath;
         currentPath = currentPath.isEmpty ? segment : '$currentPath/$segment';
-        
+
         // 如果节点不存在，创建它
         if (!nodeMap.containsKey(currentPath)) {
           final newNode = VfsDirectoryNode(
@@ -161,14 +169,16 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
             path: currentPath,
             isExpanded: false,
           );
-          
+
           nodeMap[currentPath] = newNode;
-          
+
           // 添加到父节点
           final parentNode = nodeMap[parentPath];
           if (parentNode != null) {
             parentNode.children.add(newNode);
-            debugPrint('VFS目录树: 创建节点 "$segment" (路径: $currentPath)，添加到父节点 "${parentNode.name}" (路径: $parentPath)');
+            debugPrint(
+              'VFS目录树: 创建节点 "$segment" (路径: $currentPath)，添加到父节点 "${parentNode.name}" (路径: $parentPath)',
+            );
           } else {
             debugPrint('VFS目录树: 警告 - 找不到父节点: $parentPath');
           }
@@ -180,10 +190,10 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
 
     // 对所有节点的子节点进行排序
     _sortChildrenRecursively(root);
-    
+
     debugPrint('VFS目录树: 构建完成，根节点包含 ${root.children.length} 个子节点');
     _printTreeStructure(root, 0);
-    
+
     return root;
   }
 
@@ -210,7 +220,7 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
     if (node != null) {
       node.isSelected = !node.isSelected;
       notifyListeners();
-      
+
       // 注意：原先的缓存管理已移至LegendPathSelectionManager
       // 这里只触发状态变化通知，不再直接管理缓存
     }
@@ -229,7 +239,9 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
   /// 打印树结构（调试用）
   void _printTreeStructure(VfsDirectoryNode node, int depth) {
     final indent = '  ' * depth;
-    debugPrint('$indent${node.name} (${node.path}) - ${node.children.length} children');
+    debugPrint(
+      '$indent${node.name} (${node.path}) - ${node.children.length} children',
+    );
     for (final child in node.children) {
       _printTreeStructure(child, depth + 1);
     }

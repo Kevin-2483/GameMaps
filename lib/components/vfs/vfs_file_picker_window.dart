@@ -1457,11 +1457,20 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         ),
         child: Row(
           children: [
-            Icon(Icons.location_on, size: 16, color: Theme.of(context).iconTheme.color?.withOpacity(0.6)),
+            Icon(
+              Icons.location_on,
+              size: 16,
+              color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+            ),
             const SizedBox(width: 6),
             Text(
               '请选择数据库和集合',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+              ),
             ),
           ],
         ),
@@ -1482,7 +1491,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       ),
       child: Row(
         children: [
-          Icon(Icons.location_on, size: 16, color: Theme.of(context).iconTheme.color?.withOpacity(0.6)),
+          Icon(
+            Icons.location_on,
+            size: 16,
+            color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: SingleChildScrollView(
@@ -1504,11 +1517,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5), width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.search, size: 16, color: Theme.of(context).colorScheme.tertiary),
+          Icon(
+            Icons.search,
+            size: 16,
+            color: Theme.of(context).colorScheme.tertiary,
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -1534,7 +1554,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             ),
             child: Text(
               '清除',
-              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.tertiary),
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
             ),
           ),
         ],
@@ -1616,13 +1639,22 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isLast
-                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withOpacity(0.3)
                     : isRoot
-                    ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3)
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.secondaryContainer.withOpacity(0.3)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: isLast
-                    ? Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5), width: 1)
+                    ? Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.5),
+                        width: 1,
+                      )
                     : null,
               ),
               child: Text(
@@ -1647,7 +1679,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         widgets.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Icon(Icons.chevron_right, size: 14, color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
+            child: Icon(
+              Icons.chevron_right,
+              size: 14,
+              color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
+            ),
           ),
         );
       }

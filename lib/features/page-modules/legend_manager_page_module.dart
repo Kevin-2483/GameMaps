@@ -32,11 +32,6 @@ class LegendManagerPageModule extends PageModule {
     }
 
     // 运行时配置检查 - 检查当前平台是否启用该页面
-    // 图例管理页面只在调试模式下显示
-    if (!ConfigManager.instance.isCurrentPlatformFeatureEnabled('DebugMode')) {
-      return false;
-    }
-
     return ConfigManager.instance.isCurrentPlatformPageEnabled(moduleId);
   }
 

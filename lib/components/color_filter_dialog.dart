@@ -5,14 +5,14 @@ import '../providers/user_preferences_provider.dart';
 
 /// 色彩滤镜类型
 enum ColorFilterType {
-  none,        // 无滤镜
-  grayscale,   // 灰度
-  sepia,       // 棕褐色
-  invert,      // 反色
-  brightness,  // 亮度调整
-  contrast,    // 对比度调整
-  saturation,  // 饱和度调整
-  hue,         // 色相调整
+  none, // 无滤镜
+  grayscale, // 灰度
+  sepia, // 棕褐色
+  invert, // 反色
+  brightness, // 亮度调整
+  contrast, // 对比度调整
+  saturation, // 饱和度调整
+  hue, // 色相调整
 }
 
 /// 色彩滤镜设置
@@ -20,9 +20,9 @@ class ColorFilterSettings {
   final ColorFilterType type;
   final double intensity; // 滤镜强度 0.0-1.0
   final double brightness; // 亮度调整 -1.0 到 1.0
-  final double contrast;   // 对比度调整 0.0 到 2.0
+  final double contrast; // 对比度调整 0.0 到 2.0
   final double saturation; // 饱和度调整 0.0 到 2.0
-  final double hue;        // 色相调整 0.0 到 360.0
+  final double hue; // 色相调整 0.0 到 360.0
 
   const ColorFilterSettings({
     this.type = ColorFilterType.none,
@@ -81,10 +81,26 @@ class ColorFilterSettings {
   List<double> _createGrayscaleMatrix(double intensity) {
     final gray = 1.0 - intensity;
     return [
-      0.299 + gray * 0.701, 0.587 - gray * 0.587, 0.114 - gray * 0.114, 0, 0,
-      0.299 - gray * 0.299, 0.587 + gray * 0.413, 0.114 - gray * 0.114, 0, 0,
-      0.299 - gray * 0.299, 0.587 - gray * 0.587, 0.114 + gray * 0.886, 0, 0,
-      0, 0, 0, 1, 0,
+      0.299 + gray * 0.701,
+      0.587 - gray * 0.587,
+      0.114 - gray * 0.114,
+      0,
+      0,
+      0.299 - gray * 0.299,
+      0.587 + gray * 0.413,
+      0.114 - gray * 0.114,
+      0,
+      0,
+      0.299 - gray * 0.299,
+      0.587 - gray * 0.587,
+      0.114 + gray * 0.886,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -93,10 +109,26 @@ class ColorFilterSettings {
     final sepia = intensity;
     final inv = 1.0 - sepia;
     return [
-      inv + sepia * 0.393, sepia * 0.769, sepia * 0.189, 0, 0,
-      sepia * 0.349, inv + sepia * 0.686, sepia * 0.168, 0, 0,
-      sepia * 0.272, sepia * 0.534, inv + sepia * 0.131, 0, 0,
-      0, 0, 0, 1, 0,
+      inv + sepia * 0.393,
+      sepia * 0.769,
+      sepia * 0.189,
+      0,
+      0,
+      sepia * 0.349,
+      inv + sepia * 0.686,
+      sepia * 0.168,
+      0,
+      0,
+      sepia * 0.272,
+      sepia * 0.534,
+      inv + sepia * 0.131,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -105,22 +137,33 @@ class ColorFilterSettings {
     final inv = 1.0 - intensity;
     final neg = -intensity;
     return [
-      inv + neg, 0, 0, 0, intensity * 255,
-      0, inv + neg, 0, 0, intensity * 255,
-      0, 0, inv + neg, 0, intensity * 255,
-      0, 0, 0, 1, 0,
+      inv + neg,
+      0,
+      0,
+      0,
+      intensity * 255,
+      0,
+      inv + neg,
+      0,
+      0,
+      intensity * 255,
+      0,
+      0,
+      inv + neg,
+      0,
+      intensity * 255,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
   /// 创建亮度矩阵
   List<double> _createBrightnessMatrix(double brightness) {
     final b = brightness * 255;
-    return [
-      1, 0, 0, 0, b,
-      0, 1, 0, 0, b,
-      0, 0, 1, 0, b,
-      0, 0, 0, 1, 0,
-    ];
+    return [1, 0, 0, 0, b, 0, 1, 0, 0, b, 0, 0, 1, 0, b, 0, 0, 0, 1, 0];
   }
 
   /// 创建对比度矩阵
@@ -128,10 +171,26 @@ class ColorFilterSettings {
     final c = contrast;
     final offset = (1.0 - c) * 128;
     return [
-      c, 0, 0, 0, offset,
-      0, c, 0, 0, offset,
-      0, 0, c, 0, offset,
-      0, 0, 0, 1, 0,
+      c,
+      0,
+      0,
+      0,
+      offset,
+      0,
+      c,
+      0,
+      0,
+      offset,
+      0,
+      0,
+      c,
+      0,
+      offset,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -142,10 +201,26 @@ class ColorFilterSettings {
     final sg = (1 - s) * 0.587;
     final sb = (1 - s) * 0.114;
     return [
-      sr + s, sg, sb, 0, 0,
-      sr, sg + s, sb, 0, 0,
-      sr, sg, sb + s, 0, 0,
-      0, 0, 0, 1, 0,
+      sr + s,
+      sg,
+      sb,
+      0,
+      0,
+      sr,
+      sg + s,
+      sb,
+      0,
+      0,
+      sr,
+      sg,
+      sb + s,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -155,14 +230,28 @@ class ColorFilterSettings {
     final cosH = cos(h);
     final sinH = sin(h);
     return [
-      0.213 + cosH * 0.787 - sinH * 0.213, 0.715 - cosH * 0.715 - sinH * 0.715, 0.072 - cosH * 0.072 + sinH * 0.928, 0, 0,
-      0.213 - cosH * 0.213 + sinH * 0.143, 0.715 + cosH * 0.285 + sinH * 0.140, 0.072 - cosH * 0.072 - sinH * 0.283, 0, 0,
-      0.213 - cosH * 0.213 - sinH * 0.787, 0.715 - cosH * 0.715 + sinH * 0.715, 0.072 + cosH * 0.928 + sinH * 0.072, 0, 0,
-      0, 0, 0, 1, 0,
+      0.213 + cosH * 0.787 - sinH * 0.213,
+      0.715 - cosH * 0.715 - sinH * 0.715,
+      0.072 - cosH * 0.072 + sinH * 0.928,
+      0,
+      0,
+      0.213 - cosH * 0.213 + sinH * 0.143,
+      0.715 + cosH * 0.285 + sinH * 0.140,
+      0.072 - cosH * 0.072 - sinH * 0.283,
+      0,
+      0,
+      0.213 - cosH * 0.213 - sinH * 0.787,
+      0.715 - cosH * 0.715 + sinH * 0.715,
+      0.072 + cosH * 0.928 + sinH * 0.072,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
-  
-
 }
 
 /// 色彩滤镜设置对话框
@@ -193,12 +282,16 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
   void initState() {
     super.initState();
     _layerId = widget.layerId;
-    
+
     // 如果有图层ID，检查是否有主题适配滤镜
     if (_layerId != null) {
-      final userFilter = ColorFilterSessionManager().getUserLayerFilter(_layerId!);
-      final themeFilter = ColorFilterSessionManager().getThemeAdaptationFilter(_layerId!);
-      
+      final userFilter = ColorFilterSessionManager().getUserLayerFilter(
+        _layerId!,
+      );
+      final themeFilter = ColorFilterSessionManager().getThemeAdaptationFilter(
+        _layerId!,
+      );
+
       // 优先使用用户设置的滤镜，如果没有则使用主题适配滤镜
       _settings = userFilter ?? themeFilter ?? widget.initialSettings;
       // 如果使用的是主题滤镜（没有用户滤镜但有主题滤镜），设置标记
@@ -217,12 +310,16 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
 
   /// 检查主题适配设置并自动应用滤镜
   void _checkThemeAdaptation() {
-    final userPreferences = Provider.of<UserPreferencesProvider>(context, listen: false);
+    final userPreferences = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
     final themePreferences = userPreferences.theme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    _isThemeAdaptationActive = themePreferences.canvasThemeAdaptation && isDarkMode;
-    
+
+    _isThemeAdaptationActive =
+        themePreferences.canvasThemeAdaptation && isDarkMode;
+
     if (_isThemeAdaptationActive) {
       // 自动应用适合深色模式的滤镜设置
       _autoAppliedSettings = const ColorFilterSettings(
@@ -230,16 +327,22 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
         intensity: 1.0,
         brightness: 0.5, // 增加亮度
       );
-      
+
       // 如果有图层ID，检查是否应该应用主题适配滤镜
       if (_layerId != null) {
-        final hasUserFilter = ColorFilterSessionManager().hasUserFilter(_layerId!);
-        final isUserDisabled = ColorFilterSessionManager().isThemeAdaptationUserDisabled(_layerId!);
-        
+        final hasUserFilter = ColorFilterSessionManager().hasUserFilter(
+          _layerId!,
+        );
+        final isUserDisabled = ColorFilterSessionManager()
+            .isThemeAdaptationUserDisabled(_layerId!);
+
         // 只有在用户没有明确禁用主题适配且当前没有用户手动设置的滤镜时，才自动应用主题适配滤镜
         if (!hasUserFilter && !isUserDisabled) {
           // 设置或更新主题适配滤镜
-          ColorFilterSessionManager().setThemeAdaptationFilter(_layerId!, _autoAppliedSettings!);
+          ColorFilterSessionManager().setThemeAdaptationFilter(
+            _layerId!,
+            _autoAppliedSettings!,
+          );
           setState(() {
             _settings = _autoAppliedSettings!;
             _isUsingThemeFilter = true; // 标记当前使用主题滤镜
@@ -284,7 +387,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               _buildPreview(),
               const SizedBox(height: 16),
               _buildFilterControls(),
-            ]
+            ],
           ],
         ),
       ),
@@ -298,13 +401,15 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
             if (_layerId != null) {
               // 如果用户选择了无滤镜，需要移除主题适配滤镜
               if (_settings.type == ColorFilterType.none) {
-                ColorFilterSessionManager().removeThemeAdaptationFilter(_layerId!);
+                ColorFilterSessionManager().removeThemeAdaptationFilter(
+                  _layerId!,
+                );
               } else if (_isUsingThemeFilter) {
-                 // 如果当前使用的是主题滤镜，不要将其保存为用户滤镜
-                 // 直接关闭对话框，不返回设置（界面更新由调用方处理）
-                 Navigator.of(context).pop();
-                 return;
-               }
+                // 如果当前使用的是主题滤镜，不要将其保存为用户滤镜
+                // 直接关闭对话框，不返回设置（界面更新由调用方处理）
+                Navigator.of(context).pop();
+                return;
+              }
             }
             Navigator.of(context).pop(_settings);
           },
@@ -316,19 +421,28 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
 
   /// 主题适配信息提示
   Widget _buildThemeAdaptationInfo() {
-    final hasUserFilter = _layerId != null && ColorFilterSessionManager().hasUserFilter(_layerId!);
-    final hasThemeFilter = _layerId != null && ColorFilterSessionManager().hasThemeAdaptationFilter(_layerId!);
-    final themeFilter = _layerId != null ? ColorFilterSessionManager().getThemeAdaptationFilter(_layerId!) : null;
-    final isUserDisabled = _layerId != null && ColorFilterSessionManager().isThemeAdaptationUserDisabled(_layerId!);
-    
+    final hasUserFilter =
+        _layerId != null &&
+        ColorFilterSessionManager().hasUserFilter(_layerId!);
+    final hasThemeFilter =
+        _layerId != null &&
+        ColorFilterSessionManager().hasThemeAdaptationFilter(_layerId!);
+    final themeFilter = _layerId != null
+        ? ColorFilterSessionManager().getThemeAdaptationFilter(_layerId!)
+        : null;
+    final isUserDisabled =
+        _layerId != null &&
+        ColorFilterSessionManager().isThemeAdaptationUserDisabled(_layerId!);
+
     // 检查当前设置是否与主题滤镜一致
-    final isUsingThemeFilter = themeFilter != null && 
+    final isUsingThemeFilter =
+        themeFilter != null &&
         _settings.type == themeFilter.type &&
         _settings.intensity == themeFilter.intensity &&
         _settings.hue == themeFilter.hue &&
         _settings.saturation == themeFilter.saturation &&
         _settings.brightness == themeFilter.brightness;
-    
+
     String statusText;
     if (isUserDisabled) {
       statusText = '您已禁用此图层的主题适配，当前使用自定义设置。';
@@ -341,7 +455,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
     } else {
       statusText = '深色模式下将自动应用颜色反转。';
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -389,7 +503,10 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                   icon: const Icon(Icons.auto_awesome, size: 16),
                   label: const Text('重新应用主题滤镜'),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -401,7 +518,10 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                   icon: const Icon(Icons.refresh, size: 16),
                   label: const Text('重置为自动设置'),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -413,7 +533,10 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 icon: const Icon(Icons.clear, size: 16),
                 label: const Text('清除所有滤镜'),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -430,13 +553,18 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
     if (_layerId != null) {
       ColorFilterSessionManager().removeUserLayerFilter(_layerId!);
       ColorFilterSessionManager().enableThemeAdaptation(_layerId!); // 重新启用主题适配
-      
+
       // 获取或创建主题适配滤镜
-      var themeFilter = ColorFilterSessionManager().getThemeAdaptationFilter(_layerId!);
+      var themeFilter = ColorFilterSessionManager().getThemeAdaptationFilter(
+        _layerId!,
+      );
       if (themeFilter == null && _autoAppliedSettings != null) {
         // 如果没有主题滤镜但有自动应用的设置，使用自动应用的设置
         themeFilter = _autoAppliedSettings!;
-        ColorFilterSessionManager().setThemeAdaptationFilter(_layerId!, themeFilter);
+        ColorFilterSessionManager().setThemeAdaptationFilter(
+          _layerId!,
+          themeFilter,
+        );
       } else if (themeFilter == null) {
         // 如果都没有，创建默认的亮度滤镜（主题适配的默认行为）
         themeFilter = const ColorFilterSettings(
@@ -444,9 +572,12 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           intensity: 1.0,
           brightness: 0.5, // 提高亮度
         );
-        ColorFilterSessionManager().setThemeAdaptationFilter(_layerId!, themeFilter);
+        ColorFilterSessionManager().setThemeAdaptationFilter(
+          _layerId!,
+          themeFilter,
+        );
       }
-      
+
       setState(() {
         _settings = themeFilter!;
         _isUsingThemeFilter = true; // 标记当前使用主题滤镜
@@ -502,9 +633,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
-                ? colorScheme.primary
-                : colorScheme.outline,
+            color: isSelected ? colorScheme.primary : colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
@@ -516,9 +645,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? colorScheme.primary
-                : colorScheme.onSurface,
+            color: isSelected ? colorScheme.primary : colorScheme.onSurface,
           ),
         ),
       ),
@@ -528,7 +655,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
   /// 预览区域
   Widget _buildPreview() {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       width: double.infinity,
       height: 100,
@@ -539,7 +666,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: ColorFiltered(
-          colorFilter: _settings.toColorFilter() ?? const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+          colorFilter:
+              _settings.toColorFilter() ??
+              const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -606,7 +735,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           min: 0.0,
           max: 1.0,
           divisions: 100,
-          onChanged: (value) => _updateSettings(_settings.copyWith(intensity: value)),
+          onChanged: (value) =>
+              _updateSettings(_settings.copyWith(intensity: value)),
         ),
       ],
     );
@@ -627,7 +757,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           min: -1.0,
           max: 1.0,
           divisions: 200,
-          onChanged: (value) => _updateSettings(_settings.copyWith(brightness: value)),
+          onChanged: (value) =>
+              _updateSettings(_settings.copyWith(brightness: value)),
         ),
       ],
     );
@@ -648,7 +779,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           min: 0.0,
           max: 2.0,
           divisions: 200,
-          onChanged: (value) => _updateSettings(_settings.copyWith(contrast: value)),
+          onChanged: (value) =>
+              _updateSettings(_settings.copyWith(contrast: value)),
         ),
       ],
     );
@@ -669,7 +801,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
           min: 0.0,
           max: 2.0,
           divisions: 200,
-          onChanged: (value) => _updateSettings(_settings.copyWith(saturation: value)),
+          onChanged: (value) =>
+              _updateSettings(_settings.copyWith(saturation: value)),
         ),
       ],
     );
@@ -721,7 +854,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
 
 /// 色彩滤镜会话管理器
 class ColorFilterSessionManager {
-  static final ColorFilterSessionManager _instance = ColorFilterSessionManager._internal();
+  static final ColorFilterSessionManager _instance =
+      ColorFilterSessionManager._internal();
   factory ColorFilterSessionManager() => _instance;
   ColorFilterSessionManager._internal();
 
@@ -808,7 +942,9 @@ class ColorFilterSessionManager {
 
   /// 获取所有滤镜
   Map<String, ColorFilterSettings> getAllFilters() {
-    final result = Map<String, ColorFilterSettings>.from(_themeAdaptationFilters);
+    final result = Map<String, ColorFilterSettings>.from(
+      _themeAdaptationFilters,
+    );
     result.addAll(_layerFilters); // 用户滤镜覆盖主题适配滤镜
     return result;
   }

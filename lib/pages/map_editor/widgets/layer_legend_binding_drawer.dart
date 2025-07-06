@@ -38,7 +38,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
   Widget build(BuildContext context) {
     final userPrefs = context.watch<UserPreferencesProvider>();
     final drawerWidth = userPrefs.layout.drawerWidth;
-    
+
     // 分离已绑定和未绑定的图例组
     final boundGroups = widget.allLegendGroups
         .where((group) => _selectedLegendGroupIds.contains(group.id))

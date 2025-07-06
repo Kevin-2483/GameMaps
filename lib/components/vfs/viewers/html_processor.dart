@@ -83,7 +83,9 @@ class HtmlProcessor {
       // 解析HTML片段
       h.DocumentFragment document = parseFragment(text);
 
-      debugPrint('🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}');
+      debugPrint(
+        '🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}',
+      );
 
       // 使用HTML转SpanNode访问器处理
       final result = HtmlToSpanVisitor(
@@ -91,7 +93,9 @@ class HtmlProcessor {
         parentStyle: parentStyle,
       ).toVisit(document.nodes.toList());
 
-      debugPrint('🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}');
+      debugPrint(
+        '🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}',
+      );
       return result;
     } catch (e) {
       debugPrint('🔧 HtmlProcessor.parseHtml: 解析失败 - $e');

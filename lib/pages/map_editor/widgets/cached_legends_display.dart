@@ -44,16 +44,18 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   @override
   void didUpdateWidget(CachedLegendsDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // 如果版本管理器变化，需要重新监听
     if (widget.versionManager != oldWidget.versionManager) {
       oldWidget.versionManager?.removeListener(_updateCachedLegends);
       widget.versionManager?.addListener(_updateCachedLegends);
     }
-    
+
     // 如果当前图例组ID变化，需要重新计算分类
     if (widget.currentLegendGroupId != oldWidget.currentLegendGroupId) {
-      debugPrint('[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示');
+      debugPrint(
+        '[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示',
+      );
       _updateCachedLegends();
     }
   }
@@ -67,28 +69,33 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
 
   /// 更新缓存图例列表
   void _updateCachedLegends() {
-    debugPrint('[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}');
-    
+    debugPrint(
+      '[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}',
+    );
+
     final cachedItems = _cacheManager.getAllCachedLegends();
     debugPrint('[CachedLegendsDisplay] 当前缓存图例数量: ${cachedItems.length}');
-    
+
     final Map<String, List<String>> ownSelected = {};
     final Map<String, List<String>> otherSelected = {};
     final Map<String, List<String>> unselected = {};
-    
+
     // 获取选中状态信息
     Set<String> ownSelectedPaths = {};
     Set<String> otherSelectedPaths = {};
-    
+
     if (widget.versionManager != null && widget.currentLegendGroupId != null) {
-      ownSelectedPaths = widget.versionManager!.getSelectedPaths(widget.currentLegendGroupId!);
+      ownSelectedPaths = widget.versionManager!.getSelectedPaths(
+        widget.currentLegendGroupId!,
+      );
       final allSelectedPaths = widget.versionManager!.getAllSelectedPaths();
-      otherSelectedPaths = Set<String>.from(allSelectedPaths)..removeAll(ownSelectedPaths);
-      
+      otherSelectedPaths = Set<String>.from(allSelectedPaths)
+        ..removeAll(ownSelectedPaths);
+
       debugPrint('[CachedLegendsDisplay] 自己组选中路径: $ownSelectedPaths');
       debugPrint('[CachedLegendsDisplay] 其他组选中路径: $otherSelectedPaths');
     }
-    
+
     for (final legendPath in cachedItems) {
       // 从路径确定目录
       String directory = '';
@@ -97,28 +104,30 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         directory = legendPath.substring(0, lastSlashIndex);
       }
       final displayDirectory = directory.isEmpty ? '根目录' : directory;
-      
+
       // 判断图例属于哪个分类
       bool isOwnSelected = false;
       bool isOtherSelected = false;
-      
+
       // 检查图例路径是否属于选中的目录
       for (final selectedPath in ownSelectedPaths) {
-        if (directory == selectedPath || directory.startsWith('$selectedPath/')) {
+        if (directory == selectedPath ||
+            directory.startsWith('$selectedPath/')) {
           isOwnSelected = true;
           break;
         }
       }
-      
+
       if (!isOwnSelected) {
         for (final selectedPath in otherSelectedPaths) {
-          if (directory == selectedPath || directory.startsWith('$selectedPath/')) {
+          if (directory == selectedPath ||
+              directory.startsWith('$selectedPath/')) {
             isOtherSelected = true;
             break;
           }
         }
       }
-      
+
       // 分类存储
       Map<String, List<String>> targetMap;
       if (isOwnSelected) {
@@ -128,32 +137,52 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       } else {
         targetMap = unselected;
       }
-      
+
       if (!targetMap.containsKey(displayDirectory)) {
         targetMap[displayDirectory] = [];
       }
       targetMap[displayDirectory]!.add(legendPath);
     }
-    
+
     setState(() {
       _ownSelectedLegends = ownSelected;
       _otherSelectedLegends = otherSelected;
       _unselectedLegends = unselected;
     });
-    
+
     // 输出分类结果
-    final totalOwnSelected = ownSelected.values.fold<int>(0, (sum, list) => sum + list.length);
-    final totalOtherSelected = otherSelected.values.fold<int>(0, (sum, list) => sum + list.length);
-    final totalUnselected = unselected.values.fold<int>(0, (sum, list) => sum + list.length);
-    debugPrint('[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected');
+    final totalOwnSelected = ownSelected.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final totalOtherSelected = otherSelected.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final totalUnselected = unselected.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    debugPrint(
+      '[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalOwnSelected = _ownSelectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
-    final totalOtherSelected = _otherSelectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
-    final totalUnselected = _unselectedLegends.values.fold<int>(0, (sum, list) => sum + list.length);
-    
+    final totalOwnSelected = _ownSelectedLegends.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final totalOtherSelected = _otherSelectedLegends.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final totalUnselected = _unselectedLegends.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+
     if (totalOwnSelected + totalOtherSelected + totalUnselected == 0) {
       return Center(
         child: Column(
@@ -195,11 +224,16 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
             Colors.green,
             Icons.check_circle,
           ),
-          ..._ownSelectedLegends.entries.map((entry) => 
-            _buildDirectorySection(entry.key, entry.value, Colors.green.shade50)),
+          ..._ownSelectedLegends.entries.map(
+            (entry) => _buildDirectorySection(
+              entry.key,
+              entry.value,
+              Colors.green.shade50,
+            ),
+          ),
           const SizedBox(height: 8),
         ],
-        
+
         // 2. 其他组选中的图例（中间，橙色主题）
         if (_otherSelectedLegends.isNotEmpty) ...[
           _buildCategoryHeader(
@@ -208,11 +242,16 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
             Colors.orange,
             Icons.group,
           ),
-          ..._otherSelectedLegends.entries.map((entry) => 
-            _buildDirectorySection(entry.key, entry.value, Colors.orange.shade50)),
+          ..._otherSelectedLegends.entries.map(
+            (entry) => _buildDirectorySection(
+              entry.key,
+              entry.value,
+              Colors.orange.shade50,
+            ),
+          ),
           const SizedBox(height: 8),
         ],
-        
+
         // 3. 未选中但已加载的图例（最下方，灰色主题）
         if (_unselectedLegends.isNotEmpty) ...[
           _buildCategoryHeader(
@@ -221,15 +260,25 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
             Colors.grey,
             Icons.storage,
           ),
-          ..._unselectedLegends.entries.map((entry) => 
-            _buildDirectorySection(entry.key, entry.value, Colors.grey.shade50)),
+          ..._unselectedLegends.entries.map(
+            (entry) => _buildDirectorySection(
+              entry.key,
+              entry.value,
+              Colors.grey.shade50,
+            ),
+          ),
         ],
       ],
     );
   }
 
   /// 构建分类标题
-  Widget _buildCategoryHeader(String title, int count, Color color, IconData icon) {
+  Widget _buildCategoryHeader(
+    String title,
+    int count,
+    Color color,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       child: Row(
@@ -244,22 +293,23 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               color: color,
             ),
           ),
-          Expanded(
-            child: Divider(
-              indent: 8,
-              color: color.withOpacity(0.3),
-            ),
-          ),
+          Expanded(child: Divider(indent: 8, color: color.withOpacity(0.3))),
         ],
       ),
     );
   }
 
   /// 构建目录段落
-  Widget _buildDirectorySection(String directory, List<String> legends, [Color? backgroundColor]) {
+  Widget _buildDirectorySection(
+    String directory,
+    List<String> legends, [
+    Color? backgroundColor,
+  ]) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
-      color: backgroundColor?.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0),
+      color: backgroundColor?.withOpacity(
+        Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0,
+      ),
       child: ExpansionTile(
         title: Text(
           directory,
@@ -316,7 +366,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       future: _cacheManager.getLegendData(legendPath),
       builder: (context, snapshot) {
         final legend = snapshot.data;
-        
+
         return Draggable<String>(
           data: legendPath,
           onDragStarted: () {
@@ -337,7 +387,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.9),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withOpacity(0.9),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary,
                   width: 2,
@@ -406,16 +458,22 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Icon(
                     Icons.drag_indicator,
                     size: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withOpacity(0.5),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -423,7 +481,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   '拖拽中...',
                   style: TextStyle(
                     fontSize: 10,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -449,9 +509,13 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.5),
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -463,7 +527,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                         : Icon(
                             Icons.legend_toggle,
                             size: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                   ),
                   const SizedBox(height: 4),
@@ -488,7 +554,11 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   }
 
   /// 构建图例缩略图组件
-  Widget _buildLegendThumbnail(legend_db.LegendItem legend, double width, double height) {
+  Widget _buildLegendThumbnail(
+    legend_db.LegendItem legend,
+    double width,
+    double height,
+  ) {
     if (!legend.hasImageData) {
       return Icon(
         Icons.image,
@@ -502,10 +572,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       try {
         return ScalableImageWidget.fromSISource(
           si: ScalableImageSource.fromSvgHttpUrl(
-            Uri.dataFromBytes(
-              legend.imageData!,
-              mimeType: 'image/svg+xml',
-            ),
+            Uri.dataFromBytes(legend.imageData!, mimeType: 'image/svg+xml'),
           ),
           fit: BoxFit.cover,
         );

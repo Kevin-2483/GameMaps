@@ -14,7 +14,7 @@ class WebReadOnlyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb || !showBanner) {
+    if (!showBanner) {
       return child;
     }
 

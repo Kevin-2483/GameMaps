@@ -32,7 +32,7 @@ class FileMapping {
   String targetPath;
   final String fileName;
   late final TextEditingController controller;
-  
+
   FileMapping({
     required this.sourceFile,
     required this.targetPath,
@@ -40,11 +40,11 @@ class FileMapping {
   }) {
     controller = TextEditingController(text: targetPath);
   }
-  
+
   void dispose() {
     controller.dispose();
   }
-  
+
   void updateTargetPath(String newPath) {
     targetPath = newPath;
     controller.text = newPath;
@@ -55,7 +55,7 @@ class _ExternalResourcesPageContentState
     extends State<_ExternalResourcesPageContent> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
   bool _isUploading = false;
-  
+
   // 预览状态
   bool _showPreview = false;
   final List<FileMapping> _fileMappings = [];
@@ -68,10 +68,7 @@ class _ExternalResourcesPageContentState
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(
-            title: '外部资源管理',
-            icon: Icons.cloud_sync,
-          ),
+          DraggableTitleBar(title: '外部资源管理', icon: Icons.cloud_sync),
           Expanded(
             child: SafeArea(
               child: Padding(
@@ -145,9 +142,7 @@ class _ExternalResourcesPageContentState
                     ),
                     child: const Text(
                       '确认并处理',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -156,10 +151,14 @@ class _ExternalResourcesPageContentState
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.2),
                   ),
                 ),
                 child: Row(
@@ -180,9 +179,7 @@ class _ExternalResourcesPageContentState
                 ),
               ),
               const SizedBox(height: 20),
-              Expanded(
-                child: _buildFileMappingTable(context),
-              ),
+              Expanded(child: _buildFileMappingTable(context)),
             ],
           ),
         ),
@@ -203,18 +200,16 @@ class _ExternalResourcesPageContentState
           columnSpacing: 20,
           headingRowHeight: 56,
           dataRowHeight: 72,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
           columns: [
             DataColumn(
               label: Container(
                 width: 200,
                 child: Text(
                   '源文件',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -223,9 +218,9 @@ class _ExternalResourcesPageContentState
                 width: 400,
                 child: Text(
                   '目标路径',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -234,9 +229,9 @@ class _ExternalResourcesPageContentState
                 width: 80,
                 child: Text(
                   '操作',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -254,17 +249,19 @@ class _ExternalResourcesPageContentState
                       children: [
                         Text(
                           mapping.fileName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '源文件',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                              ),
                         ),
                       ],
                     ),
@@ -290,7 +287,9 @@ class _ExternalResourcesPageContentState
                               ),
                               hintText: 'indexeddb://r6box/...',
                               hintStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.4),
                               ),
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
@@ -337,8 +336,12 @@ class _ExternalResourcesPageContentState
                         icon: const Icon(Icons.folder_open),
                         tooltip: '选择目标文件夹',
                         style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                          foregroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withOpacity(0.3),
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -396,7 +399,10 @@ class _ExternalResourcesPageContentState
       // 处理文件映射
       for (final mapping in _fileMappings) {
         // 确保目标目录存在
-        final targetDir = mapping.targetPath.substring(0, mapping.targetPath.lastIndexOf('/'));
+        final targetDir = mapping.targetPath.substring(
+          0,
+          mapping.targetPath.lastIndexOf('/'),
+        );
         await _vfsService.createDirectory('fs', targetDir);
 
         // 复制文件
@@ -416,10 +422,10 @@ class _ExternalResourcesPageContentState
       });
     }
   }
-  
+
   Future<List<String>> _checkFileConflicts() async {
     final conflicts = <String>[];
-    
+
     for (final mapping in _fileMappings) {
       // 直接使用绝对路径（已经是 indexeddb://r6box/fs/ 格式）
       final exists = await _vfsService.vfs.exists(mapping.targetPath);
@@ -427,39 +433,45 @@ class _ExternalResourcesPageContentState
         conflicts.add(mapping.targetPath);
       }
     }
-    
+
     return conflicts;
   }
-  
+
   Future<bool> _showConflictDialog(List<String> conflicts) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('文件冲突'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('以下文件已存在，是否覆盖？'),
-            const SizedBox(height: 16),
-            ...conflicts.map((path) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text('• $path', style: const TextStyle(fontFamily: 'monospace')),
-            )),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('文件冲突'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('以下文件已存在，是否覆盖？'),
+                const SizedBox(height: 16),
+                ...conflicts.map(
+                  (path) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      '• $path',
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('覆盖'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('覆盖'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   void _selectTargetPath(FileMapping mapping) async {
@@ -473,17 +485,17 @@ class _ExternalResourcesPageContentState
         allowDirectorySelection: true,
         selectionType: SelectionType.directoriesOnly,
       );
-      
+
       if (result != null) {
         // 确保返回的是完整的indexeddb路径
         String folderPath = result;
         if (!folderPath.startsWith('indexeddb://r6box/')) {
           folderPath = 'indexeddb://r6box/$result';
         }
-        
+
         // 拼接文件名形成完整路径
         final fullPath = '$folderPath/${mapping.fileName}';
-        
+
         setState(() {
           mapping.updateTargetPath(fullPath);
         });
@@ -511,9 +523,9 @@ class _ExternalResourcesPageContentState
                 const SizedBox(width: 12),
                 Text(
                   '更新外部资源',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -521,7 +533,9 @@ class _ExternalResourcesPageContentState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
@@ -550,7 +564,9 @@ class _ExternalResourcesPageContentState
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.upload_file, size: 20),
@@ -587,9 +603,9 @@ class _ExternalResourcesPageContentState
                 const SizedBox(width: 12),
                 Text(
                   '使用说明',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -601,18 +617,15 @@ class _ExternalResourcesPageContentState
               'ZIP文件应包含一个metadata.json文件，用于指定资源的目标位置',
             ),
             const SizedBox(height: 16),
-            _buildInstructionItem(
-              context,
-              '2',
-              '元数据格式',
-              'metadata.json格式示例：',
-            ),
+            _buildInstructionItem(context, '2', '元数据格式', 'metadata.json格式示例：'),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
@@ -639,12 +652,7 @@ class _ExternalResourcesPageContentState
               '系统会在VFS的fs集合中创建临时文件夹进行处理',
             ),
             const SizedBox(height: 16),
-            _buildInstructionItem(
-              context,
-              '4',
-              '自动清理',
-              '处理完成后会自动清理临时文件',
-            ),
+            _buildInstructionItem(context, '4', '自动清理', '处理完成后会自动清理临时文件'),
           ],
         ),
       ),
@@ -685,15 +693,12 @@ class _ExternalResourcesPageContentState
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(description, style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         ),
@@ -734,21 +739,25 @@ class _ExternalResourcesPageContentState
     }
   }
 
-  Future<void> _processZipFileForPreview(Uint8List zipBytes, String fileName) async {
+  Future<void> _processZipFileForPreview(
+    Uint8List zipBytes,
+    String fileName,
+  ) async {
     // 解压ZIP文件
     final archive = ZipDecoder().decodeBytes(zipBytes);
-    
+
     // 生成唯一的临时文件夹名称
-    final tempFolderName = 'external_resources_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
+    final tempFolderName =
+        'external_resources_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
     final tempPath = 'temp/$tempFolderName';
-    
+
     try {
       // 1. 创建独占的临时文件夹
       await _vfsService.createDirectory('fs', tempPath);
-      
+
       // 2. 解压所有文件到临时文件夹，查找根目录的metadata.json
       Map<String, dynamic>? metadata;
-      
+
       for (final file in archive) {
         if (file.isFile) {
           final filePath = '$tempPath/${file.name}';
@@ -757,7 +766,7 @@ class _ExternalResourcesPageContentState
             Uint8List.fromList(file.content as List<int>),
             mimeType: _getMimeType(file.name),
           );
-          
+
           // 检查是否是根目录的元数据文件
           if (file.name == 'metadata.json' && !file.name.contains('/')) {
             try {
@@ -769,21 +778,20 @@ class _ExternalResourcesPageContentState
           }
         }
       }
-      
+
       // 3. 验证元数据
       if (metadata == null) {
         throw Exception('ZIP文件根目录中未找到metadata.json文件');
       }
-      
+
       // 4. 准备文件映射预览
       await _prepareFileMappingPreview(tempPath, metadata);
-      
+
       // 5. 显示预览界面
       setState(() {
         _showPreview = true;
         _tempPath = tempPath;
       });
-      
     } catch (e) {
       // 出错时也要清理临时文件
       try {
@@ -794,7 +802,7 @@ class _ExternalResourcesPageContentState
       rethrow;
     }
   }
-  
+
   /// 准备文件映射预览
   Future<void> _prepareFileMappingPreview(
     String tempPath,
@@ -803,10 +811,10 @@ class _ExternalResourcesPageContentState
     // 支持两种元数据格式：
     // 1. 简单格式：{ "target_path": "fs/assets/images" }
     // 2. 复杂格式：{ "file_mappings": { "file1.png": "fs/assets/images/file1.png", ... } }
-    
+
     final fileMappings = metadata['file_mappings'] as Map<String, dynamic>?;
     final defaultTargetPath = metadata['target_path'] as String?;
-    
+
     if (fileMappings != null) {
       // 使用复杂映射格式
       await _prepareComplexMapping(tempPath, fileMappings);
@@ -817,32 +825,31 @@ class _ExternalResourcesPageContentState
       throw Exception('元数据中未指定target_path或file_mappings');
     }
   }
-  
+
   /// 准备简单映射：所有文件复制到同一目标路径
-  Future<void> _prepareSimpleMapping(
-    String tempPath,
-    String targetPath,
-  ) async {
+  Future<void> _prepareSimpleMapping(String tempPath, String targetPath) async {
     // 不在这里验证路径合法性，让用户在预览界面中手动修改不合法的路径
-    
+
     // 获取临时目录中的所有文件（除了metadata.json）
     final tempFiles = await _vfsService.listFiles('fs', tempPath);
-    
+
     for (final file in tempFiles) {
       if (!file.isDirectory && !file.name.endsWith('metadata.json')) {
         final sourcePath = file.path.replaceFirst('indexeddb://r6box/fs/', '');
         final fileName = file.name;
         final targetFilePath = '$targetPath/$fileName';
-        
-        _fileMappings.add(FileMapping(
-          sourceFile: sourcePath,
-          targetPath: targetFilePath,
-          fileName: fileName,
-        ));
+
+        _fileMappings.add(
+          FileMapping(
+            sourceFile: sourcePath,
+            targetPath: targetFilePath,
+            fileName: fileName,
+          ),
+        );
       }
     }
   }
-  
+
   /// 准备复杂映射：每个文件有独立的目标路径
   Future<void> _prepareComplexMapping(
     String tempPath,
@@ -851,33 +858,34 @@ class _ExternalResourcesPageContentState
     for (final entry in fileMappings.entries) {
       final sourceFileName = entry.key;
       final targetPath = entry.value as String;
-      
+
       // 不在这里验证路径合法性，让用户在预览界面中手动修改不合法的路径
-      
+
       final sourcePath = '$tempPath/$sourceFileName';
-      
+
       // 检查源文件是否存在
       final fileExists = await _vfsService.fileExists('fs', sourcePath);
       if (!fileExists) {
         debugPrint('警告：源文件不存在，跳过：$sourceFileName');
         continue;
       }
-      
-      _fileMappings.add(FileMapping(
-        sourceFile: sourcePath,
-        targetPath: targetPath,
-        fileName: sourceFileName,
-      ));
+
+      _fileMappings.add(
+        FileMapping(
+          sourceFile: sourcePath,
+          targetPath: targetPath,
+          fileName: sourceFileName,
+        ),
+      );
     }
   }
-  
+
   /// 复制单个文件到目标位置
-  Future<void> _copyFileToTarget(
-    String sourcePath,
-    String targetPath,
-  ) async {
+  Future<void> _copyFileToTarget(String sourcePath, String targetPath) async {
     // 读取源文件
-    final fileContent = await _vfsService.vfs.readFile('indexeddb://r6box/fs/$sourcePath');
+    final fileContent = await _vfsService.vfs.readFile(
+      'indexeddb://r6box/fs/$sourcePath',
+    );
     if (fileContent != null) {
       // 直接使用绝对路径（已经是 indexeddb://r6box/fs/ 格式）
       await _vfsService.vfs.writeBinaryFile(
@@ -887,60 +895,63 @@ class _ExternalResourcesPageContentState
       );
     }
   }
-  
+
   bool _isValidTargetPath(String path) {
     // 只允许 indexeddb://r6box/ 开头的绝对路径
     if (!path.startsWith('indexeddb://r6box/')) {
       return false;
     }
-    
+
     // 解析路径以验证数据库和集合
     final pathPart = path.substring('indexeddb://'.length);
     final segments = pathPart.split('/').where((s) => s.isNotEmpty).toList();
-    
+
     // 路径必须至少包含数据库和集合
     if (segments.length < 2) {
       return false;
     }
-    
+
     final database = segments[0];
     final collection = segments[1];
-    
+
     // 验证数据库名称必须是 r6box
     if (database != 'r6box') {
       return false;
     }
-    
+
     // 验证集合必须是已挂载的集合之一：fs, legends, maps
     const allowedCollections = ['fs', 'legends', 'maps'];
     if (!allowedCollections.contains(collection)) {
       return false;
     }
-    
+
     // 不允许包含危险字符（排除协议部分的双斜杠）
     final pathWithoutScheme = path.substring('indexeddb://'.length);
     if (pathWithoutScheme.contains('..') || pathWithoutScheme.contains('//')) {
       return false;
     }
-    
+
     return true;
   }
-  
+
   Future<void> _cleanupTempFiles(String tempPath) async {
     try {
       // 构建完整的临时文件夹路径
       final fullTempPath = 'indexeddb://r6box/fs/$tempPath';
       debugPrint('🗑️ 开始清理临时文件夹: $fullTempPath');
-      
+
       // 检查临时文件夹是否存在
       final exists = await _vfsService.vfs.exists(fullTempPath);
       if (!exists) {
         debugPrint('🗑️ 临时文件夹不存在，无需清理: $fullTempPath');
         return;
       }
-      
+
       // 递归删除整个临时文件夹
-      final success = await _vfsService.vfs.delete(fullTempPath, recursive: true);
+      final success = await _vfsService.vfs.delete(
+        fullTempPath,
+        recursive: true,
+      );
       if (success) {
         debugPrint('🗑️ 临时文件夹清理成功: $fullTempPath');
       } else {
@@ -950,7 +961,7 @@ class _ExternalResourcesPageContentState
       debugPrint('🗑️ 清理临时文件失败：$e');
     }
   }
-  
+
   String _getMimeType(String fileName) {
     final extension = fileName.split('.').last.toLowerCase();
     switch (extension) {
@@ -976,19 +987,13 @@ class _ExternalResourcesPageContentState
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 }

@@ -103,16 +103,19 @@ class _LegendGroupManagementDrawerState
     // 检查图例组是否发生变化（ID变化或内容变化）
     bool needsUpdate = false;
     String reason = '';
-    
+
     if (oldWidget.legendGroup.id != widget.legendGroup.id) {
       needsUpdate = true;
       reason = 'ID变化';
       // 清除选中的图例项，因为切换到了新的图例组
       _selectedLegendItemId = null;
-    } else if (oldWidget.legendGroup.legendItems.length != widget.legendGroup.legendItems.length) {
+    } else if (oldWidget.legendGroup.legendItems.length !=
+        widget.legendGroup.legendItems.length) {
       needsUpdate = true;
-      reason = '图例项数量变化: ${oldWidget.legendGroup.legendItems.length} -> ${widget.legendGroup.legendItems.length}';
-    } else if (oldWidget.legendGroup.updatedAt != widget.legendGroup.updatedAt) {
+      reason =
+          '图例项数量变化: ${oldWidget.legendGroup.legendItems.length} -> ${widget.legendGroup.legendItems.length}';
+    } else if (oldWidget.legendGroup.updatedAt !=
+        widget.legendGroup.updatedAt) {
       needsUpdate = true;
       reason = '更新时间变化';
     }
@@ -120,11 +123,11 @@ class _LegendGroupManagementDrawerState
     if (needsUpdate) {
       debugPrint('图例组管理抽屉更新: $reason');
       debugPrint('新图例组有 ${widget.legendGroup.legendItems.length} 个图例项');
-      
+
       setState(() {
         _currentGroup = widget.legendGroup;
       });
-      
+
       // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
@@ -354,7 +357,7 @@ class _LegendGroupManagementDrawerState
   Widget build(BuildContext context) {
     final userPrefs = context.watch<UserPreferencesProvider>();
     final drawerWidth = userPrefs.layout.drawerWidth;
-    
+
     return Container(
       width: drawerWidth, // 使用用户偏好设置的抽屉宽度
       decoration: BoxDecoration(
@@ -482,7 +485,8 @@ class _LegendGroupManagementDrawerState
                         onLegendSelected: _onCachedLegendSelected,
                         versionManager: widget.versionManager,
                         currentLegendGroupId: _currentGroup.id,
-                        onLegendDragToCanvas: _onLegendDragToCanvas, // 使用本地方法处理拖拽
+                        onLegendDragToCanvas:
+                            _onLegendDragToCanvas, // 使用本地方法处理拖拽
                         onDragStart: widget.onDragStart, // 传递拖拽开始回调
                         onDragEnd: widget.onDragEnd, // 传递拖拽结束回调
                       ),
@@ -549,7 +553,11 @@ class _LegendGroupManagementDrawerState
             borderRadius: BorderRadius.circular(12),
             border: _isLegendItemSelected(item)
                 ? Border.all(color: Theme.of(context).colorScheme.primary)
-                : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                : Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.3),
+                  ),
           ),
           child: Material(
             color: Colors.transparent,
@@ -573,7 +581,9 @@ class _LegendGroupManagementDrawerState
                             border: Border.all(
                               color: _isLegendItemSelected(item)
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.outline.withOpacity(0.3),
                               width: _isLegendItemSelected(item) ? 2 : 1,
                             ),
                             borderRadius: BorderRadius.circular(6),
@@ -586,7 +596,9 @@ class _LegendGroupManagementDrawerState
                               : Icon(
                                   Icons.image,
                                   size: 24,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                         ),
                         const SizedBox(width: 12),
@@ -610,7 +622,9 @@ class _LegendGroupManagementDrawerState
                                 '位置: (${item.position.dx.toStringAsFixed(2)}, ${item.position.dy.toStringAsFixed(2)})',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -623,7 +637,11 @@ class _LegendGroupManagementDrawerState
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                             size: 18,
-                            color: item.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: item.isVisible
+                                ? null
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                           onPressed: () => _updateLegendItem(
                             item.copyWith(isVisible: !item.isVisible),
@@ -898,10 +916,7 @@ class _LegendGroupManagementDrawerState
       try {
         return ScalableImageWidget.fromSISource(
           si: ScalableImageSource.fromSvgHttpUrl(
-            Uri.dataFromBytes(
-              legend.imageData!,
-              mimeType: 'image/svg+xml',
-            ),
+            Uri.dataFromBytes(legend.imageData!, mimeType: 'image/svg+xml'),
           ),
           fit: BoxFit.contain,
         );
@@ -1017,13 +1032,13 @@ class _LegendGroupManagementDrawerState
     debugPrint('图例组管理抽屉：更新组 ${updatedGroup.name}');
     debugPrint('更新前图例项数量: ${_currentGroup.legendItems.length}');
     debugPrint('更新后图例项数量: ${updatedGroup.legendItems.length}');
-    
+
     setState(() {
       _currentGroup = updatedGroup.copyWith(updatedAt: DateTime.now());
     });
-    
+
     debugPrint('本地状态已更新，当前组图例项数量: ${_currentGroup.legendItems.length}');
-    
+
     // 通知父组件更新
     widget.onLegendGroupUpdated(_currentGroup);
 
@@ -1200,7 +1215,11 @@ class _LegendGroupManagementDrawerState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -2047,8 +2066,10 @@ class _LegendGroupManagementDrawerState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '此图例组暂无图例', 
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      '此图例组暂无图例',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -2156,8 +2177,9 @@ class _LegendGroupManagementDrawerState
     // 生成完全唯一的ID - 使用更高精度的时间戳和随机数
     final now = DateTime.now();
     final timestamp = now.millisecondsSinceEpoch;
-    final randomSuffix = (now.microsecond * 1000 + (timestamp % 1000)).toString();
-    
+    final randomSuffix = (now.microsecond * 1000 + (timestamp % 1000))
+        .toString();
+
     // 从路径生成legendId - 确保每次都不同
     final pathSegments = legendPath.split('/');
     final fileName = pathSegments.last.replaceAll('.legend', '');
@@ -2186,17 +2208,19 @@ class _LegendGroupManagementDrawerState
       legendItems: currentItems,
       updatedAt: now,
     );
-    
+
     debugPrint('拖拽添加图例项: ID=${newItem.id}, legendId=${newItem.legendId}');
     debugPrint('更新前图例数量: ${_currentGroup.legendItems.length}');
     debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
-    
+
     _updateGroup(updatedGroup);
 
     // 显示成功提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('已将图例添加到 ${_currentGroup.name} (${updatedGroup.legendItems.length}个图例)'),
+        content: Text(
+          '已将图例添加到 ${_currentGroup.name} (${updatedGroup.legendItems.length}个图例)',
+        ),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),

@@ -45,7 +45,7 @@ class PlatformConfig {
 
   static const PlatformConfig defaultConfig = PlatformConfig(
     pages: ['HomePage', 'SettingsPage'],
-    features: ['DebugMode'],
+    features: [],
   );
 
   // 检查是否启用某个页面

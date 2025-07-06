@@ -185,7 +185,9 @@ class TtsService {
     await _flutterTts!.speak(request.text);
 
     if (kDebugMode) {
-      debugPrint('TTS开始播放文本: ${request.text} (来源: ${request.sourceId ?? "未知"})');
+      debugPrint(
+        'TTS开始播放文本: ${request.text} (来源: ${request.sourceId ?? "未知"})',
+      );
     }
   }
 

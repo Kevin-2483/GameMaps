@@ -114,4 +114,9 @@ class ConfigManager {
   bool isCurrentPlatformFeatureEnabled(String featureId) {
     return isPlatformFeatureEnabled(getCurrentPlatform(), featureId);
   }
+
+  // 异步检查当前平台是否启用某个功能（为了保持API一致性）
+  Future<bool> isFeatureEnabled(String featureId) async {
+    return isCurrentPlatformFeatureEnabled(featureId);
+  }
 }

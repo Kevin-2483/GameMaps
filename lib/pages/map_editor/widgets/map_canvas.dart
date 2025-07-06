@@ -395,7 +395,7 @@ class MapCanvasState extends State<MapCanvas> {
                               onPanEnd: _onDrawingEnd,
                               behavior: HitTestBehavior.translucent,
                             ),
-                    ),                  // Touch handler for element interaction - 当没有绘制工具选中时
+                    ), // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)
                     Positioned(
                       left: 0,
@@ -410,7 +410,7 @@ class MapCanvasState extends State<MapCanvas> {
                         behavior: HitTestBehavior.translucent,
                       ),
                     ),
-                  
+
                   // DragTarget for receiving legend drags from cache
                   if (!widget.isPreviewMode)
                     Positioned(
@@ -428,21 +428,36 @@ class MapCanvasState extends State<MapCanvas> {
                           // 获取拖拽释放的位置并转换为画布坐标
                           final globalPosition = details.offset;
                           // 将全局坐标转换为画布坐标
-                          final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+                          final RenderBox? renderBox =
+                              context.findRenderObject() as RenderBox?;
                           if (renderBox != null) {
-                            final localPosition = renderBox.globalToLocal(globalPosition);
-                            debugPrint('拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition');
-                            
+                            final localPosition = renderBox.globalToLocal(
+                              globalPosition,
+                            );
+                            debugPrint(
+                              '拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition',
+                            );
+
                             // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
-                            final canvasPosition = _transformLocalToCanvasPosition(localPosition);
+                            final canvasPosition =
+                                _transformLocalToCanvasPosition(localPosition);
                             debugPrint('转换后的画布坐标: $canvasPosition');
-                            
-                            _handleLegendDragAccept(details.data, canvasPosition);
+
+                            _handleLegendDragAccept(
+                              details.data,
+                              canvasPosition,
+                            );
                           } else {
                             debugPrint('警告：无法获取RenderBox，使用默认位置处理拖拽');
                             // 使用默认位置(画布中心)
-                            final defaultPosition = const Offset(kCanvasWidth / 2, kCanvasHeight / 2);
-                            _handleLegendDragAccept(details.data, defaultPosition);
+                            final defaultPosition = const Offset(
+                              kCanvasWidth / 2,
+                              kCanvasHeight / 2,
+                            );
+                            _handleLegendDragAccept(
+                              details.data,
+                              defaultPosition,
+                            );
                           }
                         },
                         builder: (context, candidateData, rejectedData) {
@@ -451,7 +466,9 @@ class MapCanvasState extends State<MapCanvas> {
                             ignoring: !isHovering, // 只有在悬停时才接收指针事件
                             child: Container(
                               color: isHovering
-                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.1)
                                   : Colors.transparent,
                               child: isHovering
                                   ? Center(
@@ -461,15 +478,24 @@ class MapCanvasState extends State<MapCanvas> {
                                           vertical: 12,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           border: Border.all(
-                                            color: Theme.of(context).colorScheme.primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                             width: 2,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withOpacity(0.3),
                                               blurRadius: 8,
                                               offset: const Offset(0, 2),
                                             ),
@@ -480,14 +506,18 @@ class MapCanvasState extends State<MapCanvas> {
                                           children: [
                                             Icon(
                                               Icons.add_circle_outline,
-                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimaryContainer,
                                               size: 20,
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
                                               '释放以添加图例到此位置',
                                               style: TextStyle(
-                                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimaryContainer,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 14,
                                               ),
@@ -528,26 +558,26 @@ class MapCanvasState extends State<MapCanvas> {
     try {
       // 获取当前的变换矩阵
       final Matrix4 transform = _transformationController.value;
-      
+
       // 提取缩放和平移信息
       final double scaleX = transform.entry(0, 0); // X轴缩放
       final double scaleY = transform.entry(1, 1); // Y轴缩放
       final double translateX = transform.entry(0, 3); // X轴平移
       final double translateY = transform.entry(1, 3); // Y轴平移
-      
+
       // 逆向变换：从视口坐标转换为画布坐标
       final double canvasX = (localPosition.dx - translateX) / scaleX;
       final double canvasY = (localPosition.dy - translateY) / scaleY;
-      
+
       // 限制在画布边界内
       final clampedPosition = Offset(
         canvasX.clamp(0.0, kCanvasWidth),
         canvasY.clamp(0.0, kCanvasHeight),
       );
-      
+
       debugPrint('坐标转换: 本地($localPosition) -> 画布($clampedPosition)');
       debugPrint('变换信息: 缩放($scaleX, $scaleY), 平移($translateX, $translateY)');
-      
+
       return clampedPosition;
     } catch (e) {
       debugPrint('坐标转换失败: $e，使用原始坐标');
@@ -584,9 +614,11 @@ class MapCanvasState extends State<MapCanvas> {
     final double actualOffsetY = layer.yOffset * maxOffsetY;
 
     // 获取图层的色彩滤镜设置（只获取用户手动设置的滤镜，不包含主题适配滤镜）
-    final userFilterSettings = ColorFilterSessionManager().getUserLayerFilter(layer.id);
+    final userFilterSettings = ColorFilterSessionManager().getUserLayerFilter(
+      layer.id,
+    );
     final colorFilter = userFilterSettings?.toColorFilter();
-    
+
     Widget imageWidget = Image.memory(
       layer.imageData!,
       width: kCanvasWidth,
@@ -594,13 +626,10 @@ class MapCanvasState extends State<MapCanvas> {
       fit: imageFit,
       // opacity: 1.0, // 透明度已经通过Opacity widget控制
     );
-    
+
     // 只有用户手动设置的滤镜才应用到背景图片，主题适配滤镜不影响背景图片
     if (colorFilter != null) {
-      imageWidget = ColorFiltered(
-        colorFilter: colorFilter,
-        child: imageWidget,
-      );
+      imageWidget = ColorFiltered(colorFilter: colorFilter, child: imageWidget);
     }
 
     return Positioned.fill(
@@ -608,10 +637,7 @@ class MapCanvasState extends State<MapCanvas> {
         opacity: layer.isVisible ? effectiveOpacity : 0.0,
         child: Transform.translate(
           offset: Offset(actualOffsetX, actualOffsetY),
-          child: Transform.scale(
-            scale: scale,
-            child: imageWidget,
-          ),
+          child: Transform.scale(scale: scale, child: imageWidget),
         ),
       ),
     );
@@ -2375,7 +2401,9 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     if (orphanedCacheKeys.isNotEmpty) {
-      debugPrint('已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys');
+      debugPrint(
+        '已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys',
+      );
 
       // 触发重绘以反映缓存清理的结果
       if (mounted) {
@@ -2618,12 +2646,15 @@ class _LayerPainter extends CustomPainter {
     if (context != null) {
       final theme = Theme.of(context!);
       final isDarkMode = theme.brightness == Brightness.dark;
-      
+
       try {
-        final userPrefs = Provider.of<UserPreferencesProvider>(context!, listen: false);
+        final userPrefs = Provider.of<UserPreferencesProvider>(
+          context!,
+          listen: false,
+        );
         final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
         shouldApplyThemeAdaptation = canvasThemeAdaptation && isDarkMode;
-        
+
         // 调试信息
         debugPrint('=== 画布主题适配调试 ===');
         debugPrint('isDarkMode: $isDarkMode');
@@ -2637,7 +2668,7 @@ class _LayerPainter extends CustomPainter {
     } else {
       debugPrint('context为null，无法获取主题信息');
     }
-    
+
     // 根据主题适配状态设置或移除滤镜
     if (!ColorFilterSessionManager().isThemeAdaptationUserDisabled(layer.id)) {
       if (shouldApplyThemeAdaptation) {
@@ -2646,9 +2677,12 @@ class _LayerPainter extends CustomPainter {
           intensity: 1.0,
           brightness: 0.5, // 提高亮度
         );
-        
+
         // 始终设置主题适配滤镜（如果需要的话）
-        ColorFilterSessionManager().setThemeAdaptationFilter(layer.id, themeAdaptationSettings);
+        ColorFilterSessionManager().setThemeAdaptationFilter(
+          layer.id,
+          themeAdaptationSettings,
+        );
         debugPrint('为图层 ${layer.id} 设置主题适配滤镜');
       } else {
         // 如果主题适配被禁用，移除主题适配滤镜
@@ -2656,14 +2690,14 @@ class _LayerPainter extends CustomPainter {
         debugPrint('移除图层 ${layer.id} 的主题适配滤镜');
       }
     }
-    
+
     // 获取图层的色彩滤镜设置（包含主题适配和用户设置）
     final filterSettings = ColorFilterSessionManager().getLayerFilter(layer.id);
     final combinedColorFilter = filterSettings?.toColorFilter();
-    
+
     // 调试信息
     debugPrint('图层ID: ${layer.id}, 应用滤镜: ${combinedColorFilter != null}');
-    
+
     // 按 z 值排序元素
     final sortedElements = List<MapDrawingElement>.from(layer.elements)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -2672,14 +2706,21 @@ class _LayerPainter extends CustomPainter {
     final eraserElements = sortedElements
         .where((e) => e.type == DrawingElementType.eraser)
         .toList();
-        
+
     // 图层元素统计
-    final nonEraserCount = sortedElements.where((e) => e.type != DrawingElementType.eraser).length;
-    debugPrint('图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}');
+    final nonEraserCount = sortedElements
+        .where((e) => e.type != DrawingElementType.eraser)
+        .length;
+    debugPrint(
+      '图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}',
+    );
 
     // 如果有色彩滤镜，对整个图层应用滤镜
     if (combinedColorFilter != null) {
-      canvas.saveLayer(Offset.zero & size, Paint()..colorFilter = combinedColorFilter);
+      canvas.saveLayer(
+        Offset.zero & size,
+        Paint()..colorFilter = combinedColorFilter,
+      );
     }
 
     // 绘制所有常规元素
@@ -2687,7 +2728,7 @@ class _LayerPainter extends CustomPainter {
       if (element.type == DrawingElementType.eraser) {
         continue; // 橡皮擦本身不绘制
       }
-      
+
       // 使用裁剪来实现选择性遮挡
       EraserRenderer.drawElementWithEraserMask(
         canvas,
@@ -2700,12 +2741,12 @@ class _LayerPainter extends CustomPainter {
         imageBufferFit: imageBufferFit,
       );
     }
-    
+
     // 如果应用了色彩滤镜，恢复画布状态
     if (combinedColorFilter != null) {
       canvas.restore();
     }
-    
+
     // 最后绘制选中元素的彩虹效果，确保它不受任何遮挡（不应用滤镜）
     if (selectedElementId != null) {
       final selectedElement = sortedElements
@@ -2894,12 +2935,12 @@ class _BackgroundPatternPainter extends CustomPainter {
   final BuildContext? context;
 
   _BackgroundPatternPainter(this.pattern, {this.context});
-  
+
   @override
   void paint(Canvas canvas, Size size) {
     BackgroundRenderer.drawBackgroundPattern(
-      canvas, 
-      size, 
+      canvas,
+      size,
       pattern,
       context: context,
     );

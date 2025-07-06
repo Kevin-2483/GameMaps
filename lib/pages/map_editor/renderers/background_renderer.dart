@@ -16,20 +16,23 @@ class BackgroundRenderer {
     // 检查是否启用了画布主题适配
     bool isDarkMode = false;
     bool canvasThemeAdaptation = false;
-    
+
     if (context != null) {
       final theme = Theme.of(context);
       isDarkMode = theme.brightness == Brightness.dark;
-      
+
       try {
-        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        final userPrefs = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
         canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
       } catch (e) {
         // 如果无法获取用户偏好，使用默认值
         canvasThemeAdaptation = false;
       }
     }
-    
+
     // 如果启用了主题适配且处于暗色模式，绘制暗色背景
     if (canvasThemeAdaptation && isDarkMode) {
       _drawDarkBackground(canvas, size);
@@ -50,26 +53,33 @@ class BackgroundRenderer {
   /// 绘制暗色背景
   static void _drawDarkBackground(Canvas canvas, Size size) {
     final Paint backgroundPaint = Paint()
-      ..color = const Color(0xFF1A1A1A) // 更暗的背景色
+      ..color =
+          const Color(0xFF1A1A1A) // 更暗的背景色
       ..style = PaintingStyle.fill;
-    
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      backgroundPaint,
+    );
   }
-  
+
   /// 绘制网格背景
   static void _drawGrid(Canvas canvas, Size size, {BuildContext? context}) {
     const double gridSize = 20.0;
-    
+
     // 根据主题适配调整网格颜色
     Color gridColor = Colors.grey.shade300;
     if (context != null) {
       final theme = Theme.of(context);
       final isDarkMode = theme.brightness == Brightness.dark;
-      
+
       try {
-        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        final userPrefs = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
         final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
-        
+
         if (canvasThemeAdaptation && isDarkMode) {
           gridColor = Colors.grey.shade700; // 暗色模式下使用稍亮的网格线
         }
@@ -77,7 +87,7 @@ class BackgroundRenderer {
         // 使用默认颜色
       }
     }
-    
+
     final Paint gridPaint = Paint()
       ..color = gridColor
       ..strokeWidth = 1.0
@@ -95,30 +105,37 @@ class BackgroundRenderer {
   }
 
   /// 绘制棋盘格背景
-  static void _drawCheckerboard(Canvas canvas, Size size, {BuildContext? context}) {
+  static void _drawCheckerboard(
+    Canvas canvas,
+    Size size, {
+    BuildContext? context,
+  }) {
     const double squareSize = 20.0;
-    
+
     // 根据主题适配调整棋盘格颜色
     Color lightColor = Colors.grey.shade100;
     Color darkColor = Colors.grey.shade200;
-    
+
     if (context != null) {
       final theme = Theme.of(context);
       final isDarkMode = theme.brightness == Brightness.dark;
-      
+
       try {
-        final userPrefs = Provider.of<UserPreferencesProvider>(context, listen: false);
+        final userPrefs = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
         final canvasThemeAdaptation = userPrefs.theme.canvasThemeAdaptation;
-        
+
         if (canvasThemeAdaptation && isDarkMode) {
           lightColor = Colors.grey.shade800; // 暗色模式下的浅色方块
-          darkColor = Colors.grey.shade900;  // 暗色模式下的深色方块
+          darkColor = Colors.grey.shade900; // 暗色模式下的深色方块
         }
       } catch (e) {
         // 使用默认颜色
       }
     }
-    
+
     final Paint lightPaint = Paint()..color = lightColor;
     final Paint darkPaint = Paint()..color = darkColor;
 

@@ -92,12 +92,12 @@ class UserPreferencesDatabaseService {
         ALTER TABLE $_preferencesTable 
         ADD COLUMN home_page_data TEXT NOT NULL DEFAULT '{}'
       ''');
-      
+
       if (kDebugMode) {
         debugPrint('数据库升级：添加 home_page_data 字段');
       }
     }
-    
+
     if (kDebugMode) {
       debugPrint('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
     }

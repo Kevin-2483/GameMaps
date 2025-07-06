@@ -6,9 +6,6 @@ import '../../config/config_manager.dart';
 
 /// 系统信息功能模块
 class SystemInfoFeature implements FeatureModule {
-  // 功能标识符
-  static const String featureId = 'DebugMode';
-
   @override
   String get name => 'system_info';
 
@@ -20,8 +17,8 @@ class SystemInfoFeature implements FeatureModule {
 
   @override
   bool get isEnabled {
-    // 检查功能是否在当前平台启用
-    return ConfigManager.instance.isCurrentPlatformFeatureEnabled(featureId);
+    // 系统信息功能始终可用
+    return true;
   }
 
   @override
@@ -54,7 +51,7 @@ class SystemInfoWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildInfoRow('Platform', _getPlatformInfo()),
-            _buildInfoRow('Debug Mode', kDebugMode ? 'Yes' : 'No'),
+            _buildInfoRow('Flutter Debug Mode', kDebugMode ? 'Yes' : 'No'),
             _buildInfoRow('Profile Mode', kProfileMode ? 'Yes' : 'No'),
             _buildInfoRow('Release Mode', kReleaseMode ? 'Yes' : 'No'),
             if (!kIsWeb) _buildInfoRow('OS', Platform.operatingSystem),

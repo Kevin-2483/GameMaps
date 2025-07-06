@@ -22,7 +22,6 @@ class ConfigValidator {
     'FullscreenTestPage',
   ];
   static const List<String> _validFeatures = [
-    'DebugMode',
     'ExperimentalFeatures',
     'TrayNavigation',
     'WebReadOnlyMode',

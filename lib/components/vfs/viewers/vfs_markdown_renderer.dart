@@ -300,9 +300,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _toggleTheme,
         icon: Icon(_effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode),
-        tooltip: _isDarkTheme == null 
-          ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
-          : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
+        tooltip: _isDarkTheme == null
+            ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
+            : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
       ),
 
       const SizedBox(width: 16), // HTML渲染切换
@@ -580,7 +580,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     }
 
     return Container(
-      color: _effectiveIsDarkTheme ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
+      color: _effectiveIsDarkTheme
+          ? const Color(0xFF1E1E1E)
+          : const Color(0xFFFAFAFA),
       padding: const EdgeInsets.all(24),
       child: Transform.scale(
         scale: _contentScale,

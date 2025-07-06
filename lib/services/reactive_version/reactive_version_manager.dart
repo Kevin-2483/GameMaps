@@ -896,19 +896,19 @@ class ReactiveVersionManager extends ChangeNotifier {
   List<String> getGroupsSelectingPath(String path) {
     final versionId = _currentVersionId ?? 'default';
     _ensureVersionPathSelectionExists(versionId);
-    
+
     final versionData = _versionPathSelections[versionId]!;
     final groups = <String>[];
-    
+
     for (final entry in versionData.entries) {
       final groupId = entry.key;
       final paths = entry.value;
-      
+
       if (paths.contains(path)) {
         groups.add(groupId);
       }
     }
-    
+
     return groups;
   }
 
@@ -923,24 +923,27 @@ class ReactiveVersionManager extends ChangeNotifier {
     final versionId = _currentVersionId ?? 'default';
     final versionState = _versionStates[versionId];
     final sessionData = versionState?.sessionData;
-    
+
     if (sessionData == null) return null;
-    
+
     // 在图例组列表中查找对应的图例组
     for (final group in sessionData.legendGroups) {
       if (group.id == groupId) {
         return group.name;
       }
     }
-    
+
     return null; // 如果找不到图例组，返回null
   }
 
   /// 获取选择了指定路径的其他图例组名称列表（排除当前图例组）
-  List<String> getOtherGroupNamesSelectingPath(String path, String currentGroupId) {
+  List<String> getOtherGroupNamesSelectingPath(
+    String path,
+    String currentGroupId,
+  ) {
     final otherGroupIds = getOtherGroupsSelectingPath(path, currentGroupId);
     final groupNames = <String>[];
-    
+
     for (final groupId in otherGroupIds) {
       final groupName = getLegendGroupName(groupId);
       if (groupName != null) {
@@ -950,7 +953,7 @@ class ReactiveVersionManager extends ChangeNotifier {
         groupNames.add(groupId);
       }
     }
-    
+
     return groupNames;
   }
 }

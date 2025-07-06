@@ -13,7 +13,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
   List<String> svgFiles = [];
   bool isLoading = true;
   String? errorMessage;
-  
+
   // R6 干员 SVG 文件列表
   final List<String> operatorFiles = [
     'ace.svg',
@@ -156,18 +156,14 @@ class _SvgTestPageState extends State<SvgTestPage> {
             padding: const EdgeInsets.all(16),
             color: Theme.of(context).colorScheme.surfaceVariant,
             child: Text(
-              isLoading 
-                ? '正在加载 SVG 文件...' 
-                : '找到 ${svgFiles.length} 个 SVG 文件',
+              isLoading ? '正在加载 SVG 文件...' : '找到 ${svgFiles.length} 个 SVG 文件',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
           ),
-          
+
           // 内容区域
-          Expanded(
-            child: _buildContent(),
-          ),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -175,9 +171,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
 
   Widget _buildContent() {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (errorMessage != null) {
@@ -199,10 +193,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSvgFiles,
-              child: const Text('重试'),
-            ),
+            ElevatedButton(onPressed: _loadSvgFiles, child: const Text('重试')),
           ],
         ),
       );
@@ -213,11 +204,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.image_not_supported,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               '未找到 SVG 文件',
@@ -239,8 +226,10 @@ class _SvgTestPageState extends State<SvgTestPage> {
       itemCount: svgFiles.length,
       itemBuilder: (context, index) {
         final fileName = svgFiles[index];
-        final operatorName = fileName.replaceAll('.svg', '').replaceAll('_', ' ');
-        
+        final operatorName = fileName
+            .replaceAll('.svg', '')
+            .replaceAll('_', ' ');
+
         return Card(
           elevation: 4,
           child: InkWell(
@@ -260,9 +249,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
                       ),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          return ScalableImageWidget(
-                            si: snapshot.data!,
-                          );
+                          return ScalableImageWidget(si: snapshot.data!);
                         } else if (snapshot.hasError) {
                           return Container(
                             alignment: Alignment.center,
@@ -336,7 +323,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              
+
               // 大尺寸 SVG
               Expanded(
                 child: Container(
@@ -352,9 +339,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
                     ),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return ScalableImageWidget(
-                          si: snapshot.data!,
-                        );
+                        return ScalableImageWidget(si: snapshot.data!);
                       } else if (snapshot.hasError) {
                         return Container(
                           alignment: Alignment.center,
@@ -369,35 +354,31 @@ class _SvgTestPageState extends State<SvgTestPage> {
                               const SizedBox(height: 8),
                               Text(
                                 '无法加载 SVG 文件',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                ),
+                                style: TextStyle(color: Colors.grey[600]),
                               ),
                             ],
                           ),
                         );
                       } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
                     },
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // 文件信息
               Text(
                 '文件: $fileName',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // 关闭按钮
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),

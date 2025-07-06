@@ -30,16 +30,20 @@ class DraggableTitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 只在桌面平台添加拖拽功能
-    final isDraggable = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-    
+    final isDraggable =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
     final titleBar = Container(
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
+        color:
+            backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
             width: 1,
           ),
         ),
@@ -58,34 +62,35 @@ class DraggableTitleBar extends StatelessWidget {
             ),
             const SizedBox(width: 12),
           ],
-          
+
           // 标题 - 可拖动区域
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
-              onPanStart: isDraggable ? (details) {
-                appWindow.startDragging();
-              } : null,
+              onPanStart: isDraggable
+                  ? (details) {
+                      appWindow.startDragging();
+                    }
+                  : null,
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: foregroundColor ?? Theme.of(context).colorScheme.primary,
+                    color:
+                        foregroundColor ??
+                        Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
           ),
-          
+
           // 右侧操作按钮
           if (actions != null && actions!.isNotEmpty) ...[
             const SizedBox(width: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: actions!,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: actions!),
           ],
         ],
       ),
@@ -119,21 +124,28 @@ class DraggableTitleBarWithContent extends StatelessWidget {
     this.backgroundColor,
     this.foregroundColor,
     this.titleHeight = 64.0,
-    this.titlePadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    this.titlePadding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 8.0,
+    ),
     this.contentPadding,
   });
 
   @override
   Widget build(BuildContext context) {
     // 只在桌面平台添加拖拽功能
-    final isDraggable = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-    
+    final isDraggable =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
+        color:
+            backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
             width: 1,
           ),
         ),
@@ -154,44 +166,48 @@ class DraggableTitleBarWithContent extends StatelessWidget {
                 ] else if (icon != null) ...[
                   Icon(
                     icon,
-                    color: foregroundColor ?? Theme.of(context).colorScheme.primary,
+                    color:
+                        foregroundColor ??
+                        Theme.of(context).colorScheme.primary,
                     size: 28,
                   ),
                   const SizedBox(width: 12),
                 ],
-                
+
                 // 标题 - 可拖动区域
                 Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
-                    onPanStart: isDraggable ? (details) {
-                      appWindow.startDragging();
-                    } : null,
+                    onPanStart: isDraggable
+                        ? (details) {
+                            appWindow.startDragging();
+                          }
+                        : null,
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         title,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: foregroundColor ?? Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color:
+                                  foregroundColor ??
+                                  Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ),
                   ),
                 ),
-                
+
                 // 右侧操作按钮
                 if (actions != null && actions!.isNotEmpty) ...[
                   const SizedBox(width: 16),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: actions!,
-                  ),
+                  Row(mainAxisSize: MainAxisSize.min, children: actions!),
                 ],
               ],
             ),
           ),
-          
+
           // 额外内容
           if (content != null)
             Padding(

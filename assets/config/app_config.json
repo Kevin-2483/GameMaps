@@ -1,18 +1,18 @@
 {  "platform": {    "Windows": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+      "features": [ "TrayNavigation" ]
     },    "MacOS": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+      "features": [ "TrayNavigation" ]
     },    "Linux": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+      "features": [ "TrayNavigation" ]
     },    "Android": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+      "features": [ "TrayNavigation" ]
     },    "iOS": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "DebugMode", "TrayNavigation" ]
+      "features": [ "TrayNavigation" ]
     },    "Web": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
       "features": [ "TrayNavigation" ]

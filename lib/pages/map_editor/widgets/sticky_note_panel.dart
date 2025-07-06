@@ -144,7 +144,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         borderRadius: BorderRadius.circular(8),
         border: isSelected
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
-            : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3), width: 1),
+            : Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                width: 1,
+              ),
       ),
       child: GestureDetector(
         onSecondaryTapDown: widget.isPreviewMode
@@ -187,7 +190,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         size: 18,
-                        color: note.isVisible ? null : Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: note.isVisible
+                            ? null
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       onPressed: widget.isPreviewMode
                           ? null
@@ -283,7 +288,11 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                         (0.3 * 255).toInt(),
                       ),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.3),
+                      ),
                     ),
                     child: Text(
                       note.content,
@@ -314,7 +323,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        ),
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
@@ -743,7 +754,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

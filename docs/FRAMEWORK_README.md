@@ -71,7 +71,7 @@ lib/
   "platform": {
     "Windows": {
       "pages": ["HomePage", "SettingsPage"],
-      "features": ["DarkTheme", "MultiLanguage", "DebugMode"]
+      "features": ["DarkTheme", "MultiLanguage"]
     },
     "MacOS": {
       "pages": ["HomePage", "SettingsPage"], 
@@ -147,7 +147,7 @@ class HomePageModule extends PageModule {
 
 ```dart
 class SystemInfoFeature implements FeatureModule {
-  static const String featureId = 'DebugMode';
+  static const String featureId = 'ExperimentalFeatures';
   
   @override
   bool get isEnabled {
@@ -225,7 +225,7 @@ scripts/build.ps1 Windows release
 ### 功能 ID
 - `DarkTheme` - 深色主题
 - `MultiLanguage` - 多语言支持
-- `DebugMode` - 调试模式
+
 - `ExperimentalFeatures` - 实验性功能
 
 ## 最佳实践

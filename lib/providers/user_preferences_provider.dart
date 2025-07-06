@@ -633,7 +633,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         homePage: homePageSettings,
         updatedAt: DateTime.now(),
       );
-      
+
       await _service.savePreferences(updated);
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();

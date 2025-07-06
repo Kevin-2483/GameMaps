@@ -321,7 +321,9 @@ class AudioPlayerService extends ChangeNotifier {
             _setState(AudioPlaybackState.playing);
           },
         );
-        debugPrint('🎵 AudioPlayerService: 临时队列开始播放 - ${_tempQueueItem!.title}');
+        debugPrint(
+          '🎵 AudioPlayerService: 临时队列开始播放 - ${_tempQueueItem!.title}',
+        );
         return true;
       } catch (e) {
         debugPrint('🎵 AudioPlayerService: 临时队列播放失败 - $e');

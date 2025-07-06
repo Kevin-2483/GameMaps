@@ -1,0 +1,15 @@
+--dart-define=TARGET_PLATFORM=Web
+--dart-define=ENABLE_HOME_PAGE=true
+--dart-define=ENABLE_SETTINGS_PAGE=true
+--dart-define=ENABLE_USER_PREFERENCES_PAGE=true
+--dart-define=ENABLE_MAP_ATLAS_PAGE=true
+--dart-define=ENABLE_LEGEND_MANAGER_PAGE=true
+--dart-define=ENABLE_EXTERNAL_RESOURCES_PAGE=false
+--dart-define=ENABLE_VFS_FILE_MANAGER_PAGE=true
+--dart-define=ENABLE_FULLSCREEN_TEST_PAGE=false
+--dart-define=ENABLE_DEBUG_MODE=true
+--dart-define=ENABLE_EXPERIMENTAL_FEATURES=false
+--dart-define=ENABLE_TRAY_NAVIGATION=true
+--dart-define=APP_NAME=R6Box
+--dart-define=APP_VERSION=1.0.0
+--dart-define=BUILD_NUMBER=1

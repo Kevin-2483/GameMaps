@@ -119,13 +119,17 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       }
 
       // 对于非SVG文件进行压缩
-      final processedImage = fileType == LegendFileType.svg 
-          ? imageBytes 
+      final processedImage = fileType == LegendFileType.svg
+          ? imageBytes
           : _compressImage(imageBytes);
 
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        final legendInfo = await _showAddLegendDialog(l10n, processedImage, fileType);
+        final legendInfo = await _showAddLegendDialog(
+          l10n,
+          processedImage,
+          fileType,
+        );
         if (legendInfo != null && legendInfo['title']?.isNotEmpty == true) {
           try {
             final legendItem = LegendItem(
@@ -403,45 +407,39 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
             icon: Icons.legend_toggle,
             actions: [
               // 创建文件夹按钮
-              ConfigAwareAppBarAction(
-                featureId: 'DebugMode',
-                action: IconButton(
-                  onPressed: _createFolder,
-                  icon: const Icon(Icons.create_new_folder),
-                  tooltip: '创建文件夹',
-                ),
+              IconButton(
+                onPressed: _createFolder,
+                icon: const Icon(Icons.create_new_folder),
+                tooltip: '创建文件夹',
               ),
-              // 调试模式功能
-              ConfigAwareAppBarAction(
-                featureId: 'DebugMode',
-                action: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'add':
-                        _addLegend();
-                        break;
-                      case 'root':
-                        _navigateToRoot();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'add',
-                      child: ListTile(
-                        leading: Icon(Icons.add),
-                        title: Text('添加图例'),
-                      ),
+              // 功能菜单
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'add':
+                      _addLegend();
+                      break;
+                    case 'root':
+                      _navigateToRoot();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'add',
+                    child: ListTile(
+                      leading: Icon(Icons.add),
+                      title: Text('添加图例'),
                     ),
-                    const PopupMenuItem(
-                      value: 'root',
-                      child: ListTile(
-                        leading: Icon(Icons.home),
-                        title: Text('回到根目录'),
-                      ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'root',
+                    child: ListTile(
+                      leading: Icon(Icons.home),
+                      title: Text('回到根目录'),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -487,16 +485,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.legend_toggle,
-              size: 64,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.legend_toggle, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text(
-              l10n.legendManagerEmpty,
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(l10n.legendManagerEmpty, style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
             Text(l10n.addLegend),
           ],
@@ -563,27 +554,16 @@ class _LegendCard extends StatelessWidget {
       } catch (e) {
         return Container(
           color: Colors.grey[300],
-          child: const Icon(
-            Icons.error,
-            size: 48,
-            color: Colors.red,
-          ),
+          child: const Icon(Icons.error, size: 48, color: Colors.red),
         );
       }
     } else {
       try {
-        return Image.memory(
-          legend.imageData!,
-          fit: BoxFit.cover,
-        );
+        return Image.memory(legend.imageData!, fit: BoxFit.cover);
       } catch (e) {
         return Container(
           color: Colors.grey[300],
-          child: const Icon(
-            Icons.error,
-            size: 48,
-            color: Colors.red,
-          ),
+          child: const Icon(Icons.error, size: 48, color: Colors.red),
         );
       }
     }
@@ -607,10 +587,10 @@ class _LegendCard extends StatelessWidget {
                   children: [
                     // 图片
                     Positioned.fill(
-                       child: legend.imageData != null
-                           ? _buildImageWidget(legend)
-                           : Container(
-                               color: Colors.grey[300],
+                      child: legend.imageData != null
+                          ? _buildImageWidget(legend)
+                          : Container(
+                              color: Colors.grey[300],
                               child: const Icon(
                                 Icons.image_not_supported,
                                 size: 48,
@@ -666,18 +646,15 @@ class _LegendCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      // 调试模式下显示删除按钮
-                      ConfigAwareWidget(
-                        featureId: 'DebugMode',
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: IconButton(
-                            onPressed: onDelete,
-                            icon: const Icon(Icons.delete, size: 20),
-                            color: Colors.red,
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
-                          ),
+                      // 删除按钮
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: IconButton(
+                          onPressed: onDelete,
+                          icon: const Icon(Icons.delete, size: 20),
+                          color: Colors.red,
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
                         ),
                       ),
                     ],

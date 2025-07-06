@@ -72,9 +72,6 @@ class BuildConfigGenerator {
 
       // 添加功能配置
       buildParams.add(
-        '--dart-define=ENABLE_DEBUG_MODE=${features.contains('DebugMode')}',
-      );
-      buildParams.add(
         '--dart-define=ENABLE_EXPERIMENTAL_FEATURES=${features.contains('ExperimentalFeatures')}',
       );
       buildParams.add(

@@ -143,27 +143,27 @@ class LegendCacheManager extends ChangeNotifier {
   }
 
   /// 批量加载指定目录下的所有图例到缓存
-Future<void> loadDirectoryToCache(String directoryPath) async {
-  try {
-    debugPrint('开始批量加载目录到缓存: $directoryPath');
-    
-    final legendService = LegendVfsService();
-    final legendFiles = await legendService.getLegendsInFolder(directoryPath);
-    
-    for (final legendFile in legendFiles) {
-      final legendPath = directoryPath.isEmpty 
-          ? legendFile 
-          : '$directoryPath/$legendFile';
-      
-      // 异步加载图例数据
-      await getLegendData(legendPath);
+  Future<void> loadDirectoryToCache(String directoryPath) async {
+    try {
+      debugPrint('开始批量加载目录到缓存: $directoryPath');
+
+      final legendService = LegendVfsService();
+      final legendFiles = await legendService.getLegendsInFolder(directoryPath);
+
+      for (final legendFile in legendFiles) {
+        final legendPath = directoryPath.isEmpty
+            ? legendFile
+            : '$directoryPath/$legendFile';
+
+        // 异步加载图例数据
+        await getLegendData(legendPath);
+      }
+
+      debugPrint('批量加载完成: $directoryPath, 共 ${legendFiles.length} 个图例');
+    } catch (e) {
+      debugPrint('批量加载目录失败: $directoryPath, 错误: $e');
     }
-    
-    debugPrint('批量加载完成: $directoryPath, 共 ${legendFiles.length} 个图例');
-  } catch (e) {
-    debugPrint('批量加载目录失败: $directoryPath, 错误: $e');
   }
-}
 
   /// 清除特定图例的缓存
   void clearCache(String legendPath) {
@@ -217,7 +217,10 @@ Future<void> loadDirectoryToCache(String directoryPath) async {
   }
 
   /// 步进型清除特定目录下的图例缓存（只清理精确匹配的路径，不递归清理子目录）
-  void clearCacheByFolderStepwise(String folderPath, {Set<String>? excludePaths}) {
+  void clearCacheByFolderStepwise(
+    String folderPath, {
+    Set<String>? excludePaths,
+  }) {
     final keysToRemove = <String>[];
 
     debugPrint('步进型缓存清理开始: 目标目录="$folderPath"');
@@ -230,7 +233,9 @@ Future<void> loadDirectoryToCache(String directoryPath) async {
       if (folderPath.isEmpty) {
         // 根目录：只清理没有"/"的路径（不包括子目录中的文件）
         shouldRemove = !path.contains('/');
-        debugPrint('根目录检查: 路径="$path", 包含/=${path.contains('/')}, 应移除=$shouldRemove');
+        debugPrint(
+          '根目录检查: 路径="$path", 包含/=${path.contains('/')}, 应移除=$shouldRemove',
+        );
       } else {
         // 特定目录：只清理以"folderPath/"开头但下一级没有更多"/"的路径
         // 即只清理直接在该目录下的文件，不清理子目录中的文件
@@ -238,7 +243,9 @@ Future<void> loadDirectoryToCache(String directoryPath) async {
           final relativePath = path.substring(folderPath.length + 1);
           // 如果相对路径中不包含"/"，说明是直接在该目录下的文件
           shouldRemove = !relativePath.contains('/');
-          debugPrint('子目录检查: 路径="$path", 相对路径="$relativePath", 包含/=${relativePath.contains('/')}, 应移除=$shouldRemove');
+          debugPrint(
+            '子目录检查: 路径="$path", 相对路径="$relativePath", 包含/=${relativePath.contains('/')}, 应移除=$shouldRemove',
+          );
         } else {
           debugPrint('路径不匹配: 路径="$path", 不以"$folderPath/"开头');
         }
@@ -262,7 +269,9 @@ Future<void> loadDirectoryToCache(String directoryPath) async {
     }
 
     if (keysToRemove.isNotEmpty) {
-      debugPrint('图例缓存 (步进型): 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项（不包括子目录）');
+      debugPrint(
+        '图例缓存 (步进型): 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项（不包括子目录）',
+      );
       debugPrint('被清理的路径: $keysToRemove');
       notifyListeners();
     } else {
@@ -313,13 +322,17 @@ Future<void> loadDirectoryToCache(String directoryPath) async {
   }
 
   /// 直接将图例数据添加到缓存
-  void cacheLegend(String legendPath, legend_db.LegendItem legendData, {Map<String, dynamic>? metadata}) {
+  void cacheLegend(
+    String legendPath,
+    legend_db.LegendItem legendData, {
+    Map<String, dynamic>? metadata,
+  }) {
     _cache[legendPath] = CachedLegendItem(
       state: LegendLoadingState.loaded,
       legendData: legendData,
       loadedAt: DateTime.now(),
     );
-    
+
     debugPrint('图例已添加到缓存: $legendPath');
     notifyListeners();
   }

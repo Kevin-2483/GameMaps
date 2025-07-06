@@ -22,12 +22,7 @@ class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
 }
 
 /// 图例文件类型枚举
-enum LegendFileType {
-  png,
-  jpg,
-  jpeg,
-  svg,
-}
+enum LegendFileType { png, jpg, jpeg, svg }
 
 /// 图例项数据模型
 @JsonSerializable()

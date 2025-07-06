@@ -47,34 +47,27 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
       case LegendFileType.svg:
         try {
           return ScalableImageWidget.fromSISource(
-             si: ScalableImageSource.fromSvgHttpUrl(
-               Uri.dataFromBytes(
-                 widget.imageData,
-                 mimeType: 'image/svg+xml',
-               ),
-             ),
-             fit: BoxFit.contain,
-           );
+            si: ScalableImageSource.fromSvgHttpUrl(
+              Uri.dataFromBytes(widget.imageData, mimeType: 'image/svg+xml'),
+            ),
+            fit: BoxFit.contain,
+          );
         } catch (e) {
           return Container(
             color: Colors.grey[200],
-            child: const Center(
-              child: Icon(Icons.error, color: Colors.red),
-            ),
+            child: const Center(child: Icon(Icons.error, color: Colors.red)),
           );
         }
       case LegendFileType.png:
       case LegendFileType.jpg:
       case LegendFileType.jpeg:
-      return Image.memory(
+        return Image.memory(
           widget.imageData,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[200],
-              child: const Center(
-                child: Icon(Icons.error, color: Colors.red),
-              ),
+              child: const Center(child: Icon(Icons.error, color: Colors.red)),
             );
           },
         );
@@ -98,9 +91,7 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
             child: Stack(
               children: [
                 // 图片
-                Positioned.fill(
-                  child: _buildImageWidget(),
-                ),
+                Positioned.fill(child: _buildImageWidget()),
                 // 中心点指示器
                 Positioned.fill(
                   child: GestureDetector(

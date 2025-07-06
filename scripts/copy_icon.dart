@@ -22,7 +22,10 @@ void main(List<String> arguments) async {
   final svgFiles = <File>[];
 
   // 递归收集所有 .svg 文件
-  await for (final entity in sourceDir.list(recursive: true, followLinks: false)) {
+  await for (final entity in sourceDir.list(
+    recursive: true,
+    followLinks: false,
+  )) {
     if (entity is File && entity.path.toLowerCase().endsWith('.svg')) {
       svgFiles.add(entity);
     }

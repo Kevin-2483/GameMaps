@@ -6,15 +6,20 @@ import '../services/map_database_service.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
+import '../config/config_manager.dart';
 
 /// Web平台数据库预填充工具
 /// 为Web版本提供示例地图数据
 class WebDatabasePreloader {
   static const String _sampleMapTitle = 'R6 地图示例';
 
-  /// 初始化Web平台示例数据
+  /// 初始化示例数据（基于配置决定是否启用）
   static Future<void> initializeSampleData() async {
-    if (!kIsWeb) return;
+    // 检查是否启用了预填充示例数据功能
+    final shouldPreloadData = await ConfigManager.instance.isFeatureEnabled(
+      'PreloadSampleData',
+    );
+    if (!shouldPreloadData) return;
 
     try {
       final mapService = VfsMapServiceFactory.createMapDatabaseService();
@@ -22,7 +27,7 @@ class WebDatabasePreloader {
       // 检查是否已有示例数据
       final existingMaps = await mapService.getAllMapsSummary();
       if (existingMaps.isNotEmpty) {
-        debugPrint('Web平台已有地图数据，跳过示例数据初始化');
+        debugPrint('已有地图数据，跳过示例数据初始化');
         return;
       }
 
@@ -32,9 +37,9 @@ class WebDatabasePreloader {
       // 插入示例数据（这里我们直接调用底层数据库方法）
       await _insertSampleMapDirectly(sampleMap);
 
-      debugPrint('Web平台示例数据初始化完成');
+      debugPrint('示例数据初始化完成');
     } catch (e) {
-      debugPrint('Web平台示例数据初始化失败: $e');
+      debugPrint('示例数据初始化失败: $e');
     }
   }
 
@@ -91,7 +96,6 @@ class WebDatabasePreloader {
 
   /// 清理示例数据（仅用于开发调试）
   static Future<void> clearSampleData() async {
-    if (!kIsWeb) return;
     try {
       final database =
           await VfsMapServiceFactory.createMapDatabaseService().database;
@@ -100,9 +104,9 @@ class WebDatabasePreloader {
         where: 'title = ?',
         whereArgs: [_sampleMapTitle],
       );
-      debugPrint('Web平台示例数据清理完成');
+      debugPrint('示例数据清理完成');
     } catch (e) {
-      debugPrint('Web平台示例数据清理失败: $e');
+      debugPrint('示例数据清理失败: $e');
     }
   }
 }

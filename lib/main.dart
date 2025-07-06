@@ -53,13 +53,18 @@ void main() async {
   // Initialize media_kit for video playback
   MediaKit.ensureInitialized();
 
-  // Import data from assets for Web platform
+  // Import data from assets for Web platform (configurable)
   if (kIsWeb) {
-    await WebDatabaseImporter.importFromAssets();
+    final shouldPreloadData = await ConfigManager.instance.isFeatureEnabled(
+      'PreloadSampleData',
+    );
+    if (shouldPreloadData) {
+      await WebDatabaseImporter.importFromAssets();
+    }
   }
 
   runApp(const R6BoxApp());
-  
+
   // Initialize bitsdojo_window for desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     doWhenWindowReady(() {
@@ -80,7 +85,7 @@ class R6BoxApp extends StatelessWidget {
   // so it doesn't get recreated on widget rebuilds.
   // Assuming AppRouter.createRouter() returns a GoRouter instance or similar.
   static final _router = AppRouter.createRouter();
-  
+
   // 标记窗口管理服务是否已初始化
   static bool _windowManagerInitialized = false;
 
@@ -116,14 +121,17 @@ class R6BoxApp extends StatelessWidget {
             // 只初始化一次窗口管理服务
             if (!_windowManagerInitialized) {
               WindowManagerService().initialize(userPrefsProvider);
-              
+
               // 应用保存的窗口大小（仅在桌面平台）
-              if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+              if (!kIsWeb &&
+                  (Platform.isWindows ||
+                      Platform.isLinux ||
+                      Platform.isMacOS)) {
                 Future.microtask(() {
                   WindowManagerService().applyWindowSize();
                 });
               }
-              
+
               _windowManagerInitialized = true;
             }
           } // Use the pre-created router instance

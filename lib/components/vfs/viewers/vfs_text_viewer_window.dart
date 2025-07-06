@@ -268,10 +268,12 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           // 主题切换
           IconButton(
             onPressed: _toggleTheme,
-            icon: Icon(_effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode),
-            tooltip: _isDarkTheme == null 
-              ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
-              : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
+            icon: Icon(
+              _effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode,
+            ),
+            tooltip: _isDarkTheme == null
+                ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
+                : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
           ),
 
           const SizedBox(width: 16),
@@ -340,7 +342,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       );
     }
     return Container(
-      color: _effectiveIsDarkTheme ? const Color(0xFF2B2B2B) : const Color(0xFFFAFAFA),
+      color: _effectiveIsDarkTheme
+          ? const Color(0xFF2B2B2B)
+          : const Color(0xFFFAFAFA),
       child: CodeTheme(
         data: _effectiveIsDarkTheme
             ? CodeThemeData(styles: monokaiSublimeTheme)

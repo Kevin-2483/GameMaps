@@ -23,10 +23,7 @@ class _SettingsPageContent extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(
-            title: l10n.settings,
-            icon: Icons.settings,
-          ),
+          DraggableTitleBar(title: l10n.settings, icon: Icons.settings),
           Expanded(
             child: SafeArea(
               child: ListView(
@@ -106,10 +103,7 @@ class _SettingsPageContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '关于',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('关于', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.info_outline),

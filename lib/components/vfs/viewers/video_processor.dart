@@ -204,7 +204,9 @@ class VideoNode extends SpanNode {
       maxHeight: height ?? 450,
     );
 
-    debugPrint('🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)');
+    debugPrint(
+      '🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)',
+    );
 
     return WidgetSpan(
       child: MediaKitVideoPlayer(url: src, config: config, muted: muted),

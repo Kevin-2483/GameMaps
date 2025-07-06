@@ -23,10 +23,7 @@ class HomePageSettingsSection extends StatelessWidget {
               children: [
                 const Icon(Icons.home),
                 const SizedBox(width: 8),
-                Text(
-                  '主页设置',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text('主页设置', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 16),
@@ -52,16 +49,16 @@ class HomePageSettingsSection extends StatelessWidget {
   }
 
   /// 标题设置
-  Widget _buildTitleSettings(BuildContext context, UserPreferencesProvider provider) {
+  Widget _buildTitleSettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '标题设置',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('标题设置', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
-        
+
         // 标题文字
         TextFormField(
           initialValue: preferences.homePage.titleText,
@@ -83,7 +80,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('标题字体大小倍数: ${(preferences.homePage.titleFontSizeMultiplier * 100).toStringAsFixed(1)}%'),
+              child: Text(
+                '标题字体大小倍数: ${(preferences.homePage.titleFontSizeMultiplier * 100).toStringAsFixed(1)}%',
+              ),
             ),
           ],
         ),
@@ -92,7 +91,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 0.05,
           max: 0.25,
           divisions: 40,
-          label: '${(preferences.homePage.titleFontSizeMultiplier * 100).toStringAsFixed(1)}%',
+          label:
+              '${(preferences.homePage.titleFontSizeMultiplier * 100).toStringAsFixed(1)}%',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -105,21 +105,23 @@ class HomePageSettingsSection extends StatelessWidget {
   }
 
   /// 显示区域设置
-  Widget _buildDisplaySettings(BuildContext context, UserPreferencesProvider provider) {
+  Widget _buildDisplaySettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '显示区域设置',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('显示区域设置', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
 
         // 显示区域倍数
         Row(
           children: [
             Expanded(
-              child: Text('显示区域倍数: ${preferences.homePage.displayAreaMultiplier.toStringAsFixed(1)}x'),
+              child: Text(
+                '显示区域倍数: ${preferences.homePage.displayAreaMultiplier.toStringAsFixed(1)}x',
+              ),
             ),
           ],
         ),
@@ -128,7 +130,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 0.3,
           max: 3.0,
           divisions: 27,
-          label: '${preferences.homePage.displayAreaMultiplier.toStringAsFixed(1)}x',
+          label:
+              '${preferences.homePage.displayAreaMultiplier.toStringAsFixed(1)}x',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -142,7 +145,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('窗口大小随动系数: ${preferences.homePage.windowScalingFactor.toStringAsFixed(2)}'),
+              child: Text(
+                '窗口大小随动系数: ${preferences.homePage.windowScalingFactor.toStringAsFixed(2)}',
+              ),
             ),
           ],
         ),
@@ -164,21 +169,23 @@ class HomePageSettingsSection extends StatelessWidget {
   }
 
   /// 性能设置
-  Widget _buildPerformanceSettings(BuildContext context, UserPreferencesProvider provider) {
+  Widget _buildPerformanceSettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '性能设置',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('性能设置', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
 
         // 基础网格间距
         Row(
           children: [
             Expanded(
-              child: Text('基础网格间距: ${preferences.homePage.baseNodeSpacing.toStringAsFixed(0)}px'),
+              child: Text(
+                '基础网格间距: ${preferences.homePage.baseNodeSpacing.toStringAsFixed(0)}px',
+              ),
             ),
           ],
         ),
@@ -201,7 +208,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('基础图标大小: ${preferences.homePage.baseSvgRenderSize.toStringAsFixed(0)}px'),
+              child: Text(
+                '基础图标大小: ${preferences.homePage.baseSvgRenderSize.toStringAsFixed(0)}px',
+              ),
             ),
           ],
         ),
@@ -210,7 +219,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 40.0,
           max: 300.0,
           divisions: 26,
-          label: '${preferences.homePage.baseSvgRenderSize.toStringAsFixed(0)}px',
+          label:
+              '${preferences.homePage.baseSvgRenderSize.toStringAsFixed(0)}px',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -224,7 +234,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('摄像机移动速度: ${preferences.homePage.cameraSpeed.toStringAsFixed(0)}px/s'),
+              child: Text(
+                '摄像机移动速度: ${preferences.homePage.cameraSpeed.toStringAsFixed(0)}px/s',
+              ),
             ),
           ],
         ),
@@ -246,14 +258,14 @@ class HomePageSettingsSection extends StatelessWidget {
   }
 
   /// 视觉效果设置
-  Widget _buildVisualSettings(BuildContext context, UserPreferencesProvider provider) {
+  Widget _buildVisualSettings(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '视觉效果设置',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('视觉效果设置', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
 
         // 启用主题颜色滤镜
@@ -274,7 +286,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('基础缓冲区倍数: ${preferences.homePage.baseBufferMultiplier.toStringAsFixed(1)}x'),
+              child: Text(
+                '基础缓冲区倍数: ${preferences.homePage.baseBufferMultiplier.toStringAsFixed(1)}x',
+              ),
             ),
           ],
         ),
@@ -283,7 +297,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 1.1,
           max: 3.0,
           divisions: 19,
-          label: '${preferences.homePage.baseBufferMultiplier.toStringAsFixed(1)}x',
+          label:
+              '${preferences.homePage.baseBufferMultiplier.toStringAsFixed(1)}x',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -297,7 +312,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('透视缓冲调节系数: ${preferences.homePage.perspectiveBufferFactor.toStringAsFixed(1)}x'),
+              child: Text(
+                '透视缓冲调节系数: ${preferences.homePage.perspectiveBufferFactor.toStringAsFixed(1)}x',
+              ),
             ),
           ],
         ),
@@ -306,7 +323,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 0.0,
           max: 2.0,
           divisions: 20,
-          label: '${preferences.homePage.perspectiveBufferFactor.toStringAsFixed(1)}x',
+          label:
+              '${preferences.homePage.perspectiveBufferFactor.toStringAsFixed(1)}x',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -320,7 +338,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('图标放大系数: ${preferences.homePage.iconEnlargementFactor.toStringAsFixed(1)}x'),
+              child: Text(
+                '图标放大系数: ${preferences.homePage.iconEnlargementFactor.toStringAsFixed(1)}x',
+              ),
             ),
           ],
         ),
@@ -329,7 +349,8 @@ class HomePageSettingsSection extends StatelessWidget {
           min: 0.5,
           max: 2.5,
           divisions: 20,
-          label: '${preferences.homePage.iconEnlargementFactor.toStringAsFixed(1)}x',
+          label:
+              '${preferences.homePage.iconEnlargementFactor.toStringAsFixed(1)}x',
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
@@ -343,7 +364,9 @@ class HomePageSettingsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('SVG分布记录数量: ${preferences.homePage.recentSvgHistorySize}'),
+              child: Text(
+                'SVG分布记录数量: ${preferences.homePage.recentSvgHistorySize}',
+              ),
             ),
           ],
         ),
@@ -356,7 +379,9 @@ class HomePageSettingsSection extends StatelessWidget {
           onChanged: (value) {
             _updateHomePageSettings(
               provider,
-              preferences.homePage.copyWith(recentSvgHistorySize: value.toInt()),
+              preferences.homePage.copyWith(
+                recentSvgHistorySize: value.toInt(),
+              ),
             );
           },
         ),
@@ -365,7 +390,10 @@ class HomePageSettingsSection extends StatelessWidget {
   }
 
   /// 更新主页设置
-  void _updateHomePageSettings(UserPreferencesProvider provider, HomePagePreferences newSettings) {
+  void _updateHomePageSettings(
+    UserPreferencesProvider provider,
+    HomePagePreferences newSettings,
+  ) {
     provider.updateHomePage(newSettings);
   }
 }
