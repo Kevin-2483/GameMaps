@@ -1,0 +1,11 @@
+# 这是一个模拟的音频文件
+# 实际使用时应该是真正的MP3文件
+# 文件内容: 通知音效
+# 时长: 2秒
+# 格式: MP3
+# 采样率: 44.1kHz
+# 比特率: 128kbps
+
+[模拟音频数据]
+Notification sound effect - 2 seconds duration
+This would be binary audio data in a real MP3 file

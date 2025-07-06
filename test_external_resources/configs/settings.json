@@ -1,0 +1,21 @@
+{
+  "app_name": "R6Box",
+  "version": "1.0.0",
+  "theme": {
+    "primary_color": "#2196F3",
+    "secondary_color": "#FF9800",
+    "dark_mode": true
+  },
+  "features": {
+    "auto_save": true,
+    "notifications": true,
+    "analytics": false
+  },
+  "performance": {
+    "max_cache_size": "100MB",
+    "auto_cleanup": true,
+    "fps_limit": 60
+  },
+  "language": "zh-CN",
+  "updated_at": "2024-01-15T10:30:00Z"
+}

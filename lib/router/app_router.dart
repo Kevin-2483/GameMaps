@@ -14,6 +14,7 @@ import '../features/page-modules/about_page_module.dart';
 import '../features/page-modules/vfs_file_manager_page_module.dart';
 import '../features/page-modules/markdown_renderer_demo_page_module.dart';
 import '../features/page-modules/svg_test_page_module.dart';
+import '../features/page-modules/external_resources_page_module.dart';
 import '../components/layout/app_shell.dart';
 
 class AppRouter {
@@ -69,6 +70,7 @@ class AppRouter {
     registry.register(MapAtlasPageModule());
     registry.register(LegendManagerPageModule());
     registry.register(AboutPageModule());
+    registry.register(ExternalResourcesPageModule());
     // registry.register(ConfigEditorModule());
     // registry.register(FullscreenTestPageModule());
     registry.register(VfsFileManagerPageModule());

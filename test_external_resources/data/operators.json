@@ -1,0 +1,51 @@
+{
+  "operators": [
+    {
+      "id": "ash",
+      "name": "Ash",
+      "real_name": "Eliza Cohen",
+      "side": "attacker",
+      "organization": "FBI SWAT",
+      "country": "USA",
+      "speed": 3,
+      "armor": 1,
+      "gadget": "Breaching Rounds",
+      "weapons": {
+        "primary": ["R4-C", "G36C"],
+        "secondary": ["M45 MEUSOC", "5.7 USG"]
+      }
+    },
+    {
+      "id": "thermite",
+      "name": "Thermite",
+      "real_name": "Jordan Trace",
+      "side": "attacker",
+      "organization": "FBI SWAT",
+      "country": "USA",
+      "speed": 2,
+      "armor": 2,
+      "gadget": "Exothermic Charge",
+      "weapons": {
+        "primary": ["556xi", "M1014"],
+        "secondary": ["M45 MEUSOC", "5.7 USG"]
+      }
+    },
+    {
+      "id": "jager",
+      "name": "Jäger",
+      "real_name": "Marius Streicher",
+      "side": "defender",
+      "organization": "GSG 9",
+      "country": "Germany",
+      "speed": 3,
+      "armor": 1,
+      "gadget": "Active Defense System",
+      "weapons": {
+        "primary": ["416-C Carbine", "M870"],
+        "secondary": ["P229"]
+      }
+    }
+  ],
+  "last_updated": "2024-01-15",
+  "total_count": 3
+}

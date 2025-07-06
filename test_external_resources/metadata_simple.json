@@ -1,0 +1,12 @@
+{
+  "name": "简单资源包",
+  "version": "1.0.0",
+  "description": "使用简单映射格式的测试资源包",
+  "author": "测试用户",
+  "created_at": "2024-01-15",
+  "target_path": "indexeddb://r6box/fs/assets/simple_resources",
+  "tags": ["测试", "简单映射"],
+  "requirements": {
+    "min_app_version": "1.0.0"
+  }
+}
