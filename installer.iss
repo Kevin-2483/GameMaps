@@ -48,24 +48,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\audioplayers_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\d3dcompiler_47.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\flutter_tts_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\irondash_engine_context_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\libEGL.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\libGLESv2.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\libmpv-2.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\media_kit_libs_windows_video_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\media_kit_video_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\super_native_extensions.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\super_native_extensions_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\vk_swiftshader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\volume_controller_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\vulkan-1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\data\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
