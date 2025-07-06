@@ -2,7 +2,7 @@ import 'dart:convert';
 // import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 import '../../models/user_preferences.dart';
 import '../database_path_service.dart';
 
@@ -295,7 +295,7 @@ class UserPreferencesDatabaseService {
       'databaseSize': dbSize,
       'currentUserId': currentUserId,
       'platform': kIsWeb ? 'web' : 'native',
-      'databasePath': join(await getDatabasesPath(), _databaseName),
+      'databasePath': await DatabasePathService().getDatabasePath(_databaseName),
     };
   }
 
