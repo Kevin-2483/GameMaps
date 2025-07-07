@@ -685,7 +685,7 @@ filterLegendGroupsByTags(['地标', '建筑']).then((groups) {
 
 **示例：**
 ```hetu
-external fun say
+external fun say(text, [options])
 external fun log
 
 // 简单语音合成

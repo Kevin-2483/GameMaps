@@ -112,7 +112,7 @@ class LegendItem {
       centerX: centerX ?? this.centerX,
       centerY: centerY ?? this.centerY,
       version: version ?? this.version,
-      tags: tags ?? this.tags,
+      tags: tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

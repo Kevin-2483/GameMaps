@@ -1678,7 +1678,28 @@ class MapCanvasState extends State<MapCanvas> {
     if (item.url != null && item.url!.isNotEmpty) {
       // 新增：支持脚本绑定
       if (item.url!.startsWith('script://')) {
-        final scriptId = item.url!.substring('script://'.length);
+        // 解析脚本URL，支持带参数的格式：script://scriptId?param1=value1&param2=value2
+        final scriptUrl = item.url!.substring('script://'.length);
+        final questionMarkIndex = scriptUrl.indexOf('?');
+        final scriptId = questionMarkIndex != -1 
+            ? scriptUrl.substring(0, questionMarkIndex)
+            : scriptUrl;
+        
+        // 解析参数
+        Map<String, dynamic> runtimeParameters = {};
+        if (questionMarkIndex != -1 && questionMarkIndex < scriptUrl.length - 1) {
+          final paramString = scriptUrl.substring(questionMarkIndex + 1);
+          final paramPairs = paramString.split('&');
+          for (final pair in paramPairs) {
+            final equalIndex = pair.indexOf('=');
+            if (equalIndex != -1) {
+              final key = Uri.decodeComponent(pair.substring(0, equalIndex));
+              final value = Uri.decodeComponent(pair.substring(equalIndex + 1));
+              runtimeParameters[key] = value;
+            }
+          }
+        }
+        
         // 查找脚本并执行
         if (widget.scriptManager != null) {
           final scripts = widget.scriptManager!.scripts;
@@ -1686,7 +1707,7 @@ class MapCanvasState extends State<MapCanvas> {
               ? scripts.firstWhere((s) => s.id == scriptId)
               : null;
           if (script != null) {
-            widget.scriptManager!.executeScript(script.id).catchError((error) {
+            widget.scriptManager!.executeScript(script.id, runtimeParameters: runtimeParameters).catchError((error) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -1699,8 +1720,8 @@ class MapCanvasState extends State<MapCanvas> {
           } else {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('未找到绑定的脚本'),
+                SnackBar(
+                  content: Text('未找到绑定的脚本: $scriptId'),
                   backgroundColor: Colors.red,
                 ),
               );

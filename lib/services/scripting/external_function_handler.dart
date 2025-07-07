@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -38,13 +39,24 @@ class ExternalFunctionHandler {
 
   /// 处理语音合成函数
   /// 参数: text, [可选参数映射]
-  void handleSay(String text, [Map<String, dynamic>? options]) async {
+  void handleSay(String text, [String? optionsJson]) async {
     try {
       debugPrint('处理语音合成: text="$text"');
 
       if (text.isEmpty) {
         debugPrint('语音合成: 文本为空，跳过');
         return;
+      }
+
+      // 解析JSON字符串为Map
+      Map<String, dynamic>? options;
+      if (optionsJson != null && optionsJson.isNotEmpty) {
+        try {
+          options = jsonDecode(optionsJson) as Map<String, dynamic>;
+        } catch (e) {
+          debugPrint('Error parsing options JSON: $e');
+          options = null;
+        }
       }
 
       // 解析可选参数
@@ -739,8 +751,18 @@ class ExternalFunctionHandler {
     String text,
     double x,
     double y, [
-    Map<String, dynamic>? options,
+    String? optionsJson,
   ]) {
+    // 解析JSON字符串为Map
+    Map<String, dynamic>? options;
+    if (optionsJson != null && optionsJson.isNotEmpty) {
+      try {
+        options = jsonDecode(optionsJson) as Map<String, dynamic>;
+      } catch (e) {
+        debugPrint('Error parsing options JSON: $e');
+        options = null;
+      }
+    }
     final textElement = MapDrawingElement(
       id: 'text_${DateTime.now().millisecondsSinceEpoch}',
       type: DrawingElementType.text,

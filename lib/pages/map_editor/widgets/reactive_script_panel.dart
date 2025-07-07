@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../../models/script_data.dart';
 import '../../../data/new_reactive_script_manager.dart';
+import '../../../components/dialogs/script_parameters_dialog.dart';
 import 'script_editor_window_reactive.dart';
 
 /// 响应式脚本管理面板
@@ -51,7 +52,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -743,15 +744,42 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     );
   }
 
-  void _executeScript(ScriptData script) {
-    widget.scriptManager.executeScript(script.id).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('脚本执行失败: $error'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    });
+  void _executeScript(ScriptData script) async {
+    try {
+      // 获取脚本参数定义
+      final parameters = widget.scriptManager.getScriptParameters(script.id);
+      
+      Map<String, dynamic>? runtimeParameters;
+      
+      // 如果脚本有参数，显示参数输入对话框
+      if (parameters.isNotEmpty) {
+        runtimeParameters = await showDialog<Map<String, dynamic>>(
+           context: context,
+           builder: (context) => ScriptParametersDialog(
+             scriptName: script.name,
+             parameters: parameters,
+             initialValues: const {},
+           ),
+         );
+        
+        // 如果用户取消了对话框，不执行脚本
+        if (runtimeParameters == null) {
+          return;
+        }
+      }
+      
+      // 执行脚本，传入运行时参数
+      await widget.scriptManager.executeScript(script.id, runtimeParameters: runtimeParameters);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('脚本执行失败: $error'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   void _duplicateScript(ScriptData script) {

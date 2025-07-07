@@ -1,0 +1,79 @@
+// 测试脚本 - 带参数的示例
+// @param name:string::用户名称
+// @param age:int::用户年龄
+// @param height:number::用户身高(米)
+// @param isActive:bool::是否活跃
+
+external fun say(text, [options]);
+external fun log(message);
+
+fun main() {
+    // 这些变量将在执行时被替换为用户输入的值
+    var userName = "{{name}}";
+    var userAge = {{age}};
+    var userHeight = {{height}};
+    var userIsActive = {{isActive}};
+    
+    log('用户信息:');
+    log('姓名: ' + userName);
+    log('年龄: ' + userAge.toString() + ' 岁');
+    log('身高: ' + userHeight.toString() + ' 米');
+    log('状态: ' + (userIsActive ? '活跃' : '不活跃'));
+    
+    // 测试say函数 - 基础调用
+    say("欢迎 " + userName + "，开始参数填充测试");
+    
+    // 测试say函数 - 带options参数
+    say("用户年龄是 " + userAge.toString() + " 岁", {
+        'language': 'zh-CN',
+        'speechRate': 0.8,
+        'volume': 0.9,
+        'pitch': 1.1
+    });
+    
+    // 计算BMI（如果身高大于0）
+    if (userHeight > 0) {
+        var weight = 70.0; // 假设体重
+        var bmi = weight / (userHeight * userHeight);
+        log('BMI: ' + bmi.toStringAsFixed(2));
+    }
+    
+    // 根据年龄分类
+    if (userAge < 18) {
+        log('分类: 未成年人');
+        say("您是未成年人", {
+            'language': 'zh-CN',
+            'speechRate': 1.0,
+            'volume': 0.8
+        });
+    } else if (userAge < 60) {
+        log('分类: 成年人');
+        say("You are an adult", {
+            'language': 'en-US',
+            'speechRate': 1.0,
+            'volume': 0.8,
+            'pitch': 1.0
+        });
+    } else {
+        log('分类: 老年人');
+        say("您是老年人，请注意健康", {
+            'language': 'zh-CN',
+            'speechRate': 0.7,
+            'volume': 1.0,
+            'pitch': 0.9
+        });
+    }
+    
+    // 根据活跃状态播放语音
+    if (userIsActive) {
+        say("保持活跃状态很棒！");
+    } else {
+        say("建议增加活动量", {
+            'language': 'zh-CN',
+            'speechRate': 0.9,
+            'volume': 0.9
+        });
+    }
+}
+
+main();

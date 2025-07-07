@@ -3242,6 +3242,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                           _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
                                       scripts: newReactiveScriptManager
                                           .scripts, // 修正：传递正确的脚本列表
+                                      scriptManager: newReactiveScriptManager, // 新增：传递脚本管理器
                                       onSmartHideStateChanged:
                                           setLegendGroupSmartHideState,
                                       getSmartHideState:

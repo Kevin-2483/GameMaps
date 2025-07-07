@@ -1,10 +1,15 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:highlight/languages/dart.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../models/script_data.dart';
+import '../../../components/common/draggable_title_bar.dart';
+import '../../../components/dialogs/script_parameters_dialog.dart';
 
 /// 响应式脚本编辑器窗口
 /// 基于新的异步响应式脚本管理器的脚本编辑器
@@ -125,6 +130,117 @@ class _ReactiveScriptEditorWindowState
     });
   }
 
+  /// 构建窗口控制按钮
+  Widget _buildWindowButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+    bool isCloseButton = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: isCloseButton
+            ? Colors.red.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+        child: Tooltip(
+          message: tooltip,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.inverseSurface,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onInverseSurface,
+            fontSize: 12,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 36,
+            height: 36,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: isCloseButton
+                  ? Colors.red
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建窗口控制按钮组
+  List<Widget> _buildWindowControls() {
+    // 只在桌面平台显示窗口控制按钮
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      return [];
+    }
+
+    return [
+       _buildWindowButton(
+         icon: Icons.minimize,
+         onPressed: () => appWindow.minimize(),
+         tooltip: '最小化',
+       ),
+       const SizedBox(width: 4),
+       _buildWindowButton(
+         icon: Icons.fullscreen,
+         onPressed: () => appWindow.maximizeOrRestore(),
+         tooltip: '最大化/还原',
+       ),
+       const SizedBox(width: 4),
+     ];
+  }
+
+  /// 执行脚本（支持参数输入）
+  void _executeScript() async {
+    try {
+      // 获取脚本参数定义
+      final parameters = widget.scriptManager.getScriptParameters(widget.script.id);
+      
+      Map<String, dynamic>? runtimeParameters;
+      
+      // 如果脚本有参数，显示参数输入对话框
+      if (parameters.isNotEmpty) {
+        runtimeParameters = await showDialog<Map<String, dynamic>>(
+           context: context,
+           builder: (context) => ScriptParametersDialog(
+             scriptName: widget.script.name,
+             parameters: parameters,
+             initialValues: const {},
+           ),
+         );
+        
+        // 如果用户取消了对话框，不执行脚本
+        if (runtimeParameters == null) {
+          return;
+        }
+      }
+      
+      // 执行脚本，传入运行时参数
+      await widget.scriptManager.executeScript(widget.script.id, runtimeParameters: runtimeParameters);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('脚本执行失败: $error'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   /// 处理窗口关闭
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
@@ -175,63 +291,78 @@ class _ReactiveScriptEditorWindowState
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false, // 禁用默认的后退按钮
-          title: Row(
-            children: [
-              Text('编辑脚本: ${widget.script.name}'),
-              if (_hasUnsavedChanges) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    '未保存',
-                    style: TextStyle(fontSize: 12, color: Colors.white),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            IconButton(
-              onPressed: _toggleTheme,
-              icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
-              tooltip: _isDarkTheme ? '切换到亮色主题' : '切换到暗色主题',
-            ),
-            IconButton(
-              onPressed: _hasUnsavedChanges ? _saveScript : null,
-              icon: const Icon(Icons.save),
-              tooltip: '保存脚本',
-            ),
-            IconButton(
-              onPressed: () async {
-                final shouldClose = await _onWillPop();
-                if (shouldClose && mounted) {
-                  // 只调用 onClose 回调，由父组件处理导航
-                  widget.onClose?.call();
-                }
-              },
-              icon: const Icon(Icons.close),
-              tooltip: '关闭编辑器',
-            ),
-          ],
-        ),
         body: Column(
           children: [
+            // 使用可拖动标题栏
+            DraggableTitleBar(
+              title: '编辑脚本: ${widget.script.name}',
+              icon: Icons.edit,
+              leading: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 关闭按钮（最左边）
+                  IconButton(
+                    onPressed: () async {
+                      final shouldClose = await _onWillPop();
+                      if (shouldClose && mounted) {
+                        // 只调用 onClose 回调，由父组件处理导航
+                        widget.onClose?.call();
+                      }
+                    },
+                    icon: const Icon(Icons.close),
+                    tooltip: '关闭编辑器',
+                  ),
+                  const SizedBox(width: 8),
+                  // 未保存状态指示器
+                  if (_hasUnsavedChanges) ...[
+                    Icon(
+                      Icons.edit,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        '未保存',
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                // 窗口控制按钮
+                ..._buildWindowControls(),
+                
+                IconButton(
+                  onPressed: _toggleTheme,
+                  icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
+                  tooltip: _isDarkTheme ? '切换到亮色主题' : '切换到暗色主题',
+                ),
+                
+                // 保存按钮（最右边）
+                IconButton(
+                  onPressed: _hasUnsavedChanges ? _saveScript : null,
+                  icon: const Icon(Icons.save),
+                  tooltip: '保存脚本',
+                ),
+              ],
+            ),
             // 工具栏
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 border: Border(
                   bottom: BorderSide(
                     color: Theme.of(
@@ -276,12 +407,7 @@ class _ReactiveScriptEditorWindowState
                   const SizedBox(width: 8),
                   FilledButton.tonal(
                     onPressed: widget.script.isEnabled
-                        ? () {
-                            // 运行脚本 - 使用新的响应式脚本管理器
-                            widget.scriptManager.executeScript(
-                              widget.script.id,
-                            );
-                          }
+                        ? () => _executeScript()
                         : null,
                     child: ListenableBuilder(
                       listenable: widget.scriptManager,

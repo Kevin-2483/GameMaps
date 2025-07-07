@@ -250,19 +250,16 @@ class ExternalFunctionRegistry {
     void Function(String, List<dynamic>) callFireAndForgetFunction,
   ) {
     // 文本元素修改函数 - 不需要等待结果
-    functions['createTextElement'] = (Map<String, dynamic> params) {
-      callFireAndForgetFunction('createTextElement', [params]);
-      return null; // 立即返回，不等待结果
+    functions['createTextElement'] = (String text, double x, double y, [String? optionsJson]) {
+      // 直接传递JSON字符串，让处理函数负责解析
+      final args = optionsJson != null && optionsJson.isNotEmpty ? [text, x, y, optionsJson] : [text, x, y];
+      callFireAndForgetFunction('createTextElement', args);
     };
-
-    functions['updateTextContent'] = (String elementId, String content) {
-      callFireAndForgetFunction('updateTextContent', [elementId, content]);
-      return null; // 立即返回，不等待结果
+    functions['updateTextContent'] = (String elementId, String newText) {
+      callFireAndForgetFunction('updateTextContent', [elementId, newText]);
     };
-
-    functions['updateTextSize'] = (String elementId, double size) {
-      callFireAndForgetFunction('updateTextSize', [elementId, size]);
-      return null; // 立即返回，不等待结果
+    functions['updateTextSize'] = (String elementId, double newSize) {
+      callFireAndForgetFunction('updateTextSize', [elementId, newSize]);
     };
 
     // 文本元素查询函数 - 需要等待结果
@@ -409,11 +406,10 @@ class ExternalFunctionRegistry {
 
     // say 函数 - 语音合成，不需要等待结果
     // 支持可选参数：language, speechRate, volume, pitch, voice
-    functions['say'] = (String text, [Map<String, dynamic>? options]) {
-      callFireAndForgetFunction('say', [
-        text,
-        options, // 传递可选参数映射
-      ]);
+    functions['say'] = (String text, [String? optionsJson]) {
+      // 直接传递JSON字符串，让处理函数负责解析
+      final args = optionsJson != null && optionsJson.isNotEmpty ? [text, optionsJson] : [text];
+      callFireAndForgetFunction('say', args);
       return null; // 立即返回，不等待结果
     };
   }
@@ -427,29 +423,28 @@ class ExternalFunctionRegistry {
     // 通用元素标签筛选函数
     functions['filterElementsByTags'] =
         (List<String> tags, [String? mode]) async {
-          return await callAwaitableFunction('filterElementsByTags', [
-            tags,
-            mode ?? 'contains',
-          ]);
+          // 只有当mode不为null时才传递，避免参数不匹配
+          final args = mode != null ? [tags, mode] : [tags];
+          return await callAwaitableFunction('filterElementsByTags', args);
         };
 
     // 便签中元素标签筛选函数
     functions['filterElementsInStickyNotesByTags'] =
         (List<String> tags, [String? mode]) async {
+          // 只有当mode不为null时才传递，避免参数不匹配
+          final args = mode != null ? [tags, mode] : [tags];
           return await callAwaitableFunction(
             'filterElementsInStickyNotesByTags',
-            [tags, mode ?? 'contains'],
+            args,
           );
         };
 
     // 指定图例组中的图例项标签筛选函数
     functions['filterLegendItemsInGroupByTags'] =
         (String groupId, List<String> tags, [String? mode]) async {
-          return await callAwaitableFunction('filterLegendItemsInGroupByTags', [
-            groupId,
-            tags,
-            mode ?? 'contains',
-          ]);
+          // 只有当mode不为null时才传递，避免参数不匹配
+          final args = mode != null ? [groupId, tags, mode] : [groupId, tags];
+          return await callAwaitableFunction('filterLegendItemsInGroupByTags', args);
         };
   }
 

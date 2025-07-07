@@ -1,0 +1,32 @@
+// 测试JSON选项参数的脚本
+// 验证Map参数改为字符串参数后的功能
+
+external fun say(text, [optionsJson]);
+external fun log(message);
+external fun createTextElement(text, x, y, [optionsJson]);
+
+fun main() {
+    log('开始测试JSON选项参数');
+    
+    // 测试say函数 - 不带选项
+    say("Hello World");
+    
+    // 测试say函数 - 带JSON选项
+    say("测试中文语音", '{"language": "zh-CN", "speechRate": 0.8, "volume": 0.9, "pitch": 1.1}');
+    
+    // 测试say函数 - 带英文选项
+    say("Testing English speech", '{"language": "en-US", "speechRate": 1.0, "volume": 0.8, "pitch": 1.0}');
+    
+    // 测试createTextElement函数 - 不带选项
+    createTextElement("Simple Text", 100.0, 100.0);
+    
+    // 测试createTextElement函数 - 带JSON选项
+    createTextElement("Styled Text", 200.0, 200.0, '{"fontSize": 18.0, "color": "#FF0000", "tags": ["test", "json"]}');
+    
+    // 测试错误的JSON格式（应该被优雅处理）
+    say("测试错误JSON", '{invalid json}');
+    
+    log('JSON选项参数测试完成');
+}
+
+main();

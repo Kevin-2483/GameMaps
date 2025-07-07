@@ -115,7 +115,7 @@ class StickyNote {
       backgroundImageOpacity:
           backgroundImageOpacity ?? this.backgroundImageOpacity,
       elements: elements ?? this.elements,
-      tags: tags ?? this.tags,
+      tags: tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

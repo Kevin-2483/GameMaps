@@ -207,6 +207,18 @@ class NewReactiveScriptEngine {
 
     // 文本元素函数
     executor.registerExternalFunction(
+      'createTextElement',
+      _functionHandler.handleCreateTextElement,
+    );
+    executor.registerExternalFunction(
+      'updateTextContent',
+      _functionHandler.handleUpdateTextContent,
+    );
+    executor.registerExternalFunction(
+      'updateTextSize',
+      _functionHandler.handleUpdateTextSize,
+    );
+    executor.registerExternalFunction(
       'getTextElements',
       _functionHandler.handleGetTextElements,
     );

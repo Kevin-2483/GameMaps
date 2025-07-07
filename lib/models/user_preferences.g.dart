@@ -11,19 +11,15 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String?,
       displayName: json['displayName'] as String,
       avatarPath: json['avatarPath'] as String?,
-      avatarData: const Uint8ListConverter().fromJson(
-        json['avatarData'] as String?,
-      ),
+      avatarData:
+          const Uint8ListConverter().fromJson(json['avatarData'] as String?),
       theme: ThemePreferences.fromJson(json['theme'] as Map<String, dynamic>),
       homePage: HomePagePreferences.fromJson(
-        json['homePage'] as Map<String, dynamic>,
-      ),
+          json['homePage'] as Map<String, dynamic>),
       mapEditor: MapEditorPreferences.fromJson(
-        json['mapEditor'] as Map<String, dynamic>,
-      ),
-      layout: LayoutPreferences.fromJson(
-        json['layout'] as Map<String, dynamic>,
-      ),
+          json['mapEditor'] as Map<String, dynamic>),
+      layout:
+          LayoutPreferences.fromJson(json['layout'] as Map<String, dynamic>),
       tools: ToolPreferences.fromJson(json['tools'] as Map<String, dynamic>),
       extensionSettings:
           json['extensionSettings'] as Map<String, dynamic>? ?? const {},
@@ -74,28 +70,26 @@ Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
     };
 
 MapEditorPreferences _$MapEditorPreferencesFromJson(
-  Map<String, dynamic> json,
-) => MapEditorPreferences(
-  undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
-  zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
-  backgroundPattern:
-      $enumDecodeNullable(
-        _$BackgroundPatternEnumMap,
-        json['backgroundPattern'],
-      ) ??
-      BackgroundPattern.checkerboard,
-  canvasBoundaryMargin:
-      (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
-);
+        Map<String, dynamic> json) =>
+    MapEditorPreferences(
+      undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
+      zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
+      backgroundPattern: $enumDecodeNullable(
+              _$BackgroundPatternEnumMap, json['backgroundPattern']) ??
+          BackgroundPattern.checkerboard,
+      canvasBoundaryMargin:
+          (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
+    );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
-  MapEditorPreferences instance,
-) => <String, dynamic>{
-  'undoHistoryLimit': instance.undoHistoryLimit,
-  'zoomSensitivity': instance.zoomSensitivity,
-  'backgroundPattern': _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
-  'canvasBoundaryMargin': instance.canvasBoundaryMargin,
-};
+        MapEditorPreferences instance) =>
+    <String, dynamic>{
+      'undoHistoryLimit': instance.undoHistoryLimit,
+      'zoomSensitivity': instance.zoomSensitivity,
+      'backgroundPattern':
+          _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
+      'canvasBoundaryMargin': instance.canvasBoundaryMargin,
+    };
 
 const _$BackgroundPatternEnumMap = {
   BackgroundPattern.blank: 'blank',
@@ -105,12 +99,10 @@ const _$BackgroundPatternEnumMap = {
 
 LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
     LayoutPreferences(
-      panelCollapsedStates: Map<String, bool>.from(
-        json['panelCollapsedStates'] as Map,
-      ),
-      panelAutoCloseStates: Map<String, bool>.from(
-        json['panelAutoCloseStates'] as Map,
-      ),
+      panelCollapsedStates:
+          Map<String, bool>.from(json['panelCollapsedStates'] as Map),
+      panelAutoCloseStates:
+          Map<String, bool>.from(json['panelAutoCloseStates'] as Map),
       sidebarWidth: (json['sidebarWidth'] as num?)?.toDouble() ?? 300.0,
       compactMode: json['compactMode'] as bool? ?? false,
       showTooltips: json['showTooltips'] as bool? ?? true,
@@ -149,44 +141,46 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'isMaximized': instance.isMaximized,
     };
 
-HomePagePreferences _$HomePagePreferencesFromJson(
-  Map<String, dynamic> json,
-) => HomePagePreferences(
-  displayAreaMultiplier:
-      (json['displayAreaMultiplier'] as num?)?.toDouble() ?? 1.5,
-  baseBufferMultiplier:
-      (json['baseBufferMultiplier'] as num?)?.toDouble() ?? 1.5,
-  perspectiveBufferFactor:
-      (json['perspectiveBufferFactor'] as num?)?.toDouble() ?? 1.0,
-  windowScalingFactor: (json['windowScalingFactor'] as num?)?.toDouble() ?? 0.5,
-  baseNodeSpacing: (json['baseNodeSpacing'] as num?)?.toDouble() ?? 200.0,
-  baseSvgRenderSize: (json['baseSvgRenderSize'] as num?)?.toDouble() ?? 150.0,
-  enableThemeColorFilter: json['enableThemeColorFilter'] as bool? ?? true,
-  titleText: json['titleText'] as String? ?? 'R6BOX',
-  titleFontSizeMultiplier:
-      (json['titleFontSizeMultiplier'] as num?)?.toDouble() ?? 0.12,
-  recentSvgHistorySize: (json['recentSvgHistorySize'] as num?)?.toInt() ?? 20,
-  cameraSpeed: (json['cameraSpeed'] as num?)?.toDouble() ?? 50.0,
-  iconEnlargementFactor:
-      (json['iconEnlargementFactor'] as num?)?.toDouble() ?? 1.0,
-);
+HomePagePreferences _$HomePagePreferencesFromJson(Map<String, dynamic> json) =>
+    HomePagePreferences(
+      displayAreaMultiplier:
+          (json['displayAreaMultiplier'] as num?)?.toDouble() ?? 1.5,
+      baseBufferMultiplier:
+          (json['baseBufferMultiplier'] as num?)?.toDouble() ?? 1.5,
+      perspectiveBufferFactor:
+          (json['perspectiveBufferFactor'] as num?)?.toDouble() ?? 1.0,
+      windowScalingFactor:
+          (json['windowScalingFactor'] as num?)?.toDouble() ?? 0.5,
+      baseNodeSpacing: (json['baseNodeSpacing'] as num?)?.toDouble() ?? 300.0,
+      baseSvgRenderSize:
+          (json['baseSvgRenderSize'] as num?)?.toDouble() ?? 200.0,
+      enableThemeColorFilter: json['enableThemeColorFilter'] as bool? ?? true,
+      titleText: json['titleText'] as String? ?? 'R6BOX',
+      titleFontSizeMultiplier:
+          (json['titleFontSizeMultiplier'] as num?)?.toDouble() ?? 0.12,
+      recentSvgHistorySize:
+          (json['recentSvgHistorySize'] as num?)?.toInt() ?? 20,
+      cameraSpeed: (json['cameraSpeed'] as num?)?.toDouble() ?? 50.0,
+      iconEnlargementFactor:
+          (json['iconEnlargementFactor'] as num?)?.toDouble() ?? 1.0,
+    );
 
 Map<String, dynamic> _$HomePagePreferencesToJson(
-  HomePagePreferences instance,
-) => <String, dynamic>{
-  'displayAreaMultiplier': instance.displayAreaMultiplier,
-  'baseBufferMultiplier': instance.baseBufferMultiplier,
-  'perspectiveBufferFactor': instance.perspectiveBufferFactor,
-  'windowScalingFactor': instance.windowScalingFactor,
-  'baseNodeSpacing': instance.baseNodeSpacing,
-  'baseSvgRenderSize': instance.baseSvgRenderSize,
-  'enableThemeColorFilter': instance.enableThemeColorFilter,
-  'titleText': instance.titleText,
-  'titleFontSizeMultiplier': instance.titleFontSizeMultiplier,
-  'recentSvgHistorySize': instance.recentSvgHistorySize,
-  'cameraSpeed': instance.cameraSpeed,
-  'iconEnlargementFactor': instance.iconEnlargementFactor,
-};
+        HomePagePreferences instance) =>
+    <String, dynamic>{
+      'displayAreaMultiplier': instance.displayAreaMultiplier,
+      'baseBufferMultiplier': instance.baseBufferMultiplier,
+      'perspectiveBufferFactor': instance.perspectiveBufferFactor,
+      'windowScalingFactor': instance.windowScalingFactor,
+      'baseNodeSpacing': instance.baseNodeSpacing,
+      'baseSvgRenderSize': instance.baseSvgRenderSize,
+      'enableThemeColorFilter': instance.enableThemeColorFilter,
+      'titleText': instance.titleText,
+      'titleFontSizeMultiplier': instance.titleFontSizeMultiplier,
+      'recentSvgHistorySize': instance.recentSvgHistorySize,
+      'cameraSpeed': instance.cameraSpeed,
+      'iconEnlargementFactor': instance.iconEnlargementFactor,
+    };
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
     ToolPreferences(
@@ -205,13 +199,11 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
-      customTags:
-          (json['customTags'] as List<dynamic>?)
+      customTags: (json['customTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      recentTags:
-          (json['recentTags'] as List<dynamic>?)
+      recentTags: (json['recentTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

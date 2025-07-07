@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jovial_svg/jovial_svg.dart';
@@ -10,8 +10,10 @@ import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VF
 import '../../../services/legend_cache_manager.dart'; // 导入图例缓存管理器
 import '../../../components/common/tags_manager.dart';
 import '../../../models/script_data.dart'; // 新增：导入脚本数据模型
+import '../../../components/dialogs/script_parameters_dialog.dart'; // 新增：导入脚本参数对话框
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart'; // 使用ReactiveVersionManager
+import '../../../data/new_reactive_script_manager.dart'; // 导入新的响应式脚本管理器
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 
@@ -30,6 +32,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final String? initialSelectedLegendItemId; // 初始选中的图例项ID
   final String? selectedElementId; // 外部传入的选中元素ID，用于同步状态
   final List<ScriptData> scripts; // 新增：脚本列表
+  final NewReactiveScriptManager scriptManager; // 新增：脚本管理器
   final Function(String, bool)? onSmartHideStateChanged;
   final bool Function(String)? getSmartHideState;
   final ReactiveVersionManager versionManager; // 版本管理器
@@ -52,6 +55,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.initialSelectedLegendItemId,
     this.selectedElementId,
     required this.scripts, // 新增：必传脚本列表
+    required this.scriptManager, // 新增：必传脚本管理器
     this.onSmartHideStateChanged, // 新增：智能隐藏状态变更回调
     this.getSmartHideState, // 新增：获取智能隐藏状态的函数
     required this.versionManager, // 版本管理器参数
@@ -67,7 +71,6 @@ class LegendGroupManagementDrawer extends StatefulWidget {
 
 class _LegendGroupManagementDrawerState
     extends State<LegendGroupManagementDrawer> {
-  late LegendGroup _currentGroup;
   String? _selectedLegendItemId; // 当前选中的图例项ID
 
   // 新增：折叠区域状态控制
@@ -76,14 +79,50 @@ class _LegendGroupManagementDrawerState
   bool _isVfsTreeExpanded = false; // VFS目录树是否展开
   bool _isCacheDisplayExpanded = true; // 缓存显示是否展开
 
+  // 新增：URL输入框控制器映射，用于管理每个图例项的输入框状态
+  final Map<String, TextEditingController> _urlControllers = {};
+
   // 通过getter访问智能隐藏状态
   bool get _isSmartHidingEnabled =>
       widget.getSmartHideState?.call(widget.legendGroup.id) ?? true;
 
+  /// 获取或创建URL输入框控制器
+  TextEditingController _getUrlController(LegendItem item) {
+    if (!_urlControllers.containsKey(item.id)) {
+      _urlControllers[item.id] = TextEditingController(text: item.url ?? '');
+    } else {
+      // 如果控制器已存在，但URL值发生了变化，需要更新控制器的文本
+      final controller = _urlControllers[item.id]!;
+      final currentUrl = item.url ?? '';
+      if (controller.text != currentUrl) {
+        controller.text = currentUrl;
+      }
+    }
+    return _urlControllers[item.id]!;
+  }
+
+  /// 清理不再使用的URL控制器
+  void _cleanupUnusedControllers() {
+    final currentItemIds = widget.legendGroup.legendItems
+        .map((item) => item.id)
+        .toSet();
+    final controllersToRemove = <String>[];
+
+    for (final itemId in _urlControllers.keys) {
+      if (!currentItemIds.contains(itemId)) {
+        controllersToRemove.add(itemId);
+      }
+    }
+
+    for (final itemId in controllersToRemove) {
+      _urlControllers[itemId]?.dispose();
+      _urlControllers.remove(itemId);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _currentGroup = widget.legendGroup;
     // 设置初始选中的图例项
     _selectedLegendItemId = widget.initialSelectedLegendItemId;
 
@@ -94,6 +133,16 @@ class _LegendGroupManagementDrawerState
       _loadSmartHidingStateFromExtensionSettings();
       _checkSmartHiding();
     });
+  }
+
+  @override
+  void dispose() {
+    // 清理所有URL输入框控制器
+    for (final controller in _urlControllers.values) {
+      controller.dispose();
+    }
+    _urlControllers.clear();
+    super.dispose();
   }
 
   @override
@@ -125,8 +174,11 @@ class _LegendGroupManagementDrawerState
       debugPrint('新图例组有 ${widget.legendGroup.legendItems.length} 个图例项');
 
       setState(() {
-        _currentGroup = widget.legendGroup;
+        // 状态更新：清理不再使用的控制器
       });
+
+      // 清理不再存在的图例项的控制器
+      _cleanupUnusedControllers();
 
       // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -176,7 +228,7 @@ class _LegendGroupManagementDrawerState
       // 如果外部选择了新元素，且该元素是图例项，同步选择
       else if (widget.selectedElementId != null) {
         // 检查选中的元素是否是当前图例组中的图例项
-        final isLegendItemInCurrentGroup = _currentGroup.legendItems.any(
+        final isLegendItemInCurrentGroup = widget.legendGroup.legendItems.any(
           (item) => item.id == widget.selectedElementId,
         );
 
@@ -240,7 +292,7 @@ class _LegendGroupManagementDrawerState
   /// 4. 如果没有选中任何图层或图层组，基于最高优先级图层组的绑定图层允许选择
   bool _canSelectLegendItem() {
     // 检查图例组是否可见
-    if (!_currentGroup.isVisible) {
+    if (!widget.legendGroup.isVisible) {
       return false;
     }
 
@@ -323,7 +375,7 @@ class _LegendGroupManagementDrawerState
   void _showSelectionNotAllowedDialog() {
     String message = '';
 
-    if (!_currentGroup.isVisible) {
+    if (!widget.legendGroup.isVisible) {
       message = '无法选择图例：图例组当前不可见，请先显示图例组';
     } else {
       message = '无法选择图例：请先选择一个绑定了此图例组的图层';
@@ -346,11 +398,19 @@ class _LegendGroupManagementDrawerState
 
   // 更新图例项
   void _updateLegendItem(LegendItem updatedItem) {
-    final updatedItems = _currentGroup.legendItems.map((item) {
+    // 1. 从 widget.legendGroup 开始构建新列表
+    final updatedItems = widget.legendGroup.legendItems.map((item) {
       return item.id == updatedItem.id ? updatedItem : item;
     }).toList();
 
-    _updateGroup(_currentGroup.copyWith(legendItems: updatedItems));
+    // 2. 基于 widget.legendGroup 创建新的图例组
+    final newGroup = widget.legendGroup.copyWith(
+      legendItems: updatedItems,
+      updatedAt: DateTime.now(),
+    );
+
+    // 3. 【只】调用回调函数通知父组件，不调用 setState
+    widget.onLegendGroupUpdated(newGroup);
   }
 
   @override
@@ -389,7 +449,7 @@ class _LegendGroupManagementDrawerState
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _currentGroup.name,
+                        widget.legendGroup.name,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -460,7 +520,7 @@ class _LegendGroupManagementDrawerState
                     child: Padding(
                       padding: const EdgeInsets.all(8),
                       child: VfsDirectoryTreeDisplay(
-                        legendGroupId: _currentGroup.id,
+                        legendGroupId: widget.legendGroup.id,
                         versionManager: widget.versionManager,
                         onCacheCleared: _clearLegendCacheForFolder,
                       ),
@@ -484,7 +544,7 @@ class _LegendGroupManagementDrawerState
                       child: CachedLegendsDisplay(
                         onLegendSelected: _onCachedLegendSelected,
                         versionManager: widget.versionManager,
-                        currentLegendGroupId: _currentGroup.id,
+                        currentLegendGroupId: widget.legendGroup.id,
                         onLegendDragToCanvas:
                             _onLegendDragToCanvas, // 使用本地方法处理拖拽
                         onDragStart: widget.onDragStart, // 传递拖拽开始回调
@@ -496,7 +556,7 @@ class _LegendGroupManagementDrawerState
 
                 // 图例列表 (可折叠)
                 _buildCollapsiblePanel(
-                  title: '图例列表 (${_currentGroup.legendItems.length})',
+                  title: '图例列表 (${widget.legendGroup.legendItems.length})',
                   icon: Icons.legend_toggle,
                   isCollapsed: !_isLegendListExpanded,
                   onToggleCollapsed: () {
@@ -581,9 +641,8 @@ class _LegendGroupManagementDrawerState
                             border: Border.all(
                               color: _isLegendItemSelected(item)
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.outline.withValues(alpha: 0.3),
+                                  : Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.3),
                               width: _isLegendItemSelected(item) ? 2 : 1,
                             ),
                             borderRadius: BorderRadius.circular(6),
@@ -757,73 +816,7 @@ class _LegendGroupManagementDrawerState
                               ),
                             ),
                             const SizedBox(height: 8),
-                            TextField(
-                              decoration: InputDecoration(
-                                labelText: '图例链接 (可选)',
-                                hintText: '输入网络链接、选择VFS文件或绑定脚本',
-                                border: const OutlineInputBorder(),
-                                isDense: true,
-                                // 合并所有操作按钮
-                                suffixIcon: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (item.url != null &&
-                                        item.url!.isNotEmpty)
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.open_in_new,
-                                          size: 16,
-                                        ),
-                                        tooltip: '打开链接',
-                                        onPressed: () => _openUrl(item.url!),
-                                      ),
-                                    IconButton(
-                                      icon: const Icon(Icons.folder, size: 16),
-                                      tooltip: '选择VFS文件',
-                                      onPressed: () async {
-                                        final selectedFile =
-                                            await _showVfsFilePicker();
-                                        if (selectedFile != null) {
-                                          _updateLegendItem(
-                                            item.copyWith(url: selectedFile),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    // 新增：选择脚本按钮
-                                    IconButton(
-                                      icon: const Icon(Icons.code, size: 16),
-                                      tooltip: '选择脚本',
-                                      onPressed: () async {
-                                        final selectedScript =
-                                            await _showScriptPickerDialog();
-                                        if (selectedScript != null) {
-                                          _updateLegendItem(
-                                            item.copyWith(
-                                              url:
-                                                  'script://${selectedScript.id}',
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              controller: TextEditingController(
-                                text: item.url ?? '',
-                              ),
-                              onChanged: (value) {
-                                _updateLegendItem(
-                                  item.copyWith(
-                                    url: value.trim().isEmpty
-                                        ? null
-                                        : value.trim(),
-                                  ),
-                                );
-                              },
-                              style: const TextStyle(fontSize: 12),
-                            ),
+                            _buildUrlInputField(item),
                           ],
                         ),
                       ),
@@ -899,6 +892,132 @@ class _LegendGroupManagementDrawerState
         );
       },
     );
+  }
+
+  /// 构建URL输入字段
+  Widget _buildUrlInputField(LegendItem item) {
+    // 使用持久的控制器，避免每次重建时创建新的控制器
+    final TextEditingController controller = _getUrlController(item);
+
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: '图例链接 (可选)',
+        hintText: '输入网络链接、选择VFS文件或绑定脚本',
+        border: const OutlineInputBorder(),
+        isDense: true,
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          // 直接调用 _buildUrlActionButtons，不再需要传递 setState
+          children: _buildUrlActionButtons(item, controller),
+        ),
+      ),
+      style: const TextStyle(fontSize: 12),
+      onChanged: (value) {
+        _updateLegendItem(
+          item.copyWith(url: value.trim().isEmpty ? null : value.trim()),
+        );
+      },
+      onSubmitted: (value) {
+        _updateUrlAndRefresh(item, value);
+      },
+      onEditingComplete: () {
+        _updateUrlAndRefresh(item, controller.text);
+      },
+    );
+  }
+
+  /// 更新URL并刷新按钮显示
+  void _updateUrlAndRefresh(LegendItem item, String value) {
+    _updateLegendItem(
+      item.copyWith(url: value.trim().isEmpty ? null : value.trim()),
+    );
+  }
+
+  /// 构建URL操作按钮
+  List<Widget> _buildUrlActionButtons(
+    LegendItem item,
+    TextEditingController controller,
+  ) {
+    final String? url = item.url;
+    final bool isEmpty = url == null || url.isEmpty;
+    final bool isScript = url != null && url.startsWith('script://');
+    final bool isVfs =
+        url != null &&
+        (url.startsWith('indexeddb://') || url.contains('.legend'));
+    final bool isHttp =
+        url != null &&
+        (url.startsWith('http://') || url.startsWith('https://'));
+
+    List<Widget> buttons = [];
+
+    if (isEmpty) {
+      // 空状态：显示添加脚本和选择VFS文件按钮
+      buttons.addAll([
+        IconButton(
+          icon: const Icon(Icons.code, size: 16),
+          tooltip: '添加脚本',
+          onPressed: () async {
+            final selectedScript = await _showScriptPickerDialog();
+            if (selectedScript != null) {
+              await _bindScriptWithParameters(item, selectedScript);
+            }
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.folder, size: 16),
+          tooltip: '选择VFS文件',
+          onPressed: () async {
+            final selectedFile = await _showVfsFilePicker();
+            if (selectedFile != null) {
+              _updateLegendItem(item.copyWith(url: selectedFile));
+            }
+          },
+        ),
+      ]);
+    } else {
+      // 有内容状态：根据链接类型显示不同按钮
+      if (isScript) {
+        // 脚本链接：显示脚本编辑按钮
+        buttons.add(
+          IconButton(
+            icon: const Icon(Icons.code, size: 16),
+            tooltip: '编辑脚本参数',
+            onPressed: () async {
+              await _editExistingScriptParameters(item);
+            },
+          ),
+        );
+      }
+
+      if (isHttp || isVfs) {
+        // 网络链接或VFS链接：显示打开链接按钮
+        buttons.add(
+          IconButton(
+            icon: const Icon(Icons.open_in_new, size: 16),
+            tooltip: '打开链接',
+            onPressed: () => _openUrl(url),
+          ),
+        );
+      }
+
+      // 所有非空状态都显示红色清空按钮
+      buttons.add(
+        IconButton(
+          icon: const Icon(Icons.clear, size: 16),
+          tooltip: '清空链接',
+          color: Theme.of(context).colorScheme.error,
+          onPressed: () {
+            // 清空输入框内容
+            controller.clear();
+            // 更新数据模型
+            _updateLegendItem(item.copyWith(url: null));
+          },
+        ),
+      );
+    }
+
+    return buttons;
   }
 
   /// 构建图例缩略图组件
@@ -1028,26 +1147,6 @@ class _LegendGroupManagementDrawerState
     );
   }
 
-  void _updateGroup(LegendGroup updatedGroup) {
-    debugPrint('图例组管理抽屉：更新组 ${updatedGroup.name}');
-    debugPrint('更新前图例项数量: ${_currentGroup.legendItems.length}');
-    debugPrint('更新后图例项数量: ${updatedGroup.legendItems.length}');
-
-    setState(() {
-      _currentGroup = updatedGroup.copyWith(updatedAt: DateTime.now());
-    });
-
-    debugPrint('本地状态已更新，当前组图例项数量: ${_currentGroup.legendItems.length}');
-
-    // 通知父组件更新
-    widget.onLegendGroupUpdated(_currentGroup);
-
-    // 延迟执行检查，避免在setState期间再次调用setState
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkSmartHiding();
-    });
-  }
-
   /// 应用智能隐藏逻辑
   void _applySmartHidingLogic() {
     if (!_isSmartHidingEnabled) return; // 只有启用智能隐藏才应用逻辑
@@ -1058,30 +1157,26 @@ class _LegendGroupManagementDrawerState
 
     // 双向智能控制：
     // 1. 当所有绑定图层都隐藏时，自动隐藏图例组
-    if (shouldHide && _currentGroup.isVisible) {
-      setState(() {
-        _currentGroup = _currentGroup.copyWith(
-          isVisible: false,
-          updatedAt: DateTime.now(),
-        );
-      });
-      widget.onLegendGroupUpdated(_currentGroup);
+    if (shouldHide && widget.legendGroup.isVisible) {
+      final updatedGroup = widget.legendGroup.copyWith(
+        isVisible: false,
+        updatedAt: DateTime.now(),
+      );
+      widget.onLegendGroupUpdated(updatedGroup);
     }
     // 2. 当有绑定图层重新显示时，自动显示图例组
-    else if (shouldShow && !_currentGroup.isVisible) {
-      setState(() {
-        _currentGroup = _currentGroup.copyWith(
-          isVisible: true,
-          updatedAt: DateTime.now(),
-        );
-      });
-      widget.onLegendGroupUpdated(_currentGroup);
+    else if (shouldShow && !widget.legendGroup.isVisible) {
+      final updatedGroup = widget.legendGroup.copyWith(
+        isVisible: true,
+        updatedAt: DateTime.now(),
+      );
+      widget.onLegendGroupUpdated(updatedGroup);
     }
   }
 
   void _showEditNameDialog() {
     final TextEditingController nameController = TextEditingController(
-      text: _currentGroup.name,
+      text: widget.legendGroup.name,
     );
 
     showDialog(
@@ -1104,9 +1199,11 @@ class _LegendGroupManagementDrawerState
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                _updateGroup(
-                  _currentGroup.copyWith(name: nameController.text.trim()),
+                final updatedGroup = widget.legendGroup.copyWith(
+                  name: nameController.text.trim(),
+                  updatedAt: DateTime.now(),
                 );
+                widget.onLegendGroupUpdated(updatedGroup);
                 Navigator.of(context).pop();
               }
             },
@@ -1122,9 +1219,9 @@ class _LegendGroupManagementDrawerState
     // 设置更合理的默认位置 - 避免总是在中心，使用较为随机的初始位置
     final baseX = 0.2; // 左侧起始位置
     final baseY = 0.2; // 顶部起始位置
-    final offsetX = (_currentGroup.legendItems.length * 0.1) % 0.6; // 水平偏移
+    final offsetX = (widget.legendGroup.legendItems.length * 0.1) % 0.6; // 水平偏移
     final offsetY =
-        ((_currentGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
+        ((widget.legendGroup.legendItems.length ~/ 6) * 0.1) % 0.6; // 垂直偏移
 
     double positionX = (baseX + offsetX).clamp(0.1, 0.9);
     double positionY = (baseY + offsetY).clamp(0.1, 0.9);
@@ -1170,7 +1267,7 @@ class _LegendGroupManagementDrawerState
                             selectedLegendPath = selectedFile;
                             legendPathController.text = selectedFile;
                           });
-                        } else if (selectedFile != null) {
+                        } else if (selectedFile != null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('请选择.legend文件')),
                           );
@@ -1377,10 +1474,16 @@ class _LegendGroupManagementDrawerState
                         createdAt: DateTime.now(),
                       );
 
-                      final updatedGroup = _currentGroup.copyWith(
-                        legendItems: [..._currentGroup.legendItems, newItem],
+                      final updatedGroup = widget.legendGroup.copyWith(
+                        legendItems: [
+                          ...widget.legendGroup.legendItems,
+                          newItem,
+                        ],
                       );
-                      _updateGroup(updatedGroup);
+                      final finalUpdatedGroup = updatedGroup.copyWith(
+                        updatedAt: DateTime.now(),
+                      );
+                      widget.onLegendGroupUpdated(finalUpdatedGroup);
                       Navigator.of(context).pop();
                     }
                   : null,
@@ -1405,13 +1508,14 @@ class _LegendGroupManagementDrawerState
           ),
           ElevatedButton(
             onPressed: () {
-              final updatedItems = _currentGroup.legendItems
+              final updatedItems = widget.legendGroup.legendItems
                   .where((i) => i.id != item.id)
                   .toList();
-              final updatedGroup = _currentGroup.copyWith(
+              final updatedGroup = widget.legendGroup.copyWith(
                 legendItems: updatedItems,
+                updatedAt: DateTime.now(),
               );
-              _updateGroup(updatedGroup);
+              widget.onLegendGroupUpdated(updatedGroup);
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -1441,7 +1545,7 @@ class _LegendGroupManagementDrawerState
 
     // 找到所有绑定了当前图例组的图层
     final boundLayers = widget.allLayers!.where((layer) {
-      return layer.legendGroupIds.contains(_currentGroup.id);
+      return layer.legendGroupIds.contains(widget.legendGroup.id);
     }).toList();
 
     // 如果没有图层绑定到这个图例组，不智能隐藏
@@ -1462,7 +1566,7 @@ class _LegendGroupManagementDrawerState
 
     // 找到所有绑定了当前图例组的图层
     final boundLayers = widget.allLayers!.where((layer) {
-      return layer.legendGroupIds.contains(_currentGroup.id);
+      return layer.legendGroupIds.contains(widget.legendGroup.id);
     }).toList();
 
     // 如果没有图层绑定到这个图例组，不智能显示
@@ -1478,7 +1582,7 @@ class _LegendGroupManagementDrawerState
   List<MapLayer> _getBoundLayers() {
     if (widget.allLayers == null) return [];
     return widget.allLayers!.where((layer) {
-      return layer.legendGroupIds.contains(_currentGroup.id);
+      return layer.legendGroupIds.contains(widget.legendGroup.id);
     }).toList();
   }
 
@@ -1491,17 +1595,25 @@ class _LegendGroupManagementDrawerState
   /// 切换智能隐藏开关
   void _toggleSmartHiding(bool enabled) {
     // 通过回调更新智能隐藏状态，由地图编辑器管理
-    widget.onSmartHideStateChanged?.call(_currentGroup.id, enabled);
+    widget.onSmartHideStateChanged?.call(widget.legendGroup.id, enabled);
 
     // 如果启用智能隐藏，立即应用双向逻辑
     if (enabled) {
       final shouldHide = _shouldSmartHideGroup();
       final shouldShow = _shouldSmartShowGroup();
 
-      if (shouldHide && _currentGroup.isVisible) {
-        _updateGroup(_currentGroup.copyWith(isVisible: false));
-      } else if (shouldShow && !_currentGroup.isVisible) {
-        _updateGroup(_currentGroup.copyWith(isVisible: true));
+      if (shouldHide && widget.legendGroup.isVisible) {
+        final updatedGroup = widget.legendGroup.copyWith(
+          isVisible: false,
+          updatedAt: DateTime.now(),
+        );
+        widget.onLegendGroupUpdated(updatedGroup);
+      } else if (shouldShow && !widget.legendGroup.isVisible) {
+        final updatedGroup = widget.legendGroup.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
+        widget.onLegendGroupUpdated(updatedGroup);
       }
     }
     // 如果禁用智能隐藏，不改变当前显示状态，让用户手动控制
@@ -1542,9 +1654,11 @@ class _LegendGroupManagementDrawerState
       );
       return selectedFile;
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('文件选择失败: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('文件选择失败: $e')));
+      }
       return null;
     }
   }
@@ -1573,19 +1687,21 @@ class _LegendGroupManagementDrawerState
 
   /// 显示错误消息
   void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   /// 显示图例组标签管理对话框
   void _showTagsManagerDialog() async {
-    final currentTags = _currentGroup.tags ?? [];
+    final currentTags = widget.legendGroup.tags ?? [];
 
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理图例组标签 - ${_currentGroup.name}',
+      title: '管理图例组标签 - ${widget.legendGroup.name}',
       maxTags: 10, // 限制最多10个标签
       suggestedTags: _getLegendGroupSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
@@ -1593,27 +1709,29 @@ class _LegendGroupManagementDrawerState
     );
 
     if (result != null) {
-      final updatedGroup = _currentGroup.copyWith(
+      final updatedGroup = widget.legendGroup.copyWith(
         tags: result,
         updatedAt: DateTime.now(),
       );
-      _updateGroup(updatedGroup);
+      widget.onLegendGroupUpdated(updatedGroup);
 
-      if (result.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已清空图例组标签')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('图例组标签已更新 (${result.length}个标签)')),
-        );
+      if (mounted) {
+        if (result.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('已清空图例组标签')));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('图例组标签已更新 (${result.length}个标签)')),
+          );
+        }
       }
     }
   }
 
   /// 构建图例组标签显示
   Widget _buildTagsDisplay() {
-    final tags = _currentGroup.tags ?? [];
+    final tags = widget.legendGroup.tags ?? [];
 
     if (tags.isEmpty) {
       return Text(
@@ -1758,14 +1876,16 @@ class _LegendGroupManagementDrawerState
       );
       _updateLegendItem(updatedItem);
 
-      if (result.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已清空图例项标签')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('图例项标签已更新 (${result.length}个标签)')),
-        );
+      if (mounted) {
+        if (result.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('已清空图例项标签')));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('图例项标签已更新 (${result.length}个标签)')),
+          );
+        }
       }
     }
   }
@@ -1807,6 +1927,182 @@ class _LegendGroupManagementDrawerState
         );
       },
     );
+  }
+
+  // 新增：解析脚本URL
+  Map<String, dynamic> _parseScriptUrl(String scriptUrl) {
+    final uri = Uri.parse(scriptUrl);
+    final scriptId = uri.host;
+    final parameters = <String, dynamic>{};
+
+    // 解析查询参数
+    uri.queryParameters.forEach((key, value) {
+      // 尝试解析为不同类型
+      if (value.toLowerCase() == 'true') {
+        parameters[key] = true;
+      } else if (value.toLowerCase() == 'false') {
+        parameters[key] = false;
+      } else if (int.tryParse(value) != null) {
+        parameters[key] = int.parse(value);
+      } else if (double.tryParse(value) != null) {
+        parameters[key] = double.parse(value);
+      } else {
+        parameters[key] = value;
+      }
+    });
+
+    return {'scriptId': scriptId, 'parameters': parameters};
+  }
+
+  // 新增：编辑现有脚本参数
+  Future<void> _editExistingScriptParameters(LegendItem item) async {
+    if (item.url == null || !item.url!.startsWith('script://')) {
+      return;
+    }
+
+    try {
+      // 解析当前脚本URL
+      final parsedUrl = _parseScriptUrl(item.url!);
+      final scriptId = parsedUrl['scriptId'] as String;
+      final currentParameters = parsedUrl['parameters'] as Map<String, dynamic>;
+
+      // 查找对应的脚本
+      final script = widget.scripts.firstWhere(
+        (s) => s.id == scriptId,
+        orElse: () => throw Exception('未找到脚本ID: $scriptId'),
+      );
+
+      // 解析脚本参数定义
+      final scriptParameters = widget.scriptManager.parseScriptParameters(
+        script.content,
+      );
+
+      if (scriptParameters.isNotEmpty) {
+        // 显示参数编辑对话框，使用当前参数作为初始值
+        final runtimeParameters = await ScriptParametersDialog.show(
+          context,
+          parameters: scriptParameters,
+          initialValues: currentParameters,
+          scriptName: script.name,
+        );
+
+        // 如果用户取消了参数设置，不进行更新
+        if (runtimeParameters == null) {
+          return;
+        }
+
+        // 重新构建脚本URL
+        String newScriptUrl = 'script://$scriptId';
+        final paramString = runtimeParameters.entries
+            .map(
+              (entry) =>
+                  '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}',
+            )
+            .join('&');
+
+        if (paramString.isNotEmpty) {
+          newScriptUrl += '?$paramString';
+        }
+
+        // 更新图例项的URL
+        _updateLegendItem(item.copyWith(url: newScriptUrl));
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('已更新脚本参数: ${script.name}'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('脚本 ${script.name} 无需参数'),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('编辑脚本参数失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('编辑脚本参数失败: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  // 新增：绑定脚本并处理参数
+  Future<void> _bindScriptWithParameters(
+    LegendItem item,
+    ScriptData script,
+  ) async {
+    try {
+      // 获取脚本参数
+      final parameters = script.parameters;
+
+      String scriptUrl = 'script://${script.id}';
+
+      // 解析脚本参数定义
+      final scriptParameters = widget.scriptManager.parseScriptParameters(
+        script.content,
+      );
+
+      // 如果脚本有参数，显示参数设置对话框
+      if (scriptParameters.isNotEmpty) {
+        final runtimeParameters = await ScriptParametersDialog.show(
+          context,
+          parameters: scriptParameters,
+          initialValues: parameters, // 使用现有参数作为初始值
+          scriptName: script.name,
+        );
+
+        // 如果用户取消了参数设置，不进行绑定
+        if (runtimeParameters == null) {
+          return;
+        }
+
+        // 将参数编码到URL中
+        final paramString = runtimeParameters.entries
+            .map(
+              (entry) =>
+                  '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}',
+            )
+            .join('&');
+
+        if (paramString.isNotEmpty) {
+          scriptUrl += '?$paramString';
+        }
+      }
+
+      // 更新图例项的URL
+      _updateLegendItem(item.copyWith(url: scriptUrl));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已绑定脚本: ${script.name}'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('绑定脚本失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('绑定脚本失败: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   /// 构建可折叠面板，使用与地图编辑器主页面相同的模式
@@ -1924,26 +2220,35 @@ class _LegendGroupManagementDrawerState
               children: [
                 IconButton(
                   icon: Icon(
-                    _currentGroup.isVisible
+                    widget.legendGroup.isVisible
                         ? Icons.visibility
                         : Icons.visibility_off,
                     size: 18,
                   ),
-                  onPressed: () => _updateGroup(
-                    _currentGroup.copyWith(isVisible: !_currentGroup.isVisible),
-                  ),
+                  onPressed: () {
+                    final updatedGroup = widget.legendGroup.copyWith(
+                      isVisible: !widget.legendGroup.isVisible,
+                      updatedAt: DateTime.now(),
+                    );
+                    widget.onLegendGroupUpdated(updatedGroup);
+                  },
                 ),
                 const SizedBox(width: 8),
                 const Text('透明度:', style: TextStyle(fontSize: 12)),
                 Expanded(
                   child: Slider(
-                    value: _currentGroup.opacity,
+                    value: widget.legendGroup.opacity,
                     min: 0.0,
                     max: 1.0,
                     divisions: 10,
-                    label: '${(_currentGroup.opacity * 100).round()}%',
-                    onChanged: (value) =>
-                        _updateGroup(_currentGroup.copyWith(opacity: value)),
+                    label: '${(widget.legendGroup.opacity * 100).round()}%',
+                    onChanged: (value) {
+                      final updatedGroup = widget.legendGroup.copyWith(
+                        opacity: value,
+                        updatedAt: DateTime.now(),
+                      );
+                      widget.onLegendGroupUpdated(updatedGroup);
+                    },
                   ),
                 ),
               ],
@@ -2054,7 +2359,7 @@ class _LegendGroupManagementDrawerState
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: _currentGroup.legendItems.isEmpty
+        child: widget.legendGroup.legendItems.isEmpty
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -2075,9 +2380,11 @@ class _LegendGroupManagementDrawerState
                 ),
               )
             : ListView.builder(
-                itemCount: _currentGroup.legendItems.length,
+                itemCount: widget.legendGroup.legendItems.length,
                 itemBuilder: (context, index) {
-                  return _buildLegendItemTile(_currentGroup.legendItems[index]);
+                  return _buildLegendItemTile(
+                    widget.legendGroup.legendItems[index],
+                  );
                 },
               ),
       ),
@@ -2087,7 +2394,7 @@ class _LegendGroupManagementDrawerState
   /// 清理指定目录下的图例缓存 - 步进型清理，智能排除正在使用的图例
   void _clearLegendCacheForFolder(String folderPath) {
     // 获取当前图例组中正在使用的图例路径
-    final usedLegendPaths = _currentGroup.legendItems
+    final usedLegendPaths = widget.legendGroup.legendItems
         .map((item) => item.legendPath)
         .toSet();
 
@@ -2200,26 +2507,26 @@ class _LegendGroupManagementDrawerState
     );
 
     // 创建新的图例项列表 - 确保是新的列表实例
-    final currentItems = List<LegendItem>.from(_currentGroup.legendItems);
+    final currentItems = List<LegendItem>.from(widget.legendGroup.legendItems);
     currentItems.add(newItem);
 
     // 添加到当前图例组
-    final updatedGroup = _currentGroup.copyWith(
+    final updatedGroup = widget.legendGroup.copyWith(
       legendItems: currentItems,
       updatedAt: now,
     );
 
     debugPrint('拖拽添加图例项: ID=${newItem.id}, legendId=${newItem.legendId}');
-    debugPrint('更新前图例数量: ${_currentGroup.legendItems.length}');
+    debugPrint('更新前图例数量: ${widget.legendGroup.legendItems.length}');
     debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
 
-    _updateGroup(updatedGroup);
+    widget.onLegendGroupUpdated(updatedGroup);
 
     // 显示成功提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '已将图例添加到 ${_currentGroup.name} (${updatedGroup.legendItems.length}个图例)',
+          '已将图例添加到 ${widget.legendGroup.name} (${updatedGroup.legendItems.length}个图例)',
         ),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
@@ -2227,11 +2534,5 @@ class _LegendGroupManagementDrawerState
     );
 
     debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');
-  }
-
-  @override
-  void dispose() {
-    // 清理工作，例如取消可能的订阅等
-    super.dispose();
   }
 }
