@@ -8,6 +8,8 @@ import '../../features/page_registry.dart';
 import '../../services/window_manager_service.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/cleanup_service.dart';
+import '../../services/work_status_service.dart';
+import '../dialogs/work_status_exit_dialog.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
@@ -43,19 +45,61 @@ class _TrayNavigationState extends State<TrayNavigation>
     }
   }
 
+  /// 处理应用关闭逻辑
+  /// 如果程序正在工作中，会显示确认对话框
+  Future<void> _handleAppClose(BuildContext context) async {
+    final workStatusService = WorkStatusService();
+    
+    // 如果程序正在工作中，显示确认对话框
+    if (workStatusService.isWorking) {
+      final shouldExit = await WorkStatusExitDialog.show(
+        context,
+        onForceExit: () {
+          // 强制停止所有工作状态
+          workStatusService.forceStopAllWork();
+        },
+      );
+      
+      // 如果用户选择取消，直接返回
+      if (shouldExit != true) {
+        return;
+      }
+    }
+    
+    // 执行正常的关闭流程
+    await _performAppClose();
+  }
+  
+  /// 执行应用关闭的实际操作
+  Future<void> _performAppClose() async {
+    // 执行清理操作
+    final cleanupService = CleanupService();
+    await cleanupService.performCleanup();
+    
+    // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
+    final windowManager = WindowManagerService();
+    await windowManager.saveWindowStateOnExit();
+    
+    // 关闭应用
+    appWindow.close();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // 调用 AutomaticKeepAliveClientMixin 的 build 方法
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 根据屏幕比例决定导航位置
-        final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-        final navigationItems = PageRegistry().getNavigationItems();
+    return ChangeNotifierProvider.value(
+      value: WorkStatusService(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 根据屏幕比例决定导航位置
+          final isWideScreen = constraints.maxWidth > constraints.maxHeight;
+          final navigationItems = PageRegistry().getNavigationItems();
 
-        // 直接返回导航托盘，始终显示
-        return _buildNavigationTray(context, navigationItems, isWideScreen);
-      },
+          // 直接返回导航托盘，始终显示
+          return _buildNavigationTray(context, navigationItems, isWideScreen);
+        },
+      ),
     );
   }
 
@@ -102,18 +146,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
-                      onPressed: () async {
-                        // 执行清理操作
-                        final cleanupService = CleanupService();
-                        await cleanupService.performCleanup();
-                        
-                        // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
-                        final windowManager = WindowManagerService();
-                        await windowManager.saveWindowStateOnExit();
-                        
-                        // 关闭应用
-                        appWindow.close();
-                      },
+                      onPressed: () => _handleAppClose(context),
                       tooltip: '关闭',
                       isCloseButton: true,
                       useNavigationStyle: true,
@@ -124,7 +157,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: _buildNavigationButtons(context, items, true),
+                      children: [_buildNavigationOrWorkStatus(context, items, true)],
                     ),
                   ),
                   // 底部：窗口控制按钮（仅在桌面平台显示）
@@ -160,7 +193,7 @@ class _TrayNavigationState extends State<TrayNavigation>
               child: Row(
                 children: [
                   // 左侧：导航按钮
-                  Row(children: _buildNavigationButtons(context, items, false)),
+                  _buildNavigationOrWorkStatus(context, items, false),
                   // 中间：拖拽区域（占用剩余空间）
                   const Expanded(child: SizedBox()),
                   // 右侧：窗口控制按钮
@@ -196,16 +229,6 @@ class _TrayNavigationState extends State<TrayNavigation>
       final item = items[i];
       final isActive = currentPath == item.path;
 
-      // // 在设置按钮前添加主题切换按钮
-      // if (item.name == 'settings' && i > 0) {
-      //   buttons.add(_buildThemeToggleButton(context, isVertical));
-      //   if (isVertical) {
-      //     buttons.add(const SizedBox(height: 8));
-      //   } else {
-      //     buttons.add(const SizedBox(width: 8));
-      //   }
-      // }
-
       buttons.add(_buildNavigationButton(context, item, isActive, isVertical));
 
       // 添加间距，除了最后一个
@@ -219,6 +242,108 @@ class _TrayNavigationState extends State<TrayNavigation>
     }
 
     return buttons;
+  }
+
+  Widget _buildNavigationOrWorkStatus(
+    BuildContext context,
+    List<NavigationItem> items,
+    bool isVertical,
+  ) {
+    return Consumer<WorkStatusService>(
+      builder: (context, workStatusService, child) {
+        // 如果处于工作状态，显示工作状态指示器
+        if (workStatusService.isWorking) {
+          return _buildWorkStatusIndicator(context, isVertical, workStatusService.workDescription);
+        }
+        
+        // 否则显示正常的导航按钮
+        final buttons = _buildNavigationButtons(context, items, isVertical);
+        return isVertical
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: buttons,
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: buttons,
+              );
+      },
+    );
+  }
+
+  Widget _buildWorkStatusIndicator(
+    BuildContext context,
+    bool isVertical,
+    String workDescription,
+  ) {
+    return isVertical
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: _buildVerticalText(context, workDescription),
+              ),
+            ],
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  workDescription,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          );
+  }
+
+  Widget _buildVerticalText(BuildContext context, String text) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: text.characters.map((char) {
+        return Transform.rotate(
+          angle: 1.5708, // 90度 = π/2 弧度
+          child: Text(
+            char,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   Widget _buildNavigationButton(
@@ -303,18 +428,7 @@ class _TrayNavigationState extends State<TrayNavigation>
         _buildWindowButton(
           context,
           icon: Icons.power_settings_new,
-          onPressed: () async {
-            // 执行清理操作
-            final cleanupService = CleanupService();
-            await cleanupService.performCleanup();
-            
-            // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
-            final windowManager = WindowManagerService();
-            await windowManager.saveWindowStateOnExit();
-            
-            // 关闭应用
-            appWindow.close();
-          },
+          onPressed: () => _handleAppClose(context),
           tooltip: '关闭',
           isCloseButton: true,
           useNavigationStyle: true,

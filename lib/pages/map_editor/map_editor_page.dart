@@ -3006,27 +3006,30 @@ class _MapEditorContentState extends State<_MapEditorContent>
               Text('地图信息'),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildInfoRow('地图名称', widget.mapTitle ?? '未知地图'),
-                _buildInfoRow('编辑模式', widget.isPreviewMode ? '预览模式' : '编辑模式'),
-                if (widget.folderPath != null)
-                  _buildInfoRow('文件夹路径', widget.folderPath ?? ''),
-                _buildInfoRow('当前版本', 'default'),
-                const SizedBox(height: 16),
-                Text(
-                  '编辑器状态',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                _buildInfoRow('是否有未保存更改', _hasUnsavedChanges ? '是' : '否'),
-                _buildInfoRow('面板状态已更改', _panelStatesChanged ? '是' : '否'),
-              ],
+          content: SizedBox(
+            width: 400, // 设置固定宽度
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildInfoRow('地图名称', widget.mapTitle ?? '未知地图'),
+                  _buildInfoRow('编辑模式', widget.isPreviewMode ? '预览模式' : '编辑模式'),
+                  if (widget.folderPath != null)
+                    _buildInfoRow('文件夹路径', widget.folderPath ?? ''),
+                  _buildInfoRow('当前版本', 'default'),
+                  const SizedBox(height: 16),
+                  Text(
+                    '编辑器状态',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStatusRow('是否有未保存更改', _hasUnsavedChanges || ReactiveVersionTabBar.hasAnyUnsavedVersions),
+                  _buildStatusRow('面板状态已更改', _panelStatesChanged),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -3048,16 +3051,64 @@ class _MapEditorContentState extends State<_MapEditorContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(
               '$label:',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
             ),
           ),
           Expanded(
-            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建状态行（使用对钩和叉子符号）
+  Widget _buildStatusRow(String label, bool status) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  status ? Icons.check_circle : Icons.cancel,
+                  size: 18,
+                  color: status ? Colors.green : Colors.grey,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  status ? '是' : '否',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: status ? Colors.green : Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -3090,14 +3141,23 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () async {
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.arrow_back),
+                        onPressed: _isLoading ? null : () async {
                           final shouldExit = await _showExitConfirmDialog();
                           if (shouldExit && context.mounted) {
                             context.pop(); // 使用 go_router 的方式退出
                           }
                         },
-                        tooltip: '返回',
+                        tooltip: _isLoading ? '保存中...' : '返回',
                       ),
                       Icon(
                         Icons.edit_location,

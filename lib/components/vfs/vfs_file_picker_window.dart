@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -2228,7 +2228,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 Icon(
                   file.isDirectory ? Icons.folder : _getFileIcon(file),
                   size: 32,
-                  color: file.isDirectory ? Colors.amber : null,
+                  color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -2303,7 +2303,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           Icon(
             file.isDirectory ? Icons.folder : _getFileIcon(file),
             size: 20,
-            color: file.isDirectory ? Colors.amber : null,
+            color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -3384,7 +3384,7 @@ class _FileListItemState extends State<_FileListItem> {
                       ? Icons.folder
                       : widget.getFileIcon(widget.file),
                   size: 40,
-                  color: widget.file.isDirectory ? Colors.amber : null,
+                  color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                 ),
                 const SizedBox(width: 12),
                 // 文件信息
@@ -3549,7 +3549,7 @@ class _FileGridItemState extends State<_FileGridItem> {
                             ? Icons.folder
                             : widget.getFileIcon(widget.file),
                         size: 48,
-                        color: widget.file.isDirectory ? Colors.amber : null,
+                        color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                       ),
                       const SizedBox(height: 8),
                       Text(

@@ -169,7 +169,7 @@ class _BackgroundImageSettingsDialogState
       width: double.infinity,
       height: 200,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ClipRRect(
@@ -200,19 +200,22 @@ class _BackgroundImageSettingsDialogState
                   ),
                 ],
               )
-            : const Center(
+            : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.image_not_supported_outlined,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       size: 48,
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       '无背景图片',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -226,9 +229,9 @@ class _BackgroundImageSettingsDialogState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +241,7 @@ class _BackgroundImageSettingsDialogState
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -255,7 +258,10 @@ class _BackgroundImageSettingsDialogState
             children: [
               Text(
                 '填充模式: ',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               Text(
                 _getBoxFitDisplayName(_imageFit),
@@ -276,7 +282,10 @@ class _BackgroundImageSettingsDialogState
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -317,11 +326,17 @@ class _BackgroundImageSettingsDialogState
           children: [
             Text(
               '10%',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             Text(
               '300%',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -362,15 +377,24 @@ class _BackgroundImageSettingsDialogState
               children: [
                 Text(
                   '左',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   '中',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   '右',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -406,15 +430,24 @@ class _BackgroundImageSettingsDialogState
               children: [
                 Text(
                   '上',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   '中',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   '下',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -468,12 +501,12 @@ class _BackgroundImageSettingsDialogState
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade300,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).toInt())
+              ? Theme.of(context).colorScheme.primaryContainer
               : Colors.transparent,
         ),
         child: Text(
@@ -482,8 +515,8 @@ class _BackgroundImageSettingsDialogState
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade700,
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),

@@ -89,7 +89,8 @@ dependencies:
   audioplayers: ^6.2.0  # 更新到较新版本，可能修复了线程问题
   hetu_script: ^0.4.2
   squadron: ^7.1.1
-
+    # SVG rendering
+  jovial_svg: ^1.1.27
   isolate_manager:
     path: E:/code/isolate_manager
   uuid: ^4.5.1
@@ -156,6 +157,7 @@ flutter:
     - assets/data/
     - assets/images/
     - LICENSE
+    - assets/images/r6operators_flat/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -195,22 +197,22 @@ flutter_launcher_icons:
   remove_alpha_ios: true          # 移除 iOS 图标的透明通道
   web:
     generate: true                # Web 应用图标
-    image_path: "assets/icons/app_icon.png"
+    image_path: "assets/icon/icon.png"
     background_color: "#hexcode"  # 背景颜色（可选）
     theme_color: "#hexcode"       # 主题颜色（可选）
   windows:
     generate: true                # Windows 应用图标
-    image_path: "assets/icons/app_icon.png"
+    image_path: "assets/icon/icon.png"
     icon_size: 48                 # Windows 图标大小（可选）
   macos:
     generate: true                # macOS 应用图标
-    image_path: "assets/icons/app_icon.png"
+    image_path: "assets/icon/icon.png"
   linux:
     generate: true                # Linux 应用图标
-    image_path: "assets/icons/app_icon.png"
-  image_path: "assets/icons/app_icon.png"  # 主图标路径
+    image_path: "assets/icon/icon.png"
+  image_path: "assets/icon/icon.png"  # 主图标路径
   min_sdk_android: 21             # Android 最小 SDK 版本
   # 自适应图标配置 (Android)
-  adaptive_icon_background: "assets/icons/app_icon.png"  # 自适应图标背景
-  adaptive_icon_foreground: "assets/icons/app_icon.png"  # 自适应图标前景
+  adaptive_icon_background: "assets/icon/icon.png"  # 自适应图标背景
+  adaptive_icon_foreground: "assets/icon/icon.png"  # 自适应图标前景
 

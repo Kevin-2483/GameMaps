@@ -7,7 +7,6 @@
 --dart-define=ENABLE_EXTERNAL_RESOURCES_PAGE=false
 --dart-define=ENABLE_VFS_FILE_MANAGER_PAGE=true
 --dart-define=ENABLE_FULLSCREEN_TEST_PAGE=false
---dart-define=ENABLE_DEBUG_MODE=true
 --dart-define=ENABLE_EXPERIMENTAL_FEATURES=false
 --dart-define=ENABLE_TRAY_NAVIGATION=true
 --dart-define=APP_NAME=R6Box

@@ -8,6 +8,7 @@ import 'dart:io';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
+import '../../services/work_status_service.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
@@ -132,9 +133,9 @@ class _ExternalResourcesPageContentState
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _confirmAndProcess,
+                    onPressed: _isUploading ? null : _confirmAndProcess,
                     style: ElevatedButton.styleFrom(
-                      elevation: 2,
+                      elevation: _isUploading ? 0 : 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -143,10 +144,29 @@ class _ExternalResourcesPageContentState
                         vertical: 12,
                       ),
                     ),
-                    child: const Text(
-                      '确认并处理',
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
+                    child: _isUploading
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                '处理中...',
+                                style: TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            '确认并处理',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
                   ),
                 ],
               ),
@@ -375,6 +395,9 @@ class _ExternalResourcesPageContentState
   }
 
   void _cancelPreview() async {
+    // 清理工作状态
+        WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+    
     // 清理临时文件
     if (_tempPath.isNotEmpty) {
       try {
@@ -407,6 +430,11 @@ class _ExternalResourcesPageContentState
       setState(() {
         _isUploading = true;
       });
+      
+      // 更新工作状态描述
+       WorkStatusService().updateWorkDescription(
+         '正在验证文件路径...',
+       );
 
       // 再次检查路径合法性（防止用户手动修改后未更新isValidPath）
       for (final mapping in _fileMappings) {
@@ -416,6 +444,11 @@ class _ExternalResourcesPageContentState
           throw Exception('目标路径不合法：${mapping.targetPath}');
         }
       }
+
+      // 更新工作状态描述
+       WorkStatusService().updateWorkDescription(
+         '正在检查文件冲突...',
+       );
 
       // 检查文件冲突
       final conflicts = await _checkFileConflicts();
@@ -428,6 +461,11 @@ class _ExternalResourcesPageContentState
           return;
         }
       }
+
+      // 更新工作状态描述
+       WorkStatusService().updateWorkDescription(
+         '正在复制文件到目标位置...',
+       );
 
       // 处理文件映射
       for (final mapping in _fileMappings) {
@@ -463,12 +501,22 @@ class _ExternalResourcesPageContentState
         await _copyFileToTarget(mapping.sourceFile, mapping.targetPath);
       }
 
+      // 更新工作状态描述
+      WorkStatusService().updateWorkDescription(
+        '正在清理临时文件...',
+      );
+      
       // 清理临时文件
       await _cleanupTempFiles(_tempPath);
 
+      // 清理工作状态
+      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+      
       _showSuccessSnackBar('外部资源更新成功');
       _cancelPreview();
     } catch (e) {
+      // 发生错误时清理工作状态
+      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
       _showErrorSnackBar('更新失败：$e');
     } finally {
       setState(() {
@@ -492,37 +540,65 @@ class _ExternalResourcesPageContentState
   }
 
   Future<bool> _showConflictDialog(List<String> conflicts) async {
+    bool isProcessing = false;
+    
     return await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('文件冲突'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('以下文件已存在，是否覆盖？'),
-                const SizedBox(height: 16),
-                ...conflicts.map(
-                  (path) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      '• $path',
-                      style: const TextStyle(fontFamily: 'monospace'),
+          builder: (context) => StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              title: const Text('文件冲突'),
+              content: SizedBox(
+                width: 500,
+                height: 300,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('以下文件已存在，是否覆盖？'),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: conflicts.map(
+                            (path) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                '• $path',
+                                style: const TextStyle(fontFamily: 'monospace'),
+                              ),
+                            ),
+                          ).toList(),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isProcessing ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('取消'),
+                ),
+                ElevatedButton(
+                  onPressed: isProcessing ? null : () {
+                    setState(() {
+                      isProcessing = true;
+                    });
+                    Navigator.of(context).pop(true);
+                  },
+                  child: isProcessing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('覆盖'),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('取消'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('覆盖'),
-              ),
-            ],
           ),
         ) ??
         false;
@@ -810,12 +886,20 @@ class _ExternalResourcesPageContentState
         return;
       }
 
+      // 设置工作状态
+        WorkStatusService().startWorking(
+          '正在处理外部资源文件...',
+          taskId: 'upload_external_resources',
+        );
+
       setState(() {
         _isUploading = true;
       });
 
       await _processZipFileForPreview(fileBytes, file.name);
     } catch (e) {
+      // 发生错误时清理工作状态
+      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
       _showErrorSnackBar('更新失败：$e');
     } finally {
       setState(() {
@@ -828,6 +912,11 @@ class _ExternalResourcesPageContentState
     Uint8List zipBytes,
     String fileName,
   ) async {
+    // 更新工作状态描述
+     WorkStatusService().updateWorkDescription(
+       '正在解压ZIP文件...',
+     );
+    
     // 解压ZIP文件
     final archive = ZipDecoder().decodeBytes(zipBytes);
 
@@ -839,6 +928,11 @@ class _ExternalResourcesPageContentState
     try {
       // 1. 创建独占的临时文件夹
       await _vfsService.createDirectory('fs', tempPath);
+
+      // 更新工作状态描述
+       WorkStatusService().updateWorkDescription(
+         '正在提取文件到临时目录...',
+       );
 
       // 2. 解压所有文件到临时文件夹，查找根目录的metadata.json
       Map<String, dynamic>? metadata;
@@ -865,11 +959,19 @@ class _ExternalResourcesPageContentState
       }
 
       // 3. 验证元数据
+      WorkStatusService().updateWorkDescription(
+        '正在验证元数据文件...',
+      );
+      
       if (metadata == null) {
         throw Exception('ZIP文件根目录中未找到metadata.json文件');
       }
 
       // 4. 准备文件映射预览
+      WorkStatusService().updateWorkDescription(
+        '正在准备文件映射预览...',
+      );
+      
       await _prepareFileMappingPreview(tempPath, metadata);
 
       // 5. 显示预览界面

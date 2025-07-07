@@ -488,10 +488,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                         return Row(
                           children: [
                             if (index > 0)
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right,
                                 size: 16,
-                                color: Colors.grey,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             InkWell(
                               onTap: isLast
@@ -509,7 +509,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                                 child: Text(
                                   breadcrumb.name,
                                   style: TextStyle(
-                                    color: isLast ? Colors.black : Colors.blue,
+                                    color: isLast 
+                                        ? Theme.of(context).colorScheme.onSurface
+                                        : Theme.of(context).colorScheme.primary,
                                     fontWeight: isLast
                                         ? FontWeight.bold
                                         : FontWeight.normal,
@@ -533,10 +535,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.folder_open,
                         size: 64,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -544,7 +546,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
-                      const Text('点击右上角菜单添加地图或创建文件夹'),
+                      Text(
+                        '点击右上角菜单添加地图或创建文件夹',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -808,8 +815,8 @@ class _FolderCard extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Container(
-                  color: Colors.blue[50],
-                  child: Icon(Icons.folder, size: 48, color: Colors.blue[700]),
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Icon(Icons.folder, size: 48, color: Theme.of(context).colorScheme.primary),
                 ),
               ),
             ),

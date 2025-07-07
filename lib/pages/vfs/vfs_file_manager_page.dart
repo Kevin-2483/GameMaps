@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -1901,7 +1901,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                 Icon(
                   file.isDirectory ? Icons.folder : _getFileIcon(file),
                   size: 32,
-                  color: file.isDirectory ? Colors.amber : null,
+                  color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1976,7 +1976,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           Icon(
             file.isDirectory ? Icons.folder : _getFileIcon(file),
             size: 20,
-            color: file.isDirectory ? Colors.amber : null,
+            color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -3117,9 +3117,9 @@ class _FileListItemState extends State<_FileListItem> {
                 Icon(
                   widget.file.isDirectory
                       ? Icons.folder
-                      : widget.getFileIcon(widget.file),
-                  size: 40,
-                  color: widget.file.isDirectory ? Colors.amber : null,
+                        : widget.getFileIcon(widget.file),
+                    size: 40,
+                    color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                 ),
                 const SizedBox(width: 12),
                 // 文件信息
@@ -3266,9 +3266,9 @@ class _FileGridItemState extends State<_FileGridItem> {
                       Icon(
                         widget.file.isDirectory
                             ? Icons.folder
-                            : widget.getFileIcon(widget.file),
+                        : widget.getFileIcon(widget.file),
                         size: 48,
-                        color: widget.file.isDirectory ? Colors.amber : null,
+                        color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
                       ),
                       const SizedBox(height: 8),
                       Text(

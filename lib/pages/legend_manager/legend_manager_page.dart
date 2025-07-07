@@ -339,6 +339,98 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     _loadLegends();
   }
 
+  /// 导航到指定路径
+  void _navigateToPath(String path) {
+    setState(() {
+      _currentPath = path;
+      // 重建路径历史
+      _pathHistory.clear();
+      if (path.isNotEmpty) {
+        final pathSegments = path.split('/');
+        for (int i = 0; i < pathSegments.length - 1; i++) {
+          _pathHistory.add(pathSegments.sublist(0, i + 1).join('/'));
+        }
+      }
+    });
+    _loadLegends();
+  }
+
+  /// 构建面包屑导航
+  Widget _buildBreadcrumbs() {
+    if (_currentPath.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final pathSegments = _currentPath.split('/');
+    final breadcrumbs = <Map<String, String>>[
+      {'name': '根目录', 'path': ''},
+    ];
+
+    String currentPath = '';
+    for (final segment in pathSegments) {
+      currentPath = currentPath.isEmpty ? segment : '$currentPath/$segment';
+      breadcrumbs.add({
+        'name': segment,
+        'path': currentPath,
+      });
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: breadcrumbs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final breadcrumb = entry.value;
+                  final isLast = index == breadcrumbs.length - 1;
+
+                  return Row(
+                    children: [
+                      if (index > 0)
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      InkWell(
+                        onTap: isLast
+                            ? null
+                            : () => breadcrumb['path']!.isEmpty
+                                ? _navigateToRoot()
+                                : _navigateToPath(breadcrumb['path']!),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          child: Text(
+                            breadcrumb['name']!,
+                            style: TextStyle(
+                              color: isLast
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.primary,
+                              fontWeight: isLast
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 创建新文件夹
   Future<void> _createFolder() async {
     final l10n = AppLocalizations.of(context)!;
@@ -452,29 +544,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
             ],
           ),
           // 面包屑导航
-          if (_currentPath.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _navigateBack,
-                    icon: const Icon(Icons.arrow_back),
-                    tooltip: '返回上级',
-                  ),
-                  Expanded(
-                    child: Text(
-                      '当前位置: ${_currentPath.isEmpty ? '根目录' : _currentPath}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToRoot,
-                    child: const Text('根目录'),
-                  ),
-                ],
-              ),
-            ),
+          _buildBreadcrumbs(),
           // 内容区域
           Expanded(
             child: _isLoading
@@ -704,10 +774,10 @@ class _FolderCard extends StatelessWidget {
                 child: Container(
                   height: double.infinity,
                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  child: const Icon(
+                  child: Icon(
                     Icons.folder,
                     size: 48,
-                    color: Colors.amber,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),

@@ -343,19 +343,41 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
 
   /// 构建图例网格
   Widget _buildLegendsGrid(List<String> legends) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // 每行4个图例
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-        childAspectRatio: 1.0,
-      ),
-      itemCount: legends.length,
-      itemBuilder: (context, index) {
-        final legendPath = legends[index];
-        return _buildLegendTile(legendPath);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 根据容器宽度动态计算列数
+        // 抽屉宽度300-600，减去padding等，实际可用宽度约为280-580
+        // 每个瓦片最小宽度约80，最大宽度约120
+        final availableWidth = constraints.maxWidth;
+        int crossAxisCount;
+        
+        if (availableWidth < 280) {
+          crossAxisCount = 3; // 最少3列
+        } else if (availableWidth < 360) {
+          crossAxisCount = 3;
+        } else if (availableWidth < 440) {
+          crossAxisCount = 4;
+        } else if (availableWidth < 520) {
+          crossAxisCount = 5;
+        } else {
+          crossAxisCount = 6; // 最多6列
+        }
+        
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            childAspectRatio: 1.0,
+          ),
+          itemCount: legends.length,
+          itemBuilder: (context, index) {
+            final legendPath = legends[index];
+            return _buildLegendTile(legendPath);
+          },
+        );
       },
     );
   }
@@ -455,8 +477,8 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
@@ -470,7 +492,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   ),
                   child: Icon(
                     Icons.drag_indicator,
-                    size: 12,
+                    size: 18,
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -504,10 +526,10 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 图例预览图标 (小正方形)
+                  // 图例预览图标 (增大尺寸)
                   Container(
-                    width: 24,
-                    height: 24,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
@@ -522,11 +544,11 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                     child: legend?.hasImageData == true
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(3),
-                            child: _buildLegendThumbnail(legend!, 22, 22),
+                            child: _buildLegendThumbnail(legend!, 34, 34),
                           )
                         : Icon(
                             Icons.legend_toggle,
-                            size: 12,
+                            size: 18,
                             color: Theme.of(
                               context,
                             ).colorScheme.onSurfaceVariant,
