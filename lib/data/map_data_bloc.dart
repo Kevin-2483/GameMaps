@@ -34,6 +34,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     on<AddLayer>(_onAddLayer);
     on<DeleteLayer>(_onDeleteLayer);
     on<ReorderLayers>(_onReorderLayers);
+    on<ReorderLayersInGroup>(_onReorderLayersInGroup);
     on<UpdateLegendGroup>(_onUpdateLegendGroup);
     on<AddLegendGroup>(_onAddLegendGroup);
     on<DeleteLegendGroup>(_onDeleteLegendGroup);
@@ -220,15 +221,24 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final currentState = state as MapDataLoaded;
     _saveToHistory(currentState);
 
+    // 重新分配order值以确保顺序正确
+    final updatedLayers = <MapLayer>[];
+    for (int i = 0; i < event.layers.length; i++) {
+      updatedLayers.add(event.layers[i].copyWith(
+        order: i,
+        updatedAt: DateTime.now(),
+      ));
+    }
+
     // 同步更新mapItem中的图层数据
     final updatedMapItem = currentState.mapItem.copyWith(
-      layers: event.layers,
+      layers: updatedLayers,
       updatedAt: DateTime.now(),
     );
 
     final newState = currentState.copyWith(
       mapItem: updatedMapItem,
-      layers: event.layers,
+      layers: updatedLayers,
       lastModified: DateTime.now(),
     );
 
@@ -304,6 +314,51 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final newLayers = List<MapLayer>.from(currentState.layers);
 
     // 执行重排序
+    final movedLayer = newLayers.removeAt(event.oldIndex);
+    newLayers.insert(event.newIndex, movedLayer);
+
+    // 重新分配order
+    for (int i = 0; i < newLayers.length; i++) {
+      newLayers[i] = newLayers[i].copyWith(order: i, updatedAt: DateTime.now());
+    }
+
+    // 同步更新mapItem中的图层数据
+    final updatedMapItem = currentState.mapItem.copyWith(
+      layers: newLayers,
+      updatedAt: DateTime.now(),
+    );
+
+    final newState = currentState.copyWith(
+      mapItem: updatedMapItem,
+      layers: newLayers,
+      lastModified: DateTime.now(),
+    );
+
+    emit(newState);
+    _notifyDataChangeListeners(newState);
+  }
+
+  /// 组内重排序图层（同时处理链接状态和顺序）
+  Future<void> _onReorderLayersInGroup(
+    ReorderLayersInGroup event,
+    Emitter<MapDataState> emit,
+  ) async {
+    if (state is! MapDataLoaded) return;
+
+    final currentState = state as MapDataLoaded;
+    _saveToHistory(currentState);
+
+    final newLayers = List<MapLayer>.from(currentState.layers);
+
+    // 首先更新需要修改链接状态的图层
+    for (final layerToUpdate in event.layersToUpdate) {
+      final index = newLayers.indexWhere((layer) => layer.id == layerToUpdate.id);
+      if (index != -1) {
+        newLayers[index] = layerToUpdate;
+      }
+    }
+
+    // 然后执行重排序
     final movedLayer = newLayers.removeAt(event.oldIndex);
     newLayers.insert(event.newIndex, movedLayer);
 

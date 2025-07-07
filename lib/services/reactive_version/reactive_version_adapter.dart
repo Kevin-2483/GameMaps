@@ -686,6 +686,12 @@ class ReactiveVersionAdapter {
     _integrationAdapter.reorderLayers(oldIndex, newIndex);
   }
 
+  /// 组内重排序图层（同时处理链接状态和顺序）
+  void reorderLayersInGroup(int oldIndex, int newIndex, List<MapLayer> layersToUpdate) {
+    debugPrint('响应式版本管理器: 组内重排序图层 $oldIndex -> $newIndex，更新图层数量: ${layersToUpdate.length}');
+    _integrationAdapter.reorderLayersInGroup(oldIndex, newIndex, layersToUpdate);
+  }
+
   // ==================== 便签操作支持 ====================
 
   /// 添加便签（响应式版本管理支持，通过集成适配器）

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/background_image_settings_dialog.dart';
@@ -18,6 +18,7 @@ class LayerPanel extends StatefulWidget {
   final Function(MapLayer) onLayerDeleted;
   final VoidCallback onLayerAdded;
   final Function(int oldIndex, int newIndex) onLayersReordered;
+  final Function(int oldIndex, int newIndex, List<MapLayer> layersToUpdate)? onLayersInGroupReordered;
   final Function(String)? onError;
   final Function(String)? onSuccess;
   //：实时透明度预览回调
@@ -45,6 +46,7 @@ class LayerPanel extends StatefulWidget {
     required this.onLayerDeleted,
     required this.onLayerAdded,
     required this.onLayersReordered,
+    this.onLayersInGroupReordered,
     this.onError,
     this.onSuccess,
     this.onOpacityPreview,
@@ -1296,11 +1298,6 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    // 批量更新修改的图层
-    for (final layerToUpdate in layersToUpdate) {
-      widget.onLayerUpdated(layerToUpdate);
-    }
-
     debugPrint(
       '全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
     );
@@ -1312,8 +1309,11 @@ class _LayerPanelState extends State<LayerPanel> {
       return;
     }
 
-    // 执行实际的重排序
-    widget.onLayersReordered(oldGlobalIndex, newGlobalIndex);
+    // 使用新的组内重排序功能，同时处理链接状态和顺序
+    debugPrint('=== 执行组内重排序（同时处理链接状态和顺序）===');
+    debugPrint('调用 onLayersInGroupReordered($oldGlobalIndex, $newGlobalIndex, ${layersToUpdate.length} 个图层更新)');
+    widget.onLayersInGroupReordered?.call(oldGlobalIndex, newGlobalIndex, layersToUpdate);
+    debugPrint('=== 组内重排序完成 ===');
   }
 
   /// 处理组重排序

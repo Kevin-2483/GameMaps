@@ -96,6 +96,16 @@ class MapEditorIntegrationAdapter {
     _mapDataBloc.add(ReorderLayers(oldIndex: oldIndex, newIndex: newIndex));
   }
 
+  /// 组内重排序图层（同时处理链接状态和顺序）
+  void reorderLayersInGroup(int oldIndex, int newIndex, List<MapLayer> layersToUpdate) {
+    debugPrint('组内重排序图层: $oldIndex -> $newIndex，更新图层数量: ${layersToUpdate.length}');
+    _mapDataBloc.add(ReorderLayersInGroup(
+      oldIndex: oldIndex,
+      newIndex: newIndex,
+      layersToUpdate: layersToUpdate,
+    ));
+  }
+
   /// 设置图层可见性
   void setLayerVisibility(String layerId, bool isVisible) {
     debugPrint('设置图层可见性: $layerId = $isVisible');

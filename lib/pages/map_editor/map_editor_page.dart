@@ -733,6 +733,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 监听地图数据变化
     mapDataStream.listen((state) {
       if (state is MapDataLoaded) {
+        debugPrint('=== 响应式监听器收到 MapDataLoaded 事件 ===');
+        debugPrint('响应式数据图层order: ${state.layers.map((l) => '${l.name}(${l.order})').toList()}');
+        
         // 同步更新传统状态
         if (mounted) {
           setState(() {
@@ -741,6 +744,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
               layers: state.layers,
               legendGroups: state.legendGroups,
             );
+            
+            debugPrint('_currentMap已更新，图层order: ${_currentMap!.layers.map((l) => '${l.name}(${l.order})').toList()}');
 
             // 同步更新选中图层的引用，确保引用最新的图层对象
             if (_selectedLayer != null) {
@@ -748,6 +753,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               _selectedLayer = state.layers
                   .where((layer) => layer.id == selectedLayerId)
                   .firstOrNull;
+              debugPrint('选中图层引用已更新: ${_selectedLayer?.name}');
             }
 
             // 同步更新选中图层组的引用
@@ -761,6 +767,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 updatedGroup.add(updatedLayer);
               }
               _selectedLayerGroup = updatedGroup;
+              debugPrint('选中图层组引用已更新');
             }
 
             // 同步更新选中便利贴的引用，确保引用最新的便利贴对象
@@ -776,7 +783,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
             _hasUnsavedChanges = hasUnsavedChangesReactive;
 
             // 更新显示顺序
+            debugPrint('调用 _updateDisplayOrderAfterLayerChange()');
             _updateDisplayOrderAfterLayerChange();
+            debugPrint('_updateDisplayOrderAfterLayerChange() 完成，_displayOrderLayers: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}');
           });
 
           // 重要：在状态同步后，确保UI能够正确反映更改状态
@@ -1557,7 +1566,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   void _prioritizeLayerGroup(List<MapLayer> group) {
+    debugPrint('=== _prioritizeLayerGroup 开始 ===');
     debugPrint('优先显示图层组: ${group.map((l) => l.name).toList()}');
+    debugPrint('当前_currentMap.layers顺序: ${_currentMap?.layers.map((l) => '${l.name}(${l.order})').toList()}');
+    debugPrint('当前_displayOrderLayers顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}');
 
     if (_currentMap == null) return;
 
@@ -1566,41 +1578,43 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final allLayers = List<MapLayer>.from(_currentMap!.layers);
       final nonGroupLayers = <MapLayer>[];
       final groupLayers = <MapLayer>[];
+      final groupLayerIds = group.map((l) => l.id).toSet();
 
-      // 分离组内图层和其他图层
+      debugPrint('allLayers从_currentMap获取: ${allLayers.map((l) => '${l.name}(${l.order})').toList()}');
+
+      // 分离组内图层和其他图层，保持在当前地图数据中的实际顺序
       for (final layer in allLayers) {
-        if (group.any((groupLayer) => groupLayer.id == layer.id)) {
+        if (groupLayerIds.contains(layer.id)) {
           groupLayers.add(layer);
         } else {
           nonGroupLayers.add(layer);
         }
       }
 
-      // 按原有顺序排列组内图层（保持组内相对顺序）
-      groupLayers.sort((a, b) => a.order.compareTo(b.order));
+      // 不再按order排序，保持图层在_currentMap!.layers中的实际顺序
+      // 这样可以正确反映组内重排序的结果
+      debugPrint('分离后的组内图层顺序: ${groupLayers.map((l) => '${l.name}(${l.order})').toList()}');
+      debugPrint('分离后的非组图层顺序: ${nonGroupLayers.map((l) => '${l.name}(${l.order})').toList()}');
 
       // 重新组织显示顺序：非组图层在前，组图层在后（后绘制的显示在上层）
       _displayOrderLayers = [...nonGroupLayers, ...groupLayers];
 
       debugPrint(
-        '重新排列后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+        '最终_displayOrderLayers顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
       );
+      debugPrint('=== _prioritizeLayerGroup 结束 ===');
     });
   }
 
   void _restoreNormalLayerOrder() {
-    debugPrint('恢复正常图层绘制顺序');
-
     if (_currentMap == null) return;
 
     setState(() {
       // 按原始order顺序排列
-      _displayOrderLayers = List<MapLayer>.from(_currentMap!.layers)
+      final sortedLayers = List<MapLayer>.from(_currentMap!.layers)
         ..sort((a, b) => a.order.compareTo(b.order));
-
-      debugPrint(
-        '恢复后的显示顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
-      );
+      
+      _displayOrderLayers = sortedLayers;
     });
   }
 
@@ -1651,12 +1665,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统更新图层
     try {
       updateLayerReactive(updatedLayer);
-      debugPrint('使用响应式系统更新图层: ${updatedLayer.name}');
-
-      // // 显示成功消息
-      // _showSuccessSnackBar('已更新图层 "${updatedLayer.name}"');
     } catch (e) {
-      debugPrint('响应式系统更新图层失败: $e');
       _showErrorSnackBar('更新图层失败: ${e.toString()}');
     }
   }
@@ -1685,10 +1694,33 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _reorderLayers(int oldIndex, int newIndex) {
     if (_currentMap == null) return;
 
-    debugPrint('=== _reorderLayers 开始 ===');
-    debugPrint('oldIndex: $oldIndex, newIndex: $newIndex');
-    debugPrint('当前图层数量: ${_currentMap!.layers.length}');
-    debugPrint('重排序前图层名称: ${_currentMap!.layers.map((l) => l.name).toList()}');
+    // 验证索引范围
+    if (oldIndex < 0 ||
+        oldIndex >= _currentMap!.layers.length ||
+        newIndex < 0 ||
+        newIndex >= _currentMap!.layers.length ||
+        oldIndex == newIndex) {
+      return;
+    }
+
+    // 使用响应式系统重排序图层
+    try {
+      reorderLayersReactive(oldIndex, newIndex);
+
+      setState(() {
+        _updateLayerSelectionAfterReorder(oldIndex, newIndex);
+      });
+
+      _showSuccessSnackBar('图层顺序已更新');
+    } catch (e) {
+      debugPrint('响应式系统重排序图层失败: $e');
+      _showErrorSnackBar('重排序图层失败: ${e.toString()}');
+    }
+  }
+
+  /// 组内重排序图层（同时处理链接状态和顺序）
+  void _reorderLayersInGroup(int oldIndex, int newIndex, List<MapLayer> layersToUpdate) {
+    if (_currentMap == null) return;
 
     // 验证索引范围
     if (oldIndex < 0 ||
@@ -1696,26 +1728,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
         newIndex < 0 ||
         newIndex >= _currentMap!.layers.length ||
         oldIndex == newIndex) {
-      debugPrint('索引无效，跳过重排序');
       return;
     }
 
-    // 使用响应式系统重排序图层
+    // 使用响应式系统进行组内重排序
     try {
-      reorderLayersReactive(oldIndex, newIndex);
-      debugPrint('使用响应式系统重排序图层: $oldIndex -> $newIndex');
+      reorderLayersInGroupReactive(oldIndex, newIndex, layersToUpdate);
 
-      // 更新UI状态（响应式流会处理数据更新）
       setState(() {
-        // 更新选中图层的引用等UI状态
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-      // // 显示成功消息
-      // _showSuccessSnackBar('图层顺序已更新');
+      _showSuccessSnackBar('图层组内顺序已更新');
     } catch (e) {
-      debugPrint('响应式系统重排序图层失败: $e');
-      _showErrorSnackBar('重排序图层失败: ${e.toString()}');
+      debugPrint('响应式系统组内重排序图层失败: $e');
+      _showErrorSnackBar('组内重排序图层失败: ${e.toString()}');
     }
   }
 
@@ -1837,7 +1864,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统批量更新图层
     try {
       updateLayersReactive(updatedLayers);
-      debugPrint('使用响应式系统批量更新 ${updatedLayers.length} 个图层');
 
       // 更新UI状态
       setState(() {
@@ -1871,7 +1897,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 显示成功消息
       _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
     } catch (e) {
-      debugPrint('响应式系统批量更新图层失败: $e');
       _showErrorSnackBar('批量更新图层失败: ${e.toString()}');
     }
   }
@@ -1977,7 +2002,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统添加图例组
     try {
       addLegendGroupReactive(newGroup);
-      debugPrint('使用响应式系统添加图例组: ${newGroup.name}');
 
       // 为新图例组设置默认的智能隐藏状态
       setLegendGroupSmartHideState(newGroup.id, true);
@@ -1985,7 +2009,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 显示成功消息
       _showSuccessSnackBar('已添加图例组 "${newGroup.name}"');
     } catch (e) {
-      debugPrint('响应式系统添加图例组失败: $e');
       _showErrorSnackBar('添加图例组失败: ${e.toString()}');
     }
   }
@@ -3549,6 +3572,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 onLayerDeleted: _deleteLayer,
                 onLayerAdded: _addNewLayer,
                 onLayersReordered: _reorderLayers,
+                onLayersInGroupReordered: _reorderLayersInGroup,
                 onError: _showErrorSnackBar,
                 onSuccess: _showSuccessSnackBar,
                 onOpacityPreview: _handleOpacityPreview,

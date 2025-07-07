@@ -88,6 +88,22 @@ class ReorderLayers extends MapDataEvent {
   List<Object?> get props => [oldIndex, newIndex];
 }
 
+/// 组内重排序图层（同时处理链接状态和顺序）
+class ReorderLayersInGroup extends MapDataEvent {
+  final int oldIndex;
+  final int newIndex;
+  final List<MapLayer> layersToUpdate; // 需要更新链接状态的图层
+
+  const ReorderLayersInGroup({
+    required this.oldIndex,
+    required this.newIndex,
+    required this.layersToUpdate,
+  });
+
+  @override
+  List<Object?> get props => [oldIndex, newIndex, layersToUpdate];
+}
+
 /// 更新图例组
 class UpdateLegendGroup extends MapDataEvent {
   final LegendGroup legendGroup;
