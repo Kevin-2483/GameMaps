@@ -89,7 +89,6 @@ class ThemeProvider extends ChangeNotifier {
         return AppThemeMode.system;
     }
   } // 亮色主题
-
   ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     colorScheme: _useMaterialYou
@@ -97,12 +96,12 @@ class ThemeProvider extends ChangeNotifier {
             seedColor: _primaryColor,
             brightness: Brightness.light,
           )
-        : ColorScheme.fromSwatch(
-            primarySwatch: MaterialColor(
-              _primaryColor.value,
-              _generateMaterialColor(_primaryColor),
-            ),
+        : ColorScheme.fromSeed(
+            seedColor: _primaryColor,
             brightness: Brightness.light,
+          ).copyWith(
+            primary: _primaryColor,
+            primaryContainer: _primaryColor.withOpacity(0.1),
           ),
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: const CardThemeData(
@@ -127,12 +126,12 @@ class ThemeProvider extends ChangeNotifier {
             seedColor: _primaryColor,
             brightness: Brightness.dark,
           )
-        : ColorScheme.fromSwatch(
-            primarySwatch: MaterialColor(
-              _primaryColor.value,
-              _generateMaterialColor(_primaryColor),
-            ),
+        : ColorScheme.fromSeed(
+            seedColor: _primaryColor,
             brightness: Brightness.dark,
+          ).copyWith(
+            primary: _primaryColor,
+            primaryContainer: _primaryColor.withOpacity(0.2),
           ),
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: const CardThemeData(
