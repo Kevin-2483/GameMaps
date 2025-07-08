@@ -287,7 +287,7 @@ class ZIndexInspector extends StatelessWidget {
       case DrawingElementType.text:
         return Icons.text_fields;
       case DrawingElementType.eraser:
-        return Icons.cleaning_services;
+        return Icons.content_cut;
       case DrawingElementType.imageArea:
         return Icons.photo_size_select_actual;
     }

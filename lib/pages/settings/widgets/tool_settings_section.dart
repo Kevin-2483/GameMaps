@@ -764,7 +764,7 @@ class ToolSettingsSection extends StatelessWidget {
       case 'text':
         return Icons.text_fields;
       case 'eraser':
-        return Icons.cleaning_services;
+        return Icons.content_cut;
       case 'imageArea':
         return Icons.photo_size_select_actual;
       default:

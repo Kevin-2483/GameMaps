@@ -1,6 +1,19 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+
+
+/// Offset扩展方法
+extension OffsetExtension on Offset {
+  /// 归一化向量
+  Offset normalize() {
+    final length = distance;
+    if (length == 0) return Offset.zero;
+    return this / length;
+  }
+}
 
 /// 轮盘手势菜单项
 class RadialMenuItem {
@@ -31,7 +44,10 @@ class RadialGestureMenu extends StatefulWidget {
   final bool debugMode;
   final double opacity;
   final Color plateColor;
+  final Color? borderColor;
   final Duration animationDuration;
+  final int menuButton;
+  final Duration returnDelay;
 
   const RadialGestureMenu({
     super.key,
@@ -43,7 +59,10 @@ class RadialGestureMenu extends StatefulWidget {
     this.debugMode = false,
     this.opacity = 1.0,
     this.plateColor = const Color(0xFF2C2C2C),
+    this.borderColor,
     this.animationDuration = const Duration(milliseconds: 300),
+    this.menuButton = 2,
+    this.returnDelay = const Duration(milliseconds: 100),
   });
 
   @override
@@ -59,6 +78,13 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   List<RadialMenuItem> _currentMenuItems = [];
   bool _isInSubMenu = false;
   RadialMenuItem? _selectedParentItem;
+  double _subMenuRotationOffset = 0.0; // 子菜单的固定旋转偏移
+  
+  // 中央区域停留计时器相关
+  Timer? _centerAreaTimer;
+  bool _isInCenterArea = false;
+  Offset? _lastPointerPosition;
+  DateTime? _lastPointerMoveTime;
 
   late AnimationController _mainAnimationController;
   late AnimationController _plateAnimationController;
@@ -139,6 +165,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
 
   @override
   void dispose() {
+    _centerAreaTimer?.cancel();
     _mainAnimationController.dispose();
     _plateAnimationController.dispose();
     for (final controller in _cardAnimationControllers) {
@@ -225,37 +252,124 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     });
     
     final distance = (position - _menuCenter!).distance;
+    final now = DateTime.now();
     
-    // 如果在中心区域，返回主菜单
+    // 检查鼠标是否移动
+    bool hasMouseMoved = false;
+    if (_lastPointerPosition != null) {
+      final moveDistance = (position - _lastPointerPosition!).distance;
+      hasMouseMoved = moveDistance > 2.0; // 移动超过2像素认为是移动
+    }
+    
+    // 更新鼠标位置和时间
+    if (hasMouseMoved) {
+      _lastPointerPosition = position;
+      _lastPointerMoveTime = now;
+    }
+    
+    // 中心区域检测和延迟返回逻辑
     if (distance < widget.centerRadius) {
-      if (_isInSubMenu) {
-        // 先隐藏当前卡片
-        for (final controller in _cardAnimationControllers) {
-          controller.reverse();
-        }
+      if (!_isInCenterArea) {
+        // 刚进入中央区域
+        _isInCenterArea = true;
+        _lastPointerPosition = position;
+        _lastPointerMoveTime = now;
+        _centerAreaTimer?.cancel();
         
-        // 等待动画完成后返回主菜单
-        Future.delayed(const Duration(milliseconds: 200), () {
-          if (mounted) {
-            setState(() {
-              _currentMenuItems = widget.menuItems;
-              _isInSubMenu = false;
-              _selectedParentItem = null;
-              _hoveredItem = null;
-            });
-            
-            // 重新初始化并播放卡片动画
-            _disposeCardAnimations();
-            _initCardAnimations();
-            _playCardAnimations();
-            
-            if (widget.debugMode) {
-              print('返回主菜单');
+        if (_isInSubMenu) {
+          _centerAreaTimer = Timer(widget.returnDelay, () {
+            if (mounted && _isInCenterArea && _isInSubMenu) {
+              // 先隐藏当前卡片
+              for (final controller in _cardAnimationControllers) {
+                controller.reverse();
+              }
+              
+              // 等待动画完成后返回主菜单
+              Future.delayed(const Duration(milliseconds: 200), () {
+                if (mounted) {
+                  setState(() {
+                    _currentMenuItems = widget.menuItems;
+                    _isInSubMenu = false;
+                    _selectedParentItem = null;
+                    _hoveredItem = null;
+                    _subMenuRotationOffset = 0.0; // 重置旋转偏移
+                    _isInCenterArea = false;
+                  });
+                  
+                  // 重新初始化并播放卡片动画
+                  _disposeCardAnimations();
+                  _initCardAnimations();
+                  _playCardAnimations();
+                  
+                  // 根据当前鼠标位置预设hover状态
+                  if (_currentPointer != null && _menuCenter != null) {
+                    _setInitialHoverForSubMenu(_currentPointer!);
+                  }
+                  
+                  if (widget.debugMode) {
+                    print('延迟返回主菜单');
+                  }
+                }
+              });
             }
-          }
-        });
+          });
+        }
+      } else {
+        // 已经在中央区域，如果鼠标移动了，重新启动计时器
+        if (hasMouseMoved && _isInSubMenu) {
+          _lastPointerPosition = position;
+          _lastPointerMoveTime = now;
+          _centerAreaTimer?.cancel();
+          _centerAreaTimer = Timer(widget.returnDelay, () {
+            if (mounted && _isInCenterArea && _isInSubMenu) {
+              // 先隐藏当前卡片
+              for (final controller in _cardAnimationControllers) {
+                controller.reverse();
+              }
+              
+              // 等待动画完成后返回主菜单
+              Future.delayed(const Duration(milliseconds: 200), () {
+                if (mounted) {
+                  setState(() {
+                    _currentMenuItems = widget.menuItems;
+                    _isInSubMenu = false;
+                    _selectedParentItem = null;
+                    _hoveredItem = null;
+                    _subMenuRotationOffset = 0.0; // 重置旋转偏移
+                    _isInCenterArea = false;
+                  });
+                  
+                  // 重新初始化并播放卡片动画
+                  _disposeCardAnimations();
+                  _initCardAnimations();
+                  _playCardAnimations();
+                  
+                  // 根据当前鼠标位置预设hover状态
+                  if (_currentPointer != null && _menuCenter != null) {
+                    _setInitialHoverForSubMenu(_currentPointer!);
+                  }
+                  
+                  if (widget.debugMode) {
+                    print('延迟返回主菜单');
+                  }
+                }
+              });
+            }
+          });
+        }
       }
-      return;
+      
+      // 主菜单状态下，在中心区域不触发选择，直接返回
+      if (!_isInSubMenu) {
+        return;
+      }
+      // 子菜单状态下，继续执行下面的角度计算和项目选择逻辑
+    } else {
+      // 离开中央区域，取消计时器
+      if (_isInCenterArea) {
+        _isInCenterArea = false;
+        _centerAreaTimer?.cancel();
+      }
     }
     
     // 计算角度
@@ -272,7 +386,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     if (itemCount == 0) return;
     
     final sectorAngle = 2 * math.pi / itemCount;
-    final adjustedAngle = (normalizedAngle + math.pi / 2) % (2 * math.pi);
+    // 在子菜单状态下需要考虑旋转偏移
+    double adjustedAngle = (normalizedAngle + math.pi / 2) % (2 * math.pi);
+    if (_isInSubMenu) {
+      adjustedAngle = (adjustedAngle - _subMenuRotationOffset + 2 * math.pi) % (2 * math.pi);
+    }
     final selectedIndex = (adjustedAngle / sectorAngle).floor() % itemCount;
     
     final selectedItem = _currentMenuItems[selectedIndex];
@@ -290,30 +408,46 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
       
       // 如果是主菜单项目且有子项目，切换到子菜单
       if (!_isInSubMenu && selectedItem.subItems != null && selectedItem.subItems!.isNotEmpty) {
-        // 先隐藏当前卡片
+        // 立即切换到子菜单状态
+        setState(() {
+          _currentMenuItems = selectedItem.subItems!;
+          _isInSubMenu = true;
+          _selectedParentItem = selectedItem;
+          
+          // 计算并固定子菜单的旋转偏移
+          if (_currentPointer != null && _menuCenter != null) {
+            final mouseAngle = math.atan2(
+              _currentPointer!.dy - _menuCenter!.dy,
+              _currentPointer!.dx - _menuCenter!.dx,
+            );
+            // 计算第一个项目的中心角度偏移
+            final itemCount = selectedItem.subItems!.length;
+            final sectorAngle = 2 * math.pi / itemCount;
+            // 让第一个项目的中心对准鼠标位置
+            _subMenuRotationOffset = mouseAngle + math.pi / 2 - sectorAngle / 2;
+          } else {
+            _subMenuRotationOffset = 0.0;
+          }
+        });
+        
+        // 同时开始一级菜单消失和二级菜单出现动画
         for (final controller in _cardAnimationControllers) {
           controller.reverse();
         }
         
-        // 等待动画完成后切换到子菜单
-        Future.delayed(const Duration(milliseconds: 200), () {
-          if (mounted) {
-            setState(() {
-              _currentMenuItems = selectedItem.subItems!;
-              _isInSubMenu = true;
-              _selectedParentItem = selectedItem;
-            });
-            
-            // 重新初始化并播放卡片动画
-            _disposeCardAnimations();
-            _initCardAnimations();
-            _playCardAnimations();
-            
-            if (widget.debugMode) {
-              print('进入子菜单: ${selectedItem.label}');
-            }
-          }
-        });
+        // 立即重新初始化并播放新的卡片动画
+        _disposeCardAnimations();
+        _initCardAnimations();
+        _playCardAnimations();
+        
+        // 根据当前鼠标位置预设hover状态
+        if (_currentPointer != null && _menuCenter != null) {
+          _setInitialHoverForSubMenu(_currentPointer!);
+        }
+        
+        if (widget.debugMode) {
+          print('进入子菜单: ${selectedItem.label}');
+        }
       }
     }
   }
@@ -333,14 +467,57 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
       _hideMenu();
     }
   }
+  
+  void _setInitialHoverForSubMenu(Offset position) {
+    if (!_isMenuVisible || _menuCenter == null || _currentMenuItems.isEmpty) return;
+    
+    final distance = (position - _menuCenter!).distance;
+    
+    // 如果在中心区域，不设置hover
+    if (distance < widget.centerRadius) {
+      return;
+    }
+    
+    // 计算角度
+    final angle = math.atan2(
+      position.dy - _menuCenter!.dy,
+      position.dx - _menuCenter!.dx,
+    );
+    
+    // 转换为0-2π范围
+    final normalizedAngle = (angle + 2 * math.pi) % (2 * math.pi);
+    
+    // 计算选中的项目
+    final itemCount = _currentMenuItems.length;
+    final sectorAngle = 2 * math.pi / itemCount;
+    // 在子菜单状态下需要考虑旋转偏移
+    double adjustedAngle = (normalizedAngle + math.pi / 2) % (2 * math.pi);
+    if (_isInSubMenu) {
+      adjustedAngle = (adjustedAngle - _subMenuRotationOffset + 2 * math.pi) % (2 * math.pi);
+    }
+    final selectedIndex = (adjustedAngle / sectorAngle).floor() % itemCount;
+    
+    final selectedItem = _currentMenuItems[selectedIndex];
+    
+    setState(() {
+      _hoveredItem = selectedItem;
+    });
+    
+    if (widget.debugMode) {
+      print('子菜单初始悬停项目: ${selectedItem.label}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Listener(
         onPointerDown: (event) {
           // 检查是否为中键按下
-          if (event.buttons == 4) {
+          if (event.buttons == widget.menuButton) {
             _showMenu(event.localPosition);
+            if (widget.debugMode) {
+              print('中键按下，显示径向菜单于位置: ${event.localPosition}');
+            }
           }
         },
         onPointerMove: (event) {
@@ -392,11 +569,13 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                 currentPointer: _currentPointer,
                 isInSubMenu: _isInSubMenu,
                 selectedParentItem: _selectedParentItem,
+                subMenuRotationOffset: _subMenuRotationOffset,
                 plateScale: _plateScaleAnimation.value,
                 plateOpacity: _plateOpacityAnimation.value,
                 cardScales: _cardScaleAnimations.map((anim) => anim.value).toList(),
                 cardOpacities: _cardOpacityAnimations.map((anim) => anim.value).toList(),
                 plateColor: widget.plateColor,
+                borderColor: widget.borderColor,
                 debugMode: widget.debugMode,
               ),
             ),
@@ -417,11 +596,13 @@ class RadialMenuPainter extends CustomPainter {
   final Offset? currentPointer;
   final bool isInSubMenu;
   final RadialMenuItem? selectedParentItem;
+  final double subMenuRotationOffset;
   final double plateScale;
   final double plateOpacity;
   final List<double> cardScales;
   final List<double> cardOpacities;
   final Color plateColor;
+  final Color? borderColor;
   final bool debugMode;
 
   RadialMenuPainter({
@@ -433,11 +614,13 @@ class RadialMenuPainter extends CustomPainter {
     this.currentPointer,
     required this.isInSubMenu,
     this.selectedParentItem,
+    required this.subMenuRotationOffset,
     required this.plateScale,
     required this.plateOpacity,
     required this.cardScales,
     required this.cardOpacities,
     required this.plateColor,
+    this.borderColor,
     required this.debugMode,
   });
 
@@ -453,11 +636,22 @@ class RadialMenuPainter extends CustomPainter {
     final itemCount = menuItems.length;
     final sectorAngle = 2 * math.pi / itemCount;
     
-    // 绘制背景圆圈（盘子）
+    // 绘制背景圆圈（盘子）- 比扇形稍大一圈
+    const double plateRadiusExpansion = 12.0; // 盘子半径扩展
+    final plateRadius = radius + plateRadiusExpansion;
     final backgroundPaint = Paint()
       ..color = plateColor
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, backgroundPaint);
+    canvas.drawCircle(center, plateRadius, backgroundPaint);
+    
+    // 绘制背景边框
+    if (borderColor != null) {
+      final borderPaint = Paint()
+        ..color = borderColor!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      canvas.drawCircle(center, plateRadius, borderPaint);
+    }
     
     // 中心区域保持透明（不绘制中心圆圈）
     // 只绘制中心圆圈边框作为取消区域的指示
@@ -467,10 +661,16 @@ class RadialMenuPainter extends CustomPainter {
     //   ..strokeWidth = 1.0;
     // canvas.drawCircle(center, centerRadius, centerBorderPaint);
     
+    // 使用固定的子菜单旋转偏移
+    double rotationOffset = 0.0;
+    if (isInSubMenu) {
+      rotationOffset = subMenuRotationOffset;
+    }
+    
     // 绘制菜单项（卡片）
     for (int i = 0; i < itemCount; i++) {
       final item = menuItems[i];
-      final startAngle = i * sectorAngle - math.pi / 2;
+      final startAngle = i * sectorAngle - math.pi / 2 + rotationOffset;
       final isHovered = item == hoveredItem;
       final cardScale = i < cardScales.length ? cardScales[i] : 1.0;
       final cardOpacity = i < cardOpacities.length ? cardOpacities[i] : 1.0;
@@ -497,9 +697,14 @@ class RadialMenuPainter extends CustomPainter {
   ) {
     canvas.save();
 
-    // 1. 定义间隙的物理宽度
+    // 1. 定义间隙的物理宽度和选中项目的半径扩展
     const double gapWidth = 4.0;
     final double halfGap = gapWidth / 2.0;
+    const double hoverRadiusExpansion = 8.0; // 选中项目半径扩展
+    
+    // 根据是否选中调整半径
+    final double adjustedRadius = radius + (isHovered ? hoverRadiusExpansion : 0.0);
+    final double adjustedCenterRadius = centerRadius - (isHovered ? hoverRadiusExpansion / 2 : 0.0);
 
     // 2. 计算扇区两侧“间隙中心线”的角度
     // 这不是扇区本身的起止角度，而是扇区与邻居之间的分界线角度
@@ -516,18 +721,18 @@ class RadialMenuPainter extends CustomPainter {
     ); // 垂直于起始分割线的单位向量
     final Offset innerStartPoint = Offset(
       center.dx +
-          centerRadius * math.cos(startDividerAngle) +
+          adjustedCenterRadius * math.cos(startDividerAngle) +
           startNormal.dx * halfGap,
       center.dy +
-          centerRadius * math.sin(startDividerAngle) +
+          adjustedCenterRadius * math.sin(startDividerAngle) +
           startNormal.dy * halfGap,
     );
     final Offset outerStartPoint = Offset(
       center.dx +
-          radius * math.cos(startDividerAngle) +
+          adjustedRadius * math.cos(startDividerAngle) +
           startNormal.dx * halfGap,
       center.dy +
-          radius * math.sin(startDividerAngle) +
+          adjustedRadius * math.sin(startDividerAngle) +
           startNormal.dy * halfGap,
     );
 
@@ -538,41 +743,100 @@ class RadialMenuPainter extends CustomPainter {
     ); // 垂直于结束分割线的单位向量
     final Offset innerEndPoint = Offset(
       center.dx +
-          centerRadius * math.cos(endDividerAngle) -
+          adjustedCenterRadius * math.cos(endDividerAngle) -
           endNormal.dx * halfGap,
       center.dy +
-          centerRadius * math.sin(endDividerAngle) -
+          adjustedCenterRadius * math.sin(endDividerAngle) -
           endNormal.dy * halfGap,
     );
     final Offset outerEndPoint = Offset(
-      center.dx + radius * math.cos(endDividerAngle) - endNormal.dx * halfGap,
-      center.dy + radius * math.sin(endDividerAngle) - endNormal.dy * halfGap,
+      center.dx + adjustedRadius * math.cos(endDividerAngle) - endNormal.dx * halfGap,
+      center.dy + adjustedRadius * math.sin(endDividerAngle) - endNormal.dy * halfGap,
     );
 
-    // 4. 构建路径
-    // 使用 arcToPoint 来连接偏移后的顶点，这能确保弧线完美地衔接直线
+    // 4. 构建路径（带圆角效果）
+    // 定义圆角半径
+    const double cornerRadius = 8.0;
+    
+    // 计算圆角过渡点
+    // 起始边的圆角过渡点
+    final startLineVector = (outerStartPoint - innerStartPoint).normalize();
+    final startCornerInner = innerStartPoint + startLineVector * cornerRadius;
+    final startCornerOuter = outerStartPoint - startLineVector * cornerRadius;
+    
+    // 结束边的圆角过渡点
+    final endLineVector = (outerEndPoint - innerEndPoint).normalize();
+    final endCornerOuter = outerEndPoint - endLineVector * cornerRadius;
+    final endCornerInner = innerEndPoint + endLineVector * cornerRadius;
+    
+    // 外弧的圆角过渡点
+    final outerArcStartTangent = Offset(
+      -math.sin(startDividerAngle),
+      math.cos(startDividerAngle),
+    ).normalize();
+    final outerArcEndTangent = Offset(
+      -math.sin(endDividerAngle),
+      math.cos(endDividerAngle),
+    ).normalize();
+    
+    final outerArcStartCorner = outerStartPoint + outerArcStartTangent * cornerRadius;
+    final outerArcEndCorner = outerEndPoint - outerArcEndTangent * cornerRadius;
+    
+    // 内弧的圆角过渡点（向直边方向弯曲）
+    // 计算起始直边的垂直方向（向扇形内部旋转90度）
+    final startLineDirection = (outerStartPoint - innerStartPoint).normalize();
+    final startPerpendicularDirection = Offset(-startLineDirection.dy, startLineDirection.dx);
+    
+    // 计算结束直边的垂直方向（向扇形内部旋转90度）
+    final endLineDirection = (outerEndPoint - innerEndPoint).normalize();
+    final endPerpendicularDirection = Offset(endLineDirection.dy, -endLineDirection.dx);
+    
+    // 内弧圆角向直边垂直方向偏移
+    final innerArcStartCorner = innerStartPoint + startPerpendicularDirection * cornerRadius;
+    final innerArcEndCorner = innerEndPoint + endPerpendicularDirection * cornerRadius;
+    
     final path = Path()
-      ..moveTo(innerStartPoint.dx, innerStartPoint.dy) // 移动到内弧起点
-      ..lineTo(outerStartPoint.dx, outerStartPoint.dy) // 绘制起始边 (直线)
-      ..arcToPoint(
-        // 绘制外弧
-        outerEndPoint,
-        radius: Radius.circular(radius),
-        largeArc: sectorAngle > math.pi, // 如果扇区大于半圆，则使用大弧
+      ..moveTo(innerArcStartCorner.dx, innerArcStartCorner.dy) // 移动到内弧圆角起点
+      // 内弧起始圆角过渡
+      ..quadraticBezierTo(
+        innerStartPoint.dx, innerStartPoint.dy,
+        startCornerInner.dx, startCornerInner.dy,
       )
-      ..lineTo(innerEndPoint.dx, innerEndPoint.dy) // 绘制结束边 (直线)
-      ..arcToPoint(
-        // 绘制内弧
-        innerStartPoint,
-        radius: Radius.circular(centerRadius),
-        largeArc: sectorAngle > math.pi,
-        clockwise: false, // 内弧需要逆时针绘制
+      ..lineTo(startCornerOuter.dx, startCornerOuter.dy) // 绘制起始边直线部分
+      // 起始边到外弧的圆角过渡
+      ..quadraticBezierTo(
+        outerStartPoint.dx, outerStartPoint.dy,
+        outerArcStartCorner.dx, outerArcStartCorner.dy,
       )
+      // 绘制外弧
+       ..arcToPoint(
+         outerArcEndCorner,
+         radius: Radius.circular(adjustedRadius),
+         largeArc: sectorAngle > math.pi,
+       )
+      // 外弧到结束边的圆角过渡
+      ..quadraticBezierTo(
+        outerEndPoint.dx, outerEndPoint.dy,
+        endCornerOuter.dx, endCornerOuter.dy,
+      )
+      ..lineTo(endCornerInner.dx, endCornerInner.dy) // 绘制结束边直线部分
+      // 结束边到内弧的圆角过渡
+      ..quadraticBezierTo(
+        innerEndPoint.dx, innerEndPoint.dy,
+        innerArcEndCorner.dx, innerArcEndCorner.dy,
+      )
+      // 绘制内弧
+       ..arcToPoint(
+         innerArcStartCorner,
+         radius: Radius.circular(adjustedCenterRadius),
+         largeArc: sectorAngle > math.pi,
+         clockwise: false,
+       )
       ..close();
 
     // 5. 应用卡片动画、绘制、文本和图标
     final midAngle = startAngle + sectorAngle / 2;
-    final cardCenterRadius = (centerRadius + radius) / 2;
+    final cardCenterRadius = (adjustedCenterRadius + adjustedRadius) / 2;
     final cardCenter = Offset(
       center.dx + cardCenterRadius * math.cos(midAngle),
       center.dy + cardCenterRadius * math.sin(midAngle),
@@ -590,7 +854,7 @@ class RadialMenuPainter extends CustomPainter {
     canvas.drawPath(path, sectorPaint);
 
     final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8 * cardOpacity)
+      ..color = (borderColor ?? Colors.white).withValues(alpha: 0.8 * cardOpacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = isHovered ? 2.0 : 1.0;
     canvas.drawPath(path, borderPaint);
@@ -607,6 +871,9 @@ class RadialMenuPainter extends CustomPainter {
       fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
     );
 
+    // 检查是否有文本内容
+    final hasText = item.label.isNotEmpty;
+    
     // 绘制图标
     if (item.icon != null) {
       final iconPainter = TextPainter(
@@ -623,36 +890,38 @@ class RadialMenuPainter extends CustomPainter {
       iconPainter.layout();
       final iconOffset = Offset(
         textCenter.dx - iconPainter.width / 2,
-        textCenter.dy - iconPainter.height / 2 - 10,
+        textCenter.dy - iconPainter.height / 2 - (hasText ? 10 : 0),
       );
       iconPainter.paint(canvas, iconOffset);
     }
 
-    // 绘制文本
-    final textPainter = TextPainter(
-      text: TextSpan(text: item.label, style: iconAndTextStyle),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    final textOffset = Offset(
-      textCenter.dx - textPainter.width / 2,
-      textCenter.dy - textPainter.height / 2 + (item.icon != null ? 10 : 0),
-    );
-    textPainter.paint(canvas, textOffset);
-
-    // 绘制子项目指示器
-    if (item.subItems != null && item.subItems!.isNotEmpty) {
-      final indicatorPaint = Paint()
-        ..color = Colors.yellow.withValues(alpha: cardOpacity)
-        ..style = PaintingStyle.fill;
-
-      final indicatorCenter = Offset(
-        center.dx + math.cos(midAngle) * (radius - 15),
-        center.dy + math.sin(midAngle) * (radius - 15),
+    // 绘制文本（只有当文本不为空时才绘制）
+    if (hasText) {
+      final textPainter = TextPainter(
+        text: TextSpan(text: item.label, style: iconAndTextStyle),
+        textDirection: TextDirection.ltr,
       );
-
-      canvas.drawCircle(indicatorCenter, 3, indicatorPaint);
+      textPainter.layout();
+      final textOffset = Offset(
+        textCenter.dx - textPainter.width / 2,
+        textCenter.dy - textPainter.height / 2 + (item.icon != null ? 10 : 0),
+      );
+      textPainter.paint(canvas, textOffset);
     }
+
+    // 绘制子项目指示器（已禁用）
+    // if (item.subItems != null && item.subItems!.isNotEmpty) {
+    //   final indicatorPaint = Paint()
+    //     ..color = Colors.yellow.withValues(alpha: cardOpacity)
+    //     ..style = PaintingStyle.fill;
+
+    //   final indicatorCenter = Offset(
+    //     center.dx + math.cos(midAngle) * (adjustedRadius - 15),
+    //     center.dy + math.sin(midAngle) * (adjustedRadius - 15),
+    //   );
+
+    //   canvas.drawCircle(indicatorCenter, 3, indicatorPaint);
+    // }
 
     canvas.restore();
   }
@@ -709,6 +978,7 @@ class RadialMenuPainter extends CustomPainter {
     return oldDelegate.hoveredItem != hoveredItem ||
         oldDelegate.currentPointer != currentPointer ||
         oldDelegate.isInSubMenu != isInSubMenu ||
+        oldDelegate.subMenuRotationOffset != subMenuRotationOffset ||
         oldDelegate.plateScale != plateScale ||
         oldDelegate.plateOpacity != plateOpacity ||
         oldDelegate.cardScales != cardScales ||

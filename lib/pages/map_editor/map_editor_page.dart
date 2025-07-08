@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +27,8 @@ import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
 import 'widgets/reactive_version_tab_bar.dart';
 import 'widgets/sticky_note_panel.dart';
+import 'widgets/radial_menu_integration.dart';
+// import '../../components/common/radial_gesture_menu.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
 import '../../services/reactive_version/reactive_version_adapter.dart';
@@ -105,6 +108,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   double _selectedCurvature = 0.0; // 默认弧度为0.0 (无弧度)
   TriangleCutType _selectedTriangleCut = TriangleCutType.none; // 默认无三角形切割
   String? _selectedElementId; // 当前选中的元素ID
+  bool _isMenuButtonDown = false; // 中键按下状态
 
   // 工具栏折叠状态
   bool _isDrawingToolbarCollapsed = false;
@@ -3933,15 +3937,70 @@ class _MapEditorContentState extends State<_MapEditorContent>
       ],
     );
   }
-
-  /// 构建地图画布区域
-  Widget _buildMapCanvasArea() {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      child: _buildMapCanvas(),
-    );
-  }
+Widget _buildMapCanvasArea() {
+  return Listener(
+    onPointerDown: (event) {
+      final userPrefs = context.read<UserPreferencesProvider>();
+      if (event.buttons == userPrefs.mapEditor.radialMenuButton) {
+        setState(() {
+          _isMenuButtonDown = true;
+        });
+      }
+    },
+    onPointerUp: (event) {
+      setState(() {
+        _isMenuButtonDown = false;
+      });
+    },
+    child: MapEditorRadialMenu(
+      currentMap: _currentMap!,
+      selectedDrawingTool: _selectedDrawingTool,
+      selectedLayer: _selectedLayer,
+      selectedLayerGroup: _selectedLayerGroup,
+      selectedStickyNote: _selectedStickyNote,
+      onDrawingToolSelected: (tool) {
+        setState(() {
+          _selectedDrawingTool = tool;
+        });
+      },
+      onLayerSelected: (layer) {
+        setState(() {
+          _selectedLayer = layer;
+        });
+      },
+      onLayerGroupSelected: (layerGroup) {
+        if (layerGroup != null) {
+          _onLayerGroupSelected(layerGroup);
+        } else {
+          setState(() {
+            _selectedLayerGroup = null;
+          });
+          _restoreNormalLayerOrder();
+        }
+      },
+      onStickyNoteSelected: (note) {
+        setState(() {
+          _selectedStickyNote = note;
+        });
+      },
+      onColorSelected: (color) {
+        setState(() {
+          _selectedColor = color;
+        });
+        // 更新最近使用的颜色
+        final userPrefs = context.read<UserPreferencesProvider>();
+        userPrefs.addRecentColor(color.value).catchError((e) {
+          debugPrint('更新最近使用颜色失败: $e');
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        child: _buildMapCanvas(),
+      ),
+    ),
+  );
+}
 
   /// 构建地图画布组件
   Widget _buildMapCanvas() {
@@ -4024,6 +4083,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           },
           scriptManager: newReactiveScriptManager,
           onLegendDragToCanvas: _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
+          isMenuButtonDown: _isMenuButtonDown, // 传递中键状态
         );
       },
     );

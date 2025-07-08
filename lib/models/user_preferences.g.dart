@@ -79,6 +79,18 @@ MapEditorPreferences _$MapEditorPreferencesFromJson(
           BackgroundPattern.checkerboard,
       canvasBoundaryMargin:
           (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
+      radialMenuButton: (json['radialMenuButton'] as num?)?.toInt() ?? 2,
+      radialMenuRadius: (json['radialMenuRadius'] as num?)?.toDouble() ?? 120.0,
+      radialMenuCenterRadius:
+          (json['radialMenuCenterRadius'] as num?)?.toDouble() ?? 30.0,
+      radialMenuBackgroundOpacity:
+          (json['radialMenuBackgroundOpacity'] as num?)?.toDouble() ?? 0.8,
+      radialMenuObjectOpacity:
+          (json['radialMenuObjectOpacity'] as num?)?.toDouble() ?? 0.9,
+      radialMenuReturnDelay:
+          (json['radialMenuReturnDelay'] as num?)?.toInt() ?? 100,
+      radialMenuAnimationDuration:
+          (json['radialMenuAnimationDuration'] as num?)?.toInt() ?? 300,
     );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
@@ -89,6 +101,13 @@ Map<String, dynamic> _$MapEditorPreferencesToJson(
       'backgroundPattern':
           _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
       'canvasBoundaryMargin': instance.canvasBoundaryMargin,
+      'radialMenuButton': instance.radialMenuButton,
+      'radialMenuRadius': instance.radialMenuRadius,
+      'radialMenuCenterRadius': instance.radialMenuCenterRadius,
+      'radialMenuBackgroundOpacity': instance.radialMenuBackgroundOpacity,
+      'radialMenuObjectOpacity': instance.radialMenuObjectOpacity,
+      'radialMenuReturnDelay': instance.radialMenuReturnDelay,
+      'radialMenuAnimationDuration': instance.radialMenuAnimationDuration,
     };
 
 const _$BackgroundPatternEnumMap = {

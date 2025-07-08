@@ -208,7 +208,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
       ),
       body: RadialGestureMenu(
         menuItems: _menuItems,
-        radius: 120.0,
+        radius: 140.0,
         centerRadius: 40.0,
         opacity: 1.0,
         plateColor: Colors.black,

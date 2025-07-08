@@ -142,6 +142,13 @@ class UserPreferencesProvider extends ChangeNotifier {
     double? zoomSensitivity,
     BackgroundPattern? backgroundPattern,
     double? canvasBoundaryMargin,
+    int? radialMenuButton,
+    double? radialMenuRadius,
+    double? radialMenuCenterRadius,
+    double? radialMenuBackgroundOpacity,
+    double? radialMenuObjectOpacity,
+    int? radialMenuReturnDelay,
+    int? radialMenuAnimationDuration,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -151,6 +158,13 @@ class UserPreferencesProvider extends ChangeNotifier {
         zoomSensitivity: zoomSensitivity,
         backgroundPattern: backgroundPattern,
         canvasBoundaryMargin: canvasBoundaryMargin,
+        radialMenuButton: radialMenuButton,
+        radialMenuRadius: radialMenuRadius,
+        radialMenuCenterRadius: radialMenuCenterRadius,
+        radialMenuBackgroundOpacity: radialMenuBackgroundOpacity,
+        radialMenuObjectOpacity: radialMenuObjectOpacity,
+        radialMenuReturnDelay: radialMenuReturnDelay,
+        radialMenuAnimationDuration: radialMenuAnimationDuration,
       );
 
       await _service.updateMapEditor(updatedMapEditor);

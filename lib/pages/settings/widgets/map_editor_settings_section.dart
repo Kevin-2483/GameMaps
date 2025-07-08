@@ -117,6 +117,143 @@ class MapEditorSettingsSection extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // 轮盘菜单设置标题
+            Text(
+              '轮盘菜单设置',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            // 轮盘菜单触发按键
+            ListTile(
+              title: Text('触发按键'),
+              subtitle: DropdownButtonFormField<int>(
+                value: mapEditor.radialMenuButton,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text('右键'),
+                  ),
+                  DropdownMenuItem(
+                    value: 4,
+                    child: Text('中键'),
+                  ),
+                ],
+                onChanged: (button) {
+                  if (button != null) {
+                    provider.updateMapEditor(radialMenuButton: button);
+                  }
+                },
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单半径
+            ListTile(
+              title: Text('菜单半径'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuRadius,
+                min: 60.0,
+                max: 200.0,
+                divisions: 14,
+                label: '${mapEditor.radialMenuRadius.round()}px',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuRadius: value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单中心区域半径
+            ListTile(
+              title: Text('中心区域半径'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuCenterRadius,
+                min: 15.0,
+                max: 60.0,
+                divisions: 9,
+                label: '${mapEditor.radialMenuCenterRadius.round()}px',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuCenterRadius: value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单背景透明度
+            ListTile(
+              title: Text('背景透明度'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuBackgroundOpacity,
+                min: 0.1,
+                max: 1.0,
+                divisions: 9,
+                label: '${(mapEditor.radialMenuBackgroundOpacity * 100).round()}%',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuBackgroundOpacity: value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单对象透明度
+            ListTile(
+              title: Text('对象透明度'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuObjectOpacity,
+                min: 0.1,
+                max: 1.0,
+                divisions: 9,
+                label: '${(mapEditor.radialMenuObjectOpacity * 100).round()}%',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuObjectOpacity: value),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单返回延迟
+            ListTile(
+              title: Text('返回延迟'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuReturnDelay.toDouble(),
+                min: 50.0,
+                max: 500.0,
+                divisions: 9,
+                label: '${mapEditor.radialMenuReturnDelay}ms',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuReturnDelay: value.round()),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 轮盘菜单动画持续时间
+            ListTile(
+              title: Text('动画持续时间'),
+              subtitle: Slider(
+                value: mapEditor.radialMenuAnimationDuration.toDouble(),
+                min: 100.0,
+                max: 800.0,
+                divisions: 14,
+                label: '${mapEditor.radialMenuAnimationDuration}ms',
+                onChanged: (value) =>
+                    provider.updateMapEditor(radialMenuAnimationDuration: value.round()),
+              ),
+            ),
           ],
         ),
       ),

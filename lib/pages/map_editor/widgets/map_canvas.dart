@@ -122,6 +122,7 @@ class MapCanvas extends StatefulWidget {
   final Function(String, double)? onStickyNoteOpacityChanged;
   final NewReactiveScriptManager? scriptManager; // 新增：脚本管理器参数
   final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽图例到画布的回调
+  final bool isMenuButtonDown; // 中键按下状态
 
   const MapCanvas({
     super.key,
@@ -165,6 +166,7 @@ class MapCanvas extends StatefulWidget {
     this.onStickyNoteOpacityChanged,
     this.scriptManager, // 新增：脚本管理器参数
     this.onLegendDragToCanvas, // 新增：拖拽图例到画布的回调
+    this.isMenuButtonDown = false, // 中键按下状态
   });
 
   @override
@@ -302,6 +304,8 @@ class MapCanvasState extends State<MapCanvas> {
           minScale: 0.1,
           maxScale: 5.0,
           scaleFactor: 200.0 / widget.zoomSensitivity,
+          panEnabled: !widget.isMenuButtonDown,
+          scaleEnabled: true,
           constrained: false,
           child: RepaintBoundary(
             // Wrap with RepaintBoundary
@@ -2215,7 +2219,7 @@ class MapCanvasState extends State<MapCanvas> {
 
   /// 构建按层级排序的所有元素（支持增量更新）
   List<Widget> _buildLayeredElements() {
-    debugPrint('=== 开始构建图层元素 (增量更新模式) ===');
+    // debugPrint('=== 开始构建图层元素 (增量更新模式) ===');
 
     final List<_LayeredElement> allElements = [];
 
@@ -2226,9 +2230,9 @@ class MapCanvasState extends State<MapCanvas> {
     // 如果没有传入显示顺序，则按 order 排序
     if (widget.displayOrderLayers == null) {
       sortedLayers.sort((a, b) => a.order.compareTo(b.order));
-      debugPrint('使用默认图层排序（按 order 字段）');
+      // debugPrint('使用默认图层排序（按 order 字段）');
     } else {
-      debugPrint('使用传入的显示顺序图层列表');
+      // debugPrint('使用传入的显示顺序图层列表');
     } // 收集所有图层及其元素（按照排序后的顺序）- 支持增量更新
     for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
       final layer = sortedLayers[layerIndex];
@@ -2239,10 +2243,10 @@ class MapCanvasState extends State<MapCanvas> {
 
       final isSelectedLayer = widget.selectedLayer?.id == layer.id;
 
-      debugPrint(
-        '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}',
-      );
-      debugPrint('是否选中: $isSelectedLayer');
+      // debugPrint(
+      //   '处理图层: ${layer.name}(order=${layer.order}), 索引=$layerIndex, 可见=${layer.isVisible}',
+      // );
+      // debugPrint('是否选中: $isSelectedLayer');
 
       // 关键修改：使用 layerIndex 作为渲染顺序，而不是 layer.order
       final renderOrder = layerIndex;
@@ -2251,9 +2255,9 @@ class MapCanvasState extends State<MapCanvas> {
 
       // 添加图层图片（如果有）
       if (layer.imageData != null) {
-        debugPrint(
-          '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
-        );
+        // debugPrint(
+        //   '添加图层图片元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+        // );
         allElements.add(
           _LayeredElement(
             order: renderOrder, // 使用在显示列表中的位置索引
@@ -2264,9 +2268,9 @@ class MapCanvasState extends State<MapCanvas> {
       }
 
       // 添加图层绘制元素
-      debugPrint(
-        '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
-      );
+      // debugPrint(
+      //   '添加图层绘制元素 - renderOrder=$renderOrder (原order=${layer.order}), selected=$isSelectedLayer',
+      // );
       allElements.add(
         _LayeredElement(
           order: renderOrder, // 使用在显示列表中的位置索引
@@ -2275,7 +2279,7 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    debugPrint('--- 处理图例组 (增量更新) ---');
+    // debugPrint('--- 处理图例组 (增量更新) ---');
     // 收集所有图例组 - 支持增量更新
     for (final legendGroup in widget.mapItem.legendGroups) {
       if (!legendGroup.isVisible) {
@@ -2321,7 +2325,7 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    debugPrint('--- 处理便签 (增量更新) ---');
+    // debugPrint('--- 处理便签 (增量更新) ---');
     // 收集所有便签（按zIndex排序）- 支持增量更新
     final sortedStickyNotes = List<StickyNote>.from(widget.mapItem.stickyNotes)
       ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -2353,24 +2357,24 @@ class MapCanvasState extends State<MapCanvas> {
         ),
       );
     }
-    debugPrint('--- 排序前的元素列表 ---');
-    debugPrint('本次构建的组件数量: ${allElements.length}');
-    for (int i = 0; i < allElements.length; i++) {
-      final element = allElements[i];
-      final typeDescription =
-          element.widget.runtimeType.toString().contains('LayerImageWidget')
-          ? '图层图片'
-          : element.widget.runtimeType.toString().contains('LayerWidget')
-          ? '图层绘制'
-          : element.widget.runtimeType.toString().contains('LegendWidget')
-          ? '图例组'
-          : element.widget.runtimeType.toString().contains('StickyNoteWidget')
-          ? '便签'
-          : '未知类型';
-      debugPrint(
-        '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
-      );
-    } // 按 renderOrder 排序，但便签始终在最上层
+    // debugPrint('--- 排序前的元素列表 ---');
+    // debugPrint('本次构建的组件数量: ${allElements.length}');
+    // for (int i = 0; i < allElements.length; i++) {
+    //   final element = allElements[i];
+    //   final typeDescription =
+    //       element.widget.runtimeType.toString().contains('LayerImageWidget')
+    //       ? '图层图片'
+    //       : element.widget.runtimeType.toString().contains('LayerWidget')
+    //       ? '图层绘制'
+    //       : element.widget.runtimeType.toString().contains('LegendWidget')
+    //       ? '图例组'
+    //       : element.widget.runtimeType.toString().contains('StickyNoteWidget')
+    //       ? '便签'
+    //       : '未知类型';
+    //   debugPrint(
+    //     '[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
+    //   );
+    // } // 按 renderOrder 排序，但便签始终在最上层
     allElements.sort((a, b) {
       // 检查是否是便签元素
       final aIsStickyNote =
@@ -2389,25 +2393,25 @@ class MapCanvasState extends State<MapCanvas> {
       if (!a.isSelected && b.isSelected) return -1;
       return a.order.compareTo(b.order);
     });
-    debugPrint('--- 排序后的渲染顺序 (从底层到顶层) ---');
-    for (int i = 0; i < allElements.length; i++) {
-      final element = allElements[i];
-      final typeDescription =
-          element.widget.runtimeType.toString().contains('LayerImageWidget')
-          ? '图层图片'
-          : element.widget.runtimeType.toString().contains('LayerWidget')
-          ? '图层绘制'
-          : element.widget.runtimeType.toString().contains('LegendWidget')
-          ? '图例组'
-          : element.widget.runtimeType.toString().contains('StickyNoteWidget')
-          ? '便签'
-          : '未知类型';
-      debugPrint(
-        '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
-      );
-    }
+    // debugPrint('--- 排序后的渲染顺序 (从底层到顶层) ---');
+    // for (int i = 0; i < allElements.length; i++) {
+      // final element = allElements[i];
+      // final typeDescription =
+      //     element.widget.runtimeType.toString().contains('LayerImageWidget')
+      //     ? '图层图片'
+      //     : element.widget.runtimeType.toString().contains('LayerWidget')
+      //     ? '图层绘制'
+      //     : element.widget.runtimeType.toString().contains('LegendWidget')
+      //     ? '图例组'
+      //     : element.widget.runtimeType.toString().contains('StickyNoteWidget')
+      //     ? '便签'
+      //     : '未知类型';
+      // debugPrint(
+      //   '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
+      // );
+    // }
 
-    debugPrint('=== 图层元素构建完成 ===');
+    // debugPrint('=== 图层元素构建完成 ===');
     return allElements.map((e) => e.widget).toList();
   }
 
@@ -2746,10 +2750,10 @@ class _LayerPainter extends CustomPainter {
         shouldApplyThemeAdaptation = canvasThemeAdaptation && isDarkMode;
 
         // 调试信息
-        debugPrint('=== 画布主题适配调试 ===');
-        debugPrint('isDarkMode: $isDarkMode');
-        debugPrint('canvasThemeAdaptation: $canvasThemeAdaptation');
-        debugPrint('shouldApplyThemeAdaptation: $shouldApplyThemeAdaptation');
+        // debugPrint('=== 画布主题适配调试 ===');
+        // debugPrint('isDarkMode: $isDarkMode');
+        // debugPrint('canvasThemeAdaptation: $canvasThemeAdaptation');
+        // debugPrint('shouldApplyThemeAdaptation: $shouldApplyThemeAdaptation');
       } catch (e) {
         // 如果无法获取用户偏好，使用默认值
         debugPrint('获取用户偏好失败: $e');
@@ -2777,7 +2781,7 @@ class _LayerPainter extends CustomPainter {
       } else {
         // 如果主题适配被禁用，移除主题适配滤镜
         ColorFilterSessionManager().setThemeAdaptationFilter(layer.id, null);
-        debugPrint('移除图层 ${layer.id} 的主题适配滤镜');
+        // debugPrint('移除图层 ${layer.id} 的主题适配滤镜');
       }
     }
 
@@ -2786,7 +2790,7 @@ class _LayerPainter extends CustomPainter {
     final combinedColorFilter = filterSettings?.toColorFilter();
 
     // 调试信息
-    debugPrint('图层ID: ${layer.id}, 应用滤镜: ${combinedColorFilter != null}');
+    // debugPrint('图层ID: ${layer.id}, 应用滤镜: ${combinedColorFilter != null}');
 
     // 按 z 值排序元素
     final sortedElements = List<MapDrawingElement>.from(layer.elements)
@@ -2801,9 +2805,9 @@ class _LayerPainter extends CustomPainter {
     final nonEraserCount = sortedElements
         .where((e) => e.type != DrawingElementType.eraser)
         .length;
-    debugPrint(
-      '图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}',
-    );
+    // debugPrint(
+    //   // '图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}',
+    // );
 
     // 如果有色彩滤镜，对整个图层应用滤镜
     if (combinedColorFilter != null) {

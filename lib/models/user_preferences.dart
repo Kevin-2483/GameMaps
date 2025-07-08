@@ -232,11 +232,39 @@ class MapEditorPreferences {
   /// 画布边距大小
   final double canvasBoundaryMargin;
 
+  /// 轮盘菜单触发按键
+  final int radialMenuButton;
+
+  /// 轮盘菜单半径
+  final double radialMenuRadius;
+
+  /// 轮盘菜单中心区域半径
+  final double radialMenuCenterRadius;
+
+  /// 轮盘菜单背景透明度
+  final double radialMenuBackgroundOpacity;
+
+  /// 轮盘菜单对象透明度
+  final double radialMenuObjectOpacity;
+
+  /// 轮盘菜单返回延迟（毫秒）
+  final int radialMenuReturnDelay;
+
+  /// 轮盘菜单动画持续时间（毫秒）
+  final int radialMenuAnimationDuration;
+
   const MapEditorPreferences({
     this.undoHistoryLimit = 20,
     this.zoomSensitivity = 1.0,
     this.backgroundPattern = BackgroundPattern.checkerboard,
     this.canvasBoundaryMargin = 200.0,
+    this.radialMenuButton = 2,
+    this.radialMenuRadius = 120.0,
+    this.radialMenuCenterRadius = 30.0,
+    this.radialMenuBackgroundOpacity = 0.8,
+    this.radialMenuObjectOpacity = 0.9,
+    this.radialMenuReturnDelay = 100,
+    this.radialMenuAnimationDuration = 300,
   });
   factory MapEditorPreferences.createDefault() {
     return const MapEditorPreferences(
@@ -244,6 +272,13 @@ class MapEditorPreferences {
       zoomSensitivity: 1.0,
       backgroundPattern: BackgroundPattern.checkerboard,
       canvasBoundaryMargin: 200.0,
+      radialMenuButton: 2,
+      radialMenuRadius: 120.0,
+      radialMenuCenterRadius: 30.0,
+      radialMenuBackgroundOpacity: 0.8,
+      radialMenuObjectOpacity: 0.9,
+      radialMenuReturnDelay: 100,
+      radialMenuAnimationDuration: 300,
     );
   }
   MapEditorPreferences copyWith({
@@ -251,12 +286,26 @@ class MapEditorPreferences {
     double? zoomSensitivity,
     BackgroundPattern? backgroundPattern,
     double? canvasBoundaryMargin,
+    int? radialMenuButton,
+    double? radialMenuRadius,
+    double? radialMenuCenterRadius,
+    double? radialMenuBackgroundOpacity,
+    double? radialMenuObjectOpacity,
+    int? radialMenuReturnDelay,
+    int? radialMenuAnimationDuration,
   }) {
     return MapEditorPreferences(
       undoHistoryLimit: undoHistoryLimit ?? this.undoHistoryLimit,
       zoomSensitivity: zoomSensitivity ?? this.zoomSensitivity,
       backgroundPattern: backgroundPattern ?? this.backgroundPattern,
       canvasBoundaryMargin: canvasBoundaryMargin ?? this.canvasBoundaryMargin,
+      radialMenuButton: radialMenuButton ?? this.radialMenuButton,
+      radialMenuRadius: radialMenuRadius ?? this.radialMenuRadius,
+      radialMenuCenterRadius: radialMenuCenterRadius ?? this.radialMenuCenterRadius,
+      radialMenuBackgroundOpacity: radialMenuBackgroundOpacity ?? this.radialMenuBackgroundOpacity,
+      radialMenuObjectOpacity: radialMenuObjectOpacity ?? this.radialMenuObjectOpacity,
+      radialMenuReturnDelay: radialMenuReturnDelay ?? this.radialMenuReturnDelay,
+      radialMenuAnimationDuration: radialMenuAnimationDuration ?? this.radialMenuAnimationDuration,
     );
   }
 

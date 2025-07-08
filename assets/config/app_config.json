@@ -1,29 +1,84 @@
-{  "platform": {    "Windows": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "TrayNavigation" ]
-    },    "MacOS": {
+{
+  "platform": {
+    "Windows": {
       "pages": [
-				"HomePage",
-				"SettingsPage",
-				"UserPreferencesPage",
-				"MapAtlasPage",
-				"LegendManagerPage",
-				"VfsFileManagerPage",
-				"RadialGestureDemo"
-			],
-      "features": [ "TrayNavigation" ]
-    },    "Linux": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "TrayNavigation" ]
-    },    "Android": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "TrayNavigation" ]
-    },    "iOS": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "TrayNavigation" ]
-    },    "Web": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
-      "features": [ "TrayNavigation" ]
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage",
+        "RadialGestureDemo"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
+    },
+    "MacOS": {
+      "pages": [
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage",
+        "RadialGestureDemo"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
+    },
+    "Linux": {
+      "pages": [
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
+    },
+    "Android": {
+      "pages": [
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
+    },
+    "iOS": {
+      "pages": [
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
+    },
+    "Web": {
+      "pages": [
+        "HomePage",
+        "SettingsPage",
+        "UserPreferencesPage",
+        "MapAtlasPage",
+        "LegendManagerPage",
+        "VfsFileManagerPage"
+      ],
+      "features": [
+        "TrayNavigation"
+      ]
     }
   },
   "build": {
