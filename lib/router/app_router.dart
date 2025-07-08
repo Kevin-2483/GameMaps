@@ -10,6 +10,7 @@ import '../features/page-modules/legend_manager_page_module.dart';
 import '../features/page-modules/about_page_module.dart';
 import '../features/page-modules/vfs_file_manager_page_module.dart';
 import '../features/page-modules/external_resources_page_module.dart';
+import '../features/page-modules/radial_gesture_demo_page_module.dart';
 import '../components/layout/app_shell.dart';
 
 class AppRouter {
@@ -67,5 +68,6 @@ class AppRouter {
     registry.register(AboutPageModule());
     registry.register(ExternalResourcesPageModule());
     registry.register(VfsFileManagerPageModule());
+    registry.register(RadialGestureDemoPageModule());
   }
 }

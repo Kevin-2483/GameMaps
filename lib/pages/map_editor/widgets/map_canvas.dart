@@ -1,6 +1,7 @@
-﻿import '../../../services/legend_session_manager.dart';
+import '../../../services/legend_session_manager.dart';
 import '../../../services/legend_cache_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart'; // For PointerPanZoom events
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'dart:typed_data';
@@ -402,12 +403,26 @@ class MapCanvasState extends State<MapCanvas> {
                       top: 0,
                       width: kCanvasWidth,
                       height: kCanvasHeight,
-                      child: GestureDetector(
-                        onTapDown: _onElementInteractionTapDown,
-                        onPanStart: _onElementInteractionPanStart,
-                        onPanUpdate: _onElementInteractionPanUpdate,
-                        onPanEnd: _onElementInteractionPanEnd,
-                        behavior: HitTestBehavior.translucent,
+                      child: Listener(
+                        // 监听触摸板的两指拖动事件
+                        onPointerPanZoomStart: _onTrackpadPanZoomStart,
+                        onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
+                        onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
+                        child: GestureDetector(
+                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                          supportedDevices: {
+                            PointerDeviceKind.touch,
+                            PointerDeviceKind.mouse,
+                            PointerDeviceKind.stylus,
+                            PointerDeviceKind.invertedStylus,
+                            // 不包含 PointerDeviceKind.trackpad
+                          },
+                          onTapDown: _onElementInteractionTapDown,
+                          onPanStart: _onElementInteractionPanStart,
+                          onPanUpdate: _onElementInteractionPanUpdate,
+                          onPanEnd: _onElementInteractionPanEnd,
+                          behavior: HitTestBehavior.translucent,
+                        ),
                       ),
                     ),
 
@@ -1564,6 +1579,60 @@ class MapCanvasState extends State<MapCanvas> {
       // 完成选区创建
       _endSelectionDrag();
     }
+  }
+
+  /// 处理右键拖动开始（macOS触摸板两指拖动）
+  void _onElementInteractionSecondaryPanStart(DragStartDetails details) {
+    // 右键拖动行为与左键拖动相同，但可以在这里添加特殊逻辑
+    _onElementInteractionPanStart(details);
+  }
+
+  /// 处理右键拖动更新（macOS触摸板两指拖动）
+  void _onElementInteractionSecondaryPanUpdate(DragUpdateDetails details) {
+    // 右键拖动行为与左键拖动相同
+    _onElementInteractionPanUpdate(details);
+  }
+
+  /// 处理右键拖动结束（macOS触摸板两指拖动）
+  void _onElementInteractionSecondaryPanEnd(DragEndDetails details) {
+    // 右键拖动行为与左键拖动相同
+    _onElementInteractionPanEnd(details);
+  }
+
+  /// 处理触摸板两指拖动开始事件
+  void _onTrackpadPanZoomStart(PointerPanZoomStartEvent event) {
+    // 将触摸板事件转换为拖动开始事件
+    final details = DragStartDetails(
+      sourceTimeStamp: event.timeStamp,
+      globalPosition: event.position,
+      localPosition: event.localPosition,
+    );
+    // 触摸板两指拖动被视为右键拖动
+    _onElementInteractionSecondaryPanStart(details);
+  }
+
+  /// 处理触摸板两指拖动更新事件
+  void _onTrackpadPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    // 将触摸板事件转换为拖动更新事件
+    final details = DragUpdateDetails(
+      sourceTimeStamp: event.timeStamp,
+      delta: event.panDelta,
+      primaryDelta: event.panDelta.dx,
+      globalPosition: event.position,
+      localPosition: event.localPosition,
+    );
+    // 触摸板两指拖动被视为右键拖动
+    _onElementInteractionSecondaryPanUpdate(details);
+  }
+
+  /// 处理触摸板两指拖动结束事件
+  void _onTrackpadPanZoomEnd(PointerPanZoomEndEvent event) {
+    // 将触摸板事件转换为拖动结束事件
+    final details = DragEndDetails(
+      primaryVelocity: 0.0,
+    );
+    // 触摸板两指拖动被视为右键拖动
+    _onElementInteractionSecondaryPanEnd(details);
   }
 
   // 开始选区拖动

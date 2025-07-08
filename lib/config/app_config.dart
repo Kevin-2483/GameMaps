@@ -44,7 +44,15 @@ class PlatformConfig {
   Map<String, dynamic> toJson() => _$PlatformConfigToJson(this);
 
   static const PlatformConfig defaultConfig = PlatformConfig(
-    pages: ['HomePage', 'SettingsPage'],
+    pages: [
+      'HomePage',
+      'SettingsPage',
+      'UserPreferencesPage',
+      'MapAtlasPage',
+      'LegendManagerPage',
+      'VfsFileManagerPage',
+      'RadialGestureDemo',
+    ],
     features: [],
   );
 

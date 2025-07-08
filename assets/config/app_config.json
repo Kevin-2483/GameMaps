@@ -2,7 +2,15 @@
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
       "features": [ "TrayNavigation" ]
     },    "MacOS": {
-      "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
+      "pages": [
+				"HomePage",
+				"SettingsPage",
+				"UserPreferencesPage",
+				"MapAtlasPage",
+				"LegendManagerPage",
+				"VfsFileManagerPage",
+				"RadialGestureDemo"
+			],
       "features": [ "TrayNavigation" ]
     },    "Linux": {
       "pages": ["HomePage", "SettingsPage", "UserPreferencesPage", "MapAtlasPage", "LegendManagerPage", "VfsFileManagerPage"],
