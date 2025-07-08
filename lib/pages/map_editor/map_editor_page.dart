@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
+import '../../models/user_preferences.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/clipboard_service.dart';
@@ -4097,13 +4098,16 @@ Widget _buildMapCanvasArea() {
     }
 
     // 获取用户偏好设置
-    final toolPrefs = context.read<UserPreferencesProvider>().tools;
-    final copyShortcut = toolPrefs.shortcuts['copy'] ?? 'Ctrl+C';
-    final undoShortcut = toolPrefs.shortcuts['undo'] ?? 'Ctrl+Z';
-    final redoShortcut = toolPrefs.shortcuts['redo'] ?? 'Ctrl+Y';
+    final userPrefs = context.read<UserPreferencesProvider>();
+    final toolPrefs = userPrefs.tools;
+    final mapEditorPrefs = userPrefs.mapEditor;
+    
+    final copyShortcuts = mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C'];
+    final undoShortcuts = mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z'];
+    final redoShortcuts = mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y'];
 
     // 检查撤销快捷键
-    if (_isShortcutPressed(event, undoShortcut)) {
+    if (_isAnyShortcutPressed(event, undoShortcuts)) {
       if (_canUndo) {
         _undo();
         return KeyEventResult.handled;
@@ -4111,7 +4115,7 @@ Widget _buildMapCanvasArea() {
     }
 
     // 检查重做快捷键
-    if (_isShortcutPressed(event, redoShortcut)) {
+    if (_isAnyShortcutPressed(event, redoShortcuts)) {
       if (_canRedo) {
         _redo();
         return KeyEventResult.handled;
@@ -4119,12 +4123,342 @@ Widget _buildMapCanvasArea() {
     }
 
     // 检查复制快捷键
-    if (_isShortcutPressed(event, copyShortcut)) {
+    if (_isAnyShortcutPressed(event, copyShortcuts)) {
       _handleCopySelection();
       return KeyEventResult.handled;
     }
 
+    // 检查地图编辑器快捷键
+    if (_handleMapEditorShortcuts(event, mapEditorPrefs)) {
+      return KeyEventResult.handled;
+    }
+
     return KeyEventResult.ignored;
+  }
+
+  /// 处理地图编辑器快捷键
+  bool _handleMapEditorShortcuts(RawKeyEvent event, MapEditorPreferences mapEditorPrefs) {
+    // 检查选择上一个图层
+    final prevLayerShortcuts = mapEditorPrefs.shortcuts['prevLayer'] ?? ['Ctrl+Up'];
+    if (_isAnyShortcutPressed(event, prevLayerShortcuts)) {
+      _selectPreviousLayer();
+      return true;
+    }
+
+    // 检查选择下一个图层
+    final nextLayerShortcuts = mapEditorPrefs.shortcuts['nextLayer'] ?? ['Ctrl+Down'];
+    if (_isAnyShortcutPressed(event, nextLayerShortcuts)) {
+      _selectNextLayer();
+      return true;
+    }
+
+    // 检查选择上一个图层组
+    final prevLayerGroupShortcuts = mapEditorPrefs.shortcuts['prevLayerGroup'] ?? ['Ctrl+Left'];
+    if (_isAnyShortcutPressed(event, prevLayerGroupShortcuts)) {
+      _selectPreviousLayerGroup();
+      return true;
+    }
+
+    // 检查选择下一个图层组
+    final nextLayerGroupShortcuts = mapEditorPrefs.shortcuts['nextLayerGroup'] ?? ['Ctrl+Right'];
+    if (_isAnyShortcutPressed(event, nextLayerGroupShortcuts)) {
+      _selectNextLayerGroup();
+      return true;
+    }
+
+    // 检查打开上一个图例组
+    final prevLegendGroupShortcuts = mapEditorPrefs.shortcuts['prevLegendGroup'] ?? ['Alt+Up'];
+    if (_isAnyShortcutPressed(event, prevLegendGroupShortcuts)) {
+      _openPreviousLegendGroup();
+      return true;
+    }
+
+    // 检查打开下一个图例组
+    final nextLegendGroupShortcuts = mapEditorPrefs.shortcuts['nextLegendGroup'] ?? ['Alt+Down'];
+    if (_isAnyShortcutPressed(event, nextLegendGroupShortcuts)) {
+      _openNextLegendGroup();
+      return true;
+    }
+
+    // 检查打开图例管理抽屉
+    final openLegendDrawerShortcuts = mapEditorPrefs.shortcuts['openLegendDrawer'] ?? ['Ctrl+L'];
+    if (_isAnyShortcutPressed(event, openLegendDrawerShortcuts)) {
+      print('Ctrl+L快捷键匹配成功，即将调用_toggleLegendGroupManagementDrawer');
+      _toggleLegendGroupManagementDrawer();
+      return true;
+    }
+
+    // 检查清除图层/图层组选择
+    final clearLayerSelectionShortcuts = mapEditorPrefs.shortcuts['clearLayerSelection'] ?? ['Escape'];
+    if (_isAnyShortcutPressed(event, clearLayerSelectionShortcuts)) {
+      _clearLayerSelection();
+      return true;
+    }
+
+    // 检查数字键1-0选择图层组
+    for (int i = 1; i <= 10; i++) {
+      final key = i == 10 ? '0' : i.toString();
+      final shortcutKey = 'selectLayerGroup$i';
+      final shortcuts = mapEditorPrefs.shortcuts[shortcutKey] ?? [key];
+      if (_isAnyShortcutPressed(event, shortcuts)) {
+        _selectLayerGroupByIndex(i - 1); // 索引从0开始
+        return true;
+      }
+    }
+
+    // 检查F1-F12选择图层
+    for (int i = 1; i <= 12; i++) {
+      final shortcutKey = 'selectLayer$i';
+      final shortcuts = mapEditorPrefs.shortcuts[shortcutKey] ?? ['F$i'];
+      if (_isAnyShortcutPressed(event, shortcuts)) {
+        _selectLayerByIndex(i - 1); // 索引从0开始
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// 选择上一个图层
+  void _selectPreviousLayer() {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    final layers = _currentMap!.layers;
+    layers.sort((a, b) => a.order.compareTo(b.order));
+
+    if (_selectedLayer == null) {
+      // 如果没有选中图层，选择最后一个
+      final lastLayer = layers.last;
+      setState(() {
+        _selectedLayer = lastLayer;
+        _selectedLayerGroup = null;
+      });
+      _prioritizeLayerAndGroupDisplay();
+    } else {
+      // 找到当前选中图层的索引
+      final currentIndex = layers.indexWhere((layer) => layer.id == _selectedLayer!.id);
+      if (currentIndex > 0) {
+        final previousLayer = layers[currentIndex - 1];
+        setState(() {
+          _selectedLayer = previousLayer;
+          _selectedLayerGroup = null;
+        });
+        _prioritizeLayerAndGroupDisplay();
+      }
+    }
+  }
+
+  /// 选择下一个图层
+  void _selectNextLayer() {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    final layers = _currentMap!.layers;
+    layers.sort((a, b) => a.order.compareTo(b.order));
+
+    if (_selectedLayer == null) {
+      // 如果没有选中图层，选择第一个
+      final firstLayer = layers.first;
+      setState(() {
+        _selectedLayer = firstLayer;
+        _selectedLayerGroup = null;
+      });
+      _prioritizeLayerAndGroupDisplay();
+    } else {
+      // 找到当前选中图层的索引
+      final currentIndex = layers.indexWhere((layer) => layer.id == _selectedLayer!.id);
+      if (currentIndex < layers.length - 1) {
+        final nextLayer = layers[currentIndex + 1];
+        setState(() {
+          _selectedLayer = nextLayer;
+          _selectedLayerGroup = null;
+        });
+        _prioritizeLayerAndGroupDisplay();
+      }
+    }
+  }
+
+  /// 选择上一个图层组
+  void _selectPreviousLayerGroup() {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    // 获取所有图层组
+    final layerGroups = _getLayerGroups();
+    if (layerGroups.isEmpty) return;
+
+    if (_selectedLayerGroup == null || _selectedLayerGroup!.isEmpty) {
+      // 如果没有选中图层组，选择最后一个
+      final lastGroup = layerGroups.last;
+      setState(() {
+        _selectedLayerGroup = lastGroup;
+        _selectedLayer = null;
+      });
+      _prioritizeLayerAndGroupDisplay();
+    } else {
+      // 找到当前选中图层组的索引
+      final currentGroupFirstLayerId = _selectedLayerGroup!.first.id;
+      final currentIndex = layerGroups.indexWhere((group) => group.first.id == currentGroupFirstLayerId);
+      if (currentIndex > 0) {
+        final previousGroup = layerGroups[currentIndex - 1];
+        setState(() {
+          _selectedLayerGroup = previousGroup;
+          _selectedLayer = null;
+        });
+        _prioritizeLayerAndGroupDisplay();
+      }
+    }
+  }
+
+  /// 选择下一个图层组
+  void _selectNextLayerGroup() {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    // 获取所有图层组
+    final layerGroups = _getLayerGroups();
+    if (layerGroups.isEmpty) return;
+
+    if (_selectedLayerGroup == null || _selectedLayerGroup!.isEmpty) {
+      // 如果没有选中图层组，选择第一个
+      final firstGroup = layerGroups.first;
+      setState(() {
+        _selectedLayerGroup = firstGroup;
+        _selectedLayer = null;
+      });
+      _prioritizeLayerAndGroupDisplay();
+    } else {
+      // 找到当前选中图层组的索引
+      final currentGroupFirstLayerId = _selectedLayerGroup!.first.id;
+      final currentIndex = layerGroups.indexWhere((group) => group.first.id == currentGroupFirstLayerId);
+      if (currentIndex < layerGroups.length - 1) {
+        final nextGroup = layerGroups[currentIndex + 1];
+        setState(() {
+          _selectedLayerGroup = nextGroup;
+          _selectedLayer = null;
+        });
+        _prioritizeLayerAndGroupDisplay();
+      }
+    }
+  }
+
+  /// 获取所有图层组
+  List<List<MapLayer>> _getLayerGroups() {
+    if (_currentMap == null) return [];
+
+    // 使用与layer_panel.dart中相同的逻辑来分组图层
+    final groups = <List<MapLayer>>[];
+    List<MapLayer> currentGroup = [];
+    
+    for (final layer in _currentMap!.layers) {
+      currentGroup.add(layer);
+      
+      // 如果当前图层没有链接到下一个图层，或者是最后一个图层，结束当前组
+      if (!layer.isLinkedToNext || layer == _currentMap!.layers.last) {
+        if (currentGroup.length > 1) {
+          // 只有包含多个图层的才算作组
+          groups.add(List.from(currentGroup));
+        }
+        currentGroup = [];
+      }
+    }
+    
+    return groups;
+  }
+
+  /// 根据索引选择图层组
+  void _selectLayerGroupByIndex(int index) {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    final layerGroups = _getLayerGroups();
+    if (index < 0 || index >= layerGroups.length) return;
+
+    final selectedGroup = layerGroups[index];
+    setState(() {
+      _selectedLayerGroup = selectedGroup;
+      _selectedLayer = null;
+    });
+    _prioritizeLayerAndGroupDisplay();
+  }
+
+  /// 根据索引选择图层
+  void _selectLayerByIndex(int index) {
+    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
+
+    final layers = _currentMap!.layers;
+    layers.sort((a, b) => a.order.compareTo(b.order));
+    
+    if (index < 0 || index >= layers.length) return;
+
+    final selectedLayer = layers[index];
+    setState(() {
+      _selectedLayer = selectedLayer;
+      _selectedLayerGroup = null;
+    });
+    _prioritizeLayerAndGroupDisplay();
+  }
+
+  /// 打开上一个图例组
+  void _openPreviousLegendGroup() {
+    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
+
+    final legendGroups = _currentMap!.legendGroups;
+    if (_currentLegendGroupForManagement == null) {
+      // 如果没有打开图例组管理抽屉，打开最后一个图例组
+      final lastGroup = legendGroups.last;
+      _showLegendGroupManagementDrawer(lastGroup);
+    } else {
+      // 找到当前图例组的索引
+      final currentIndex = legendGroups.indexWhere(
+        (group) => group.id == _currentLegendGroupForManagement!.id,
+      );
+      if (currentIndex > 0) {
+        final previousGroup = legendGroups[currentIndex - 1];
+        _showLegendGroupManagementDrawer(previousGroup);
+      }
+    }
+  }
+
+  /// 打开下一个图例组
+  void _openNextLegendGroup() {
+    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
+
+    final legendGroups = _currentMap!.legendGroups;
+    if (_currentLegendGroupForManagement == null) {
+      // 如果没有打开图例组管理抽屉，打开第一个图例组
+      final firstGroup = legendGroups.first;
+      _showLegendGroupManagementDrawer(firstGroup);
+    } else {
+      // 找到当前图例组的索引
+      final currentIndex = legendGroups.indexWhere(
+        (group) => group.id == _currentLegendGroupForManagement!.id,
+      );
+      if (currentIndex < legendGroups.length - 1) {
+        final nextGroup = legendGroups[currentIndex + 1];
+        _showLegendGroupManagementDrawer(nextGroup);
+      }
+    }
+  }
+
+  /// 切换图例组管理抽屉
+  void _toggleLegendGroupManagementDrawer() {
+    
+    if (_isLegendGroupManagementDrawerOpen) {
+      _closeLegendGroupManagementDrawer();
+    } else {
+      // 如果有图例组，打开第一个
+      if (_currentMap != null && _currentMap!.legendGroups.isNotEmpty) {
+        final firstGroup = _currentMap!.legendGroups.first;
+        _showLegendGroupManagementDrawer(firstGroup);
+      }
+    }
+  }
+
+  /// 清除图层/图层组选择
+  void _clearLayerSelection() {
+    setState(() {
+      _selectedLayer = null;
+      _selectedLayerGroup = null;
+    });
+    _prioritizeLayerAndGroupDisplay();
+    _clearCanvasSelection();
   }
 
   /// 检查是否按下了指定的快捷键
@@ -4133,32 +4467,21 @@ Widget _buildMapCanvasArea() {
     final key = parts.last;
     final modifiers = parts.take(parts.length - 1).toList();
 
-    // 检查主键
-    bool keyMatch = false;
-    switch (key) {
-      case 'c':
-        keyMatch = event.logicalKey == LogicalKeyboardKey.keyC;
-        break;
-      case 'v':
-        keyMatch = event.logicalKey == LogicalKeyboardKey.keyV;
-        break;
-      case 'x':
-        keyMatch = event.logicalKey == LogicalKeyboardKey.keyX;
-        break;
-      case 'z':
-        keyMatch = event.logicalKey == LogicalKeyboardKey.keyZ;
-        break;
-      case 'y':
-        keyMatch = event.logicalKey == LogicalKeyboardKey.keyY;
-        break;
-      default:
-        return false;
+    // 动态获取按键对应的LogicalKeyboardKey
+    LogicalKeyboardKey? targetKey = _getLogicalKeyFromString(key);
+    if (targetKey == null) {
+      print('不支持的按键: $key');
+      return false;
     }
 
-    if (!keyMatch) return false;
+    // 检查主键是否匹配
+    bool keyMatch = event.logicalKey == targetKey;
+    if (!keyMatch) {
+      return false;
+    }
 
-    // 检查修饰键
-    bool ctrlRequired = modifiers.contains('ctrl');
+    // 检查修饰键（统一使用不分左右的名称）
+    bool ctrlRequired = modifiers.contains('control');
     bool shiftRequired = modifiers.contains('shift');
     bool altRequired = modifiers.contains('alt');
 
@@ -4166,9 +4489,123 @@ Widget _buildMapCanvasArea() {
     bool shiftPressed = event.isShiftPressed;
     bool altPressed = event.isAltPressed;
 
-    return (ctrlRequired == ctrlPressed) &&
+    // 如果快捷键不包含任何修饰键，则只检查主键是否匹配，忽略修饰键状态
+    if (!ctrlRequired && !shiftRequired && !altRequired) {
+      print('不带修饰键的快捷键: $shortcut, 主键匹配: $keyMatch');
+      return keyMatch;
+    }
+
+    // 如果快捷键包含修饰键，则严格检查修饰键状态
+    bool result = (ctrlRequired == ctrlPressed) &&
         (shiftRequired == shiftPressed) &&
         (altRequired == altPressed);
+
+    print('带修饰键的快捷键: $shortcut, 修饰键检查结果: $result');
+    return result;
+  }
+
+  /// 检查是否按下了任意一个指定的快捷键
+  bool _isAnyShortcutPressed(RawKeyEvent event, List<String> shortcuts) {
+    for (final shortcut in shortcuts) {
+      if (_isShortcutPressed(event, shortcut)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// 根据字符串获取对应的LogicalKeyboardKey
+  LogicalKeyboardKey? _getLogicalKeyFromString(String key) {
+    switch (key) {
+      // 字母键
+      case 'a': return LogicalKeyboardKey.keyA;
+      case 'b': return LogicalKeyboardKey.keyB;
+      case 'c': return LogicalKeyboardKey.keyC;
+      case 'd': return LogicalKeyboardKey.keyD;
+      case 'e': return LogicalKeyboardKey.keyE;
+      case 'f': return LogicalKeyboardKey.keyF;
+      case 'g': return LogicalKeyboardKey.keyG;
+      case 'h': return LogicalKeyboardKey.keyH;
+      case 'i': return LogicalKeyboardKey.keyI;
+      case 'j': return LogicalKeyboardKey.keyJ;
+      case 'k': return LogicalKeyboardKey.keyK;
+      case 'l': return LogicalKeyboardKey.keyL;
+      case 'm': return LogicalKeyboardKey.keyM;
+      case 'n': return LogicalKeyboardKey.keyN;
+      case 'o': return LogicalKeyboardKey.keyO;
+      case 'p': return LogicalKeyboardKey.keyP;
+      case 'q': return LogicalKeyboardKey.keyQ;
+      case 'r': return LogicalKeyboardKey.keyR;
+      case 's': return LogicalKeyboardKey.keyS;
+      case 't': return LogicalKeyboardKey.keyT;
+      case 'u': return LogicalKeyboardKey.keyU;
+      case 'v': return LogicalKeyboardKey.keyV;
+      case 'w': return LogicalKeyboardKey.keyW;
+      case 'x': return LogicalKeyboardKey.keyX;
+      case 'y': return LogicalKeyboardKey.keyY;
+      case 'z': return LogicalKeyboardKey.keyZ;
+      
+      // 数字键
+      case '0': return LogicalKeyboardKey.digit0;
+      case '1': return LogicalKeyboardKey.digit1;
+      case '2': return LogicalKeyboardKey.digit2;
+      case '3': return LogicalKeyboardKey.digit3;
+      case '4': return LogicalKeyboardKey.digit4;
+      case '5': return LogicalKeyboardKey.digit5;
+      case '6': return LogicalKeyboardKey.digit6;
+      case '7': return LogicalKeyboardKey.digit7;
+      case '8': return LogicalKeyboardKey.digit8;
+      case '9': return LogicalKeyboardKey.digit9;
+      
+      // 方向键
+      case 'up': return LogicalKeyboardKey.arrowUp;
+      case 'down': return LogicalKeyboardKey.arrowDown;
+      case 'left': return LogicalKeyboardKey.arrowLeft;
+      case 'right': return LogicalKeyboardKey.arrowRight;
+      
+      // 功能键
+      case 'f1': return LogicalKeyboardKey.f1;
+      case 'f2': return LogicalKeyboardKey.f2;
+      case 'f3': return LogicalKeyboardKey.f3;
+      case 'f4': return LogicalKeyboardKey.f4;
+      case 'f5': return LogicalKeyboardKey.f5;
+      case 'f6': return LogicalKeyboardKey.f6;
+      case 'f7': return LogicalKeyboardKey.f7;
+      case 'f8': return LogicalKeyboardKey.f8;
+      case 'f9': return LogicalKeyboardKey.f9;
+      case 'f10': return LogicalKeyboardKey.f10;
+      case 'f11': return LogicalKeyboardKey.f11;
+      case 'f12': return LogicalKeyboardKey.f12;
+      
+      // 特殊键
+      case 'escape': return LogicalKeyboardKey.escape;
+      case 'tab': return LogicalKeyboardKey.tab;
+      case 'space': return LogicalKeyboardKey.space;
+      case 'enter': return LogicalKeyboardKey.enter;
+      case 'backspace': return LogicalKeyboardKey.backspace;
+      case 'delete': return LogicalKeyboardKey.delete;
+      case 'home': return LogicalKeyboardKey.home;
+      case 'end': return LogicalKeyboardKey.end;
+      case 'pageup': return LogicalKeyboardKey.pageUp;
+      case 'pagedown': return LogicalKeyboardKey.pageDown;
+      case 'insert': return LogicalKeyboardKey.insert;
+      
+      // 符号键
+      case '-': return LogicalKeyboardKey.minus;
+      case '=': return LogicalKeyboardKey.equal;
+      case '[': return LogicalKeyboardKey.bracketLeft;
+      case ']': return LogicalKeyboardKey.bracketRight;
+      case '\\': return LogicalKeyboardKey.backslash;
+      case ';': return LogicalKeyboardKey.semicolon;
+      case '\'': return LogicalKeyboardKey.quote;
+      case '`': return LogicalKeyboardKey.backquote;
+      case ',': return LogicalKeyboardKey.comma;
+      case '.': return LogicalKeyboardKey.period;
+      case '/': return LogicalKeyboardKey.slash;
+      
+      default:
+        return null;
+    }
   }
 
   /// 处理复制选区的逻辑

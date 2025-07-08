@@ -1,0 +1,344 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+class KeyCaptureWidget extends StatefulWidget {
+  final Function(String) onKeyCaptured;
+  final String? initialValue;
+
+  const KeyCaptureWidget({
+    Key? key,
+    required this.onKeyCaptured,
+    this.initialValue,
+  }) : super(key: key);
+
+  @override
+  _KeyCaptureWidgetState createState() => _KeyCaptureWidgetState();
+}
+
+class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isCapturing = false;
+  List<String> _capturedKeys = [];
+  Set<LogicalKeyboardKey> _pressedKeys = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialValue != null && widget.initialValue!.isNotEmpty) {
+      _capturedKeys = widget.initialValue!.split('+');
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  /// 将LogicalKeyboardKey转换为字符串表示
+  String _getKeyString(LogicalKeyboardKey key) {
+    // 字母键
+    if (key == LogicalKeyboardKey.keyA) return 'a';
+    if (key == LogicalKeyboardKey.keyB) return 'b';
+    if (key == LogicalKeyboardKey.keyC) return 'c';
+    if (key == LogicalKeyboardKey.keyD) return 'd';
+    if (key == LogicalKeyboardKey.keyE) return 'e';
+    if (key == LogicalKeyboardKey.keyF) return 'f';
+    if (key == LogicalKeyboardKey.keyG) return 'g';
+    if (key == LogicalKeyboardKey.keyH) return 'h';
+    if (key == LogicalKeyboardKey.keyI) return 'i';
+    if (key == LogicalKeyboardKey.keyJ) return 'j';
+    if (key == LogicalKeyboardKey.keyK) return 'k';
+    if (key == LogicalKeyboardKey.keyL) return 'l';
+    if (key == LogicalKeyboardKey.keyM) return 'm';
+    if (key == LogicalKeyboardKey.keyN) return 'n';
+    if (key == LogicalKeyboardKey.keyO) return 'o';
+    if (key == LogicalKeyboardKey.keyP) return 'p';
+    if (key == LogicalKeyboardKey.keyQ) return 'q';
+    if (key == LogicalKeyboardKey.keyR) return 'r';
+    if (key == LogicalKeyboardKey.keyS) return 's';
+    if (key == LogicalKeyboardKey.keyT) return 't';
+    if (key == LogicalKeyboardKey.keyU) return 'u';
+    if (key == LogicalKeyboardKey.keyV) return 'v';
+    if (key == LogicalKeyboardKey.keyW) return 'w';
+    if (key == LogicalKeyboardKey.keyX) return 'x';
+    if (key == LogicalKeyboardKey.keyY) return 'y';
+    if (key == LogicalKeyboardKey.keyZ) return 'z';
+
+    // 数字键
+    if (key == LogicalKeyboardKey.digit0) return '0';
+    if (key == LogicalKeyboardKey.digit1) return '1';
+    if (key == LogicalKeyboardKey.digit2) return '2';
+    if (key == LogicalKeyboardKey.digit3) return '3';
+    if (key == LogicalKeyboardKey.digit4) return '4';
+    if (key == LogicalKeyboardKey.digit5) return '5';
+    if (key == LogicalKeyboardKey.digit6) return '6';
+    if (key == LogicalKeyboardKey.digit7) return '7';
+    if (key == LogicalKeyboardKey.digit8) return '8';
+    if (key == LogicalKeyboardKey.digit9) return '9';
+
+    // 方向键
+    if (key == LogicalKeyboardKey.arrowUp) return 'ArrowUp';
+    if (key == LogicalKeyboardKey.arrowDown) return 'ArrowDown';
+    if (key == LogicalKeyboardKey.arrowLeft) return 'ArrowLeft';
+    if (key == LogicalKeyboardKey.arrowRight) return 'ArrowRight';
+
+    // 功能键
+    if (key == LogicalKeyboardKey.f1) return 'F1';
+    if (key == LogicalKeyboardKey.f2) return 'F2';
+    if (key == LogicalKeyboardKey.f3) return 'F3';
+    if (key == LogicalKeyboardKey.f4) return 'F4';
+    if (key == LogicalKeyboardKey.f5) return 'F5';
+    if (key == LogicalKeyboardKey.f6) return 'F6';
+    if (key == LogicalKeyboardKey.f7) return 'F7';
+    if (key == LogicalKeyboardKey.f8) return 'F8';
+    if (key == LogicalKeyboardKey.f9) return 'F9';
+    if (key == LogicalKeyboardKey.f10) return 'F10';
+    if (key == LogicalKeyboardKey.f11) return 'F11';
+    if (key == LogicalKeyboardKey.f12) return 'F12';
+
+    // 修饰键
+    if (key == LogicalKeyboardKey.controlLeft || key == LogicalKeyboardKey.controlRight) return 'Control';
+    if (key == LogicalKeyboardKey.shiftLeft || key == LogicalKeyboardKey.shiftRight) return 'Shift';
+    if (key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight) return 'Alt';
+    if (key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight) return 'Meta';
+
+    // 特殊键
+    if (key == LogicalKeyboardKey.space) return 'Space';
+    if (key == LogicalKeyboardKey.enter) return 'Enter';
+    if (key == LogicalKeyboardKey.escape) return 'Escape';
+    if (key == LogicalKeyboardKey.tab) return 'Tab';
+    if (key == LogicalKeyboardKey.backspace) return 'Backspace';
+    if (key == LogicalKeyboardKey.delete) return 'Delete';
+    if (key == LogicalKeyboardKey.insert) return 'Insert';
+    if (key == LogicalKeyboardKey.home) return 'Home';
+    if (key == LogicalKeyboardKey.end) return 'End';
+    if (key == LogicalKeyboardKey.pageUp) return 'PageUp';
+    if (key == LogicalKeyboardKey.pageDown) return 'PageDown';
+
+    // 符号键
+    if (key == LogicalKeyboardKey.minus) return '-';
+    if (key == LogicalKeyboardKey.equal) return '=';
+    if (key == LogicalKeyboardKey.bracketLeft) return '[';
+    if (key == LogicalKeyboardKey.bracketRight) return ']';
+    if (key == LogicalKeyboardKey.backslash) return '\\';
+    if (key == LogicalKeyboardKey.semicolon) return ';';
+    if (key == LogicalKeyboardKey.quote) return "'";
+    if (key == LogicalKeyboardKey.comma) return ',';
+    if (key == LogicalKeyboardKey.period) return '.';
+    if (key == LogicalKeyboardKey.slash) return '/';
+    if (key == LogicalKeyboardKey.backquote) return '`';
+
+    // 如果没有匹配的键，返回键的调试名称
+    return key.debugName ?? 'Unknown';
+  }
+
+  /// 处理按键事件
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (!_isCapturing) return KeyEventResult.ignored;
+    
+    if (event is KeyDownEvent) {
+      final String mainKey = _getKeyString(event.logicalKey);
+      
+      // 如果按下的是修饰键，不做任何处理，等待主键
+      if (mainKey == 'Control' || 
+          mainKey == 'Shift' || 
+          mainKey == 'Alt' || 
+          mainKey == 'Meta') {
+        return KeyEventResult.handled;
+      }
+      
+      final List<String> keys = [];
+      
+      // 检查修饰键状态（统一使用不分左右的名称）
+      if (HardwareKeyboard.instance.isControlPressed) {
+        keys.add('Control');
+      }
+      if (HardwareKeyboard.instance.isShiftPressed) {
+        keys.add('Shift');
+      }
+      if (HardwareKeyboard.instance.isAltPressed) {
+        keys.add('Alt');
+      }
+      if (HardwareKeyboard.instance.isMetaPressed) {
+        keys.add('Meta');
+      }
+      
+      // 添加主键
+      keys.add(mainKey);
+      
+      setState(() {
+        _capturedKeys = keys;
+        _isCapturing = false;
+      });
+      
+      // 构建快捷键字符串
+      final String shortcut = keys.join('+');
+      widget.onKeyCaptured(shortcut);
+      _focusNode.unfocus();
+    }
+    
+    return KeyEventResult.handled;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      focusNode: _focusNode,
+      onKeyEvent: _handleKeyEvent,
+      child: GestureDetector(
+        onTap: () {
+          _focusNode.requestFocus();
+          setState(() {
+            _isCapturing = true;
+            _capturedKeys.clear();
+            _pressedKeys.clear();
+          });
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: _isCapturing ? Colors.blue : Colors.grey,
+              width: _isCapturing ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            color: _isCapturing ? Colors.blue.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+          ),
+          child: _capturedKeys.isEmpty
+              ? Text(
+                  _isCapturing ? '请按下按键组合...' : '点击开始录制按键',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                )
+              : Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: _buildKeyChips(),
+                ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildKeyChips() {
+    List<Widget> widgets = [];
+    for (int i = 0; i < _capturedKeys.length; i++) {
+      if (i > 0) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Icon(
+              Icons.add,
+              size: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        );
+      }
+      widgets.add(_buildKeyChip(_capturedKeys[i]));
+    }
+    return widgets;
+  }
+
+  Widget _buildKeyChip(String key) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _getKeyColor(key),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey[300]!, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            offset: const Offset(0, 1),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: Text(
+        _getKeyDisplayName(key),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Color _getKeyColor(String key) {
+    switch (key.toLowerCase()) {
+      case 'control':
+      case 'shift':
+      case 'alt':
+      case 'meta':
+        return Colors.orange[100]!;
+      case 'f1':
+      case 'f2':
+      case 'f3':
+      case 'f4':
+      case 'f5':
+      case 'f6':
+      case 'f7':
+      case 'f8':
+      case 'f9':
+      case 'f10':
+      case 'f11':
+      case 'f12':
+        return Colors.purple[100]!;
+      case 'arrowup':
+      case 'arrowdown':
+      case 'arrowleft':
+      case 'arrowright':
+        return Colors.green[100]!;
+      case 'space':
+      case 'enter':
+      case 'tab':
+      case 'escape':
+      case 'backspace':
+      case 'delete':
+        return Colors.blue[100]!;
+      default:
+        return Colors.grey[100]!;
+    }
+  }
+
+  String _getKeyDisplayName(String key) {
+    switch (key.toLowerCase()) {
+      case 'control':
+        return 'Ctrl';
+      case 'shift':
+        return 'Shift';
+      case 'alt':
+        return 'Alt';
+      case 'meta':
+        return 'Win';
+      case 'space':
+        return 'Space';
+      case 'enter':
+        return 'Enter';
+      case 'tab':
+        return 'Tab';
+      case 'escape':
+        return 'Esc';
+      case 'backspace':
+        return 'Backspace';
+      case 'delete':
+        return 'Del';
+      case 'arrowup':
+        return '↑';
+      case 'arrowdown':
+        return '↓';
+      case 'arrowleft':
+        return '←';
+      case 'arrowright':
+        return '→';
+      default:
+        return key.toUpperCase();
+    }
+  }
+}

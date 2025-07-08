@@ -149,6 +149,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     double? radialMenuObjectOpacity,
     int? radialMenuReturnDelay,
     int? radialMenuAnimationDuration,
+    Map<String, List<String>>? shortcuts,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -165,6 +166,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         radialMenuObjectOpacity: radialMenuObjectOpacity,
         radialMenuReturnDelay: radialMenuReturnDelay,
         radialMenuAnimationDuration: radialMenuAnimationDuration,
+        shortcuts: shortcuts,
       );
 
       await _service.updateMapEditor(updatedMapEditor);
@@ -254,7 +256,6 @@ class UserPreferencesProvider extends ChangeNotifier {
     List<int>? recentColors,
     List<int>? customColors,
     List<double>? favoriteStrokeWidths,
-    Map<String, String>? shortcuts,
     List<String>? toolbarLayout,
     bool? showAdvancedTools,
     double? handleSize,
@@ -267,7 +268,6 @@ class UserPreferencesProvider extends ChangeNotifier {
         recentColors: recentColors,
         customColors: customColors,
         favoriteStrokeWidths: favoriteStrokeWidths,
-        shortcuts: shortcuts,
         toolbarLayout: toolbarLayout,
         showAdvancedTools: showAdvancedTools,
         handleSize: handleSize,
@@ -487,6 +487,21 @@ class UserPreferencesProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// 更新地图编辑器快捷键
+  Future<void> updateMapEditorShortcut(String action, List<String> shortcuts) async {
+    if (_currentPreferences == null) return;
+
+    try {
+      final currentShortcuts = Map<String, List<String>>.from(mapEditor.shortcuts);
+      currentShortcuts[action] = shortcuts;
+      await updateMapEditor(shortcuts: currentShortcuts);
+    } catch (e) {
+      _setError('更新地图编辑器快捷键失败: ${e.toString()}');
+    }
+  }
+
+
 
   /// 导入设置
   Future<void> importSettings(String jsonData) async {

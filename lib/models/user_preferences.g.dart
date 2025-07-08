@@ -91,6 +91,11 @@ MapEditorPreferences _$MapEditorPreferencesFromJson(
           (json['radialMenuReturnDelay'] as num?)?.toInt() ?? 100,
       radialMenuAnimationDuration:
           (json['radialMenuAnimationDuration'] as num?)?.toInt() ?? 300,
+      shortcuts: (json['shortcuts'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+                k, (e as List<dynamic>).map((e) => e as String).toList()),
+          ) ??
+          const <String, List<String>>{},
     );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
@@ -108,6 +113,7 @@ Map<String, dynamic> _$MapEditorPreferencesToJson(
       'radialMenuObjectOpacity': instance.radialMenuObjectOpacity,
       'radialMenuReturnDelay': instance.radialMenuReturnDelay,
       'radialMenuAnimationDuration': instance.radialMenuAnimationDuration,
+      'shortcuts': instance.shortcuts,
     };
 
 const _$BackgroundPatternEnumMap = {
@@ -212,7 +218,6 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
       favoriteStrokeWidths: (json['favoriteStrokeWidths'] as List<dynamic>)
           .map((e) => (e as num).toDouble())
           .toList(),
-      shortcuts: Map<String, String>.from(json['shortcuts'] as Map),
       toolbarLayout: (json['toolbarLayout'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
@@ -234,7 +239,6 @@ Map<String, dynamic> _$ToolPreferencesToJson(ToolPreferences instance) =>
       'recentColors': instance.recentColors,
       'customColors': instance.customColors,
       'favoriteStrokeWidths': instance.favoriteStrokeWidths,
-      'shortcuts': instance.shortcuts,
       'toolbarLayout': instance.toolbarLayout,
       'showAdvancedTools': instance.showAdvancedTools,
       'handleSize': instance.handleSize,

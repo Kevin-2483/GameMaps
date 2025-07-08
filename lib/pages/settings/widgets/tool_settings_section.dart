@@ -293,29 +293,6 @@ class ToolSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 快捷键设置
-            Text(
-              '快捷键设置',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-
-            ...tools.shortcuts.entries.map(
-              (entry) => ListTile(
-                title: Text(_getShortcutDisplayName(entry.key)),
-                subtitle: Text(entry.value),
-                trailing: IconButton(
-                  onPressed: () =>
-                      _editShortcut(context, provider, entry.key, entry.value),
-                  icon: Icon(Icons.edit),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             // 重置工具设置
             Row(
               children: [
@@ -809,33 +786,7 @@ class ToolSettingsSection extends StatelessWidget {
     }
   }
 
-  String _getShortcutDisplayName(String shortcut) {
-    switch (shortcut) {
-      case 'undo':
-        return '撤销';
-      case 'redo':
-        return '重做';
-      case 'save':
-        return '保存';
-      case 'copy':
-        return '复制';
-      case 'paste':
-        return '粘贴';
-      case 'delete':
-        return '删除';
-      default:
-        return shortcut;
-    }
-  }
 
-  void _editShortcut(
-    BuildContext context,
-    UserPreferencesProvider provider,
-    String action,
-    String currentShortcut,
-  ) {
-    // 编辑快捷键的实现
-  }
 
   void _resetToolSettings(
     BuildContext context,
@@ -858,7 +809,6 @@ class ToolSettingsSection extends StatelessWidget {
                 recentColors: defaultTools.recentColors,
                 customColors: defaultTools.customColors,
                 favoriteStrokeWidths: defaultTools.favoriteStrokeWidths,
-                shortcuts: defaultTools.shortcuts,
                 toolbarLayout: defaultTools.toolbarLayout,
                 showAdvancedTools: defaultTools.showAdvancedTools,
               );

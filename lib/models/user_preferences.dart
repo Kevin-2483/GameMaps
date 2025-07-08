@@ -253,6 +253,9 @@ class MapEditorPreferences {
   /// 轮盘菜单动画持续时间（毫秒）
   final int radialMenuAnimationDuration;
 
+  /// 地图编辑器快捷键设置
+  final Map<String, List<String>> shortcuts;
+
   const MapEditorPreferences({
     this.undoHistoryLimit = 20,
     this.zoomSensitivity = 1.0,
@@ -265,6 +268,7 @@ class MapEditorPreferences {
     this.radialMenuObjectOpacity = 0.9,
     this.radialMenuReturnDelay = 100,
     this.radialMenuAnimationDuration = 300,
+    this.shortcuts = const <String, List<String>>{},
   });
   factory MapEditorPreferences.createDefault() {
     return const MapEditorPreferences(
@@ -279,6 +283,48 @@ class MapEditorPreferences {
       radialMenuObjectOpacity: 0.9,
       radialMenuReturnDelay: 100,
       radialMenuAnimationDuration: 300,
+      shortcuts: {
+        // 工具快捷键
+        'undo': ['Ctrl+Z'],
+        'redo': ['Ctrl+Y'],
+        'save': ['Ctrl+S'],
+        'copy': ['Ctrl+C', 'Command+C'],
+        'paste': ['Ctrl+V'],
+        'delete': ['Delete'],
+        // 地图编辑器快捷键
+        'prevLayer': ['Ctrl+Up'],
+        'nextLayer': ['Ctrl+Down'],
+        'prevLayerGroup': ['Ctrl+Left'],
+        'nextLayerGroup': ['Ctrl+Right'],
+        'prevLegendGroup': ['Alt+Up'],
+        'nextLegendGroup': ['Alt+Down'],
+        'openLegendDrawer': ['Ctrl+L'],
+        'clearLayerSelection': ['Escape'],
+        // 图层组选择快捷键 (数字键1-0)
+        'selectLayerGroup1': ['1'],
+        'selectLayerGroup2': ['2'],
+        'selectLayerGroup3': ['3'],
+        'selectLayerGroup4': ['4'],
+        'selectLayerGroup5': ['5'],
+        'selectLayerGroup6': ['6'],
+        'selectLayerGroup7': ['7'],
+        'selectLayerGroup8': ['8'],
+        'selectLayerGroup9': ['9'],
+        'selectLayerGroup10': ['0'],
+        // 图层选择快捷键 (F1-F12)
+        'selectLayer1': ['F1'],
+        'selectLayer2': ['F2'],
+        'selectLayer3': ['F3'],
+        'selectLayer4': ['F4'],
+        'selectLayer5': ['F5'],
+        'selectLayer6': ['F6'],
+        'selectLayer7': ['F7'],
+        'selectLayer8': ['F8'],
+        'selectLayer9': ['F9'],
+        'selectLayer10': ['F10'],
+        'selectLayer11': ['F11'],
+        'selectLayer12': ['F12'],
+      },
     );
   }
   MapEditorPreferences copyWith({
@@ -293,6 +339,7 @@ class MapEditorPreferences {
     double? radialMenuObjectOpacity,
     int? radialMenuReturnDelay,
     int? radialMenuAnimationDuration,
+    Map<String, List<String>>? shortcuts,
   }) {
     return MapEditorPreferences(
       undoHistoryLimit: undoHistoryLimit ?? this.undoHistoryLimit,
@@ -306,6 +353,7 @@ class MapEditorPreferences {
       radialMenuObjectOpacity: radialMenuObjectOpacity ?? this.radialMenuObjectOpacity,
       radialMenuReturnDelay: radialMenuReturnDelay ?? this.radialMenuReturnDelay,
       radialMenuAnimationDuration: radialMenuAnimationDuration ?? this.radialMenuAnimationDuration,
+      shortcuts: shortcuts ?? this.shortcuts,
     );
   }
 
@@ -582,9 +630,6 @@ class ToolPreferences {
   /// 常用线条宽度
   final List<double> favoriteStrokeWidths;
 
-  /// 快捷键设置
-  final Map<String, String> shortcuts;
-
   /// 工具栏自定义布局
   final List<String> toolbarLayout;
 
@@ -607,7 +652,6 @@ class ToolPreferences {
     required this.recentColors,
     required this.customColors,
     required this.favoriteStrokeWidths,
-    required this.shortcuts,
     required this.toolbarLayout,
     this.showAdvancedTools = false,
     this.handleSize = 8.0,
@@ -630,14 +674,6 @@ class ToolPreferences {
         0xFF795548, // 棕色
       ],
       favoriteStrokeWidths: const [1.0, 2.0, 3.0, 5.0, 8.0],
-      shortcuts: const {
-        'undo': 'Ctrl+Z',
-        'redo': 'Ctrl+Y',
-        'save': 'Ctrl+S',
-        'copy': 'Ctrl+C',
-        'paste': 'Ctrl+V',
-        'delete': 'Delete',
-      },
       toolbarLayout: const [
         'line',
         'dashedLine',
@@ -675,7 +711,6 @@ class ToolPreferences {
     List<int>? recentColors,
     List<int>? customColors,
     List<double>? favoriteStrokeWidths,
-    Map<String, String>? shortcuts,
     List<String>? toolbarLayout,
     bool? showAdvancedTools,
     double? handleSize,
@@ -687,7 +722,6 @@ class ToolPreferences {
       recentColors: recentColors ?? this.recentColors,
       customColors: customColors ?? this.customColors,
       favoriteStrokeWidths: favoriteStrokeWidths ?? this.favoriteStrokeWidths,
-      shortcuts: shortcuts ?? this.shortcuts,
       toolbarLayout: toolbarLayout ?? this.toolbarLayout,
       showAdvancedTools: showAdvancedTools ?? this.showAdvancedTools,
       handleSize: handleSize ?? this.handleSize,
