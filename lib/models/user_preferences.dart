@@ -300,6 +300,16 @@ class MapEditorPreferences {
         'nextLegendGroup': ['Alt+Down'],
         'openLegendDrawer': ['Ctrl+L'],
         'clearLayerSelection': ['Escape'],
+        // 新增快捷键
+        'toggleSidebar': ['Ctrl+B'],
+        'openZInspector': ['Ctrl+I'],
+        'toggleLegendGroupDrawer': ['Ctrl+G'],
+        'hideOtherLayers': ['Ctrl+H'],
+        'hideOtherLayerGroups': ['Ctrl+Shift+H'],
+        'showCurrentLayer': ['Ctrl+Shift+S'],
+        'showCurrentLayerGroup': ['Ctrl+Alt+S'],
+        'hideOtherLegendGroups': ['Ctrl+Alt+H'],
+        'showCurrentLegendGroup': ['Ctrl+Alt+G'],
         // 图层组选择快捷键 (数字键1-0)
         'selectLayerGroup1': ['1'],
         'selectLayerGroup2': ['2'],

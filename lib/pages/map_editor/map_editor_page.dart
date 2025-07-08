@@ -4195,6 +4195,13 @@ Widget _buildMapCanvasArea() {
       return true;
     }
 
+    // 保存地图
+    final saveShortcuts = mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S'];
+    if (_isAnyShortcutPressed(event, saveShortcuts)) {
+      _saveMap();
+      return true;
+    }
+
     // 检查数字键1-0选择图层组
     for (int i = 1; i <= 10; i++) {
       final key = i == 10 ? '0' : i.toString();
@@ -4214,6 +4221,69 @@ Widget _buildMapCanvasArea() {
         _selectLayerByIndex(i - 1); // 索引从0开始
         return true;
       }
+    }
+
+    // 检查切换左侧边栏
+    final toggleSidebarShortcuts = mapEditorPrefs.shortcuts['toggleSidebar'] ?? ['Ctrl+B'];
+    if (_isAnyShortcutPressed(event, toggleSidebarShortcuts)) {
+      _toggleSidebar();
+      return true;
+    }
+
+    // 检查打开Z元素检视器
+    final openZInspectorShortcuts = mapEditorPrefs.shortcuts['openZInspector'] ?? ['Ctrl+I'];
+    if (_isAnyShortcutPressed(event, openZInspectorShortcuts)) {
+      _openZInspector();
+      return true;
+    }
+
+    // 检查切换图例组绑定抽屉
+    final toggleLegendGroupDrawerShortcuts = mapEditorPrefs.shortcuts['toggleLegendGroupDrawer'] ?? ['Ctrl+G'];
+    if (_isAnyShortcutPressed(event, toggleLegendGroupDrawerShortcuts)) {
+      _toggleLegendGroupBindingDrawer();
+      return true;
+    }
+
+    // 检查隐藏其他图层
+    final hideOtherLayersShortcuts = mapEditorPrefs.shortcuts['hideOtherLayers'] ?? ['Ctrl+H'];
+    if (_isAnyShortcutPressed(event, hideOtherLayersShortcuts)) {
+      _hideOtherLayers();
+      return true;
+    }
+
+    // 检查隐藏其他图层组
+    final hideOtherLayerGroupsShortcuts = mapEditorPrefs.shortcuts['hideOtherLayerGroups'] ?? ['Ctrl+Shift+H'];
+    if (_isAnyShortcutPressed(event, hideOtherLayerGroupsShortcuts)) {
+      _hideOtherLayerGroups();
+      return true;
+    }
+
+    // 检查显示当前图层
+    final showCurrentLayerShortcuts = mapEditorPrefs.shortcuts['showCurrentLayer'] ?? ['Ctrl+Shift+S'];
+    if (_isAnyShortcutPressed(event, showCurrentLayerShortcuts)) {
+      _showCurrentLayer();
+      return true;
+    }
+
+    // 检查显示当前图层组
+    final showCurrentLayerGroupShortcuts = mapEditorPrefs.shortcuts['showCurrentLayerGroup'] ?? ['Ctrl+Alt+S'];
+    if (_isAnyShortcutPressed(event, showCurrentLayerGroupShortcuts)) {
+      _showCurrentLayerGroup();
+      return true;
+    }
+
+    // 检查隐藏其他图例组
+    final hideOtherLegendGroupsShortcuts = mapEditorPrefs.shortcuts['hideOtherLegendGroups'] ?? ['Ctrl+Alt+H'];
+    if (_isAnyShortcutPressed(event, hideOtherLegendGroupsShortcuts)) {
+      _hideOtherLegendGroups();
+      return true;
+    }
+
+    // 检查显示当前图例组
+    final showCurrentLegendGroupShortcuts = mapEditorPrefs.shortcuts['showCurrentLegendGroup'] ?? ['Ctrl+Alt+G'];
+    if (_isAnyShortcutPressed(event, showCurrentLegendGroupShortcuts)) {
+      _showCurrentLegendGroup();
+      return true;
     }
 
     return false;
@@ -4459,6 +4529,247 @@ Widget _buildMapCanvasArea() {
     });
     _prioritizeLayerAndGroupDisplay();
     _clearCanvasSelection();
+  }
+
+  /// 切换左侧边栏
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarCollapsed = !_isSidebarCollapsed;
+    });
+  }
+
+  /// 打开Z元素检视器
+  void _openZInspector() {
+    // 需要有图层或便签选中，优先处理图层
+    if (_selectedLayer != null) {
+      setState(() {
+        _isZIndexInspectorOpen = true;
+      });
+    } else if (_selectedStickyNote != null) {
+      setState(() {
+        _isZIndexInspectorOpen = true;
+      });
+    } else {
+      // 没有选中任何对象时显示提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请先选择一个图层或便签'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  /// 切换图例组绑定抽屉
+  void _toggleLegendGroupBindingDrawer() {
+    // 需要有图层选中
+    if (_selectedLayer != null) {
+      setState(() {
+        _isLayerLegendBindingDrawerOpen = !_isLayerLegendBindingDrawerOpen;
+        if (_isLayerLegendBindingDrawerOpen) {
+          _currentLayerForBinding = _selectedLayer;
+        }
+      });
+    } else {
+      // 没有选中图层时显示提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请先选择一个图层'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  /// 隐藏其他图层
+  void _hideOtherLayers() {
+    if (_currentMap == null) return;
+
+    if (_selectedLayer != null) {
+      // 有选择：隐藏除了选中图层的所有其他图层
+      for (final layer in _currentMap!.layers) {
+        if (layer.id != _selectedLayer!.id) {
+          final updatedLayer = layer.copyWith(
+            isVisible: false,
+            updatedAt: DateTime.now(),
+          );
+          _updateLayer(updatedLayer);
+        }
+      }
+    } else {
+      // 没有选择：隐藏全部图层
+      for (final layer in _currentMap!.layers) {
+        final updatedLayer = layer.copyWith(
+          isVisible: false,
+          updatedAt: DateTime.now(),
+        );
+        _updateLayer(updatedLayer);
+      }
+    }
+  }
+
+  /// 隐藏其他图层组
+  void _hideOtherLayerGroups() {
+    if (_currentMap == null) return;
+
+    if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+      // 有选择：隐藏除了选中图层组的所有其他图层
+      final selectedGroupIds = _selectedLayerGroup!.map((layer) => layer.id).toSet();
+      for (final layer in _currentMap!.layers) {
+        if (!selectedGroupIds.contains(layer.id)) {
+          final updatedLayer = layer.copyWith(
+            isVisible: false,
+            updatedAt: DateTime.now(),
+          );
+          _updateLayer(updatedLayer);
+        }
+      }
+    } else {
+      // 没有选择：隐藏全部图层
+      for (final layer in _currentMap!.layers) {
+        final updatedLayer = layer.copyWith(
+          isVisible: false,
+          updatedAt: DateTime.now(),
+        );
+        _updateLayer(updatedLayer);
+      }
+    }
+  }
+
+  /// 显示当前图层
+  void _showCurrentLayer() {
+    if (_currentMap == null) return;
+
+    if (_selectedLayer != null) {
+      // 有选择：显示当前选中的图层
+      final updatedLayer = _selectedLayer!.copyWith(
+        isVisible: true,
+        updatedAt: DateTime.now(),
+      );
+      _updateLayer(updatedLayer);
+    } else {
+      // 没有选择：显示所有图层
+      for (final layer in _currentMap!.layers) {
+        final updatedLayer = layer.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
+        _updateLayer(updatedLayer);
+      }
+    }
+  }
+
+  /// 显示当前图层组
+  void _showCurrentLayerGroup() {
+    if (_currentMap == null) return;
+
+    if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+      // 有选择：显示当前选中的图层组
+      for (final layer in _selectedLayerGroup!) {
+        final updatedLayer = layer.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
+        _updateLayer(updatedLayer);
+      }
+    } else {
+      // 没有选择：显示所有图层
+      for (final layer in _currentMap!.layers) {
+        final updatedLayer = layer.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
+        _updateLayer(updatedLayer);
+      }
+    }
+  }
+
+  /// 隐藏其他图例组
+  void _hideOtherLegendGroups() {
+    if (_currentMap == null) return;
+
+    // 获取当前选中图层或图层组绑定的图例组
+    Set<String> boundLegendGroupIds = {};
+    
+    if (_selectedLayer != null) {
+      // 单个图层的绑定
+      for (final groupId in _selectedLayer!.legendGroupIds) {
+        boundLegendGroupIds.add(groupId);
+      }
+    } else if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+      // 图层组中所有图层的绑定
+      for (final layer in _selectedLayerGroup!) {
+        for (final groupId in layer.legendGroupIds) {
+          boundLegendGroupIds.add(groupId);
+        }
+      }
+    }
+
+    if (boundLegendGroupIds.isNotEmpty) {
+      // 有绑定：隐藏除了绑定图例组的所有其他图例组
+      for (final legendGroup in _currentMap!.legendGroups) {
+        if (!boundLegendGroupIds.contains(legendGroup.id)) {
+          final updatedGroup = legendGroup.copyWith(
+            isVisible: false,
+            updatedAt: DateTime.now(),
+          );
+          _updateLegendGroup(updatedGroup);
+        }
+      }
+    } else {
+      // 没有绑定或没有选择：隐藏全部图例组
+      for (final legendGroup in _currentMap!.legendGroups) {
+        final updatedGroup = legendGroup.copyWith(
+          isVisible: false,
+          updatedAt: DateTime.now(),
+        );
+        _updateLegendGroup(updatedGroup);
+      }
+    }
+  }
+
+  /// 显示当前图例组
+  void _showCurrentLegendGroup() {
+    if (_currentMap == null) return;
+
+    // 获取当前选中图层或图层组绑定的图例组
+    Set<String> boundLegendGroupIds = {};
+    
+    if (_selectedLayer != null) {
+      // 单个图层的绑定
+      for (final groupId in _selectedLayer!.legendGroupIds) {
+        boundLegendGroupIds.add(groupId);
+      }
+    } else if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+      // 图层组中所有图层的绑定
+      for (final layer in _selectedLayerGroup!) {
+        for (final groupId in layer.legendGroupIds) {
+          boundLegendGroupIds.add(groupId);
+        }
+      }
+    }
+
+    if (boundLegendGroupIds.isNotEmpty) {
+      // 有绑定：显示绑定的图例组
+      for (final legendGroup in _currentMap!.legendGroups) {
+        if (boundLegendGroupIds.contains(legendGroup.id)) {
+          final updatedGroup = legendGroup.copyWith(
+            isVisible: true,
+            updatedAt: DateTime.now(),
+          );
+          _updateLegendGroup(updatedGroup);
+        }
+      }
+    } else {
+      // 没有绑定或没有选择：显示所有图例组
+      for (final legendGroup in _currentMap!.legendGroups) {
+        final updatedGroup = legendGroup.copyWith(
+          isVisible: true,
+          updatedAt: DateTime.now(),
+        );
+        _updateLegendGroup(updatedGroup);
+      }
+    }
   }
 
   /// 检查是否按下了指定的快捷键

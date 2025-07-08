@@ -87,6 +87,25 @@ class MapEditorSettingsSection extends StatelessWidget {
         return '选择图层 11';
       case 'selectLayer12':
         return '选择图层 12';
+      // 新增的快捷键功能
+      case 'toggleSidebar':
+        return '切换左侧边栏';
+      case 'openZInspector':
+        return '打开Z元素检视器';
+      case 'toggleLegendGroupDrawer':
+        return '切换图例组绑定抽屉';
+      case 'hideOtherLayers':
+        return '隐藏其他图层';
+      case 'hideOtherLayerGroups':
+        return '隐藏其他图层组';
+      case 'showCurrentLayer':
+        return '显示当前图层';
+      case 'showCurrentLayerGroup':
+        return '显示当前图层组';
+      case 'hideOtherLegendGroups':
+        return '隐藏其他图例组';
+      case 'showCurrentLegendGroup':
+        return '显示当前图例组';
       default:
         return shortcut;
     }
@@ -247,38 +266,38 @@ class MapEditorSettingsSection extends StatelessWidget {
   /// 返回冲突的动作名称，如果没有冲突返回null
   String? _checkShortcutConflict(String shortcut, String currentAction, Map<String, List<String>> allShortcuts) {
     // 定义受保护的快捷键（数字键1-0和F1-F12）
-    final protectedShortcuts = {
-      '1': 'selectLayerGroup1',
-      '2': 'selectLayerGroup2', 
-      '3': 'selectLayerGroup3',
-      '4': 'selectLayerGroup4',
-      '5': 'selectLayerGroup5',
-      '6': 'selectLayerGroup6',
-      '7': 'selectLayerGroup7',
-      '8': 'selectLayerGroup8',
-      '9': 'selectLayerGroup9',
-      '0': 'selectLayerGroup10',
-      'F1': 'selectLayer1',
-      'F2': 'selectLayer2',
-      'F3': 'selectLayer3',
-      'F4': 'selectLayer4',
-      'F5': 'selectLayer5',
-      'F6': 'selectLayer6',
-      'F7': 'selectLayer7',
-      'F8': 'selectLayer8',
-      'F9': 'selectLayer9',
-      'F10': 'selectLayer10',
-      'F11': 'selectLayer11',
-      'F12': 'selectLayer12',
-    };
+    // final protectedShortcuts = {
+    //   '1': 'selectLayerGroup1',
+    //   '2': 'selectLayerGroup2', 
+    //   '3': 'selectLayerGroup3',
+    //   '4': 'selectLayerGroup4',
+    //   '5': 'selectLayerGroup5',
+    //   '6': 'selectLayerGroup6',
+    //   '7': 'selectLayerGroup7',
+    //   '8': 'selectLayerGroup8',
+    //   '9': 'selectLayerGroup9',
+    //   '0': 'selectLayerGroup10',
+    //   'F1': 'selectLayer1',
+    //   'F2': 'selectLayer2',
+    //   'F3': 'selectLayer3',
+    //   'F4': 'selectLayer4',
+    //   'F5': 'selectLayer5',
+    //   'F6': 'selectLayer6',
+    //   'F7': 'selectLayer7',
+    //   'F8': 'selectLayer8',
+    //   'F9': 'selectLayer9',
+    //   'F10': 'selectLayer10',
+    //   'F11': 'selectLayer11',
+    //   'F12': 'selectLayer12',
+    // };
 
-    // 检查是否与受保护的快捷键冲突
-    if (protectedShortcuts.containsKey(shortcut)) {
-      final protectedAction = protectedShortcuts[shortcut]!;
-      if (currentAction != protectedAction) {
-        return protectedAction;
-      }
-    }
+    // // 检查是否与受保护的快捷键冲突
+    // if (protectedShortcuts.containsKey(shortcut)) {
+    //   final protectedAction = protectedShortcuts[shortcut]!;
+    //   if (currentAction != protectedAction) {
+    //     return protectedAction;
+    //   }
+    // }
 
     // 检查是否与其他已设置的快捷键冲突
     for (final entry in allShortcuts.entries) {
@@ -288,6 +307,57 @@ class MapEditorSettingsSection extends StatelessWidget {
     }
 
     return null;
+  }
+
+  /// 显示快捷键管理弹窗
+  void _showShortcutManagementDialog(
+      BuildContext context, UserPreferencesProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('快捷键管理'),
+        content: SizedBox(
+          width: 600,
+          height: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '点击编辑按钮可以修改对应功能的快捷键',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...provider.currentPreferences!.mapEditor.shortcuts.entries.map(
+                  (entry) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(_getShortcutDisplayName(entry.key)),
+                      subtitle: _buildShortcutChips(entry.value),
+                      trailing: IconButton(
+                        onPressed: () => _editShortcut(
+                            context, provider, entry.key, entry.value),
+                        icon: Icon(Icons.edit),
+                        tooltip: '编辑快捷键',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('关闭'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 编辑快捷键
@@ -755,17 +825,12 @@ class MapEditorSettingsSection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // 快捷键列表
-            ...mapEditor.shortcuts.entries.map(
-              (entry) => ListTile(
-                title: Text(_getShortcutDisplayName(entry.key)),
-                subtitle: _buildShortcutChips(entry.value),
-                trailing: IconButton(
-                  onPressed: () =>
-                      _editShortcut(context, provider, entry.key, entry.value),
-                  icon: Icon(Icons.edit),
-                ),
-              ),
+            // 快捷键设置按钮
+            ListTile(
+              title: Text('管理快捷键'),
+              subtitle: Text('点击查看和编辑所有快捷键设置'),
+              trailing: Icon(Icons.keyboard),
+              onTap: () => _showShortcutManagementDialog(context, provider),
             ),
           ],
         ),
