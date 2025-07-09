@@ -6,7 +6,8 @@ import 'dart:io';
 /// 可拖动标题栏组件
 /// 统一各页面的标题栏格式，添加拖动区域和一致的高度
 class DraggableTitleBar extends StatelessWidget {
-  final String title;
+  final String? title;
+  final Widget? titleWidget;
   final IconData? icon;
   final List<Widget>? actions;
   final Widget? leading;
@@ -17,7 +18,8 @@ class DraggableTitleBar extends StatelessWidget {
 
   const DraggableTitleBar({
     super.key,
-    required this.title,
+    this.title,
+    this.titleWidget,
     this.icon,
     this.actions,
     this.leading,
@@ -25,7 +27,7 @@ class DraggableTitleBar extends StatelessWidget {
     this.foregroundColor,
     this.height = 64.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  });
+  }) : assert(title != null || titleWidget != null, 'Either title or titleWidget must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +76,8 @@ class DraggableTitleBar extends StatelessWidget {
                   : null,
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  title,
+                child: titleWidget ?? Text(
+                  title!,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color:
                         foregroundColor ??

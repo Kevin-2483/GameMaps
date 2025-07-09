@@ -29,6 +29,7 @@ import 'widgets/z_index_inspector.dart';
 import 'widgets/reactive_version_tab_bar.dart';
 import 'widgets/sticky_note_panel.dart';
 import 'widgets/radial_menu_integration.dart';
+import 'widgets/editor_status_bar.dart';
 // import '../../components/common/radial_gesture_menu.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
@@ -2990,10 +2991,36 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   /// 构建地图编辑器标题
-  String _buildMapEditorTitle() {
+  Widget _buildMapEditorTitle() {
     final l10n = AppLocalizations.of(context)!;
     final baseTitle = widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor;
-    return '$baseTitle - ${widget.mapTitle}';
+    final titleText = '$baseTitle - ${widget.mapTitle}';
+    
+    return Row(
+      children: [
+        Text(
+          titleText,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 16),
+        if (!widget.isPreviewMode) // 只在编辑模式下显示状态栏
+           EditorStatusBar(
+             layers: _currentMap?.layers,
+             stickyNotes: _currentMap?.stickyNotes,
+             selectedLayer: _selectedLayer,
+             selectedLayerGroup: _selectedLayerGroup,
+             selectedDrawingTool: _selectedDrawingTool,
+             selectedColor: _selectedColor,
+             selectedStrokeWidth: _selectedStrokeWidth,
+             selectedDensity: _selectedDensity,
+             selectedCurvature: _selectedCurvature,
+             selectedTriangleCut: _selectedTriangleCut,
+             isCompact: true,
+           ),
+      ],
+    );
   }
 
   /// 构建标题栏操作按钮
@@ -3143,6 +3170,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Consumer<UserPreferencesProvider>(
@@ -3164,7 +3193,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               appBar: PreferredSize(
                 preferredSize: const Size.fromHeight(64), // 只有标题栏高度
                 child: DraggableTitleBar(
-                  title: _buildMapEditorTitle(),
+                  titleWidget: _buildMapEditorTitle(),
                   leading: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
