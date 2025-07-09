@@ -112,11 +112,14 @@ class MapEditorSettingsSection extends StatelessWidget {
   }
 
   /// 构建快捷键chip显示
-  Widget _buildShortcutChips(List<String> shortcuts) {
+  Widget _buildShortcutChips(List<String> shortcuts, BuildContext context) {
     if (shortcuts.isEmpty) {
       return Text(
         '未设置',
-        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant, 
+          fontSize: 12
+        ),
       );
     }
 
@@ -130,21 +133,24 @@ class MapEditorSettingsSection extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.blue[50],
+            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.blue[200]!, width: 1),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.5), 
+              width: 1
+            ),
           ),
           child: Wrap(
             alignment: WrapAlignment.start,
             crossAxisAlignment: WrapCrossAlignment.center,
-            children: _buildKeyChips(keys),
+            children: _buildKeyChips(keys, context),
           ),
         );
       }).toList(),
     );
   }
 
-  List<Widget> _buildKeyChips(List<String> keys) {
+  List<Widget> _buildKeyChips(List<String> keys, BuildContext context) {
     List<Widget> widgets = [];
     for (int i = 0; i < keys.length; i++) {
       if (i > 0) {
@@ -154,26 +160,29 @@ class MapEditorSettingsSection extends StatelessWidget {
             child: Icon(
               Icons.add,
               size: 12,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         );
       }
-      widgets.add(_buildKeyChip(keys[i]));
+      widgets.add(_buildKeyChip(keys[i], context));
     }
     return widgets;
   }
 
-  Widget _buildKeyChip(String key) {
+  Widget _buildKeyChip(String key, BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: _getKeyColor(key),
+        color: _getKeyColor(key, context),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.5), 
+          width: 1
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
             offset: const Offset(0, 1),
             blurRadius: 1,
           ),
@@ -181,22 +190,24 @@ class MapEditorSettingsSection extends StatelessWidget {
       ),
       child: Text(
         _getKeyDisplayName(key),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
   }
 
-  Color _getKeyColor(String key) {
+  Color _getKeyColor(String key, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     switch (key.toLowerCase()) {
       case 'control':
       case 'shift':
       case 'alt':
       case 'meta':
-        return Colors.orange[100]!;
+        return colorScheme.tertiaryContainer;
       case 'f1':
       case 'f2':
       case 'f3':
@@ -209,21 +220,21 @@ class MapEditorSettingsSection extends StatelessWidget {
       case 'f10':
       case 'f11':
       case 'f12':
-        return Colors.purple[100]!;
+        return colorScheme.secondaryContainer;
       case 'arrowup':
       case 'arrowdown':
       case 'arrowleft':
       case 'arrowright':
-        return Colors.green[100]!;
+        return colorScheme.primaryContainer;
       case 'space':
       case 'enter':
       case 'tab':
       case 'escape':
       case 'backspace':
       case 'delete':
-        return Colors.blue[100]!;
+        return colorScheme.surfaceVariant;
       default:
-        return Colors.grey[100]!;
+        return colorScheme.surface;
     }
   }
 
@@ -336,7 +347,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       title: Text(_getShortcutDisplayName(entry.key)),
-                      subtitle: _buildShortcutChips(entry.value),
+                      subtitle: _buildShortcutChips(entry.value, context),
                       trailing: IconButton(
                         onPressed: () => _editShortcut(
                             context, provider, entry.key, entry.value),
@@ -393,7 +404,10 @@ class MapEditorSettingsSection extends StatelessWidget {
                 if (newShortcuts.isEmpty)
                   Text(
                     '未设置',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant, 
+                      fontSize: 12
+                    ),
                   )
                 else
                   Wrap(
@@ -405,14 +419,23 @@ class MapEditorSettingsSection extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.blue[200]!, width: 1),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.5), 
+                            width: 1
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(shortcut, style: TextStyle(fontSize: 12)),
+                            Text(
+                              shortcut, 
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface
+                              )
+                            ),
                             const SizedBox(width: 4),
                             InkWell(
                               onTap: () {
@@ -420,7 +443,11 @@ class MapEditorSettingsSection extends StatelessWidget {
                                   newShortcuts.removeAt(index);
                                 });
                               },
-                              child: Icon(Icons.close, size: 16, color: Colors.red),
+                              child: Icon(
+                                Icons.close, 
+                                size: 16, 
+                                color: Theme.of(context).colorScheme.error
+                              ),
                             ),
                           ],
                         ),
@@ -440,7 +467,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                   '点击下方区域，然后按下您想要添加的快捷键组合',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -457,7 +484,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                        ScaffoldMessenger.of(context).showSnackBar(
                          SnackBar(
                            content: Text('请先按下快捷键组合'),
-                           backgroundColor: Colors.orange,
+                           backgroundColor: Theme.of(context).colorScheme.tertiary,
                            duration: Duration(seconds: 2),
                          ),
                        );
@@ -469,7 +496,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                        ScaffoldMessenger.of(context).showSnackBar(
                          SnackBar(
                            content: Text('快捷键重复: $tempShortcut 已在当前列表中'),
-                           backgroundColor: Colors.orange,
+                           backgroundColor: Theme.of(context).colorScheme.tertiary,
                            duration: Duration(seconds: 2),
                          ),
                        );
@@ -483,7 +510,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                        ScaffoldMessenger.of(context).showSnackBar(
                          SnackBar(
                            content: Text('快捷键冲突: $tempShortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用'),
-                           backgroundColor: Colors.red,
+                           backgroundColor: Theme.of(context).colorScheme.error,
                            duration: Duration(seconds: 3),
                          ),
                        );
@@ -522,7 +549,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('列表中存在重复快捷键: ${duplicates.join(", ")}'),
-                        backgroundColor: Colors.orange,
+                        backgroundColor: Theme.of(context).colorScheme.tertiary,
                         duration: Duration(seconds: 3),
                       ),
                     );
@@ -546,7 +573,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(conflictMessage!),
-                        backgroundColor: Colors.red,
+                        backgroundColor: Theme.of(context).colorScheme.error,
                         duration: Duration(seconds: 3),
                       ),
                     );

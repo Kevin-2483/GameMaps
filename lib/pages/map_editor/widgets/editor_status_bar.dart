@@ -336,14 +336,6 @@ class EditorStatusBar extends StatelessWidget {
   String _getToolParameters() {
     final params = <String>[];
     
-    print('DEBUG: _getToolParameters called');
-    print('DEBUG: selectedDrawingTool = $selectedDrawingTool');
-    print('DEBUG: selectedColor = $selectedColor');
-    print('DEBUG: selectedStrokeWidth = $selectedStrokeWidth');
-    print('DEBUG: selectedCurvature = $selectedCurvature');
-    print('DEBUG: selectedTriangleCut = $selectedTriangleCut');
-    print('DEBUG: selectedDensity = $selectedDensity');
-    
     // 总是显示颜色参数
     if (selectedColor != null) {
       final colorHex = '#${selectedColor!.value.toRadixString(16).substring(2).toUpperCase()}';
@@ -359,7 +351,6 @@ class EditorStatusBar extends StatelessWidget {
     if (selectedDrawingTool != null && _shouldShowDensityControl()) {
       if (selectedDensity != null) {
         params.add('密度:${selectedDensity!.toStringAsFixed(1)}');
-        print('DEBUG: Added density parameter');
       }
     }
     
@@ -367,7 +358,6 @@ class EditorStatusBar extends StatelessWidget {
     if (selectedDrawingTool != null && _shouldShowCurvatureControl()) {
       if (selectedCurvature != null && selectedCurvature! != 0.0) {
         params.add('弧度:${selectedCurvature!.toStringAsFixed(1)}');
-        print('DEBUG: Added curvature parameter');
       }
     }
     
@@ -375,12 +365,10 @@ class EditorStatusBar extends StatelessWidget {
     if (selectedDrawingTool != null && _shouldShowTriangleCutControl()) {
       if (selectedTriangleCut != null && selectedTriangleCut != TriangleCutType.none) {
         params.add('切割:${_getTriangleCutName(selectedTriangleCut!)}');
-        print('DEBUG: Added triangle cut parameter');
       }
     }
     
     final result = params.join(' | ');
-    print('DEBUG: Final parameters string: "$result"');
     return result;
   }
 

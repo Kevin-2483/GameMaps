@@ -200,17 +200,21 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           decoration: BoxDecoration(
             border: Border.all(
-              color: _isCapturing ? Colors.blue : Colors.grey,
+              color: _isCapturing 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.outline,
               width: _isCapturing ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: _isCapturing ? Colors.blue.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+            color: _isCapturing 
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.05) 
+                : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
           ),
           child: _capturedKeys.isEmpty
               ? Text(
                   _isCapturing ? '请按下按键组合...' : '点击开始录制按键',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
                   ),
                 )
@@ -234,7 +238,7 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
             child: Icon(
               Icons.add,
               size: 16,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         );
@@ -248,12 +252,15 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _getKeyColor(key),
+        color: _getKeyColor(key, context),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.5), 
+          width: 1
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
             offset: const Offset(0, 1),
             blurRadius: 2,
           ),
@@ -261,22 +268,24 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
       ),
       child: Text(
         _getKeyDisplayName(key),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
   }
 
-  Color _getKeyColor(String key) {
+  Color _getKeyColor(String key, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     switch (key.toLowerCase()) {
       case 'control':
       case 'shift':
       case 'alt':
       case 'meta':
-        return Colors.orange[100]!;
+        return colorScheme.tertiaryContainer;
       case 'f1':
       case 'f2':
       case 'f3':
@@ -289,21 +298,21 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
       case 'f10':
       case 'f11':
       case 'f12':
-        return Colors.purple[100]!;
+        return colorScheme.secondaryContainer;
       case 'arrowup':
       case 'arrowdown':
       case 'arrowleft':
       case 'arrowright':
-        return Colors.green[100]!;
+        return colorScheme.primaryContainer;
       case 'space':
       case 'enter':
       case 'tab':
       case 'escape':
       case 'backspace':
       case 'delete':
-        return Colors.blue[100]!;
+        return colorScheme.surfaceVariant;
       default:
-        return Colors.grey[100]!;
+        return colorScheme.surface;
     }
   }
 
