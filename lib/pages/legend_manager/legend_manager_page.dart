@@ -12,6 +12,7 @@ import '../../services/legend_vfs/legend_vfs_service.dart';
 // import '../../components/common/config_aware_widgets.dart';
 import '../../components/common/center_point_selector.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../../services/notification/notification_service.dart';
 
 class LegendManagerPage extends BasePage {
   const LegendManagerPage({super.key});
@@ -86,15 +87,11 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    context.showErrorSnackBar(message);
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+    context.showSuccessSnackBar(message);
   }
 
   Future<void> _addLegend() async {
@@ -369,10 +366,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     String currentPath = '';
     for (final segment in pathSegments) {
       currentPath = currentPath.isEmpty ? segment : '$currentPath/$segment';
-      breadcrumbs.add({
-        'name': segment,
-        'path': currentPath,
-      });
+      breadcrumbs.add({'name': segment, 'path': currentPath});
     }
 
     return Container(
@@ -400,8 +394,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                         onTap: isLast
                             ? null
                             : () => breadcrumb['path']!.isEmpty
-                                ? _navigateToRoot()
-                                : _navigateToPath(breadcrumb['path']!),
+                                  ? _navigateToRoot()
+                                  : _navigateToPath(breadcrumb['path']!),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -773,7 +767,9 @@ class _FolderCard extends StatelessWidget {
                 flex: 1,
                 child: Container(
                   height: double.infinity,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   child: Icon(
                     Icons.folder,
                     size: 48,

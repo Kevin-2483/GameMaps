@@ -1,7 +1,8 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../services/notification/notification_service.dart';
 
 /// VFS文件搜索对话框
 class VfsFileSearchDialog extends StatefulWidget {
@@ -130,10 +131,7 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
           _searchResults.clear();
           _isSearching = false;
         });
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('搜索失败: $e')));
+        context.showErrorSnackBar('搜索失败: $e');
       }
     }
   }
@@ -317,7 +315,9 @@ class _VfsFileSearchDialogState extends State<VfsFileSearchDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
+                  top: BorderSide(
+                    color: colorScheme.outline.withValues(alpha: 0.2),
+                  ),
                 ),
               ),
               child: Row(

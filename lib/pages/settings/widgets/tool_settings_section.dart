@@ -5,6 +5,7 @@ import '../../../providers/user_preferences_provider.dart';
 import '../../../components/color_picker_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../services/tts_service.dart';
+import '../../../services/notification/notification_service.dart';
 
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -630,12 +631,7 @@ class ToolSettingsSection extends StatelessWidget {
 
     // 检查是否已达到最大数量限制
     if (currentWidths.length >= 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('最多只能添加5个常用线条宽度'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      context.showInfoSnackBar('最多只能添加5个常用线条宽度');
       return;
     }
 
@@ -676,12 +672,7 @@ class ToolSettingsSection extends StatelessWidget {
                 final newWidths = List<double>.from(currentWidths);
                 if (!newWidths.contains(newWidth)) {
                   if (newWidths.length >= 5) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('最多只能添加5个常用线条宽度'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
+                    context.showInfoSnackBar('最多只能添加5个常用线条宽度');
                     return;
                   }
                   newWidths.add(newWidth);
@@ -689,19 +680,9 @@ class ToolSettingsSection extends StatelessWidget {
                   provider.updateTools(favoriteStrokeWidths: newWidths);
                   Navigator.of(context).pop();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('已添加线条宽度 ${newWidth.round()}px'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  context.showSuccessSnackBar('已添加线条宽度 ${newWidth.round()}px');
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('该线条宽度已存在'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
+                  context.showInfoSnackBar('该线条宽度已存在');
                 }
               },
               child: Text('添加'),
@@ -786,8 +767,6 @@ class ToolSettingsSection extends StatelessWidget {
     }
   }
 
-
-
   void _resetToolSettings(
     BuildContext context,
     UserPreferencesProvider provider,
@@ -813,12 +792,7 @@ class ToolSettingsSection extends StatelessWidget {
                 showAdvancedTools: defaultTools.showAdvancedTools,
               );
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('工具设置已重置'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('工具设置已重置');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
@@ -1025,25 +999,13 @@ class ToolSettingsSection extends StatelessWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'TTS 测试已开始播放 (${_getLanguageDisplayName(currentLanguage ?? 'zh-CN')})',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
+        context.showSuccessSnackBar(
+          'TTS 测试已开始播放 (${_getLanguageDisplayName(currentLanguage ?? 'zh-CN')})',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('TTS 测试失败: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        context.showErrorSnackBar('TTS 测试失败: ${e.toString()}');
       }
     }
   }
@@ -1104,12 +1066,7 @@ class ToolSettingsSection extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).pop();
               provider.updateTools(tts: TtsPreferences.createDefault());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('TTS设置已重置'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('TTS设置已重置');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,

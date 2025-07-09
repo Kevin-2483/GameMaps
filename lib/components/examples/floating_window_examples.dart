@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../common/floating_window.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 浮动窗口使用示例
 class FloatingWindowExamples extends StatelessWidget {
@@ -366,9 +367,7 @@ class FloatingWindowExamples extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help),
             onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('帮助信息')));
+              context.showInfoSnackBar('帮助信息');
             },
             tooltip: '帮助',
           ),

@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
-import '../../components/examples/radial_gesture_menu_example.dart';
+import '../../pages/test/notification_test_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
 
-/// 径向手势菜单演示页面模块
-class RadialGestureDemoPageModule extends PageModule {
+/// 通知测试页模块
+class NotificationTestPageModule extends PageModule {
   // 模块标识符
-  static const String moduleId = 'RadialGestureDemo';
+  static const String moduleId = 'NotificationTestPage';
 
   @override
-  String get name => 'radial_gesture_demo';
+  String get name => 'notification-test';
 
   @override
-  String get path => '/radial-gesture-demo';
+  String get path => '/notification-test';
 
   @override
-  String get displayName => '径向手势菜单演示';
+  String get displayName => '通知测试';
 
   @override
-  IconData get icon => Icons.gesture;
+  IconData get icon => Icons.notifications_active;
 
   @override
   bool get isEnabled {
@@ -33,13 +33,10 @@ class RadialGestureDemoPageModule extends PageModule {
   }
 
   @override
-  int get priority => 999; // 低优先级，放在最后
-
-  @override
-  bool get showInNavigation => true; // 在导航栏中显示
+  int get priority => 800; // 较低优先级，在设置页面之前
 
   @override
   Widget buildPage(BuildContext context) {
-    return const RadialGestureMenuExample();
+    return const NotificationTestPage();
   }
 }

@@ -46,9 +46,11 @@ class ReactiveVersionTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // 更新未保存版本状态
     _updateUnsavedVersionsState();
-    
+
     // 添加调试信息
-    debugPrint('响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId, 未保存版本=$_hasAnyUnsavedVersions');
+    debugPrint(
+      '响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId, 未保存版本=$_hasAnyUnsavedVersions',
+    );
 
     return Container(
       height: 50,

@@ -17,6 +17,8 @@ import 'services/web_database_importer.dart';
 import 'services/virtual_file_system/vfs_database_initializer.dart';
 import 'components/web/web_context_menu_handler.dart';
 import 'services/window_manager_service.dart';
+import 'services/notification/notification_service.dart';
+import 'services/notification/notification_models.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -159,6 +161,31 @@ class R6BoxApp extends StatelessWidget {
                 GlobalCupertinoLocalizations.delegate,
               ],
               supportedLocales: LocaleProvider.supportedLocales,
+
+              // 初始化通知服务
+              builder: (context, child) {
+                // 初始化通知服务
+                NotificationService.instance.initialize(
+                  config: const NotificationConfig(
+                    defaultPosition: NotificationPosition.bottomCenter,
+                    defaultDuration: Duration(seconds: 4),
+                    defaultShowCloseButton: true,
+                    maxQueueSize: 5,
+                    borderRadius: 8.0,
+                    elevation: 4.0,
+                  ),
+                  theme: const NotificationTheme(
+                    successColor: Colors.green,
+                    errorColor: Colors.red,
+                    warningColor: Colors.orange,
+                    infoColor: Colors.blue,
+                    textColor: Colors.white,
+                    closeButtonColor: Colors.white70,
+                  ),
+                );
+
+                return child ?? const SizedBox.shrink();
+              },
             ),
           );
         },

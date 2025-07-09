@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../services/notification/notification_service.dart';
 
 /// VFS文件元数据对话框
 class VfsFileMetadataDialog extends StatefulWidget {
@@ -123,7 +124,9 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
+                  top: BorderSide(
+                    color: colorScheme.outline.withValues(alpha: 0.2),
+                  ),
                 ),
               ),
               child: Row(
@@ -166,7 +169,9 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.3),
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -258,9 +263,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
     Clipboard.setData(ClipboardData(text: buffer.toString()));
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('文件信息已复制到剪贴板')));
+      context.showSuccessSnackBar('文件信息已复制到剪贴板');
     }
   }
 }

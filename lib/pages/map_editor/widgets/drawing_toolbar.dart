@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:provider/provider.dart';
@@ -9,6 +9,8 @@ import '../../../components/color_picker_dialog.dart';
 import '../../../utils/image_utils.dart';
 import '../../../services/clipboard_service.dart';
 import '../utils/drawing_utils.dart'; // 导入绘制工具函数
+import '../../../services/notification/notification_service.dart';
+import '../../../services/notification/notification_models.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -584,9 +586,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                           '点击调色盘按钮添加自定义颜色',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                            color: Theme.of(context).textTheme.bodyMedium?.color
+                                ?.withValues(alpha: 0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -969,12 +970,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           await userPrefs.addCustomColor(selectedColor.value);
           _handleColorSelection(selectedColor);
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('颜色已添加到自定义'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            context.showSuccessSnackBar('颜色已添加到自定义');
           }
         } catch (e) {
           if (mounted) {
@@ -984,12 +980,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             } else {
               errorMessage = '添加颜色失败: $e';
             }
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: Colors.orange,
-              ),
-            );
+            context.showErrorSnackBar(errorMessage);
           }
           // 即使添加失败，也选择该颜色
           _handleColorSelection(selectedColor);
@@ -1158,12 +1149,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               final currentWidths = provider.tools.favoriteStrokeWidths;
               if (!currentWidths.contains(newWidth)) {
                 if (currentWidths.length >= 5) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('最多只能添加5个常用线条宽度'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
+                  context.showErrorSnackBar('最多只能添加5个常用线条宽度');
                   return;
                 }
                 final newWidths = List<double>.from(currentWidths);
@@ -1172,19 +1158,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 provider.updateTools(favoriteStrokeWidths: newWidths);
                 Navigator.of(context).pop();
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('已添加线条宽度 ${newWidth.round()}px'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                context.showSuccessSnackBar('已添加线条宽度 ${newWidth.round()}px');
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('该线条宽度已存在'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
+                context.showErrorSnackBar('该线条宽度已存在');
               }
             },
             child: const Text('添加'),
@@ -1307,7 +1283,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
+                    color: Theme.of(
+                      context,
+                    ).iconTheme.color?.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -1410,13 +1388,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // 调用回调函数更新缓冲区图片适应方式
     widget.onImageBufferFitChanged?.call(fit);
 
-    // 显示更改提示
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('图片适应方式已设置为: ${getBoxFitDisplayName(fit)}'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    context.showSuccessSnackBar('图片适应方式已设置为: ${getBoxFitDisplayName(fit)}');
   }
 
   /// 构建图片缓冲区显示组件（显示已上传的图片）
@@ -1525,7 +1497,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               Icon(
                 Icons.cloud_upload_outlined,
                 size: 32,
-                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).iconTheme.color?.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 8),
               Text(
@@ -1598,34 +1572,22 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
   /// 处理图片上传
   Future<void> _handleImageUpload() async {
+    const String notificationId = 'image-upload-notification';
+
     try {
-      // 显示加载指示器
+      // 显示持久加载通知
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 12),
-                Text('正在选择图片...'),
-              ],
-            ),
-            duration: Duration(seconds: 10),
-          ),
+        NotificationService.instance.show(
+          id: notificationId,
+          message: '正在选择图片...',
+          type: NotificationType.info,
+          isPersistent: true,
+          borderEffect: NotificationBorderEffect.loading,
         );
       }
 
       // 使用ImageUtils选择和上传图片
       final imageData = await ImageUtils.pickAndEncodeImage();
-
-      // 清除加载指示器
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-      }
 
       if (imageData != null) {
         // 验证图片数据
@@ -1636,37 +1598,34 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         // 更新缓冲区
         widget.onImageBufferUpdated?.call(imageData);
 
-        // 显示成功消息
+        // 更新通知为成功状态
         if (mounted) {
           final sizeInKB = (imageData.length / 1024).toStringAsFixed(1);
           final mimeType = ImageUtils.getImageMimeType(imageData);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
+          NotificationService.instance.updateNotification(
+            notificationId: notificationId,
+            message:
                 '图片已上传到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
+            type: NotificationType.success,
+            isPersistent: false,
+            duration: const Duration(seconds: 3),
+            borderEffect: NotificationBorderEffect.none,
           );
         }
       } else {
-        // 用户取消选择
+        // 用户取消选择，更新通知
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('已取消图片选择'),
-              duration: Duration(seconds: 1),
-            ),
+          NotificationService.instance.updateNotification(
+            notificationId: notificationId,
+            message: '已取消图片选择',
+            type: NotificationType.info,
+            isPersistent: false,
+            duration: const Duration(seconds: 2),
+            borderEffect: NotificationBorderEffect.none,
           );
         }
       }
     } catch (e) {
-      // 清除加载指示器
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-      }
-
       if (mounted) {
         String errorMessage = e.toString();
         // 清理错误消息格式
@@ -1674,28 +1633,14 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           errorMessage = errorMessage.substring(11);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '图片上传失败',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(errorMessage),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: '重试',
-              textColor: Colors.white,
-              onPressed: _handleImageUpload,
-            ),
-          ),
+        // 更新通知为错误状态
+        NotificationService.instance.updateNotification(
+          notificationId: notificationId,
+          message: '图片上传失败: $errorMessage',
+          type: NotificationType.error,
+          isPersistent: false,
+          duration: const Duration(seconds: 4),
+          borderEffect: NotificationBorderEffect.none,
         );
       }
     }
@@ -1703,34 +1648,22 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
   /// 处理从剪贴板粘贴图片
   Future<void> _handleClipboardPaste() async {
+    const String notificationId = 'clipboard-paste-notification';
+
     try {
-      // 显示加载指示器
+      // 显示持久加载通知
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 12),
-                Text('正在从剪贴板读取图片...'),
-              ],
-            ),
-            duration: Duration(seconds: 10),
-          ),
+        NotificationService.instance.show(
+          id: notificationId,
+          message: '正在从剪贴板读取图片...',
+          type: NotificationType.info,
+          isPersistent: true,
+          borderEffect: NotificationBorderEffect.loading,
         );
       }
 
       // 从剪贴板读取图片
       final imageData = await ClipboardService.readImageFromClipboard();
-
-      // 清除加载指示器
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-      }
 
       if (imageData != null) {
         // 验证图片数据
@@ -1746,38 +1679,34 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         // 更新缓冲区
         widget.onImageBufferUpdated?.call(imageData);
 
-        // 显示成功消息
+        // 更新通知为成功状态
         if (mounted) {
           final sizeInKB = (imageData.length / 1024).toStringAsFixed(1);
           final mimeType = ImageUtils.getImageMimeType(imageData);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
+          NotificationService.instance.updateNotification(
+            notificationId: notificationId,
+            message:
                 '图片已从剪贴板读取到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
+            type: NotificationType.success,
+            isPersistent: false,
+            duration: const Duration(seconds: 3),
+            borderEffect: NotificationBorderEffect.none,
           );
         }
       } else {
-        // 剪贴板中没有图片
+        // 剪贴板中没有图片，更新通知
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('剪贴板中没有图片数据'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 2),
-            ),
+          NotificationService.instance.updateNotification(
+            notificationId: notificationId,
+            message: '剪贴板中没有图片数据',
+            type: NotificationType.warning,
+            isPersistent: false,
+            duration: const Duration(seconds: 3),
+            borderEffect: NotificationBorderEffect.none,
           );
         }
       }
     } catch (e) {
-      // 清除加载指示器
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-      }
-
       if (mounted) {
         String errorMessage = e.toString();
         // 清理错误消息格式
@@ -1785,28 +1714,14 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           errorMessage = errorMessage.substring(11);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '从剪贴板读取图片失败',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(errorMessage),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: '重试',
-              textColor: Colors.white,
-              onPressed: _handleClipboardPaste,
-            ),
-          ),
+        // 更新通知为错误状态
+        NotificationService.instance.updateNotification(
+          notificationId: notificationId,
+          message: '从剪贴板读取图片失败: $errorMessage',
+          type: NotificationType.error,
+          isPersistent: false,
+          duration: const Duration(seconds: 4),
+          borderEffect: NotificationBorderEffect.none,
         );
       }
     }

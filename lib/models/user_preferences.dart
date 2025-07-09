@@ -362,11 +362,16 @@ class MapEditorPreferences {
       canvasBoundaryMargin: canvasBoundaryMargin ?? this.canvasBoundaryMargin,
       radialMenuButton: radialMenuButton ?? this.radialMenuButton,
       radialMenuRadius: radialMenuRadius ?? this.radialMenuRadius,
-      radialMenuCenterRadius: radialMenuCenterRadius ?? this.radialMenuCenterRadius,
-      radialMenuBackgroundOpacity: radialMenuBackgroundOpacity ?? this.radialMenuBackgroundOpacity,
-      radialMenuObjectOpacity: radialMenuObjectOpacity ?? this.radialMenuObjectOpacity,
-      radialMenuReturnDelay: radialMenuReturnDelay ?? this.radialMenuReturnDelay,
-      radialMenuAnimationDuration: radialMenuAnimationDuration ?? this.radialMenuAnimationDuration,
+      radialMenuCenterRadius:
+          radialMenuCenterRadius ?? this.radialMenuCenterRadius,
+      radialMenuBackgroundOpacity:
+          radialMenuBackgroundOpacity ?? this.radialMenuBackgroundOpacity,
+      radialMenuObjectOpacity:
+          radialMenuObjectOpacity ?? this.radialMenuObjectOpacity,
+      radialMenuReturnDelay:
+          radialMenuReturnDelay ?? this.radialMenuReturnDelay,
+      radialMenuAnimationDuration:
+          radialMenuAnimationDuration ?? this.radialMenuAnimationDuration,
       shortcuts: shortcuts ?? this.shortcuts,
     );
   }

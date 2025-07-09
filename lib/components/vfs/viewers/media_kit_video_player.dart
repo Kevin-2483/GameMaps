@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 基于 media_kit 的跨平台视频播放器
 /// 支持所有平台：Windows、macOS、Linux、Android、iOS、Web
@@ -273,12 +274,7 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
     debugPrint('复制视频链接: ${widget.url}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('视频链接已复制到剪贴板'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    context.showSuccessSnackBar('视频链接已复制到剪贴板');
   }
 
   @override

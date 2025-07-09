@@ -7,20 +7,19 @@ part of 'legend_item.dart';
 // **************************************************************************
 
 LegendItem _$LegendItemFromJson(Map<String, dynamic> json) => LegendItem(
-      id: (json['id'] as num?)?.toInt(),
-      title: json['title'] as String,
-      imageData:
-          const Uint8ListConverter().fromJson(json['imageData'] as String?),
-      fileType:
-          $enumDecodeNullable(_$LegendFileTypeEnumMap, json['fileType']) ??
-              LegendFileType.png,
-      centerX: (json['centerX'] as num).toDouble(),
-      centerY: (json['centerY'] as num).toDouble(),
-      version: (json['version'] as num).toInt(),
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-    );
+  id: (json['id'] as num?)?.toInt(),
+  title: json['title'] as String,
+  imageData: const Uint8ListConverter().fromJson(json['imageData'] as String?),
+  fileType:
+      $enumDecodeNullable(_$LegendFileTypeEnumMap, json['fileType']) ??
+      LegendFileType.png,
+  centerX: (json['centerX'] as num).toDouble(),
+  centerY: (json['centerY'] as num).toDouble(),
+  version: (json['version'] as num).toInt(),
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: DateTime.parse(json['updatedAt'] as String),
+);
 
 Map<String, dynamic> _$LegendItemToJson(LegendItem instance) =>
     <String, dynamic>{

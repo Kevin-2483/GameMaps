@@ -58,19 +58,23 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
       if (param.type == ScriptParameterType.boolean) {
         // 布尔类型使用单独的状态管理
         // 优先级：initialValues > defaultValues > 参数默认值 > false
-        final initialValue = widget.initialValues[param.name] ??
-                           widget.defaultValues?[param.name] ??
-                           (param.defaultValue != null ? param.defaultValue!.toLowerCase() == 'true' : false);
-        _boolValues[param.name] = initialValue is bool 
-            ? initialValue 
+        final initialValue =
+            widget.initialValues[param.name] ??
+            widget.defaultValues?[param.name] ??
+            (param.defaultValue != null
+                ? param.defaultValue!.toLowerCase() == 'true'
+                : false);
+        _boolValues[param.name] = initialValue is bool
+            ? initialValue
             : (initialValue.toString().toLowerCase() == 'true');
       } else {
         // 其他类型使用文本控制器
         // 优先级：initialValues > defaultValues > 参数默认值 > 空字符串
-        final initialValue = widget.initialValues[param.name]?.toString() ?? 
-                           widget.defaultValues?[param.name]?.toString() ??
-                           param.defaultValue ?? 
-                           '';
+        final initialValue =
+            widget.initialValues[param.name]?.toString() ??
+            widget.defaultValues?[param.name]?.toString() ??
+            param.defaultValue ??
+            '';
         _controllers[param.name] = TextEditingController(text: initialValue);
       }
     }
@@ -130,18 +134,18 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // 参数说明
             if (widget.parameters.isNotEmpty) ...[
               Text(
                 '请设置以下参数：',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 12),
             ],
-            
+
             // 参数输入表单
             Flexible(
               child: Form(
@@ -155,7 +159,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
                 ),
               ),
             ),
-            
+
             // 错误提示
             if (_hasErrors) ...[
               const SizedBox(height: 12),
@@ -194,10 +198,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
-        FilledButton(
-          onPressed: _validateAndSubmit,
-          child: const Text('确认'),
-        ),
+        FilledButton(onPressed: _validateAndSubmit, child: const Text('确认')),
       ],
     );
   }
@@ -250,7 +251,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
               ),
             ],
           ),
-          
+
           // 参数描述
           if (param.description != null && param.description!.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -262,9 +263,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
               ),
             ),
           ],
-          
+
           const SizedBox(height: 8),
-          
+
           // 参数输入控件
           _buildInputWidget(param),
         ],
@@ -311,9 +312,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         isDense: true,
       ),
       keyboardType: TextInputType.number,
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?\d*'))],
       validator: (value) {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
           return '${param.name}是必填参数';
@@ -342,7 +341,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
           return '${param.name}是必填参数';
         }
-        if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+        if (value != null &&
+            value.isNotEmpty &&
+            double.tryParse(value) == null) {
           return '请输入有效的数字';
         }
         return null;
@@ -410,14 +411,14 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
 
     // 收集所有参数值
     final result = <String, dynamic>{};
-    
+
     for (final param in widget.parameters.values) {
       if (param.type == ScriptParameterType.boolean) {
         result[param.name] = _boolValues[param.name] ?? false;
       } else {
         final controller = _controllers[param.name]!;
         final value = controller.text.trim();
-        
+
         if (value.isNotEmpty) {
           switch (param.type) {
             case ScriptParameterType.integer:

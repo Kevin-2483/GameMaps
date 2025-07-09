@@ -2,6 +2,7 @@
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_permission_system.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
+import '../../services/notification/notification_service.dart';
 
 /// VFS权限管理对话框
 class VfsPermissionDialog extends StatefulWidget {
@@ -44,12 +45,7 @@ class VfsPermissionDialog extends StatefulWidget {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load permissions: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      context.showErrorSnackBar('获取文件权限失败: $e');
       return null;
     }
   }
@@ -345,14 +341,10 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
 
         Navigator.of(context).pop(_permissions);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('权限已保存'), backgroundColor: Colors.green),
-        );
+        context.showSuccessSnackBar('权限已保存');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存权限失败: $e'), backgroundColor: Colors.red),
-      );
+      context.showErrorSnackBar('保存权限失败: $e');
     } finally {
       setState(() {
         _isLoading = false;

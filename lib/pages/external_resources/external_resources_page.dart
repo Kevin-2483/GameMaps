@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
@@ -9,6 +9,7 @@ import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/work_status_service.dart';
+import '../../services/notification/notification_service.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
@@ -103,112 +104,114 @@ class _ExternalResourcesPageContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.preview,
-                    size: 24,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '文件映射预览',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+            Row(
+              children: [
+                Icon(
+                  Icons.preview,
+                  size: 24,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '文件映射预览',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                OutlinedButton(
+                  onPressed: _cancelPreview,
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
                   ),
-                  const Spacer(),
-                  OutlinedButton(
-                    onPressed: _cancelPreview,
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
+                  child: const Text('取消'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _isUploading ? null : _confirmAndProcess,
+                  style: ElevatedButton.styleFrom(
+                    elevation: _isUploading ? 0 : 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('取消'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _isUploading ? null : _confirmAndProcess,
-                    style: ElevatedButton.styleFrom(
-                      elevation: _isUploading ? 0 : 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: _isUploading
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  child: _isUploading
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                '处理中...',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          )
-                        : const Text(
-                            '确认并处理',
-                            style: TextStyle(fontWeight: FontWeight.w500),
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              '处理中...',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        )
+                      : const Text(
+                          '确认并处理',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '请检查并修改文件的目标路径。您可以直接编辑路径或点击文件夹图标选择目标位置。',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '请检查并修改文件的目标路径。您可以直接编辑路径或点击文件夹图标选择目标位置。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 400, // 设置固定高度以支持滚动
-                child: _buildFileMappingTable(context),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 400, // 设置固定高度以支持滚动
+              child: _buildFileMappingTable(context),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -285,9 +288,8 @@ class _ExternalResourcesPageContentState
                             '源文件',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
                                 ),
                           ),
                         ],
@@ -301,61 +303,62 @@ class _ExternalResourcesPageContentState
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: mapping.controller,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: mapping.controller,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                hintText: 'indexeddb://r6box/...',
+                                hintStyle: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
+                                ),
                               ),
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              hintText: 'indexeddb://r6box/...',
-                              hintStyle: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.4),
-                              ),
-                            ),
-                            style: Theme.of(context).textTheme.bodySmall,
-                            onChanged: (value) {
-                              mapping.targetPath = value;
-                              mapping.isValidPath = _isValidTargetPath(value);
-                              setState(() {}); // 触发UI更新
-                            },
-                            onFieldSubmitted: (value) {
-                              setState(() {
+                              style: Theme.of(context).textTheme.bodySmall,
+                              onChanged: (value) {
                                 mapping.targetPath = value;
                                 mapping.isValidPath = _isValidTargetPath(value);
-                              });
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        if (mapping.targetPath.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: _isValidTargetPath(mapping.targetPath)
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Icon(
-                              _isValidTargetPath(mapping.targetPath)
-                                  ? Icons.check_circle
-                                  : Icons.error,
-                              color: _isValidTargetPath(mapping.targetPath)
-                                  ? Colors.green
-                                  : Colors.red,
-                              size: 18,
+                                setState(() {}); // 触发UI更新
+                              },
+                              onFieldSubmitted: (value) {
+                                setState(() {
+                                  mapping.targetPath = value;
+                                  mapping.isValidPath = _isValidTargetPath(
+                                    value,
+                                  );
+                                });
+                              },
                             ),
                           ),
-                      ],
+                          const SizedBox(width: 12),
+                          if (mapping.targetPath.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: _isValidTargetPath(mapping.targetPath)
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Icon(
+                                _isValidTargetPath(mapping.targetPath)
+                                    ? Icons.check_circle
+                                    : Icons.error,
+                                color: _isValidTargetPath(mapping.targetPath)
+                                    ? Colors.green
+                                    : Colors.red,
+                                size: 18,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -370,9 +373,10 @@ class _ExternalResourcesPageContentState
                           icon: const Icon(Icons.folder_open),
                           tooltip: '选择目标文件夹',
                           style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withValues(alpha: 0.3),
                             foregroundColor: Theme.of(
                               context,
                             ).colorScheme.primary,
@@ -396,8 +400,8 @@ class _ExternalResourcesPageContentState
 
   void _cancelPreview() async {
     // 清理工作状态
-        WorkStatusService().stopWorking(taskId: 'upload_external_resources');
-    
+    WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+
     // 清理临时文件
     if (_tempPath.isNotEmpty) {
       try {
@@ -406,7 +410,7 @@ class _ExternalResourcesPageContentState
         debugPrint('清理临时文件失败：$e');
       }
     }
-    
+
     setState(() {
       _showPreview = false;
       // 清理controllers
@@ -420,7 +424,9 @@ class _ExternalResourcesPageContentState
 
   void _confirmAndProcess() async {
     // 检查是否所有路径都有效
-    final invalidMappings = _fileMappings.where((mapping) => !mapping.isValidPath).toList();
+    final invalidMappings = _fileMappings
+        .where((mapping) => !mapping.isValidPath)
+        .toList();
     if (invalidMappings.isNotEmpty) {
       _showErrorSnackBar('存在无效路径，请修正后再试。无效路径数量：${invalidMappings.length}');
       return;
@@ -430,11 +436,9 @@ class _ExternalResourcesPageContentState
       setState(() {
         _isUploading = true;
       });
-      
+
       // 更新工作状态描述
-       WorkStatusService().updateWorkDescription(
-         '正在验证文件路径...',
-       );
+      WorkStatusService().updateWorkDescription('正在验证文件路径...');
 
       // 再次检查路径合法性（防止用户手动修改后未更新isValidPath）
       for (final mapping in _fileMappings) {
@@ -446,9 +450,7 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-       WorkStatusService().updateWorkDescription(
-         '正在检查文件冲突...',
-       );
+      WorkStatusService().updateWorkDescription('正在检查文件冲突...');
 
       // 检查文件冲突
       final conflicts = await _checkFileConflicts();
@@ -463,9 +465,7 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-       WorkStatusService().updateWorkDescription(
-         '正在复制文件到目标位置...',
-       );
+      WorkStatusService().updateWorkDescription('正在复制文件到目标位置...');
 
       // 处理文件映射
       for (final mapping in _fileMappings) {
@@ -474,14 +474,16 @@ class _ExternalResourcesPageContentState
           0,
           mapping.targetPath.lastIndexOf('/'),
         );
-        
+
         // 从完整路径中提取集合和相对路径部分用于创建目录
         String collection = 'fs';
         String relativePath = '';
-        
+
         if (targetDir.startsWith('indexeddb://r6box/')) {
           // 提取集合名称和路径部分
-          final pathParts = targetDir.substring('indexeddb://r6box/'.length).split('/');
+          final pathParts = targetDir
+              .substring('indexeddb://r6box/'.length)
+              .split('/');
           if (pathParts.isNotEmpty) {
             collection = pathParts[0]; // 第一部分是集合名
             if (pathParts.length >= 2) {
@@ -492,7 +494,7 @@ class _ExternalResourcesPageContentState
         } else {
           relativePath = targetDir;
         }
-        
+
         if (relativePath.isNotEmpty) {
           await _vfsService.createDirectory(collection, relativePath);
         }
@@ -502,16 +504,14 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription(
-        '正在清理临时文件...',
-      );
-      
+      WorkStatusService().updateWorkDescription('正在清理临时文件...');
+
       // 清理临时文件
       await _cleanupTempFiles(_tempPath);
 
       // 清理工作状态
       WorkStatusService().stopWorking(taskId: 'upload_external_resources');
-      
+
       _showSuccessSnackBar('外部资源更新成功');
       _cancelPreview();
     } catch (e) {
@@ -541,7 +541,7 @@ class _ExternalResourcesPageContentState
 
   Future<bool> _showConflictDialog(List<String> conflicts) async {
     bool isProcessing = false;
-    
+
     return await showDialog<bool>(
           context: context,
           builder: (context) => StatefulBuilder(
@@ -559,15 +559,21 @@ class _ExternalResourcesPageContentState
                       child: SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: conflicts.map(
-                            (path) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              child: Text(
-                                '• $path',
-                                style: const TextStyle(fontFamily: 'monospace'),
-                              ),
-                            ),
-                          ).toList(),
+                          children: conflicts
+                              .map(
+                                (path) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: Text(
+                                    '• $path',
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                     ),
@@ -576,23 +582,29 @@ class _ExternalResourcesPageContentState
               ),
               actions: [
                 TextButton(
-                  onPressed: isProcessing ? null : () => Navigator.of(context).pop(false),
+                  onPressed: isProcessing
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   child: const Text('取消'),
                 ),
                 ElevatedButton(
-                  onPressed: isProcessing ? null : () {
-                    setState(() {
-                      isProcessing = true;
-                    });
-                    Navigator.of(context).pop(true);
-                  },
+                  onPressed: isProcessing
+                      ? null
+                      : () {
+                          setState(() {
+                            isProcessing = true;
+                          });
+                          Navigator.of(context).pop(true);
+                        },
                   child: isProcessing
                       ? const SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text('覆盖'),
@@ -619,7 +631,7 @@ class _ExternalResourcesPageContentState
       if (result != null) {
         // VfsFileManagerWindow 返回的已经是完整的 indexeddb:// 路径
         String folderPath = result;
-        
+
         // 拼接文件名形成完整路径
         final fullPath = '$folderPath/${mapping.fileName}';
 
@@ -666,7 +678,9 @@ class _ExternalResourcesPageContentState
                 ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: SizedBox(
@@ -759,27 +773,29 @@ class _ExternalResourcesPageContentState
                 ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
-'{\n'
-'  "name": "测试资源包",\n'
-'  "version": "1.0.0",\n'
-'  "description": "用于测试外部资源上传功能的示例资源包",\n'
-'  "author": "测试用户",\n'
-'  "created_at": "2024-01-15",\n'
-'  "file_mappings": {\n'
-'    "logo.png": "indexeddb://r6box/fs/assets/images/logo.png",\n'
-'    "images/background.jpg": "indexeddb://r6box/fs/assets/images/backgrounds/main_bg.jpg",\n'
-'    "sounds": "indexeddb://r6box/maps/assets/sound",\n'
-'    "docs": "indexeddb://r6box/fs/docs"\n'
-'  },\n'
-'  "tags": ["测试", "示例", "资源包"],\n'
-'  "requirements": {\n'
-'    "min_app_version": "1.0.0"\n'
-'  }\n'
-'}\n',
+                '{\n'
+                '  "name": "测试资源包",\n'
+                '  "version": "1.0.0",\n'
+                '  "description": "用于测试外部资源上传功能的示例资源包",\n'
+                '  "author": "测试用户",\n'
+                '  "created_at": "2024-01-15",\n'
+                '  "file_mappings": {\n'
+                '    "logo.png": "indexeddb://r6box/fs/assets/images/logo.png",\n'
+                '    "images/background.jpg": "indexeddb://r6box/fs/assets/images/backgrounds/main_bg.jpg",\n'
+                '    "sounds": "indexeddb://r6box/maps/assets/sound",\n'
+                '    "docs": "indexeddb://r6box/fs/docs"\n'
+                '  },\n'
+                '  "tags": ["测试", "示例", "资源包"],\n'
+                '  "requirements": {\n'
+                '    "min_app_version": "1.0.0"\n'
+                '  }\n'
+                '}\n',
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 13,
@@ -864,7 +880,7 @@ class _ExternalResourcesPageContentState
 
       final file = result.files.first;
       Uint8List? fileBytes;
-      
+
       if (file.bytes != null) {
         // Web平台：使用bytes
         fileBytes = file.bytes!;
@@ -880,17 +896,17 @@ class _ExternalResourcesPageContentState
           return;
         }
       }
-      
+
       if (fileBytes == null) {
         _showErrorSnackBar('无法读取文件内容，请确保文件存在且有读取权限');
         return;
       }
 
       // 设置工作状态
-        WorkStatusService().startWorking(
-          '正在处理外部资源文件...',
-          taskId: 'upload_external_resources',
-        );
+      WorkStatusService().startWorking(
+        '正在处理外部资源文件...',
+        taskId: 'upload_external_resources',
+      );
 
       setState(() {
         _isUploading = true;
@@ -913,10 +929,8 @@ class _ExternalResourcesPageContentState
     String fileName,
   ) async {
     // 更新工作状态描述
-     WorkStatusService().updateWorkDescription(
-       '正在解压ZIP文件...',
-     );
-    
+    WorkStatusService().updateWorkDescription('正在解压ZIP文件...');
+
     // 解压ZIP文件
     final archive = ZipDecoder().decodeBytes(zipBytes);
 
@@ -930,9 +944,7 @@ class _ExternalResourcesPageContentState
       await _vfsService.createDirectory('fs', tempPath);
 
       // 更新工作状态描述
-       WorkStatusService().updateWorkDescription(
-         '正在提取文件到临时目录...',
-       );
+      WorkStatusService().updateWorkDescription('正在提取文件到临时目录...');
 
       // 2. 解压所有文件到临时文件夹，查找根目录的metadata.json
       Map<String, dynamic>? metadata;
@@ -959,19 +971,15 @@ class _ExternalResourcesPageContentState
       }
 
       // 3. 验证元数据
-      WorkStatusService().updateWorkDescription(
-        '正在验证元数据文件...',
-      );
-      
+      WorkStatusService().updateWorkDescription('正在验证元数据文件...');
+
       if (metadata == null) {
         throw Exception('ZIP文件根目录中未找到metadata.json文件');
       }
 
       // 4. 准备文件映射预览
-      WorkStatusService().updateWorkDescription(
-        '正在准备文件映射预览...',
-      );
-      
+      WorkStatusService().updateWorkDescription('正在准备文件映射预览...');
+
       await _prepareFileMappingPreview(tempPath, metadata);
 
       // 5. 显示预览界面
@@ -1062,7 +1070,10 @@ class _ExternalResourcesPageContentState
       }
 
       // 检查是否为文件夹
-      final sourceFiles = await _vfsService.listFiles('fs', '$tempPath/$sourceFileName');
+      final sourceFiles = await _vfsService.listFiles(
+        'fs',
+        '$tempPath/$sourceFileName',
+      );
       final isDirectory = sourceFiles.isNotEmpty;
 
       if (isDirectory) {
@@ -1186,15 +1197,13 @@ class _ExternalResourcesPageContentState
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+    // 使用新的通知系统替换 SnackBar
+    context.showSuccessSnackBar(message);
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    // 使用新的通知系统替换 SnackBar
+    context.showErrorSnackBar(message);
   }
 
   /// 处理文件夹映射：递归处理文件夹中的所有文件
@@ -1205,21 +1214,28 @@ class _ExternalResourcesPageContentState
   ) async {
     try {
       // 获取文件夹中的所有文件和子文件夹
-      final items = await _vfsService.listFiles('fs', sourceFolderPath.substring('indexeddb://r6box/fs/'.length));
-      
+      final items = await _vfsService.listFiles(
+        'fs',
+        sourceFolderPath.substring('indexeddb://r6box/fs/'.length),
+      );
+
       for (final item in items) {
         if (item.isDirectory) {
           // 递归处理子文件夹
           final subFolderName = item.name;
           final subSourcePath = '${sourceFolderPath}/${subFolderName}';
           final subTargetPath = '${targetFolderPath}/${subFolderName}';
-          await _processDirectoryMapping(subSourcePath, subTargetPath, subFolderName);
+          await _processDirectoryMapping(
+            subSourcePath,
+            subTargetPath,
+            subFolderName,
+          );
         } else {
           // 处理文件
           final fileName = item.name;
           final fileSourcePath = item.path;
           final fileTargetPath = '${targetFolderPath}/${fileName}';
-          
+
           final isValid = _isValidTargetPath(fileTargetPath);
           _fileMappings.add(
             FileMapping(

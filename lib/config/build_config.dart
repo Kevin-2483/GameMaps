@@ -37,11 +37,13 @@ class BuildTimeConfig {
       defaultValue: false,
     ))
       'FullscreenTestPage',
+    if (bool.fromEnvironment('ENABLE_RADIAL_GESTURE_DEMO', defaultValue: true))
+      'RadialGestureDemo',
     if (bool.fromEnvironment(
-      'ENABLE_RADIAL_GESTURE_DEMO',
+      'ENABLE_NOTIFICATION_TEST_PAGE',
       defaultValue: true,
     ))
-      'RadialGestureDemo',
+      'NotificationTestPage',
   ];
 
   /// 从环境变量获取启用的功能列表

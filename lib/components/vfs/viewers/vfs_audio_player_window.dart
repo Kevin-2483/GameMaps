@@ -6,6 +6,7 @@ import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import '../../../services/audio/audio_player_service.dart';
 import 'audio_player_widget.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// VFS音频播放器窗口
 class VfsAudioPlayerWindow extends StatefulWidget {
@@ -312,12 +313,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
     // 这里可以添加复制到剪贴板的功能
     debugPrint('复制音频链接: ${widget.vfsPath}');
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('音频链接已复制到剪贴板'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      context.showSuccessSnackBar('音频链接已复制到剪贴板');
     }
   }
 }

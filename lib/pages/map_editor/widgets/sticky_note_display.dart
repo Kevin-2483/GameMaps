@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
@@ -195,7 +195,9 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
           // 当选中便签且不在预览模式时，添加虚线边框提示可绘制区域
           border: widget.isSelected && !widget.isPreviewMode
               ? Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                   width: 1,
                   style: BorderStyle.solid,
                 )

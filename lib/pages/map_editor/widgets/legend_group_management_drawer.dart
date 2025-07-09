@@ -16,6 +16,8 @@ import '../../../services/reactive_version/reactive_version_manager.dart'; // �
 import '../../../data/new_reactive_script_manager.dart'; // 导入新的响应式脚本管理器
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
+import '../../../services/notification/notification_service.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -1268,9 +1270,7 @@ class _LegendGroupManagementDrawerState
                             legendPathController.text = selectedFile;
                           });
                         } else if (selectedFile != null && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('请选择.legend文件')),
-                          );
+                          context.showErrorSnackBar('请选择.legend文件');
                         }
                       },
                     ),
@@ -1655,9 +1655,7 @@ class _LegendGroupManagementDrawerState
       return selectedFile;
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('文件选择失败: $e')));
+        context.showErrorSnackBar('文件选择失败: $e');
       }
       return null;
     }
@@ -1688,9 +1686,7 @@ class _LegendGroupManagementDrawerState
   /// 显示错误消息
   void _showErrorMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      context.showErrorSnackBar(message);
     }
   }
 
@@ -1717,13 +1713,9 @@ class _LegendGroupManagementDrawerState
 
       if (mounted) {
         if (result.isEmpty) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('已清空图例组标签')));
+          context.showInfoSnackBar('已清空图例组标签');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('图例组标签已更新 (${result.length}个标签)')),
-          );
+          context.showSuccessSnackBar('图例组标签已更新 (${result.length}个标签)');
         }
       }
     }
@@ -1878,13 +1870,9 @@ class _LegendGroupManagementDrawerState
 
       if (mounted) {
         if (result.isEmpty) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('已清空图例项标签')));
+          context.showInfoSnackBar('已清空图例项标签');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('图例项标签已更新 (${result.length}个标签)')),
-          );
+          context.showSuccessSnackBar('图例项标签已更新 (${result.length}个标签)');
         }
       }
     }
@@ -2008,32 +1996,17 @@ class _LegendGroupManagementDrawerState
         _updateLegendItem(item.copyWith(url: newScriptUrl));
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('已更新脚本参数: ${script.name}'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-            ),
-          );
+          context.showSuccessSnackBar('已更新脚本参数: ${script.name}');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('脚本 ${script.name} 无需参数'),
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-            ),
-          );
+          context.showInfoSnackBar('脚本 ${script.name} 无需参数');
         }
       }
     } catch (e) {
       debugPrint('编辑脚本参数失败: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('编辑脚本参数失败: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar('编辑脚本参数失败: $e');
       }
     }
   }
@@ -2085,22 +2058,12 @@ class _LegendGroupManagementDrawerState
       _updateLegendItem(item.copyWith(url: scriptUrl));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('已绑定脚本: ${script.name}'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
+        context.showSuccessSnackBar('已绑定脚本: ${script.name}');
       }
     } catch (e) {
       debugPrint('绑定脚本失败: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('绑定脚本失败: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar('绑定脚本失败: $e');
       }
     }
   }
@@ -2417,14 +2380,8 @@ class _LegendGroupManagementDrawerState
 
     if (usedPathsInThisFolder.isNotEmpty) {
       // 如果有图例在使用，显示信息但继续清理（排除正在使用的）
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '目录 "$folderPath" 中有 ${usedPathsInThisFolder.length} 个图例正在使用，将排除这些图例进行清理',
-          ),
-          backgroundColor: Colors.blue,
-          duration: const Duration(seconds: 3),
-        ),
+      context.showInfoSnackBar(
+        '目录 "$folderPath" 中有 ${usedPathsInThisFolder.length} 个图例正在使用，将排除这些图例进行清理',
       );
     }
 
@@ -2437,14 +2394,8 @@ class _LegendGroupManagementDrawerState
       );
 
       // 通知用户清理完成
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '已清理目录 "$folderPath" 下的图例缓存（步进型，已排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
+      context.showSuccessSnackBar(
+        '已清理目录 "$folderPath" 下的图例缓存（步进型，已排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
       );
 
       debugPrint(
@@ -2453,13 +2404,7 @@ class _LegendGroupManagementDrawerState
       debugPrint('排除的图例路径: $usedPathsInThisFolder');
     } catch (e) {
       // 清理失败显示错误消息
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('清理缓存失败: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      context.showErrorSnackBar('清理缓存失败: $e');
     }
   }
 
@@ -2523,14 +2468,8 @@ class _LegendGroupManagementDrawerState
     widget.onLegendGroupUpdated(updatedGroup);
 
     // 显示成功提示
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '已将图例添加到 ${widget.legendGroup.name} (${updatedGroup.legendItems.length}个图例)',
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
+    context.showSuccessSnackBar(
+      '已将图例添加到 ${widget.legendGroup.name} (${updatedGroup.legendItems.length}个图例)',
     );
 
     debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');

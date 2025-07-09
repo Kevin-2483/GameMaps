@@ -30,7 +30,7 @@ class WorkStatusService extends ChangeNotifier {
     if (taskId != null && !_workingTasks.contains(taskId)) {
       _workingTasks.add(taskId);
     }
-    
+
     if (!_isWorking) {
       _isWorking = true;
       _workDescription = description;

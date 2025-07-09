@@ -3,6 +3,7 @@ import '../../../components/common/floating_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'vfs_markdown_renderer.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// VFS Markdown查看器窗口
 class VfsMarkdownViewerWindow extends StatefulWidget {
@@ -99,13 +100,7 @@ class _VfsMarkdownViewerWindowState extends State<VfsMarkdownViewerWindow> {
       onClose: widget.onClose,
       onError: (error) {
         // 可以在这里添加窗口特定的错误处理
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        context.showErrorSnackBar(error);
       },
     );
   }

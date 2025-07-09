@@ -3,6 +3,7 @@ import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
 import '../navigation/tray_navigation.dart';
 import 'page_configuration.dart';
+import '../../services/notification/notification_service.dart';
 
 /// 应用程序外壳 - 包含托盘导航和页面内容区域
 /// 托盘导航保持静止，只有页面内容区域会有动画切换
@@ -17,6 +18,30 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   bool _showTrayNavigation = true;
+  bool _overlayStateSet = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _trySetOverlayState();
+  }
+
+  void _trySetOverlayState() {
+    if (_overlayStateSet) return;
+
+    try {
+      final overlayState = Overlay.of(context, rootOverlay: false);
+      NotificationService.instance.setOverlayState(overlayState);
+      _overlayStateSet = true;
+    } catch (e) {
+      // 延迟重试
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && !_overlayStateSet) {
+          _trySetOverlayState();
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

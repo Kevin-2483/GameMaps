@@ -236,7 +236,10 @@ class NewReactiveScriptManager extends ChangeNotifier {
   }
 
   /// 执行脚本（使用新的响应式引擎）
-  Future<void> executeScript(String scriptId, {Map<String, dynamic>? runtimeParameters}) async {
+  Future<void> executeScript(
+    String scriptId, {
+    Map<String, dynamic>? runtimeParameters,
+  }) async {
     final script = _scripts.firstWhere(
       (s) => s.id == scriptId,
       orElse: () => throw Exception('Script not found: $scriptId'),
@@ -251,10 +254,13 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
     try {
       // 处理脚本参数替换
-      final processedScript = await _processScriptParameters(script, runtimeParameters);
+      final processedScript = await _processScriptParameters(
+        script,
+        runtimeParameters,
+      );
 
       debugPrint('执行脚本: ${script.name}, 内容: ${processedScript.content}');
-      
+
       final result = await _reactiveEngine.executeScript(processedScript);
       _lastResults[scriptId] = result;
 
@@ -437,20 +443,20 @@ class NewReactiveScriptManager extends ChangeNotifier {
   Map<String, ScriptParameter> parseScriptParameters(String scriptContent) {
     final parameters = <String, ScriptParameter>{};
     final lines = scriptContent.split('\n');
-    
+
     for (final line in lines) {
       final trimmed = line.trim();
       if (trimmed.startsWith('// @param ')) {
         try {
           final paramDef = trimmed.substring(10); // 移除 '// @param '
           final parts = paramDef.split(':');
-          
+
           if (parts.length >= 2) {
             final name = parts[0].trim();
             final type = parts[1].trim();
             final defaultValue = parts.length > 2 ? parts[2].trim() : '';
             final description = parts.length > 3 ? parts[3].trim() : '';
-            
+
             parameters[name] = ScriptParameter(
               name: name,
               type: _parseParameterType(type),
@@ -464,7 +470,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
         }
       }
     }
-    
+
     return parameters;
   }
 
@@ -492,62 +498,76 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
   /// 处理脚本参数替换
   Future<ScriptData> _processScriptParameters(
-    ScriptData script, 
-    Map<String, dynamic>? runtimeParameters
+    ScriptData script,
+    Map<String, dynamic>? runtimeParameters,
   ) async {
     // 解析脚本中的参数定义
     final scriptParams = parseScriptParameters(script.content);
-    
+
     if (scriptParams.isEmpty) {
       // 没有参数，直接返回原脚本
       return script;
     }
-    
+
     // 合并运行时参数和默认参数
     final finalParameters = <String, dynamic>{};
-    
+
     // 首先使用默认值
     for (final param in scriptParams.values) {
       if (param.defaultValue != null) {
-        finalParameters[param.name] = _convertParameterValue(param.defaultValue!, param.type);
+        finalParameters[param.name] = _convertParameterValue(
+          param.defaultValue!,
+          param.type,
+        );
       }
     }
-    
+
     // 然后使用存储的参数
     finalParameters.addAll(script.parameters);
-    
+
     // 最后使用运行时参数（优先级最高）
     if (runtimeParameters != null) {
       finalParameters.addAll(runtimeParameters);
     }
-    
+
     // 替换脚本内容中的参数占位符
     String processedContent = script.content;
-    
+
     for (final entry in finalParameters.entries) {
       final paramName = entry.key;
       final paramValue = entry.value;
-      
+
       // 获取参数类型信息
       final paramType = scriptParams[paramName]?.type;
-      
+
       // 替换 {{paramName}} 格式的占位符
       final placeholder = '{{$paramName}}';
-      
+
       // 检查占位符是否已经在引号内
       final doubleQuotedPlaceholder = '"$placeholder"';
       final singleQuotedPlaceholder = "'$placeholder'";
-      final isInDoubleQuotes = processedContent.contains(doubleQuotedPlaceholder);
-      final isInSingleQuotes = processedContent.contains(singleQuotedPlaceholder);
-      
+      final isInDoubleQuotes = processedContent.contains(
+        doubleQuotedPlaceholder,
+      );
+      final isInSingleQuotes = processedContent.contains(
+        singleQuotedPlaceholder,
+      );
+
       String valueStr;
-      if ((isInDoubleQuotes || isInSingleQuotes) && paramType == ScriptParameterType.string) {
+      if ((isInDoubleQuotes || isInSingleQuotes) &&
+          paramType == ScriptParameterType.string) {
         // 如果占位符已经在引号内且是字符串类型，直接使用原值
         valueStr = paramValue.toString();
         if (isInDoubleQuotes) {
-          processedContent = processedContent.replaceAll(doubleQuotedPlaceholder, '"$valueStr"');
+          processedContent = processedContent.replaceAll(
+            doubleQuotedPlaceholder,
+            '"$valueStr"',
+          );
         } else {
-          processedContent = processedContent.replaceAll(singleQuotedPlaceholder, "'$valueStr'");
+          processedContent = processedContent.replaceAll(
+            singleQuotedPlaceholder,
+            "'$valueStr'",
+          );
         }
       } else {
         // 否则使用原来的格式化逻辑
@@ -555,7 +575,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
         processedContent = processedContent.replaceAll(placeholder, valueStr);
       }
     }
-    
+
     // 返回处理后的脚本
     return script.copyWith(content: processedContent);
   }
@@ -586,7 +606,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
         return value.toString();
       }
     }
-    
+
     // 根据参数类型格式化值
     switch (paramType) {
       case ScriptParameterType.string:
@@ -606,7 +626,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
       (s) => s.id == scriptId,
       orElse: () => throw Exception('Script not found: $scriptId'),
     );
-    
+
     return parseScriptParameters(script.content);
   }
 
@@ -650,12 +670,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
 }
 
 /// 脚本参数类型
-enum ScriptParameterType {
-  string,
-  integer,
-  number,
-  boolean,
-}
+enum ScriptParameterType { string, integer, number, boolean }
 
 /// 脚本参数定义
 class ScriptParameter {
@@ -681,14 +696,15 @@ class ScriptParameter {
     'isRequired': isRequired,
   };
 
-  factory ScriptParameter.fromJson(Map<String, dynamic> json) => ScriptParameter(
-    name: json['name'] as String,
-    type: ScriptParameterType.values.firstWhere(
-      (e) => e.name == json['type'],
-      orElse: () => ScriptParameterType.string,
-    ),
-    defaultValue: json['defaultValue'] as String?,
-    description: json['description'] as String?,
-    isRequired: json['isRequired'] as bool? ?? false,
-  );
+  factory ScriptParameter.fromJson(Map<String, dynamic> json) =>
+      ScriptParameter(
+        name: json['name'] as String,
+        type: ScriptParameterType.values.firstWhere(
+          (e) => e.name == json['type'],
+          orElse: () => ScriptParameterType.string,
+        ),
+        defaultValue: json['defaultValue'] as String?,
+        description: json['description'] as String?,
+        isRequired: json['isRequired'] as bool? ?? false,
+      );
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../models/sticky_note.dart';
 import '../../../utils/image_utils.dart';
 import '../../../components/color_picker_dialog.dart';
@@ -145,7 +145,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         border: isSelected
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
             : Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
                 width: 1,
               ),
       ),

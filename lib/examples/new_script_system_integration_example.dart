@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../data/new_reactive_script_manager.dart';
 import '../data/map_data_bloc.dart';
@@ -6,6 +6,7 @@ import '../models/script_data.dart';
 import '../pages/map_editor/widgets/reactive_script_panel.dart';
 import '../pages/map_editor/widgets/script_status_monitor.dart';
 import '../pages/map_editor/widgets/script_editor_window_reactive.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 新脚本系统集成示例
 /// 展示如何在地图编辑器中使用新的异步脚本管理器
@@ -281,7 +282,9 @@ class _NewScriptSystemIntegrationExampleState
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
         border: Border(
           top: BorderSide(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -315,9 +318,8 @@ class _NewScriptSystemIntegrationExampleState
   void _createNewScript() {
     // 这里可以打开新脚本创建对话框
     // 或者直接创建一个示例脚本
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('创建新脚本功能待实现')));
+
+    context.showInfoSnackBar('创建新脚本功能待实现');
   }
 
   /// 显示系统信息
@@ -391,8 +393,6 @@ class _NewScriptSystemIntegrationExampleState
 
   /// 运行系统测试
   void _runSystemTest() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('系统测试功能待实现')));
+    context.showInfoSnackBar('系统测试功能待实现');
   }
 }

@@ -250,11 +250,14 @@ class ExternalFunctionRegistry {
     void Function(String, List<dynamic>) callFireAndForgetFunction,
   ) {
     // 文本元素修改函数 - 不需要等待结果
-    functions['createTextElement'] = (String text, double x, double y, [String? optionsJson]) {
-      // 直接传递JSON字符串，让处理函数负责解析
-      final args = optionsJson != null && optionsJson.isNotEmpty ? [text, x, y, optionsJson] : [text, x, y];
-      callFireAndForgetFunction('createTextElement', args);
-    };
+    functions['createTextElement'] =
+        (String text, double x, double y, [String? optionsJson]) {
+          // 直接传递JSON字符串，让处理函数负责解析
+          final args = optionsJson != null && optionsJson.isNotEmpty
+              ? [text, x, y, optionsJson]
+              : [text, x, y];
+          callFireAndForgetFunction('createTextElement', args);
+        };
     functions['updateTextContent'] = (String elementId, String newText) {
       callFireAndForgetFunction('updateTextContent', [elementId, newText]);
     };
@@ -408,7 +411,9 @@ class ExternalFunctionRegistry {
     // 支持可选参数：language, speechRate, volume, pitch, voice
     functions['say'] = (String text, [String? optionsJson]) {
       // 直接传递JSON字符串，让处理函数负责解析
-      final args = optionsJson != null && optionsJson.isNotEmpty ? [text, optionsJson] : [text];
+      final args = optionsJson != null && optionsJson.isNotEmpty
+          ? [text, optionsJson]
+          : [text];
       callFireAndForgetFunction('say', args);
       return null; // 立即返回，不等待结果
     };
@@ -444,7 +449,10 @@ class ExternalFunctionRegistry {
         (String groupId, List<String> tags, [String? mode]) async {
           // 只有当mode不为null时才传递，避免参数不匹配
           final args = mode != null ? [groupId, tags, mode] : [groupId, tags];
-          return await callAwaitableFunction('filterLegendItemsInGroupByTags', args);
+          return await callAwaitableFunction(
+            'filterLegendItemsInGroupByTags',
+            args,
+          );
         };
   }
 

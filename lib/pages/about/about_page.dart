@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../../services/notification/notification_service.dart';
 
 class AboutPage extends BasePage {
   const AboutPage({super.key});
@@ -409,9 +410,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _licenseText!));
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('许可证文本已复制到剪贴板')));
+                context.showSuccessSnackBar('许可证文本已复制到剪贴板');
               },
               child: const Text('复制'),
             ),

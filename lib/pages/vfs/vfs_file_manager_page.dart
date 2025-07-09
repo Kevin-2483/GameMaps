@@ -20,6 +20,7 @@ import '../../services/virtual_file_system/vfs_database_initializer.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -1222,7 +1223,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5),
@@ -1372,7 +1375,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                       ? Theme.of(context).colorScheme.primary
                       : isRoot
                       ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.8),
                   fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -1901,7 +1906,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                 Icon(
                   file.isDirectory ? Icons.folder : _getFileIcon(file),
                   size: 32,
-                  color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                  color: file.isDirectory
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1976,7 +1983,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           Icon(
             file.isDirectory ? Icons.folder : _getFileIcon(file),
             size: 20,
-            color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+            color: file.isDirectory
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -2191,24 +2200,12 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
   /// 显示成功消息
   void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    context.showSuccessSnackBar(message);
   }
 
   /// 显示错误消息
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    context.showErrorSnackBar(message);
   }
 
   /// 构建权限指示器
@@ -2243,7 +2240,9 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
@@ -3117,9 +3116,11 @@ class _FileListItemState extends State<_FileListItem> {
                 Icon(
                   widget.file.isDirectory
                       ? Icons.folder
-                        : widget.getFileIcon(widget.file),
-                    size: 40,
-                    color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                      : widget.getFileIcon(widget.file),
+                  size: 40,
+                  color: widget.file.isDirectory
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 // 文件信息
@@ -3266,9 +3267,11 @@ class _FileGridItemState extends State<_FileGridItem> {
                       Icon(
                         widget.file.isDirectory
                             ? Icons.folder
-                        : widget.getFileIcon(widget.file),
+                            : widget.getFileIcon(widget.file),
                         size: 48,
-                        color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                        color: widget.file.isDirectory
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                       ),
                       const SizedBox(height: 8),
                       Text(

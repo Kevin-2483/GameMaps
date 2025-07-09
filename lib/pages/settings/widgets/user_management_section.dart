@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../services/notification/notification_service.dart';
 
 class UserManagementSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -253,12 +254,7 @@ class UserManagementSection extends StatelessWidget {
             onPressed: () async {
               // 实现删除配置文件的逻辑
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('配置文件已删除'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('配置文件已删除');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -353,12 +349,7 @@ class UserManagementSection extends StatelessWidget {
 
         // 检查文件大小（限制为5MB）
         if (imageData.length > 5 * 1024 * 1024) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('图片文件过大，请选择小于5MB的图片'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          context.showErrorSnackBar('图片文件过大，请选择小于5MB的图片');
           return;
         }
 
@@ -367,17 +358,10 @@ class UserManagementSection extends StatelessWidget {
           avatarPath: null, // 清除URL路径
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('头像已上传'), backgroundColor: Colors.green),
-        );
+        context.showSuccessSnackBar('头像已上传');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('上传失败: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      context.showErrorSnackBar('上传失败: ${e.toString()}');
     }
   }
 
@@ -410,16 +394,9 @@ class UserManagementSection extends StatelessWidget {
     if (confirmed == true) {
       try {
         await provider.updateUserInfo(avatarPath: null, avatarData: null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('头像已移除'), backgroundColor: Colors.green),
-        );
+        context.showSuccessSnackBar('头像已移除');
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('移除失败: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorSnackBar('移除失败: ${e.toString()}');
       }
     }
   }
@@ -446,19 +423,9 @@ class UserManagementSection extends StatelessWidget {
                   try {
                     await provider.updateUserInfo(locale: value);
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('语言已更新为 ${language['name']}'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    context.showSuccessSnackBar('语言已更新为 ${language['name']}');
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('更新失败: ${e.toString()}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    context.showErrorSnackBar('更新失败: ${e.toString()}');
                   }
                 } else {
                   Navigator.of(context).pop();
@@ -552,9 +519,7 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
                   : _avatarController.text.trim(),
             );
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('用户信息已更新'), backgroundColor: Colors.green),
-            );
+            context.showSuccessSnackBar('用户信息已更新');
           },
           child: Text('保存'),
         ),
@@ -605,12 +570,7 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
             if (name.isNotEmpty) {
               // 实现创建新配置文件的逻辑
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('配置文件"$name"已创建'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('配置文件"$name"已创建');
             }
           },
           child: Text('创建'),
@@ -740,19 +700,9 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
                         displayName: newName,
                       );
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('显示名称已更新为 "$newName"'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                      context.showSuccessSnackBar('显示名称已更新为 "$newName"');
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('更新失败: ${e.toString()}'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      context.showErrorSnackBar('更新失败: ${e.toString()}');
                     }
                   } else {
                     Navigator.of(context).pop();
@@ -850,19 +800,11 @@ class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
                       avatarData: null, // 清除二进制数据
                     );
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(url.isEmpty ? '头像URL已清除' : '头像已更新'),
-                        backgroundColor: Colors.green,
-                      ),
+                    context.showSuccessSnackBar(
+                      url.isEmpty ? '头像URL已清除' : '头像已更新',
                     );
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('更新失败: ${e.toString()}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    context.showErrorSnackBar('更新失败: ${e.toString()}');
                   }
                 }
               : null,

@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../services/notification/notification_service.dart';
 
 /// 颜色选择操作类型
 enum ColorPickerAction { directUse, addToCustom, cancel }
@@ -208,12 +209,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 _updateColor(HSVColor.fromColor(color));
                 Navigator.of(context).pop();
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('无效的颜色格式，请检查输入'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                context.showErrorSnackBar('无效的颜色格式，请检查输入');
               }
             },
             child: const Text('确定'),

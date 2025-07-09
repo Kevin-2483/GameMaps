@@ -75,13 +75,13 @@ class TimerData {
       mode: TimerMode.values.firstWhere((e) => e.name == json['mode']),
       state: TimerState.values.firstWhere((e) => e.name == json['state']),
       currentTime: Duration(milliseconds: json['currentTime'] as int),
-      targetTime: json['targetTime'] != null 
+      targetTime: json['targetTime'] != null
           ? Duration(milliseconds: json['targetTime'] as int)
           : null,
-      startTime: json['startTime'] != null 
+      startTime: json['startTime'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['startTime'] as int)
           : null,
-      pauseTime: json['pauseTime'] != null 
+      pauseTime: json['pauseTime'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['pauseTime'] as int)
           : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int),
@@ -169,9 +169,9 @@ enum TimerMode {
 
 /// 计时器状态
 enum TimerState {
-  stopped,  // 停止
-  running,  // 运行中
-  paused,   // 暂停
+  stopped, // 停止
+  running, // 运行中
+  paused, // 暂停
   completed, // 完成
 }
 

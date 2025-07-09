@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../web/web_context_menu_handler.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// Web兼容的右键菜单组件示例
 /// 用于演示如何在Web平台上实现与客户端一致的右键菜单体验
@@ -214,8 +215,6 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
   }
 
   void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
+    context.showInfoSnackBar(message);
   }
 }

@@ -27,7 +27,9 @@ class VfsStorageService {
 
   /// 初始化数据库
   Future<Database> _initDatabase() async {
-    final String path = await DatabasePathService().getDatabasePath(_databaseName);
+    final String path = await DatabasePathService().getDatabasePath(
+      _databaseName,
+    );
     return await openDatabase(
       path,
       version: _databaseVersion,

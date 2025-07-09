@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'dart:math' as math;
@@ -346,7 +346,10 @@ class ElementRenderer {
     final textPainter = TextPainter(
       text: TextSpan(
         text: '加载中...',
-        style: TextStyle(color: Colors.blue.withValues(alpha: 0.7), fontSize: 12.0),
+        style: TextStyle(
+          color: Colors.blue.withValues(alpha: 0.7),
+          fontSize: 12.0,
+        ),
       ),
       textDirection: TextDirection.ltr,
     );

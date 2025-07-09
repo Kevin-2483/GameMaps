@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -16,6 +16,7 @@ import '../../../components/common/floating_window.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// VFS文本查看器窗口
 class VfsTextViewerWindow extends StatefulWidget {
@@ -413,7 +414,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
@@ -474,21 +477,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         '  ',
       ).convert(jsonObject);
       _codeController.text = formattedJson;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('JSON格式化完成'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      context.showSuccessSnackBar('JSON格式化完成');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('JSON格式化失败: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      context.showErrorSnackBar('JSON格式化失败: $e');
     }
   }
 
@@ -496,9 +487,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   void _copyContent() {
     Clipboard.setData(ClipboardData(text: _codeController.text));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 2)),
-    );
+    context.showSuccessSnackBar('已复制到剪贴板');
   }
 
   /// 保存文件
@@ -530,22 +519,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           );
         }
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('文件保存成功'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      context.showSuccessSnackBar('文件保存成功');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('保存文件失败: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      context.showErrorSnackBar('保存文件失败: $e');
     }
   }
 

@@ -92,21 +92,23 @@ class ClipboardService {
     int height,
   ) async {
     try {
-        // 保存临时文件到剪贴板专用子目录
-        final tempDir = await VfsPlatformIO.getTempDirectory();
-        final clipboardDir = Directory(path.join(tempDir.path, 'clipboard_files'));
-        
-        // 确保剪贴板目录存在
-        if (!await clipboardDir.exists()) {
-          await clipboardDir.create(recursive: true);
-        }
-        
-        final tempFile = File(
-          path.join(
-            clipboardDir.path,
-            'canvas_selection_${DateTime.now().millisecondsSinceEpoch}.png',
-          ),
-        );
+      // 保存临时文件到剪贴板专用子目录
+      final tempDir = await VfsPlatformIO.getTempDirectory();
+      final clipboardDir = Directory(
+        path.join(tempDir.path, 'clipboard_files'),
+      );
+
+      // 确保剪贴板目录存在
+      if (!await clipboardDir.exists()) {
+        await clipboardDir.create(recursive: true);
+      }
+
+      final tempFile = File(
+        path.join(
+          clipboardDir.path,
+          'canvas_selection_${DateTime.now().millisecondsSinceEpoch}.png',
+        ),
+      );
       await tempFile.writeAsBytes(pngBytes);
 
       // 尝试使用 super_clipboard 复制图像
@@ -349,17 +351,19 @@ class ClipboardService {
       }
 
       final tempDir = await VfsPlatformIO.getTempDirectory();
-        final clipboardDir = Directory(path.join(tempDir.path, 'clipboard_files'));
-        
-        // 确保剪贴板目录存在
-        if (!await clipboardDir.exists()) {
-          await clipboardDir.create(recursive: true);
-        }
-        
-        final tempFilePath = path.join(
-          clipboardDir.path,
-          'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.png',
-        );
+      final clipboardDir = Directory(
+        path.join(tempDir.path, 'clipboard_files'),
+      );
+
+      // 确保剪贴板目录存在
+      if (!await clipboardDir.exists()) {
+        await clipboardDir.create(recursive: true);
+      }
+
+      final tempFilePath = path.join(
+        clipboardDir.path,
+        'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
 
       if (Platform.isWindows) {
         // Windows 平台：使用 PowerShell 读取剪贴板图片

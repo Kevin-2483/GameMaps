@@ -29,6 +29,7 @@ import '../tools/drawing_tool_manager.dart';
 import '../tools/element_interaction_manager.dart';
 import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
 import '../../../components/color_filter_dialog.dart'; // 导入色彩滤镜组件
+import '../../../services/notification/notification_service.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -1632,9 +1633,7 @@ class MapCanvasState extends State<MapCanvas> {
   /// 处理触摸板两指拖动结束事件
   void _onTrackpadPanZoomEnd(PointerPanZoomEndEvent event) {
     // 将触摸板事件转换为拖动结束事件
-    final details = DragEndDetails(
-      primaryVelocity: 0.0,
-    );
+    final details = DragEndDetails(primaryVelocity: 0.0);
     // 触摸板两指拖动被视为右键拖动
     _onElementInteractionSecondaryPanEnd(details);
   }
@@ -1754,13 +1753,14 @@ class MapCanvasState extends State<MapCanvas> {
         // 解析脚本URL，支持带参数的格式：script://scriptId?param1=value1&param2=value2
         final scriptUrl = item.url!.substring('script://'.length);
         final questionMarkIndex = scriptUrl.indexOf('?');
-        final scriptId = questionMarkIndex != -1 
+        final scriptId = questionMarkIndex != -1
             ? scriptUrl.substring(0, questionMarkIndex)
             : scriptUrl;
-        
+
         // 解析参数
         Map<String, dynamic> runtimeParameters = {};
-        if (questionMarkIndex != -1 && questionMarkIndex < scriptUrl.length - 1) {
+        if (questionMarkIndex != -1 &&
+            questionMarkIndex < scriptUrl.length - 1) {
           final paramString = scriptUrl.substring(questionMarkIndex + 1);
           final paramPairs = paramString.split('&');
           for (final pair in paramPairs) {
@@ -1772,7 +1772,7 @@ class MapCanvasState extends State<MapCanvas> {
             }
           }
         }
-        
+
         // 查找脚本并执行
         if (widget.scriptManager != null) {
           final scripts = widget.scriptManager!.scripts;
@@ -1780,34 +1780,21 @@ class MapCanvasState extends State<MapCanvas> {
               ? scripts.firstWhere((s) => s.id == scriptId)
               : null;
           if (script != null) {
-            widget.scriptManager!.executeScript(script.id, runtimeParameters: runtimeParameters).catchError((error) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('脚本执行失败: $error'),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                );
-              }
-            });
+            widget.scriptManager!
+                .executeScript(script.id, runtimeParameters: runtimeParameters)
+                .catchError((error) {
+                  if (context.mounted) {
+                    context.showErrorSnackBar('脚本执行失败: $error');
+                  }
+                });
           } else {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('未找到绑定的脚本: $scriptId'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              context.showErrorSnackBar('未找到绑定的脚本: $scriptId');
             }
           }
         } else {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('脚本管理器未初始化，无法执行脚本'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            context.showErrorSnackBar('脚本管理器未初始化，无法执行脚本');
           }
         }
         return;
@@ -1958,13 +1945,7 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showInfoSnackBar(message);
     }
   }
 
@@ -1993,13 +1974,7 @@ class MapCanvasState extends State<MapCanvas> {
   /// 显示URL错误消息
   void _showUrlErrorMessage(String message) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showErrorSnackBar(message);
     }
   }
 
@@ -2395,20 +2370,20 @@ class MapCanvasState extends State<MapCanvas> {
     });
     // debugPrint('--- 排序后的渲染顺序 (从底层到顶层) ---');
     // for (int i = 0; i < allElements.length; i++) {
-      // final element = allElements[i];
-      // final typeDescription =
-      //     element.widget.runtimeType.toString().contains('LayerImageWidget')
-      //     ? '图层图片'
-      //     : element.widget.runtimeType.toString().contains('LayerWidget')
-      //     ? '图层绘制'
-      //     : element.widget.runtimeType.toString().contains('LegendWidget')
-      //     ? '图例组'
-      //     : element.widget.runtimeType.toString().contains('StickyNoteWidget')
-      //     ? '便签'
-      //     : '未知类型';
-      // debugPrint(
-      //   '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
-      // );
+    // final element = allElements[i];
+    // final typeDescription =
+    //     element.widget.runtimeType.toString().contains('LayerImageWidget')
+    //     ? '图层图片'
+    //     : element.widget.runtimeType.toString().contains('LayerWidget')
+    //     ? '图层绘制'
+    //     : element.widget.runtimeType.toString().contains('LegendWidget')
+    //     ? '图例组'
+    //     : element.widget.runtimeType.toString().contains('StickyNoteWidget')
+    //     ? '便签'
+    //     : '未知类型';
+    // debugPrint(
+    //   '渲染[$i] $typeDescription - renderOrder=${element.order}, selected=${element.isSelected}',
+    // );
     // }
 
     // debugPrint('=== 图层元素构建完成 ===');

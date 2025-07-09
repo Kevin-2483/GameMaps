@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 
 /// VFS文件重命名对话框
@@ -167,7 +167,9 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceVariant.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

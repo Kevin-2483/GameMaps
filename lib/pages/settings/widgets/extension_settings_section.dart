@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../services/notification/notification_service.dart';
 
 class ExtensionSettingsSection extends StatefulWidget {
   final UserPreferences preferences;
@@ -71,12 +72,7 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
       _updateJsonController();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('扩展设置已清空'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        context.showSuccessSnackBar('扩展设置已清空');
       }
     }
   }
@@ -91,21 +87,11 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('扩展设置已保存'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        context.showSuccessSnackBar('扩展设置已保存');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorSnackBar('保存失败: ${e.toString()}');
       }
     }
   }
@@ -119,9 +105,7 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
 
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _jsonController.text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 1)),
-    );
+    context.showInfoSnackBar('已复制到剪贴板');
   }
 
   Future<bool> _showConfirmDialog({

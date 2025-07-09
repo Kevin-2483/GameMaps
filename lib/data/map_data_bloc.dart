@@ -241,10 +241,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     // 重新分配order值以确保顺序正确
     final updatedLayers = <MapLayer>[];
     for (int i = 0; i < event.layers.length; i++) {
-      updatedLayers.add(event.layers[i].copyWith(
-        order: i,
-        updatedAt: DateTime.now(),
-      ));
+      updatedLayers.add(
+        event.layers[i].copyWith(order: i, updatedAt: DateTime.now()),
+      );
     }
 
     // 同步更新mapItem中的图层数据
@@ -369,7 +368,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
     // 首先更新需要修改链接状态的图层
     for (final layerToUpdate in event.layersToUpdate) {
-      final index = newLayers.indexWhere((layer) => layer.id == layerToUpdate.id);
+      final index = newLayers.indexWhere(
+        (layer) => layer.id == layerToUpdate.id,
+      );
       if (index != -1) {
         newLayers[index] = layerToUpdate;
       }
@@ -891,7 +892,6 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   /// 获取当前版本
   String? get currentVersion => _currentVersion;
 
-
   // 便签事件处理方法
 
   /// 添加便签
@@ -1268,10 +1268,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   }
 
   /// 停止计时器
-  Future<void> _onStopTimer(
-    StopTimer event,
-    Emitter<MapDataState> emit,
-  ) async {
+  Future<void> _onStopTimer(StopTimer event, Emitter<MapDataState> emit) async {
     final currentState = state;
     if (currentState is! MapDataLoaded) return;
 
@@ -1291,7 +1288,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       TimerManager.instance.stopTimer(event.timerId);
 
       // 重置计时器状态
-      final resetTime = timer.mode == TimerMode.countdown 
+      final resetTime = timer.mode == TimerMode.countdown
           ? (timer.targetTime ?? Duration.zero)
           : Duration.zero;
 
@@ -1340,7 +1337,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       TimerManager.instance.stopTimer(event.timerId);
 
       // 重置计时器
-      final resetTime = timer.mode == TimerMode.countdown 
+      final resetTime = timer.mode == TimerMode.countdown
           ? (timer.targetTime ?? Duration.zero)
           : Duration.zero;
 
@@ -1371,10 +1368,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   }
 
   /// 计时器时间更新
-  Future<void> _onTimerTick(
-    TimerTick event,
-    Emitter<MapDataState> emit,
-  ) async {
+  Future<void> _onTimerTick(TimerTick event, Emitter<MapDataState> emit) async {
     final currentState = state;
     if (currentState is! MapDataLoaded) return;
 
@@ -1383,9 +1377,10 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       if (timer == null || !timer.isRunning) return;
 
       // 检查是否完成
-      final isCompleted = timer.mode == TimerMode.countdown 
+      final isCompleted = timer.mode == TimerMode.countdown
           ? event.currentTime.inMilliseconds <= 0
-          : (timer.targetTime != null && event.currentTime >= timer.targetTime!);
+          : (timer.targetTime != null &&
+                event.currentTime >= timer.targetTime!);
 
       final newState = isCompleted ? TimerState.completed : TimerState.running;
 

@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_preferences_provider.dart';
+import '../../services/notification/notification_service.dart';
 
 /// 标签管理组件
 /// 可以被其他组件调用来为元素分配和管理tags
@@ -228,13 +229,7 @@ class _TagsManagerState extends State<TagsManager> {
 
   /// 显示错误信息
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    context.showErrorSnackBar(message);
   }
 
   /// 构建标签芯片
@@ -261,7 +256,9 @@ class _TagsManagerState extends State<TagsManager> {
       onPressed: () => _addTag(tag),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
-      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      backgroundColor: Theme.of(
+        context,
+      ).colorScheme.primary.withValues(alpha: 0.1),
       side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
     );
   }
@@ -329,7 +326,9 @@ class _TagsManagerState extends State<TagsManager> {
           Text(
             '建议标签：',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -351,7 +350,9 @@ class _TagsManagerState extends State<TagsManager> {
                 ? '${widget.tags.length} / ${widget.maxTags} 个标签'
                 : '${widget.tags.length} 个标签',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -450,9 +451,7 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
       }
     } catch (e) {
       debugPrint('添加自定义标签失败: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('添加自定义标签失败: $e'), backgroundColor: Colors.red),
-      );
+      context.showErrorSnackBar('添加自定义标签失败: $e');
     }
   }
 
@@ -588,7 +587,9 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                                           visualDensity: VisualDensity.compact,
                                           backgroundColor:
                                               _currentTags.contains(tag)
-                                              ? Colors.green.withValues(alpha: 0.1)
+                                              ? Colors.green.withValues(
+                                                  alpha: 0.1,
+                                                )
                                               : Theme.of(
                                                   context,
                                                 ).colorScheme.primaryContainer,

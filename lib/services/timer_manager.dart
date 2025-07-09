@@ -9,17 +9,17 @@ import '../data/map_data_event.dart';
 class TimerManager {
   static TimerManager? _instance;
   static TimerManager get instance => _instance ??= TimerManager._();
-  
+
   TimerManager._();
 
   // 计时器映射表
   final Map<String, Timer> _activeTimers = {};
   final Map<String, DateTime> _startTimes = {};
   final Map<String, Duration> _pausedDurations = {};
-  
+
   // 更新间隔（毫秒）
   static const int _updateIntervalMs = 10;
-  
+
   MapDataBloc? _mapDataBloc;
 
   /// 初始化计时器管理器
@@ -31,10 +31,10 @@ class TimerManager {
   void startTimer(String timerId, TimerData timerData) {
     // 停止现有的计时器（如果有）
     stopTimer(timerId);
-    
+
     final now = DateTime.now();
     _startTimes[timerId] = now;
-    
+
     // 如果是从暂停状态恢复，需要考虑之前暂停的时长
     if (timerData.state == TimerState.paused && timerData.pauseTime != null) {
       final pausedDuration = timerData.currentTime;
@@ -42,13 +42,13 @@ class TimerManager {
     } else {
       _pausedDurations[timerId] = timerData.currentTime;
     }
-    
+
     // 创建定时器
     _activeTimers[timerId] = Timer.periodic(
       const Duration(milliseconds: _updateIntervalMs),
       (timer) => _updateTimer(timerId, timerData),
     );
-    
+
     debugPrint('计时器已启动: $timerId');
   }
 
@@ -89,17 +89,17 @@ class TimerManager {
   void _updateTimer(String timerId, TimerData timerData) {
     final startTime = _startTimes[timerId];
     final pausedDuration = _pausedDurations[timerId];
-    
+
     if (startTime == null || pausedDuration == null || _mapDataBloc == null) {
       return;
     }
 
     final now = DateTime.now();
     final elapsed = now.difference(startTime);
-    
+
     Duration currentTime;
     bool shouldComplete = false;
-    
+
     switch (timerData.mode) {
       case TimerMode.countdown:
         // 倒计时：从暂停的时间减去经过的时间
@@ -109,24 +109,22 @@ class TimerManager {
           shouldComplete = true;
         }
         break;
-        
+
       case TimerMode.stopwatch:
         // 正计时：从暂停的时间加上经过的时间
         currentTime = pausedDuration + elapsed;
         // 检查是否达到目标时间
-        if (timerData.targetTime != null && currentTime >= timerData.targetTime!) {
+        if (timerData.targetTime != null &&
+            currentTime >= timerData.targetTime!) {
           currentTime = timerData.targetTime!;
           shouldComplete = true;
         }
         break;
     }
-    
+
     // 发送时间更新事件
-    _mapDataBloc!.add(TimerTick(
-      timerId: timerId,
-      currentTime: currentTime,
-    ));
-    
+    _mapDataBloc!.add(TimerTick(timerId: timerId, currentTime: currentTime));
+
     // 如果计时器完成，停止它
     if (shouldComplete) {
       stopTimer(timerId);
@@ -158,7 +156,9 @@ class TimerManager {
       'runningTimers': runningTimerCount,
       'activeTimerIds': runningTimerIds,
       'startTimes': _startTimes.map((k, v) => MapEntry(k, v.toIso8601String())),
-      'pausedDurations': _pausedDurations.map((k, v) => MapEntry(k, v.inMilliseconds)),
+      'pausedDurations': _pausedDurations.map(
+        (k, v) => MapEntry(k, v.inMilliseconds),
+      ),
     };
   }
 }

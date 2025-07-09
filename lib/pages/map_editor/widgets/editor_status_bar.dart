@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 
-
 /// 地图编辑器状态栏组件
 /// 显示图层数量、图层组数量、便签数量、当前选中的图层、工具等状态信息
 class EditorStatusBar extends StatelessWidget {
@@ -46,7 +45,7 @@ class EditorStatusBar extends StatelessWidget {
   Widget _buildCompactStatus(BuildContext context) {
     final theme = Theme.of(context);
     final statusItems = _getStatusItems();
-    
+
     if (statusItems.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -55,7 +54,7 @@ class EditorStatusBar extends StatelessWidget {
       builder: (context, constraints) {
         // 计算可用宽度，预留空间给窗口控制按钮等
         final availableWidth = constraints.maxWidth - 200; // 预留200px给其他UI元素
-        
+
         // 根据可用宽度动态调整显示的状态项数量
         int maxItems = statusItems.length;
         if (availableWidth < 600) {
@@ -66,14 +65,16 @@ class EditorStatusBar extends StatelessWidget {
           maxItems = 5; // 较大空间时最多显示5个
         }
         // 否则显示所有状态项
-        
+
         final displayItems = statusItems.take(maxItems).toList();
-        
+
         return IntrinsicWidth(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.7,
+              ),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.3),
@@ -95,7 +96,7 @@ class EditorStatusBar extends StatelessWidget {
                     size: 16,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -108,7 +109,7 @@ class EditorStatusBar extends StatelessWidget {
   Widget _buildFullStatus(BuildContext context) {
     final theme = Theme.of(context);
     final statusItems = _getStatusItems();
-    
+
     if (statusItems.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -151,66 +152,80 @@ class EditorStatusBar extends StatelessWidget {
 
     // 高优先级：当前选中的绘制工具
     if (selectedDrawingTool != null) {
-      highPriorityItems.add(StatusItem(
-        icon: _getToolIcon(selectedDrawingTool!),
-        label: '工具',
-        value: _getToolName(selectedDrawingTool!),
-        color: Colors.red,
-      ));
+      highPriorityItems.add(
+        StatusItem(
+          icon: _getToolIcon(selectedDrawingTool!),
+          label: '工具',
+          value: _getToolName(selectedDrawingTool!),
+          color: Colors.red,
+        ),
+      );
     }
 
     // 高优先级：工具参数（仅在选择工具时显示）
     if (selectedDrawingTool != null) {
       final params = _getToolParameters();
       if (params.isNotEmpty) {
-        highPriorityItems.add(StatusItem(
-          icon: Icons.tune,
-          label: '参数',
-          value: params,
-          color: Colors.teal,
-        ));
+        highPriorityItems.add(
+          StatusItem(
+            icon: Icons.tune,
+            label: '参数',
+            value: params,
+            color: Colors.teal,
+          ),
+        );
       }
     }
 
     // 中优先级：当前选中的图层
     if (selectedLayer != null) {
-      mediumPriorityItems.add(StatusItem(
-        icon: Icons.check_circle,
-        label: '选中图层',
-        value: selectedLayer!.name,
-        color: Colors.green,
-      ));
+      mediumPriorityItems.add(
+        StatusItem(
+          icon: Icons.check_circle,
+          label: '选中图层',
+          value: selectedLayer!.name,
+          color: Colors.green,
+        ),
+      );
     }
 
     // 中优先级：当前选中的图层组
     if (selectedLayerGroup != null && selectedLayerGroup!.isNotEmpty) {
-      final layerNames = selectedLayerGroup!.map((layer) => layer.name).join(', ');
-      mediumPriorityItems.add(StatusItem(
-        icon: Icons.group_work,
-        label: '选中组',
-        value: '${selectedLayerGroup!.length}层: $layerNames',
-        color: Colors.purple,
-      ));
+      final layerNames = selectedLayerGroup!
+          .map((layer) => layer.name)
+          .join(', ');
+      mediumPriorityItems.add(
+        StatusItem(
+          icon: Icons.group_work,
+          label: '选中组',
+          value: '${selectedLayerGroup!.length}层: $layerNames',
+          color: Colors.purple,
+        ),
+      );
     }
 
     // 低优先级：图层数量
     if (layers != null && layers!.isNotEmpty) {
-      lowPriorityItems.add(StatusItem(
-        icon: Icons.layers,
-        label: '图层',
-        value: '${layers!.length}',
-        color: Colors.blue,
-      ));
+      lowPriorityItems.add(
+        StatusItem(
+          icon: Icons.layers,
+          label: '图层',
+          value: '${layers!.length}',
+          color: Colors.blue,
+        ),
+      );
     }
 
     // 低优先级：便签数量
     if (stickyNotes != null && stickyNotes!.isNotEmpty) {
-      lowPriorityItems.add(StatusItem(
-        icon: Icons.sticky_note_2,
-        label: '便签',
-        value: '${stickyNotes!.length}',
-        color: Colors.yellow.shade700,
-      ));
+      lowPriorityItems.add(
+        StatusItem(
+          icon: Icons.sticky_note_2,
+          label: '便签',
+          value: '${stickyNotes!.length}',
+          color: Colors.yellow.shade700,
+        ),
+      );
     }
 
     // 低优先级：图层组数量（通过分析图层的groupName计算）
@@ -223,12 +238,14 @@ class EditorStatusBar extends StatelessWidget {
         // }
       }
       if (groupNames.isNotEmpty) {
-        lowPriorityItems.add(StatusItem(
-          icon: Icons.folder,
-          label: '图层组',
-          value: '${groupNames.length}',
-          color: Colors.orange,
-        ));
+        lowPriorityItems.add(
+          StatusItem(
+            icon: Icons.folder,
+            label: '图层组',
+            value: '${groupNames.length}',
+            color: Colors.orange,
+          ),
+        );
       }
     }
 
@@ -239,15 +256,11 @@ class EditorStatusBar extends StatelessWidget {
   /// 构建单个状态项
   Widget _buildStatusItem(BuildContext context, StatusItem item) {
     final theme = Theme.of(context);
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          item.icon,
-          size: 16,
-          color: item.color,
-        ),
+        Icon(item.icon, size: 16, color: item.color),
         const SizedBox(width: 4),
         Text(
           '${item.label}: ',
@@ -335,39 +348,41 @@ class EditorStatusBar extends StatelessWidget {
   /// 获取工具参数字符串
   String _getToolParameters() {
     final params = <String>[];
-    
+
     // 总是显示颜色参数
     if (selectedColor != null) {
-      final colorHex = '#${selectedColor!.value.toRadixString(16).substring(2).toUpperCase()}';
+      final colorHex =
+          '#${selectedColor!.value.toRadixString(16).substring(2).toUpperCase()}';
       params.add('颜色:$colorHex');
     }
-    
+
     // 总是显示线宽参数
     if (selectedStrokeWidth != null) {
       params.add('线宽:${selectedStrokeWidth!.toStringAsFixed(1)}px');
     }
-    
+
     // 显示密度参数（根据drawing_toolbar.dart的逻辑）
     if (selectedDrawingTool != null && _shouldShowDensityControl()) {
       if (selectedDensity != null) {
         params.add('密度:${selectedDensity!.toStringAsFixed(1)}');
       }
     }
-    
+
     // 显示弧度参数（根据drawing_toolbar.dart的逻辑）
     if (selectedDrawingTool != null && _shouldShowCurvatureControl()) {
       if (selectedCurvature != null && selectedCurvature! != 0.0) {
         params.add('弧度:${selectedCurvature!.toStringAsFixed(1)}');
       }
     }
-    
+
     // 显示切割参数（根据drawing_toolbar.dart的逻辑）
     if (selectedDrawingTool != null && _shouldShowTriangleCutControl()) {
-      if (selectedTriangleCut != null && selectedTriangleCut != TriangleCutType.none) {
+      if (selectedTriangleCut != null &&
+          selectedTriangleCut != TriangleCutType.none) {
         params.add('切割:${_getTriangleCutName(selectedTriangleCut!)}');
       }
     }
-    
+
     final result = params.join(' | ');
     return result;
   }

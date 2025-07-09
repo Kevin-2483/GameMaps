@@ -12,14 +12,23 @@ class KeyCaptureWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _KeyCaptureWidgetState createState() => _KeyCaptureWidgetState();
+  KeyCaptureWidgetState createState() => KeyCaptureWidgetState();
 }
 
-class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
+class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
   final FocusNode _focusNode = FocusNode();
   bool _isCapturing = false;
   List<String> _capturedKeys = [];
   Set<LogicalKeyboardKey> _pressedKeys = {};
+
+  /// 清空预览框内容
+  void clearCapturedKeys() {
+    setState(() {
+      _capturedKeys.clear();
+      _isCapturing = false;
+    });
+    _focusNode.unfocus();
+  }
 
   @override
   void initState() {
@@ -38,32 +47,32 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
   /// 将LogicalKeyboardKey转换为字符串表示
   String _getKeyString(LogicalKeyboardKey key) {
     // 字母键
-    if (key == LogicalKeyboardKey.keyA) return 'a';
-    if (key == LogicalKeyboardKey.keyB) return 'b';
-    if (key == LogicalKeyboardKey.keyC) return 'c';
-    if (key == LogicalKeyboardKey.keyD) return 'd';
-    if (key == LogicalKeyboardKey.keyE) return 'e';
-    if (key == LogicalKeyboardKey.keyF) return 'f';
-    if (key == LogicalKeyboardKey.keyG) return 'g';
-    if (key == LogicalKeyboardKey.keyH) return 'h';
-    if (key == LogicalKeyboardKey.keyI) return 'i';
-    if (key == LogicalKeyboardKey.keyJ) return 'j';
-    if (key == LogicalKeyboardKey.keyK) return 'k';
-    if (key == LogicalKeyboardKey.keyL) return 'l';
-    if (key == LogicalKeyboardKey.keyM) return 'm';
-    if (key == LogicalKeyboardKey.keyN) return 'n';
-    if (key == LogicalKeyboardKey.keyO) return 'o';
-    if (key == LogicalKeyboardKey.keyP) return 'p';
-    if (key == LogicalKeyboardKey.keyQ) return 'q';
-    if (key == LogicalKeyboardKey.keyR) return 'r';
-    if (key == LogicalKeyboardKey.keyS) return 's';
-    if (key == LogicalKeyboardKey.keyT) return 't';
-    if (key == LogicalKeyboardKey.keyU) return 'u';
-    if (key == LogicalKeyboardKey.keyV) return 'v';
-    if (key == LogicalKeyboardKey.keyW) return 'w';
-    if (key == LogicalKeyboardKey.keyX) return 'x';
-    if (key == LogicalKeyboardKey.keyY) return 'y';
-    if (key == LogicalKeyboardKey.keyZ) return 'z';
+    if (key == LogicalKeyboardKey.keyA) return 'A';
+    if (key == LogicalKeyboardKey.keyB) return 'B';
+    if (key == LogicalKeyboardKey.keyC) return 'C';
+    if (key == LogicalKeyboardKey.keyD) return 'D';
+    if (key == LogicalKeyboardKey.keyE) return 'E';
+    if (key == LogicalKeyboardKey.keyF) return 'F';
+    if (key == LogicalKeyboardKey.keyG) return 'G';
+    if (key == LogicalKeyboardKey.keyH) return 'H';
+    if (key == LogicalKeyboardKey.keyI) return 'I';
+    if (key == LogicalKeyboardKey.keyJ) return 'J';
+    if (key == LogicalKeyboardKey.keyK) return 'K';
+    if (key == LogicalKeyboardKey.keyL) return 'L';
+    if (key == LogicalKeyboardKey.keyM) return 'M';
+    if (key == LogicalKeyboardKey.keyN) return 'N';
+    if (key == LogicalKeyboardKey.keyO) return 'O';
+    if (key == LogicalKeyboardKey.keyP) return 'P';
+    if (key == LogicalKeyboardKey.keyQ) return 'Q';
+    if (key == LogicalKeyboardKey.keyR) return 'R';
+    if (key == LogicalKeyboardKey.keyS) return 'S';
+    if (key == LogicalKeyboardKey.keyT) return 'T';
+    if (key == LogicalKeyboardKey.keyU) return 'U';
+    if (key == LogicalKeyboardKey.keyV) return 'V';
+    if (key == LogicalKeyboardKey.keyW) return 'W';
+    if (key == LogicalKeyboardKey.keyX) return 'X';
+    if (key == LogicalKeyboardKey.keyY) return 'Y';
+    if (key == LogicalKeyboardKey.keyZ) return 'Z';
 
     // 数字键
     if (key == LogicalKeyboardKey.digit0) return '0';
@@ -98,10 +107,17 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
     if (key == LogicalKeyboardKey.f12) return 'F12';
 
     // 修饰键
-    if (key == LogicalKeyboardKey.controlLeft || key == LogicalKeyboardKey.controlRight) return 'Control';
-    if (key == LogicalKeyboardKey.shiftLeft || key == LogicalKeyboardKey.shiftRight) return 'Shift';
-    if (key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight) return 'Alt';
-    if (key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight) return 'Meta';
+    if (key == LogicalKeyboardKey.controlLeft ||
+        key == LogicalKeyboardKey.controlRight)
+      return 'Ctrl';
+    if (key == LogicalKeyboardKey.shiftLeft ||
+        key == LogicalKeyboardKey.shiftRight)
+      return 'Shift';
+    if (key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight)
+      return 'Alt';
+    if (key == LogicalKeyboardKey.metaLeft ||
+        key == LogicalKeyboardKey.metaRight)
+      return 'Win';
 
     // 特殊键
     if (key == LogicalKeyboardKey.space) return 'Space';
@@ -136,23 +152,23 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
   /// 处理按键事件
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (!_isCapturing) return KeyEventResult.ignored;
-    
+
     if (event is KeyDownEvent) {
       final String mainKey = _getKeyString(event.logicalKey);
-      
+
       // 如果按下的是修饰键，不做任何处理，等待主键
-      if (mainKey == 'Control' || 
-          mainKey == 'Shift' || 
-          mainKey == 'Alt' || 
-          mainKey == 'Meta') {
+      if (mainKey == 'Ctrl' ||
+          mainKey == 'Shift' ||
+          mainKey == 'Alt' ||
+          mainKey == 'Win') {
         return KeyEventResult.handled;
       }
-      
+
       final List<String> keys = [];
-      
+
       // 检查修饰键状态（统一使用不分左右的名称）
       if (HardwareKeyboard.instance.isControlPressed) {
-        keys.add('Control');
+        keys.add('Ctrl');
       }
       if (HardwareKeyboard.instance.isShiftPressed) {
         keys.add('Shift');
@@ -161,23 +177,23 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
         keys.add('Alt');
       }
       if (HardwareKeyboard.instance.isMetaPressed) {
-        keys.add('Meta');
+        keys.add('Win');
       }
-      
+
       // 添加主键
       keys.add(mainKey);
-      
+
       setState(() {
         _capturedKeys = keys;
         _isCapturing = false;
       });
-      
+
       // 构建快捷键字符串
       final String shortcut = keys.join('+');
       widget.onKeyCaptured(shortcut);
       _focusNode.unfocus();
     }
-    
+
     return KeyEventResult.handled;
   }
 
@@ -200,14 +216,14 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           decoration: BoxDecoration(
             border: Border.all(
-              color: _isCapturing 
-                  ? Theme.of(context).colorScheme.primary 
+              color: _isCapturing
+                  ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.outline,
               width: _isCapturing ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: _isCapturing 
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.05) 
+            color: _isCapturing
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.05)
                 : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
           ),
           child: _capturedKeys.isEmpty
@@ -255,8 +271,8 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
         color: _getKeyColor(key, context),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5), 
-          width: 1
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
@@ -279,7 +295,7 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
 
   Color _getKeyColor(String key, BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     switch (key.toLowerCase()) {
       case 'control':
       case 'shift':
@@ -319,12 +335,14 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
   String _getKeyDisplayName(String key) {
     switch (key.toLowerCase()) {
       case 'control':
+      case 'ctrl':
         return 'Ctrl';
       case 'shift':
         return 'Shift';
       case 'alt':
         return 'Alt';
       case 'meta':
+      case 'win':
         return 'Win';
       case 'space':
         return 'Space';
@@ -347,7 +365,7 @@ class _KeyCaptureWidgetState extends State<KeyCaptureWidget> {
       case 'arrowright':
         return '→';
       default:
-        return key.toUpperCase();
+        return key;
     }
   }
 }

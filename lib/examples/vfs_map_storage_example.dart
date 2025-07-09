@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../services/map_database_service.dart';
 import '../models/map_item.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// VFS地图存储使用示例
 /// 演示如何从传统SQLite存储迁移到VFS存储
@@ -277,9 +278,8 @@ class _VfsMapStorageExampleState extends State<VfsMapStorageExample> {
                           ),
                           onTap: () {
                             // 可以添加地图详情页面导航
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('查看地图: ${map.title}')),
-                            );
+
+                            context.showInfoSnackBar('查看地图: ${map.title}');
                           },
                         ),
                       );

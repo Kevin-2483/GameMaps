@@ -49,7 +49,7 @@ class _TrayNavigationState extends State<TrayNavigation>
   /// 如果程序正在工作中，会显示确认对话框
   Future<void> _handleAppClose(BuildContext context) async {
     final workStatusService = WorkStatusService();
-    
+
     // 如果程序正在工作中，显示确认对话框
     if (workStatusService.isWorking) {
       final shouldExit = await WorkStatusExitDialog.show(
@@ -59,27 +59,27 @@ class _TrayNavigationState extends State<TrayNavigation>
           workStatusService.forceStopAllWork();
         },
       );
-      
+
       // 如果用户选择取消，直接返回
       if (shouldExit != true) {
         return;
       }
     }
-    
+
     // 执行正常的关闭流程
     await _performAppClose();
   }
-  
+
   /// 执行应用关闭的实际操作
   Future<void> _performAppClose() async {
     // 执行清理操作
     final cleanupService = CleanupService();
     await cleanupService.performCleanup();
-    
+
     // 使用智能保存逻辑，根据用户设置决定是否保存最大化状态
     final windowManager = WindowManagerService();
     await windowManager.saveWindowStateOnExit();
-    
+
     // 关闭应用
     appWindow.close();
   }
@@ -157,7 +157,9 @@ class _TrayNavigationState extends State<TrayNavigation>
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [_buildNavigationOrWorkStatus(context, items, true)],
+                      children: [
+                        _buildNavigationOrWorkStatus(context, items, true),
+                      ],
                     ),
                   ),
                   // 底部：窗口控制按钮（仅在桌面平台显示）
@@ -253,20 +255,18 @@ class _TrayNavigationState extends State<TrayNavigation>
       builder: (context, workStatusService, child) {
         // 如果处于工作状态，显示工作状态指示器
         if (workStatusService.isWorking) {
-          return _buildWorkStatusIndicator(context, isVertical, workStatusService.workDescription);
+          return _buildWorkStatusIndicator(
+            context,
+            isVertical,
+            workStatusService.workDescription,
+          );
         }
-        
+
         // 否则显示正常的导航按钮
         final buttons = _buildNavigationButtons(context, items, isVertical);
         return isVertical
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: buttons,
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: buttons,
-              );
+            ? Column(mainAxisSize: MainAxisSize.min, children: buttons)
+            : Row(mainAxisSize: MainAxisSize.min, children: buttons);
       },
     );
   }
@@ -291,9 +291,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                 ),
               ),
               const SizedBox(height: 8),
-              Flexible(
-                child: _buildVerticalText(context, workDescription),
-              ),
+              Flexible(child: _buildVerticalText(context, workDescription)),
             ],
           )
         : Row(
@@ -500,7 +498,9 @@ class _TrayNavigationState extends State<TrayNavigation>
             borderRadius: BorderRadius.circular(8),
             hoverColor: isCloseButton
                 ? Colors.red.withValues(alpha: 0.1)
-                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.1),
             child: Tooltip(
               message: tooltip,
               decoration: BoxDecoration(

@@ -18,6 +18,7 @@ import 'vfs_file_search_dialog.dart';
 import 'vfs_permission_dialog.dart';
 import '../common/floating_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
+import '../../services/notification/notification_service.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -1515,7 +1516,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5),
@@ -1665,7 +1668,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       ? Theme.of(context).colorScheme.primary
                       : isRoot
                       ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.8),
                   fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -2228,7 +2233,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 Icon(
                   file.isDirectory ? Icons.folder : _getFileIcon(file),
                   size: 32,
-                  color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                  color: file.isDirectory
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -2303,7 +2310,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           Icon(
             file.isDirectory ? Icons.folder : _getFileIcon(file),
             size: 20,
-            color: file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+            color: file.isDirectory
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -2539,24 +2548,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
   /// 显示成功消息
   void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    context.showSuccessSnackBar(message);
   }
 
   /// 显示错误消息
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    context.showErrorSnackBar(message);
   }
 
   /// 构建权限指示器
@@ -2592,7 +2589,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
@@ -2636,7 +2635,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   ? Theme.of(context).colorScheme.primary
                   : isMultipleSelectionAllowed
                   ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const Spacer(),
@@ -3343,7 +3344,9 @@ class _FileListItemState extends State<_FileListItem> {
                 color: widget.isSelected
                     ? Theme.of(context).colorScheme.primary
                     : (!widget.canBeSelected)
-                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.3)
                     : Theme.of(context).dividerColor,
                 width: widget.isSelected ? 2 : 1,
               ),
@@ -3384,7 +3387,9 @@ class _FileListItemState extends State<_FileListItem> {
                       ? Icons.folder
                       : widget.getFileIcon(widget.file),
                   size: 40,
-                  color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                  color: widget.file.isDirectory
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 // 文件信息
@@ -3549,7 +3554,9 @@ class _FileGridItemState extends State<_FileGridItem> {
                             ? Icons.folder
                             : widget.getFileIcon(widget.file),
                         size: 48,
-                        color: widget.file.isDirectory ? Theme.of(context).colorScheme.primary : null,
+                        color: widget.file.isDirectory
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                       ),
                       const SizedBox(height: 8),
                       Text(

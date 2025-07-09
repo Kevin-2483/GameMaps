@@ -35,9 +35,9 @@ class WorkStatusExitDialog extends StatelessWidget {
         children: [
           Text(
             '当前正在执行：',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Container(

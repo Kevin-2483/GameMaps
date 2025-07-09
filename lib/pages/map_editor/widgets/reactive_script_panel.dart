@@ -5,6 +5,7 @@ import '../../../models/script_data.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
 import 'script_editor_window_reactive.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 响应式脚本管理面板
 /// 使用新的异步响应式脚本管理器
@@ -52,7 +53,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -356,7 +359,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
           width: isSelected ? 2 : 1,
         ),
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
       ),
       child: InkWell(
@@ -748,36 +753,34 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     try {
       // 获取脚本参数定义
       final parameters = widget.scriptManager.getScriptParameters(script.id);
-      
+
       Map<String, dynamic>? runtimeParameters;
-      
+
       // 如果脚本有参数，显示参数输入对话框
       if (parameters.isNotEmpty) {
         runtimeParameters = await showDialog<Map<String, dynamic>>(
-           context: context,
-           builder: (context) => ScriptParametersDialog(
-             scriptName: script.name,
-             parameters: parameters,
-             initialValues: const {},
-           ),
-         );
-        
+          context: context,
+          builder: (context) => ScriptParametersDialog(
+            scriptName: script.name,
+            parameters: parameters,
+            initialValues: const {},
+          ),
+        );
+
         // 如果用户取消了对话框，不执行脚本
         if (runtimeParameters == null) {
           return;
         }
       }
-      
+
       // 执行脚本，传入运行时参数
-      await widget.scriptManager.executeScript(script.id, runtimeParameters: runtimeParameters);
+      await widget.scriptManager.executeScript(
+        script.id,
+        runtimeParameters: runtimeParameters,
+      );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('脚本执行失败: $error'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        context.showErrorSnackBar('脚本执行失败: $error');
       }
     }
   }
@@ -974,9 +977,7 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
 
   void _saveScript() {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
+      context.showErrorSnackBar('请输入名称');
       return;
     }
 

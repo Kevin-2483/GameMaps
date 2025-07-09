@@ -27,7 +27,10 @@ class DraggableTitleBar extends StatelessWidget {
     this.foregroundColor,
     this.height = 64.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  }) : assert(title != null || titleWidget != null, 'Either title or titleWidget must be provided');
+  }) : assert(
+         title != null || titleWidget != null,
+         'Either title or titleWidget must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -76,15 +79,18 @@ class DraggableTitleBar extends StatelessWidget {
                   : null,
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: titleWidget ?? Text(
-                  title!,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color:
-                        foregroundColor ??
-                        Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child:
+                    titleWidget ??
+                    Text(
+                      title!,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color:
+                                foregroundColor ??
+                                Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
               ),
             ),
           ),

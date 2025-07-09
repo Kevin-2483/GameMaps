@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../widgets/key_capture_widget.dart';
+import '../../../services/notification/notification_service.dart';
 
 class MapEditorSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -124,8 +125,8 @@ class MapEditorSettingsSection extends StatelessWidget {
       return Text(
         '未设置',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurfaceVariant, 
-          fontSize: 12
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 12,
         ),
       );
     }
@@ -140,11 +141,13 @@ class MapEditorSettingsSection extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(0.3),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5), 
-              width: 1
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              width: 1,
             ),
           ),
           child: Wrap(
@@ -184,8 +187,8 @@ class MapEditorSettingsSection extends StatelessWidget {
         color: _getKeyColor(key, context),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5), 
-          width: 1
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
@@ -208,7 +211,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
   Color _getKeyColor(String key, BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     switch (key.toLowerCase()) {
       case 'control':
       case 'shift':
@@ -280,13 +283,23 @@ class MapEditorSettingsSection extends StatelessWidget {
     }
   }
 
+  /// 标准化快捷键字符串，统一处理修饰键的不同表示
+  String _normalizeShortcut(String shortcut) {
+    return shortcut.replaceAll('Control', 'Ctrl').replaceAll('Meta', 'Win');
+  }
+
   /// 检查快捷键冲突
   /// 返回冲突的动作名称，如果没有冲突返回null
-  String? _checkShortcutConflict(String shortcut, String currentAction, Map<String, List<String>> allShortcuts) {
+  String? _checkShortcutConflict(
+    String shortcut,
+    String currentAction,
+    Map<String, List<String>> allShortcuts,
+  ) {
+    final normalizedShortcut = _normalizeShortcut(shortcut);
     // 定义受保护的快捷键（数字键1-0和F1-F12）
     // final protectedShortcuts = {
     //   '1': 'selectLayerGroup1',
-    //   '2': 'selectLayerGroup2', 
+    //   '2': 'selectLayerGroup2',
     //   '3': 'selectLayerGroup3',
     //   '4': 'selectLayerGroup4',
     //   '5': 'selectLayerGroup5',
@@ -319,8 +332,12 @@ class MapEditorSettingsSection extends StatelessWidget {
 
     // 检查是否与其他已设置的快捷键冲突
     for (final entry in allShortcuts.entries) {
-      if (entry.key != currentAction && entry.value.contains(shortcut)) {
-        return entry.key;
+      if (entry.key != currentAction) {
+        for (final existingShortcut in entry.value) {
+          if (_normalizeShortcut(existingShortcut) == normalizedShortcut) {
+            return entry.key;
+          }
+        }
       }
     }
 
@@ -329,7 +346,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
   /// 显示快捷键管理弹窗
   void _showShortcutManagementDialog(
-      BuildContext context, UserPreferencesProvider provider) {
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -343,10 +362,7 @@ class MapEditorSettingsSection extends StatelessWidget {
               children: [
                 Text(
                   '点击编辑按钮可以修改对应功能的快捷键',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
                 ...provider.currentPreferences!.mapEditor.shortcuts.entries.map(
@@ -357,7 +373,11 @@ class MapEditorSettingsSection extends StatelessWidget {
                       subtitle: _buildShortcutChips(entry.value, context),
                       trailing: IconButton(
                         onPressed: () => _editShortcut(
-                            context, provider, entry.key, entry.value),
+                          context,
+                          provider,
+                          entry.key,
+                          entry.value,
+                        ),
                         icon: Icon(Icons.edit),
                         tooltip: '编辑快捷键',
                       ),
@@ -380,12 +400,15 @@ class MapEditorSettingsSection extends StatelessWidget {
 
   /// 编辑快捷键
   void _editShortcut(
-      BuildContext context,
-      UserPreferencesProvider provider,
-      String action,
-      List<String> currentShortcuts) {
+    BuildContext context,
+    UserPreferencesProvider provider,
+    String action,
+    List<String> currentShortcuts,
+  ) {
     List<String> newShortcuts = List.from(currentShortcuts);
     String tempShortcut = '';
+    final GlobalKey<KeyCaptureWidgetState> keyCaptureKey =
+        GlobalKey<KeyCaptureWidgetState>();
 
     showDialog(
       context: context,
@@ -402,18 +425,15 @@ class MapEditorSettingsSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   '当前快捷键:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 if (newShortcuts.isEmpty)
                   Text(
                     '未设置',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant, 
-                      fontSize: 12
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
                     ),
                   )
                 else
@@ -424,24 +444,31 @@ class MapEditorSettingsSection extends StatelessWidget {
                       final index = entry.key;
                       final shortcut = entry.value;
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.5), 
-                            width: 1
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.5),
+                            width: 1,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              shortcut, 
+                              shortcut,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface
-                              )
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             InkWell(
@@ -451,9 +478,9 @@ class MapEditorSettingsSection extends StatelessWidget {
                                 });
                               },
                               child: Icon(
-                                Icons.close, 
-                                size: 16, 
-                                color: Theme.of(context).colorScheme.error
+                                Icons.close,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.error,
                               ),
                             ),
                           ],
@@ -464,10 +491,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   '添加新快捷键:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -479,6 +503,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 KeyCaptureWidget(
+                  key: keyCaptureKey,
                   initialValue: '',
                   onKeyCaptured: (value) {
                     tempShortcut = value;
@@ -486,51 +511,49 @@ class MapEditorSettingsSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
-                   onPressed: () {
-                     if (tempShortcut.isEmpty) {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(
-                           content: Text('请先按下快捷键组合'),
-                           backgroundColor: Theme.of(context).colorScheme.tertiary,
-                           duration: Duration(seconds: 2),
-                         ),
-                       );
-                       return;
-                     }
-                     
-                     // 检查是否在当前列表中重复
-                     if (newShortcuts.contains(tempShortcut)) {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(
-                           content: Text('快捷键重复: $tempShortcut 已在当前列表中'),
-                           backgroundColor: Theme.of(context).colorScheme.tertiary,
-                           duration: Duration(seconds: 2),
-                         ),
-                       );
-                       return;
-                     }
-                     
-                     // 检查快捷键冲突
-                     final conflictResult = _checkShortcutConflict(tempShortcut, action, provider.currentPreferences!.mapEditor.shortcuts);
-                     if (conflictResult != null) {
-                       // 显示冲突警告
-                       ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(
-                           content: Text('快捷键冲突: $tempShortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用'),
-                           backgroundColor: Theme.of(context).colorScheme.error,
-                           duration: Duration(seconds: 3),
-                         ),
-                       );
-                       return;
-                     }
-                     
-                     setState(() {
-                       newShortcuts.add(tempShortcut);
-                       tempShortcut = '';
-                     });
-                   },
-                   child: Text('添加快捷键'),
-                 ),
+                  onPressed: () {
+                    if (tempShortcut.isEmpty) {
+                      context.showInfoSnackBar('请先按下快捷键组合');
+                      return;
+                    }
+
+                    // 检查是否在当前列表中重复
+                    final normalizedTemp = _normalizeShortcut(tempShortcut);
+                    bool isDuplicate = false;
+                    for (final existing in newShortcuts) {
+                      if (_normalizeShortcut(existing) == normalizedTemp) {
+                        isDuplicate = true;
+                        break;
+                      }
+                    }
+                    if (isDuplicate) {
+                      context.showInfoSnackBar('快捷键重复: $tempShortcut 已在当前列表中');
+                      return;
+                    }
+
+                    // 检查快捷键冲突
+                    final conflictResult = _checkShortcutConflict(
+                      tempShortcut,
+                      action,
+                      provider.currentPreferences!.mapEditor.shortcuts,
+                    );
+                    if (conflictResult != null) {
+                      // 显示冲突警告
+                      context.showErrorSnackBar(
+                        '快捷键冲突: $tempShortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用',
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      newShortcuts.add(tempShortcut);
+                      tempShortcut = '';
+                    });
+                    // 清空KeyCaptureWidget的预览框
+                    keyCaptureKey.currentState?.clearCapturedKeys();
+                  },
+                  child: Text('添加快捷键'),
+                ),
               ],
             ),
           ),
@@ -540,65 +563,59 @@ class MapEditorSettingsSection extends StatelessWidget {
               child: Text('取消'),
             ),
             ElevatedButton(
-                onPressed: () {
-                  // 检查列表内是否有重复快捷键
-                  final duplicates = <String>{};
-                  final seen = <String>{};
-                  for (final shortcut in newShortcuts) {
-                    if (seen.contains(shortcut)) {
-                      duplicates.add(shortcut);
-                    } else {
-                      seen.add(shortcut);
-                    }
+              onPressed: () {
+                // 检查列表内是否有重复快捷键
+                final duplicates = <String>{};
+                final seen = <String>{};
+                for (final shortcut in newShortcuts) {
+                  final normalized = _normalizeShortcut(shortcut);
+                  if (seen.contains(normalized)) {
+                    duplicates.add(shortcut);
+                  } else {
+                    seen.add(normalized);
                   }
-                  
-                  if (duplicates.isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('列表中存在重复快捷键: ${duplicates.join(", ")}'),
-                        backgroundColor: Theme.of(context).colorScheme.tertiary,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                    return;
+                }
+
+                if (duplicates.isNotEmpty) {
+                  context.showInfoSnackBar(
+                    '列表中存在重复快捷键: ${duplicates.join(", ")}',
+                  );
+                  return;
+                }
+
+                // 检查所有快捷键是否与其他功能冲突
+                bool hasConflict = false;
+                String? conflictMessage;
+
+                for (final shortcut in newShortcuts) {
+                  final conflictResult = _checkShortcutConflict(
+                    shortcut,
+                    action,
+                    provider.currentPreferences!.mapEditor.shortcuts,
+                  );
+                  if (conflictResult != null) {
+                    hasConflict = true;
+                    conflictMessage =
+                        '快捷键冲突: $shortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用';
+                    break;
                   }
-                  
-                  // 检查所有快捷键是否与其他功能冲突
-                  bool hasConflict = false;
-                  String? conflictMessage;
-                  
-                  for (final shortcut in newShortcuts) {
-                    final conflictResult = _checkShortcutConflict(shortcut, action, provider.currentPreferences!.mapEditor.shortcuts);
-                    if (conflictResult != null) {
-                      hasConflict = true;
-                      conflictMessage = '快捷键冲突: $shortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用';
-                      break;
-                    }
-                  }
-                  
-                  if (hasConflict) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(conflictMessage!),
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                    return;
-                  }
-                  
-                  provider.updateMapEditorShortcut(action, newShortcuts);
-                  Navigator.of(context).pop();
-                },
-                child: Text('保存'),
-              ),
+                }
+
+                if (hasConflict) {
+                  context.showErrorSnackBar(conflictMessage!);
+                  return;
+                }
+
+                provider.updateMapEditorShortcut(action, newShortcuts);
+                Navigator.of(context).pop();
+              },
+              child: Text('保存'),
+            ),
           ],
         ),
       ),
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -735,14 +752,8 @@ class MapEditorSettingsSection extends StatelessWidget {
                   ),
                 ),
                 items: [
-                  DropdownMenuItem(
-                    value: 2,
-                    child: Text('右键'),
-                  ),
-                  DropdownMenuItem(
-                    value: 4,
-                    child: Text('中键'),
-                  ),
+                  DropdownMenuItem(value: 2, child: Text('右键')),
+                  DropdownMenuItem(value: 4, child: Text('中键')),
                 ],
                 onChanged: (button) {
                   if (button != null) {
@@ -788,15 +799,17 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单背景透明度
             ListTile(
-              title: Text('背景透明度'),
+              title: Text('背景不透明度'),
               subtitle: Slider(
                 value: mapEditor.radialMenuBackgroundOpacity,
                 min: 0.1,
                 max: 1.0,
                 divisions: 9,
-                label: '${(mapEditor.radialMenuBackgroundOpacity * 100).round()}%',
-                onChanged: (value) =>
-                    provider.updateMapEditor(radialMenuBackgroundOpacity: value),
+                label:
+                    '${(mapEditor.radialMenuBackgroundOpacity * 100).round()}%',
+                onChanged: (value) => provider.updateMapEditor(
+                  radialMenuBackgroundOpacity: value,
+                ),
               ),
             ),
 
@@ -804,7 +817,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单对象透明度
             ListTile(
-              title: Text('对象透明度'),
+              title: Text('对象不透明度'),
               subtitle: Slider(
                 value: mapEditor.radialMenuObjectOpacity,
                 min: 0.1,
@@ -827,8 +840,9 @@ class MapEditorSettingsSection extends StatelessWidget {
                 max: 500.0,
                 divisions: 9,
                 label: '${mapEditor.radialMenuReturnDelay}ms',
-                onChanged: (value) =>
-                    provider.updateMapEditor(radialMenuReturnDelay: value.round()),
+                onChanged: (value) => provider.updateMapEditor(
+                  radialMenuReturnDelay: value.round(),
+                ),
               ),
             ),
 
@@ -843,8 +857,9 @@ class MapEditorSettingsSection extends StatelessWidget {
                 max: 800.0,
                 divisions: 14,
                 label: '${mapEditor.radialMenuAnimationDuration}ms',
-                onChanged: (value) =>
-                    provider.updateMapEditor(radialMenuAnimationDuration: value.round()),
+                onChanged: (value) => provider.updateMapEditor(
+                  radialMenuAnimationDuration: value.round(),
+                ),
               ),
             ),
 

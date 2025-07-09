@@ -63,7 +63,8 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         id: 'dashed_line',
         icon: Icons.more_horiz,
         label: '',
-        onTap: () => widget.onDrawingToolSelected(DrawingElementType.dashedLine),
+        onTap: () =>
+            widget.onDrawingToolSelected(DrawingElementType.dashedLine),
       ),
       RadialMenuItem(
         id: 'arrow',
@@ -81,7 +82,8 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         id: 'hollow_rectangle',
         icon: Icons.rectangle_outlined,
         label: '',
-        onTap: () => widget.onDrawingToolSelected(DrawingElementType.hollowRectangle),
+        onTap: () =>
+            widget.onDrawingToolSelected(DrawingElementType.hollowRectangle),
       ),
       RadialMenuItem(
         id: 'text',
@@ -99,7 +101,8 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         id: 'free_drawing',
         icon: Icons.gesture,
         label: '',
-        onTap: () => widget.onDrawingToolSelected(DrawingElementType.freeDrawing),
+        onTap: () =>
+            widget.onDrawingToolSelected(DrawingElementType.freeDrawing),
       ),
     ];
   }
@@ -118,7 +121,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
 
     // 获取所有图层组
     final groups = _groupLinkedLayers();
-    
+
     // 计算图层组在列表中的位置（最上层的组序号最大）
     int currentValidIndex = 0;
     for (int i = 0; i < groups.length; i++) {
@@ -127,7 +130,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         currentValidIndex++;
         // 计算在列表中的位置序号（最上层的组序号最大）
         final positionIndex = currentValidIndex;
-        
+
         // 只显示序号1-9的图层组
         if (positionIndex <= 9) {
           items.add(
@@ -170,9 +173,12 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
 
     // 根据选中的图层组过滤图层
     List<MapLayer> layersToShow;
-    if (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty) {
+    if (widget.selectedLayerGroup != null &&
+        widget.selectedLayerGroup!.isNotEmpty) {
       // 如果选中了图层组，只显示该组的图层
-      final selectedGroupLayerIds = widget.selectedLayerGroup!.map((l) => l.id).toSet();
+      final selectedGroupLayerIds = widget.selectedLayerGroup!
+          .map((l) => l.id)
+          .toSet();
       layersToShow = widget.currentMap.layers
           .where((layer) => selectedGroupLayerIds.contains(layer.id))
           .toList();
@@ -197,12 +203,13 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
 
     for (int i = 0; i < layersToShow.length; i++) {
       final layer = layersToShow[i];
-      
+
       IconData? iconToUse;
       String labelToUse = layer.name.isNotEmpty ? layer.name : '未命名图层';
       Color? layerColor;
-      
-      if (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty) {
+
+      if (widget.selectedLayerGroup != null &&
+          widget.selectedLayerGroup!.isNotEmpty) {
         // 选中图层组时，使用 looks 系列图标（最多6个）
         if (i < 6) {
           iconToUse = _getLooksIcon(i + 1);
@@ -218,7 +225,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
             break;
           }
         }
-        
+
         if (groupIndex >= 0 && groups[groupIndex].length > 1) {
           // 属于图层组，使用组对应的颜色
           layerColor = groupColors[groupIndex % groupColors.length];
@@ -226,7 +233,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
           // 不属于组，使用父菜单颜色（橙色）
           layerColor = Colors.orange;
         }
-        
+
         if (layersToShow.length <= 6) {
           // 不超过6个图层时，显示数字序号图标，不显示文字
           iconToUse = _getLooksIcon(i + 1);
@@ -237,7 +244,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
           labelToUse = '${i + 1}'; // 名称显示为编号
         }
       }
-      
+
       items.add(
         RadialMenuItem(
           id: 'layer_${layer.id}',
@@ -256,13 +263,13 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
   List<RadialMenuItem> _getRecentColorItems() {
     final userPrefs = context.read<UserPreferencesProvider>();
     final recentColors = userPrefs.tools.recentColors;
-    
+
     final List<RadialMenuItem> items = [];
-    
+
     for (int i = 0; i < recentColors.length && i < 6; i++) {
       final colorValue = recentColors[i];
       final color = Color(colorValue);
-      
+
       items.add(
         RadialMenuItem(
           id: 'recent_color_$i',
@@ -273,7 +280,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         ),
       );
     }
-    
+
     if (items.isEmpty) {
       items.add(
         RadialMenuItem(
@@ -284,7 +291,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         ),
       );
     }
-    
+
     return items;
   }
 
@@ -305,10 +312,10 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         RadialMenuItem(
           id: 'sticky_note_${note.id}',
           icon: Icons.sticky_note_2,
-          label: note.content.isNotEmpty 
-              ? (note.content.length > 10 
-                  ? '${note.content.substring(0, 10)}...' 
-                  : note.content)
+          label: note.content.isNotEmpty
+              ? (note.content.length > 10
+                    ? '${note.content.substring(0, 10)}...'
+                    : note.content)
               : '空便签',
           onTap: () => widget.onStickyNoteSelected(note),
         ),
@@ -317,8 +324,6 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
 
     return items;
   }
-
-
 
   /// 获取数字图标
   IconData _getNumberIcon(int number) {
@@ -392,7 +397,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
   Widget build(BuildContext context) {
     final userPrefs = context.read<UserPreferencesProvider>();
     final radialMenuPrefs = userPrefs.mapEditor;
-    
+
     return RadialGestureMenu(
       child: widget.child,
       menuItems: [
@@ -438,11 +443,17 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
       radius: radialMenuPrefs.radialMenuRadius,
       centerRadius: radialMenuPrefs.radialMenuCenterRadius,
       opacity: radialMenuPrefs.radialMenuBackgroundOpacity,
-      animationDuration: Duration(milliseconds: radialMenuPrefs.radialMenuAnimationDuration),
-      plateColor: Theme.of(context).colorScheme.surface.withOpacity(radialMenuPrefs.radialMenuObjectOpacity),
+      animationDuration: Duration(
+        milliseconds: radialMenuPrefs.radialMenuAnimationDuration,
+      ),
+      plateColor: Theme.of(context).colorScheme.surface.withOpacity(
+        radialMenuPrefs.radialMenuObjectOpacity,
+      ),
       borderColor: Theme.of(context).colorScheme.outline,
       menuButton: radialMenuPrefs.radialMenuButton,
-      returnDelay: Duration(milliseconds: radialMenuPrefs.radialMenuReturnDelay),
+      returnDelay: Duration(
+        milliseconds: radialMenuPrefs.radialMenuReturnDelay,
+      ),
     );
   }
 }

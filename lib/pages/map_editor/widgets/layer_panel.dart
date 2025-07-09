@@ -18,7 +18,8 @@ class LayerPanel extends StatefulWidget {
   final Function(MapLayer) onLayerDeleted;
   final VoidCallback onLayerAdded;
   final Function(int oldIndex, int newIndex) onLayersReordered;
-  final Function(int oldIndex, int newIndex, List<MapLayer> layersToUpdate)? onLayersInGroupReordered;
+  final Function(int oldIndex, int newIndex, List<MapLayer> layersToUpdate)?
+  onLayersInGroupReordered;
   final Function(String)? onError;
   final Function(String)? onSuccess;
   //：实时透明度预览回调
@@ -989,7 +990,9 @@ class _LayerPanelState extends State<LayerPanel> {
         isLinked ? Icons.link : Icons.link_off,
         size: 16,
         color: isLastLayer
-            ? Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+            ? Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
             : (isLinked
                   ? Colors.blue
                   : Theme.of(context).colorScheme.onSurfaceVariant),
@@ -1311,8 +1314,14 @@ class _LayerPanelState extends State<LayerPanel> {
 
     // 使用新的组内重排序功能，同时处理链接状态和顺序
     debugPrint('=== 执行组内重排序（同时处理链接状态和顺序）===');
-    debugPrint('调用 onLayersInGroupReordered($oldGlobalIndex, $newGlobalIndex, ${layersToUpdate.length} 个图层更新)');
-    widget.onLayersInGroupReordered?.call(oldGlobalIndex, newGlobalIndex, layersToUpdate);
+    debugPrint(
+      '调用 onLayersInGroupReordered($oldGlobalIndex, $newGlobalIndex, ${layersToUpdate.length} 个图层更新)',
+    );
+    widget.onLayersInGroupReordered?.call(
+      oldGlobalIndex,
+      newGlobalIndex,
+      layersToUpdate,
+    );
     debugPrint('=== 组内重排序完成 ===');
   }
 

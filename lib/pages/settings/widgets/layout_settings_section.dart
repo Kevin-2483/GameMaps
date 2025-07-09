@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 // import '../../../services/window_manager_service.dart';
+import '../../../services/notification/notification_service.dart';
 
 class LayoutSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -353,12 +354,7 @@ class LayoutSettingsSection extends StatelessWidget {
                 autoRestorePanelStates: defaultLayout.autoRestorePanelStates,
               );
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('布局设置已重置'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('布局设置已重置');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
@@ -390,12 +386,7 @@ class LayoutSettingsSection extends StatelessWidget {
             onPressed: () {
               provider.updateLayout(windowWidth: 1280.0, windowHeight: 720.0);
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('窗口大小设置已重置为默认值'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.showSuccessSnackBar('窗口大小设置已重置为默认值');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,

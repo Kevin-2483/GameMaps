@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../common/floating_window.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 演示如何使用浮动窗口组件的简单示例
 class SimpleFloatingWindowDemo extends StatelessWidget {
@@ -149,18 +150,14 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('刷新文件列表')));
+              context.showInfoSnackBar('刷新文件列表');
             },
             tooltip: '刷新',
           ),
           IconButton(
             icon: const Icon(Icons.view_list),
             onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('切换视图')));
+              context.showInfoSnackBar('切换视图');
             },
             tooltip: '视图',
           ),
@@ -303,9 +300,7 @@ class _FileManagerContent extends StatelessWidget {
                       : '${file['size']} • ${file['date']}',
                 ),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('选择了: ${file['name']}')),
-                  );
+                  context.showInfoSnackBar('选择了: ${file['name']}');
                 },
               );
             },

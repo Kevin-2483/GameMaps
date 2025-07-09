@@ -20,6 +20,7 @@ import '../../config/config_manager.dart';
 import '../map_editor/map_editor_page.dart';
 import '../../utils/filename_sanitizer.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../../services/notification/notification_service.dart';
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -171,15 +172,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    context.showErrorSnackBar(message);
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+    context.showSuccessSnackBar(message);
   }
 
   Future<void> _addMap() async {
@@ -491,7 +488,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                               Icon(
                                 Icons.chevron_right,
                                 size: 16,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             InkWell(
                               onTap: isLast
@@ -509,8 +508,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                                 child: Text(
                                   breadcrumb.name,
                                   style: TextStyle(
-                                    color: isLast 
-                                        ? Theme.of(context).colorScheme.onSurface
+                                    color: isLast
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
                                         : Theme.of(context).colorScheme.primary,
                                     fontWeight: isLast
                                         ? FontWeight.bold
@@ -816,7 +817,11 @@ class _FolderCard extends StatelessWidget {
                 aspectRatio: 1,
                 child: Container(
                   color: Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(Icons.folder, size: 48, color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    Icons.folder,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),

@@ -489,19 +489,22 @@ class UserPreferencesProvider extends ChangeNotifier {
   }
 
   /// 更新地图编辑器快捷键
-  Future<void> updateMapEditorShortcut(String action, List<String> shortcuts) async {
+  Future<void> updateMapEditorShortcut(
+    String action,
+    List<String> shortcuts,
+  ) async {
     if (_currentPreferences == null) return;
 
     try {
-      final currentShortcuts = Map<String, List<String>>.from(mapEditor.shortcuts);
+      final currentShortcuts = Map<String, List<String>>.from(
+        mapEditor.shortcuts,
+      );
       currentShortcuts[action] = shortcuts;
       await updateMapEditor(shortcuts: currentShortcuts);
     } catch (e) {
       _setError('更新地图编辑器快捷键失败: ${e.toString()}');
     }
   }
-
-
 
   /// 导入设置
   Future<void> importSettings(String jsonData) async {

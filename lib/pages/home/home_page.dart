@@ -513,13 +513,13 @@ class _HomePageContentState extends State<_HomePageContent>
     // 💡 修改方法: 直接改变数值，比如 30.0 表示很慢，100.0 表示很快
     _cameraSpeed = 50.0; // 当前: 50px/秒
 
-    debugPrint('🎬 摄像机移动方向: $_cameraDirection');
-    debugPrint(
-      '📐 透视角度: X=${(_perspectiveAngleX * 180 / math.pi).toStringAsFixed(1)}°, Y=${(_perspectiveAngleY * 180 / math.pi).toStringAsFixed(1)}°',
-    );
+    // debugPrint('🎬 摄像机移动方向: $_cameraDirection');
+    // debugPrint(
+    //   '📐 透视角度: X=${(_perspectiveAngleX * 180 / math.pi).toStringAsFixed(1)}°, Y=${(_perspectiveAngleY * 180 / math.pi).toStringAsFixed(1)}°',
+    // );
 
     // 计算并打印透视区域信息
-    _logPerspectiveAreaInfo();
+    // _logPerspectiveAreaInfo();
   }
 
   // 计算动态缓冲倍数（根据透视角度和显示区域倍数调整）
@@ -609,7 +609,7 @@ class _HomePageContentState extends State<_HomePageContent>
       _svgsCached = true;
     });
 
-    debugPrint('✅ SVG缓存完成: ${_cachedSvgs.length}个文件');
+    // debugPrint('✅ SVG缓存完成: ${_cachedSvgs.length}个文件');
   }
 
   // 更新摄像机位置
@@ -646,7 +646,7 @@ class _HomePageContentState extends State<_HomePageContent>
       const int targetNodes = 200; // 目标节点数量
       if (_activeNodes.length > targetNodes) {
         _pruneDistantNodes(targetNodes);
-        debugPrint('🕐 定期清理: 30秒清理周期，目标节点数 $targetNodes');
+        // debugPrint('🕐 定期清理: 30秒清理周期，目标节点数 $targetNodes');
       }
       _lastCleanupTime = currentTime;
     }
@@ -664,12 +664,12 @@ class _HomePageContentState extends State<_HomePageContent>
     }
 
     // 📊 调试输出节点数量变化
-    final newNodeCount = _activeNodes.length;
-    if (oldNodeCount != newNodeCount) {
-      debugPrint(
-        '🎯 节点数量变化: $oldNodeCount → $newNodeCount (删除: ${oldNodeCount - newNodeCount + (_activeNodes.length - oldNodeCount)}, 新增: ${_activeNodes.length - oldNodeCount})',
-      );
-    }
+    // final newNodeCount = _activeNodes.length;
+    // if (oldNodeCount != newNodeCount) {
+    //   debugPrint(
+    //     '🎯 节点数量变化: $oldNodeCount → $newNodeCount (删除: ${oldNodeCount - newNodeCount + (_activeNodes.length - oldNodeCount)}, 新增: ${_activeNodes.length - oldNodeCount})',
+    //   );
+    // }
   }
 
   // 计算当前可见边界（统一的显示区域系统）
@@ -826,12 +826,12 @@ class _HomePageContentState extends State<_HomePageContent>
       }
     }
 
-    // 📊 调试输出生成信息
-    if (generatedCount > 0) {
-      debugPrint(
-        '🎨 本帧生成节点: $generatedCount 个 (待生成: ${pendingPositions.length}, 限制: $maxGenerationPerFrame)',
-      );
-    }
+    // // 📊 调试输出生成信息
+    // if (generatedCount > 0) {
+    //   debugPrint(
+    //     '🎨 本帧生成节点: $generatedCount 个 (待生成: ${pendingPositions.length}, 限制: $maxGenerationPerFrame)',
+    //   );
+    // }
   }
 
   // 🎯 智能SVG选择：避免最近使用过的SVG重复出现
@@ -871,15 +871,15 @@ class _HomePageContentState extends State<_HomePageContent>
       );
     }
 
-    // 📊 调试输出：显示SVG分布情况
-    if (_recentlyUsedSvgs.length % 5 == 0) {
-      // 每5个SVG输出一次统计
-      final uniqueCount = _recentlyUsedSvgs.toSet().length;
-      final diversity = uniqueCount / _recentlyUsedSvgs.length;
-      debugPrint(
-        '🎨 SVG分布统计: 历史${_recentlyUsedSvgs.length}个, 独特${uniqueCount}个, 多样性${(diversity * 100).toStringAsFixed(1)}%',
-      );
-    }
+    // // 📊 调试输出：显示SVG分布情况
+    // if (_recentlyUsedSvgs.length % 5 == 0) {
+    //   // 每5个SVG输出一次统计
+    //   final uniqueCount = _recentlyUsedSvgs.toSet().length;
+    //   final diversity = uniqueCount / _recentlyUsedSvgs.length;
+    //   debugPrint(
+    //     '🎨 SVG分布统计: 历史${_recentlyUsedSvgs.length}个, 独特${uniqueCount}个, 多样性${(diversity * 100).toStringAsFixed(1)}%',
+    //   );
+    // }
   }
 
   // 🔧 清理距离摄像机最远的节点，防止节点数量过多
@@ -903,7 +903,7 @@ class _HomePageContentState extends State<_HomePageContent>
 
     _activeNodes.removeWhere((key, node) => !nodesToKeep.contains(key));
 
-    debugPrint('🧹 清理远距离节点: 保留 ${nodesToKeep.length} 个最近节点');
+    // debugPrint('🧹 清理远距离节点: 保留 ${nodesToKeep.length} 个最近节点');
   }
 
   // 🎯 计算窗口自适应参数 - 根据窗口大小和随动系数动态调整内容大小
@@ -930,24 +930,24 @@ class _HomePageContentState extends State<_HomePageContent>
     _nodeSpacing = _nodeSpacing.clamp(80.0, 400.0); // 间距范围限制
     _svgRenderSize = _svgRenderSize.clamp(40.0, 300.0); // 图标大小范围限制
 
-    // 📊 调试输出：显示自适应计算结果
-    debugPrint('🔄 窗口自适应参数计算:');
-    debugPrint(
-      '   - 当前窗口尺寸: ${_screenSize.width.toInt()}×${_screenSize.height.toInt()}',
-    );
-    debugPrint('   - 标准尺寸: ${standardWidth.toInt()}×${standardHeight.toInt()}');
-    debugPrint('   - 面积缩放因子: ${areaSqrtRatio.toStringAsFixed(3)}');
-    debugPrint('   - 随动系数: $_windowScalingFactor');
-    debugPrint('   - 最终缩放因子: ${windowScaleFactor.toStringAsFixed(3)}');
-    debugPrint(
-      '   - 基础网格间距: ${_baseNodeSpacing.toInt()}px → 实际间距: ${_nodeSpacing.toInt()}px',
-    );
-    debugPrint(
-      '   - 基础图标大小: ${_baseSvgRenderSize.toInt()}px → 实际大小: ${_svgRenderSize.toInt()}px',
-    );
-    debugPrint(
-      '   - 预计图标数量变化: ${(1.0 / (windowScaleFactor * windowScaleFactor)).toStringAsFixed(2)}倍',
-    );
+    // // 📊 调试输出：显示自适应计算结果
+    // debugPrint('🔄 窗口自适应参数计算:');
+    // debugPrint(
+    //   '   - 当前窗口尺寸: ${_screenSize.width.toInt()}×${_screenSize.height.toInt()}',
+    // );
+    // debugPrint('   - 标准尺寸: ${standardWidth.toInt()}×${standardHeight.toInt()}');
+    // debugPrint('   - 面积缩放因子: ${areaSqrtRatio.toStringAsFixed(3)}');
+    // debugPrint('   - 随动系数: $_windowScalingFactor');
+    // debugPrint('   - 最终缩放因子: ${windowScaleFactor.toStringAsFixed(3)}');
+    // debugPrint(
+    //   '   - 基础网格间距: ${_baseNodeSpacing.toInt()}px → 实际间距: ${_nodeSpacing.toInt()}px',
+    // );
+    // debugPrint(
+    //   '   - 基础图标大小: ${_baseSvgRenderSize.toInt()}px → 实际大小: ${_svgRenderSize.toInt()}px',
+    // );
+    // debugPrint(
+    //   '   - 预计图标数量变化: ${(1.0 / (windowScaleFactor * windowScaleFactor)).toStringAsFixed(2)}倍',
+    // );
   }
 
   @override
@@ -992,14 +992,14 @@ class _HomePageContentState extends State<_HomePageContent>
 
         _calculateAdaptiveParameters();
         _triangleHeight = _nodeSpacing * math.sqrt(3) / 2; // 更新三角形高度
-        debugPrint(
-          '🔄 窗口大小变化 ${sizeChange.toStringAsFixed(1)}px，清理旧节点并重新计算自适应参数',
-        );
+        // debugPrint(
+        //   '🔄 窗口大小变化 ${sizeChange.toStringAsFixed(1)}px，清理旧节点并重新计算自适应参数',
+        // );
       } else if (oldScreenSize == const Size(2560, 1440)) {
         // 首次加载时也需要计算自适应参数（从默认值变为实际值）
         _calculateAdaptiveParameters();
         _triangleHeight = _nodeSpacing * math.sqrt(3) / 2;
-        debugPrint('🔄 首次加载，计算自适应参数');
+        // debugPrint('🔄 首次加载，计算自适应参数');
       }
     }
   }

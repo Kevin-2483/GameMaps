@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../common/radial_gesture_menu.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 轮盘手势菜单示例
 class RadialGestureMenuExample extends StatefulWidget {
   const RadialGestureMenuExample({super.key});
 
   @override
-  State<RadialGestureMenuExample> createState() => _RadialGestureMenuExampleState();
+  State<RadialGestureMenuExample> createState() =>
+      _RadialGestureMenuExampleState();
 }
 
 class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
@@ -62,7 +64,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         ],
         onTap: () => _onItemSelected('画笔'),
       ),
-      
+
       // 图层 (左侧)
       RadialMenuItem(
         id: 'layer',
@@ -101,7 +103,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         ],
         onTap: () => _onItemSelected('图层'),
       ),
-      
+
       // 图层组 (右侧)
       RadialMenuItem(
         id: 'layer_group',
@@ -133,7 +135,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         ],
         onTap: () => _onItemSelected('图层组'),
       ),
-      
+
       // 便签 (底部)
       RadialMenuItem(
         id: 'note',
@@ -179,14 +181,9 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
     setState(() {
       _selectedAction = action;
     });
-    
+
     // 显示选择结果
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('选择了: $action'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    context.showInfoSnackBar('选择了: $action');
   }
 
   @override
@@ -196,7 +193,9 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         title: const Text('轮盘手势菜单示例'),
         actions: [
           IconButton(
-            icon: Icon(_debugMode ? Icons.bug_report : Icons.bug_report_outlined),
+            icon: Icon(
+              _debugMode ? Icons.bug_report : Icons.bug_report_outlined,
+            ),
             onPressed: () {
               setState(() {
                 _debugMode = !_debugMode;
@@ -224,28 +223,18 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.blue.shade50,
-                Colors.purple.shade50,
-              ],
+              colors: [Colors.blue.shade50, Colors.purple.shade50],
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.touch_app,
-                size: 64,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.touch_app, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
               const Text(
                 '使用中键或触摸板双指按下\n来调起轮盘菜单',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
               const SizedBox(height: 32),
               Container(
@@ -316,10 +305,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
                       '3. 拖回中心区域返回主菜单\n'
                       '4. 松开鼠标/手指执行选择的动作\n'
                       '5. 开启调试模式可以看到连线和角度信息',
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
+                      style: TextStyle(fontSize: 14, height: 1.4),
                     ),
                   ],
                 ),

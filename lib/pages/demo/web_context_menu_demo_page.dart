@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../../components/web/web_context_menu_handler.dart';
 import '../../components/layout/main_layout.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// Web右键菜单测试页面
 class WebContextMenuDemoPage extends BasePage {
@@ -267,13 +268,7 @@ class _WebContextMenuDemoContentState
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    context.showInfoSnackBar(message);
   }
 
   void _copyItem(int index) {

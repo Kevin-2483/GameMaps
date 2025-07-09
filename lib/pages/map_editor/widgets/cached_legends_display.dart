@@ -293,7 +293,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               color: color,
             ),
           ),
-          Expanded(child: Divider(indent: 8, color: color.withValues(alpha: 0.3))),
+          Expanded(
+            child: Divider(indent: 8, color: color.withValues(alpha: 0.3)),
+          ),
         ],
       ),
     );
@@ -350,7 +352,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         // 每个瓦片最小宽度约80，最大宽度约120
         final availableWidth = constraints.maxWidth;
         int crossAxisCount;
-        
+
         if (availableWidth < 280) {
           crossAxisCount = 3; // 最少3列
         } else if (availableWidth < 360) {
@@ -362,7 +364,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         } else {
           crossAxisCount = 6; // 最多6列
         }
-        
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -467,9 +469,13 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
           ),
           childWhenDragging: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.5),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -480,9 +486,8 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
                     border: Border.all(
                       color: Theme.of(
                         context,
@@ -519,7 +524,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.3),
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),

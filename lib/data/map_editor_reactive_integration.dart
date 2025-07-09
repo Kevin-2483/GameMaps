@@ -176,14 +176,18 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   void updateLayerReactive(MapLayer layer) {
     debugPrint('=== updateLayerReactive 调用 ===');
     debugPrint('更新图层: ${layer.name}, ID: ${layer.id}');
-    debugPrint('isLinkedToNext: ${layer.isLinkedToNext}, order: ${layer.order}');
+    debugPrint(
+      'isLinkedToNext: ${layer.isLinkedToNext}, order: ${layer.order}',
+    );
     debugPrint('updatedAt: ${layer.updatedAt}');
-    
+
     reactiveIntegration.throttled<MapLayer>(
       'updateLayer_${layer.id}', // 使用图层ID作为唯一标识
       (value) {
         debugPrint('=== 节流执行图层更新 ===');
-        debugPrint('执行更新图层: ${value!.name}, isLinkedToNext: ${value.isLinkedToNext}');
+        debugPrint(
+          '执行更新图层: ${value!.name}, isLinkedToNext: ${value.isLinkedToNext}',
+        );
         return reactiveIntegration._adapter.updateLayer(value);
       },
       value: layer,
@@ -215,10 +219,20 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   }
 
   /// 组内重排序图层（响应式）
-  void reorderLayersInGroupReactive(int oldIndex, int newIndex, List<MapLayer> layersToUpdate) {
+  void reorderLayersInGroupReactive(
+    int oldIndex,
+    int newIndex,
+    List<MapLayer> layersToUpdate,
+  ) {
     debugPrint('=== reorderLayersInGroupReactive 调用 ===');
-    debugPrint('组内重排序图层: oldIndex=$oldIndex, newIndex=$newIndex, 更新图层数量: ${layersToUpdate.length}');
-    reactiveIntegration.adapter.reorderLayersInGroup(oldIndex, newIndex, layersToUpdate);
+    debugPrint(
+      '组内重排序图层: oldIndex=$oldIndex, newIndex=$newIndex, 更新图层数量: ${layersToUpdate.length}',
+    );
+    reactiveIntegration.adapter.reorderLayersInGroup(
+      oldIndex,
+      newIndex,
+      layersToUpdate,
+    );
     debugPrint('=== reorderLayersInGroupReactive 完成 ===');
   }
 
@@ -291,11 +305,11 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   Future<void> saveMapDataReactive({bool forceUpdate = false}) async {
     debugPrint('=== saveMapDataReactive 开始 ===');
     debugPrint('强制更新: $forceUpdate');
-    
+
     // 在保存前强制执行所有待处理的节流任务
     debugPrint('强制执行所有待处理的节流任务...');
     flushAllThrottledUpdates();
-    
+
     await reactiveIntegration.saveMapData(forceUpdate: forceUpdate);
     debugPrint('=== saveMapDataReactive 完成 ===');
   }

@@ -4,6 +4,7 @@ import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
 import '../data/map_data_state.dart';
 import '../models/timer_data.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 紧凑的标题栏计时器组件
 class CompactTimerWidget extends StatefulWidget {
@@ -95,31 +96,35 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
     );
   }
 
-  void _showTimerMenu(BuildContext context, TimerData timer, MapDataLoaded state) {
+  void _showTimerMenu(
+    BuildContext context,
+    TimerData timer,
+    MapDataLoaded state,
+  ) {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     final Size size = renderBox.size;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final ThemeData theme = Theme.of(context);
-    
+
     // 计算菜单位置，防止超出屏幕
     const double menuWidth = 280;
     const double menuMaxHeight = 400;
     const double padding = 16;
-    
+
     double left = offset.dx;
     double top = offset.dy + size.height + 8;
-    
+
     // 检查右边界
     if (left + menuWidth > mediaQuery.size.width - padding) {
       left = mediaQuery.size.width - menuWidth - padding;
     }
-    
+
     // 检查左边界
     if (left < padding) {
       left = padding;
     }
-    
+
     // 检查下边界，如果超出则显示在上方
     if (top + menuMaxHeight > mediaQuery.size.height - padding) {
       top = offset.dy - menuMaxHeight - 8;
@@ -171,76 +176,92 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                     if (currentState is! MapDataLoaded) {
                       return const SizedBox.shrink();
                     }
-                    
-                    final currentTimer = currentState.getTimerById(timer.id) ?? timer;
-                    
+
+                    final currentTimer =
+                        currentState.getTimerById(timer.id) ?? timer;
+
                     return SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                        // 计时器控制选项
-                        if (currentTimer.state.canStart)
-                          _buildMenuItem(
-                            icon: Icons.play_arrow,
-                            color: Colors.green,
-                            text: '开始 ${currentTimer.name}',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              widget.mapDataBloc.add(StartTimer(timerId: currentTimer.id));
-                            },
-                          ),
-                        if (currentTimer.state.canPause)
-                          _buildMenuItem(
-                            icon: Icons.pause,
-                            color: Colors.orange,
-                            text: '暂停 ${currentTimer.name}',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              widget.mapDataBloc.add(PauseTimer(timerId: currentTimer.id));
-                            },
-                          ),
-                        if (currentTimer.state.canStop)
-                          _buildMenuItem(
-                            icon: Icons.stop,
-                            color: Colors.red,
-                            text: '停止 ${currentTimer.name}',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              widget.mapDataBloc.add(StopTimer(timerId: currentTimer.id));
-                            },
-                          ),
-                        if (currentTimer.state.canReset)
-                          _buildMenuItem(
-                            icon: Icons.refresh,
-                            color: Colors.blue,
-                            text: '重置 ${currentTimer.name}',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              widget.mapDataBloc.add(ResetTimer(timerId: currentTimer.id));
-                            },
-                          ),
+                          // 计时器控制选项
+                          if (currentTimer.state.canStart)
+                            _buildMenuItem(
+                              icon: Icons.play_arrow,
+                              color: Colors.green,
+                              text: '开始 ${currentTimer.name}',
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                widget.mapDataBloc.add(
+                                  StartTimer(timerId: currentTimer.id),
+                                );
+                              },
+                            ),
+                          if (currentTimer.state.canPause)
+                            _buildMenuItem(
+                              icon: Icons.pause,
+                              color: Colors.orange,
+                              text: '暂停 ${currentTimer.name}',
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                widget.mapDataBloc.add(
+                                  PauseTimer(timerId: currentTimer.id),
+                                );
+                              },
+                            ),
+                          if (currentTimer.state.canStop)
+                            _buildMenuItem(
+                              icon: Icons.stop,
+                              color: Colors.red,
+                              text: '停止 ${currentTimer.name}',
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                widget.mapDataBloc.add(
+                                  StopTimer(timerId: currentTimer.id),
+                                );
+                              },
+                            ),
+                          if (currentTimer.state.canReset)
+                            _buildMenuItem(
+                              icon: Icons.refresh,
+                              color: Colors.blue,
+                              text: '重置 ${currentTimer.name}',
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                widget.mapDataBloc.add(
+                                  ResetTimer(timerId: currentTimer.id),
+                                );
+                              },
+                            ),
 
-                        // 分隔线
-                         if (currentTimer.state.canStart ||
-                             currentTimer.state.canPause ||
-                             currentTimer.state.canStop ||
-                             currentTimer.state.canReset)
-                           Divider(
-                             height: 1,
-                             color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                           ),
+                          // 分隔线
+                          if (currentTimer.state.canStart ||
+                              currentTimer.state.canPause ||
+                              currentTimer.state.canStop ||
+                              currentTimer.state.canReset)
+                            Divider(
+                              height: 1,
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.2,
+                              ),
+                            ),
 
-                        // 切换计时器选项
-                        if (currentState.timers.length > 1)
-                          ...currentState.timers.map(
-                            (t) {
-                              final latestTimer = currentState.getTimerById(t.id) ?? t;
+                          // 切换计时器选项
+                          if (currentState.timers.length > 1)
+                            ...currentState.timers.map((t) {
+                              final latestTimer =
+                                  currentState.getTimerById(t.id) ?? t;
                               return _buildMenuItem(
                                 icon: _getTimerIcon(latestTimer),
                                 color: _getTimerColor(latestTimer),
-                                text: '${latestTimer.name} (${_formatDuration(latestTimer.currentTime)})',
+                                text:
+                                    '${latestTimer.name} (${_formatDuration(latestTimer.currentTime)})',
                                 trailing: t.id == currentTimer.id
-                                    ? const Icon(Icons.check, size: 16, color: Colors.green)
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Colors.green,
+                                      )
                                     : null,
                                 onTap: () {
                                   Navigator.of(context).pop();
@@ -251,38 +272,40 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                                   }
                                 },
                               );
+                            }),
+
+                          if (currentState.timers.length > 1)
+                            Divider(
+                              height: 1,
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.2,
+                              ),
+                            ),
+
+                          // 管理选项
+                          _buildMenuItem(
+                            icon: Icons.add,
+                            color: Colors.blue,
+                            text: '创建新计时器',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              _showCreateTimerDialog(context);
                             },
                           ),
-
-                        if (currentState.timers.length > 1) Divider(
-                           height: 1,
-                           color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                         ),
-
-                        // 管理选项
-                        _buildMenuItem(
-                          icon: Icons.add,
-                          color: Colors.blue,
-                          text: '创建新计时器',
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            _showCreateTimerDialog(context);
-                          },
-                        ),
-                        _buildMenuItem(
-                          icon: Icons.settings,
-                          color: Colors.grey,
-                          text: '管理计时器',
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            _showTimerManagementDialog(context, currentState);
-                          },
-                        ),
-                         ],
-                       ),
-                     );
-                   },
-                 ),
+                          _buildMenuItem(
+                            icon: Icons.settings,
+                            color: Colors.grey,
+                            text: '管理计时器',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              _showTimerManagementDialog(context, currentState);
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -323,8 +346,6 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
       ),
     );
   }
-
-
 
   void _showCreateTimerDialog(BuildContext context) {
     showDialog(
@@ -496,9 +517,7 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
   void _createTimer() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入计时器名称')));
+      context.showErrorSnackBar('请输入计时器名称');
       return;
     }
 
@@ -513,9 +532,7 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
       duration = Duration(hours: hours, minutes: minutes, seconds: seconds);
 
       if (duration.inMilliseconds <= 0) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('请设置有效的时间')));
+        context.showErrorSnackBar('请设置有效的时间');
         return;
       }
     }

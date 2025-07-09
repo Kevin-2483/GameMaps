@@ -13,6 +13,7 @@ import 'widgets/tool_settings_section.dart';
 import 'widgets/user_management_section.dart';
 import 'widgets/extension_settings_section.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../../services/notification/notification_service.dart';
 
 class UserPreferencesPage extends BasePage {
   const UserPreferencesPage({super.key});
@@ -57,21 +58,11 @@ class _UserPreferencesPageContentState
       await Clipboard.setData(ClipboardData(text: jsonData));
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.settingsExported} (已复制到剪贴板)'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        context.showSuccessSnackBar('${l10n.settingsExported} (已复制到剪贴板)');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('导出失败：${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorSnackBar('导出失败：${e.toString()}');
       }
     }
   }
@@ -91,23 +82,13 @@ class _UserPreferencesPageContentState
 
         if (mounted) {
           final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.settingsImported),
-              backgroundColor: Colors.green,
-            ),
-          );
+          context.showSuccessSnackBar(l10n.settingsImported);
         }
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.importFailed(e.toString())),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorSnackBar(l10n.importFailed(e.toString()));
       }
     }
   }
@@ -143,21 +124,11 @@ class _UserPreferencesPageContentState
         await provider.resetToDefaults();
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.settingsReset),
-              backgroundColor: Colors.green,
-            ),
-          );
+          context.showSuccessSnackBar(l10n.settingsReset);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('重置失败：${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          context.showErrorSnackBar('重置失败：${e.toString()}');
         }
       }
     }

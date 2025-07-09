@@ -20,15 +20,15 @@ class DatabasePathService {
 
     // 获取应用程序文档目录
     final appDocDir = await getApplicationDocumentsDirectory();
-    
+
     // 创建r6box/databases子目录
     final databasesDir = Directory(join(appDocDir.path, 'r6box', 'databases'));
-    
+
     // 确保目录存在
     if (!await databasesDir.exists()) {
       await databasesDir.create(recursive: true);
     }
-    
+
     _customDatabasePath = databasesDir.path;
     return _customDatabasePath!;
   }
@@ -59,11 +59,11 @@ class DatabasePathService {
     try {
       final databasesPath = await getDatabasesPath();
       final dir = Directory(databasesPath);
-      
+
       if (!await dir.exists()) {
         return 0;
       }
-      
+
       int totalSize = 0;
       await for (final entity in dir.list(recursive: true)) {
         if (entity is File) {
@@ -71,7 +71,7 @@ class DatabasePathService {
           totalSize += stat.size;
         }
       }
-      
+
       return totalSize;
     } catch (e) {
       return 0;
@@ -83,18 +83,18 @@ class DatabasePathService {
     try {
       final databasesPath = await getDatabasesPath();
       final dir = Directory(databasesPath);
-      
+
       if (!await dir.exists()) {
         return [];
       }
-      
+
       final files = <String>[];
       await for (final entity in dir.list()) {
         if (entity is File && entity.path.endsWith('.db')) {
           files.add(basename(entity.path));
         }
       }
-      
+
       return files;
     } catch (e) {
       return [];

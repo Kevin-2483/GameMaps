@@ -4,6 +4,7 @@ import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'media_kit_video_player.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// VFS视频查看器窗口
 class VfsVideoViewerWindow extends StatefulWidget {
@@ -467,11 +468,6 @@ class _VfsVideoViewerWindowState extends State<VfsVideoViewerWindow> {
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
     debugPrint('复制视频链接: ${widget.vfsPath}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('视频链接已复制到剪贴板'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    context.showSuccessSnackBar('视频链接已复制到剪贴板');
   }
 }

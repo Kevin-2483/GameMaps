@@ -104,7 +104,9 @@ class CleanupService {
     } catch (e) {
       totalStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('清理操作过程中发生错误: $e，已耗时: ${totalStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          '清理操作过程中发生错误: $e，已耗时: ${totalStopwatch.elapsedMilliseconds}ms',
+        );
       }
     } finally {
       _isCleanupInProgress = false;
@@ -258,24 +260,29 @@ class CleanupService {
         debugPrint('正在清理临时文件...');
       }
 
-      if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      if (!kIsWeb &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
         // 只清理应用内部临时目录的子目录，保留temp目录本身
         final appDocDir = await getApplicationDocumentsDirectory();
         final appTempDir = Directory(path.join(appDocDir.path, 'r6box'));
-        
+
         if (await appTempDir.exists()) {
           // 清理VFS临时文件子目录
-          final vfsFilesDir = Directory(path.join(appTempDir.path, 'vfs_files'));
+          final vfsFilesDir = Directory(
+            path.join(appTempDir.path, 'vfs_files'),
+          );
           if (await vfsFilesDir.exists()) {
             await _cleanupDirectory(vfsFilesDir);
           }
-          
+
           // 清理剪贴板临时文件子目录
-          final clipboardFilesDir = Directory(path.join(appTempDir.path, 'clipboard_files'));
+          final clipboardFilesDir = Directory(
+            path.join(appTempDir.path, 'clipboard_files'),
+          );
           if (await clipboardFilesDir.exists()) {
             await _cleanupDirectory(clipboardFilesDir);
           }
-          
+
           // 清理其他可能的临时文件（直接在temp目录下的文件）
           await for (final entity in appTempDir.list()) {
             if (entity is File) {
@@ -311,15 +318,16 @@ class CleanupService {
         debugPrint('正在清理过期日志文件...');
       }
 
-      if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      if (!kIsWeb &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
         // 获取应用文档目录
         final appDocDir = await getApplicationDocumentsDirectory();
         final logsDir = Directory(path.join(appDocDir.path, 'logs'));
-        
+
         if (await logsDir.exists()) {
           // 清理超过7天的日志文件
           final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
-          
+
           await for (final entity in logsDir.list()) {
             if (entity is File && entity.path.endsWith('.log')) {
               try {
@@ -375,7 +383,10 @@ class CleanupService {
   }
 
   /// 清理指定目录
-  Future<void> _cleanupDirectory(Directory directory, {List<String>? patterns}) async {
+  Future<void> _cleanupDirectory(
+    Directory directory, {
+    List<String>? patterns,
+  }) async {
     try {
       if (!await directory.exists()) {
         return;
@@ -385,7 +396,7 @@ class CleanupService {
         try {
           if (entity is File) {
             bool shouldDelete = false;
-            
+
             if (patterns != null) {
               final fileName = path.basename(entity.path);
               for (final pattern in patterns) {
@@ -415,7 +426,7 @@ class CleanupService {
           } else if (entity is Directory) {
             // 检查目录名是否匹配模式
             bool shouldProcessDir = false;
-            
+
             if (patterns != null) {
               final dirName = path.basename(entity.path);
               for (final pattern in patterns) {
@@ -434,11 +445,11 @@ class CleanupService {
               // 如果没有指定模式，处理所有目录
               shouldProcessDir = true;
             }
-            
+
             if (shouldProcessDir) {
               // 递归清理匹配的子目录
               await _cleanupDirectory(entity, patterns: patterns);
-              
+
               // 如果目录为空，删除它
               try {
                 final isEmpty = await entity.list().isEmpty;

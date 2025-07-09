@@ -9,16 +9,16 @@ class VfsPlatformIO {
   static Future<Directory> getTempDirectory() async {
     // 获取应用文档目录作为基础目录
     final appDocDir = await getApplicationDocumentsDirectory();
-    
+
     // 在应用文档目录下创建temp子目录
     final tempDir = Directory(path.join(appDocDir.path, 'r6box'));
-    
+
     // 确保目录存在
     if (!await tempDir.exists()) {
       await tempDir.create(recursive: true);
       debugPrint('🔗 VfsPlatformIO: 创建应用临时目录 - ${tempDir.path}');
     }
-    
+
     return tempDir;
   }
 
@@ -96,7 +96,7 @@ class VfsPlatformIO {
 
     // 优先从MIME类型推断文件扩展名
     String extension = _getExtensionFromMimeType(mimeType);
-    
+
     // 如果MIME类型无法确定扩展名（返回.bin），尝试从文件名中提取
     if (extension == '.bin') {
       extension = _getExtensionFromFileName(vfsPath) ?? '.bin';
@@ -109,18 +109,18 @@ class VfsPlatformIO {
   static String? _getExtensionFromFileName(String filePath) {
     // 获取文件名（去掉路径）
     final fileName = filePath.split('/').last;
-    
+
     // 查找最后一个点的位置
     final lastDotIndex = fileName.lastIndexOf('.');
-    
+
     // 如果没有找到点，或者点在开头（隐藏文件），返回null
     if (lastDotIndex == -1 || lastDotIndex == 0) {
       return null;
     }
-    
+
     // 提取扩展名（包含点）
     final extension = fileName.substring(lastDotIndex).toLowerCase();
-    
+
     // 验证扩展名是否合理（长度在1-10之间，只包含字母数字）
     if (extension.length > 1 && extension.length <= 10) {
       final extWithoutDot = extension.substring(1);
@@ -128,7 +128,7 @@ class VfsPlatformIO {
         return extension;
       }
     }
-    
+
     return null;
   }
 
@@ -148,7 +148,7 @@ class VfsPlatformIO {
       'image/bmp': '.bmp',
       'image/tiff': '.tiff',
       'image/ico': '.ico',
-      
+
       // 视频类型
       'video/mp4': '.mp4',
       'video/webm': '.webm',
@@ -160,7 +160,7 @@ class VfsPlatformIO {
       'video/x-flv': '.flv',
       'video/3gpp': '.3gp',
       'video/x-ms-wmv': '.wmv',
-      
+
       // 音频类型
       'audio/mpeg': '.mp3',
       'audio/wav': '.wav',
@@ -168,16 +168,19 @@ class VfsPlatformIO {
       'audio/aac': '.aac',
       'audio/flac': '.flac',
       'audio/x-ms-wma': '.wma',
-      
+
       // 文档类型
       'application/pdf': '.pdf',
       'application/msword': '.doc',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          '.docx',
       'application/vnd.ms-excel': '.xls',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+          '.xlsx',
       'application/vnd.ms-powerpoint': '.ppt',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
-      
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+          '.pptx',
+
       // 文本类型
       'text/plain': '.txt',
       'text/html': '.html',
@@ -186,20 +189,20 @@ class VfsPlatformIO {
       'text/markdown': '.md',
       'text/csv': '.csv',
       'text/xml': '.xml',
-      
+
       // 数据类型
       'application/json': '.json',
       'application/xml': '.xml',
       'application/yaml': '.yaml',
       'application/x-yaml': '.yml',
-      
+
       // 压缩文件
       'application/zip': '.zip',
       'application/x-rar-compressed': '.rar',
       'application/x-7z-compressed': '.7z',
       'application/x-tar': '.tar',
       'application/gzip': '.gz',
-      
+
       // 其他常见类型
       'application/octet-stream': '.bin',
       'application/x-executable': '.exe',
@@ -215,24 +218,28 @@ class VfsPlatformIO {
 
     // 如果没有精确匹配，尝试部分匹配
     final lowerMimeType = mimeType.toLowerCase();
-    
+
     // 视频类型的部分匹配
     if (lowerMimeType.startsWith('video/')) {
       if (lowerMimeType.contains('mp4')) return '.mp4';
       if (lowerMimeType.contains('webm')) return '.webm';
       if (lowerMimeType.contains('ogg')) return '.ogg';
-      if (lowerMimeType.contains('quicktime') || lowerMimeType.contains('mov')) return '.mov';
-      if (lowerMimeType.contains('msvideo') || lowerMimeType.contains('avi')) return '.avi';
-      if (lowerMimeType.contains('matroska') || lowerMimeType.contains('mkv')) return '.mkv';
+      if (lowerMimeType.contains('quicktime') || lowerMimeType.contains('mov'))
+        return '.mov';
+      if (lowerMimeType.contains('msvideo') || lowerMimeType.contains('avi'))
+        return '.avi';
+      if (lowerMimeType.contains('matroska') || lowerMimeType.contains('mkv'))
+        return '.mkv';
       if (lowerMimeType.contains('flv')) return '.flv';
       if (lowerMimeType.contains('3gpp')) return '.3gp';
       if (lowerMimeType.contains('wmv')) return '.wmv';
       return '.mp4'; // 默认视频扩展名
     }
-    
+
     // 音频类型的部分匹配
     if (lowerMimeType.startsWith('audio/')) {
-      if (lowerMimeType.contains('mpeg') || lowerMimeType.contains('mp3')) return '.mp3';
+      if (lowerMimeType.contains('mpeg') || lowerMimeType.contains('mp3'))
+        return '.mp3';
       if (lowerMimeType.contains('wav')) return '.wav';
       if (lowerMimeType.contains('ogg')) return '.ogg';
       if (lowerMimeType.contains('aac')) return '.aac';
@@ -240,11 +247,12 @@ class VfsPlatformIO {
       if (lowerMimeType.contains('wma')) return '.wma';
       return '.mp3'; // 默认音频扩展名
     }
-    
+
     // 图片类型的部分匹配
     if (lowerMimeType.startsWith('image/')) {
       if (lowerMimeType.contains('png')) return '.png';
-      if (lowerMimeType.contains('jpeg') || lowerMimeType.contains('jpg')) return '.jpg';
+      if (lowerMimeType.contains('jpeg') || lowerMimeType.contains('jpg'))
+        return '.jpg';
       if (lowerMimeType.contains('gif')) return '.gif';
       if (lowerMimeType.contains('webp')) return '.webp';
       if (lowerMimeType.contains('svg')) return '.svg';
@@ -253,7 +261,7 @@ class VfsPlatformIO {
       if (lowerMimeType.contains('ico')) return '.ico';
       return '.png'; // 默认图片扩展名
     }
-    
+
     // 文本类型的部分匹配
     if (lowerMimeType.startsWith('text/')) {
       if (lowerMimeType.contains('html')) return '.html';
@@ -264,7 +272,7 @@ class VfsPlatformIO {
       if (lowerMimeType.contains('xml')) return '.xml';
       return '.txt'; // 默认文本扩展名
     }
-    
+
     // 应用程序类型的部分匹配
     if (lowerMimeType.startsWith('application/')) {
       if (lowerMimeType.contains('json')) return '.json';

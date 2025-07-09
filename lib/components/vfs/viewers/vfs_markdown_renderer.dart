@@ -15,6 +15,7 @@ import 'latex_processor.dart';
 import 'video_processor.dart';
 import 'audio_processor.dart';
 import 'media_kit_video_player.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -1166,12 +1167,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           // 尝试匹配标题文本
           if (headingText.toLowerCase().contains(searchText.toLowerCase())) {
             _tocController.jumpToIndex(toc.widgetIndex);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('已跳转到: $headingText'),
-                duration: const Duration(seconds: 1),
-              ),
-            );
+            context.showSuccessSnackBar('已跳转到: $headingText');
             return;
           }
         }
@@ -1469,20 +1465,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   void _copyContent() {
     Clipboard.setData(ClipboardData(text: _markdownContent));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已复制到剪贴板'), duration: Duration(seconds: 2)),
-    );
+    context.showSuccessSnackBar('已复制到剪贴板');
   }
 
   /// 显示错误提示
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    context.showErrorSnackBar(message);
   }
 
   /// 显示HTML信息对话框

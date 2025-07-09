@@ -3,6 +3,7 @@ import '../../config/config_manager.dart';
 import '../../config/app_config.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../../l10n/app_localizations.dart';
+import '../../../services/notification/notification_service.dart';
 
 /// 配置编辑器页面
 class ConfigEditorPage extends StatefulWidget {
@@ -90,10 +91,7 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
     setState(() {
       _config = newConfig;
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.configUpdated)),
-    );
+    context.showSuccessSnackBar(AppLocalizations.of(context)!.configUpdated);
   }
 
   @override
