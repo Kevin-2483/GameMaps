@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../models/map_layer.dart';
 import '../models/map_item.dart';
+import '../models/timer_data.dart';
 
 /// 地图数据状态
 abstract class MapDataState extends Equatable {
@@ -25,6 +26,7 @@ class MapDataLoaded extends MapDataState {
   final MapItem mapItem;
   final List<MapLayer> layers;
   final List<LegendGroup> legendGroups;
+  final List<TimerData> timers;
   final DateTime lastModified;
   final Map<String, dynamic> metadata;
 
@@ -32,6 +34,7 @@ class MapDataLoaded extends MapDataState {
     required this.mapItem,
     required this.layers,
     required this.legendGroups,
+    this.timers = const [],
     required this.lastModified,
     this.metadata = const {},
   });
@@ -41,6 +44,7 @@ class MapDataLoaded extends MapDataState {
     mapItem,
     layers,
     legendGroups,
+    timers,
     lastModified,
     metadata,
   ];
@@ -50,6 +54,7 @@ class MapDataLoaded extends MapDataState {
     MapItem? mapItem,
     List<MapLayer>? layers,
     List<LegendGroup>? legendGroups,
+    List<TimerData>? timers,
     DateTime? lastModified,
     Map<String, dynamic>? metadata,
   }) {
@@ -57,6 +62,7 @@ class MapDataLoaded extends MapDataState {
       mapItem: mapItem ?? this.mapItem,
       layers: layers ?? this.layers,
       legendGroups: legendGroups ?? this.legendGroups,
+      timers: timers ?? this.timers,
       lastModified: lastModified ?? this.lastModified,
       metadata: metadata ?? this.metadata,
     );
@@ -95,6 +101,40 @@ class MapDataLoaded extends MapDataState {
   /// 获取可见图例组
   List<LegendGroup> get visibleLegendGroups {
     return legendGroups.where((group) => group.isVisible).toList();
+  }
+
+  /// 获取指定ID的计时器
+  TimerData? getTimerById(String timerId) {
+    try {
+      return timers.firstWhere((timer) => timer.id == timerId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 获取运行中的计时器
+  List<TimerData> get runningTimers {
+    return timers.where((timer) => timer.isRunning).toList();
+  }
+
+  /// 获取已暂停的计时器
+  List<TimerData> get pausedTimers {
+    return timers.where((timer) => timer.isPaused).toList();
+  }
+
+  /// 获取已完成的计时器
+  List<TimerData> get completedTimers {
+    return timers.where((timer) => timer.isCompleted).toList();
+  }
+
+  /// 检查是否有运行中的计时器
+  bool get hasRunningTimers => runningTimers.isNotEmpty;
+
+  /// 获取按创建时间排序的计时器
+  List<TimerData> get sortedTimers {
+    final sorted = List<TimerData>.from(timers);
+    sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return sorted;
   }
 }
 

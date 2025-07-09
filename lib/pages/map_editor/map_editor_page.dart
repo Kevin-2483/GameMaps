@@ -43,6 +43,7 @@ import '../../data/new_reactive_script_manager.dart';
 import '../../services/legend_cache_manager.dart';
 import '../../components/color_filter_dialog.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import '../../widgets/compact_timer_widget.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -3026,6 +3027,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   /// 构建标题栏操作按钮
   List<Widget> _buildTitleBarActions() {
     return [
+      // 计时器组件
+      CompactTimerWidget(mapDataBloc: reactiveIntegration.mapDataBloc),
+      const SizedBox(width: 8),
+      
       // 窗口控制按钮
       ..._buildWindowControls(),
 

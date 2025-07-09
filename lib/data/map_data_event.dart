@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../models/map_layer.dart';
 import '../models/map_item.dart';
 import '../models/sticky_note.dart';
+import '../models/timer_data.dart';
 
 /// 地图数据事件基类
 abstract class MapDataEvent extends Equatable {
@@ -316,4 +317,102 @@ class ReorderStickyNotesByDrag extends MapDataEvent {
 
   @override
   List<Object?> get props => [reorderedNotes];
+}
+
+// 计时器相关事件
+
+/// 创建计时器
+class CreateTimer extends MapDataEvent {
+  final TimerData timer;
+
+  const CreateTimer({required this.timer});
+
+  @override
+  List<Object?> get props => [timer];
+}
+
+/// 更新计时器
+class UpdateTimer extends MapDataEvent {
+  final TimerData timer;
+
+  const UpdateTimer({required this.timer});
+
+  @override
+  List<Object?> get props => [timer];
+}
+
+/// 删除计时器
+class DeleteTimer extends MapDataEvent {
+  final String timerId;
+
+  const DeleteTimer({required this.timerId});
+
+  @override
+  List<Object?> get props => [timerId];
+}
+
+/// 启动计时器
+class StartTimer extends MapDataEvent {
+  final String timerId;
+
+  const StartTimer({required this.timerId});
+
+  @override
+  List<Object?> get props => [timerId];
+}
+
+/// 暂停计时器
+class PauseTimer extends MapDataEvent {
+  final String timerId;
+
+  const PauseTimer({required this.timerId});
+
+  @override
+  List<Object?> get props => [timerId];
+}
+
+/// 停止计时器
+class StopTimer extends MapDataEvent {
+  final String timerId;
+
+  const StopTimer({required this.timerId});
+
+  @override
+  List<Object?> get props => [timerId];
+}
+
+/// 重置计时器
+class ResetTimer extends MapDataEvent {
+  final String timerId;
+
+  const ResetTimer({required this.timerId});
+
+  @override
+  List<Object?> get props => [timerId];
+}
+
+/// 计时器时间更新（内部事件，由计时器管理器触发）
+class TimerTick extends MapDataEvent {
+  final String timerId;
+  final Duration currentTime;
+
+  const TimerTick({required this.timerId, required this.currentTime});
+
+  @override
+  List<Object?> get props => [timerId, currentTime];
+}
+
+/// 批量更新计时器
+class UpdateTimers extends MapDataEvent {
+  final List<TimerData> timers;
+
+  const UpdateTimers({required this.timers});
+
+  @override
+  List<Object?> get props => [timers];
+}
+
+/// 清空所有计时器
+class ClearAllTimers extends MapDataEvent {
+  const ClearAllTimers();
 }

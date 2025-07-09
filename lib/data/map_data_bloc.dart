@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
 import '../services/vfs_map_storage/vfs_map_service.dart';
+import '../services/timer_manager.dart';
 import '../models/map_layer.dart';
 import '../models/sticky_note.dart';
+import '../models/timer_data.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
 
@@ -58,6 +60,21 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     on<DeleteStickyNote>(_onDeleteStickyNote);
     on<ReorderStickyNotes>(_onReorderStickyNotes);
     on<ReorderStickyNotesByDrag>(_onReorderStickyNotesByDrag);
+
+    // 计时器事件处理器
+    on<CreateTimer>(_onCreateTimer);
+    on<UpdateTimer>(_onUpdateTimer);
+    on<DeleteTimer>(_onDeleteTimer);
+    on<StartTimer>(_onStartTimer);
+    on<PauseTimer>(_onPauseTimer);
+    on<StopTimer>(_onStopTimer);
+    on<ResetTimer>(_onResetTimer);
+    on<TimerTick>(_onTimerTick);
+    on<UpdateTimers>(_onUpdateTimers);
+    on<ClearAllTimers>(_onClearAllTimers);
+
+    // 初始化计时器管理器
+    TimerManager.instance.initialize(this);
   }
 
   /// 添加数据变更监听器
@@ -874,11 +891,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
   /// 获取当前版本
   String? get currentVersion => _currentVersion;
 
-  @override
-  Future<void> close() {
-    _dataChangeListeners.clear();
-    return super.close();
-  }
+
   // 便签事件处理方法
 
   /// 添加便签
@@ -1052,5 +1065,413 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       debugPrint('通过拖拽重新排序便签失败: $e');
       emit(MapDataError(message: '通过拖拽重新排序便签失败: $e'));
     }
+  }
+
+  // 计时器事件处理方法
+
+  /// 创建计时器
+  Future<void> _onCreateTimer(
+    CreateTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 检查是否已存在相同ID的计时器
+      final existingTimer = currentState.getTimerById(event.timer.id);
+      if (existingTimer != null) {
+        emit(const MapDataError(message: '计时器ID已存在'));
+        return;
+      }
+
+      // 添加新计时器
+      final updatedTimers = List<TimerData>.from(currentState.timers)
+        ..add(event.timer);
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+      debugPrint('计时器已创建: ${event.timer.id}');
+    } catch (e) {
+      debugPrint('创建计时器失败: $e');
+      emit(MapDataError(message: '创建计时器失败: $e'));
+    }
+  }
+
+  /// 更新计时器
+  Future<void> _onUpdateTimer(
+    UpdateTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 更新计时器
+      final updatedTimers = currentState.timers.map((timer) {
+        return timer.id == event.timer.id ? event.timer : timer;
+      }).toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('更新计时器失败: $e');
+      emit(MapDataError(message: '更新计时器失败: $e'));
+    }
+  }
+
+  /// 删除计时器
+  Future<void> _onDeleteTimer(
+    DeleteTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 停止计时器（如果正在运行）
+      TimerManager.instance.stopTimer(event.timerId);
+
+      // 删除计时器
+      final updatedTimers = currentState.timers
+          .where((timer) => timer.id != event.timerId)
+          .toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+      debugPrint('计时器已删除: ${event.timerId}');
+    } catch (e) {
+      debugPrint('删除计时器失败: $e');
+      emit(MapDataError(message: '删除计时器失败: $e'));
+    }
+  }
+
+  /// 启动计时器
+  Future<void> _onStartTimer(
+    StartTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final timer = currentState.getTimerById(event.timerId);
+      if (timer == null) {
+        emit(const MapDataError(message: '计时器不存在'));
+        return;
+      }
+
+      if (!timer.state.canStart) {
+        emit(const MapDataError(message: '计时器当前状态无法启动'));
+        return;
+      }
+
+      // 更新计时器状态
+      final updatedTimer = timer.copyWith(
+        state: TimerState.running,
+        startTime: DateTime.now(),
+        pauseTime: null,
+        updatedAt: DateTime.now(),
+      );
+
+      // 启动计时器管理器
+      TimerManager.instance.startTimer(event.timerId, updatedTimer);
+
+      // 更新状态
+      final updatedTimers = currentState.timers.map((t) {
+        return t.id == event.timerId ? updatedTimer : t;
+      }).toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('启动计时器失败: $e');
+      emit(MapDataError(message: '启动计时器失败: $e'));
+    }
+  }
+
+  /// 暂停计时器
+  Future<void> _onPauseTimer(
+    PauseTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final timer = currentState.getTimerById(event.timerId);
+      if (timer == null) {
+        emit(const MapDataError(message: '计时器不存在'));
+        return;
+      }
+
+      if (!timer.state.canPause) {
+        emit(const MapDataError(message: '计时器当前状态无法暂停'));
+        return;
+      }
+
+      // 停止计时器管理器
+      TimerManager.instance.pauseTimer(event.timerId);
+
+      // 更新计时器状态
+      final updatedTimer = timer.copyWith(
+        state: TimerState.paused,
+        pauseTime: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // 更新状态
+      final updatedTimers = currentState.timers.map((t) {
+        return t.id == event.timerId ? updatedTimer : t;
+      }).toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('暂停计时器失败: $e');
+      emit(MapDataError(message: '暂停计时器失败: $e'));
+    }
+  }
+
+  /// 停止计时器
+  Future<void> _onStopTimer(
+    StopTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final timer = currentState.getTimerById(event.timerId);
+      if (timer == null) {
+        emit(const MapDataError(message: '计时器不存在'));
+        return;
+      }
+
+      if (!timer.state.canStop) {
+        emit(const MapDataError(message: '计时器当前状态无法停止'));
+        return;
+      }
+
+      // 停止计时器管理器
+      TimerManager.instance.stopTimer(event.timerId);
+
+      // 重置计时器状态
+      final resetTime = timer.mode == TimerMode.countdown 
+          ? (timer.targetTime ?? Duration.zero)
+          : Duration.zero;
+
+      final updatedTimer = timer.copyWith(
+        state: TimerState.stopped,
+        currentTime: resetTime,
+        startTime: null,
+        pauseTime: null,
+        updatedAt: DateTime.now(),
+      );
+
+      // 更新状态
+      final updatedTimers = currentState.timers.map((t) {
+        return t.id == event.timerId ? updatedTimer : t;
+      }).toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('停止计时器失败: $e');
+      emit(MapDataError(message: '停止计时器失败: $e'));
+    }
+  }
+
+  /// 重置计时器
+  Future<void> _onResetTimer(
+    ResetTimer event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final timer = currentState.getTimerById(event.timerId);
+      if (timer == null) {
+        emit(const MapDataError(message: '计时器不存在'));
+        return;
+      }
+
+      // 停止计时器管理器
+      TimerManager.instance.stopTimer(event.timerId);
+
+      // 重置计时器
+      final resetTime = timer.mode == TimerMode.countdown 
+          ? (timer.targetTime ?? Duration.zero)
+          : Duration.zero;
+
+      final updatedTimer = timer.copyWith(
+        state: TimerState.stopped,
+        currentTime: resetTime,
+        startTime: null,
+        pauseTime: null,
+        updatedAt: DateTime.now(),
+      );
+
+      // 更新状态
+      final updatedTimers = currentState.timers.map((t) {
+        return t.id == event.timerId ? updatedTimer : t;
+      }).toList();
+
+      final newState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('重置计时器失败: $e');
+      emit(MapDataError(message: '重置计时器失败: $e'));
+    }
+  }
+
+  /// 计时器时间更新
+  Future<void> _onTimerTick(
+    TimerTick event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      final timer = currentState.getTimerById(event.timerId);
+      if (timer == null || !timer.isRunning) return;
+
+      // 检查是否完成
+      final isCompleted = timer.mode == TimerMode.countdown 
+          ? event.currentTime.inMilliseconds <= 0
+          : (timer.targetTime != null && event.currentTime >= timer.targetTime!);
+
+      final newState = isCompleted ? TimerState.completed : TimerState.running;
+
+      // 更新计时器时间
+      final updatedTimer = timer.copyWith(
+        currentTime: event.currentTime,
+        state: newState,
+        updatedAt: DateTime.now(),
+      );
+
+      // 更新状态
+      final updatedTimers = currentState.timers.map((t) {
+        return t.id == event.timerId ? updatedTimer : t;
+      }).toList();
+
+      final newMapState = currentState.copyWith(
+        timers: updatedTimers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newMapState);
+      // 注意：这里不调用_notifyDataChangeListeners以避免过于频繁的通知
+    } catch (e) {
+      debugPrint('计时器时间更新失败: $e');
+    }
+  }
+
+  /// 批量更新计时器
+  Future<void> _onUpdateTimers(
+    UpdateTimers event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      final newState = currentState.copyWith(
+        timers: event.timers,
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+    } catch (e) {
+      debugPrint('批量更新计时器失败: $e');
+      emit(MapDataError(message: '批量更新计时器失败: $e'));
+    }
+  }
+
+  /// 清空所有计时器
+  Future<void> _onClearAllTimers(
+    ClearAllTimers event,
+    Emitter<MapDataState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! MapDataLoaded) return;
+
+    try {
+      // 保存到撤销历史
+      _saveToHistory(currentState);
+
+      // 停止所有计时器
+      TimerManager.instance.stopAllTimers();
+
+      final newState = currentState.copyWith(
+        timers: [],
+        lastModified: DateTime.now(),
+      );
+
+      emit(newState);
+      _notifyDataChangeListeners(newState);
+      debugPrint('所有计时器已清空');
+    } catch (e) {
+      debugPrint('清空计时器失败: $e');
+      emit(MapDataError(message: '清空计时器失败: $e'));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    // 清理计时器管理器
+    TimerManager.instance.dispose();
+    _dataChangeListeners.clear();
+    return super.close();
   }
 }
