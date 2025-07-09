@@ -310,6 +310,10 @@ class MapEditorPreferences {
         'showCurrentLayerGroup': ['Ctrl+Alt+S'],
         'hideOtherLegendGroups': ['Ctrl+Alt+H'],
         'showCurrentLegendGroup': ['Ctrl+Alt+G'],
+        // 版本管理快捷键
+        'prevVersion': ['Ctrl+Shift+Left'],
+        'nextVersion': ['Ctrl+Shift+Right'],
+        'createNewVersion': ['Ctrl+Shift+N'],
         // 图层组选择快捷键 (数字键1-0)
         'selectLayerGroup1': ['1'],
         'selectLayerGroup2': ['2'],

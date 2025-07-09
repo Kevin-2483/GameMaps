@@ -106,6 +106,13 @@ class MapEditorSettingsSection extends StatelessWidget {
         return '隐藏其他图例组';
       case 'showCurrentLegendGroup':
         return '显示当前图例组';
+      // 版本管理快捷键
+      case 'prevVersion':
+        return '切换到上一个版本';
+      case 'nextVersion':
+        return '切换到下一个版本';
+      case 'createNewVersion':
+        return '新增版本';
       default:
         return shortcut;
     }

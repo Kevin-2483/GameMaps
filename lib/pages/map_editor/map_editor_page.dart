@@ -4315,7 +4315,87 @@ Widget _buildMapCanvasArea() {
       return true;
     }
 
+    // 检查切换到上一个版本
+    final prevVersionShortcuts = mapEditorPrefs.shortcuts['prevVersion'] ?? ['Ctrl+Shift+Left'];
+    if (_isAnyShortcutPressed(event, prevVersionShortcuts)) {
+      _switchToPreviousVersion();
+      return true;
+    }
+
+    // 检查切换到下一个版本
+    final nextVersionShortcuts = mapEditorPrefs.shortcuts['nextVersion'] ?? ['Ctrl+Shift+Right'];
+    if (_isAnyShortcutPressed(event, nextVersionShortcuts)) {
+      _switchToNextVersion();
+      return true;
+    }
+
+    // 检查新增版本
+    final createNewVersionShortcuts = mapEditorPrefs.shortcuts['createNewVersion'] ?? ['Ctrl+Shift+N'];
+    if (_isAnyShortcutPressed(event, createNewVersionShortcuts)) {
+      _createNewVersionWithShortcut();
+      return true;
+    }
+
     return false;
+  }
+
+  /// 切换到上一个版本
+  void _switchToPreviousVersion() {
+    final versions = allVersionStates;
+    if (versions.isEmpty) return;
+
+    final currentId = currentVersionId;
+    if (currentId == null) return;
+
+    // 按创建时间排序版本
+    versions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    
+    final currentIndex = versions.indexWhere((v) => v.versionId == currentId);
+    if (currentIndex > 0) {
+      final previousVersion = versions[currentIndex - 1];
+      switchVersion(previousVersion.versionId).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('切换版本失败: $error'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      });
+    }
+  }
+
+  /// 切换到下一个版本
+  void _switchToNextVersion() {
+    final versions = allVersionStates;
+    if (versions.isEmpty) return;
+
+    final currentId = currentVersionId;
+    if (currentId == null) return;
+
+    // 按创建时间排序版本
+    versions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    
+    final currentIndex = versions.indexWhere((v) => v.versionId == currentId);
+    if (currentIndex >= 0 && currentIndex < versions.length - 1) {
+      final nextVersion = versions[currentIndex + 1];
+      switchVersion(nextVersion.versionId).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('切换版本失败: $error'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      });
+    }
+  }
+
+  /// 通过快捷键创建新版本
+  void _createNewVersionWithShortcut() {
+    final now = DateTime.now();
+    final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+    final versionName = '快捷键版本_$timestamp';
+    
+    _createVersion(versionName);
   }
 
   /// 选择上一个图层
