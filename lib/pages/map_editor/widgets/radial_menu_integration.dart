@@ -454,6 +454,9 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
       returnDelay: Duration(
         milliseconds: radialMenuPrefs.radialMenuReturnDelay,
       ),
+      subMenuDelay: Duration(
+        milliseconds: radialMenuPrefs.radialMenuSubMenuDelay,
+      ),
     );
   }
 }

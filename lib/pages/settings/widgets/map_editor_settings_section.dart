@@ -863,6 +863,36 @@ class MapEditorSettingsSection extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 8),
+
+            // 轮盘菜单子菜单延迟
+            ListTile(
+              title: Text('子菜单延迟'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    value: mapEditor.radialMenuSubMenuDelay.toDouble(),
+                    min: 0.0,
+                    max: 200.0,
+                    divisions: 20,
+                    label: mapEditor.radialMenuSubMenuDelay == 0 
+                        ? '立即进入' 
+                        : '${mapEditor.radialMenuSubMenuDelay}ms',
+                    onChanged: (value) => provider.updateMapEditor(
+                      radialMenuSubMenuDelay: value.round(),
+                    ),
+                  ),
+                  Text(
+                    mapEditor.radialMenuSubMenuDelay == 0 
+                        ? '立即进入子菜单' 
+                        : '鼠标停止移动${mapEditor.radialMenuSubMenuDelay}ms后进入子菜单',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 16),
 
             // 快捷键设置标题

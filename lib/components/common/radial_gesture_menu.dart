@@ -46,6 +46,7 @@ class RadialGestureMenu extends StatefulWidget {
   final Duration animationDuration;
   final int menuButton;
   final Duration returnDelay;
+  final Duration subMenuDelay;
 
   const RadialGestureMenu({
     super.key,
@@ -61,6 +62,7 @@ class RadialGestureMenu extends StatefulWidget {
     this.animationDuration = const Duration(milliseconds: 300),
     this.menuButton = 2,
     this.returnDelay = const Duration(milliseconds: 100),
+    this.subMenuDelay = const Duration(milliseconds: 50),
   });
 
   @override
@@ -83,6 +85,10 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   bool _isInCenterArea = false;
   Offset? _lastPointerPosition;
   DateTime? _lastPointerMoveTime;
+  
+  // 子菜单延迟进入相关
+  Timer? _subMenuDelayTimer;
+  RadialMenuItem? _pendingSubMenuItem;
 
   late AnimationController _mainAnimationController;
   late AnimationController _plateAnimationController;
@@ -157,6 +163,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   @override
   void dispose() {
     _centerAreaTimer?.cancel();
+    _subMenuDelayTimer?.cancel();
     _mainAnimationController.dispose();
     _plateAnimationController.dispose();
     for (final controller in _cardAnimationControllers) {
@@ -181,7 +188,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     _initCardAnimations();
 
     if (widget.debugMode) {
-      print('显示菜单于位置: $position');
+      debugPrint('显示菜单于位置: $position');
     }
 
     HapticFeedback.lightImpact();
@@ -194,6 +201,10 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   }
 
   void _hideMenu() {
+    // 取消所有计时器
+    _centerAreaTimer?.cancel();
+    _subMenuDelayTimer?.cancel();
+    
     // 同时隐藏所有动画
     _plateAnimationController.reverse();
     for (final controller in _cardAnimationControllers) {
@@ -209,12 +220,13 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
           _hoveredItem = null;
           _isInSubMenu = false;
           _selectedParentItem = null;
+          _pendingSubMenuItem = null;
         });
       }
     });
 
     if (widget.debugMode) {
-      print('隐藏菜单');
+      debugPrint('隐藏菜单');
     }
   }
 
@@ -298,7 +310,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                   }
 
                   if (widget.debugMode) {
-                    print('延迟返回主菜单');
+                    debugPrint('延迟返回主菜单');
                   }
                 }
               });
@@ -341,7 +353,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                   }
 
                   if (widget.debugMode) {
-                    print('延迟返回主菜单');
+                    debugPrint('延迟返回主菜单');
                   }
                 }
               });
@@ -394,63 +406,102 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
       });
 
       if (widget.debugMode) {
-        print('悬停项目: ${selectedItem.label}');
+        debugPrint('悬停项目: ${selectedItem.label}');
       }
 
       HapticFeedback.selectionClick();
 
+      // 取消之前的子菜单延迟计时器（因为悬停项目改变了）
+      _subMenuDelayTimer?.cancel();
+      _pendingSubMenuItem = null;
+      
       // 如果是主菜单项目且有子项目，切换到子菜单
       if (!_isInSubMenu &&
           selectedItem.subItems != null &&
           selectedItem.subItems!.isNotEmpty) {
-        // 立即切换到子菜单状态
-        setState(() {
-          _currentMenuItems = selectedItem.subItems!;
-          _isInSubMenu = true;
-          _selectedParentItem = selectedItem;
-
-          // 计算并固定子菜单的旋转偏移
-          if (_currentPointer != null && _menuCenter != null) {
-            final mouseAngle = math.atan2(
-              _currentPointer!.dy - _menuCenter!.dy,
-              _currentPointer!.dx - _menuCenter!.dx,
-            );
-            // 计算第一个项目的中心角度偏移
-            final itemCount = selectedItem.subItems!.length;
-            final sectorAngle = 2 * math.pi / itemCount;
-            // 让第一个项目的中心对准鼠标位置
-            _subMenuRotationOffset = mouseAngle + math.pi / 2 - sectorAngle / 2;
-          } else {
-            _subMenuRotationOffset = 0.0;
+        
+        // 如果延迟为0，立即进入子菜单（保持原来的行为）
+        if (widget.subMenuDelay == Duration.zero) {
+          _enterSubMenu(selectedItem);
+          if (widget.debugMode) {
+            debugPrint('立即进入子菜单: ${selectedItem.label}');
           }
-        });
-
-        // 同时开始一级菜单消失和二级菜单出现动画
-        for (final controller in _cardAnimationControllers) {
-          controller.reverse();
-        }
-
-        // 立即重新初始化并播放新的卡片动画
-        _disposeCardAnimations();
-        _initCardAnimations();
-        _playCardAnimations();
-
-        // 根据当前鼠标位置预设hover状态
-        if (_currentPointer != null && _menuCenter != null) {
-          _setInitialHoverForSubMenu(_currentPointer!);
-        }
-
-        if (widget.debugMode) {
-          print('进入子菜单: ${selectedItem.label}');
+        } else {
+          // 设置新的待处理子菜单项目
+          _pendingSubMenuItem = selectedItem;
+          
+          // 使用类似中心区域的逻辑，检查鼠标是否停止移动
+          _subMenuDelayTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+            if (!mounted || _hoveredItem != selectedItem || _isInSubMenu || _pendingSubMenuItem != selectedItem) {
+              timer.cancel();
+              return;
+            }
+            
+            // 检查鼠标是否停止移动了足够长的时间
+             if (_lastPointerMoveTime != null) {
+               final timeSinceLastMove = DateTime.now().difference(_lastPointerMoveTime!);
+               if (timeSinceLastMove >= widget.subMenuDelay) {
+                 timer.cancel();
+                 _enterSubMenu(selectedItem);
+                 if (widget.debugMode) {
+                   debugPrint('鼠标停止移动，延迟进入子菜单: ${selectedItem.label}');
+                 }
+               }
+             }
+           });
+          
+          if (widget.debugMode) {
+            debugPrint('设置子菜单延迟计时器: ${selectedItem.label}');
+          }
         }
       }
+    }
+  }
+
+  void _enterSubMenu(RadialMenuItem selectedItem) {
+    // 切换到子菜单状态
+    setState(() {
+      _currentMenuItems = selectedItem.subItems!;
+      _isInSubMenu = true;
+      _selectedParentItem = selectedItem;
+      _pendingSubMenuItem = null;
+
+      // 计算并固定子菜单的旋转偏移
+      if (_currentPointer != null && _menuCenter != null) {
+        final mouseAngle = math.atan2(
+          _currentPointer!.dy - _menuCenter!.dy,
+          _currentPointer!.dx - _menuCenter!.dx,
+        );
+        // 计算第一个项目的中心角度偏移
+        final itemCount = selectedItem.subItems!.length;
+        final sectorAngle = 2 * math.pi / itemCount;
+        // 让第一个项目的中心对准鼠标位置
+        _subMenuRotationOffset = mouseAngle + math.pi / 2 - sectorAngle / 2;
+      } else {
+        _subMenuRotationOffset = 0.0;
+      }
+    });
+
+    // 同时开始一级菜单消失和二级菜单出现动画
+    for (final controller in _cardAnimationControllers) {
+      controller.reverse();
+    }
+
+    // 立即重新初始化并播放新的卡片动画
+    _disposeCardAnimations();
+    _initCardAnimations();
+    _playCardAnimations();
+
+    // 根据当前鼠标位置预设hover状态
+    if (_currentPointer != null && _menuCenter != null) {
+      _setInitialHoverForSubMenu(_currentPointer!);
     }
   }
 
   void _selectItem() {
     if (_hoveredItem != null) {
       if (widget.debugMode) {
-        print('选择项目: ${_hoveredItem!.label}');
+        debugPrint('选择项目: ${_hoveredItem!.label}');
       }
 
       HapticFeedback.mediumImpact();
@@ -502,7 +553,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     });
 
     if (widget.debugMode) {
-      print('子菜单初始悬停项目: ${selectedItem.label}');
+      debugPrint('子菜单初始悬停项目: ${selectedItem.label}');
     }
   }
 
@@ -514,7 +565,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
         if (event.buttons == widget.menuButton) {
           _showMenu(event.localPosition);
           if (widget.debugMode) {
-            print('中键按下，显示径向菜单于位置: ${event.localPosition}');
+            debugPrint('中键按下，显示径向菜单于位置: ${event.localPosition}');
           }
         }
       },

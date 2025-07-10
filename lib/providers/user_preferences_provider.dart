@@ -149,6 +149,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     double? radialMenuObjectOpacity,
     int? radialMenuReturnDelay,
     int? radialMenuAnimationDuration,
+    int? radialMenuSubMenuDelay,
     Map<String, List<String>>? shortcuts,
   }) async {
     if (_currentPreferences == null) return;
@@ -166,6 +167,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         radialMenuObjectOpacity: radialMenuObjectOpacity,
         radialMenuReturnDelay: radialMenuReturnDelay,
         radialMenuAnimationDuration: radialMenuAnimationDuration,
+        radialMenuSubMenuDelay: radialMenuSubMenuDelay,
         shortcuts: shortcuts,
       );
 

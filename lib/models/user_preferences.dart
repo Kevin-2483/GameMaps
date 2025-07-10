@@ -253,6 +253,9 @@ class MapEditorPreferences {
   /// 轮盘菜单动画持续时间（毫秒）
   final int radialMenuAnimationDuration;
 
+  /// 轮盘菜单子菜单延迟（毫秒）
+  final int radialMenuSubMenuDelay;
+
   /// 地图编辑器快捷键设置
   final Map<String, List<String>> shortcuts;
 
@@ -268,6 +271,7 @@ class MapEditorPreferences {
     this.radialMenuObjectOpacity = 0.9,
     this.radialMenuReturnDelay = 100,
     this.radialMenuAnimationDuration = 300,
+    this.radialMenuSubMenuDelay = 50,
     this.shortcuts = const <String, List<String>>{},
   });
   factory MapEditorPreferences.createDefault() {
@@ -283,6 +287,7 @@ class MapEditorPreferences {
       radialMenuObjectOpacity: 0.9,
       radialMenuReturnDelay: 100,
       radialMenuAnimationDuration: 300,
+      radialMenuSubMenuDelay: 50,
       shortcuts: {
         // 工具快捷键
         'undo': ['Ctrl+Z'],
@@ -353,6 +358,7 @@ class MapEditorPreferences {
     double? radialMenuObjectOpacity,
     int? radialMenuReturnDelay,
     int? radialMenuAnimationDuration,
+    int? radialMenuSubMenuDelay,
     Map<String, List<String>>? shortcuts,
   }) {
     return MapEditorPreferences(
@@ -372,6 +378,8 @@ class MapEditorPreferences {
           radialMenuReturnDelay ?? this.radialMenuReturnDelay,
       radialMenuAnimationDuration:
           radialMenuAnimationDuration ?? this.radialMenuAnimationDuration,
+      radialMenuSubMenuDelay:
+          radialMenuSubMenuDelay ?? this.radialMenuSubMenuDelay,
       shortcuts: shortcuts ?? this.shortcuts,
     );
   }
