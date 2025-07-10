@@ -128,25 +128,28 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
         tooltip: '最大化/还原',
       ),
       
-      SizedBox(width: widget.spacing),
-      
-      // 全屏按钮
-      _buildWindowButton(
-        icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
-        onPressed: () async {
-          try {
-            if (!_isFullScreen) {
-              // 进入全屏时保存窗口大小
-              _saveWindowSizeIfEnabled(context);
+      // 在Windows平台上不显示全屏按钮
+      if (!Platform.isWindows) ...[
+        SizedBox(width: widget.spacing),
+        
+        // 全屏按钮
+        _buildWindowButton(
+          icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+          onPressed: () async {
+            try {
+              if (!_isFullScreen) {
+                // 进入全屏时保存窗口大小
+                _saveWindowSizeIfEnabled(context);
+              }
+              // 切换全屏状态
+              FullScreen.setFullScreen(!_isFullScreen);
+            } catch (e) {
+              debugPrint('切换全屏模式失败: $e');
             }
-            // 切换全屏状态
-            FullScreen.setFullScreen(!_isFullScreen);
-          } catch (e) {
-            debugPrint('切换全屏模式失败: $e');
-          }
-        },
-        tooltip: _isFullScreen ? '退出全屏' : '全屏',
-      ),
+          },
+          tooltip: _isFullScreen ? '退出全屏' : '全屏',
+        ),
+      ],
     ];
 
     // 如果显示关闭按钮，添加关闭按钮

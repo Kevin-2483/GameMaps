@@ -211,8 +211,11 @@ class _TrayNavigationState extends State<TrayNavigation>
                       tooltip: '最大化/还原',
                       useNavigationStyle: true,
                     ),
-                    const SizedBox(height: 8),
-                    _buildFullscreenButton(context, true),
+                    // 在Windows平台上不显示全屏按钮
+                    if (!Platform.isWindows) ...[
+                      const SizedBox(height: 8),
+                      _buildFullscreenButton(context, true),
+                    ],
                   ],
                 ],
               ),
@@ -449,8 +452,11 @@ class _TrayNavigationState extends State<TrayNavigation>
           tooltip: '最大化/还原',
           useNavigationStyle: true,
         ),
-        const SizedBox(width: 8),
-        _buildFullscreenButton(context, false),
+        // 在Windows平台上不显示全屏按钮
+        if (!Platform.isWindows) ...[
+          const SizedBox(width: 8),
+          _buildFullscreenButton(context, false),
+        ],
         const SizedBox(width: 8),
         _buildWindowButton(
           context,

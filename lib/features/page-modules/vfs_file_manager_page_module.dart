@@ -22,7 +22,7 @@ class VfsFileManagerPageModule extends PageModule {
   IconData get icon => Icons.folder;
 
   @override
-  int get priority => 1; // 高优先级，放在主页之后
+  int get priority => 4;
 
   @override
   bool get isEnabled {
