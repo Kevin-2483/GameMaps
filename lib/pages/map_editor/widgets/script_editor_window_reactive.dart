@@ -1,16 +1,14 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:highlight/languages/dart.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../models/script_data.dart';
 import '../../../components/common/draggable_title_bar.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../components/common/window_controls.dart';
 
 /// 响应式脚本编辑器窗口
 /// 基于新的异步响应式脚本管理器的脚本编辑器
@@ -176,28 +174,12 @@ class _ReactiveScriptEditorWindowState
   }
 
   /// 构建窗口控制按钮组
-  List<Widget> _buildWindowControls() {
-    // 只在桌面平台显示窗口控制按钮
-    if (kIsWeb ||
-        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      return [];
-    }
 
-    return [
-      _buildWindowButton(
-        icon: Icons.minimize,
-        onPressed: () => appWindow.minimize(),
-        tooltip: '最小化',
-      ),
-      const SizedBox(width: 4),
-      _buildWindowButton(
-        icon: Icons.fullscreen,
-        onPressed: () => appWindow.maximizeOrRestore(),
-        tooltip: '最大化/还原',
-      ),
-      const SizedBox(width: 4),
-    ];
+  /// 构建窗口控制按钮组
+  List<Widget> _buildWindowControls() {
+    return [const WindowControls(spacing: 4.0)];
   }
+
 
   /// 执行脚本（支持参数输入）
   void _executeScript() async {

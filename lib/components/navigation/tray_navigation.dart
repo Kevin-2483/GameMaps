@@ -4,6 +4,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 import '../../features/page_registry.dart';
 import '../../services/window_manager_service.dart';
 import '../../providers/user_preferences_provider.dart';
@@ -20,9 +21,33 @@ class TrayNavigation extends StatefulWidget {
 }
 
 class _TrayNavigationState extends State<TrayNavigation>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, FullScreenListener {
   @override
   bool get wantKeepAlive => true;
+  
+  bool _isFullScreen = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _isFullScreen = FullScreen.isFullScreen;
+    FullScreen.addListener(this);
+  }
+  
+  @override
+  void dispose() {
+    FullScreen.removeListener(this);
+    super.dispose();
+  }
+  
+  @override
+  void onFullScreenChanged(bool enabled, dynamic systemUiMode) {
+    if (mounted) {
+      setState(() {
+        _isFullScreen = enabled;
+      });
+    }
+  }
 
   /// 如果启用了自动保存窗口大小，则保存当前窗口大小（仅在非最大化状态下）
   void _saveWindowSizeIfEnabled(BuildContext context) {
@@ -178,7 +203,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                     const SizedBox(height: 8),
                     _buildWindowButton(
                       context,
-                      icon: Icons.fullscreen,
+                      icon: Icons.crop_square,
                       onPressed: () {
                         _saveWindowSizeIfEnabled(context);
                         appWindow.maximizeOrRestore();
@@ -186,6 +211,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                       tooltip: '最大化/还原',
                       useNavigationStyle: true,
                     ),
+                    const SizedBox(height: 8),
+                    _buildFullscreenButton(context, true),
                   ],
                 ],
               ),
@@ -414,7 +441,7 @@ class _TrayNavigationState extends State<TrayNavigation>
         const SizedBox(width: 8),
         _buildWindowButton(
           context,
-          icon: Icons.fullscreen,
+          icon: Icons.crop_square,
           onPressed: () {
             _saveWindowSizeIfEnabled(context);
             appWindow.maximizeOrRestore();
@@ -422,6 +449,8 @@ class _TrayNavigationState extends State<TrayNavigation>
           tooltip: '最大化/还原',
           useNavigationStyle: true,
         ),
+        const SizedBox(width: 8),
+        _buildFullscreenButton(context, false),
         const SizedBox(width: 8),
         _buildWindowButton(
           context,
@@ -523,6 +552,24 @@ class _TrayNavigationState extends State<TrayNavigation>
         ),
       );
     }
+  }
+
+  // 构建全屏按钮
+  Widget _buildFullscreenButton(BuildContext context, bool isVertical) {
+    return _buildWindowButton(
+      context,
+      icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+      onPressed: () async {
+        if (!_isFullScreen) {
+          // 进入全屏时保存窗口大小
+          _saveWindowSizeIfEnabled(context);
+        }
+        // 切换全屏状态
+        FullScreen.setFullScreen(!_isFullScreen);
+      },
+      tooltip: _isFullScreen ? '退出全屏' : '全屏',
+      useNavigationStyle: true,
+    );
   }
 
   // Widget _buildThemeToggleButton(BuildContext context, bool isVertical) {

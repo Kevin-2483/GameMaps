@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -42,7 +40,7 @@ import '../../data/map_data_state.dart';
 import '../../data/new_reactive_script_manager.dart';
 import '../../services/legend_cache_manager.dart';
 import '../../components/color_filter_dialog.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
+import '../../components/common/window_controls.dart';
 import '../../widgets/compact_timer_widget.dart';
 import '../../../services/notification/notification_service.dart';
 
@@ -2976,25 +2974,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 构建窗口控制按钮组
   List<Widget> _buildWindowControls() {
-    // 只在桌面平台显示窗口控制按钮
-    if (kIsWeb ||
-        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      return [];
-    }
-
     return [
-      _buildWindowButton(
-        icon: Icons.minimize,
-        onPressed: () => appWindow.minimize(),
-        tooltip: '最小化',
+      const WindowControls(
+        spacing: 4.0,
       ),
-      const SizedBox(width: 4),
-      _buildWindowButton(
-        icon: Icons.fullscreen,
-        onPressed: () => appWindow.maximizeOrRestore(),
-        tooltip: '最大化/还原',
-      ),
-      const SizedBox(width: 4),
     ];
   }
 

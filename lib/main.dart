@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
@@ -22,6 +23,9 @@ import 'services/notification/notification_models.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize flutter_fullscreen
+  await FullScreen.ensureInitialized();
 
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {};
