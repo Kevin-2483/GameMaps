@@ -50,6 +50,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\code\r6box\r6box\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "E:\code\r6box\r6box\installer\VC_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -57,5 +58,23 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/quiet /norestart"; \
+  StatusMsg: "正在安装 VC++ 运行库..."; Flags: waituntilterminated; \
+  Check: ShouldInstallVCRedist
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[Code]
+function IsVCRedistInstalled(): Boolean;
+var
+  installValue: Cardinal;
+  keyExists: Boolean;
+begin
+  keyExists := RegQueryDWordValue(HKEY_LOCAL_MACHINE,
+    'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installValue);
+  Result := keyExists and (installValue = 1);
+end;
+
+function ShouldInstallVCRedist(): Boolean;
+begin
+  Result := not IsVCRedistInstalled();
+end;
