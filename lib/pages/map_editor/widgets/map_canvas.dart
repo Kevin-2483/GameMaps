@@ -2283,10 +2283,10 @@ class MapCanvasState extends State<MapCanvas> {
       debugPrint('计算得到的 legendRenderOrder: $legendRenderOrder');
       debugPrint('是否选中: $isLegendSelected');
 
-      // 如果图例组没有绑定到任何图层，使用默认位置
+      // 如果图例组没有绑定到任何图层，使用默认位置（-1确保在最底层）
       if (legendRenderOrder == -1) {
-        legendRenderOrder = 0;
-        debugPrint('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder');
+        legendRenderOrder = -1;
+        // debugPrint('图例组没有绑定图层，使用默认 renderOrder: $legendRenderOrder（最底层）');
       }
 
       debugPrint(

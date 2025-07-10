@@ -2974,11 +2974,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 构建窗口控制按钮组
   List<Widget> _buildWindowControls() {
-    return [
-      const WindowControls(
-        spacing: 4.0,
-      ),
-    ];
+    return [const WindowControls(spacing: 4.0)];
   }
 
   /// 构建地图编辑器标题
@@ -3034,9 +3030,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 保存按钮（仅在编辑模式下显示）
       if (!widget.isPreviewMode)
         IconButton(
-          icon: const Icon(Icons.save),
-          onPressed: _saveMap,
-          tooltip: '保存',
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Icon(Icons.save),
+          onPressed: _isLoading ? null : _saveMap,
+          tooltip: _isLoading ? '保存中...' : '保存',
         ),
     ];
   }
