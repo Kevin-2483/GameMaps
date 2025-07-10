@@ -40,7 +40,8 @@ post_install do |installer|
     flutter_additional_macos_build_settings(target)
     # 僅編譯 arm64 架構，解決 Apple Silicon 下 x86_64 編譯失敗問題
     target.build_configurations.each do |config|
-      config.build_settings['EXCLUDED_ARCHS[sdk=macosx*]'] = 'x86_64'
+      # config.build_settings['EXCLUDED_ARCHS[sdk=macosx*]'] = 'x86_64'
+      # config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
     end
   end
 end
