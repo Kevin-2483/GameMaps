@@ -4137,12 +4137,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 获取用户偏好设置
     final userPrefs = context.read<UserPreferencesProvider>();
-    final toolPrefs = userPrefs.tools;
     final mapEditorPrefs = userPrefs.mapEditor;
 
-    final copyShortcuts = mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C'];
-    final undoShortcuts = mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z'];
-    final redoShortcuts = mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y'];
+    final copyShortcuts = mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C', 'Win+C'];
+    final undoShortcuts = mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z', 'Win+Z'];
+    final redoShortcuts = mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y', 'Win+Y'];
 
     // 检查撤销快捷键
     if (_isAnyShortcutPressed(event, undoShortcuts)) {
@@ -4181,7 +4180,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   ) {
     // 检查选择上一个图层
     final prevLayerShortcuts =
-        mapEditorPrefs.shortcuts['prevLayer'] ?? ['Ctrl+Up'];
+        mapEditorPrefs.shortcuts['prevLayer'] ?? ['P'];
     if (_isAnyShortcutPressed(event, prevLayerShortcuts)) {
       _selectPreviousLayer();
       return true;
@@ -4189,7 +4188,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查选择下一个图层
     final nextLayerShortcuts =
-        mapEditorPrefs.shortcuts['nextLayer'] ?? ['Ctrl+Down'];
+        mapEditorPrefs.shortcuts['nextLayer'] ?? ['N'];
     if (_isAnyShortcutPressed(event, nextLayerShortcuts)) {
       _selectNextLayer();
       return true;
@@ -4197,7 +4196,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查选择上一个图层组
     final prevLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['prevLayerGroup'] ?? ['Ctrl+Left'];
+        mapEditorPrefs.shortcuts['prevLayerGroup'] ?? ['Left'];
     if (_isAnyShortcutPressed(event, prevLayerGroupShortcuts)) {
       _selectPreviousLayerGroup();
       return true;
@@ -4205,7 +4204,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查选择下一个图层组
     final nextLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['nextLayerGroup'] ?? ['Ctrl+Right'];
+        mapEditorPrefs.shortcuts['nextLayerGroup'] ?? ['Right'];
     if (_isAnyShortcutPressed(event, nextLayerGroupShortcuts)) {
       _selectNextLayerGroup();
       return true;
@@ -4213,7 +4212,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查打开上一个图例组
     final prevLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['prevLegendGroup'] ?? ['Alt+Up'];
+        mapEditorPrefs.shortcuts['prevLegendGroup'] ?? ['Up'];
     if (_isAnyShortcutPressed(event, prevLegendGroupShortcuts)) {
       _openPreviousLegendGroup();
       return true;
@@ -4221,7 +4220,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查打开下一个图例组
     final nextLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['nextLegendGroup'] ?? ['Alt+Down'];
+        mapEditorPrefs.shortcuts['nextLegendGroup'] ?? ['Down'];
     if (_isAnyShortcutPressed(event, nextLegendGroupShortcuts)) {
       _openNextLegendGroup();
       return true;
@@ -4229,9 +4228,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查打开图例管理抽屉
     final openLegendDrawerShortcuts =
-        mapEditorPrefs.shortcuts['openLegendDrawer'] ?? ['Ctrl+L'];
+        mapEditorPrefs.shortcuts['openLegendDrawer'] ?? ['L'];
     if (_isAnyShortcutPressed(event, openLegendDrawerShortcuts)) {
-      print('Ctrl+L快捷键匹配成功，即将调用_toggleLegendGroupManagementDrawer');
       _toggleLegendGroupManagementDrawer();
       return true;
     }
@@ -4245,7 +4243,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     // 保存地图
-    final saveShortcuts = mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S'];
+    final saveShortcuts = mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S', 'Win+S'];
     if (_isAnyShortcutPressed(event, saveShortcuts)) {
       _saveMap();
       return true;
@@ -4274,7 +4272,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查切换左侧边栏
     final toggleSidebarShortcuts =
-        mapEditorPrefs.shortcuts['toggleSidebar'] ?? ['Ctrl+B'];
+        mapEditorPrefs.shortcuts['toggleSidebar'] ?? ['Ctrl+B', 'Win+B'];
     if (_isAnyShortcutPressed(event, toggleSidebarShortcuts)) {
       _toggleSidebar();
       return true;
@@ -4282,7 +4280,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查打开Z元素检视器
     final openZInspectorShortcuts =
-        mapEditorPrefs.shortcuts['openZInspector'] ?? ['Ctrl+I'];
+        mapEditorPrefs.shortcuts['openZInspector'] ?? ['Z'];
     if (_isAnyShortcutPressed(event, openZInspectorShortcuts)) {
       _openZInspector();
       return true;
@@ -4290,7 +4288,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查切换图例组绑定抽屉
     final toggleLegendGroupDrawerShortcuts =
-        mapEditorPrefs.shortcuts['toggleLegendGroupDrawer'] ?? ['Ctrl+G'];
+        mapEditorPrefs.shortcuts['toggleLegendGroupDrawer'] ?? ['G'];
     if (_isAnyShortcutPressed(event, toggleLegendGroupDrawerShortcuts)) {
       _toggleLegendGroupBindingDrawer();
       return true;
@@ -4298,7 +4296,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查隐藏其他图层
     final hideOtherLayersShortcuts =
-        mapEditorPrefs.shortcuts['hideOtherLayers'] ?? ['Ctrl+H'];
+        mapEditorPrefs.shortcuts['hideOtherLayers'] ?? ['H'];
     if (_isAnyShortcutPressed(event, hideOtherLayersShortcuts)) {
       _hideOtherLayers();
       return true;
@@ -4306,7 +4304,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查隐藏其他图层组
     final hideOtherLayerGroupsShortcuts =
-        mapEditorPrefs.shortcuts['hideOtherLayerGroups'] ?? ['Ctrl+Shift+H'];
+        mapEditorPrefs.shortcuts['hideOtherLayerGroups'] ?? ['Alt+H'];
     if (_isAnyShortcutPressed(event, hideOtherLayerGroupsShortcuts)) {
       _hideOtherLayerGroups();
       return true;
@@ -4314,7 +4312,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查显示当前图层
     final showCurrentLayerShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLayer'] ?? ['Ctrl+Shift+S'];
+        mapEditorPrefs.shortcuts['showCurrentLayer'] ?? ['S'];
     if (_isAnyShortcutPressed(event, showCurrentLayerShortcuts)) {
       _showCurrentLayer();
       return true;
@@ -4322,7 +4320,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查显示当前图层组
     final showCurrentLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLayerGroup'] ?? ['Ctrl+Alt+S'];
+        mapEditorPrefs.shortcuts['showCurrentLayerGroup'] ?? ['Alt+S'];
     if (_isAnyShortcutPressed(event, showCurrentLayerGroupShortcuts)) {
       _showCurrentLayerGroup();
       return true;
@@ -4338,7 +4336,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查显示当前图例组
     final showCurrentLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLegendGroup'] ?? ['Ctrl+Alt+G'];
+        mapEditorPrefs.shortcuts['showCurrentLegendGroup'] ?? ['Ctrl+Alt+S'];
     if (_isAnyShortcutPressed(event, showCurrentLegendGroupShortcuts)) {
       _showCurrentLegendGroup();
       return true;
@@ -4346,7 +4344,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查切换到上一个版本
     final prevVersionShortcuts =
-        mapEditorPrefs.shortcuts['prevVersion'] ?? ['Ctrl+Shift+Left'];
+        mapEditorPrefs.shortcuts['prevVersion'] ?? ['Ctrl+Left', 'Win+Left'];
     if (_isAnyShortcutPressed(event, prevVersionShortcuts)) {
       _switchToPreviousVersion();
       return true;
@@ -4354,7 +4352,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查切换到下一个版本
     final nextVersionShortcuts =
-        mapEditorPrefs.shortcuts['nextVersion'] ?? ['Ctrl+Shift+Right'];
+        mapEditorPrefs.shortcuts['nextVersion'] ?? ['Ctrl+Right', 'Win+Right'];
     if (_isAnyShortcutPressed(event, nextVersionShortcuts)) {
       _switchToNextVersion();
       return true;
@@ -4362,7 +4360,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查新增版本
     final createNewVersionShortcuts =
-        mapEditorPrefs.shortcuts['createNewVersion'] ?? ['Ctrl+Shift+N'];
+        mapEditorPrefs.shortcuts['createNewVersion'] ?? ['Ctrl+N', 'Win+N'];
     if (_isAnyShortcutPressed(event, createNewVersionShortcuts)) {
       _createNewVersionWithShortcut();
       return true;
@@ -4680,34 +4678,59 @@ class _MapEditorContentState extends State<_MapEditorContent>
   /// 打开Z元素检视器
   void _openZInspector() {
     // 需要有图层或便签选中，优先处理图层
-    if (_selectedLayer != null) {
-      setState(() {
-        _isZIndexInspectorOpen = true;
-      });
-    } else if (_selectedStickyNote != null) {
-      setState(() {
-        _isZIndexInspectorOpen = true;
-      });
+    if (_isZIndexInspectorOpen || _isZIndexInspectorOpen) {
+      if (_isZIndexInspectorOpen) {
+        setState(() {
+          _isZIndexInspectorOpen = false;
+        });
+      } else if (_isZIndexInspectorOpen) {
+        setState(() {
+          _isZIndexInspectorOpen = false;
+        });
+      }
     } else {
-      // 没有选中任何对象时显示提示
-      if (mounted) context.showInfoSnackBar('请先选择一个图层或便签');
+      if (_selectedLayer != null) {
+        setState(() {
+          _isZIndexInspectorOpen = true;
+        });
+      } else if (_selectedStickyNote != null) {
+        setState(() {
+          _isZIndexInspectorOpen = true;
+        });
+      } else {
+        // 没有选中任何对象时显示提示
+        if (mounted) context.showInfoSnackBar('请先选择一个图层或便签');
+      }
     }
   }
 
-  /// 切换图例组绑定抽屉
   void _toggleLegendGroupBindingDrawer() {
-    // 需要有图层选中
-    if (_selectedLayer != null) {
-      setState(() {
-        _isLayerLegendBindingDrawerOpen = !_isLayerLegendBindingDrawerOpen;
-        if (_isLayerLegendBindingDrawerOpen) {
-          _currentLayerForBinding = _selectedLayer;
+    setState(() {
+      if (_isLayerLegendBindingDrawerOpen) {
+        // 如果当前是打开状态，则关闭
+        _isLayerLegendBindingDrawerOpen = false;
+        _currentLayerForBinding = null;
+        _allLegendGroupsForBinding = null;
+      } else {
+        // 如果当前是关闭状态，则尝试打开
+        if (_selectedLayer == null) {
+          // 没有选中图层时，显示提示但不打开
+          if (mounted) context.showInfoSnackBar('请先选择一个图层');
+          return;
         }
-      });
-    } else {
-      // 没有选中图层时显示提示
-      if (mounted) context.showInfoSnackBar('请先选择一个图层');
-    }
+        
+        // 关闭其他抽屉
+        _isLegendGroupManagementDrawerOpen = false;
+        _isZIndexInspectorOpen = false;
+        _currentLegendGroupForManagement = null;
+        _initialSelectedLegendItemId = null;
+        
+        // 有选中图层时，打开抽屉并绑定当前图层
+        _isLayerLegendBindingDrawerOpen = true;
+        _currentLayerForBinding = _selectedLayer;
+        _allLegendGroupsForBinding = widget.mapItem?.legendGroups ?? [];
+      }
+    });
   }
 
   /// 隐藏其他图层
@@ -4927,24 +4950,30 @@ class _MapEditorContentState extends State<_MapEditorContent>
         modifiers.contains('control') || modifiers.contains('ctrl');
     bool shiftRequired = modifiers.contains('shift');
     bool altRequired = modifiers.contains('alt');
+    bool winRequired =
+        modifiers.contains('super') ||
+        modifiers.contains('win') ||
+        modifiers.contains('meta') ||
+        modifiers.contains('command');
 
-    bool ctrlPressed = event.isControlPressed || event.isMetaPressed;
+    bool ctrlPressed = event.isControlPressed;
     bool shiftPressed = event.isShiftPressed;
     bool altPressed = event.isAltPressed;
+    bool winPressed = event.isMetaPressed;
 
-    // 如果快捷键不包含任何修饰键，则只检查主键是否匹配，忽略修饰键状态
-    if (!ctrlRequired && !shiftRequired && !altRequired) {
-      print('不带修饰键的快捷键: $shortcut, 主键匹配: $keyMatch');
-      return keyMatch;
-    }
-
-    // 如果快捷键包含修饰键，则严格检查修饰键状态
+    // 严格检查修饰键状态：所有修饰键都必须匹配
+    // 如果快捷键不要求修饰键，那么当前也不能有修饰键按下
+    // 如果快捷键要求修饰键，那么对应的修饰键必须按下，其他修饰键不能按下
     bool result =
+        keyMatch &&
         (ctrlRequired == ctrlPressed) &&
         (shiftRequired == shiftPressed) &&
-        (altRequired == altPressed);
+        (altRequired == altPressed) &&
+        (winRequired == winPressed);
 
-    print('带修饰键的快捷键: $shortcut, 修饰键检查结果: $result');
+    print(
+      '快捷键检查: $shortcut, 主键匹配: $keyMatch, 修饰键匹配: ${(ctrlRequired == ctrlPressed) && (shiftRequired == shiftPressed) && (altRequired == altPressed) && (winRequired == winPressed)}, 最终结果: $result',
+    );
     return result;
   }
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -118,6 +119,8 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
     if (key == LogicalKeyboardKey.metaLeft ||
         key == LogicalKeyboardKey.metaRight)
       return 'Win';
+    if (key == LogicalKeyboardKey.capsLock)
+      return 'CapsLock';
 
     // 特殊键
     if (key == LogicalKeyboardKey.space) return 'Space';
@@ -282,13 +285,81 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
           ),
         ],
       ),
-      child: Text(
-        _getKeyDisplayName(key),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+      child: _buildKeyContent(key),
+    );
+  }
+
+  Widget _buildKeyContent(String key) {
+    // 为特殊键显示图标
+    switch (key.toLowerCase()) {
+      case 'meta':
+      case 'win':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_command_key,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'control':
+      case 'ctrl':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_control_key,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'alt':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_option_key,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'shift':
+        return Icon(
+          Icons.north,
+          size: 14,
           color: Theme.of(context).colorScheme.onSurface,
-        ),
+        );
+      case 'capslock':
+        return Icon(
+          Icons.upgrade,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'tab':
+        return Icon(
+          Icons.keyboard_tab,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'space':
+        return Icon(
+          Icons.space_bar,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'escape':
+        return Icon(
+          Icons.keyboard_return,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+    }
+    
+    // 对于其他键，显示文本
+    return Text(
+      _getKeyDisplayName(key),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -298,9 +369,12 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
 
     switch (key.toLowerCase()) {
       case 'control':
+      case 'ctrl':
       case 'shift':
       case 'alt':
       case 'meta':
+      case 'win':
+      case 'capslock':
         return colorScheme.tertiaryContainer;
       case 'f1':
       case 'f2':
@@ -336,14 +410,22 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
     switch (key.toLowerCase()) {
       case 'control':
       case 'ctrl':
-        return 'Ctrl';
+        return Platform.isMacOS ? 'Control' : 'Ctrl';
       case 'shift':
         return 'Shift';
       case 'alt':
-        return 'Alt';
+        return Platform.isMacOS ? 'Option' : 'Alt';
       case 'meta':
       case 'win':
-        return 'Win';
+        if (Platform.isMacOS) {
+          return 'Command';
+        } else if (Platform.isLinux) {
+          return 'Super';
+        } else {
+          return 'Win';
+        }
+      case 'capslock':
+        return 'CapsLock';
       case 'space':
         return 'Space';
       case 'enter':

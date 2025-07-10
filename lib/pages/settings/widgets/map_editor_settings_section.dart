@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
@@ -198,13 +199,81 @@ class MapEditorSettingsSection extends StatelessWidget {
           ),
         ],
       ),
-      child: Text(
-        _getKeyDisplayName(key),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
+      child: _buildKeyContent(key, context),
+    );
+  }
+
+  Widget _buildKeyContent(String key, BuildContext context) {
+    // 为特殊键显示图标
+    switch (key.toLowerCase()) {
+      case 'meta':
+      case 'win':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_command_key,
+            size: 12,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'control':
+      case 'ctrl':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_control_key,
+            size: 12,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'alt':
+        if (Platform.isMacOS) {
+          return Icon(
+            Icons.keyboard_option_key,
+            size: 12,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+        }
+        break;
+      case 'shift':
+        return Icon(
+          Icons.north,
+          size: 12,
           color: Theme.of(context).colorScheme.onSurface,
-        ),
+        );
+      case 'capslock':
+        return Icon(
+          Icons.upgrade,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'tab':
+        return Icon(
+          Icons.keyboard_tab,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'space':
+        return Icon(
+          Icons.space_bar,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+      case 'escape':
+        return Icon(
+          Icons.keyboard_return,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+    }
+    
+    // 对于其他键，显示文本
+    return Text(
+      _getKeyDisplayName(key),
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -214,9 +283,12 @@ class MapEditorSettingsSection extends StatelessWidget {
 
     switch (key.toLowerCase()) {
       case 'control':
+      case 'ctrl':
       case 'shift':
       case 'alt':
       case 'meta':
+      case 'win':
+      case 'capslock':
         return colorScheme.tertiaryContainer;
       case 'f1':
       case 'f2':
@@ -251,13 +323,23 @@ class MapEditorSettingsSection extends StatelessWidget {
   String _getKeyDisplayName(String key) {
     switch (key.toLowerCase()) {
       case 'control':
-        return 'Ctrl';
+      case 'ctrl':
+        return Platform.isMacOS ? 'Control' : 'Ctrl';
       case 'shift':
         return 'Shift';
       case 'alt':
-        return 'Alt';
+        return Platform.isMacOS ? 'Option' : 'Alt';
       case 'meta':
-        return 'Win';
+      case 'win':
+        if (Platform.isMacOS) {
+          return 'Command';
+        } else if (Platform.isLinux) {
+          return 'Super';
+        } else {
+          return 'Win';
+        }
+      case 'capslock':
+        return 'CapsLock';
       case 'space':
         return 'Space';
       case 'enter':
