@@ -171,8 +171,8 @@ class R6BoxApp extends StatelessWidget {
                 // 初始化通知服务
                 NotificationService.instance.initialize(
                   config: const NotificationConfig(
-                    defaultPosition: NotificationPosition.bottomCenter,
-                    defaultDuration: Duration(seconds: 4),
+                    defaultPosition: NotificationPosition.topCenter,
+                    defaultDuration: Duration(seconds: 2),
                     defaultShowCloseButton: true,
                     maxQueueSize: 5,
                     borderRadius: 8.0,

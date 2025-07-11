@@ -28,6 +28,7 @@ import 'widgets/reactive_version_tab_bar.dart';
 import 'widgets/sticky_note_panel.dart';
 import 'widgets/radial_menu_integration.dart';
 import 'widgets/editor_status_bar.dart';
+import 'widgets/legend_dock_bar.dart';
 // import '../../components/common/radial_gesture_menu.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
@@ -3430,6 +3431,25 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     ),
                                   ),
                                 ),
+                              
+                              // 图例浮动dock栏
+                              Positioned(
+                                bottom: 16,
+                                left: 0,
+                                right: 0,
+                                child: Positioned(
+                                  bottom: 20,
+                                  left: 0,
+                                  right: 0,
+                                  child: Center(
+                                    child: LegendDockBar(
+                                      mapItem: _currentMap!,
+                                      selectedLayerGroup: _selectedLayerGroup,
+                                      selectedLayer: _selectedLayer,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                   ), // 关闭 PopScope 的 child 参数
@@ -4603,11 +4623,44 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _prioritizeLayerAndGroupDisplay();
   }
 
+  /// 获取当前选中图层或图层组绑定的图例组列表
+  List<LegendGroup> _getBoundLegendGroups() {
+    if (_currentMap == null) return [];
+    
+    final allBoundGroupIds = <String>{};
+    
+    // 收集选中图层绑定的图例组ID
+    if (_selectedLayer != null) {
+      allBoundGroupIds.addAll(_selectedLayer!.legendGroupIds);
+    }
+    
+    // 收集选中图层组中所有图层绑定的图例组ID
+    if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+      for (final layer in _selectedLayerGroup!) {
+        allBoundGroupIds.addAll(layer.legendGroupIds);
+      }
+    }
+    
+    // 返回对应的图例组列表
+    return _currentMap!.legendGroups
+        .where((group) => allBoundGroupIds.contains(group.id))
+        .toList();
+  }
+
   /// 打开上一个图例组
   void _openPreviousLegendGroup() {
     if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
 
-    final legendGroups = _currentMap!.legendGroups;
+    // 根据是否有选中图层/图层组决定切换范围
+    final legendGroups = (_selectedLayer != null || (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
+        ? _getBoundLegendGroups()
+        : _currentMap!.legendGroups;
+    
+    if (legendGroups.isEmpty) {
+      if (mounted) context.showInfoSnackBar('没有可切换的图例组');
+      return;
+    }
+
     if (_currentLegendGroupForManagement == null) {
       // 如果没有打开图例组管理抽屉，打开最后一个图例组
       final lastGroup = legendGroups.last;
@@ -4620,6 +4673,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       if (currentIndex > 0) {
         final previousGroup = legendGroups[currentIndex - 1];
         _showLegendGroupManagementDrawer(previousGroup);
+      } else if (currentIndex == 0 && legendGroups.length > 1) {
+        // 如果是第一个，循环到最后一个
+        final lastGroup = legendGroups.last;
+        _showLegendGroupManagementDrawer(lastGroup);
       }
     }
   }
@@ -4628,7 +4685,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _openNextLegendGroup() {
     if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
 
-    final legendGroups = _currentMap!.legendGroups;
+    // 根据是否有选中图层/图层组决定切换范围
+    final legendGroups = (_selectedLayer != null || (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
+        ? _getBoundLegendGroups()
+        : _currentMap!.legendGroups;
+    
+    if (legendGroups.isEmpty) {
+      if (mounted) context.showInfoSnackBar('没有可切换的图例组');
+      return;
+    }
+
     if (_currentLegendGroupForManagement == null) {
       // 如果没有打开图例组管理抽屉，打开第一个图例组
       final firstGroup = legendGroups.first;
@@ -4641,6 +4707,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       if (currentIndex < legendGroups.length - 1) {
         final nextGroup = legendGroups[currentIndex + 1];
         _showLegendGroupManagementDrawer(nextGroup);
+      } else if (currentIndex == legendGroups.length - 1 && legendGroups.length > 1) {
+        // 如果是最后一个，循环到第一个
+        final firstGroup = legendGroups.first;
+        _showLegendGroupManagementDrawer(firstGroup);
       }
     }
   }
@@ -4650,10 +4720,53 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_isLegendGroupManagementDrawerOpen) {
       _closeLegendGroupManagementDrawer();
     } else {
-      // 如果有图例组，打开第一个
+      // 优先级1：当前选中图层绑定的图例组
+      if (_selectedLayer != null) {
+        if (_selectedLayer!.legendGroupIds.isNotEmpty) {
+          final boundLegendGroupId = _selectedLayer!.legendGroupIds.first;
+          final boundLegendGroup = _currentMap?.legendGroups
+              .where((group) => group.id == boundLegendGroupId)
+              .firstOrNull;
+          if (boundLegendGroup != null) {
+            _showLegendGroupManagementDrawer(boundLegendGroup);
+            return;
+          }
+        } else {
+          // 选中图层但没有绑定图例组
+          if (mounted) context.showInfoSnackBar('当前选中图层没有绑定图例组');
+          return;
+        }
+      }
+      
+      // 优先级2：当前选中图层组包含的图层绑定的图例组
+      if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
+        final allBoundGroupIds = <String>{};
+        for (final layer in _selectedLayerGroup!) {
+          allBoundGroupIds.addAll(layer.legendGroupIds);
+        }
+        if (allBoundGroupIds.isNotEmpty) {
+          final firstBoundGroupId = allBoundGroupIds.first;
+          final boundLegendGroup = _currentMap?.legendGroups
+              .where((group) => group.id == firstBoundGroupId)
+              .firstOrNull;
+          if (boundLegendGroup != null) {
+            _showLegendGroupManagementDrawer(boundLegendGroup);
+            return;
+          }
+        } else {
+          // 选中图层组但没有绑定图例组
+          if (mounted) context.showInfoSnackBar('当前选中图层组没有绑定图例组');
+          return;
+        }
+      }
+      
+      // 优先级3：没有选择时，检查是否有图例组
       if (_currentMap != null && _currentMap!.legendGroups.isNotEmpty) {
         final firstGroup = _currentMap!.legendGroups.first;
         _showLegendGroupManagementDrawer(firstGroup);
+      } else {
+        // 没有图例组时显示提示
+        if (mounted) context.showInfoSnackBar('当前地图没有图例组');
       }
     }
   }
