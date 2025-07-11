@@ -297,9 +297,44 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     final currentState = state as MapDataLoaded;
     _saveToHistory(currentState);
 
-    final newLayers = currentState.layers
-        .where((layer) => layer.id != event.layerId)
-        .toList();
+    // 找到要删除的图层
+    final layerToDelete = currentState.layers.firstWhere(
+      (layer) => layer.id == event.layerId,
+      orElse: () => throw Exception('Layer not found'),
+    );
+
+    // 找到要删除图层的索引
+    final deleteIndex = currentState.layers.indexWhere(
+      (layer) => layer.id == event.layerId,
+    );
+
+    if (deleteIndex == -1) return;
+
+    // 创建新的图层列表（不包含要删除的图层）
+    final newLayers = List<MapLayer>.from(currentState.layers)
+      ..removeAt(deleteIndex);
+
+    // 检查是否需要调整链接状态
+    // 如果删除的是组内最后一个图层（不链接下一个但与上一个相连），需要断开上一层的链接
+    if (!layerToDelete.isLinkedToNext && deleteIndex > 0) {
+      final previousLayerIndex = deleteIndex - 1;
+      final previousLayer = newLayers[previousLayerIndex];
+      
+      // 如果上一层有链接，说明删除的图层是组内最后一个
+      // 删除后，上一层应该成为新的组末尾，需要断开其链接
+      if (previousLayer.isLinkedToNext) {
+        final updatedPreviousLayer = previousLayer.copyWith(
+          isLinkedToNext: false,
+          updatedAt: DateTime.now(),
+        );
+        newLayers[previousLayerIndex] = updatedPreviousLayer;
+      }
+    }
+
+    // 重新分配order
+    for (int i = 0; i < newLayers.length; i++) {
+      newLayers[i] = newLayers[i].copyWith(order: i, updatedAt: DateTime.now());
+    }
 
     // 同步更新mapItem中的图层数据
     final updatedMapItem = currentState.mapItem.copyWith(
