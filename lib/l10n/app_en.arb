@@ -775,6 +775,18 @@
   "@mapEditorSettings": {
     "description": "Map editor settings section"
   },
+  "layerSelectionSettings": "Layer Selection Settings",
+  "@layerSelectionSettings": {
+    "description": "Layer selection settings section"
+  },
+  "autoSelectLastLayerInGroup": "Auto-select last layer in group",
+  "@autoSelectLastLayerInGroup": {
+    "description": "Auto-select last layer in group setting"
+  },
+  "autoSelectLastLayerInGroupDescription": "Automatically select the last layer when a layer group is selected",
+  "@autoSelectLastLayerInGroupDescription": {
+    "description": "Description for auto-select last layer in group setting"
+  },
   "layoutSettings": "Layout Settings",
   "@layoutSettings": {
     "description": "Layout settings section"

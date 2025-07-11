@@ -548,6 +548,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mapEditorSettings => '地图编辑器设置';
 
   @override
+  String get layerSelectionSettings => '图层选择设置';
+
+  @override
+  String get autoSelectLastLayerInGroup => '自动选择图层组的最后一层';
+
+  @override
+  String get autoSelectLastLayerInGroupDescription => '选择图层组时自动选择该组的最后一层';
+
+  @override
   String get layoutSettings => '界面布局设置';
 
   @override

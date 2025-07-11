@@ -1088,6 +1088,24 @@ abstract class AppLocalizations {
   /// **'Map Editor Settings'**
   String get mapEditorSettings;
 
+  /// Layer selection settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Layer Selection Settings'**
+  String get layerSelectionSettings;
+
+  /// Auto-select last layer in group setting
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-select last layer in group'**
+  String get autoSelectLastLayerInGroup;
+
+  /// Description for auto-select last layer in group setting
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically select the last layer when a layer group is selected'**
+  String get autoSelectLastLayerInGroupDescription;
+
   /// Layout settings section
   ///
   /// In en, this message translates to:

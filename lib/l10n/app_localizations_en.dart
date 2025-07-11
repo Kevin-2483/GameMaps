@@ -564,6 +564,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapEditorSettings => 'Map Editor Settings';
 
   @override
+  String get layerSelectionSettings => 'Layer Selection Settings';
+
+  @override
+  String get autoSelectLastLayerInGroup => 'Auto-select last layer in group';
+
+  @override
+  String get autoSelectLastLayerInGroupDescription =>
+      'Automatically select the last layer when a layer group is selected';
+
+  @override
   String get layoutSettings => 'Layout Settings';
 
   @override

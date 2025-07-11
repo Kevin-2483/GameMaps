@@ -259,6 +259,9 @@ class MapEditorPreferences {
   /// 地图编辑器快捷键设置
   final Map<String, List<String>> shortcuts;
 
+  /// 自动选择图层组中的最后一个图层
+  final bool autoSelectLastLayerInGroup;
+
   const MapEditorPreferences({
     this.undoHistoryLimit = 20,
     this.zoomSensitivity = 1.0,
@@ -273,6 +276,7 @@ class MapEditorPreferences {
     this.radialMenuAnimationDuration = 300,
     this.radialMenuSubMenuDelay = 50,
     this.shortcuts = const <String, List<String>>{},
+    this.autoSelectLastLayerInGroup = false,
   });
   factory MapEditorPreferences.createDefault() {
     return const MapEditorPreferences(
@@ -288,6 +292,7 @@ class MapEditorPreferences {
       radialMenuReturnDelay: 100,
       radialMenuAnimationDuration: 300,
       radialMenuSubMenuDelay: 50,
+      autoSelectLastLayerInGroup: false,
       shortcuts: {
         // 工具快捷键
         'undo': ['Ctrl+Z', 'Win+Z'],
@@ -360,6 +365,7 @@ class MapEditorPreferences {
     int? radialMenuAnimationDuration,
     int? radialMenuSubMenuDelay,
     Map<String, List<String>>? shortcuts,
+    bool? autoSelectLastLayerInGroup,
   }) {
     return MapEditorPreferences(
       undoHistoryLimit: undoHistoryLimit ?? this.undoHistoryLimit,
@@ -381,6 +387,8 @@ class MapEditorPreferences {
       radialMenuSubMenuDelay:
           radialMenuSubMenuDelay ?? this.radialMenuSubMenuDelay,
       shortcuts: shortcuts ?? this.shortcuts,
+      autoSelectLastLayerInGroup:
+          autoSelectLastLayerInGroup ?? this.autoSelectLastLayerInGroup,
     );
   }
 

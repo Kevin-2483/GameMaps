@@ -1471,6 +1471,30 @@ class _MapEditorContentState extends State<_MapEditorContent>
     setState(() {
       // 修改：不清除单图层选择，允许同时选择
       _selectedLayerGroup = group; // 设置组选择
+      
+      // 检查用户偏好设置，是否自动选择图层组的最后一层
+      final userPreferences = Provider.of<UserPreferencesProvider>(
+        context,
+        listen: false,
+      );
+      
+      if (userPreferences.mapEditor.autoSelectLastLayerInGroup && group.isNotEmpty) {
+        // 找到图层组中的最后一层
+        MapLayer? lastLayer;
+        
+        
+        for (final layer in group) {
+          if (!layer.isLinkedToNext) {
+            
+            lastLayer = layer;
+          }
+        }
+        
+        // 如果找到了最后一层，自动选择它
+        if (lastLayer != null) {
+          _selectedLayer = lastLayer;
+        }
+      }
     });
 
     // 触发优先显示逻辑

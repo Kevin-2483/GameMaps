@@ -5,6 +5,7 @@ import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../widgets/key_capture_widget.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 class MapEditorSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -703,6 +704,7 @@ class MapEditorSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
     final mapEditor = preferences.mapEditor;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       child: Padding(
@@ -972,6 +974,27 @@ class MapEditorSettingsSection extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 图层选择设置标题
+            Text(
+              l10n.layerSelectionSettings,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            // 自动选择图层组中的最后一个图层
+            SwitchListTile(
+              title: Text(l10n.autoSelectLastLayerInGroup),
+              subtitle: Text(l10n.autoSelectLastLayerInGroupDescription),
+              value: mapEditor.autoSelectLastLayerInGroup,
+              onChanged: (value) => provider.updateMapEditor(
+                autoSelectLastLayerInGroup: value,
               ),
             ),
 

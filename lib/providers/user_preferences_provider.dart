@@ -151,6 +151,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     int? radialMenuAnimationDuration,
     int? radialMenuSubMenuDelay,
     Map<String, List<String>>? shortcuts,
+    bool? autoSelectLastLayerInGroup,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -169,6 +170,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         radialMenuAnimationDuration: radialMenuAnimationDuration,
         radialMenuSubMenuDelay: radialMenuSubMenuDelay,
         shortcuts: shortcuts,
+        autoSelectLastLayerInGroup: autoSelectLastLayerInGroup,
       );
 
       await _service.updateMapEditor(updatedMapEditor);
