@@ -163,11 +163,22 @@ class VfsStorageService {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
 
+    // 确保正确提取文件名，支持包含空格的路径
+    String fileName = '';
+    if (vfsPath.segments.isNotEmpty) {
+      fileName = vfsPath.segments.last;
+    } else if (vfsPath.path.isNotEmpty) {
+      // 如果segments为空但path不为空，直接使用path作为文件名
+      fileName = vfsPath.path;
+    }
+
+    debugPrint('🗂️ VFS: Creating directory - path: "${vfsPath.path}", fileName: "$fileName"');
+
     await db.insert(_filesTableName, {
       'database_name': vfsPath.database,
       'collection_name': vfsPath.collection,
       'file_path': vfsPath.path,
-      'file_name': vfsPath.fileName ?? '',
+      'file_name': fileName,
       'is_directory': 1,
       'content_data': null,
       'mime_type': null,
@@ -401,7 +412,14 @@ class VfsStorageService {
           if (oldPath == fromVfsPath.path) {
             // 这是被移动的目录本身
             newPath = toVfsPath.path;
-            newFileName = toVfsPath.fileName ?? '';
+            // 确保正确提取文件名，支持包含空格的路径
+            if (toVfsPath.segments.isNotEmpty) {
+              newFileName = toVfsPath.segments.last;
+            } else if (toVfsPath.path.isNotEmpty) {
+              newFileName = toVfsPath.path;
+            } else {
+              newFileName = '';
+            }
           } else {
             // 这是子文件/目录，需要更新路径前缀
             if (fromVfsPath.path.isEmpty) {
@@ -432,11 +450,19 @@ class VfsStorageService {
         }
       } else {
         // 移动文件
+        // 确保正确提取文件名，支持包含空格的路径
+        String newFileName = '';
+        if (toVfsPath.segments.isNotEmpty) {
+          newFileName = toVfsPath.segments.last;
+        } else if (toVfsPath.path.isNotEmpty) {
+          newFileName = toVfsPath.path;
+        }
+        
         await txn.update(
           _filesTableName,
           {
             'file_path': toVfsPath.path,
-            'file_name': toVfsPath.fileName ?? '',
+            'file_name': newFileName,
             'modified_at': now,
           },
           where: 'database_name = ? AND collection_name = ? AND file_path = ?',
@@ -791,11 +817,22 @@ class VfsStorageService {
       }
     }
 
+    // 确保正确提取文件名，支持包含空格的路径
+    String fileName = '';
+    if (vfsPath.segments.isNotEmpty) {
+      fileName = vfsPath.segments.last;
+    } else if (vfsPath.path.isNotEmpty) {
+      // 如果segments为空但path不为空，直接使用path作为文件名
+      fileName = vfsPath.path;
+    }
+
+    debugPrint('📄 VFS: Writing file - path: "${vfsPath.path}", fileName: "$fileName"');
+
     await db.insert(_filesTableName, {
       'database_name': vfsPath.database,
       'collection_name': vfsPath.collection,
       'file_path': vfsPath.path,
-      'file_name': vfsPath.fileName ?? '',
+      'file_name': fileName,
       'is_directory': 0,
       'content_data': data,
       'mime_type': mimeType,

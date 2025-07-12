@@ -10,6 +10,7 @@ class VfsProtocol {
   ///
   /// 路径格式: indexeddb://database/collection/path/to/file
   /// 例如: indexeddb://r6box/maps/map1/data.json
+  /// 支持包含空格的路径名
   static VfsPath? parsePath(String path) {
     if (!path.startsWith(schemePrefix)) {
       return null;
@@ -22,11 +23,15 @@ class VfsProtocol {
       return null;
     }
 
+    // 确保路径段正确处理，包括空格
+    final pathSegments = segments.skip(2).toList();
+    final fullPath = pathSegments.join('/');
+
     return VfsPath(
       database: segments[0],
       collection: segments[1],
-      path: segments.skip(2).join('/'),
-      segments: segments.skip(2).toList(),
+      path: fullPath,
+      segments: pathSegments,
     );
   }
 

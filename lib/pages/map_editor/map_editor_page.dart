@@ -783,6 +783,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   .firstOrNull;
             }
 
+            // 关键修复：同步更新当前正在管理的图例组引用
+            // 确保LegendGroupManagementDrawer能够接收到最新的图例组数据
+            if (_currentLegendGroupForManagement != null) {
+              final managedGroupId = _currentLegendGroupForManagement!.id;
+              _currentLegendGroupForManagement = state.legendGroups
+                  .where((group) => group.id == managedGroupId)
+                  .firstOrNull;
+              debugPrint('图例组管理状态已同步: ${_currentLegendGroupForManagement?.name}');
+            }
+
             // 重要修复：同步未保存更改状态
             // 当响应式系统有数据变化时，UI也应该反映这个变化
             _hasUnsavedChanges = hasUnsavedChangesReactive;
@@ -1464,6 +1474,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _prioritizeLayerAndGroupDisplay();
     // 清除画布上的选区
     _clearCanvasSelection();
+    
+    // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
+    _autoSwitchToFirstBoundLegendGroup();
   }
 
   //TODO: 考虑使用响应式系统
@@ -1501,6 +1514,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _prioritizeLayerAndGroupDisplay();
     //：清除画布上的选区
     _clearCanvasSelection();
+    
+    // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
+    _autoSwitchToFirstBoundLegendGroup();
   }
 
   //TODO: 考虑使用响应式系统
@@ -4669,6 +4685,26 @@ class _MapEditorContentState extends State<_MapEditorContent>
     return _currentMap!.legendGroups
         .where((group) => allBoundGroupIds.contains(group.id))
         .toList();
+  }
+
+  /// 自动切换到绑定的第一个图例组（如果图例组抽屉已打开）
+  void _autoSwitchToFirstBoundLegendGroup() {
+    // 只有在图例组管理抽屉打开时才执行自动切换
+    if (!_isLegendGroupManagementDrawerOpen) return;
+    
+    // 获取当前选中图层或图层组绑定的图例组
+    final boundLegendGroups = _getBoundLegendGroups();
+    
+    // 如果有绑定的图例组，切换到第一个
+    if (boundLegendGroups.isNotEmpty) {
+      final firstBoundGroup = boundLegendGroups.first;
+      debugPrint('自动切换图例组抽屉到绑定的图例组: ${firstBoundGroup.name}');
+      
+      // 切换到第一个绑定的图例组
+      _showLegendGroupManagementDrawer(firstBoundGroup);
+    } else {
+      debugPrint('当前选中的图层或图层组没有绑定任何图例组');
+    }
   }
 
   /// 打开上一个图例组

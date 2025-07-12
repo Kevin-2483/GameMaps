@@ -17,7 +17,7 @@ import '../../../data/new_reactive_script_manager.dart'; // 导入新的响应�
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 import '../../../services/notification/notification_service.dart';
-import '../../../services/notification/notification_service.dart';
+
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -80,6 +80,52 @@ class _LegendGroupManagementDrawerState
   bool _isLegendListExpanded = false; // 图例列表是否展开
   bool _isVfsTreeExpanded = false; // VFS目录树是否展开
   bool _isCacheDisplayExpanded = true; // 缓存显示是否展开
+
+  /// 切换折叠面板状态，实现互斥展开（一次只能展开一个面板）
+  void _togglePanel(String panelName) {
+    setState(() {
+      // 检查当前要切换的面板是否已经展开
+      bool isCurrentPanelExpanded = false;
+      switch (panelName) {
+        case 'settings':
+          isCurrentPanelExpanded = _isSettingsExpanded;
+          break;
+        case 'legendList':
+          isCurrentPanelExpanded = _isLegendListExpanded;
+          break;
+        case 'vfsTree':
+          isCurrentPanelExpanded = _isVfsTreeExpanded;
+          break;
+        case 'cacheDisplay':
+          isCurrentPanelExpanded = _isCacheDisplayExpanded;
+          break;
+      }
+
+      // 先关闭所有面板
+      _isSettingsExpanded = false;
+      _isLegendListExpanded = false;
+      _isVfsTreeExpanded = false;
+      _isCacheDisplayExpanded = false;
+
+      // 如果当前面板之前是关闭的，则展开它；如果之前是展开的，则保持关闭状态
+      if (!isCurrentPanelExpanded) {
+        switch (panelName) {
+          case 'settings':
+            _isSettingsExpanded = true;
+            break;
+          case 'legendList':
+            _isLegendListExpanded = true;
+            break;
+          case 'vfsTree':
+            _isVfsTreeExpanded = true;
+            break;
+          case 'cacheDisplay':
+            _isCacheDisplayExpanded = true;
+            break;
+        }
+      }
+    });
+  }
 
   // 新增：URL输入框控制器映射，用于管理每个图例项的输入框状态
   final Map<String, TextEditingController> _urlControllers = {};
@@ -421,172 +467,386 @@ class _LegendGroupManagementDrawerState
     final drawerWidth = userPrefs.layout.drawerWidth;
 
     return Container(
-      width: drawerWidth, // 使用用户偏好设置的抽屉宽度
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border.all(color: Theme.of(context).dividerColor),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          // 标题栏
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          width: drawerWidth, // 使用用户偏好设置的抽屉宽度
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            border: Border.all(color: Theme.of(context).dividerColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // 标题栏
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.legend_toggle,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.legendGroup.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.legend_toggle,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.legendGroup.name,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ),
+                        // if (!widget.isPreviewMode)
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 18),
+                          onPressed: _showEditNameDialog,
+                          tooltip: '编辑名称',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: widget.onClose,
+                        ),
+                      ],
                     ),
-                    // if (!widget.isPreviewMode)
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 18),
-                      onPressed: _showEditNameDialog,
-                      tooltip: '编辑名称',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: widget.onClose,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '管理图例组中的图例',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
+              ),
+
+              // 可折叠的内容区域 - 使用平分空间的布局
+              Expanded(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Text(
-                        '管理图例组中的图例',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSecondaryContainer,
+                    // 设置选项 (可折叠)
+                    if (!_isSettingsExpanded)
+                      Container(
+                        height: 48.0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () => _togglePanel('settings'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.settings, size: 20),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  '设置选项',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const Icon(Icons.expand_more, size: 20),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Card(
+                          margin: const EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 48.0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  ),
+                                ),
+                                child: InkWell(
+                                  onTap: () => _togglePanel('settings'),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.settings, size: 20),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '设置选项',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.expand_less, size: 20),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              _buildSettingsContent(),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
 
-          // 可折叠的内容区域 - 使用平分空间的布局
-          Expanded(
-            child: Column(
-              children: [
-                // 设置选项 (可折叠)
-                _buildCollapsiblePanel(
-                  title: '设置选项',
-                  icon: Icons.settings,
-                  isCollapsed: !_isSettingsExpanded,
-                  onToggleCollapsed: () {
-                    setState(() {
-                      _isSettingsExpanded = !_isSettingsExpanded;
-                    });
-                  },
-                  child: _buildSettingsContent(),
-                ),
-
-                // VFS目录树 (可折叠)
-                _buildCollapsiblePanel(
-                  title: 'VFS图例目录',
-                  icon: Icons.folder_outlined,
-                  isCollapsed: !_isVfsTreeExpanded,
-                  onToggleCollapsed: () {
-                    setState(() {
-                      _isVfsTreeExpanded = !_isVfsTreeExpanded;
-                    });
-                  },
-                  child: Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: VfsDirectoryTreeDisplay(
-                        legendGroupId: widget.legendGroup.id,
-                        versionManager: widget.versionManager,
-                        onCacheCleared: _clearLegendCacheForFolder,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 缓存图例 (可折叠)
-                _buildCollapsiblePanel(
-                  title: '缓存图例',
-                  icon: Icons.storage,
-                  isCollapsed: !_isCacheDisplayExpanded,
-                  onToggleCollapsed: () {
-                    setState(() {
-                      _isCacheDisplayExpanded = !_isCacheDisplayExpanded;
-                    });
-                  },
-                  child: Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: CachedLegendsDisplay(
-                        onLegendSelected: _onCachedLegendSelected,
-                        versionManager: widget.versionManager,
-                        currentLegendGroupId: widget.legendGroup.id,
-                        onLegendDragToCanvas:
-                            _onLegendDragToCanvas, // 使用本地方法处理拖拽
-                        onDragStart: widget.onDragStart, // 传递拖拽开始回调
-                        onDragEnd: widget.onDragEnd, // 传递拖拽结束回调
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 图例列表 (可折叠)
-                _buildCollapsiblePanel(
-                  title: '图例列表 (${widget.legendGroup.legendItems.length})',
-                  icon: Icons.legend_toggle,
-                  isCollapsed: !_isLegendListExpanded,
-                  onToggleCollapsed: () {
-                    setState(() {
-                      _isLegendListExpanded = !_isLegendListExpanded;
-                    });
-                  },
-                  child: _buildLegendListContent(),
-                  actions: [
-                    ElevatedButton.icon(
-                      onPressed: _showAddLegendDialog,
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('添加图例'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                    // VFS目录树 (可折叠)
+                    if (!_isVfsTreeExpanded)
+                      Container(
+                        height: 48.0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () => _togglePanel('vfsTree'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.folder_outlined, size: 20),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'VFS图例目录',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const Icon(Icons.expand_more, size: 20),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Card(
+                          margin: const EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 48.0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  ),
+                                ),
+                                child: InkWell(
+                                  onTap: () => _togglePanel('vfsTree'),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.folder_outlined, size: 20),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'VFS图例目录',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.expand_less, size: 20),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: VfsDirectoryTreeDisplay(
+                                    legendGroupId: widget.legendGroup.id,
+                                    versionManager: widget.versionManager,
+                                    onCacheCleared: _clearLegendCacheForFolder,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+
+                    // 缓存图例 (可折叠)
+                    if (!_isCacheDisplayExpanded)
+                      Container(
+                        height: 48.0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () => _togglePanel('cacheDisplay'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.storage, size: 20),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  '缓存图例',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const Icon(Icons.expand_more, size: 20),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Card(
+                          margin: const EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 48.0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  ),
+                                ),
+                                child: InkWell(
+                                  onTap: () => _togglePanel('cacheDisplay'),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.storage, size: 20),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '缓存图例',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.expand_less, size: 20),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: CachedLegendsDisplay(
+                                    onLegendSelected: _onCachedLegendSelected,
+                                    versionManager: widget.versionManager,
+                                    currentLegendGroupId: widget.legendGroup.id,
+                                    onLegendDragToCanvas:
+                                        _onLegendDragToCanvas, // 使用本地方法处理拖拽
+                                    onDragStart: widget.onDragStart, // 传递拖拽开始回调
+                                    onDragEnd: widget.onDragEnd, // 传递拖拽结束回调
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // 图例列表 (可折叠)
+                    if (!_isLegendListExpanded)
+                      Container(
+                        height: 48.0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () => _togglePanel('legendList'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.legend_toggle, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '图例列表 (${widget.legendGroup.legendItems.length})',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const Icon(Icons.expand_more, size: 20),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Card(
+                          margin: const EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 48.0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  ),
+                                ),
+                                child: InkWell(
+                                  onTap: () => _togglePanel('legendList'),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.legend_toggle, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '图例列表 (${widget.legendGroup.legendItems.length})',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: _showAddLegendDialog,
+                                        icon: const Icon(Icons.add, size: 16),
+                                        label: const Text('添加图例'),
+                                        style: ElevatedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.expand_less, size: 20),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              _buildLegendListContent(),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
   }
 
   Widget _buildLegendItemTile(LegendItem item) {

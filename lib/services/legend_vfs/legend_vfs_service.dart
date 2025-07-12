@@ -273,18 +273,50 @@ class LegendVfsService {
 
   /// 获取图例
   Future<LegendItem?> getLegend(String title, [String? folderPath]) async {
-    final legendPath = _buildLegendPath(title, folderPath);
+    // 首先尝试使用原始标题构建路径（不进行sanitize）
+    final pathPrefix = 'indexeddb://$_database/$_collection';
+    String legendPath;
+    
+    if (folderPath != null && folderPath.isNotEmpty) {
+      final cleanFolderPath = folderPath.replaceAll(RegExp(r'^/+|/+$'), '');
+      legendPath = cleanFolderPath.isNotEmpty 
+          ? '$pathPrefix/$cleanFolderPath/$title.legend'
+          : '$pathPrefix/$title.legend';
+    } else {
+      legendPath = '$pathPrefix/$title.legend';
+    }
+    
+    debugPrint('获取图例: "$title", 尝试原始路径: $legendPath');
 
     try {
-      // 检查目录是否存在
+      // 首先检查使用原始标题的目录是否存在
       if (!await _vfs.exists(legendPath)) {
-        return null;
+        debugPrint('原始路径不存在，尝试sanitized路径');
+        // 如果不存在，尝试使用sanitized路径
+        legendPath = _buildLegendPath(title, folderPath);
+        debugPrint('尝试sanitized路径: $legendPath');
+        
+        if (!await _vfs.exists(legendPath)) {
+          debugPrint('图例目录不存在: $legendPath');
+          return null;
+        }
       }
 
-      // 读取JSON配置
-      final jsonPath = '$legendPath/${_sanitizeFileName(title)}.json';
+      // 读取JSON配置 - 首先尝试使用原始标题
+      String jsonPath = '$legendPath/$title.json';
+      debugPrint('查找JSON文件: $jsonPath (使用原始标题)');
+      
       if (!await _vfs.exists(jsonPath)) {
-        return null;
+        debugPrint('原始标题JSON文件不存在，尝试sanitized标题');
+        // 如果原始标题的JSON不存在，尝试sanitized标题
+        final sanitizedTitle = _sanitizeFileName(title);
+        jsonPath = '$legendPath/$sanitizedTitle.json';
+        debugPrint('查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")');
+        
+        if (!await _vfs.exists(jsonPath)) {
+          debugPrint('JSON文件不存在: $jsonPath');
+          return null;
+        }
       }
 
       final legendJson = await _vfs.readJsonFile(jsonPath);
@@ -336,13 +368,24 @@ class LegendVfsService {
           ? 'indexeddb://$_database/$_collection/${folderPath.replaceAll(RegExp(r'^/+|/+$'), '')}'
           : 'indexeddb://$_database/$_collection';
 
+      debugPrint('获取图例列表，路径: $basePath');
       final entries = await _vfs.listDirectory(basePath);
-
-      return entries
-          .where((entry) => entry.isDirectory && entry.name.endsWith('.legend'))
+      debugPrint('VFS返回的条目数量: ${entries.length}');
+      
+      final legendEntries = entries.where((entry) => entry.isDirectory && entry.name.endsWith('.legend')).toList();
+      debugPrint('找到的.legend文件夹: ${legendEntries.map((e) => e.name).toList()}');
+      
+      final titles = legendEntries
           .map((entry) => entry.name.replaceAll('.legend', ''))
-          .map((name) => _desanitizeFileName(name))
+          .map((name) {
+            final desanitized = _desanitizeFileName(name);
+            debugPrint('文件夹名称转换: "$name" -> "$desanitized"');
+            return desanitized;
+          })
           .toList();
+      
+      debugPrint('最终图例标题列表: $titles');
+      return titles;
     } catch (e) {
       debugPrint('获取图例列表失败: $e');
       return [];
