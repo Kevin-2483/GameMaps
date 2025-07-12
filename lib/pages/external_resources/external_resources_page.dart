@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
-// import 'dart:typed_data';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:intl/intl.dart';
+import '../../utils/web_download_stub.dart'
+    if (dart.library.html) '../../utils/web_download_web.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
+import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/work_status_service.dart';
 import '../../services/notification/notification_service.dart';
 
@@ -57,6 +62,30 @@ class FileMapping {
   }
 }
 
+class ExportMapping {
+  final String sourcePath;
+  final String exportName;
+  final bool isValidPath;
+
+  ExportMapping({
+    required this.sourcePath,
+    required this.exportName,
+    required this.isValidPath,
+  });
+
+  ExportMapping copyWith({
+    String? sourcePath,
+    String? exportName,
+    bool? isValidPath,
+  }) {
+    return ExportMapping(
+      sourcePath: sourcePath ?? this.sourcePath,
+      exportName: exportName ?? this.exportName,
+      isValidPath: isValidPath ?? this.isValidPath,
+    );
+  }
+}
+
 class _ExternalResourcesPageContentState
     extends State<_ExternalResourcesPageContent> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
@@ -83,6 +112,8 @@ class _ExternalResourcesPageContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!_showPreview) _buildUpdateSection(context, l10n),
+                    if (!_showPreview) const SizedBox(height: 24),
+                    if (!_showPreview) _buildExportSection(context),
                     if (!_showPreview) const SizedBox(height: 24),
                     if (!_showPreview) _buildInstructionsSection(context),
                     if (_showPreview) _buildPreviewSection(context),
@@ -645,6 +676,266 @@ class _ExternalResourcesPageContentState
     }
   }
 
+  Widget _buildExportSection(BuildContext context) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.file_download,
+                  size: 24,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '导出外部资源',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '选择要导出的文件或文件夹，并为它们指定导出名称。系统将创建一个包含所选资源和元数据的ZIP文件。',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // 导出映射列表
+            if (_exportMappings.isNotEmpty) ...[
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    // 表头
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              '源路径',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              '导出名称',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 100), // 操作按钮空间
+                        ],
+                      ),
+                    ),
+                    // 导出项列表
+                    ...List.generate(_exportMappings.length, (index) {
+                      final mapping = _exportMappings[index];
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // 源路径
+                            Expanded(
+                              flex: 3,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      decoration: InputDecoration(
+                                        hintText: '选择源文件或文件夹',
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: !_isValidSourcePathField(mapping.sourcePath) 
+                                                ? Theme.of(context).colorScheme.error 
+                                                : Theme.of(context).colorScheme.outline,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: !_isValidSourcePathField(mapping.sourcePath) 
+                                                ? Theme.of(context).colorScheme.error 
+                                                : Theme.of(context).colorScheme.outline,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: !_isValidSourcePathField(mapping.sourcePath) 
+                                                ? Theme.of(context).colorScheme.error 
+                                                : Theme.of(context).colorScheme.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        errorText: !mapping.isValidPath && mapping.sourcePath.isNotEmpty
+                                            ? '路径无效'
+                                            : !_isValidSourcePathField(mapping.sourcePath)
+                                                ? '请选择源路径'
+                                                : null,
+                                      ),
+                                      controller: TextEditingController(text: mapping.sourcePath),
+                                      onChanged: (value) => _updateExportSourcePath(index, value),
+                                      readOnly: true,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    onPressed: () => _selectSourcePath(index),
+                                    icon: const Icon(Icons.folder_open),
+                                    tooltip: '选择路径',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // 导出名称
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: '输入导出名称',
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: !_isValidExportName(index, mapping.exportName) 
+                                          ? Theme.of(context).colorScheme.error 
+                                          : Theme.of(context).colorScheme.outline,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: !_isValidExportName(index, mapping.exportName) 
+                                          ? Theme.of(context).colorScheme.error 
+                                          : Theme.of(context).colorScheme.outline,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: !_isValidExportName(index, mapping.exportName) 
+                                          ? Theme.of(context).colorScheme.error 
+                                          : Theme.of(context).colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  errorText: mapping.exportName.trim().isEmpty
+                                      ? '请输入导出名称'
+                                      : !_isValidExportName(index, mapping.exportName)
+                                          ? '导出名称重复'
+                                          : null,
+                                ),
+                                controller: TextEditingController(text: mapping.exportName),
+                                onChanged: (value) => _updateExportName(index, value),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // 删除按钮
+                            IconButton(
+                              onPressed: () => _removeExportMapping(index),
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: '删除',
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
+            // 操作按钮
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _addExportMapping,
+                  icon: const Icon(Icons.add),
+                  label: const Text('添加导出项'),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _isExporting || _exportMappings.isEmpty ? null : _performExport,
+                  icon: _isExporting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.download),
+                  label: Text(_isExporting ? '导出中...' : '开始导出'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                    elevation: _isExporting ? 0 : 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildUpdateSection(BuildContext context, AppLocalizations l10n) {
     return Card(
       elevation: 2,
@@ -675,7 +966,7 @@ class _ExternalResourcesPageContentState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(
@@ -770,7 +1061,7 @@ class _ExternalResourcesPageContentState
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(
@@ -1204,6 +1495,424 @@ class _ExternalResourcesPageContentState
   void _showErrorSnackBar(String message) {
     // 使用新的通知系统替换 SnackBar
     context.showErrorSnackBar(message);
+  }
+
+  // ==================== 导出功能 ====================
+
+  final List<ExportMapping> _exportMappings = [];
+  bool _isExporting = false;
+
+  /// 添加导出映射
+  void _addExportMapping() {
+    setState(() {
+      _exportMappings.add(ExportMapping(
+        sourcePath: '',
+        exportName: '',
+        isValidPath: false,
+      ));
+    });
+  }
+
+  /// 删除导出映射
+  void _removeExportMapping(int index) {
+    setState(() {
+      _exportMappings.removeAt(index);
+    });
+  }
+
+  /// 更新导出映射的源路径
+  void _updateExportSourcePath(int index, String path) {
+    setState(() {
+      _exportMappings[index] = _exportMappings[index].copyWith(
+        sourcePath: path,
+        isValidPath: _isValidSourcePath(path),
+      );
+    });
+  }
+
+  /// 更新导出映射的导出名称
+  void _updateExportName(int index, String name) {
+    setState(() {
+      _exportMappings[index] = _exportMappings[index].copyWith(
+        exportName: name,
+      );
+    });
+  }
+
+  /// 验证源路径是否有效
+  bool _isValidSourcePath(String path) {
+    if (path.isEmpty) return false;
+    
+    // 只允许 indexeddb://r6box/ 开头的绝对路径
+    if (!path.startsWith('indexeddb://r6box/')) {
+      return false;
+    }
+
+    // 解析路径以验证数据库和集合
+    final pathPart = path.substring('indexeddb://'.length);
+    final segments = pathPart.split('/').where((s) => s.isNotEmpty).toList();
+
+    // 路径必须至少包含数据库和集合
+    if (segments.length < 2) {
+      return false;
+    }
+
+    final database = segments[0];
+    final collection = segments[1];
+
+    // 验证数据库名称必须是 r6box
+    if (database != 'r6box') {
+      return false;
+    }
+
+    // 验证集合必须是已挂载的集合之一：fs, legends, maps
+    const allowedCollections = ['fs', 'legends', 'maps'];
+    if (!allowedCollections.contains(collection)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// 选择源路径
+  Future<void> _selectSourcePath(int index) async {
+    try {
+      final result = await VfsFileManagerWindow.showFilePicker(
+        context,
+        allowDirectorySelection: true,
+        selectionType: SelectionType.both,
+      );
+
+      if (result != null) {
+        _updateExportSourcePath(index, result);
+        
+        // 自动提取路径结尾填充导出名称
+        final pathName = _extractPathName(result);
+        if (pathName.isNotEmpty) {
+          _updateExportName(index, pathName);
+        }
+      }
+    } catch (e) {
+      _showErrorSnackBar('选择路径失败：$e');
+    }
+  }
+
+  /// 从路径中提取文件/文件夹名称
+  String _extractPathName(String path) {
+    if (path.isEmpty) return '';
+    
+    // 移除末尾的斜杠
+    String cleanPath = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
+    
+    // 提取最后一个路径段
+    final segments = cleanPath.split('/').where((s) => s.isNotEmpty).toList();
+    if (segments.isEmpty) return '';
+    
+    return segments.last;
+  }
+
+  /// 检查导出名称是否有效（不为空且不重复）
+  bool _isValidExportName(int currentIndex, String name) {
+    if (name.trim().isEmpty) return false;
+    
+    // 检查是否与其他项重复
+    for (int i = 0; i < _exportMappings.length; i++) {
+      if (i != currentIndex && _exportMappings[i].exportName.trim() == name.trim()) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  /// 检查源路径是否为空
+  bool _isValidSourcePathField(String path) {
+    return path.trim().isNotEmpty;
+  }
+
+  /// 执行导出
+  Future<void> _performExport() async {
+    // 验证导出映射
+    if (_exportMappings.isEmpty) {
+      _showErrorSnackBar('请至少添加一个导出项');
+      return;
+    }
+
+    final validMappings = _exportMappings.where((mapping) => 
+      mapping.isValidPath && 
+      mapping.sourcePath.isNotEmpty && 
+      mapping.exportName.isNotEmpty
+    ).toList();
+
+    if (validMappings.isEmpty) {
+      _showErrorSnackBar('请确保所有导出项都有有效的源路径和导出名称');
+      return;
+    }
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      // 开始导出状态
+      final workStatusService = WorkStatusService();
+      workStatusService.startWorking('正在准备导出...', taskId: 'export');
+      
+      // 创建临时文件夹
+      final tempFolderName = 'export_temp_${DateTime.now().millisecondsSinceEpoch}';
+      final tempPath = 'indexeddb://r6box/fs/temp/$tempFolderName';
+      
+      await _vfsService.vfs.createDirectory(tempPath);
+
+      // 复制文件到临时文件夹并重命名
+      workStatusService.updateWorkDescription('正在复制文件...');
+      final fileMapping = <String, String>{};
+      
+      for (int i = 0; i < validMappings.length; i++) {
+        final mapping = validMappings[i];
+        workStatusService.updateWorkDescription('正在复制文件 ${i + 1}/${validMappings.length}');
+        await _copyToTempFolder(mapping, tempPath, fileMapping);
+      }
+
+      // 创建 metadata.json
+      workStatusService.updateWorkDescription('正在生成元数据...');
+      await _createMetadataFile(tempPath, fileMapping);
+
+      // 压缩文件夹
+      workStatusService.updateWorkDescription('正在压缩文件...');
+      final zipBytes = await _compressTempFolder(tempPath);
+
+      // 让用户选择保存位置并下载
+      workStatusService.updateWorkDescription('正在保存文件...');
+      await _saveExportFile(zipBytes);
+
+      // 清理临时文件
+      workStatusService.updateWorkDescription('正在清理临时文件...');
+      await _vfsService.vfs.delete(tempPath, recursive: true);
+
+      workStatusService.updateWorkDescription('导出完成！');
+      _showSuccessSnackBar('导出成功！');
+      
+      // 延迟结束工作状态以显示完成信息
+      Future.delayed(const Duration(seconds: 2), () {
+        workStatusService.stopWorking(taskId: 'export');
+      });
+      
+    } catch (e) {
+      final workStatusService = WorkStatusService();
+      workStatusService.updateWorkDescription('导出失败：$e');
+      _showErrorSnackBar('导出失败：$e');
+      debugPrint('导出失败：$e');
+      // 延迟结束工作状态以显示错误信息
+      Future.delayed(const Duration(seconds: 2), () {
+        workStatusService.stopWorking(taskId: 'export');
+      });
+    } finally {
+      setState(() {
+        _isExporting = false;
+      });
+    }
+  }
+
+  /// 复制文件到临时文件夹
+  Future<void> _copyToTempFolder(
+    ExportMapping mapping, 
+    String tempPath, 
+    Map<String, String> fileMapping,
+  ) async {
+    final sourcePath = mapping.sourcePath;
+    final exportName = mapping.exportName;
+    
+    // 记录顶层映射（无论是文件还是文件夹）
+    fileMapping[exportName] = sourcePath;
+    
+    // 检查源路径是否存在
+    final exists = await _vfsService.vfs.exists(sourcePath);
+    if (!exists) {
+      throw Exception('源路径不存在：$sourcePath');
+    }
+
+    // 检查是文件还是文件夹
+    final fileInfo = await _vfsService.vfs.getFileInfo(sourcePath);
+    final isDirectory = fileInfo?.isDirectory ?? false;
+    
+    if (isDirectory) {
+      // 处理文件夹（不记录子文件映射）
+      await _copyDirectoryToTemp(sourcePath, tempPath, exportName);
+    } else {
+      // 处理单个文件
+      final fileContent = await _vfsService.vfs.readFile(sourcePath);
+      if (fileContent != null) {
+        final targetPath = '$tempPath/$exportName';
+        await _vfsService.vfs.writeBinaryFile(
+          targetPath,
+          fileContent.data,
+          mimeType: fileContent.mimeType,
+        );
+      }
+    }
+  }
+
+  /// 递归复制文件夹到临时位置
+  Future<void> _copyDirectoryToTemp(
+    String sourcePath,
+    String tempPath,
+    String exportName,
+  ) async {
+    final targetDirPath = '$tempPath/$exportName';
+    await _vfsService.vfs.createDirectory(targetDirPath);
+    
+    // 解析源路径获取collection和相对路径
+    final sourceRelativePath = sourcePath.substring('indexeddb://r6box/'.length);
+    final pathParts = sourceRelativePath.split('/');
+    final collection = pathParts[0];
+    final relativePath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    
+    final items = await _vfsService.listFiles(collection, relativePath);
+
+    for (final item in items) {
+      final itemName = item.name;
+      final itemSourcePath = item.path;
+      final itemTargetPath = '$targetDirPath/$itemName';
+      
+      if (item.isDirectory) {
+        // 递归处理子文件夹
+        await _copyDirectoryToTemp(
+          itemSourcePath,
+          targetDirPath,
+          itemName,
+        );
+      } else {
+        // 复制文件
+        final fileContent = await _vfsService.vfs.readFile(itemSourcePath);
+        if (fileContent != null) {
+          await _vfsService.vfs.writeBinaryFile(
+            itemTargetPath,
+            fileContent.data,
+            mimeType: fileContent.mimeType,
+          );
+        }
+      }
+    }
+  }
+
+  /// 创建 metadata.json 文件
+  Future<void> _createMetadataFile(
+    String tempPath,
+    Map<String, String> fileMapping,
+  ) async {
+    final metadata = {
+      'file_mappings': fileMapping,
+      'export_time': DateTime.now().toIso8601String(),
+      'version': '1.0',
+    };
+    
+    final metadataJson = jsonEncode(metadata);
+    final metadataPath = '$tempPath/metadata.json';
+    
+    await _vfsService.vfs.writeTextFile(metadataPath, metadataJson);
+  }
+
+  /// 压缩临时文件夹
+  Future<Uint8List> _compressTempFolder(String tempPath) async {
+    final archive = Archive();
+    
+    // 解析临时文件夹路径
+    final tempRelativePath = tempPath.substring('indexeddb://r6box/'.length);
+    final pathParts = tempRelativePath.split('/');
+    final collection = pathParts[0];
+    final relativePath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    
+    final items = await _vfsService.listFiles(collection, relativePath);
+
+    // 递归添加所有文件到压缩包
+    await _addItemsToArchive(archive, items, '');
+    
+    // 压缩
+    final zipEncoder = ZipEncoder();
+    return Uint8List.fromList(zipEncoder.encode(archive)!);
+  }
+
+  /// 递归添加文件到压缩包
+  Future<void> _addItemsToArchive(
+    Archive archive,
+    List<VfsFileInfo> items,
+    String basePath,
+  ) async {
+    for (final item in items) {
+      final itemPath = basePath.isEmpty ? item.name : '$basePath/${item.name}';
+      
+      if (item.isDirectory) {
+        // 处理文件夹
+        final itemRelativePath = item.path.substring('indexeddb://r6box/'.length);
+        final itemPathParts = itemRelativePath.split('/');
+        final itemCollection = itemPathParts[0];
+        final itemSubPath = itemPathParts.length > 1 ? itemPathParts.sublist(1).join('/') : '';
+        
+        final subItems = await _vfsService.listFiles(itemCollection, itemSubPath);
+        await _addItemsToArchive(archive, subItems, itemPath);
+      } else {
+        // 添加文件到压缩包
+        final fileContent = await _vfsService.vfs.readFile(item.path);
+        if (fileContent != null) {
+          final archiveFile = ArchiveFile(
+            itemPath,
+            fileContent.data.length,
+            fileContent.data,
+          );
+          archive.addFile(archiveFile);
+        }
+      }
+    }
+  }
+
+  /// 保存导出文件
+  Future<void> _saveExportFile(Uint8List zipBytes) async {
+    try {
+      // 生成默认文件名
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final defaultFileName = 'external_resources_export_$timestamp.zip';
+      
+      // 使用文件选择器让用户选择保存位置
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: '保存导出文件',
+        fileName: defaultFileName,
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+      );
+      
+      if (result != null) {
+        // 写入文件
+        final file = File(result);
+        await file.writeAsBytes(zipBytes);
+      }
+    } catch (e) {
+      // 如果文件选择器失败，尝试下载到默认位置
+      debugPrint('文件选择器失败，尝试下载：$e');
+      await _downloadFile(zipBytes);
+    }
+  }
+
+  /// 下载文件（Web平台备用方案）
+  Future<void> _downloadFile(Uint8List zipBytes) async {
+    try {
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final fileName = 'external_resources_export_$timestamp.zip';
+      
+      if (kIsWeb) {
+        // Web平台：使用WebDownloader下载
+        await WebDownloader.downloadFile(zipBytes, fileName);
+      } else {
+        // 桌面平台：保存到下载文件夹
+        final downloadsPath = Platform.isWindows 
+            ? '${Platform.environment['USERPROFILE']}\\Downloads'
+            : '${Platform.environment['HOME']}/Downloads';
+        final file = File('$downloadsPath/$fileName');
+        await file.writeAsBytes(zipBytes);
+      }
+    } catch (e) {
+      throw Exception('下载失败：$e');
+    }
   }
 
   /// 处理文件夹映射：递归处理文件夹中的所有文件
