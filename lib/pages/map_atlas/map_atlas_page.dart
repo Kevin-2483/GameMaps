@@ -196,16 +196,37 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         imageBytes = await file.readAsBytes();
       }
 
-      // 压缩图片
-      final compressedImage = _compressImage(imageBytes);
+      // 确定文件类型
+      final fileName = result.files.single.name.toLowerCase();
+      final isPng = fileName.endsWith('.png');
+      final isSvg = fileName.endsWith('.svg');
+      
+      // 处理图片 - PNG和SVG保持原始文件，只压缩JPG/JPEG
+      final processedImage = (isPng || isSvg) ? imageBytes : _compressImage(imageBytes);
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         final mapInfo = await _showAddMapDialog(l10n);
         if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {
           try {
+            final mapTitle = mapInfo['title'] as String;
+            
+            // 检查地图是否已存在
+            final existingMap = await _vfsMapService.getMapByTitle(
+              mapTitle,
+              _currentPath.isEmpty ? null : _currentPath,
+            );
+            
+            if (existingMap != null) {
+              // 显示覆盖确认对话框
+              final shouldOverwrite = await _showOverwriteConfirmDialog(l10n, mapTitle);
+              if (shouldOverwrite != true) {
+                return; // 用户取消覆盖
+              }
+            }
+            
             final mapItem = MapItem(
-              title: mapInfo['title'],
-              imageData: compressedImage,
+              title: mapTitle,
+              imageData: processedImage,
               version: mapInfo['version'] ?? 1,
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
@@ -234,12 +255,35 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       if (image != null) {
         // 调整图片大小，最大宽度800像素
         final resized = img.copyResize(image, width: 800);
-        return Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+        // 使用PNG编码以保持透明通道支持
+        return Uint8List.fromList(img.encodePng(resized));
       }
     } catch (e) {
       debugPrint('图片压缩失败: $e');
     }
     return imageBytes;
+  }
+
+  Future<bool?> _showOverwriteConfirmDialog(AppLocalizations l10n, String mapTitle) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('地图已存在'),
+          content: Text('地图 "$mapTitle" 已存在，是否要覆盖现有地图？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('覆盖'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<Map<String, dynamic>?> _showAddMapDialog(AppLocalizations l10n) async {

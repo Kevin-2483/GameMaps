@@ -123,8 +123,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         fileType = LegendFileType.png;
       }
 
-      // 对于非SVG文件进行压缩
-      final processedImage = fileType == LegendFileType.svg
+      // 处理图片 - PNG保持原始文件，只压缩JPG/JPEG
+      final processedImage = fileType == LegendFileType.svg || fileType == LegendFileType.png
           ? imageBytes
           : _compressImage(imageBytes);
 
@@ -137,8 +137,24 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         );
         if (legendInfo != null && legendInfo['title']?.isNotEmpty == true) {
           try {
+            final legendTitle = legendInfo['title'] as String;
+            
+            // 检查图例是否已存在
+            final existingLegend = await _vfsService.getLegend(
+              legendTitle,
+              _currentPath.isEmpty ? null : _currentPath,
+            );
+            
+            if (existingLegend != null) {
+              // 显示覆盖确认对话框
+              final shouldOverwrite = await _showOverwriteConfirmDialog(l10n, legendTitle);
+              if (shouldOverwrite != true) {
+                return; // 用户取消覆盖
+              }
+            }
+            
             final legendItem = LegendItem(
-              title: legendInfo['title'],
+              title: legendTitle,
               imageData: processedImage,
               fileType: fileType,
               centerX: legendInfo['centerX'] ?? 0.5,
@@ -167,12 +183,35 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       if (image != null) {
         // 调整图片大小，最大宽度800像素
         final resized = img.copyResize(image, width: 800);
-        return Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+        // 保持PNG格式以保留透明通道
+        return Uint8List.fromList(img.encodePng(resized));
       }
     } catch (e) {
       debugPrint('图片压缩失败: $e');
     }
     return imageBytes;
+  }
+
+  Future<bool?> _showOverwriteConfirmDialog(AppLocalizations l10n, String legendTitle) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('图例已存在'),
+          content: Text('图例 "$legendTitle" 已存在，是否要覆盖现有图例？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('覆盖'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// 根据文件类型构建图像组件
