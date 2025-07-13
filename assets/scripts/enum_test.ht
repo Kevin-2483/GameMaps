@@ -1,0 +1,11 @@
+// 枚举参数测试脚本
+// @param greeting:enum:hello:选择问候语:你好,再见,滚蛋
+
+external fun say(text, [options]);
+external fun log(text);
+
+// 使用枚举参数
+say('{{greeting}}');
+
+// 显示选择的问候语信息
+log('你选择的问候语是: {{greeting}}');

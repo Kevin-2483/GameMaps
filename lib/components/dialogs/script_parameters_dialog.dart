@@ -283,6 +283,8 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         return _buildNumberInput(param);
       case ScriptParameterType.string:
         return _buildStringInput(param);
+      case ScriptParameterType.enumeration:
+        return _buildEnumInput(param);
     }
   }
 
@@ -371,6 +373,47 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
     );
   }
 
+  Widget _buildEnumInput(ScriptParameter param) {
+    final options = param.options ?? [];
+    if (options.isEmpty) {
+      // 如果没有选项，回退到字符串输入
+      return _buildStringInput(param);
+    }
+
+    // 确保当前值在选项列表中
+    final currentValue = _controllers[param.name]?.text;
+    if (currentValue != null && currentValue.isNotEmpty && !options.contains(currentValue)) {
+      // 如果当前值不在选项中，添加到选项列表
+      options.add(currentValue);
+    }
+
+    return DropdownButtonFormField<String>(
+      value: currentValue?.isNotEmpty == true ? currentValue : null,
+      decoration: InputDecoration(
+        hintText: param.defaultValue ?? '请选择${param.name}',
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      items: options.map((String option) {
+        return DropdownMenuItem<String>(
+          value: option,
+          child: Text(option),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          _controllers[param.name]?.text = newValue ?? '';
+        });
+      },
+      validator: (value) {
+        if (param.isRequired && (value == null || value.trim().isEmpty)) {
+          return '${param.name}是必填参数';
+        }
+        return null;
+      },
+    );
+  }
+
   Color _getTypeColor(ScriptParameterType type) {
     switch (type) {
       case ScriptParameterType.string:
@@ -381,6 +424,8 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         return Colors.orange;
       case ScriptParameterType.boolean:
         return Colors.purple;
+      case ScriptParameterType.enumeration:
+        return Colors.teal;
     }
   }
 
@@ -394,6 +439,8 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         return '数字';
       case ScriptParameterType.boolean:
         return '布尔';
+      case ScriptParameterType.enumeration:
+        return '选择';
     }
   }
 

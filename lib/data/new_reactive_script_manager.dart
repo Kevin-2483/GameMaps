@@ -439,7 +439,8 @@ class NewReactiveScriptManager extends ChangeNotifier {
   }
 
   /// 解析脚本中的参数定义
-  /// 支持格式：// @param paramName:type:defaultValue:description
+  /// 支持格式：// @param paramName:type:defaultValue:description[:options]
+  /// 对于枚举类型：// @param paramName:enum:defaultValue:description:option1,option2,option3
   Map<String, ScriptParameter> parseScriptParameters(String scriptContent) {
     final parameters = <String, ScriptParameter>{};
     final lines = scriptContent.split('\n');
@@ -456,13 +457,22 @@ class NewReactiveScriptManager extends ChangeNotifier {
             final type = parts[1].trim();
             final defaultValue = parts.length > 2 ? parts[2].trim() : '';
             final description = parts.length > 3 ? parts[3].trim() : '';
+            final optionsStr = parts.length > 4 ? parts[4].trim() : '';
+
+            // 解析选项列表（仅对枚举类型）
+            List<String>? options;
+            final paramType = _parseParameterType(type);
+            if (paramType == ScriptParameterType.enumeration && optionsStr.isNotEmpty) {
+              options = optionsStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+            }
 
             parameters[name] = ScriptParameter(
               name: name,
-              type: _parseParameterType(type),
+              type: paramType,
               defaultValue: defaultValue.isEmpty ? null : defaultValue,
               description: description.isEmpty ? null : description,
               isRequired: defaultValue.isEmpty,
+              options: options,
             );
           }
         } catch (e) {
@@ -491,6 +501,10 @@ class NewReactiveScriptManager extends ChangeNotifier {
       case 'bool':
       case 'boolean':
         return ScriptParameterType.boolean;
+      case 'enum':
+      case 'select':
+      case 'choice':
+        return ScriptParameterType.enumeration;
       default:
         return ScriptParameterType.string;
     }
@@ -555,8 +569,8 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
       String valueStr;
       if ((isInDoubleQuotes || isInSingleQuotes) &&
-          paramType == ScriptParameterType.string) {
-        // 如果占位符已经在引号内且是字符串类型，直接使用原值
+          (paramType == ScriptParameterType.string || paramType == ScriptParameterType.enumeration)) {
+        // 如果占位符已经在引号内且是字符串或枚举类型，直接使用原值
         valueStr = paramValue.toString();
         if (isInDoubleQuotes) {
           processedContent = processedContent.replaceAll(
@@ -589,6 +603,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
         return double.tryParse(value) ?? 0.0;
       case ScriptParameterType.boolean:
         return value.toLowerCase() == 'true';
+      case ScriptParameterType.enumeration:
       case ScriptParameterType.string:
       default:
         return value;
@@ -610,7 +625,8 @@ class NewReactiveScriptManager extends ChangeNotifier {
     // 根据参数类型格式化值
     switch (paramType) {
       case ScriptParameterType.string:
-        // 字符串类型需要加引号
+      case ScriptParameterType.enumeration:
+        // 字符串和枚举类型需要加引号
         return "'$value'";
       case ScriptParameterType.integer:
       case ScriptParameterType.number:
@@ -670,7 +686,7 @@ class NewReactiveScriptManager extends ChangeNotifier {
 }
 
 /// 脚本参数类型
-enum ScriptParameterType { string, integer, number, boolean }
+enum ScriptParameterType { string, integer, number, boolean, enumeration }
 
 /// 脚本参数定义
 class ScriptParameter {
@@ -679,6 +695,7 @@ class ScriptParameter {
   final String? defaultValue;
   final String? description;
   final bool isRequired;
+  final List<String>? options; // 枚举类型的选项列表
 
   const ScriptParameter({
     required this.name,
@@ -686,6 +703,7 @@ class ScriptParameter {
     this.defaultValue,
     this.description,
     this.isRequired = false,
+    this.options,
   });
 
   Map<String, dynamic> toJson() => {
@@ -694,6 +712,7 @@ class ScriptParameter {
     'defaultValue': defaultValue,
     'description': description,
     'isRequired': isRequired,
+    'options': options,
   };
 
   factory ScriptParameter.fromJson(Map<String, dynamic> json) =>
@@ -706,5 +725,6 @@ class ScriptParameter {
         defaultValue: json['defaultValue'] as String?,
         description: json['description'] as String?,
         isRequired: json['isRequired'] as bool? ?? false,
+        options: (json['options'] as List<dynamic>?)?.cast<String>(),
       );
 }
