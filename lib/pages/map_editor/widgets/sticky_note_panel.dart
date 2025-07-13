@@ -19,6 +19,7 @@ class StickyNotePanel extends StatefulWidget {
   final Function(String)? onSuccess;
   final Function(String noteId, double opacity)? onOpacityPreview; // 实时透明度预览回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
+  final Function(bool)? onInputFieldFocusChanged; // 新增：输入框焦点状态回调
 
   const StickyNotePanel({
     super.key,
@@ -34,6 +35,7 @@ class StickyNotePanel extends StatefulWidget {
     this.onSuccess,
     this.onOpacityPreview,
     this.onZIndexInspectorRequested,
+    this.onInputFieldFocusChanged,
   });
 
   @override
@@ -331,25 +333,58 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
-      child: TextField(
-        controller: controller,
-        enabled: !widget.isPreviewMode,
-        style: const TextStyle(fontSize: 14),
-        decoration: const InputDecoration(
-          hintText: '便签标题',
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          isDense: true,
-        ),
-        onSubmitted: (value) {
-          if (value.trim() != note.title) {
-            final updatedNote = note.copyWith(
-              title: value.trim().isEmpty ? '无标题便签' : value.trim(),
-              updatedAt: DateTime.now(),
-            );
-            widget.onStickyNoteUpdated(updatedNote);
-          }
+      child: Focus(
+        onFocusChange: (hasFocus) {
+          // 通知父组件输入框焦点状态变化
+          widget.onInputFieldFocusChanged?.call(hasFocus);
         },
+        child: TextField(
+          controller: controller,
+          enabled: !widget.isPreviewMode,
+          style: const TextStyle(fontSize: 14),
+          decoration: const InputDecoration(
+            hintText: '便签标题',
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            isDense: true,
+          ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) {
+            if (value.trim() != note.title) {
+              final updatedNote = note.copyWith(
+                title: value.trim().isEmpty ? '无标题便签' : value.trim(),
+                updatedAt: DateTime.now(),
+              );
+              widget.onStickyNoteUpdated(updatedNote);
+            }
+            // 保存后立即失去焦点，重新启用全局快捷键
+            FocusScope.of(context).unfocus();
+          },
+          onTapOutside: (event) {
+            // 当用户点击输入框外部时保存标题
+            if (controller.text.trim() != note.title) {
+              final updatedNote = note.copyWith(
+                title: controller.text.trim().isEmpty ? '无标题便签' : controller.text.trim(),
+                updatedAt: DateTime.now(),
+              );
+              widget.onStickyNoteUpdated(updatedNote);
+            }
+            // 失去焦点
+            FocusScope.of(context).unfocus();
+          },
+          onEditingComplete: () {
+            // 当用户完成编辑时保存标题
+            if (controller.text.trim() != note.title) {
+              final updatedNote = note.copyWith(
+                title: controller.text.trim().isEmpty ? '无标题便签' : controller.text.trim(),
+                updatedAt: DateTime.now(),
+              );
+              widget.onStickyNoteUpdated(updatedNote);
+            }
+            // 保存后立即失去焦点，重新启用全局快捷键
+            FocusScope.of(context).unfocus();
+          },
+        ),
       ),
     );
   }
@@ -825,10 +860,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     );
 
     if (result != null) {
-      final updatedNote = note.copyWith(
-        tags: result.isNotEmpty ? result : null,
-        updatedAt: DateTime.now(),
-      );
+      // 如果用户清空了所有标签，使用clearTags参数来明确清空
+      final updatedNote = result.isEmpty
+          ? note.copyWith(clearTags: true, updatedAt: DateTime.now())
+          : note.copyWith(tags: result, updatedAt: DateTime.now());
       widget.onStickyNoteUpdated(updatedNote);
 
       if (result.isEmpty) {

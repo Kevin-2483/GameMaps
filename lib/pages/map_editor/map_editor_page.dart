@@ -131,6 +131,28 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
+  
+  // 输入框焦点状态，用于控制快捷键启用/禁用
+  bool _isInputFieldFocused = false;
+  
+  // 主焦点节点，用于管理快捷键
+  late FocusNode _mainFocusNode;
+  
+  /// 设置输入框焦点状态
+  void _setInputFieldFocused(bool focused) {
+    print('DEBUG: Setting _isInputFieldFocused to $focused');
+    setState(() {
+      _isInputFieldFocused = focused;
+    });
+    
+    // 当输入框失去焦点时，确保主FocusNode重新获得焦点
+    if (!focused) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _mainFocusNode.requestFocus();
+        print('DEBUG: Requested focus back to main FocusNode');
+      });
+    }
+  }
   // 透明度预览状态
   final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
@@ -215,6 +237,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 释放响应式版本管理资源（包括路径选择状态清理）
     disposeVersionManagement();
+    
+    // 释放主焦点节点
+    _mainFocusNode.dispose();
 
     super.dispose();
   }
@@ -222,6 +247,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   @override
   void initState() {
     super.initState();
+    _mainFocusNode = FocusNode();
     _initializeMapAndReactiveSystem();
     _initializeLayoutFromPreferences();
     // 脚本管理器现在通过响应式系统自动初始化
@@ -1510,8 +1536,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _onLayerSelected(MapLayer layer) {
     setState(() {
       _selectedLayer = layer;
-      // 清除图层组选择，但保持单图层选择
-      _selectedLayerGroup = null;
+      // 修改：不清除图层组选择，允许同时选择图层和图层组
+      // _selectedLayerGroup = null; // 注释掉这行，保持图层组选择
     });
 
     // 触发优先显示逻辑
@@ -3274,6 +3300,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             }
           },
           child: Focus(
+            focusNode: _mainFocusNode,
             autofocus: true,
             onKey: _handleKeyEvent,
             child: Scaffold(
@@ -3403,6 +3430,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                           _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
                                       onDragStart: _handleDragStart, // 添加这行
                                       onDragEnd: _handleDragEnd, // 添加这行
+                                      onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
                                     ),
                                   ),
                                 ), // Z层级检视器覆盖层
@@ -3588,6 +3616,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     onToolSelected: (tool) {
                       if (!_shouldDisableDrawingTools) {
                         setState(() => _selectedDrawingTool = tool);
+                        // 选择绘制工具时清除当前选择
+                        if (tool != null) {
+                          _mapCanvasKey.currentState?.clearSelection();
+                        }
                       }
                     },
                     onColorSelected: (color) {
@@ -3733,6 +3765,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     _layerGroupCollapsedStates = newStates;
                   });
                 },
+                onInputFieldFocusChanged: _setInputFieldFocused,
               ),
       ),
     );
@@ -3804,6 +3837,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 onOpacityPreview: _handleStickyNoteOpacityPreview,
                 onStickyNoteSelected: _selectStickyNote,
                 onZIndexInspectorRequested: _showZIndexInspector,
+                onInputFieldFocusChanged: _setInputFieldFocused,
               ),
       ),
     ); // 脚本管理面板
@@ -4106,6 +4140,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
             _selectedDrawingTool = tool;
             _previewDrawingTool = null; // 清除预览状态，确保与工具栏行为一致
           });
+          // 选择绘制工具时清除当前选择
+          if (tool != null) {
+            _mapCanvasKey.currentState?.clearSelection();
+          }
         },
         onLayerSelected: (layer) {
           setState(() {
@@ -4239,6 +4277,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (event is! RawKeyDownEvent) {
       return KeyEventResult.ignored;
     }
+
+    // 如果输入框正在被编辑，忽略快捷键
+    if (_isInputFieldFocused) {
+      print('DEBUG: Ignoring shortcut because _isInputFieldFocused is true');
+      return KeyEventResult.ignored;
+    }
+    print('DEBUG: Processing shortcut because _isInputFieldFocused is false');
 
     // 获取用户偏好设置
     final userPrefs = context.read<UserPreferencesProvider>();

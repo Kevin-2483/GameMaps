@@ -36,6 +36,9 @@ class TimerData {
     DateTime? pauseTime,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearTargetTime = false,
+    bool clearStartTime = false,
+    bool clearPauseTime = false,
   }) {
     return TimerData(
       id: id ?? this.id,
@@ -43,9 +46,9 @@ class TimerData {
       mode: mode ?? this.mode,
       state: state ?? this.state,
       currentTime: currentTime ?? this.currentTime,
-      targetTime: targetTime ?? this.targetTime,
-      startTime: startTime ?? this.startTime,
-      pauseTime: pauseTime ?? this.pauseTime,
+      targetTime: clearTargetTime ? null : (targetTime ?? this.targetTime),
+      startTime: clearStartTime ? null : (startTime ?? this.startTime),
+      pauseTime: clearPauseTime ? null : (pauseTime ?? this.pauseTime),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

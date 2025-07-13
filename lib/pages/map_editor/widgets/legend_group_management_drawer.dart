@@ -41,6 +41,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽到画布的回调
   final VoidCallback? onDragStart; // 新增：拖拽开始回调（用于关闭抽屉）
   final VoidCallback? onDragEnd; // 新增：拖拽结束回调（用于重新打开抽屉）
+  final Function(bool isFocused)? onInputFieldFocusChanged; // 输入框焦点状态变化回调
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -64,6 +65,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onLegendDragToCanvas, // 新增：拖拽到画布的回调
     this.onDragStart, // 新增：拖拽开始回调
     this.onDragEnd, // 新增：拖拽结束回调
+    this.onInputFieldFocusChanged, // 输入框焦点状态变化回调
   });
 
   @override
@@ -1161,38 +1163,49 @@ class _LegendGroupManagementDrawerState
     // 使用持久的控制器，避免每次重建时创建新的控制器
     final TextEditingController controller = _getUrlController(item);
 
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: '图例链接 (可选)',
-        hintText: '输入网络链接、选择VFS文件或绑定脚本',
-        border: const OutlineInputBorder(),
-        isDense: true,
-        suffixIcon: Row(
-          mainAxisSize: MainAxisSize.min,
-          // 直接调用 _buildUrlActionButtons，不再需要传递 setState
-          children: _buildUrlActionButtons(item, controller),
+    return Focus(
+      onFocusChange: (hasFocus) {
+        widget.onInputFieldFocusChanged?.call(hasFocus);
+      },
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: '图例链接 (可选)',
+          hintText: '输入网络链接、选择VFS文件或绑定脚本',
+          border: const OutlineInputBorder(),
+          isDense: true,
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            // 直接调用 _buildUrlActionButtons，不再需要传递 setState
+            children: _buildUrlActionButtons(item, controller),
+          ),
         ),
+        style: const TextStyle(fontSize: 12),
+        onChanged: (value) {
+          final trimmedValue = value.trim();
+          _updateLegendItem(
+            trimmedValue.isEmpty
+                ? item.copyWith(clearUrl: true)
+                : item.copyWith(url: trimmedValue),
+          );
+        },
+        onSubmitted: (value) {
+          _updateUrlAndRefresh(item, value);
+        },
+        onEditingComplete: () {
+          _updateUrlAndRefresh(item, controller.text);
+        },
       ),
-      style: const TextStyle(fontSize: 12),
-      onChanged: (value) {
-        _updateLegendItem(
-          item.copyWith(url: value.trim().isEmpty ? null : value.trim()),
-        );
-      },
-      onSubmitted: (value) {
-        _updateUrlAndRefresh(item, value);
-      },
-      onEditingComplete: () {
-        _updateUrlAndRefresh(item, controller.text);
-      },
     );
   }
 
   /// 更新URL并刷新按钮显示
   void _updateUrlAndRefresh(LegendItem item, String value) {
+    final trimmedValue = value.trim();
     _updateLegendItem(
-      item.copyWith(url: value.trim().isEmpty ? null : value.trim()),
+      trimmedValue.isEmpty
+          ? item.copyWith(clearUrl: true)
+          : item.copyWith(url: trimmedValue),
     );
   }
 
@@ -1273,7 +1286,7 @@ class _LegendGroupManagementDrawerState
             // 清空输入框内容
             controller.clear();
             // 更新数据模型
-            _updateLegendItem(item.copyWith(url: null));
+            _updateLegendItem(item.copyWith(clearUrl: true));
           },
         ),
       );
@@ -2123,9 +2136,10 @@ class _LegendGroupManagementDrawerState
     );
 
     if (result != null) {
-      final updatedItem = item.copyWith(
-        tags: result.isNotEmpty ? result : null,
-      );
+      // 如果用户清空了所有标签，使用clearTags参数来明确清空
+      final updatedItem = result.isEmpty
+          ? item.copyWith(clearTags: true)
+          : item.copyWith(tags: result);
       _updateLegendItem(updatedItem);
 
       if (mounted) {

@@ -303,7 +303,37 @@ class NewReactiveScriptEngine {
     executor.registerExternalFunction(
       'filterLegendItemsInGroupByTags',
       functionHandler.handleFilterLegendItemsInGroupByTags,
-    ); // 语音合成函数
+    );
+
+    // 元素操作函数
+    executor.registerExternalFunction(
+      'updateElementProperty',
+      functionHandler.handleUpdateElementProperty,
+    );
+    executor.registerExternalFunction(
+      'moveElement',
+      functionHandler.handleMoveElement,
+    );
+
+    // 图例操作函数
+    executor.registerExternalFunction(
+      'updateLegendGroup',
+      functionHandler.handleUpdateLegendGroup,
+    );
+    executor.registerExternalFunction(
+      'updateLegendGroupVisibility',
+      functionHandler.handleUpdateLegendGroupVisibility,
+    );
+    executor.registerExternalFunction(
+      'updateLegendGroupOpacity',
+      functionHandler.handleUpdateLegendGroupOpacity,
+    );
+    executor.registerExternalFunction(
+      'updateLegendItem',
+      functionHandler.handleUpdateLegendItem,
+    );
+
+    // 语音合成函数
     executor.registerExternalFunction('say', functionHandler.handleSay);
     executor.registerExternalFunction(
       'ttsStop',

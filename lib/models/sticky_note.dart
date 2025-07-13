@@ -90,6 +90,7 @@ class StickyNote {
     DateTime? updatedAt,
     bool clearBackgroundImageData = false, // 用于明确清除背景图片数据
     bool clearBackgroundImageHash = false, // 用于明确清除背景图像哈希
+    bool clearTags = false, // 用于明确清除tags
   }) {
     return StickyNote(
       id: id ?? this.id,
@@ -115,7 +116,7 @@ class StickyNote {
       backgroundImageOpacity:
           backgroundImageOpacity ?? this.backgroundImageOpacity,
       elements: elements ?? this.elements,
-      tags: tags,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

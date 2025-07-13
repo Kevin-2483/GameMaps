@@ -65,6 +65,7 @@ class ScriptData {
     String? lastError,
     DateTime? lastRunAt,
     bool clearLastError = false,
+    bool clearLastRunAt = false,
   }) {
     return ScriptData(
       id: id ?? this.id,
@@ -77,7 +78,7 @@ class ScriptData {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastError: clearLastError ? null : (lastError ?? this.lastError),
-      lastRunAt: lastRunAt ?? this.lastRunAt,
+      lastRunAt: clearLastRunAt ? null : (lastRunAt ?? this.lastRunAt),
     );
   }
 }

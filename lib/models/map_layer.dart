@@ -66,6 +66,7 @@ class MapLayer {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool clearImageData = false, //参数用于明确清除图片数据
+    bool clearTags = false, //参数用于明确清除tags
     bool? isLinkedToNext, //参数用于链接到下一个图层
   }) {
     return MapLayer(
@@ -77,11 +78,11 @@ class MapLayer {
       imageData: clearImageData ? null : (imageData ?? this.imageData),
       elements: elements ?? this.elements,
       legendGroupIds: legendGroupIds ?? this.legendGroupIds,
-      imageFit: imageFit,
+      imageFit: imageFit ?? this.imageFit,
       xOffset: xOffset ?? this.xOffset,
       yOffset: yOffset ?? this.yOffset,
       imageScale: imageScale ?? this.imageScale,
-      tags: tags,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isLinkedToNext: isLinkedToNext ?? this.isLinkedToNext,
@@ -180,6 +181,7 @@ class MapDrawingElement {
     DateTime? createdAt,
     bool clearImageData = false, // 用于明确清除图片数据
     bool clearImageHash = false, // 用于明确清除图像哈希
+    bool clearTags = false, // 用于明确清除tags
   }) {
     return MapDrawingElement(
       id: id ?? this.id,
@@ -192,12 +194,12 @@ class MapDrawingElement {
       curvature: curvature ?? this.curvature,
       triangleCut: triangleCut ?? this.triangleCut,
       zIndex: zIndex ?? this.zIndex,
-      text: text,
+      text: text ?? this.text,
       fontSize: fontSize ?? this.fontSize,
       imageData: clearImageData ? null : (imageData ?? this.imageData),
       imageHash: clearImageHash ? null : (imageHash ?? this.imageHash),
-      imageFit: imageFit,
-      tags: tags,
+      imageFit: imageFit ?? this.imageFit,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -237,6 +239,7 @@ class LegendGroup {
     List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearTags = false, // 用于明确清除tags
   }) {
     return LegendGroup(
       id: id ?? this.id,
@@ -244,7 +247,7 @@ class LegendGroup {
       isVisible: isVisible ?? this.isVisible,
       opacity: opacity ?? this.opacity,
       legendItems: legendItems ?? this.legendItems,
-      tags: tags,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -295,18 +298,21 @@ class LegendItem {
     String? url,
     List<String>? tags,
     DateTime? createdAt,
+    bool clearLegendId = false, // 用于明确清除legendId
+    bool clearUrl = false, // 用于明确清除url
+    bool clearTags = false, // 用于明确清除tags
   }) {
     return LegendItem(
       id: id ?? this.id,
       legendPath: legendPath ?? this.legendPath,
-      legendId: legendId,
+      legendId: clearLegendId ? null : (legendId ?? this.legendId),
       position: position ?? this.position,
       size: size ?? this.size,
       rotation: rotation ?? this.rotation,
       opacity: opacity ?? this.opacity,
       isVisible: isVisible ?? this.isVisible,
-      url: url,
-      tags: tags,
+      url: clearUrl ? null : (url ?? this.url),
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -25,6 +25,7 @@ class MapVersion {
     DateTime? updatedAt,
     MapItem? mapData,
     List<String>? tags,
+    bool clearTags = false,
   }) {
     return MapVersion(
       id: id ?? this.id,
@@ -32,7 +33,7 @@ class MapVersion {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       mapData: mapData ?? this.mapData,
-      tags: tags ?? this.tags,
+      tags: clearTags ? null : (tags ?? this.tags),
     );
   }
 

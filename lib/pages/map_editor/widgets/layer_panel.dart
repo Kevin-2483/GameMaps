@@ -33,6 +33,7 @@ class LayerPanel extends StatefulWidget {
   final Map<String, bool>? groupCollapsedStates; // 传入的折叠状态
   final Function(Map<String, bool>)? onGroupCollapsedStatesChanged; // 折叠状态变化回调
   final Function()? onLayerSelectionCleared; //：只清除图层选择
+  final Function(bool)? onInputFieldFocusChanged; // 新增：输入框焦点状态回调
 
   const LayerPanel({
     super.key,
@@ -57,6 +58,7 @@ class LayerPanel extends StatefulWidget {
     this.groupCollapsedStates, //
     this.onGroupCollapsedStatesChanged, //
     this.onLayerSelectionCleared, //
+    this.onInputFieldFocusChanged, // 新增：输入框焦点状态回调
   });
 
   @override
@@ -794,9 +796,6 @@ class _LayerPanelState extends State<LayerPanel> {
       // 如果已经选中，则只取消图层选择（保留图层组选择）
       if (widget.onLayerSelectionCleared != null) {
         widget.onLayerSelectionCleared!();
-      } else {
-        // 如果没有单独的图层清除回调，则清除所有选择
-        widget.onSelectionCleared();
       }
     } else {
       // 如果未选中，则选择该图层（不影响图层组选择）
@@ -1655,31 +1654,37 @@ class _LayerPanelState extends State<LayerPanel> {
         borderRadius: BorderRadius.circular(4),
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
-      child: TextField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14),
-        textAlign: TextAlign.left,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: const InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-          border: InputBorder.none,
-          hintText: '输入图层名称',
-          hintStyle: TextStyle(fontSize: 14),
-          isDense: true,
+      child: Focus(
+        onFocusChange: (hasFocus) {
+          // 通知父组件输入框焦点状态变化
+          widget.onInputFieldFocusChanged?.call(hasFocus);
+        },
+        child: TextField(
+          controller: controller,
+          style: const TextStyle(fontSize: 14),
+          textAlign: TextAlign.left,
+          textAlignVertical: TextAlignVertical.center,
+          decoration: const InputDecoration(
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            border: InputBorder.none,
+            hintText: '输入图层名称',
+            hintStyle: TextStyle(fontSize: 14),
+            isDense: true,
+          ),
+          enabled: true, //!widget.isPreviewMode,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (newName) => _saveLayerName(layer, newName),
+          onTapOutside: (event) {
+            // 当用户点击输入框外部时保存名称
+            _saveLayerName(layer, controller.text);
+            // 失去焦点
+            FocusScope.of(context).unfocus();
+          },
+          onEditingComplete: () {
+            // 当用户完成编辑时保存名称
+            _saveLayerName(layer, controller.text);
+          },
         ),
-        enabled: true, //!widget.isPreviewMode,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (newName) => _saveLayerName(layer, newName),
-        onTapOutside: (event) {
-          // 当用户点击输入框外部时保存名称
-          _saveLayerName(layer, controller.text);
-          // 失去焦点
-          FocusScope.of(context).unfocus();
-        },
-        onEditingComplete: () {
-          // 当用户完成编辑时保存名称
-          _saveLayerName(layer, controller.text);
-        },
       ),
     );
   }
@@ -1693,6 +1698,8 @@ class _LayerPanelState extends State<LayerPanel> {
       );
       widget.onLayerUpdated(updatedLayer);
     }
+    // 保存后立即失焦，恢复快捷键
+    FocusScope.of(context).unfocus();
   }
 
   /// 处理图片上传

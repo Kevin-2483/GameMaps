@@ -1,10 +1,8 @@
-﻿import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../components/color_picker_dialog.dart';
-import '../../../providers/user_preferences_provider.dart';
 
 /// Z层级元素检视器 - 显示图层或便签中的绘制元素并支持删除操作
 class ZIndexInspector extends StatelessWidget {
@@ -422,32 +420,7 @@ class ZIndexInspector extends StatelessWidget {
             '${element.triangleCut}',
             element: element,
             propertyName: 'triangleCut',
-          ), // 标签管理区域
-        const SizedBox(height: 8),
-        const Divider(),
-        const SizedBox(height: 8),
-        Consumer<UserPreferencesProvider>(
-          builder: (context, userPrefsProvider, child) {
-            return TagsManager(
-              tags: element.tags ?? [],
-              onTagsChanged: (newTags) {
-                if (onElementUpdated != null) {
-                  final updatedElement = element.copyWith(tags: newTags);
-                  onElementUpdated!(updatedElement);
-                }
-              },
-              title: '元素标签',
-              hintText: '为元素添加标签',
-              maxTags: 10,
-              suggestedTags: TagsManagerUtils.getSuggestedTagsWithCustomTags(
-                userPrefsProvider.isInitialized ? userPrefsProvider : null,
-              ),
-              tagValidator: TagsManagerUtils.defaultTagValidator,
-              enablePreferencesIntegration: true,
-              autoSaveCustomTags: true,
-            );
-          },
-        ),
+          )
       ],
     );
   }
@@ -493,7 +466,10 @@ class ZIndexInspector extends StatelessWidget {
       tagValidator: TagsManagerUtils.defaultTagValidator,
     ).then((newTags) {
       if (newTags != null && onElementUpdated != null) {
-        final updatedElement = element.copyWith(tags: newTags);
+        // 如果用户清空了所有标签，使用clearTags参数来明确清空
+        final updatedElement = newTags.isEmpty
+            ? element.copyWith(clearTags: true)
+            : element.copyWith(tags: newTags);
         onElementUpdated!(updatedElement);
       }
     });

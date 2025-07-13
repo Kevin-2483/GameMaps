@@ -1,0 +1,51 @@
+// 根据标签切换元素颜色脚本
+// @param targetTag:string:important:要搜索的标签值
+
+// 外部函数声明
+external fun log(message);
+external fun filterElementsByTags(tagsJson, mode);
+external fun updateElementProperty(elementId, property, value);
+
+// 颜色常量
+var RED_COLOR = 0xFFFF0000;    // 红色
+var YELLOW_COLOR = 0xFFFFFF00; // 黄色
+
+fun main() {
+    var targetTag = "{{targetTag}}";
+    
+    log('开始切换标签 "${targetTag}" 的元素颜色');
+    
+    // 查找包含指定标签的元素
+    var tagsJson = '["${targetTag}"]';
+    filterElementsByTags(tagsJson, 'contains').then((elements) {
+        if (elements == null || elements.length == 0) {
+            log('未找到包含标签 "${targetTag}" 的元素');
+            return;
+        }
+        
+        log('找到 ${elements.length} 个元素，开始切换颜色');
+        
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+            var elementId = element['id'];
+            var currentColor = element['color'];
+            
+            var newColor;
+            if (currentColor == RED_COLOR) {
+                newColor = YELLOW_COLOR; // 红色 -> 黄色
+            } else if (currentColor == YELLOW_COLOR) {
+                newColor = RED_COLOR;    // 黄色 -> 红色
+            } else {
+                newColor = RED_COLOR;    // 其他 -> 红色
+            }
+            
+            updateElementProperty(elementId, 'color', newColor);
+            log('元素 ${elementId} 颜色已更新');
+        }
+        
+        log('颜色切换完成');
+    });
+}
+
+// 执行主函数
+main();

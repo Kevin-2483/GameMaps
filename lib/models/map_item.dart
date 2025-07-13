@@ -148,16 +148,19 @@ class MapItem {
     List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearId = false,
+    bool clearImageData = false,
+    bool clearTags = false,
   }) {
     return MapItem(
-      id: id ?? this.id,
+      id: clearId ? null : (id ?? this.id),
       title: title ?? this.title,
-      imageData: imageData ?? this.imageData,
+      imageData: clearImageData ? null : (imageData ?? this.imageData),
       version: version ?? this.version,
       layers: layers ?? this.layers,
       legendGroups: legendGroups ?? this.legendGroups,
       stickyNotes: stickyNotes ?? this.stickyNotes,
-      tags: tags ?? this.tags,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

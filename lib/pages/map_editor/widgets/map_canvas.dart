@@ -255,6 +255,14 @@ class MapCanvasState extends State<MapCanvas> {
       // 通知外部选区已清除
       widget.onSelectionCleared?.call();
     }
+    
+    // 清除元素选择
+    widget.onElementSelected(null);
+    
+    // 清除便签选择
+    if (widget.selectedStickyNote != null) {
+      widget.onStickyNoteSelected?.call(null);
+    }
   }
 
   @override
@@ -395,7 +403,13 @@ class MapCanvasState extends State<MapCanvas> {
                               behavior: HitTestBehavior.translucent,
                             )
                           : GestureDetector(
-                              // 其他工具使用拖拽手势
+                              // 其他工具使用拖拽手势和点击手势
+                              onTapDown: (details) {
+                                final position = _getCanvasPosition(
+                                  details.localPosition,
+                                );
+                                _handleDrawingToolTap(position);
+                              },
                               onPanStart: _onDrawingStart,
                               onPanUpdate: _onDrawingUpdate,
                               onPanEnd: _onDrawingEnd,
@@ -2011,6 +2025,83 @@ class MapCanvasState extends State<MapCanvas> {
   void _onDrawingStart(DragStartDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
 
+    // 检测拖拽相关的交互（便签拖拽、元素拖拽等）
+    final hitStickyNote = _getHitStickyNote(canvasPosition);
+    if (hitStickyNote != null) {
+      final stickyNoteHitResult = StickyNoteGestureHelper.getStickyNoteHitType(
+        canvasPosition,
+        hitStickyNote,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+
+      // 如果拖拽便签的可拖拽区域（标题栏或调整大小手柄），启动便签拖拽
+       if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
+        _stickyNoteDragState = StickyNoteGestureHelper.handleStickyNotePanStart(
+          hitStickyNote,
+          stickyNoteHitResult,
+          details,
+          _getCanvasPosition,
+          widget.onStickyNoteUpdated!,
+        );
+        return;
+      }
+    }
+
+    // 检测图例拖拽
+    final hitLegendItem = _getHitLegendItem(canvasPosition);
+    if (hitLegendItem != null && widget.selectedElementId == hitLegendItem.id) {
+      _onLegendDragStart(hitLegendItem, details);
+      return;
+    }
+
+    // 检测元素拖拽和调整大小
+    if (widget.selectedElementId != null) {
+      final selectedElement = widget.selectedLayer?.elements
+          .where((e) => e.id == widget.selectedElementId)
+          .firstOrNull;
+
+      if (selectedElement != null) {
+        // 检查是否拖拽调整大小控制柄
+        final userPrefsProvider = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
+        final handleSize = userPrefsProvider.tools.handleSize;
+        final resizeHandle = _elementInteractionManager.getHitResizeHandle(
+          canvasPosition,
+          selectedElement,
+          handleSize: handleSize,
+        );
+        if (resizeHandle != null) {
+          _elementInteractionManager.onResizeStart(
+            widget.selectedElementId!,
+            resizeHandle,
+            details,
+            widget.selectedLayer!,
+            _getCanvasPosition,
+          );
+          return;
+        }
+
+        // 检查是否拖拽选中元素
+        if (_elementInteractionManager.isPointInElement(
+          canvasPosition,
+          selectedElement,
+        )) {
+          _elementInteractionManager.onElementDragStart(
+            widget.selectedElementId!,
+            details,
+            widget.selectedLayer!,
+            _getCanvasPosition,
+          );
+          return;
+        }
+      }
+    }
+
+    // 开始绘制时清除选区
+    clearSelection();
+
     // 检查是否点击在便签内容区域
     bool isDrawingOnStickyNote = false;
     if (widget.selectedStickyNote != null &&
@@ -2071,6 +2162,43 @@ class MapCanvasState extends State<MapCanvas> {
 
   void _onDrawingUpdate(DragUpdateDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
+
+    // 处理便签拖拽更新
+    if (_stickyNoteDragState != null) {
+      StickyNoteGestureHelper.handleStickyNotePanUpdate(
+        _stickyNoteDragState!,
+        details,
+        _getCanvasPosition,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+      return;
+    }
+
+    // 处理图例拖拽更新
+    if (_draggingLegendItem != null) {
+      _onLegendDragUpdate(_draggingLegendItem!, details);
+      return;
+    }
+
+    // 处理元素交互更新
+    if (_elementInteractionManager.isDragging) {
+      _elementInteractionManager.onElementDragUpdate(
+        _elementInteractionManager.draggingElementId!,
+        details,
+        widget.selectedLayer!,
+        _getCanvasPosition,
+      );
+      return;
+    }
+    if (_elementInteractionManager.isResizing) {
+      _elementInteractionManager.onResizeUpdate(
+        _elementInteractionManager.resizingElementId!,
+        details,
+        widget.selectedLayer!,
+        _getCanvasPosition,
+      );
+      return;
+    }
 
     // Check if drawing on sticky note
     if (_drawingToolManager.currentDrawingStickyNote != null) {
@@ -2155,6 +2283,43 @@ class MapCanvasState extends State<MapCanvas> {
   }
 
   void _onDrawingEnd(DragEndDetails details) {
+    // 处理便签拖拽结束
+    if (_stickyNoteDragState != null) {
+      StickyNoteGestureHelper.handleStickyNotePanEnd(
+        _stickyNoteDragState!,
+        details,
+        _getCanvasPosition,
+        const Size(kCanvasWidth, kCanvasHeight),
+        widget.mapItem.stickyNotes,
+        widget.onStickyNotesReordered ?? (notes) {},
+      );
+      _stickyNoteDragState = null;
+      return;
+    }
+
+    // 处理图例拖拽结束
+    if (_draggingLegendItem != null) {
+      final item = _draggingLegendItem!;
+      _onLegendDragEnd(item, details);
+      return;
+    }
+
+    // 处理元素交互结束
+    if (_elementInteractionManager.isDragging) {
+      _elementInteractionManager.onElementDragEnd(
+        _elementInteractionManager.draggingElementId!,
+        details,
+      );
+      return;
+    }
+    if (_elementInteractionManager.isResizing) {
+      _elementInteractionManager.onResizeEnd(
+        _elementInteractionManager.resizingElementId!,
+        details,
+      );
+      return;
+    }
+
     // 恢复所有因绘制而调整的便签透明度
     for (final entry in _originalOpacityBeforeDrawing.entries) {
       _updateStickyNoteOpacity(entry.key, entry.value);
@@ -2599,8 +2764,87 @@ class MapCanvasState extends State<MapCanvas> {
     }
   }
 
+  /// 处理其他绘制工具的点击事件
+  void _handleDrawingToolTap(Offset canvasPosition) {
+
+    clearSelection();
+    // 优先检测便签点击（包括标题栏）
+    final hitStickyNote = _getHitStickyNote(canvasPosition);
+    if (hitStickyNote != null) {
+      // 检查是否点击了便签的特定区域
+      final stickyNoteHitResult = StickyNoteGestureHelper.getStickyNoteHitType(
+        canvasPosition,
+        hitStickyNote,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+
+      // 如果点击了标题栏，选中便签
+      if (stickyNoteHitResult == StickyNoteHitType.titleBar) {
+        if (widget.selectedStickyNote?.id != hitStickyNote.id) {
+          // 选中便签
+          widget.onStickyNoteSelected?.call(hitStickyNote);
+        } else {
+          // 如果点击的是已选中的便签，取消选中
+          widget.onStickyNoteSelected?.call(null);
+        }
+        return;
+      }
+
+      // 如果点击了折叠按钮，处理折叠操作
+      if (stickyNoteHitResult == StickyNoteHitType.collapseButton &&
+          widget.onStickyNoteUpdated != null) {
+        final updatedNote = hitStickyNote.copyWith(
+          isCollapsed: !hitStickyNote.isCollapsed,
+          updatedAt: DateTime.now(),
+        );
+        widget.onStickyNoteUpdated!(updatedNote);
+        return;
+      }
+    }
+    
+    // 如果没有点击便签特殊区域，不做任何处理
+    // 让拖拽手势来处理绘制操作
+  }
+
   /// 处理文本工具点击
   void _handleTextToolTap(Offset canvasPosition) {
+    // 优先检测便签点击（包括标题栏）
+    final hitStickyNote = _getHitStickyNote(canvasPosition);
+    if (hitStickyNote != null) {
+      // 检查是否点击了便签的特定区域
+      final stickyNoteHitResult = StickyNoteGestureHelper.getStickyNoteHitType(
+        canvasPosition,
+        hitStickyNote,
+        const Size(kCanvasWidth, kCanvasHeight),
+      );
+
+      // 如果点击了标题栏，选中便签
+      if (stickyNoteHitResult == StickyNoteHitType.titleBar) {
+        if (widget.selectedStickyNote?.id != hitStickyNote.id) {
+          // 选中便签
+          widget.onStickyNoteSelected?.call(hitStickyNote);
+        } else {
+          // 如果点击的是已选中的便签，取消选中
+          widget.onStickyNoteSelected?.call(null);
+        }
+        return;
+      }
+
+      // 如果点击了折叠按钮，处理折叠操作
+      if (stickyNoteHitResult == StickyNoteHitType.collapseButton &&
+          widget.onStickyNoteUpdated != null) {
+        final updatedNote = hitStickyNote.copyWith(
+          isCollapsed: !hitStickyNote.isCollapsed,
+          updatedAt: DateTime.now(),
+        );
+        widget.onStickyNoteUpdated!(updatedNote);
+        return;
+      }
+    }
+
+    // 使用文本工具时清除选区
+    clearSelection();
+    
     // 首先检查是否点击在选中的便签内
     if (widget.selectedStickyNote != null) {
       // 检查是否在便签的内容区域内

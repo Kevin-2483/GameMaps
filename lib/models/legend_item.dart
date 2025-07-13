@@ -103,16 +103,19 @@ class LegendItem {
     List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearId = false, // 用于明确清除id
+    bool clearImageData = false, // 用于明确清除imageData
+    bool clearTags = false, // 用于明确清除tags
   }) {
     return LegendItem(
-      id: id ?? this.id,
+      id: clearId ? null : (id ?? this.id),
       title: title ?? this.title,
-      imageData: imageData ?? this.imageData,
+      imageData: clearImageData ? null : (imageData ?? this.imageData),
       fileType: fileType ?? this.fileType,
       centerX: centerX ?? this.centerX,
       centerY: centerY ?? this.centerY,
       version: version ?? this.version,
-      tags: tags,
+      tags: clearTags ? null : (tags ?? this.tags),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
