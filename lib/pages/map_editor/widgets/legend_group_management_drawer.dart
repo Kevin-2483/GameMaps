@@ -2163,10 +2163,12 @@ class _LegendGroupManagementDrawerState
           content: SizedBox(
             width: 350,
             height: 400,
-            child: widget.scripts.isEmpty
-                ? const Center(child: Text('暂无可用脚本'))
+            child: widget.scripts.where((script) => script.isEnabled).isEmpty
+                ? const Center(child: Text('暂无可用的启用脚本'))
                 : ListView(
-                    children: widget.scripts.map((script) {
+                    children: widget.scripts
+                        .where((script) => script.isEnabled)
+                        .map((script) {
                       return ListTile(
                         leading: const Icon(Icons.code),
                         title: Text(script.name),

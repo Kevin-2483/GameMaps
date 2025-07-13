@@ -40,6 +40,7 @@ import '../../data/map_editor_reactive_integration.dart';
 import '../../data/map_data_state.dart';
 import '../../data/new_reactive_script_manager.dart';
 import '../../services/legend_cache_manager.dart';
+import '../../services/script_template_service.dart';
 import '../../components/color_filter_dialog.dart';
 import '../../components/common/window_controls.dart';
 import '../../widgets/compact_timer_widget.dart';
@@ -3398,39 +3399,44 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                   child: Material(
                                     elevation: 8,
                                     borderRadius: BorderRadius.circular(12),
-                                    child: LegendGroupManagementDrawer(
-                                      mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
-                                      legendGroup:
-                                          _currentLegendGroupForManagement!,
-                                      availableLegends: [], // 不再需要预载图例列表
-                                      onLegendGroupUpdated: _updateLegendGroup,
-                                      isPreviewMode: widget.isPreviewMode,
-                                      onClose:
-                                          _closeLegendGroupManagementDrawer,
-                                      onLegendItemSelected: _selectLegendItem,
-                                      allLayers:
-                                          _currentMap?.layers, // 传递所有图层用于智能隐藏功能
-                                      selectedLayer:
-                                          _selectedLayer, // 传递当前选中的图层
-                                      initialSelectedLegendItemId:
-                                          _initialSelectedLegendItemId, // 传递初始选中的图例项ID
-                                      selectedElementId:
-                                          _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
-                                      scripts: newReactiveScriptManager
-                                          .scripts, // 修正：传递正确的脚本列表
-                                      scriptManager:
-                                          newReactiveScriptManager, // 新增：传递脚本管理器
-                                      onSmartHideStateChanged:
-                                          setLegendGroupSmartHideState,
-                                      getSmartHideState:
-                                          getLegendGroupSmartHideState,
-                                      versionManager: versionAdapter!
-                                          .versionManager, // 传递版本管理器
-                                      onLegendDragToCanvas:
-                                          _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
-                                      onDragStart: _handleDragStart, // 添加这行
-                                      onDragEnd: _handleDragEnd, // 添加这行
-                                      onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
+                                    child: ListenableBuilder(
+                                      listenable: newReactiveScriptManager,
+                                      builder: (context, child) {
+                                        return LegendGroupManagementDrawer(
+                                          mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
+                                          legendGroup:
+                                              _currentLegendGroupForManagement!,
+                                          availableLegends: [], // 不再需要预载图例列表
+                                          onLegendGroupUpdated: _updateLegendGroup,
+                                          isPreviewMode: widget.isPreviewMode,
+                                          onClose:
+                                              _closeLegendGroupManagementDrawer,
+                                          onLegendItemSelected: _selectLegendItem,
+                                          allLayers:
+                                              _currentMap?.layers, // 传递所有图层用于智能隐藏功能
+                                          selectedLayer:
+                                              _selectedLayer, // 传递当前选中的图层
+                                          initialSelectedLegendItemId:
+                                              _initialSelectedLegendItemId, // 传递初始选中的图例项ID
+                                          selectedElementId:
+                                              _selectedElementId, // 传递当前选中的元素ID用于外部状态同步
+                                          scripts: newReactiveScriptManager
+                                              .scripts, // 修正：传递正确的脚本列表
+                                          scriptManager:
+                                              newReactiveScriptManager, // 新增：传递脚本管理器
+                                          onSmartHideStateChanged:
+                                              setLegendGroupSmartHideState,
+                                          getSmartHideState:
+                                              getLegendGroupSmartHideState,
+                                          versionManager: versionAdapter!
+                                              .versionManager, // 传递版本管理器
+                                          onLegendDragToCanvas:
+                                              _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
+                                          onDragStart: _handleDragStart, // 添加这行
+                                          onDragEnd: _handleDragEnd, // 添加这行
+                                          onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
+                                        );
+                                      },
                                     ),
                                   ),
                                 ), // Z层级检视器覆盖层
@@ -5737,19 +5743,20 @@ class _ReactiveScriptCreateDialogState
     );
   }
 
-  void _saveScript() {
+  void _saveScript() async {
     if (_nameController.text.trim().isEmpty) {
       context.showErrorSnackBar('请输入脚本名称');
       return;
     }
 
     final now = DateTime.now();
+    final content = await _getDefaultScriptContent(_selectedType);
     final script = ScriptData(
       id: now.millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       type: _selectedType,
-      content: _getDefaultScriptContent(_selectedType),
+      content: content,
       parameters: {},
       isEnabled: true,
       createdAt: now,
@@ -5789,102 +5796,8 @@ class _ReactiveScriptCreateDialogState
     }
   }
 
-  String _getDefaultScriptContent(ScriptType type) {
-    switch (type) {
-      case ScriptType.automation:
-        return '''// 响应式自动化脚本示例
-// 此脚本会自动响应地图数据变化
-
-var layers = getLayers();
-log('响应式系统检测到 ' + layers.length.toString() + ' 个图层');
-
-// 遍历所有元素并执行自动化操作
-var elements = getAllElements();
-for (var element in elements) {
-    log('处理元素 ' + element['id'] + ' 类型: ' + element['type']);
-    
-    // 在响应式环境中，数据变化会自动触发此脚本
-    if (element['type'] == 'marker') {
-        // 自动处理标记元素
-        log('自动处理标记: ' + element['id']);
-    }
-}
-
-log('响应式自动化处理完成');''';
-      case ScriptType.animation:
-        return '''// 响应式动画脚本示例
-// 响应地图数据变化的动画效果
-
-var elements = getAllElements();
-if (elements.length > 0) {
-    log('响应式动画系统启动，元素数量: ' + elements.length.toString());
-    
-    for (var element in elements) {
-        // 响应式动画会根据数据变化自动调整
-        if (element['visible']) {
-            // 淡入动画
-            animate(element['id'], 'opacity', 1.0, 500);
-        } else {
-            // 淡出动画
-            animate(element['id'], 'opacity', 0.0, 500);
-        }
-    }
-}
-
-log('响应式动画脚本执行完成');''';
-      case ScriptType.filter:
-        return '''// 响应式过滤脚本示例
-// 自动响应数据变化的过滤逻辑
-
-var allElements = getAllElements();
-log('响应式过滤系统启动，总元素: ' + allElements.length.toString());
-
-// 响应式过滤会在数据变化时自动重新执行
-var visibleElements = filterElements(fun(element) {
-    // 根据实时数据状态进行过滤
-    return element['visible'] && element['opacity'] > 0.5;
-});
-
-var highlightedElements = filterElements(fun(element) {
-    return element['highlighted'] == true;
-});
-
-log('可见元素: ' + visibleElements.length.toString());
-log('高亮元素: ' + highlightedElements.length.toString());
-
-// 响应式过滤结果会自动同步到UI
-setFilteredElements(visibleElements);''';
-      case ScriptType.statistics:
-        return '''// 响应式统计脚本示例
-// 实时统计地图数据变化
-
-var totalElements = countElements();
-var rectangles = countElements('rectangle');
-var circles = countElements('circle');
-var markers = countElements('marker');
-
-log('=== 响应式统计报告 ===');
-log('总元素数: ' + totalElements.toString());
-log('矩形数量: ' + rectangles.toString());
-log('圆形数量: ' + circles.toString());
-log('标记数量: ' + markers.toString());
-
-// 计算实时面积和位置统计
-var totalArea = calculateTotalArea();
-var centerPoint = calculateCenterPoint();
-
-log('总面积: ' + totalArea.toString());
-log('中心点: (' + centerPoint['x'].toString() + ', ' + centerPoint['y'].toString() + ')');
-
-// 响应式统计会在数据变化时自动更新
-var layers = getLayers();
-for (var layer in layers) {
-    var layerElements = countElements(null, layer['id']);
-    log('图层 "' + layer['name'] + '": ' + layerElements.toString() + ' 个元素');
-}
-
-log('=== 响应式统计完成 ===');''';
-    }
+  Future<String> _getDefaultScriptContent(ScriptType type) async {
+    return await ScriptTemplateService.getTemplateContent(type);
   }
 
   String _getTypeDisplayName(ScriptType type) {

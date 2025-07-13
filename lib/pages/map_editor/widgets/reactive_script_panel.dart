@@ -1,10 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../../models/script_data.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
-import '../../../services/script_template_service.dart';
 import 'script_editor_window_reactive.dart';
 import '../../../services/notification/notification_service.dart';
 
@@ -316,7 +315,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                 ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
-                  onPressed: _showNewScriptDialog,
+                  onPressed: widget.onNewScript,
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('创建脚本'),
                   style: FilledButton.styleFrom(
@@ -718,19 +717,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     );
   }
 
-  void _showNewScriptDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _ReactiveScriptEditDialog(
-        type: _selectedType,
-        scriptManager: widget.scriptManager,
-        onSaved: (script) {
-          widget.scriptManager.addScript(script);
-        },
-      ),
-    );
-  }
-
   void _editScript(ScriptData script) {
     // 使用响应式脚本编辑器窗口
     showDialog(
@@ -831,142 +817,6 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         return '统计';
     }
   }
-
-
-}
-
-/// 响应式脚本编辑对话框
-class _ReactiveScriptEditDialog extends StatefulWidget {
-  final ScriptType type;
-  final NewReactiveScriptManager scriptManager;
-  final Function(ScriptData) onSaved;
-
-  const _ReactiveScriptEditDialog({
-    required this.type,
-    required this.scriptManager,
-    required this.onSaved,
-  });
-
-  @override
-  State<_ReactiveScriptEditDialog> createState() =>
-      _ReactiveScriptEditDialogState();
-}
-
-class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
-  late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
-  late ScriptType _selectedType;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: '');
-    _descriptionController = TextEditingController(text: '');
-    _selectedType = widget.type;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('新建脚本'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '脚本名称',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: '描述',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<ScriptType>(
-              value: _selectedType,
-              decoration: const InputDecoration(
-                labelText: '脚本类型',
-                border: OutlineInputBorder(),
-              ),
-              items: ScriptType.values.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(_getTypeDisplayName(type)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedType = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(onPressed: _saveScript, child: const Text('保存')),
-      ],
-    );
-  }
-
-  void _saveScript() async {
-    if (_nameController.text.trim().isEmpty) {
-      context.showErrorSnackBar('请输入名称');
-      return;
-    }
-
-    final now = DateTime.now();
-    final content = await ScriptTemplateService.getTemplateContent(_selectedType);
-    final script = ScriptData(
-      id: now.millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      type: _selectedType,
-      content: content,
-      parameters: {},
-      isEnabled: true,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    widget.onSaved(script);
-    Navigator.of(context).pop();
-  }
-
-  String _getTypeDisplayName(ScriptType type) {
-    switch (type) {
-      case ScriptType.automation:
-        return '自动化';
-      case ScriptType.animation:
-        return '动画';
-      case ScriptType.filter:
-        return '过滤';
-      case ScriptType.statistics:
-        return '统计';
-    }
-  }
-
-
 }
 
 /// 执行日志对话框组件
