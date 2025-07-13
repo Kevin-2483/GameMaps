@@ -1199,10 +1199,54 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 删除指定图层中的绘制元素（使用响应式系统重构）
   void _deleteElement(String elementId) {
+    MapDrawingElement? elementToDelete;
+    
+    // 优先检查便签中的元素
+    if (_selectedStickyNote != null) {
+      elementToDelete = _selectedStickyNote!.elements
+          .where((element) => element.id == elementId)
+          .firstOrNull;
+      
+      if (elementToDelete != null) {
+        // 删除便签中的元素
+        try {
+          final updatedElements = _selectedStickyNote!.elements
+              .where((element) => element.id != elementId)
+              .toList();
+          
+          final updatedStickyNote = _selectedStickyNote!.copyWith(
+            elements: updatedElements,
+            updatedAt: DateTime.now(),
+          );
+          
+          updateStickyNoteReactive(updatedStickyNote);
+          debugPrint('使用响应式系统删除便签绘制元素: ${_selectedStickyNote!.id}/$elementId');
+          
+          // 如果删除的是图片元素，强制触发缓存清理
+          if (elementToDelete.type == DrawingElementType.imageArea) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {});
+              }
+            });
+          }
+          
+          // 显示删除成功消息
+          _showSuccessSnackBar('已删除便签元素');
+          return;
+        } catch (e) {
+          debugPrint('响应式系统删除便签元素失败: $e');
+          _showErrorSnackBar('删除便签元素失败: $e');
+          return;
+        }
+      }
+    }
+    
+    // 如果便签中没有找到元素，检查图层中的元素
     if (_selectedLayer == null) return;
 
     // 找到要删除的元素
-    final elementToDelete = _selectedLayer!.elements
+    elementToDelete = _selectedLayer!.elements
         .where((element) => element.id == elementId)
         .firstOrNull;
 
@@ -1229,7 +1273,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showSuccessSnackBar('已删除绘制元素');
     } catch (e) {
       debugPrint('响应式系统删除元素失败: $e');
-      // _deleteElementTraditional(elementId, elementToDelete);
+      _showErrorSnackBar('删除元素失败: $e');
     }
   }
 
@@ -4060,6 +4104,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         onDrawingToolSelected: (tool) {
           setState(() {
             _selectedDrawingTool = tool;
+            _previewDrawingTool = null; // 清除预览状态，确保与工具栏行为一致
           });
         },
         onLayerSelected: (layer) {

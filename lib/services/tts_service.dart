@@ -111,6 +111,7 @@ class TtsService {
       _currentRequest!.completer.complete();
       _currentRequest = null;
     }
+    _isProcessing = false;
     _processNextRequest();
   }
 
@@ -120,13 +121,14 @@ class TtsService {
       _currentRequest!.completer.completeError(error);
       _currentRequest = null;
     }
+    _isProcessing = false;
     _processNextRequest();
   }
 
   /// 处理队列中的下一个请求
   void _processNextRequest() async {
+    // 如果已经在处理或队列为空，则返回
     if (_isProcessing || _requestQueue.isEmpty) {
-      _isProcessing = false;
       return;
     }
 
@@ -158,7 +160,13 @@ class TtsService {
       if (kDebugMode) {
         debugPrint('TTS已禁用，跳过播放请求');
       }
-      _onSpeechComplete();
+      // 直接完成当前请求并处理下一个
+      if (_currentRequest != null) {
+        _currentRequest!.completer.complete();
+        _currentRequest = null;
+      }
+      _isProcessing = false;
+      _processNextRequest();
       return;
     }
 

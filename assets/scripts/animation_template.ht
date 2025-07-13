@@ -1,0 +1,89 @@
+// 测试脚本1：地图数据读取和元素操作
+external fun log
+external fun getLayers
+external fun getLayerById
+external fun getElementsInLayer
+external fun getAllElements
+external fun getTextElements
+external fun findTextElementsByContent
+external fun updateElementProperty
+external fun moveElement
+
+fun testMapDataOperations() {
+    log('=== 测试脚本1：地图数据读取和元素操作 ===')
+    
+    // 测试1：获取所有图层
+    log('1. 测试获取所有图层')
+    getLayers().then((layers) {
+        log('图层总数: ${layers.length}')
+        
+        if (layers.length > 0) {
+            var firstLayer = layers[0]
+            log('第一个图层ID: ${firstLayer["id"]}')
+            log('第一个图层名称: ${firstLayer["name"]}')
+            
+            // 测试2：根据ID获取图层
+            log('2. 测试根据ID获取图层')
+            getLayerById(firstLayer["id"]).then((layer) {
+                if (layer != null) {
+                    log('成功获取图层: ${layer["name"]}')
+                    
+                    // 测试3：获取图层中的元素
+                    log('3. 测试获取图层中的元素')
+                    getElementsInLayer(layer["id"]).then((elements) {
+                        log('图层 ${layer["name"]} 中的元素数量: ${elements.length}')
+                        
+                        if (elements.length > 0) {
+                            var firstElement = elements[0]
+                            log('第一个元素ID: ${firstElement["id"]}')
+                            log('第一个元素类型: ${firstElement["type"]}')
+                            
+                            // 测试4：更新元素属性
+                            log('4. 测试更新元素属性')
+                            updateElementProperty(firstElement["id"], 'zIndex', 10)
+                            log('已更新元素 ${firstElement["id"]} 的zIndex为10')
+                            
+                            // 测试5：移动元素
+                            log('5. 测试移动元素')
+                            moveElement(firstElement["id"], "{'deltaX': 10.0, 'deltaY': 20.0}")
+                            log('已移动元素 ${firstElement["id"]} 偏移(10, 20)')
+                        }
+                        
+                        // 测试6：获取所有元素
+                        log('6. 测试获取所有元素')
+                        getAllElements().then((allElements) {
+                            log('地图中所有元素数量: ${allElements.length}')
+                            
+                            // 测试7：获取文本元素
+                            log('7. 测试获取文本元素')
+                            getTextElements().then((textElements) {
+                                log('文本元素数量: ${textElements.length}')
+                                
+                                if (textElements.length > 0) {
+                                    var firstText = textElements[0]
+                                    log('第一个文本元素内容: ${firstText["text"]}')
+                                    
+                                    // 测试8：根据内容查找文本元素
+                                    log('8. 测试根据内容查找文本元素')
+                                    findTextElementsByContent(firstText["text"]).then((foundElements) {
+                                        log('找到包含"${firstText["text"]}"的文本元素: ${foundElements.length}个')
+                                        log('=== 地图数据操作测试完成 ===')
+                                    })
+                                } else {
+                                    log('=== 地图数据操作测试完成 ===')
+                                }
+                            })
+                        })
+                    })
+                } else {
+                    log('获取图层失败')
+                }
+            })
+        } else {
+            log('没有找到图层')
+        }
+    })
+}
+
+// 启动测试
+testMapDataOperations()

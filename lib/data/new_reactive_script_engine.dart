@@ -19,16 +19,15 @@ class NewReactiveScriptEngine {
   bool _isListening = false;
   // 执行器池 - 支持并发执行多个脚本
   final Map<String, IScriptExecutor> _executorPool = {};
+  // 外部函数处理器池 - 每个脚本有独立的处理器实例
+  final Map<String, ExternalFunctionHandler> _functionHandlerPool = {};
   final int _maxConcurrentExecutors;
-  // 统一的外部函数处理器
-  late final ExternalFunctionHandler _functionHandler;
 
   NewReactiveScriptEngine({
     required MapDataBloc mapDataBloc,
     int maxConcurrentExecutors = 5, // 默认最多支持5个并发脚本
   }) : _mapDataBloc = mapDataBloc,
        _maxConcurrentExecutors = maxConcurrentExecutors {
-    _functionHandler = ExternalFunctionHandler(mapDataBloc: _mapDataBloc);
     _initialize();
   }
 
@@ -159,165 +158,172 @@ class NewReactiveScriptEngine {
       throw Exception('达到最大并发脚本数限制 ($_maxConcurrentExecutors)');
     }
 
+    // 为该脚本创建独立的外部函数处理器
+    final functionHandler = ExternalFunctionHandler(
+      mapDataBloc: _mapDataBloc,
+      scriptId: scriptId,
+    );
+    _functionHandlerPool[scriptId] = functionHandler;
+
     // 创建新的执行器（根据平台和需求选择合适的类型）
     final executor = _createAppropriateExecutor();
 
     // 注册外部函数
-    _registerExternalFunctions(executor);
+    _registerExternalFunctions(executor, functionHandler);
 
     // 加入执行器池
     _executorPool[scriptId] = executor;
 
-    debugPrint('为脚本 $scriptId 创建新的执行器 (当前池大小: ${_executorPool.length})');
+    debugPrint('为脚本 $scriptId 创建新的执行器和函数处理器 (当前池大小: ${_executorPool.length})');
 
     return executor;
   }
 
   /// 注册外部函数到指定执行器
-  void _registerExternalFunctions(IScriptExecutor executor) {
+  void _registerExternalFunctions(IScriptExecutor executor, ExternalFunctionHandler functionHandler) {
     // 基础函数
-    executor.registerExternalFunction('log', _functionHandler.handleLog);
+    executor.registerExternalFunction('log', functionHandler.handleLog);
 
     // 数学函数
-    executor.registerExternalFunction('sin', _functionHandler.handleSin);
-    executor.registerExternalFunction('cos', _functionHandler.handleCos);
-    executor.registerExternalFunction('tan', _functionHandler.handleTan);
-    executor.registerExternalFunction('sqrt', _functionHandler.handleSqrt);
-    executor.registerExternalFunction('pow', _functionHandler.handlePow);
-    executor.registerExternalFunction('abs', _functionHandler.handleAbs);
-    executor.registerExternalFunction('random', _functionHandler.handleRandom);
+    executor.registerExternalFunction('sin', functionHandler.handleSin);
+    executor.registerExternalFunction('cos', functionHandler.handleCos);
+    executor.registerExternalFunction('tan', functionHandler.handleTan);
+    executor.registerExternalFunction('sqrt', functionHandler.handleSqrt);
+    executor.registerExternalFunction('pow', functionHandler.handlePow);
+    executor.registerExternalFunction('abs', functionHandler.handleAbs);
+    executor.registerExternalFunction('random', functionHandler.handleRandom);
 
     // 地图数据访问函数
     executor.registerExternalFunction(
       'getLayers',
-      _functionHandler.handleGetLayers,
+      functionHandler.handleGetLayers,
     );
     executor.registerExternalFunction(
       'getLayerById',
-      _functionHandler.handleGetLayerById,
+      functionHandler.handleGetLayerById,
     );
     executor.registerExternalFunction(
       'getAllElements',
-      _functionHandler.handleGetAllElements,
+      functionHandler.handleGetAllElements,
     );
     executor.registerExternalFunction(
       'getElementsInLayer',
-      _functionHandler.handleGetElementsInLayer,
+      functionHandler.handleGetElementsInLayer,
     );
 
     // 文本元素函数
     executor.registerExternalFunction(
       'createTextElement',
-      _functionHandler.handleCreateTextElement,
+      functionHandler.handleCreateTextElement,
     );
     executor.registerExternalFunction(
       'updateTextContent',
-      _functionHandler.handleUpdateTextContent,
+      functionHandler.handleUpdateTextContent,
     );
     executor.registerExternalFunction(
       'updateTextSize',
-      _functionHandler.handleUpdateTextSize,
+      functionHandler.handleUpdateTextSize,
     );
     executor.registerExternalFunction(
       'getTextElements',
-      _functionHandler.handleGetTextElements,
+      functionHandler.handleGetTextElements,
     );
     executor.registerExternalFunction(
       'findTextElementsByContent',
-      _functionHandler.handleFindTextElementsByContent,
+      functionHandler.handleFindTextElementsByContent,
     );
 
     // 文件操作函数
     executor.registerExternalFunction(
       'readjson',
-      _functionHandler.handleReadJson,
+      functionHandler.handleReadJson,
     );
     executor.registerExternalFunction(
       'writetext',
-      _functionHandler.handleWriteText,
+      functionHandler.handleWriteText,
     );
 
     // 便签相关函数
     executor.registerExternalFunction(
       'getStickyNotes',
-      _functionHandler.handleGetStickyNotes,
+      functionHandler.handleGetStickyNotes,
     );
     executor.registerExternalFunction(
       'getStickyNoteById',
-      _functionHandler.handleGetStickyNoteById,
+      functionHandler.handleGetStickyNoteById,
     );
     executor.registerExternalFunction(
       'getElementsInStickyNote',
-      _functionHandler.handleGetElementsInStickyNote,
+      functionHandler.handleGetElementsInStickyNote,
     );
     executor.registerExternalFunction(
       'filterStickyNotesByTags',
-      _functionHandler.handleFilterStickyNotesByTags,
+      functionHandler.handleFilterStickyNotesByTags,
     );
     executor.registerExternalFunction(
       'filterStickyNoteElementsByTags',
-      _functionHandler.handleFilterStickyNoteElementsByTags,
+      functionHandler.handleFilterStickyNoteElementsByTags,
     );
 
     // 图例相关函数
     executor.registerExternalFunction(
       'getLegendGroups',
-      _functionHandler.handleGetLegendGroups,
+      functionHandler.handleGetLegendGroups,
     );
     executor.registerExternalFunction(
       'getLegendGroupById',
-      _functionHandler.handleGetLegendGroupById,
+      functionHandler.handleGetLegendGroupById,
     );
     executor.registerExternalFunction(
       'getLegendItems',
-      _functionHandler.handleGetLegendItems,
+      functionHandler.handleGetLegendItems,
     );
     executor.registerExternalFunction(
       'getLegendItemById',
-      _functionHandler.handleGetLegendItemById,
+      functionHandler.handleGetLegendItemById,
     );
     executor.registerExternalFunction(
       'filterLegendGroupsByTags',
-      _functionHandler.handleFilterLegendGroupsByTags,
+      functionHandler.handleFilterLegendGroupsByTags,
     );
     executor.registerExternalFunction(
       'filterLegendItemsByTags',
-      _functionHandler.handleFilterLegendItemsByTags,
+      functionHandler.handleFilterLegendItemsByTags,
     );
 
     // 标签筛选函数
     executor.registerExternalFunction(
       'filterElementsByTags',
-      _functionHandler.handleFilterElementsByTags,
+      functionHandler.handleFilterElementsByTags,
     );
     executor.registerExternalFunction(
       'filterElementsInStickyNotesByTags',
-      _functionHandler.handleFilterElementsInStickyNotesByTags,
+      functionHandler.handleFilterElementsInStickyNotesByTags,
     );
     executor.registerExternalFunction(
       'filterLegendItemsInGroupByTags',
-      _functionHandler.handleFilterLegendItemsInGroupByTags,
+      functionHandler.handleFilterLegendItemsInGroupByTags,
     ); // 语音合成函数
-    executor.registerExternalFunction('say', _functionHandler.handleSay);
+    executor.registerExternalFunction('say', functionHandler.handleSay);
     executor.registerExternalFunction(
       'ttsStop',
-      _functionHandler.handleTtsStop,
+      functionHandler.handleTtsStop,
     );
     executor.registerExternalFunction(
       'ttsGetLanguages',
-      _functionHandler.handleTtsGetLanguages,
+      functionHandler.handleTtsGetLanguages,
     );
     executor.registerExternalFunction(
       'ttsGetVoices',
-      _functionHandler.handleTtsGetVoices,
+      functionHandler.handleTtsGetVoices,
     );
     executor.registerExternalFunction(
       'ttsIsLanguageAvailable',
-      _functionHandler.handleTtsIsLanguageAvailable,
+      functionHandler.handleTtsIsLanguageAvailable,
     );
     executor.registerExternalFunction(
       'ttsGetSpeechRateRange',
-      _functionHandler.handleTtsGetSpeechRateRange,
+      functionHandler.handleTtsGetSpeechRateRange,
     );
 
     debugPrint('已注册所有外部函数到Isolate执行器');
@@ -325,14 +331,18 @@ class NewReactiveScriptEngine {
 
   /// 处理获取图层函数  /// 清空执行日志
   void clearExecutionLogs() {
-    _functionHandler.clearExecutionLogs();
-    debugPrint('清空脚本执行日志');
+    for (final handler in _functionHandlerPool.values) {
+      handler.clearExecutionLogs();
+    }
+    debugPrint('清空所有脚本执行日志');
   }
 
   /// 重置脚本引擎
   void reset() {
     _clearDataAccessor();
-    _functionHandler.clearExecutionLogs();
+    for (final handler in _functionHandlerPool.values) {
+      handler.clearExecutionLogs();
+    }
   }
 
   /// 获取当前地图图层数据（用于脚本访问）
@@ -385,6 +395,12 @@ class NewReactiveScriptEngine {
       _executorPool[scriptId]!.dispose();
       _executorPool.remove(scriptId);
     }
+    
+    // 同时清理对应的函数处理器
+    if (_functionHandlerPool.containsKey(scriptId)) {
+      debugPrint('清理脚本函数处理器: $scriptId');
+      _functionHandlerPool.remove(scriptId);
+    }
   }
 
   /// 释放资源
@@ -400,16 +416,23 @@ class NewReactiveScriptEngine {
       entry.value.dispose();
     }
     _executorPool.clear();
+    
+    // 清理所有函数处理器
+    _functionHandlerPool.clear();
 
     // 从MapDataBloc中移除监听器
     _mapDataBloc.removeDataChangeListener(_onMapDataChanged); // 清空数据访问器
     _clearDataAccessor();
-    _functionHandler.clearExecutionLogs();
+    for (final handler in _functionHandlerPool.values) {
+      handler.clearExecutionLogs();
+    }
   }
 
-  /// 添加执行日志
+  /// 添加执行日志（添加到所有活跃的函数处理器）
   void addExecutionLog(String message) {
-    _functionHandler.addExecutionLog(message);
+    for (final handler in _functionHandlerPool.values) {
+      handler.addExecutionLog(message);
+    }
   }
 
   /// 停止脚本执行
@@ -422,9 +445,13 @@ class NewReactiveScriptEngine {
     }
   }
 
-  /// 获取脚本执行日志
+  /// 获取脚本执行日志（合并所有函数处理器的日志）
   List<String> getExecutionLogs() {
-    return _functionHandler.getExecutionLogs();
+    final allLogs = <String>[];
+    for (final handler in _functionHandlerPool.values) {
+      allLogs.addAll(handler.getExecutionLogs());
+    }
+    return allLogs;
   }
 
   /// 获取执行器池统计信息

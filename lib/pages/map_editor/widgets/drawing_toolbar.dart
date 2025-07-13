@@ -98,14 +98,12 @@ class DrawingToolbarOptimized extends StatefulWidget {
 
 class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   // 临时状态，用于预览
-  DrawingElementType? _tempSelectedTool;
   Color? _tempSelectedColor;
   double? _tempSelectedStrokeWidth;
   double? _tempSelectedDensity;
   double? _tempSelectedCurvature; // 临时弧度值
   TriangleCutType? _tempSelectedTriangleCut; // 临时三角形切割值
   // 定时器，用于延迟提交更改
-  Timer? _toolTimer;
   Timer? _colorTimer;
   Timer? _strokeWidthTimer;
   Timer? _densityTimer;
@@ -114,7 +112,6 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
 
   @override
   void dispose() {
-    _toolTimer?.cancel();
     _colorTimer?.cancel();
     _strokeWidthTimer?.cancel();
     _densityTimer?.cancel();
@@ -129,9 +126,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // didUpdateWidget - 保留方法但移除画布交互逻辑
   }
 
-  // 获取有效的工具选择（临时值或实际值）
-  DrawingElementType? get _effectiveTool =>
-      _tempSelectedTool ?? widget.selectedTool;
+  // 获取有效的工具选择
+  DrawingElementType? get _effectiveTool => widget.selectedTool;
   Color get _effectiveColor => _tempSelectedColor ?? widget.selectedColor;
   double get _effectiveStrokeWidth =>
       _tempSelectedStrokeWidth ?? widget.selectedStrokeWidth;
@@ -143,25 +139,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       _tempSelectedTriangleCut ?? widget.selectedTriangleCut;
 
   void _handleToolSelection(DrawingElementType? tool) {
-    setState(() {
-      _tempSelectedTool = tool;
-    });
-
     // 立即通知预览（如果提供了回调）
     widget.onToolPreview?.call(tool);
-
-    // 取消之前的定时器
-    _toolTimer?.cancel();
-
-    // 设置新的定时器，延迟提交更改
-    _toolTimer = Timer(const Duration(milliseconds: 100), () {
-      widget.onToolSelected(tool);
-      if (mounted) {
-        setState(() {
-          _tempSelectedTool = null;
-        });
-      }
-    });
+    
+    // 立即提交工具选择更改
+    widget.onToolSelected(tool);
   }
 
   void _handleColorSelection(Color color) {

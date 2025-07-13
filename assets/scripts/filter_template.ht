@@ -1,0 +1,135 @@
+// 测试脚本3：图例管理和TTS功能
+external fun log
+external fun getLegendGroups
+external fun getLegendGroupById
+external fun getLegendItems
+external fun getLegendItemById
+external fun updateLegendGroup
+external fun updateLegendGroupVisibility
+external fun updateLegendGroupOpacity
+external fun updateLegendItem
+external fun filterLegendGroupsByTags
+external fun filterLegendItemsByTags
+external fun ttsStop
+external fun ttsGetLanguages
+external fun ttsGetVoices
+external fun say
+
+fun testLegendManagementAndTTS() {
+    log('=== 测试脚本3：图例管理和TTS功能 ===')
+    
+    // 测试1：获取所有图例组
+    log('1. 测试获取所有图例组')
+    getLegendGroups().then((groups) {
+        log('图例组总数: ${groups.length}')
+        
+        if (groups.length > 0) {
+            var firstGroup = groups[0]
+            log('第一个图例组ID: ${firstGroup["id"]}')
+            log('第一个图例组名称: ${firstGroup["name"]}')
+            log('第一个图例组可见性: ${firstGroup["visible"]}')
+            log('第一个图例组透明度: ${firstGroup["opacity"]}')
+            
+            // 测试2：根据ID获取图例组
+            log('2. 测试根据ID获取图例组')
+            getLegendGroupById(firstGroup["id"]).then((group) {
+                if (group != null) {
+                    log('成功获取图例组: ${group["name"]}')
+                    
+                    // 测试3：获取所有图例项
+                    log('3. 测试获取所有图例项')
+                    getLegendItems().then((items) {
+                        log('图例项总数: ${items.length}')
+                        
+                        if (items.length > 0) {
+                            var firstItem = items[0]
+                            log('第一个图例项ID: ${firstItem["id"]}')
+                            log('第一个图例项名称: ${firstItem["name"]}')
+                            log('第一个图例项标签: ${firstItem["tags"]}')
+                            
+                            // 测试4：根据ID获取图例项
+                            log('4. 测试根据ID获取图例项')
+                            getLegendItemById(firstItem["id"]).then((item) {
+                                if (item != null) {
+                                    log('成功获取图例项: ${item["name"]}')
+                                    
+                                    // 测试5：更新图例组属性
+                                    log('5. 测试更新图例组属性')
+                                    var groupParams = '{"name": "更新后的组名", "description": "测试更新"}'
+                                    updateLegendGroup(firstGroup["id"], groupParams)
+                                    log('已更新图例组属性')
+                                    
+                                    // 测试6：更新图例组可见性
+                                    log('6. 测试更新图例组可见性')
+                                    updateLegendGroupVisibility(firstGroup["id"], false)
+                                    log('已隐藏图例组')
+                                    
+                                    // 测试7：更新图例组透明度
+                                    log('7. 测试更新图例组透明度')
+                                    updateLegendGroupOpacity(firstGroup["id"], 0.5)
+                                    log('已设置图例组透明度为0.5')
+                                    
+                                    // 测试8：更新图例项
+                                    log('8. 测试更新图例项')
+                                    var itemParams = '{"name": "更新后的项名", "description": "测试更新项"}'
+                                    updateLegendItem(firstItem["id"], itemParams)
+                                    log('已更新图例项')
+                                    
+                                    // 测试9：根据标签筛选图例组
+                                    log('9. 测试根据标签筛选图例组')
+                                    var testTags = '["important", "category1"]'
+                                    filterLegendGroupsByTags(testTags).then((filteredGroups) {
+                                        log('包含标签的图例组数量: ${filteredGroups.length}')
+                                        
+                                        // 测试10：根据标签筛选图例项
+                                        log('10. 测试根据标签筛选图例项')
+                                        filterLegendItemsByTags(testTags).then((filteredItems) {
+                                            log('包含标签的图例项数量: ${filteredItems.length}')
+                                            
+                                            // 测试11：TTS功能测试
+                                            log('11. 测试TTS功能')
+                                            
+                                            // 获取TTS语言列表
+                                            ttsGetLanguages().then((languages) {
+                                                log('支持的TTS语言数量: ${languages.length}')
+                                                
+                                                // 获取TTS语音列表
+                                                ttsGetVoices().then((voices) {
+                                                    log('可用的TTS语音数量: ${voices.length}')
+                                                    
+                                                    // 测试语音播放
+                                                    log('12. 测试语音播放')
+                                                    var ttsOptions = '{"language": "zh-CN", "speechRate": 1.0, "volume": 0.8}'
+                                                    say('图例管理和TTS功能测试完成', ttsOptions)
+                                                    log('已开始TTS播放')
+                                                    
+                                                    // 停止TTS播放
+                                                    log('13. 测试停止TTS播放')
+                                                    ttsStop()
+                                                    log('已停止TTS播放')
+                                                    
+                                                    log('=== 图例管理和TTS测试完成 ===')
+                                                })
+                                            })
+                                        })
+                                    })
+                                } else {
+                                    log('获取图例项失败')
+                                }
+                            })
+                        } else {
+                            log('没有找到图例项')
+                        }
+                    })
+                } else {
+                    log('获取图例组失败')
+                }
+            })
+        } else {
+            log('没有找到图例组')
+        }
+    })
+}
+
+// 启动测试
+testLegendManagementAndTTS()

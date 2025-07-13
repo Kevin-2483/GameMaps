@@ -149,6 +149,7 @@ flutter:
     - assets/config/
     - assets/data/
     - assets/images/
+    - assets/scripts/
     - LICENSE
     - assets/images/r6operators_flat/
 

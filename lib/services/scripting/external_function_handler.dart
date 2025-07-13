@@ -122,7 +122,8 @@ class ExternalFunctionHandler {
       await _ttsService.initialize();
       final languages = _ttsService.availableLanguages;
       addExecutionLog('获取TTS语言列表: ${languages?.length ?? 0} 种语言');
-      return languages;
+      // 转换为可序列化的字符串列表
+      return languages?.map((lang) => lang.toString()).toList() ?? [];
     } catch (e) {
       debugPrint('获取TTS语言列表失败: $e');
       addExecutionLog('获取TTS语言列表失败: $e');
@@ -136,7 +137,14 @@ class ExternalFunctionHandler {
       await _ttsService.initialize();
       final voices = _ttsService.availableVoices;
       addExecutionLog('获取TTS语音列表: ${voices?.length ?? 0} 种语音');
-      return voices;
+      // 转换为可序列化的Map列表
+      return voices?.map((voice) {
+        if (voice is Map) {
+          return Map<String, dynamic>.from(voice.map((key, value) => 
+            MapEntry(key.toString(), value?.toString())));
+        }
+        return {'name': voice.toString()};
+      }).toList() ?? [];
     } catch (e) {
       debugPrint('获取TTS语音列表失败: $e');
       addExecutionLog('获取TTS语音列表失败: $e');
@@ -418,9 +426,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选便签
   List<Map<String, dynamic>> handleFilterStickyNotesByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
       return state.mapItem.stickyNotes
@@ -433,9 +451,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选便签中的元素
   List<Map<String, dynamic>> handleFilterStickyNoteElementsByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
       final filteredElements = <Map<String, dynamic>>[];
@@ -457,9 +485,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选图例组
   List<Map<String, dynamic>> handleFilterLegendGroupsByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
       return state.legendGroups
@@ -472,9 +510,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选图例项
   List<Map<String, dynamic>> handleFilterLegendItemsByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
       final filteredItems = <Map<String, dynamic>>[];
@@ -496,9 +544,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选所有元素（包括画布中的和便签中的）
   List<Map<String, dynamic>> handleFilterElementsByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     final filteredElements = <Map<String, dynamic>>[];
 
     // 筛选画布图层中的元素
@@ -532,9 +590,19 @@ class ExternalFunctionHandler {
 
   /// 处理根据标签筛选便签中的元素（独立函数）
   List<Map<String, dynamic>> handleFilterElementsInStickyNotesByTags(
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
       final filteredElements = <Map<String, dynamic>>[];
@@ -557,9 +625,19 @@ class ExternalFunctionHandler {
   /// 处理根据标签筛选指定图例组中的图例项
   List<Map<String, dynamic>> handleFilterLegendItemsInGroupByTags(
     String groupId,
-    List<String> tags, [
+    String tagsJson, [
     String mode = 'contains',
   ]) {
+    // 解析JSON字符串为List<String>
+    List<String> tags;
+    try {
+      final decoded = jsonDecode(tagsJson);
+      tags = (decoded as List).cast<String>();
+    } catch (e) {
+      debugPrint('Error parsing tags JSON: $e');
+      addExecutionLog('标签筛选失败：JSON解析错误');
+      return [];
+    }
     if (_mapDataBloc.state is MapDataLoaded) {
       final state = _mapDataBloc.state as MapDataLoaded;
 
@@ -692,7 +770,19 @@ class ExternalFunctionHandler {
   }
 
   /// 处理移动元素
-  void handleMoveElement(String elementId, double deltaX, double deltaY) {
+  void handleMoveElement(String elementId, String positionJson) {
+    // 解析JSON字符串为Map
+    Map<String, dynamic>? position;
+    try {
+      position = jsonDecode(positionJson) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error parsing position JSON: $e');
+      addExecutionLog('移动元素失败：JSON解析错误');
+      return;
+    }
+
+    final deltaX = position['deltaX']?.toDouble() ?? 0.0;
+    final deltaY = position['deltaY']?.toDouble() ?? 0.0;
     if (_mapDataBloc.state is! MapDataLoaded) return;
 
     final state = _mapDataBloc.state as MapDataLoaded;
@@ -803,8 +893,17 @@ class ExternalFunctionHandler {
   }
 
   /// 处理更新图例组
-  void handleUpdateLegendGroup(String groupId, Map<String, dynamic> updates) {
+  void handleUpdateLegendGroup(String groupId, String updatesJson) {
     if (_mapDataBloc.state is! MapDataLoaded) return;
+
+    // 解析JSON字符串为Map
+    Map<String, dynamic> updates;
+    try {
+      updates = jsonDecode(updatesJson) as Map<String, dynamic>;
+    } catch (e) {
+      addExecutionLog('解析图例组更新参数JSON失败: $e');
+      return;
+    }
 
     final state = _mapDataBloc.state as MapDataLoaded;
     final groupIndex = state.legendGroups.indexWhere((g) => g.id == groupId);
@@ -828,19 +927,28 @@ class ExternalFunctionHandler {
 
   /// 处理更新图例组可见性
   void handleUpdateLegendGroupVisibility(String groupId, bool isVisible) {
-    handleUpdateLegendGroup(groupId, {'isVisible': isVisible});
+    handleUpdateLegendGroup(groupId, jsonEncode({'isVisible': isVisible}));
     addExecutionLog('设置图例组 $groupId 可见性为: $isVisible');
   }
 
   /// 处理更新图例组透明度
   void handleUpdateLegendGroupOpacity(String groupId, double opacity) {
-    handleUpdateLegendGroup(groupId, {'opacity': opacity});
+    handleUpdateLegendGroup(groupId, jsonEncode({'opacity': opacity}));
     addExecutionLog('设置图例组 $groupId 透明度为: $opacity');
   }
 
   /// 处理更新图例项
-  void handleUpdateLegendItem(String itemId, Map<String, dynamic> updates) {
+  void handleUpdateLegendItem(String itemId, String updatesJson) {
     if (_mapDataBloc.state is! MapDataLoaded) return;
+
+    // 解析JSON字符串为Map
+    Map<String, dynamic> updates;
+    try {
+      updates = jsonDecode(updatesJson) as Map<String, dynamic>;
+    } catch (e) {
+      addExecutionLog('解析图例项更新参数JSON失败: $e');
+      return;
+    }
 
     final state = _mapDataBloc.state as MapDataLoaded;
 

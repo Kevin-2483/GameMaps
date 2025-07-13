@@ -243,18 +243,57 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
         final args = call.arguments;
         final result = Function.apply(handler, args);
 
-        // 发送响应
-        final response = ExternalFunctionResponse(
-          callId: call.callId,
-          result: result,
-        );
+        // 处理异步结果
+        if (result is Future) {
+          debugPrint('[DEBUG] 处理异步外部函数: ${call.functionName}');
+          result.then((asyncResult) {
+            debugPrint('[DEBUG] 异步函数 ${call.functionName} 完成，结果类型: ${asyncResult.runtimeType}');
+            final serializedResult = _serializeResult(asyncResult);
+            debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
+            
+            final response = ExternalFunctionResponse(
+              callId: call.callId,
+              result: serializedResult,
+            );
 
-        final responseMessage = ScriptMessage(
-          type: ScriptMessageType.externalFunctionResponse,
-          data: response.toJson(),
-        );
+            final responseMessage = ScriptMessage(
+              type: ScriptMessageType.externalFunctionResponse,
+              data: response.toJson(),
+            );
 
-        _isolateSendPort?.send(responseMessage.toJson());
+            _isolateSendPort?.send(responseMessage.toJson());
+          }).catchError((error) {
+            debugPrint('[DEBUG] 异步函数 ${call.functionName} 出错: $error');
+            final response = ExternalFunctionResponse(
+              callId: call.callId,
+              error: error.toString(),
+            );
+
+            final responseMessage = ScriptMessage(
+              type: ScriptMessageType.externalFunctionResponse,
+              data: response.toJson(),
+            );
+
+            _isolateSendPort?.send(responseMessage.toJson());
+          });
+        } else {
+          // 处理同步结果
+          debugPrint('[DEBUG] 处理同步外部函数: ${call.functionName}，结果类型: ${result.runtimeType}');
+          final serializedResult = _serializeResult(result);
+          debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
+          
+          final response = ExternalFunctionResponse(
+            callId: call.callId,
+            result: serializedResult,
+          );
+
+          final responseMessage = ScriptMessage(
+            type: ScriptMessageType.externalFunctionResponse,
+            data: response.toJson(),
+          );
+
+          _isolateSendPort?.send(responseMessage.toJson());
+        }
       } else {
         // 函数未找到，发送错误响应
         final response = ExternalFunctionResponse(
@@ -271,6 +310,7 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       }
     } catch (e) {
       // 函数执行错误，发送错误响应
+      debugPrint('[DEBUG] 外部函数 ${call.functionName} 执行出错: $e');
       final response = ExternalFunctionResponse(
         callId: call.callId,
         error: e.toString(),
@@ -283,6 +323,35 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
 
       _isolateSendPort?.send(responseMessage.toJson());
     }
+  }
+
+  /// 序列化结果，确保可以通过Isolate传递
+  dynamic _serializeResult(dynamic result) {
+    if (result == null) {
+      return null;
+    }
+    
+    // 基本类型直接返回
+    if (result is String || result is num || result is bool) {
+      return result;
+    }
+    
+    // 列表类型递归序列化
+    if (result is List) {
+      return result.map((item) => _serializeResult(item)).toList();
+    }
+    
+    // Map类型递归序列化
+    if (result is Map) {
+      final Map<String, dynamic> serializedMap = {};
+      result.forEach((key, value) {
+        serializedMap[key.toString()] = _serializeResult(value);
+      });
+      return serializedMap;
+    }
+    
+    // 其他类型转换为字符串
+    return result.toString();
   }
 
   /// 处理不需要等待结果的外部函数调用（Fire and Forget）

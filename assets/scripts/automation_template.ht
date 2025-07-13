@@ -1,0 +1,85 @@
+// 测试脚本2：便签和标签筛选功能
+external fun log
+external fun getStickyNotes
+external fun getStickyNoteById
+external fun getElementsInStickyNote
+external fun filterStickyNotesByTags
+external fun filterStickyNoteElementsByTags
+external fun filterElementsByTags
+external fun filterElementsInStickyNotesByTags
+
+fun testStickyNotesAndTagFiltering() {
+    log('=== 测试脚本2：便签和标签筛选功能 ===')
+    
+    // 测试1：获取所有便签
+    log('1. 测试获取所有便签')
+    getStickyNotes().then((notes) {
+        log('便签总数: ${notes.length}')
+        
+        if (notes.length > 0) {
+            var firstNote = notes[0]
+            log('第一个便签ID: ${firstNote["id"]}')
+            log('第一个便签标题: ${firstNote["title"]}')
+            log('第一个便签标签: ${firstNote["tags"]}')
+            
+            // 测试2：根据ID获取便签
+            log('2. 测试根据ID获取便签')
+            getStickyNoteById(firstNote["id"]).then((note) {
+                if (note != null) {
+                    log('成功获取便签: ${note["title"]}')
+                    
+                    // 测试3：获取便签中的元素
+                    log('3. 测试获取便签中的元素')
+                    getElementsInStickyNote(note["id"]).then((elements) {
+                        log('便签 ${note["title"]} 中的元素数量: ${elements.length}')
+                        
+                        if (elements.length > 0) {
+                            var firstElement = elements[0]
+                            log('第一个元素类型: ${firstElement["type"]}')
+                            log('第一个元素标签: ${firstElement["tags"]}')
+                        }
+                        
+                        // 测试4：根据标签筛选便签
+                        log('4. 测试根据标签筛选便签')
+                        var testTags = '["important", "draft"]'
+                        filterStickyNotesByTags(testTags).then((filteredNotes) { 
+                          log('包含标签${testTags}的便签数量: ${filteredNotes.length}')
+                            
+                            // 测试5：根据标签筛选便签中的元素
+                            log('5. 测试根据标签筛选便签中的元素')
+                            filterStickyNoteElementsByTags(testTags).then((filteredElements) {
+                                log('便签中包含标签${testTags}的元素数量: ${filteredElements.length}')
+                                
+                                // 测试6：根据标签筛选所有元素（包含模式）
+                                log('6. 测试根据标签筛选所有元素（包含模式）')
+                                filterElementsByTags(testTags, 'contains').then((allFilteredElements) {
+                                    log('所有包含标签${testTags}的元素数量: ${allFilteredElements.length}')
+                                    
+                                    // 测试7：根据标签筛选所有元素（排除模式）
+                                    log('7. 测试根据标签筛选所有元素（排除模式）')
+                                    filterElementsByTags(testTags, 'excludes').then((excludedElements) {
+                                        log('所有不包含标签${testTags}的元素数量: ${excludedElements.length}')
+                                        
+                                        // 测试8：筛选便签中的元素（独立函数）
+                                        log('8. 测试筛选便签中的元素（独立函数）')
+                                        filterElementsInStickyNotesByTags(testTags, 'contains').then((stickyFilteredElements) {
+                                            log('便签中包含标签${testTags}的元素数量: ${stickyFilteredElements.length}')
+                                            log('=== 便签和标签筛选测试完成 ===')
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                } else {
+                    log('获取便签失败')
+                }
+            })
+        } else {
+            log('没有找到便签')
+        }
+    })
+}
+
+// 启动测试
+testStickyNotesAndTagFiltering()

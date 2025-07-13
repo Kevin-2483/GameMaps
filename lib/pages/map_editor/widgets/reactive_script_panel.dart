@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../../models/script_data.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
+import '../../../services/script_template_service.dart';
 import 'script_editor_window_reactive.dart';
 import '../../../services/notification/notification_service.dart';
 
@@ -831,54 +832,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     }
   }
 
-  String _getDefaultScriptContent(ScriptType type) {
-    switch (type) {
-      case ScriptType.automation:
-        return '''// 自动化脚本示例
-var layers = getLayers();
-log('共有 ' + layers.length.toString() + ' 个图层');
 
-// 遍历所有元素
-var elements = getAllElements();
-for (var element in elements) {
-    log('元素 ' + element['id'] + ' 类型: ' + element['type']);
-}''';
-      case ScriptType.animation:
-        return '''// 动画脚本示例
-var elements = getAllElements();
-if (elements.length > 0) {
-    var element = elements[0];
-    
-    // 动画改变颜色
-    animate(element['id'], 'color', 0xFF00FF00, 1000);
-    delay(1000);
-    
-    // 动画移动元素
-    animate(element['id'], 'x', 0.5, 1000);
-}''';
-      case ScriptType.filter:
-        return '''// 过滤脚本示例
-var allElements = getAllElements();
-var filteredElements = filterElements(allElements, {
-    'type': 'rectangle',
-    'color': 0xFF0000FF
-});
-
-log('找到 ' + filteredElements.length.toString() + ' 个蓝色矩形');''';
-      case ScriptType.statistics:
-        return '''// 统计脚本示例
-var layers = getLayers();
-var totalElements = 0;
-
-for (var layer in layers) {
-    var elementCount = layer['elementCount'];
-    totalElements += elementCount;
-    log('图层 ' + layer['name'] + ': ' + elementCount.toString() + ' 个元素');
-}
-
-log('总计: ' + totalElements.toString() + ' 个元素');''';
-    }
-  }
 }
 
 /// 响应式脚本编辑对话框
@@ -975,19 +929,20 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
     );
   }
 
-  void _saveScript() {
+  void _saveScript() async {
     if (_nameController.text.trim().isEmpty) {
       context.showErrorSnackBar('请输入名称');
       return;
     }
 
     final now = DateTime.now();
+    final content = await ScriptTemplateService.getTemplateContent(_selectedType);
     final script = ScriptData(
       id: now.millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       type: _selectedType,
-      content: _getDefaultScriptContent(_selectedType),
+      content: content,
       parameters: {},
       isEnabled: true,
       createdAt: now,
@@ -1011,11 +966,7 @@ class _ReactiveScriptEditDialogState extends State<_ReactiveScriptEditDialog> {
     }
   }
 
-  String _getDefaultScriptContent(ScriptType type) {
-    // 使用相同的默认内容生成逻辑
-    final panel = _ReactiveScriptPanelState();
-    return panel._getDefaultScriptContent(type);
-  }
+
 }
 
 /// 执行日志对话框组件
@@ -1087,7 +1038,7 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
               )
             : Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: ListView.builder(
@@ -1101,8 +1052,8 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
                       ),
                       decoration: BoxDecoration(
                         color: index.isEven
-                            ? Colors.grey.shade50
-                            : Colors.white,
+                            ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                            : Theme.of(context).colorScheme.surface,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1112,16 +1063,17 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
                             style: TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 11,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               log,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ),

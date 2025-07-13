@@ -1,0 +1,172 @@
+// TTS参数化脚本演示
+// @param message:string::要朗读的消息
+// @param language:string:zh-CN:语言代码(zh-CN, en-US等)
+// @param speechRate:number:1.0:语速(0.1-2.0)
+// @param volume:number:0.8:音量(0.0-1.0)
+// @param pitch:number:1.0:音调(0.1-2.0)
+// @param repeatCount:int:1:重复次数
+// @param useAdvancedFeatures:bool:false:是否使用高级功能
+
+// 声明外部函数
+external fun say(text, [options]);
+external fun log(message);
+external fun ttsGetLanguages();
+external fun ttsGetVoices();
+external fun ttsIsLanguageAvailable(language);
+external fun ttsGetSpeechRateRange();
+external fun ttsStop();
+
+fun main() {
+    // 获取用户输入的参数
+    var message = "{{message}}";
+    var language = "{{language}}";
+    var speechRate = {{speechRate}};
+    var volume = {{volume}};
+    var pitch = {{pitch}};
+    var repeatCount = {{repeatCount}};
+    var useAdvancedFeatures = {{useAdvancedFeatures}};
+    
+    log('=== TTS参数化脚本开始执行 ===');
+    log('消息: ' + message);
+    log('语言: ' + language);
+    log('语速: ' + speechRate.toString());
+    log('音量: ' + volume.toString());
+    log('音调: ' + pitch.toString());
+    log('重复次数: ' + repeatCount.toString());
+    log('高级功能: ' + (useAdvancedFeatures ? '启用' : '禁用'));
+    
+    // 如果启用高级功能，先检查TTS系统状态
+    if (useAdvancedFeatures) {
+        log('=== 检查TTS系统状态 ===');
+        
+        // 获取可用语言列表
+        ttsGetLanguages().then((languages) {
+            log('系统支持 ' + languages.length.toString() + ' 种语言');
+            
+            // 检查指定语言是否可用
+            ttsIsLanguageAvailable(language).then((isAvailable) {
+                if (isAvailable) {
+                    log('语言 ' + language + ' 可用');
+                } else {
+                    log('警告: 语言 ' + language + ' 不可用，将使用默认语言');
+                }
+                
+                // 获取语音速度范围
+                ttsGetSpeechRateRange().then((range) {
+                    log('语音速度范围: ' + range.toString());
+                    
+                    // 获取可用语音列表
+                    ttsGetVoices().then((voices) {
+                        log('系统支持 ' + voices.length.toString() + ' 种语音');
+                        
+                        // 开始语音播放
+                        startTtsPlayback();
+                    });
+                });
+            });
+        });
+    } else {
+        // 直接开始语音播放
+        startTtsPlayback();
+    }
+}
+
+// 开始TTS播放的函数
+fun startTtsPlayback() {
+    var message = "{{message}}";
+    var language = "{{language}}";
+    var speechRate = {{speechRate}};
+    var volume = {{volume}};
+    var pitch = {{pitch}};
+    var repeatCount = {{repeatCount}};
+    
+    log('=== 开始语音播放 ===');
+    
+    // 构建TTS选项（JSON字符串格式）
+    var ttsOptions = '{
+        "language": "' + language + '",
+        "speechRate": ' + speechRate.toString() + ',
+        "volume": ' + volume.toString() + ',
+        "pitch": ' + pitch.toString() + '
+    }';
+    
+    // 播放欢迎消息
+    var welcomeOptions = '{
+        "language": "' + language + '",
+        "speechRate": 1.0,
+        "volume": 0.7,
+        "pitch": 1.0
+    }';
+    say('TTS参数化脚本开始执行', welcomeOptions);
+    
+    // 根据重复次数播放主要消息
+    for (var i = 1; i <= repeatCount; i++) {
+        if (repeatCount > 1) {
+            var countMessage = '第 ' + i.toString() + ' 次播放: ' + message;
+            log('播放: ' + countMessage);
+            say(countMessage, ttsOptions);
+        } else {
+            log('播放: ' + message);
+            say(message, ttsOptions);
+        }
+        
+        // 如果不是最后一次，添加间隔
+        if (i < repeatCount) {
+            // 注意：Hetu不支持真正的延迟，这里只是示例
+            log('等待下一次播放...');
+        }
+    }
+    
+    // 播放完成消息
+    var completionMessage = '语音播放完成，共播放 ' + repeatCount.toString() + ' 次';
+    log(completionMessage);
+    var completionOptions = '{
+        "language": "' + language + '",
+        "speechRate": 0.9,
+        "volume": 0.6,
+        "pitch": 1.1
+    }';
+    say(completionMessage, completionOptions);
+    
+    // 演示不同语言的播放
+    demonstrateMultiLanguage();
+}
+
+// 演示多语言播放
+fun demonstrateMultiLanguage() {
+    var language = "{{language}}";
+    
+    log('=== 多语言演示 ===');
+    
+    // 中文播放
+    var chineseOptions = '{
+        "language": "zh-CN",
+        "speechRate": 1.0,
+        "volume": 0.8,
+        "pitch": 1.0
+    }';
+    say('这是中文语音合成演示', chineseOptions);
+    
+    // 英文播放
+    var englishOptions = '{
+        "language": "en-US",
+        "speechRate": 1.0,
+        "volume": 0.8,
+        "pitch": 1.0
+    }';
+    say('This is English text-to-speech demonstration', englishOptions);
+    
+    // 使用用户指定的语言播放结束语
+    var endOptions = '{
+        "language": "' + language + '",
+        "speechRate": 1.2,
+        "volume": 0.7,
+        "pitch": 1.2
+    }';
+    say('多语言演示完成', endOptions);
+    
+    log('=== TTS参数化脚本执行完成 ===');
+}
+
+// 执行主函数
+main();

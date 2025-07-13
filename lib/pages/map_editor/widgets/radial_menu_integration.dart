@@ -308,15 +308,25 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
     ];
 
     for (final note in widget.currentMap.stickyNotes) {
+      // 优先显示标题，如果标题为空则显示内容，都为空则显示"空便签"
+      String displayText;
+      if (note.title.isNotEmpty) {
+        displayText = note.title.length > 10
+            ? '${note.title.substring(0, 10)}...'
+            : note.title;
+      } else if (note.content.isNotEmpty) {
+        displayText = note.content.length > 10
+            ? '${note.content.substring(0, 10)}...'
+            : note.content;
+      } else {
+        displayText = '空便签';
+      }
+      
       items.add(
         RadialMenuItem(
           id: 'sticky_note_${note.id}',
           icon: Icons.sticky_note_2,
-          label: note.content.isNotEmpty
-              ? (note.content.length > 10
-                    ? '${note.content.substring(0, 10)}...'
-                    : note.content)
-              : '空便签',
+          label: displayText,
           onTap: () => widget.onStickyNoteSelected(note),
         ),
       );

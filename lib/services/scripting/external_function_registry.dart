@@ -237,8 +237,8 @@ class ExternalFunctionRegistry {
         };
 
     functions['moveElement'] =
-        (String elementId, Map<String, dynamic> newPosition) {
-          callFireAndForgetFunction('moveElement', [elementId, newPosition]);
+        (String elementId, String positionJson) {
+          callFireAndForgetFunction('moveElement', [elementId, positionJson]);
           return null; // 立即返回，不等待结果
         };
   }
@@ -314,13 +314,13 @@ class ExternalFunctionRegistry {
       return await callAwaitableFunction('getElementsInStickyNote', [id]);
     };
 
-    functions['filterStickyNotesByTags'] = (List<String> tags) async {
-      return await callAwaitableFunction('filterStickyNotesByTags', [tags]);
+    functions['filterStickyNotesByTags'] = (String tagsJson) async {
+      return await callAwaitableFunction('filterStickyNotesByTags', [tagsJson]);
     };
 
-    functions['filterStickyNoteElementsByTags'] = (List<String> tags) async {
+    functions['filterStickyNoteElementsByTags'] = (String tagsJson) async {
       return await callAwaitableFunction('filterStickyNoteElementsByTags', [
-        tags,
+        tagsJson,
       ]);
     };
   }
@@ -348,17 +348,17 @@ class ExternalFunctionRegistry {
       return await callAwaitableFunction('getLegendItemById', [id]);
     };
 
-    functions['filterLegendGroupsByTags'] = (List<String> tags) async {
-      return await callAwaitableFunction('filterLegendGroupsByTags', [tags]);
+    functions['filterLegendGroupsByTags'] = (String tagsJson) async {
+      return await callAwaitableFunction('filterLegendGroupsByTags', [tagsJson]);
     };
 
-    functions['filterLegendItemsByTags'] = (List<String> tags) async {
-      return await callAwaitableFunction('filterLegendItemsByTags', [tags]);
+    functions['filterLegendItemsByTags'] = (String tagsJson) async {
+      return await callAwaitableFunction('filterLegendItemsByTags', [tagsJson]);
     };
 
     // 图例修改函数 - 不需要等待结果
-    functions['updateLegendGroup'] = (String id, Map<String, dynamic> params) {
-      callFireAndForgetFunction('updateLegendGroup', [id, params]);
+    functions['updateLegendGroup'] = (String id, String paramsJson) {
+      callFireAndForgetFunction('updateLegendGroup', [id, paramsJson]);
       return null; // 立即返回，不等待结果
     };
 
@@ -372,8 +372,8 @@ class ExternalFunctionRegistry {
       return null; // 立即返回，不等待结果
     };
 
-    functions['updateLegendItem'] = (String id, Map<String, dynamic> params) {
-      callFireAndForgetFunction('updateLegendItem', [id, params]);
+    functions['updateLegendItem'] = (String id, String paramsJson) {
+      callFireAndForgetFunction('updateLegendItem', [id, paramsJson]);
       return null; // 立即返回，不等待结果
     };
   }
@@ -427,17 +427,17 @@ class ExternalFunctionRegistry {
   ) {
     // 通用元素标签筛选函数
     functions['filterElementsByTags'] =
-        (List<String> tags, [String? mode]) async {
+        (String tagsJson, [String? mode]) async {
           // 只有当mode不为null时才传递，避免参数不匹配
-          final args = mode != null ? [tags, mode] : [tags];
+          final args = mode != null ? [tagsJson, mode] : [tagsJson];
           return await callAwaitableFunction('filterElementsByTags', args);
         };
 
     // 便签中元素标签筛选函数
     functions['filterElementsInStickyNotesByTags'] =
-        (List<String> tags, [String? mode]) async {
+        (String tagsJson, [String? mode]) async {
           // 只有当mode不为null时才传递，避免参数不匹配
-          final args = mode != null ? [tags, mode] : [tags];
+          final args = mode != null ? [tagsJson, mode] : [tagsJson];
           return await callAwaitableFunction(
             'filterElementsInStickyNotesByTags',
             args,
@@ -446,9 +446,9 @@ class ExternalFunctionRegistry {
 
     // 指定图例组中的图例项标签筛选函数
     functions['filterLegendItemsInGroupByTags'] =
-        (String groupId, List<String> tags, [String? mode]) async {
+        (String groupId, String tagsJson, [String? mode]) async {
           // 只有当mode不为null时才传递，避免参数不匹配
-          final args = mode != null ? [groupId, tags, mode] : [groupId, tags];
+          final args = mode != null ? [groupId, tagsJson, mode] : [groupId, tagsJson];
           return await callAwaitableFunction(
             'filterLegendItemsInGroupByTags',
             args,
