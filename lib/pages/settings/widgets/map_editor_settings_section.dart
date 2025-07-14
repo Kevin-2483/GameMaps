@@ -1018,6 +1018,44 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // 默认图例大小设置标题
+            Text(
+              '默认图例大小',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            // 默认图例大小
+            ListTile(
+              title: Text('图例大小'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    value: mapEditor.defaultLegendSize,
+                    min: 0.0,
+                    max: 3.0,
+                    divisions: 30,
+                    label: mapEditor.defaultLegendSize == 0.0
+                        ? '动态大小'
+                        : '${mapEditor.defaultLegendSize.toStringAsFixed(1)}',
+                    onChanged: (value) =>
+                        provider.updateMapEditor(defaultLegendSize: value),
+                  ),
+                  Text(
+                    mapEditor.defaultLegendSize == 0.0
+                        ? '使用动态公式：1/(缩放*系数)'
+                        : '固定大小：${mapEditor.defaultLegendSize.toStringAsFixed(1)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // 图层选择设置标题
             Text(
               l10n.layerSelectionSettings,

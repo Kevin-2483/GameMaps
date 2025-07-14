@@ -397,20 +397,25 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final legendId = 'drag_${fileName}_${timestamp}_${randomSuffix}';
       final itemId = 'item_${timestamp}_${randomSuffix}';
 
-      // 计算图例大小 - 根据当前缩放级别和保存的缩放因子
+      // 计算图例大小 - 根据用户偏好设置和缩放因子
       double legendSize = 1.0; // 默认大小
       
-      // 获取当前画布的缩放级别
-      final currentZoomLevel = _mapCanvasKey.currentState?.getCurrentZoomLevel() ?? 1.0;
+      // 获取用户偏好设置中的默认图例大小
+      final defaultLegendSize = _userPreferencesProvider?.mapEditor.defaultLegendSize ?? 0.0;
       
-      // 获取该图例组的缩放因子（使用统一状态管理）
-      final zoomFactor = getLegendGroupZoomFactor(
-        _currentLegendGroupForManagement!.id,
-      );
-      
-      // 使用缩放因子计算图例大小
-      legendSize = zoomFactor / currentZoomLevel;
-      debugPrint('使用缩放因子计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize');
+      if (defaultLegendSize == 0.0) {
+        // 使用动态公式：1/(缩放*系数)
+        final currentZoomLevel = _mapCanvasKey.currentState?.getCurrentZoomLevel() ?? 1.0;
+        final zoomFactor = getLegendGroupZoomFactor(
+          _currentLegendGroupForManagement!.id,
+        );
+        legendSize = zoomFactor / currentZoomLevel;
+        debugPrint('使用动态公式计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize');
+      } else {
+        // 使用固定大小
+        legendSize = defaultLegendSize;
+        debugPrint('使用固定图例大小: $legendSize');
+      }
 
       // 创建新的图例项
       final newItem = LegendItem(

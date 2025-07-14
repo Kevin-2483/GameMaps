@@ -152,6 +152,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     int? radialMenuSubMenuDelay,
     Map<String, List<String>>? shortcuts,
     bool? autoSelectLastLayerInGroup,
+    double? defaultLegendSize,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -171,6 +172,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         radialMenuSubMenuDelay: radialMenuSubMenuDelay,
         shortcuts: shortcuts,
         autoSelectLastLayerInGroup: autoSelectLastLayerInGroup,
+        defaultLegendSize: defaultLegendSize,
       );
 
       await _service.updateMapEditor(updatedMapEditor);

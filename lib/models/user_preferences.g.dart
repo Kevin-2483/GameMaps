@@ -100,6 +100,7 @@ MapEditorPreferences _$MapEditorPreferencesFromJson(
           const <String, List<String>>{},
       autoSelectLastLayerInGroup:
           json['autoSelectLastLayerInGroup'] as bool? ?? false,
+      defaultLegendSize: (json['defaultLegendSize'] as num?)?.toDouble() ?? 0.0,
     );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
@@ -120,6 +121,7 @@ Map<String, dynamic> _$MapEditorPreferencesToJson(
       'radialMenuSubMenuDelay': instance.radialMenuSubMenuDelay,
       'shortcuts': instance.shortcuts,
       'autoSelectLastLayerInGroup': instance.autoSelectLastLayerInGroup,
+      'defaultLegendSize': instance.defaultLegendSize,
     };
 
 const _$BackgroundPatternEnumMap = {
