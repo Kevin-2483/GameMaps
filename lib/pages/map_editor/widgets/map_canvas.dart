@@ -255,14 +255,14 @@ class MapCanvasState extends State<MapCanvas> {
       // 通知外部选区已清除
       widget.onSelectionCleared?.call();
     }
-    
+
     // 清除元素选择
     widget.onElementSelected(null);
-    
-    // 清除便签选择
-    if (widget.selectedStickyNote != null) {
-      widget.onStickyNoteSelected?.call(null);
-    }
+
+    // // 清除便签选择
+    // if (widget.selectedStickyNote != null) {
+    //   widget.onStickyNoteSelected?.call(null);
+    // }
   }
 
   @override
@@ -413,6 +413,9 @@ class MapCanvasState extends State<MapCanvas> {
                                   );
                                   _handleTextToolTap(position);
                                 },
+                                onPanStart: _onElementInteractionPanStart,
+                                onPanUpdate: _onElementInteractionPanUpdate,
+                                onPanEnd: _onElementInteractionPanEnd,
                                 behavior: HitTestBehavior.translucent,
                               ),
                             )
@@ -2075,7 +2078,7 @@ class MapCanvasState extends State<MapCanvas> {
       );
 
       // 如果拖拽便签的可拖拽区域（标题栏或调整大小手柄），启动便签拖拽
-       if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
+      if (stickyNoteHitResult != null && widget.onStickyNoteUpdated != null) {
         _stickyNoteDragState = StickyNoteGestureHelper.handleStickyNotePanStart(
           hitStickyNote,
           stickyNoteHitResult,
@@ -2806,7 +2809,6 @@ class MapCanvasState extends State<MapCanvas> {
 
   /// 处理其他绘制工具的点击事件
   void _handleDrawingToolTap(Offset canvasPosition) {
-
     clearSelection();
     // 优先检测便签点击（包括标题栏）
     final hitStickyNote = _getHitStickyNote(canvasPosition);
@@ -2841,7 +2843,7 @@ class MapCanvasState extends State<MapCanvas> {
         return;
       }
     }
-    
+
     // 如果没有点击便签特殊区域，不做任何处理
     // 让拖拽手势来处理绘制操作
   }
@@ -2884,7 +2886,7 @@ class MapCanvasState extends State<MapCanvas> {
 
     // 使用文本工具时清除选区
     clearSelection();
-    
+
     // 首先检查是否点击在选中的便签内
     if (widget.selectedStickyNote != null) {
       // 检查是否在便签的内容区域内
