@@ -345,12 +345,7 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
           size: 14,
           color: Theme.of(context).colorScheme.onSurface,
         );
-      case 'escape':
-        return Icon(
-          Icons.keyboard_return,
-          size: 14,
-          color: Theme.of(context).colorScheme.onSurface,
-        );
+      // case 'escape': // 移除escape键的图标显示，让它显示为文本
     }
     
     // 对于其他键，显示文本

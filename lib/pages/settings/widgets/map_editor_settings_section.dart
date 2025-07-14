@@ -28,7 +28,7 @@ class MapEditorSettingsSection extends StatelessWidget {
       case 'nextLegendGroup':
         return '打开下一个图例组';
       case 'openLegendDrawer':
-        return '打开图例管理抽屉';
+        return '打开图例组绑定抽屉';
       case 'clearLayerSelection':
         return '清除图层/图层组选择';
       // 工具快捷键
@@ -96,7 +96,7 @@ class MapEditorSettingsSection extends StatelessWidget {
       case 'openZInspector':
         return '打开Z元素检视器';
       case 'toggleLegendGroupDrawer':
-        return '切换图例组绑定抽屉';
+        return '切换图例管理抽屉';
       case 'hideOtherLayers':
         return '隐藏其他图层';
       case 'hideOtherLayerGroups':
@@ -109,6 +109,8 @@ class MapEditorSettingsSection extends StatelessWidget {
         return '隐藏其他图例组';
       case 'showCurrentLegendGroup':
         return '显示当前图例组';
+      case 'showShortcuts':
+        return '显示快捷键列表';
       // 版本管理快捷键
       case 'prevVersion':
         return '切换到上一个版本';
@@ -257,12 +259,6 @@ class MapEditorSettingsSection extends StatelessWidget {
       case 'space':
         return Icon(
           Icons.space_bar,
-          size: 12,
-          color: Theme.of(context).colorScheme.onSurface,
-        );
-      case 'escape':
-        return Icon(
-          Icons.keyboard_return,
           size: 12,
           color: Theme.of(context).colorScheme.onSurface,
         );
@@ -473,8 +469,51 @@ class MapEditorSettingsSection extends StatelessWidget {
         ),
         actions: [
           TextButton(
+            onPressed: () => _resetAllShortcuts(context, provider),
+            child: Text('恢复默认'),
+          ),
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 恢复所有快捷键到默认设置
+  void _resetAllShortcuts(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('恢复默认快捷键'),
+        content: Text('确定要将所有快捷键恢复到默认设置吗？此操作将覆盖您的自定义快捷键设置。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // 获取默认快捷键设置
+              final defaultShortcuts = MapEditorPreferences.createDefault().shortcuts;
+              
+              // 更新用户偏好设置
+              provider.updateMapEditor(shortcuts: defaultShortcuts);
+              
+              // 关闭确认对话框
+              Navigator.of(context).pop();
+              
+              // 关闭快捷键管理对话框
+              Navigator.of(context).pop();
+              
+              // 显示成功提示
+              context.showSuccessSnackBar('已恢复所有快捷键到默认设置');
+            },
+            child: Text('确定'),
           ),
         ],
       ),

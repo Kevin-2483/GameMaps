@@ -8,6 +8,7 @@ import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../models/user_preferences.dart';
+import 'widgets/shortcuts_dialog.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/clipboard_service.dart';
@@ -3199,6 +3200,22 @@ class _MapEditorContentState extends State<_MapEditorContent>
                         ReactiveVersionTabBar.hasAnyUnsavedVersions,
                   ),
                   _buildStatusRow('面板状态已更改', _panelStatesChanged),
+                  const SizedBox(height: 16),
+                  // 快捷键按钮
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop(); // 关闭当前对话框
+                        ShortcutsDialog.show(context); // 显示快捷键对话框
+                      },
+                      icon: const Icon(Icons.keyboard),
+                      label: const Text('查看快捷键列表'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -3285,6 +3302,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -4519,6 +4538,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
         mapEditorPrefs.shortcuts['createNewVersion'] ?? ['Ctrl+N', 'Win+N'];
     if (_isAnyShortcutPressed(event, createNewVersionShortcuts)) {
       _createNewVersionWithShortcut();
+      return true;
+    }
+
+    // 检查显示快捷键列表
+    final showShortcutsShortcuts =
+        mapEditorPrefs.shortcuts['showShortcuts'] ?? ['Ctrl+/', 'Win+/'];
+    if (_isAnyShortcutPressed(event, showShortcutsShortcuts)) {
+      ShortcutsDialog.show(context);
       return true;
     }
 

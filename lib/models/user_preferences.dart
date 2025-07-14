@@ -348,6 +348,8 @@ class MapEditorPreferences {
         'selectLayer10': ['F10'],
         'selectLayer11': ['F11'],
         'selectLayer12': ['F12'],
+        // 帮助快捷键
+        'showShortcuts': ['Ctrl+/', 'Win+/'],
       },
     );
   }
