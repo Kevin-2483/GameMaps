@@ -197,6 +197,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 智能隐藏状态管理（从抽屉迁移到地图编辑器）
   Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
+  
+  // 缩放因子状态管理（统一管理）
+  Map<String, double> _legendGroupZoomFactors = {}; // 图例组缩放因子状态
 
   bool _isDragTemporaryHidden = false; // 标记抽屉是否因拖拽而临时隐藏
   LegendGroup? _hiddenLegendGroupForDrag; // 保存因拖拽而隐藏的图例组
@@ -215,6 +218,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap != null) {
       _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
         debugPrint('在dispose中保存智能隐藏状态失败: $e');
+      });
+      
+      // 保存缩放因子状态到扩展存储
+      _saveLegendGroupZoomFactorsOnExit().catchError((e) {
+        debugPrint('在dispose中保存缩放因子状态失败: $e');
       });
     }
 
@@ -292,6 +300,33 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('图例组智能隐藏状态已初始化: $_legendGroupSmartHideStates');
   }
 
+  /// 初始化图例组缩放因子状态
+  void _initializeLegendGroupZoomFactors() {
+    if (_currentMap == null) return;
+
+    // 使用保存的引用而不是context.read
+    final enableExtensionStorage =
+        _userPreferencesProvider?.layout.enableExtensionStorage ?? false;
+
+    if (enableExtensionStorage) {
+      // 扩展储存功能开启时，从扩展设置加载状态
+      for (final group in _currentMap!.legendGroups) {
+        final savedZoomFactor = LegendGroupZoomFactorManager.getZoomFactor(
+          _currentMap!.title,
+          group.id,
+        );
+        _legendGroupZoomFactors[group.id] = savedZoomFactor;
+      }
+    } else {
+      // 扩展储存功能关闭时，所有图例组默认使用1.0缩放因子
+      for (final group in _currentMap!.legendGroups) {
+        _legendGroupZoomFactors[group.id] = 1.0;
+      }
+    }
+
+    debugPrint('图例组缩放因子状态已初始化: $_legendGroupZoomFactors');
+  }
+
   /// 获取图例组智能隐藏状态
   bool getLegendGroupSmartHideState(String legendGroupId) {
     return _legendGroupSmartHideStates[legendGroupId] ?? true;
@@ -319,6 +354,33 @@ class _MapEditorContentState extends State<_MapEditorContent>
     debugPrint('图例组 $legendGroupId 智能隐藏状态已更新: $enabled');
   }
 
+  /// 获取图例组缩放因子
+  double getLegendGroupZoomFactor(String legendGroupId) {
+    return _legendGroupZoomFactors[legendGroupId] ?? 1.0;
+  }
+
+  /// 设置图例组缩放因子
+  void setLegendGroupZoomFactor(String legendGroupId, double zoomFactor) {
+    setState(() {
+      _legendGroupZoomFactors[legendGroupId] = zoomFactor;
+    });
+
+    // 使用保存的引用而不是context.read
+    final enableExtensionStorage =
+        _userPreferencesProvider?.layout.enableExtensionStorage ?? false;
+
+    // 只有扩展储存功能开启时才保存到扩展设置
+    if (enableExtensionStorage && _currentMap != null) {
+      LegendGroupZoomFactorManager.setZoomFactor(
+        _currentMap!.title,
+        legendGroupId,
+        zoomFactor,
+      );
+    }
+
+    debugPrint('图例组 $legendGroupId 缩放因子已更新: $zoomFactor');
+  }
+
   /// 处理从缓存拖拽图例到画布
   void _handleLegendDragToCanvas(String legendPath, Offset canvasPosition) {
     // 找到当前打开的图例组管理抽屉对应的图例组
@@ -335,13 +397,28 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final legendId = 'drag_${fileName}_${timestamp}_${randomSuffix}';
       final itemId = 'item_${timestamp}_${randomSuffix}';
 
+      // 计算图例大小 - 根据当前缩放级别和保存的缩放因子
+      double legendSize = 1.0; // 默认大小
+      
+      // 获取当前画布的缩放级别
+      final currentZoomLevel = _mapCanvasKey.currentState?.getCurrentZoomLevel() ?? 1.0;
+      
+      // 获取该图例组的缩放因子（使用统一状态管理）
+      final zoomFactor = getLegendGroupZoomFactor(
+        _currentLegendGroupForManagement!.id,
+      );
+      
+      // 使用缩放因子计算图例大小
+      legendSize = zoomFactor / currentZoomLevel;
+      debugPrint('使用缩放因子计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize');
+
       // 创建新的图例项
       final newItem = LegendItem(
         id: itemId,
         legendPath: legendPath,
         legendId: legendId,
         position: canvasPosition, // 使用拖拽的位置
-        size: 1.0, // 默认大小
+        size: legendSize, // 根据缩放因子计算的大小
         rotation: 0.0, // 默认旋转
         opacity: 1.0, // 默认透明度
         isVisible: true, // 默认可见
@@ -447,6 +524,41 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
   }
 
+  /// 退出时保存缩放因子状态
+  Future<void> _saveLegendGroupZoomFactorsOnExit() async {
+    if (_currentMap == null || _userPreferencesProvider == null) return;
+
+    final enableExtensionStorage =
+        _userPreferencesProvider!.layout.enableExtensionStorage;
+
+    if (!enableExtensionStorage) return;
+
+    try {
+      // 清理此地图的旧设置
+      await LegendGroupZoomFactorManager.clearAllZoomFactors(
+        _currentMap!.title,
+      );
+
+      // 重新序列化当前状态，只保存当前存在的图例组
+      final currentGroupIds = _currentMap!.legendGroups
+          .map((g) => g.id)
+          .toSet();
+      for (final entry in _legendGroupZoomFactors.entries) {
+        if (currentGroupIds.contains(entry.key)) {
+          await LegendGroupZoomFactorManager.setZoomFactor(
+            _currentMap!.title,
+            entry.key,
+            entry.value,
+          );
+        }
+      }
+
+      debugPrint('地图 ${_currentMap!.title} 的图例组缩放因子状态已保存');
+    } catch (e) {
+      debugPrint('保存图例组缩放因子状态失败: $e');
+    }
+  }
+
   /// 同步初始化地图和响应式系统
   void _initializeMapAndReactiveSystem() async {
     setState(() => _isLoading = true);
@@ -515,6 +627,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 初始化图例组智能隐藏状态（在地图数据加载完成后）
       _initializeLegendGroupSmartHideStates();
+      
+      // 初始化图例组缩放因子状态
+      _initializeLegendGroupZoomFactors();
 
       debugPrint('地图数据加载完成: ${_currentMap!.title}');
     } catch (e) {
@@ -3037,53 +3152,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _panelStatesChanged = true;
   }
 
-  /// 构建窗口控制按钮
-  Widget _buildWindowButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required String tooltip,
-    bool isCloseButton = false,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: isCloseButton
-            ? Colors.red.withValues(alpha: 0.1)
-            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-        child: Tooltip(
-          message: tooltip,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.inverseSurface,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onInverseSurface,
-            fontSize: 12,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 36,
-            height: 36,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: isCloseButton
-                  ? Colors.red
-                  : Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   /// 构建窗口控制按钮组
   List<Widget> _buildWindowControls() {
@@ -3447,6 +3515,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                               setLegendGroupSmartHideState,
                                           getSmartHideState:
                                               getLegendGroupSmartHideState,
+                                          onZoomFactorChanged:
+                                              setLegendGroupZoomFactor,
+                                          getZoomFactor:
+                                              getLegendGroupZoomFactor,
                                           versionManager: versionAdapter!
                                               .versionManager, // 传递版本管理器
                                           onLegendDragToCanvas:

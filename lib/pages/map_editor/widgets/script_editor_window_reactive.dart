@@ -125,53 +125,7 @@ class _ReactiveScriptEditorWindowState
     });
   }
 
-  /// 构建窗口控制按钮
-  Widget _buildWindowButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required String tooltip,
-    bool isCloseButton = false,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: isCloseButton
-            ? Colors.red.withValues(alpha: 0.1)
-            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-        child: Tooltip(
-          message: tooltip,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.inverseSurface,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onInverseSurface,
-            fontSize: 12,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 36,
-            height: 36,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: isCloseButton
-                  ? Colors.red
-                  : Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   /// 构建窗口控制按钮组
 

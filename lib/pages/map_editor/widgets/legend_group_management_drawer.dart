@@ -19,6 +19,7 @@ import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 import '../../../services/notification/notification_service.dart';
 
 
+
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
   final String? mapId; // 地图ID，用于扩展设置隔离
@@ -37,6 +38,8 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final NewReactiveScriptManager scriptManager; // 新增：脚本管理器
   final Function(String, bool)? onSmartHideStateChanged;
   final bool Function(String)? getSmartHideState;
+  final Function(String, double)? onZoomFactorChanged; // 缩放因子变更回调
+  final double Function(String)? getZoomFactor; // 获取缩放因子的函数
   final ReactiveVersionManager versionManager; // 版本管理器
   final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽到画布的回调
   final VoidCallback? onDragStart; // 新增：拖拽开始回调（用于关闭抽屉）
@@ -61,6 +64,8 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     required this.scriptManager, // 新增：必传脚本管理器
     this.onSmartHideStateChanged, // 新增：智能隐藏状态变更回调
     this.getSmartHideState, // 新增：获取智能隐藏状态的函数
+    this.onZoomFactorChanged, // 缩放因子变更回调
+    this.getZoomFactor, // 获取缩放因子的函数
     required this.versionManager, // 版本管理器参数
     this.onLegendDragToCanvas, // 新增：拖拽到画布的回调
     this.onDragStart, // 新增：拖拽开始回调
@@ -136,6 +141,9 @@ class _LegendGroupManagementDrawerState
   bool get _isSmartHidingEnabled =>
       widget.getSmartHideState?.call(widget.legendGroup.id) ?? true;
 
+  // 缩放因子相关状态
+  double _currentZoomFactor = 1.0; // 默认值为1.0
+
   /// 获取或创建URL输入框控制器
   TextEditingController _getUrlController(LegendItem item) {
     if (!_urlControllers.containsKey(item.id)) {
@@ -181,6 +189,7 @@ class _LegendGroupManagementDrawerState
     // 延迟执行检查，避免在初始化期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSmartHidingStateFromExtensionSettings();
+      _loadZoomFactorFromParent();
       _checkSmartHiding();
     });
   }
@@ -192,6 +201,7 @@ class _LegendGroupManagementDrawerState
       controller.dispose();
     }
     _urlControllers.clear();
+    
     super.dispose();
   }
 
@@ -233,6 +243,7 @@ class _LegendGroupManagementDrawerState
       // 延迟执行检查，确保新图例组的智能隐藏逻辑正确应用
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
+        _loadZoomFactorFromParent();
         _checkSmartHiding();
       });
     }
@@ -248,6 +259,7 @@ class _LegendGroupManagementDrawerState
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadSmartHidingStateFromExtensionSettings();
+        _loadZoomFactorFromParent();
         _checkSmartHiding();
       });
     }
@@ -754,8 +766,6 @@ class _LegendGroupManagementDrawerState
                                     onLegendSelected: _onCachedLegendSelected,
                                     versionManager: widget.versionManager,
                                     currentLegendGroupId: widget.legendGroup.id,
-                                    onLegendDragToCanvas:
-                                        _onLegendDragToCanvas, // 使用本地方法处理拖拽
                                     onDragStart: widget.onDragStart, // 传递拖拽开始回调
                                     onDragEnd: widget.onDragEnd, // 传递拖拽结束回调
                                   ),
@@ -1865,6 +1875,37 @@ class _LegendGroupManagementDrawerState
     // 状态通过 widget.getSmartHideState 回调获取
   }
 
+  /// 从扩展设置加载缩放因子
+  /// 从父组件加载缩放因子状态
+  void _loadZoomFactorFromParent() {
+    // 缩放因子状态由地图编辑器统一管理，通过回调获取
+    final zoomFactor = widget.getZoomFactor?.call(widget.legendGroup.id) ?? 1.0;
+    
+    setState(() {
+      _currentZoomFactor = zoomFactor;
+    });
+  }
+
+  /// 通过回调保存缩放因子到父组件
+  void _saveZoomFactorToExtensionSettings(double zoomFactor) {
+    // 通过回调更新缩放因子状态，由地图编辑器统一管理和持久化
+    widget.onZoomFactorChanged?.call(widget.legendGroup.id, zoomFactor);
+    
+    setState(() {
+      _currentZoomFactor = zoomFactor;
+    });
+  }
+
+  /// 重置缩放因子为默认值
+  void _clearZoomFactorSetting() {
+    // 通过回调重置缩放因子为默认值1.0，由地图编辑器统一管理
+    widget.onZoomFactorChanged?.call(widget.legendGroup.id, 1.0);
+    
+    setState(() {
+      _currentZoomFactor = 1.0;
+    });
+  }
+
   /// 切换智能隐藏开关
   void _toggleSmartHiding(bool enabled) {
     // 通过回调更新智能隐藏状态，由地图编辑器管理
@@ -2345,106 +2386,7 @@ class _LegendGroupManagementDrawerState
   }
 
   /// 构建可折叠面板，使用与地图编辑器主页面相同的模式
-  Widget _buildCollapsiblePanel({
-    required String title,
-    required IconData icon,
-    required bool isCollapsed,
-    required VoidCallback onToggleCollapsed,
-    Widget? child,
-    List<Widget>? actions,
-    String? collapsedSubtitle, // 折叠状态下显示的附加信息
-    bool compactMode = false,
-  }) {
-    final double headerHeight = compactMode ? 40.0 : 48.0;
 
-    if (isCollapsed) {
-      return Container(
-        height: headerHeight,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: InkWell(
-          onTap: onToggleCollapsed,
-          child: Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    if (collapsedSubtitle != null &&
-                        collapsedSubtitle.isNotEmpty)
-                      Text(
-                        collapsedSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).hintColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.expand_more, size: 20),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Expanded(
-      child: Card(
-        margin: const EdgeInsets.all(4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题栏
-            Container(
-              height: headerHeight,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest
-                    .withAlpha((0.3 * 255).toInt()),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-              ),
-              child: InkWell(
-                onTap: onToggleCollapsed,
-                child: Row(
-                  children: [
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    // 动作按钮
-                    if (actions != null) ...actions,
-                    const SizedBox(width: 8),
-                    const Icon(Icons.expand_less, size: 20),
-                  ],
-                ),
-              ),
-            ),
-            // 内容区域
-            if (child != null) child,
-          ],
-        ),
-      ),
-    );
-  }
 
   /// 构建设置内容
   Widget _buildSettingsContent() {
@@ -2549,6 +2491,111 @@ class _LegendGroupManagementDrawerState
                 ),
               ),
             ],
+
+            // 缩放因子设置
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withAlpha((0.3 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.zoom_in,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '缩放因子',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      if (_currentZoomFactor != 1.0)
+                        IconButton(
+                          onPressed: _clearZoomFactorSetting,
+                          icon: const Icon(Icons.clear, size: 16),
+                          tooltip: '重置为默认值 (1.0)',
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '0.3',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: _currentZoomFactor.clamp(0.3, 3.0),
+                              min: 0.3,
+                              max: 3.0,
+                              divisions: 27, // (3.0 - 0.3) / 0.1 = 27
+                              label: _currentZoomFactor.toStringAsFixed(1),
+                              onChanged: (value) {
+                                setState(() {
+                                  _currentZoomFactor = value;
+                                });
+                              },
+                              onChangeEnd: (value) {
+                                _saveZoomFactorToExtensionSettings(value);
+                              },
+                            ),
+                          ),
+                          Text(
+                            '3.0',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '当前值: ${_currentZoomFactor.toStringAsFixed(1)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '新拖拽的图例将根据此缩放因子和当前画布缩放级别自动调整大小',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             // 标签管理
             const SizedBox(height: 16),
@@ -2692,62 +2739,5 @@ class _LegendGroupManagementDrawerState
 
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
-  }
-
-  /// 处理从缓存拖拽图例到画布
-  void _onLegendDragToCanvas(String legendPath, Offset canvasPosition) {
-    // 自动将拖拽的图例添加到当前图例组
-    _addLegendFromPath(legendPath, canvasPosition);
-  }
-
-  /// 从图例路径添加图例到当前组
-  void _addLegendFromPath(String legendPath, Offset canvasPosition) {
-    // 生成完全唯一的ID - 使用更高精度的时间戳和随机数
-    final now = DateTime.now();
-    final timestamp = now.millisecondsSinceEpoch;
-    final randomSuffix = (now.microsecond * 1000 + (timestamp % 1000))
-        .toString();
-
-    // 从路径生成legendId - 确保每次都不同
-    final pathSegments = legendPath.split('/');
-    final fileName = pathSegments.last.replaceAll('.legend', '');
-    final legendId = 'drag_${fileName}_${timestamp}_${randomSuffix}';
-    final itemId = 'item_${timestamp}_${randomSuffix}';
-
-    // 创建新的图例项
-    final newItem = LegendItem(
-      id: itemId,
-      legendPath: legendPath,
-      legendId: legendId,
-      position: canvasPosition, // 使用拖拽的位置
-      size: 1.0, // 默认大小
-      rotation: 0.0, // 默认旋转
-      opacity: 1.0, // 默认透明度
-      isVisible: true, // 默认可见
-      createdAt: now,
-    );
-
-    // 创建新的图例项列表 - 确保是新的列表实例
-    final currentItems = List<LegendItem>.from(widget.legendGroup.legendItems);
-    currentItems.add(newItem);
-
-    // 添加到当前图例组
-    final updatedGroup = widget.legendGroup.copyWith(
-      legendItems: currentItems,
-      updatedAt: now,
-    );
-
-    debugPrint('拖拽添加图例项: ID=${newItem.id}, legendId=${newItem.legendId}');
-    debugPrint('更新前图例数量: ${widget.legendGroup.legendItems.length}');
-    debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
-
-    widget.onLegendGroupUpdated(updatedGroup);
-
-    // 显示成功提示
-    context.showSuccessSnackBar(
-      '已将图例添加到 ${widget.legendGroup.name} (${updatedGroup.legendItems.length}个图例)',
-    );
-
-    debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');
   }
 }

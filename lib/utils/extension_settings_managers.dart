@@ -82,6 +82,87 @@ class LegendGroupSmartHideManager {
   }
 }
 
+/// 图例组缩放因子管理器
+/// 使用扩展设置存储每个地图的图例组缩放因子
+class LegendGroupZoomFactorManager {
+  /// 获取图例组的缩放因子
+  static double getZoomFactor(String mapId, String legendGroupId) {
+    if (!ExtensionSettingsManager.isInitialized) return 1.0;
+
+    return ExtensionSettingsManager.instance.getLegendGroupZoomFactor(
+      mapId,
+      legendGroupId,
+    );
+  }
+
+  /// 设置图例组的缩放因子
+  static Future<void> setZoomFactor(
+    String mapId,
+    String legendGroupId,
+    double zoomFactor,
+  ) async {
+    if (!ExtensionSettingsManager.isInitialized) return;
+
+    await ExtensionSettingsManager.instance.setLegendGroupZoomFactor(
+      mapId,
+      legendGroupId,
+      zoomFactor,
+    );
+
+    if (kDebugMode) {
+      debugPrint('图例组缩放因子已保存: $mapId/$legendGroupId = $zoomFactor');
+    }
+  }
+
+  /// 获取地图的所有图例组缩放因子设置
+  static Map<String, double> getAllZoomFactors(String mapId) {
+    if (!ExtensionSettingsManager.isInitialized) return {};
+
+    return ExtensionSettingsManager.instance.getAllLegendGroupZoomFactors(mapId);
+  }
+
+  /// 清除地图的所有图例组缩放因子设置
+  static Future<void> clearAllZoomFactors(String mapId) async {
+    if (!ExtensionSettingsManager.isInitialized) return;
+
+    await ExtensionSettingsManager.instance.clearLegendGroupZoomFactors(mapId);
+
+    if (kDebugMode) {
+      debugPrint('已清除地图 $mapId 的所有图例组缩放因子设置');
+    }
+  }
+
+  /// 导出缩放因子设置为JSON
+  static Map<String, dynamic> exportSettings(String mapId) {
+    final settings = getAllZoomFactors(mapId);
+    return {
+      'mapId': mapId,
+      'zoomFactorSettings': settings,
+      'exportTime': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// 从JSON导入缩放因子设置
+  static Future<void> importSettings(Map<String, dynamic> data) async {
+    if (!data.containsKey('mapId') || !data.containsKey('zoomFactorSettings')) {
+      throw ArgumentError('无效的导入数据格式');
+    }
+
+    final mapId = data['mapId'] as String;
+    final settings = data['zoomFactorSettings'] as Map<String, dynamic>;
+
+    for (final entry in settings.entries) {
+      final legendGroupId = entry.key;
+      final zoomFactor = (entry.value as num).toDouble();
+      await setZoomFactor(mapId, legendGroupId, zoomFactor);
+    }
+
+    if (kDebugMode) {
+      debugPrint('已导入地图 $mapId 的图例组缩放因子设置: ${settings.length} 项');
+    }
+  }
+}
+
 /// 画布视图设置管理器
 /// 管理用户在地图编辑时的临时视图偏好
 class CanvasViewManager {

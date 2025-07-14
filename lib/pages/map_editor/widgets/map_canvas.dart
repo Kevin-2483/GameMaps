@@ -615,6 +615,18 @@ class MapCanvasState extends State<MapCanvas> {
     widget.onLegendDragToCanvas?.call(legendPath, relativePosition);
   }
 
+  /// 获取当前画布的缩放等级
+  double getCurrentZoomLevel() {
+    try {
+      final Matrix4 transform = _transformationController.value;
+      // 使用X轴缩放作为缩放等级（通常X和Y轴缩放相同）
+      return transform.entry(0, 0);
+    } catch (e) {
+      debugPrint('获取缩放等级失败: $e，返回默认值1.0');
+      return 1.0;
+    }
+  }
+
   /// 将本地坐标转换为画布坐标，考虑 InteractiveViewer 的变换矩阵
   Offset _transformLocalToCanvasPosition(Offset localPosition) {
     try {
@@ -3049,9 +3061,9 @@ class _LayerPainter extends CustomPainter {
         .toList();
 
     // 图层元素统计
-    final nonEraserCount = sortedElements
-        .where((e) => e.type != DrawingElementType.eraser)
-        .length;
+    // final nonEraserCount = sortedElements
+    //     .where((e) => e.type != DrawingElementType.eraser)
+    //     .length;
     // debugPrint(
     //   // '图层 ${layer.id}: 总元素${sortedElements.length}, 非橡皮擦${nonEraserCount}',
     // );

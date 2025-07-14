@@ -9,6 +9,7 @@ class ExtensionSettingsKeys {
   // 图例组相关设置
   static const String legendGroupPrefix = 'legendGroup.';
   static const String legendGroupSmartHide = 'legendGroup.smartHide';
+  static const String legendGroupZoomFactor = 'legendGroup.zoomFactor';
   static const String legendGroupLastView = 'legendGroup.lastView';
 
   // 图层相关设置
@@ -85,6 +86,63 @@ class ExtensionSettingsHelper {
 
     if (kDebugMode) {
       debugPrint('扩展设置: 已清除地图 $mapId 的所有图例组智能隐藏设置');
+    }
+  }
+
+  // 图例组缩放因子设置
+
+  /// 获取图例组的缩放因子
+  double getLegendGroupZoomFactor(String mapId, String legendGroupId) {
+    final key =
+        '${ExtensionSettingsKeys.legendGroupZoomFactor}.$mapId.$legendGroupId';
+    return _provider.getExtensionSetting<double>(key, 1.0) ?? 1.0; // 默认缩放因子为1.0
+  }
+
+  /// 设置图例组的缩放因子
+  Future<void> setLegendGroupZoomFactor(
+    String mapId,
+    String legendGroupId,
+    double zoomFactor,
+  ) async {
+    final key =
+        '${ExtensionSettingsKeys.legendGroupZoomFactor}.$mapId.$legendGroupId';
+    await _provider.setExtensionSetting(key, zoomFactor);
+
+    if (kDebugMode) {
+      debugPrint('扩展设置: 地图 $mapId 的图例组 $legendGroupId 缩放因子已设置为 $zoomFactor');
+    }
+  }
+
+  /// 获取地图的所有图例组缩放因子设置
+  Map<String, double> getAllLegendGroupZoomFactors(String mapId) {
+    final prefix = '${ExtensionSettingsKeys.legendGroupZoomFactor}.$mapId.';
+    final result = <String, double>{};
+
+    for (final entry in _provider.extensionSettings.entries) {
+      if (entry.key.startsWith(prefix)) {
+        final legendGroupId = entry.key.substring(prefix.length);
+        if (entry.value is num) {
+          result[legendGroupId] = (entry.value as num).toDouble();
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /// 清除地图的所有图例组缩放因子设置
+  Future<void> clearLegendGroupZoomFactors(String mapId) async {
+    final prefix = '${ExtensionSettingsKeys.legendGroupZoomFactor}.$mapId.';
+    final keysToRemove = _provider.extensionSettings.keys
+        .where((key) => key.startsWith(prefix))
+        .toList();
+
+    for (final key in keysToRemove) {
+      await _provider.removeExtensionSetting(key);
+    }
+
+    if (kDebugMode) {
+      debugPrint('扩展设置: 已清除地图 $mapId 的所有图例组缩放因子设置');
     }
   }
 
