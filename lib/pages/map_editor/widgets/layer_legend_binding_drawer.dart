@@ -35,6 +35,33 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
   }
 
   @override
+  void didUpdateWidget(LayerLegendBindingDrawer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // 如果图层发生变化，更新选中的图例组ID
+    if (oldWidget.layer.id != widget.layer.id) {
+      setState(() {
+        _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
+      });
+    }
+    // 如果是同一个图层但图例组绑定发生了变化，也需要更新
+    else if (oldWidget.layer.legendGroupIds != widget.layer.legendGroupIds) {
+      setState(() {
+        _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
+      });
+    }
+    
+    // 如果图例组列表发生变化，触发UI重新构建
+    if (oldWidget.allLegendGroups != widget.allLegendGroups) {
+      setState(() {
+        // 检查当前选中的图例组ID是否仍然有效
+        final validGroupIds = widget.allLegendGroups.map((g) => g.id).toSet();
+        _selectedLegendGroupIds = _selectedLegendGroupIds.intersection(validGroupIds);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final userPrefs = context.watch<UserPreferencesProvider>();
     final drawerWidth = userPrefs.layout.drawerWidth;

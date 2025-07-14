@@ -4543,7 +4543,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 检查显示快捷键列表
     final showShortcutsShortcuts =
-        mapEditorPrefs.shortcuts['showShortcuts'] ?? ['Ctrl+/', 'Win+/'];
+        mapEditorPrefs.shortcuts['showShortcuts'] ?? ['/', '/'];
     if (_isAnyShortcutPressed(event, showShortcutsShortcuts)) {
       ShortcutsDialog.show(context);
       return true;

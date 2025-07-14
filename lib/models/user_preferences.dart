@@ -287,12 +287,12 @@ class MapEditorPreferences {
       radialMenuButton: 2,
       radialMenuRadius: 120.0,
       radialMenuCenterRadius: 30.0,
-      radialMenuBackgroundOpacity: 0.8,
-      radialMenuObjectOpacity: 0.9,
+      radialMenuBackgroundOpacity: 1,
+      radialMenuObjectOpacity: 1,
       radialMenuReturnDelay: 100,
       radialMenuAnimationDuration: 300,
       radialMenuSubMenuDelay: 50,
-      autoSelectLastLayerInGroup: false,
+      autoSelectLastLayerInGroup: true,
       shortcuts: {
         // 工具快捷键
         'undo': ['Ctrl+Z', 'Win+Z'],
@@ -349,7 +349,7 @@ class MapEditorPreferences {
         'selectLayer11': ['F11'],
         'selectLayer12': ['F12'],
         // 帮助快捷键
-        'showShortcuts': ['Ctrl+/', 'Win+/'],
+        'showShortcuts': ['/'],
       },
     );
   }
@@ -476,12 +476,12 @@ class LayoutPreferences {
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
       panelCollapsedStates: {
-        'drawing': false,
-        'layer': false,
-        'legend': false,
-        'stickyNote': false,
-        'script': false,
-        'sidebar': false,
+        'drawing': true,
+        'layer': true,
+        'legend': true,
+        'stickyNote': true,
+        'script': true,
+        'sidebar': true,
       },
       panelAutoCloseStates: {
         'drawing': true,
@@ -490,7 +490,7 @@ class LayoutPreferences {
         'stickyNote': true,
         'script': true,
       },
-      sidebarWidth: 300.0,
+      sidebarWidth: 400.0,
       compactMode: false,
       showTooltips: true,
       animationDuration: 300,

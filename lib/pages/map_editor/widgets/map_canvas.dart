@@ -392,28 +392,56 @@ class MapCanvasState extends State<MapCanvas> {
                       width: kCanvasWidth,
                       height: kCanvasHeight,
                       child: _effectiveDrawingTool == DrawingElementType.text
-                          ? GestureDetector(
-                              // 文本工具使用点击手势
-                              onTapDown: (details) {
-                                final position = _getCanvasPosition(
-                                  details.localPosition,
-                                );
-                                _handleTextToolTap(position);
-                              },
-                              behavior: HitTestBehavior.translucent,
+                          ? Listener(
+                              // 监听触摸板的两指拖动事件
+                              onPointerPanZoomStart: _onTrackpadPanZoomStart,
+                              onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
+                              onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
+                              child: GestureDetector(
+                                // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                                supportedDevices: {
+                                  PointerDeviceKind.touch,
+                                  PointerDeviceKind.mouse,
+                                  PointerDeviceKind.stylus,
+                                  PointerDeviceKind.invertedStylus,
+                                  // 不包含 PointerDeviceKind.trackpad
+                                },
+                                // 文本工具使用点击手势
+                                onTapDown: (details) {
+                                  final position = _getCanvasPosition(
+                                    details.localPosition,
+                                  );
+                                  _handleTextToolTap(position);
+                                },
+                                behavior: HitTestBehavior.translucent,
+                              ),
                             )
-                          : GestureDetector(
-                              // 其他工具使用拖拽手势和点击手势
-                              onTapDown: (details) {
-                                final position = _getCanvasPosition(
-                                  details.localPosition,
-                                );
-                                _handleDrawingToolTap(position);
-                              },
-                              onPanStart: _onDrawingStart,
-                              onPanUpdate: _onDrawingUpdate,
-                              onPanEnd: _onDrawingEnd,
-                              behavior: HitTestBehavior.translucent,
+                          : Listener(
+                              // 监听触摸板的两指拖动事件
+                              onPointerPanZoomStart: _onTrackpadPanZoomStart,
+                              onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
+                              onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
+                              child: GestureDetector(
+                                // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                                supportedDevices: {
+                                  PointerDeviceKind.touch,
+                                  PointerDeviceKind.mouse,
+                                  PointerDeviceKind.stylus,
+                                  PointerDeviceKind.invertedStylus,
+                                  // 不包含 PointerDeviceKind.trackpad
+                                },
+                                // 其他工具使用拖拽手势和点击手势
+                                onTapDown: (details) {
+                                  final position = _getCanvasPosition(
+                                    details.localPosition,
+                                  );
+                                  _handleDrawingToolTap(position);
+                                },
+                                onPanStart: _onDrawingStart,
+                                onPanUpdate: _onDrawingUpdate,
+                                onPanEnd: _onDrawingEnd,
+                                behavior: HitTestBehavior.translucent,
+                              ),
                             ),
                     ), // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)

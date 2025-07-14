@@ -2671,7 +2671,7 @@ class _LegendGroupManagementDrawerState
 
       // 通知用户清理完成
       context.showSuccessSnackBar(
-        '已清理目录 "$folderPath" 下的图例缓存（步进型，已排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
+        '已清理目录 "$folderPath" 下的图例缓存（排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
       );
 
       debugPrint(
