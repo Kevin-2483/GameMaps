@@ -154,7 +154,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '版本 ${_packageInfo?.version ?? '1.0.0'} (${_packageInfo?.buildNumber ?? '1'})',
+                        '版本 ${_packageInfo?.version ?? '1.1.0'} (${_packageInfo?.buildNumber ?? '1'})',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -423,7 +423,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     showLicensePage(
       context: context,
       applicationName: _packageInfo?.appName ?? 'R6BOX',
-      applicationVersion: _packageInfo?.version ?? '1.0.0',
+      applicationVersion: _packageInfo?.version ?? '1.1.0',
       applicationIcon: Icon(
         Icons.videogame_asset,
         size: 64,

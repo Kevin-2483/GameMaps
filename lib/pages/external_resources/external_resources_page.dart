@@ -1072,7 +1072,7 @@ class _ExternalResourcesPageContentState
               child: Text(
                 '{\n'
                 '  "name": "测试资源包",\n'
-                '  "version": "1.0.0",\n'
+                '  "version": "1.1.0",\n'
                 '  "description": "用于测试外部资源上传功能的示例资源包",\n'
                 '  "author": "测试用户",\n'
                 '  "created_at": "2024-01-15",\n'
@@ -1084,7 +1084,7 @@ class _ExternalResourcesPageContentState
                 '  },\n'
                 '  "tags": ["测试", "示例", "资源包"],\n'
                 '  "requirements": {\n'
-                '    "min_app_version": "1.0.0"\n'
+                '    "min_app_version": "1.1.0"\n'
                 '  }\n'
                 '}\n',
                 style: TextStyle(

@@ -416,3 +416,17 @@ class UpdateTimers extends MapDataEvent {
 class ClearAllTimers extends MapDataEvent {
   const ClearAllTimers();
 }
+
+/// 设置图例组手动关闭标记
+class SetLegendGroupManuallyClosedFlag extends MapDataEvent {
+  final String groupId;
+  final bool isManuallyClosed;
+
+  const SetLegendGroupManuallyClosedFlag({
+    required this.groupId,
+    required this.isManuallyClosed,
+  });
+
+  @override
+  List<Object?> get props => [groupId, isManuallyClosed];
+}

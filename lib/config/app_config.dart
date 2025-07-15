@@ -72,7 +72,7 @@ class BuildConfig {
 
   const BuildConfig({
     this.appName = 'R6Box',
-    this.version = '1.0.0',
+    this.version = '1.1.0',
     this.buildNumber = '1',
     this.enableLogging = true,
   });

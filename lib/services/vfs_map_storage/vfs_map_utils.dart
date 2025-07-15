@@ -210,7 +210,7 @@ class VfsMapBackupService {
         throw Exception('地图不存在: $mapId');
       } // 导出地图数据为JSON
       final backupData = {
-        'version': '1.0.0',
+        'version': '1.1.0',
         'mapId': mapId,
         'createdAt': DateTime.now().toIso8601String(),
         'map': map.toJson(),
@@ -253,7 +253,7 @@ class VfsMapBackupService {
       // TODO: 扫描地图中的所有资产引用
       // 创建自包含的地图包
       final bundle = <String, dynamic>{
-        'version': '1.0.0',
+        'version': '1.1.0',
         'map': map.toJson(),
         'assets': <String, String>{}, // 资产数据的Base64编码
       }; // 添加资产数据

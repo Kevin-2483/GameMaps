@@ -222,7 +222,7 @@ class VfsImportExportService {
   final VfsStorageService _storageService = VfsStorageService();
 
   /// 导出数据格式版本
-  static const String _exportVersion = '1.0.0';
+  static const String _exportVersion = '1.1.0';
 
   /// 导出所有VFS数据到JSON文件
   Future<String?> exportToFile({

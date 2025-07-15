@@ -53,6 +53,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     on<SetLayerVisibility>(_onSetLayerVisibility);
     on<SetLayerOpacity>(_onSetLayerOpacity);
     on<SetLegendGroupVisibility>(_onSetLegendGroupVisibility);
+    on<SetLegendGroupManuallyClosedFlag>(_onSetLegendGroupManuallyClosedFlag);
 
     // 便签事件处理器
     on<AddStickyNote>(_onAddStickyNote);
@@ -892,6 +893,31 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       );
       add(UpdateLegendGroup(legendGroup: updatedGroup));
     }
+  }
+
+  /// 设置图例组手动关闭标记
+  Future<void> _onSetLegendGroupManuallyClosedFlag(
+    SetLegendGroupManuallyClosedFlag event,
+    Emitter<MapDataState> emit,
+  ) async {
+    if (state is! MapDataLoaded) return;
+
+    final currentState = state as MapDataLoaded;
+    final updatedFlags = Map<String, bool>.from(currentState.manuallyClosedLegendGroups);
+    
+    if (event.isManuallyClosed) {
+      updatedFlags[event.groupId] = true;
+    } else {
+      updatedFlags.remove(event.groupId);
+    }
+
+    final newState = currentState.copyWith(
+      manuallyClosedLegendGroups: updatedFlags,
+      lastModified: DateTime.now(),
+    );
+
+    emit(newState);
+    _notifyDataChangeListeners(newState);
   }
 
   /// 保存到历史记录

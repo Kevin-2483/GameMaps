@@ -29,6 +29,7 @@ class MapDataLoaded extends MapDataState {
   final List<TimerData> timers;
   final DateTime lastModified;
   final Map<String, dynamic> metadata;
+  final Map<String, bool> manuallyClosedLegendGroups; // 手动关闭的图例组标记
 
   const MapDataLoaded({
     required this.mapItem,
@@ -37,6 +38,7 @@ class MapDataLoaded extends MapDataState {
     this.timers = const [],
     required this.lastModified,
     this.metadata = const {},
+    this.manuallyClosedLegendGroups = const {},
   });
 
   @override
@@ -47,6 +49,7 @@ class MapDataLoaded extends MapDataState {
     timers,
     lastModified,
     metadata,
+    manuallyClosedLegendGroups,
   ];
 
   /// 创建副本，用于状态更新
@@ -57,6 +60,7 @@ class MapDataLoaded extends MapDataState {
     List<TimerData>? timers,
     DateTime? lastModified,
     Map<String, dynamic>? metadata,
+    Map<String, bool>? manuallyClosedLegendGroups,
   }) {
     return MapDataLoaded(
       mapItem: mapItem ?? this.mapItem,
@@ -65,6 +69,7 @@ class MapDataLoaded extends MapDataState {
       timers: timers ?? this.timers,
       lastModified: lastModified ?? this.lastModified,
       metadata: metadata ?? this.metadata,
+      manuallyClosedLegendGroups: manuallyClosedLegendGroups ?? this.manuallyClosedLegendGroups,
     );
   }
 

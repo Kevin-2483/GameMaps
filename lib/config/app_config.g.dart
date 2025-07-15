@@ -34,7 +34,7 @@ Map<String, dynamic> _$PlatformConfigToJson(PlatformConfig instance) =>
 
 BuildConfig _$BuildConfigFromJson(Map<String, dynamic> json) => BuildConfig(
       appName: json['appName'] as String? ?? 'R6Box',
-      version: json['version'] as String? ?? '1.0.0',
+      version: json['version'] as String? ?? '1.1.0',
       buildNumber: json['buildNumber'] as String? ?? '1',
       enableLogging: json['enableLogging'] as bool? ?? true,
     );

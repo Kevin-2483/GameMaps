@@ -18,6 +18,9 @@ import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 import '../../../services/notification/notification_service.dart';
 import '../../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
+import '../../../data/map_data_bloc.dart'; // 导入MapDataBloc
+import '../../../data/map_data_event.dart'; // 导入MapDataEvent
+import '../../../data/map_data_state.dart'; // 导入MapDataState
 
 
 
@@ -48,6 +51,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final Function(bool isFocused)? onInputFieldFocusChanged; // 输入框焦点状态变化回调
   final String? defaultExpandedPanel; // 默认展开的面板：'settings', 'legendList', 'vfsTree', 'cacheDisplay'
   final String? absoluteMapPath; // 地图的绝对路径，用于图例路径占位符处理
+  final MapDataBloc? mapDataBloc; // MapDataBloc实例，用于管理手动关闭状态
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -76,6 +80,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onInputFieldFocusChanged, // 输入框焦点状态变化回调
     this.defaultExpandedPanel, // 默认展开的面板
     this.absoluteMapPath, // 地图的绝对路径
+    this.mapDataBloc, // MapDataBloc实例
   });
 
   @override
@@ -227,6 +232,9 @@ class _LegendGroupManagementDrawerState
 
   // 缩放因子相关状态
   double _currentZoomFactor = 1.0; // 默认值为1.0
+  
+  // 手动操作标记，防止智能隐藏逻辑覆盖用户操作
+  bool _isManualOperation = false;
 
   /// 获取或创建URL输入框控制器
   TextEditingController _getUrlController(LegendItem item) {
@@ -1578,21 +1586,29 @@ class _LegendGroupManagementDrawerState
   void _applySmartHidingLogic() {
     if (!_isSmartHidingEnabled) return; // 只有启用智能隐藏才应用逻辑
     if (!mounted) return; // 确保组件仍然挂载
+    if (_isManualOperation) return; // 如果正在进行手动操作，跳过智能隐藏逻辑
 
     final shouldHide = _shouldSmartHideGroup();
     final shouldShow = _shouldSmartShowGroup();
+    
+    // 从MapDataBloc状态中获取手动关闭标记
+    bool isManuallyClosedGroup = false;
+    if (widget.mapDataBloc != null && widget.mapDataBloc!.state is MapDataLoaded) {
+      final state = widget.mapDataBloc!.state as MapDataLoaded;
+      isManuallyClosedGroup = state.manuallyClosedLegendGroups[widget.legendGroup.id] ?? false;
+    }
 
     // 双向智能控制：
-    // 1. 当所有绑定图层都隐藏时，自动隐藏图例组
-    if (shouldHide && widget.legendGroup.isVisible) {
+    // 1. 当所有绑定图层都隐藏时，自动隐藏图例组（但不覆盖手动关闭的状态）
+    if (shouldHide && widget.legendGroup.isVisible && !isManuallyClosedGroup) {
       final updatedGroup = widget.legendGroup.copyWith(
         isVisible: false,
         updatedAt: DateTime.now(),
       );
       widget.onLegendGroupUpdated(updatedGroup);
     }
-    // 2. 当有绑定图层重新显示时，自动显示图例组
-    else if (shouldShow && !widget.legendGroup.isVisible) {
+    // 2. 当有绑定图层重新显示时，自动显示图例组（但不覆盖手动关闭的状态）
+    else if (shouldShow && !widget.legendGroup.isVisible && !isManuallyClosedGroup) {
       final updatedGroup = widget.legendGroup.copyWith(
         isVisible: true,
         updatedAt: DateTime.now(),
@@ -2572,11 +2588,33 @@ class _LegendGroupManagementDrawerState
                     size: 18,
                   ),
                   onPressed: () {
+                    final newVisibility = !widget.legendGroup.isVisible;
+                    
+                    // 先设置本地标记，防止智能隐藏逻辑立即覆盖
+                    _isManualOperation = true;
+                    
+                    // 通过MapDataBloc设置手动关闭标记
+                    if (widget.mapDataBloc != null) {
+                      widget.mapDataBloc!.add(
+                        SetLegendGroupManuallyClosedFlag(
+                          groupId: widget.legendGroup.id,
+                          isManuallyClosed: !newVisibility,
+                        ),
+                      );
+                    }
+                    
                     final updatedGroup = widget.legendGroup.copyWith(
-                      isVisible: !widget.legendGroup.isVisible,
+                      isVisible: newVisibility,
                       updatedAt: DateTime.now(),
                     );
                     widget.onLegendGroupUpdated(updatedGroup);
+                    
+                    // 延迟重置手动操作标记
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (mounted) {
+                        _isManualOperation = false;
+                      }
+                    });
                   },
                 ),
                 const SizedBox(width: 8),
