@@ -357,7 +357,7 @@ class _LayerPanelState extends State<LayerPanel> {
         _buildLayerGroup(context, group, groupIndex, hasLegendBelow: true),
         // 显示绑定的图例组
         ...boundLegendGroups.map((legendGroup) => Container(
-          margin: const EdgeInsets.only(top: 2, bottom: 8),
+          margin: const EdgeInsets.only(top: 2, bottom: 0),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
