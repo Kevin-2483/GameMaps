@@ -174,8 +174,8 @@ void drawArrow(Canvas canvas, Offset start, Offset end, Paint paint) {
   // Draw main line
   canvas.drawLine(start, end, paint);
 
-  // Draw arrowhead
-  const arrowLength = 10.0;
+  // Draw arrowhead - 箭头头部长度根据线条宽度自动调整
+  final arrowLength = math.max(8.0, paint.strokeWidth * 3.0); // 最小8像素，或线宽的3倍
   const arrowAngle = 0.5;
 
   final direction = (end - start).direction;

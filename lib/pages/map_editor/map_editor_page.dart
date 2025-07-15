@@ -175,7 +175,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
   LegendGroup? _currentLegendGroupForManagement;
-  String? _initialSelectedLegendItemId; // 初始选中的图例项ID  // 撤销/重做历史记录管理（已迁移到响应式系统）
+  String? _initialSelectedLegendItemId; // 初始选中的图例项ID
+  String? _defaultExpandedPanel; // 默认展开的面板  // 撤销/重做历史记录管理（已迁移到响应式系统）
   // final List<MapItem> _undoHistory = [];
   // final List<MapItem> _redoHistory = [];
 
@@ -2375,6 +2376,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _showLegendGroupManagementDrawer(
     LegendGroup legendGroup, {
     String? selectedLegendItemId,
+    String? defaultExpandedPanel,
   }) {
     setState(() {
       // 关闭其他抽屉
@@ -2386,6 +2388,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 打开图例组管理抽屉
       _currentLegendGroupForManagement = legendGroup;
       _initialSelectedLegendItemId = selectedLegendItemId;
+      _defaultExpandedPanel = defaultExpandedPanel;
       _isLegendGroupManagementDrawerOpen = true;
     });
   } // 处理图例项双击事件
@@ -2407,12 +2410,34 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     }
 
-    // 如果找到了包含该图例项的图例组，打开管理抽屉并选中该图例项
+    // 如果找到了包含该图例项的图例组
     if (containingGroup != null) {
-      _showLegendGroupManagementDrawer(
-        containingGroup,
-        selectedLegendItemId: item.id,
-      );
+      // 检查抽屉是否已经打开且是同一个图例组
+      if (_isLegendGroupManagementDrawerOpen && 
+          _currentLegendGroupForManagement?.id == containingGroup.id) {
+        // 抽屉已经打开且是同一个图例组，强制更新选中项和展开状态
+        // debugPrint('双击图例：抽屉已打开，更新选中项 ${item.id}');
+        setState(() {
+          // 先清空再设置，确保触发变化
+          _initialSelectedLegendItemId = null;
+          _defaultExpandedPanel = null;
+        });
+        // 延迟设置新值，确保触发 didUpdateWidget
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _initialSelectedLegendItemId = item.id;
+            _defaultExpandedPanel = 'legendList';
+          });
+        });
+      } else {
+        // 抽屉未打开或是不同的图例组，正常打开抽屉
+        // debugPrint('双击图例：打开新抽屉，图例组 ${containingGroup.id}，选中项 ${item.id}');
+        _showLegendGroupManagementDrawer(
+          containingGroup,
+          selectedLegendItemId: item.id,
+          defaultExpandedPanel: 'legendList',
+        );
+      }
     }
   }
 
@@ -2431,6 +2456,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _isLegendGroupManagementDrawerOpen = false;
       _currentLegendGroupForManagement = null;
       _initialSelectedLegendItemId = null;
+      _defaultExpandedPanel = null;
     });
   }
 
@@ -2807,22 +2833,87 @@ class _MapEditorContentState extends State<_MapEditorContent>
       return; // 已经是当前版本
     }
     try {
+      // 保存当前的选择状态
+      final previousSelectedLayerId = _selectedLayer?.id;
+      final previousSelectedLayerGroupIds = _selectedLayerGroup?.map((layer) => layer.id).toList();
+      final previousSelectedElementId = _selectedElementId;
+      final previousSelectedStickyNoteId = _selectedStickyNote?.id;
+      
       // 使用响应式版本管理切换版本
       switchVersion(versionId).then((_) {
         setState(() {
           // 响应式系统会自动管理状态
 
-          // 重置选择状态
+          // 尝试恢复选择状态
           if (_currentMap != null && _currentMap!.layers.isNotEmpty) {
-            _selectedLayer = _currentMap!.layers.first;
+            // 尝试恢复选中的图层
+            if (previousSelectedLayerId != null) {
+              final matchingLayer = _currentMap!.layers
+                  .where((layer) => layer.id == previousSelectedLayerId)
+                  .firstOrNull;
+              if (matchingLayer != null) {
+                _selectedLayer = matchingLayer;
+              } else {
+                // 如果找不到之前选中的图层，选择第一个图层
+                _selectedLayer = _currentMap!.layers.first;
+              }
+            } else {
+              _selectedLayer = _currentMap!.layers.first;
+            }
+            
+            // 尝试恢复选中的图层组
+            if (previousSelectedLayerGroupIds != null && previousSelectedLayerGroupIds.isNotEmpty) {
+              final matchingLayers = <MapLayer>[];
+              for (final layerId in previousSelectedLayerGroupIds) {
+                final matchingLayer = _currentMap!.layers
+                    .where((layer) => layer.id == layerId)
+                    .firstOrNull;
+                if (matchingLayer != null) {
+                  matchingLayers.add(matchingLayer);
+                }
+              }
+              if (matchingLayers.isNotEmpty) {
+                _selectedLayerGroup = matchingLayers;
+                // 不清除单个图层选择，保持图层和图层组可以同时存在的状态
+              } else {
+                // 如果图层组无法恢复，清除图层组选择
+                _selectedLayerGroup = null;
+              }
+            } else {
+              // 如果之前没有选中图层组，确保清除图层组选择
+              _selectedLayerGroup = null;
+            }
           } else {
             _selectedLayer = null;
+            _selectedLayerGroup = null;
           }
-          _selectedLayerGroup = null;
-          _selectedElementId = null;
+          
+          // 尝试恢复选中的元素
+          if (previousSelectedElementId != null && _selectedLayer != null) {
+            final hasElement = _selectedLayer!.elements
+                .any((element) => element.id == previousSelectedElementId);
+            if (hasElement) {
+              _selectedElementId = previousSelectedElementId;
+            } else {
+              _selectedElementId = null;
+            }
+          } else {
+            _selectedElementId = null;
+          }
 
-          // 重置便签选择状态
-          _selectedStickyNote = null;
+          // 尝试恢复选中的便签
+          if (previousSelectedStickyNoteId != null && _currentMap != null) {
+            final matchingStickyNote = _currentMap!.stickyNotes
+                .where((note) => note.id == previousSelectedStickyNoteId)
+                .firstOrNull;
+            if (matchingStickyNote != null) {
+              _selectedStickyNote = matchingStickyNote;
+            } else {
+              _selectedStickyNote = null;
+            }
+          } else {
+            _selectedStickyNote = null;
+          }
 
           // 更新显示顺序
           _updateDisplayOrderAfterLayerChange();
@@ -2845,6 +2936,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     try {
+      // 记录删除前的当前版本ID
+      final previousVersionId = currentVersionId;
+      
       // 使用响应式版本管理删除版本
       await deleteVersion(versionId);
 
@@ -2876,6 +2970,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
         debugPrint('删除版本元数据失败: $e');
         // 元数据删除失败不影响主流程
       }
+
+      // 检查当前版本是否已经改变（如果删除的是当前版本）
+      final newCurrentVersionId = currentVersionId;
+      if (previousVersionId == versionId && newCurrentVersionId != null && newCurrentVersionId != versionId) {
+        // 当前版本已经自动切换到其他版本，需要加载新版本的数据到画布
+        // debugPrint('当前版本已自动切换到: $newCurrentVersionId，正在加载画布数据...');
+        await switchVersion(newCurrentVersionId);
+      }
+      
       setState(() {
         // 响应式系统会自动管理状态
       });
@@ -3531,6 +3634,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                           onDragStart: _handleDragStart, // 添加这行
                                           onDragEnd: _handleDragEnd, // 添加这行
                                           onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
+                                          defaultExpandedPanel: _defaultExpandedPanel, // 传递默认展开的面板
                                         );
                                       },
                                     ),
@@ -4844,6 +4948,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedLayer = null;
     });
     _prioritizeLayerAndGroupDisplay();
+    
+    // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
+    _autoSwitchToFirstBoundLegendGroup();
   }
 
   /// 根据索引选择图层

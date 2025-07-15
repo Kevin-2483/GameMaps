@@ -45,6 +45,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final VoidCallback? onDragStart; // 新增：拖拽开始回调（用于关闭抽屉）
   final VoidCallback? onDragEnd; // 新增：拖拽结束回调（用于重新打开抽屉）
   final Function(bool isFocused)? onInputFieldFocusChanged; // 输入框焦点状态变化回调
+  final String? defaultExpandedPanel; // 默认展开的面板：'settings', 'legendList', 'vfsTree', 'cacheDisplay'
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -71,6 +72,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onDragStart, // 新增：拖拽开始回调
     this.onDragEnd, // 新增：拖拽结束回调
     this.onInputFieldFocusChanged, // 输入框焦点状态变化回调
+    this.defaultExpandedPanel, // 默认展开的面板
   });
 
   @override
@@ -86,7 +88,7 @@ class _LegendGroupManagementDrawerState
   bool _isSettingsExpanded = false; // 设置选项是否展开
   bool _isLegendListExpanded = false; // 图例列表是否展开
   bool _isVfsTreeExpanded = false; // VFS目录树是否展开
-  bool _isCacheDisplayExpanded = true; // 缓存显示是否展开
+  bool _isCacheDisplayExpanded = false; // 缓存显示是否展开
 
   /// 切换折叠面板状态，实现互斥展开（一次只能展开一个面板）
   void _togglePanel(String panelName) {
@@ -122,6 +124,8 @@ class _LegendGroupManagementDrawerState
             break;
           case 'legendList':
             _isLegendListExpanded = true;
+            // 如果展开的是图例列表，自动滚动到选中项
+            _scrollToSelectedLegendItem();
             break;
           case 'vfsTree':
             _isVfsTreeExpanded = true;
@@ -134,8 +138,85 @@ class _LegendGroupManagementDrawerState
     });
   }
 
+  /// 强制展开指定面板（不切换，总是展开）
+  void _expandPanel(String panelName) {
+    // debugPrint('_expandPanel 被调用: $panelName');
+    // debugPrint('当前面板状态: legendList=$_isLegendListExpanded, vfsTree=$_isVfsTreeExpanded, cacheDisplay=$_isCacheDisplayExpanded');
+    
+    setState(() {
+      // 先关闭所有面板
+      _isSettingsExpanded = false;
+      _isLegendListExpanded = false;
+      _isVfsTreeExpanded = false;
+      _isCacheDisplayExpanded = false;
+
+      // 展开指定面板
+      switch (panelName) {
+        case 'settings':
+          _isSettingsExpanded = true;
+          break;
+        case 'legendList':
+          _isLegendListExpanded = true;
+          // debugPrint('设置 _isLegendListExpanded = true');
+          // 如果展开的是图例列表，自动滚动到选中项
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // debugPrint('延迟执行滚动到选中项: $_selectedLegendItemId');
+            _scrollToSelectedLegendItem();
+          });
+          break;
+        case 'vfsTree':
+          _isVfsTreeExpanded = true;
+          break;
+        case 'cacheDisplay':
+          _isCacheDisplayExpanded = true;
+          break;
+      }
+    });
+    
+    // debugPrint('_expandPanel 完成，新状态: legendList=$_isLegendListExpanded, vfsTree=$_isVfsTreeExpanded, cacheDisplay=$_isCacheDisplayExpanded');
+  }
+
+  /// 滚动到选中的图例项
+  void _scrollToSelectedLegendItem() {
+    if (!_legendListScrollController.hasClients) {
+      return;
+    }
+
+    // 如果有选中的图例项，滚动到该项
+    if (_selectedLegendItemId != null) {
+      final selectedIndex = widget.legendGroup.legendItems
+          .indexWhere((item) => item.id == _selectedLegendItemId);
+      
+      if (selectedIndex != -1) {
+        const itemHeight = 400.0;
+        final scrollOffset = selectedIndex * itemHeight;
+        
+        // 确保滚动位置不超过最大滚动范围
+        final maxScrollExtent = _legendListScrollController.position.maxScrollExtent;
+        final targetOffset = scrollOffset > maxScrollExtent ? maxScrollExtent : scrollOffset;
+        
+        _legendListScrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        return;
+      }
+    }
+
+    // 如果没有选中项或找不到选中项，滚动到顶部
+    _legendListScrollController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   // 新增：URL输入框控制器映射，用于管理每个图例项的输入框状态
   final Map<String, TextEditingController> _urlControllers = {};
+
+  // 图例列表滚动控制器
+  final ScrollController _legendListScrollController = ScrollController();
 
   // 通过getter访问智能隐藏状态
   bool get _isSmartHidingEnabled =>
@@ -184,6 +265,9 @@ class _LegendGroupManagementDrawerState
     // 设置初始选中的图例项
     _selectedLegendItemId = widget.initialSelectedLegendItemId;
 
+    // 根据传入的参数设置默认展开的面板
+    _initializeDefaultExpandedPanel();
+
     // 版本管理器已通过widget传入，无需额外设置
 
     // 延迟执行检查，避免在初始化期间调用setState
@@ -194,6 +278,36 @@ class _LegendGroupManagementDrawerState
     });
   }
 
+  /// 初始化默认展开的面板
+  void _initializeDefaultExpandedPanel() {
+    // 先关闭所有面板
+    _isSettingsExpanded = false;
+    _isLegendListExpanded = false;
+    _isVfsTreeExpanded = false;
+    _isCacheDisplayExpanded = false;
+
+    // 根据传入的参数展开指定面板，默认展开缓存显示
+     switch (widget.defaultExpandedPanel) {
+       case 'settings':
+         _isSettingsExpanded = true;
+         break;
+       case 'legendList':
+         _isLegendListExpanded = true;
+         // 如果默认展开图例列表，延迟滚动到选中项
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+           _scrollToSelectedLegendItem();
+         });
+         break;
+       case 'vfsTree':
+         _isVfsTreeExpanded = true;
+         break;
+       case 'cacheDisplay':
+       default:
+         _isCacheDisplayExpanded = true;
+         break;
+     }
+  }
+
   @override
   void dispose() {
     // 清理所有URL输入框控制器
@@ -201,6 +315,9 @@ class _LegendGroupManagementDrawerState
       controller.dispose();
     }
     _urlControllers.clear();
+    
+    // 清理滚动控制器
+    _legendListScrollController.dispose();
     
     super.dispose();
   }
@@ -299,6 +416,28 @@ class _LegendGroupManagementDrawerState
             _selectedLegendItemId = widget.selectedElementId;
           });
         }
+      }
+    }
+
+    // 检查初始选中图例项ID是否发生变化
+    if (oldWidget.initialSelectedLegendItemId != widget.initialSelectedLegendItemId) {
+      // debugPrint('didUpdateWidget: initialSelectedLegendItemId 变化: ${oldWidget.initialSelectedLegendItemId} -> ${widget.initialSelectedLegendItemId}');
+      if (widget.initialSelectedLegendItemId != null) {
+        setState(() {
+          _selectedLegendItemId = widget.initialSelectedLegendItemId;
+        });
+      }
+    }
+
+    // 检查默认展开面板是否发生变化
+    if (oldWidget.defaultExpandedPanel != widget.defaultExpandedPanel) {
+      // debugPrint('didUpdateWidget: defaultExpandedPanel 变化: ${oldWidget.defaultExpandedPanel} -> ${widget.defaultExpandedPanel}');
+      if (widget.defaultExpandedPanel == 'legendList') {
+        // 延迟调用，避免在didUpdateWidget中直接调用setState
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // debugPrint('执行 _expandPanel(legendList)');
+          _expandPanel('legendList');
+        });
       }
     }
   }
@@ -2666,6 +2805,7 @@ class _LegendGroupManagementDrawerState
                 ),
               )
             : ListView.builder(
+                controller: _legendListScrollController,
                 itemCount: widget.legendGroup.legendItems.length,
                 itemBuilder: (context, index) {
                   return _buildLegendItemTile(
