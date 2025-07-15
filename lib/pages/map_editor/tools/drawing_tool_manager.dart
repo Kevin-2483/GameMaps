@@ -406,6 +406,66 @@ class DrawingToolManager {
     _clearDrawingState();
   }
 
+  /// 7.1 显示带预设字体大小的文本输入对话框
+  Future<void> showTextInputDialogWithSize(
+    Offset position,
+    MapLayer selectedLayer,
+    double presetFontSize,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+  ) async {
+    if (context == null) return;
+
+    final textController = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context!,
+      builder: (context) => AlertDialog(
+        title: Text('添加文本 (字体大小: ${presetFontSize.round()}px)'),
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(
+            labelText: '文本内容',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                Navigator.of(context).pop(textController.text);
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      createTextElement(
+        result,
+        presetFontSize,
+        position,
+        selectedLayer,
+        effectiveColor,
+        effectiveStrokeWidth,
+        effectiveDensity,
+        effectiveCurvature,
+      );
+    }
+
+    _clearDrawingState();
+  }
+
   /// 11. 在便签中创建文本元素
   void createStickyNoteTextElement(
     String text,
@@ -521,6 +581,66 @@ class DrawingToolManager {
       createStickyNoteTextElement(
         result['text'],
         result['fontSize'],
+        position,
+        targetStickyNote,
+        effectiveColor,
+        effectiveStrokeWidth,
+        effectiveDensity,
+        effectiveCurvature,
+        onStickyNoteUpdated,
+      );
+    }
+  }
+
+  /// 12.1 显示带预设字体大小的便签文本输入对话框
+  Future<void> showStickyNoteTextInputDialogWithSize(
+    Offset position,
+    StickyNote targetStickyNote,
+    double presetFontSize,
+    Color effectiveColor,
+    double effectiveStrokeWidth,
+    double effectiveDensity,
+    double effectiveCurvature,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) async {
+    if (context == null) return;
+
+    final textController = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context!,
+      builder: (context) => AlertDialog(
+        title: Text('添加文本到便签 (字体大小: ${presetFontSize.round()}px)'),
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(
+            labelText: '文本内容',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                Navigator.of(context).pop(textController.text);
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      createStickyNoteTextElement(
+        result,
+        presetFontSize,
         position,
         targetStickyNote,
         effectiveColor,

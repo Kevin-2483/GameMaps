@@ -2148,7 +2148,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
 
       // 显示成功消息
-      _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
+      // _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
     } catch (e) {
       _showErrorSnackBar('批量更新图层失败: ${e.toString()}');
     }

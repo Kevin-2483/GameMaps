@@ -47,15 +47,17 @@ class ElementInteractionManager {
     switch (element.type) {
       case DrawingElementType.text:
         if (element.points.isEmpty) return false;
-        final textPosition = Offset(
+        final fontSize = element.fontSize ?? 16.0;
+        final anchorPoint = Offset(
           element.points[0].dx * size.width,
           element.points[0].dy * size.height,
         );
-        // 为文本创建一个点击区域
-        final hitArea = Rect.fromCenter(
-          center: textPosition,
-          width: 100, // 假设文本宽度
-          height: element.fontSize ?? 16.0,
+        // 创建正方形点击区域，调整位置使其包围文本
+        final hitArea = Rect.fromLTWH(
+          anchorPoint.dx - fontSize / 2,
+          anchorPoint.dy - fontSize / 2,
+          fontSize,
+          fontSize,
         );
         return hitArea.contains(canvasPosition);
 
@@ -111,9 +113,100 @@ class ElementInteractionManager {
     MapDrawingElement element, {
     double? handleSize,
   }) {
+    const size = Size(kCanvasWidth, kCanvasHeight);
+    final effectiveHandleSize = handleSize ?? 8.0;
+    final handles = <Rect>[];
+
+    // 文本元素特殊处理
+    if (element.type == DrawingElementType.text) {
+      if (element.points.isEmpty) return [];
+      
+      final fontSize = element.fontSize ?? 16.0;
+      final anchorPoint = Offset(
+        element.points[0].dx * size.width,
+        element.points[0].dy * size.height,
+      );
+      
+      // 创建正方形边界框，调整位置使其包围文本
+      final boundingRect = Rect.fromLTWH(
+        anchorPoint.dx - fontSize / 2,
+        anchorPoint.dy - fontSize / 2,
+        fontSize,
+        fontSize,
+      );
+      
+      // 按照ResizeHandle枚举顺序添加调整柄
+      // topLeft
+      handles.add(
+        Rect.fromCenter(
+          center: boundingRect.topLeft,
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // topRight
+      handles.add(
+        Rect.fromCenter(
+          center: boundingRect.topRight,
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // bottomLeft
+      handles.add(
+        Rect.fromCenter(
+          center: boundingRect.bottomLeft,
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // bottomRight
+      handles.add(
+        Rect.fromCenter(
+          center: boundingRect.bottomRight,
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // topCenter
+      handles.add(
+        Rect.fromCenter(
+          center: Offset(boundingRect.center.dx, boundingRect.top),
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // bottomCenter
+      handles.add(
+        Rect.fromCenter(
+          center: Offset(boundingRect.center.dx, boundingRect.bottom),
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // centerLeft
+      handles.add(
+        Rect.fromCenter(
+          center: Offset(boundingRect.left, boundingRect.center.dy),
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      // centerRight
+      handles.add(
+        Rect.fromCenter(
+          center: Offset(boundingRect.right, boundingRect.center.dy),
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+      
+      return handles;
+    }
+
+    // 其他元素的处理
     if (element.points.length < 2) return [];
 
-    const size = Size(kCanvasWidth, kCanvasHeight);
     final start = Offset(
       element.points[0].dx * size.width,
       element.points[0].dy * size.height,
@@ -123,9 +216,6 @@ class ElementInteractionManager {
       element.points[1].dy * size.height,
     );
     final rect = Rect.fromPoints(start, end);
-
-    final effectiveHandleSize = handleSize ?? 8.0;
-    final handles = <Rect>[];
 
     // 四个角的控制柄
     handles.add(
@@ -198,8 +288,40 @@ class ElementInteractionManager {
   }) {
     final handles = getResizeHandles(element, handleSize: handleSize);
 
+    // Debug output for text elements
+    if (element.type == DrawingElementType.text) {
+      print('Text element hit test:');
+      print('  Canvas position: $canvasPosition');
+      print('  Element points: ${element.points}');
+      print('  Font size: ${element.fontSize}');
+      print('  Number of handles: ${handles.length}');
+      for (int i = 0; i < handles.length; i++) {
+        final handle = handles[i];
+        final expandedHandle = Rect.fromCenter(
+          center: handle.center,
+          width: handle.width * 1.5,
+          height: handle.height * 1.5,
+        );
+        print('  Handle $i (${ResizeHandle.values[i]}): ${handle.center} -> expanded: $expandedHandle');
+        if (expandedHandle.contains(canvasPosition)) {
+          print('  -> HIT!');
+        }
+      }
+    }
+
+    // 增加检测区域，使调整柄更容易被点击
+    const double hitAreaMultiplier = 1.5; // 检测区域放大1.5倍
+    
     for (int i = 0; i < handles.length; i++) {
-      if (handles[i].contains(canvasPosition)) {
+      final handle = handles[i];
+      // 创建一个放大的检测区域
+      final expandedHandle = Rect.fromCenter(
+        center: handle.center,
+        width: handle.width * hitAreaMultiplier,
+        height: handle.height * hitAreaMultiplier,
+      );
+      
+      if (expandedHandle.contains(canvasPosition)) {
         return ResizeHandle.values[i];
       }
     }
@@ -346,7 +468,24 @@ class ElementInteractionManager {
     final element = selectedLayer.elements
         .where((e) => e.id == elementId)
         .first;
-    if (element.points.length >= 2) {
+    
+    // 文本元素特殊处理
+    if (element.type == DrawingElementType.text) {
+      if (element.points.isNotEmpty) {
+        const size = Size(kCanvasWidth, kCanvasHeight);
+        final fontSize = element.fontSize ?? 16.0;
+        final anchorPoint = Offset(
+          element.points[0].dx * size.width,
+          element.points[0].dy * size.height,
+        );
+        _originalElementBounds = Rect.fromLTWH(
+          anchorPoint.dx - fontSize / 2,
+          anchorPoint.dy - fontSize / 2,
+          fontSize,
+          fontSize,
+        );
+      }
+    } else if (element.points.length >= 2) {
       const size = Size(kCanvasWidth, kCanvasHeight);
       final start = Offset(
         element.points[0].dx * size.width,
@@ -378,13 +517,38 @@ class ElementInteractionManager {
 
     final currentPosition = getCanvasPosition(details.localPosition);
     final delta = currentPosition - _resizeStartPosition!;
+    
+    final element = selectedLayer.elements
+        .where((e) => e.id == elementId)
+        .first;
 
-    // 根据控制柄类型计算新的边界
-    final newBounds = calculateNewBounds(
-      _originalElementBounds!,
-      _activeResizeHandle!,
-      delta,
-    );
+    Rect newBounds;
+    
+    // 文本元素特殊处理
+    if (element.type == DrawingElementType.text) {
+      // 调整字体大小（保持正方形）
+      newBounds = calculateNewBounds(
+        _originalElementBounds!,
+        _activeResizeHandle!,
+        delta,
+      );
+      
+      // 确保文本框保持正方形
+      final size = (newBounds.width + newBounds.height) / 2;
+      newBounds = Rect.fromLTWH(
+        newBounds.left,
+        newBounds.top,
+        size,
+        size,
+      );
+    } else {
+      // 其他元素的处理
+      newBounds = calculateNewBounds(
+        _originalElementBounds!,
+        _activeResizeHandle!,
+        delta,
+      );
+    }
 
     // 更新元素大小
     updateElementSize(elementId, newBounds, selectedLayer);
@@ -442,7 +606,7 @@ class ElementInteractionManager {
     }
 
     // 确保最小尺寸
-    const minSize = 0.0;
+    const minSize = 8.0; // 文本最小字体大小
     if (right - left < minSize) {
       if (handle == ResizeHandle.centerLeft ||
           handle == ResizeHandle.topLeft ||
@@ -481,19 +645,39 @@ class ElementInteractionManager {
       selectedLayer.elements,
     );
 
-    // 转换为标准化坐标
-    final normalizedStart = Offset(
-      (newBounds.left / kCanvasWidth).clamp(0.0, 1.0),
-      (newBounds.top / kCanvasHeight).clamp(0.0, 1.0),
-    );
-    final normalizedEnd = Offset(
-      (newBounds.right / kCanvasWidth).clamp(0.0, 1.0),
-      (newBounds.bottom / kCanvasHeight).clamp(0.0, 1.0),
-    );
+    MapDrawingElement updatedElement;
+    
+    // 文本元素特殊处理
+     if (element.type == DrawingElementType.text) {
+       // 对于文本元素，更新锚点位置和字体大小
+       // 锚点应该是边界框中心对应的位置
+       final normalizedAnchor = Offset(
+         ((newBounds.left + newBounds.width / 2) / kCanvasWidth).clamp(0.0, 1.0),
+         ((newBounds.top + newBounds.height / 2) / kCanvasHeight).clamp(0.0, 1.0),
+       );
+       
+       // 字体大小等于选择框的高度（只限制最小值）
+       final newFontSize = newBounds.height.clamp(8.0, double.infinity);
+       
+       updatedElement = element.copyWith(
+         points: [normalizedAnchor],
+         fontSize: newFontSize,
+       );
+     } else {
+      // 其他元素的处理
+      final normalizedStart = Offset(
+        (newBounds.left / kCanvasWidth).clamp(0.0, 1.0),
+        (newBounds.top / kCanvasHeight).clamp(0.0, 1.0),
+      );
+      final normalizedEnd = Offset(
+        (newBounds.right / kCanvasWidth).clamp(0.0, 1.0),
+        (newBounds.bottom / kCanvasHeight).clamp(0.0, 1.0),
+      );
 
-    final updatedElement = element.copyWith(
-      points: [normalizedStart, normalizedEnd],
-    );
+      updatedElement = element.copyWith(
+        points: [normalizedStart, normalizedEnd],
+      );
+    }
 
     updatedElements[elementIndex] = updatedElement;
     final updatedLayer = selectedLayer.copyWith(elements: updatedElements);

@@ -34,6 +34,9 @@ class NotificationQueueManager {
   /// 位置到通知ID列表的映射
   final Map<NotificationPosition, List<String>> _positionToIds = {};
 
+  /// 用于生成唯一ID的计数器
+  static int _idCounter = 0;
+
   /// 每个位置的总数通知器
   final Map<NotificationPosition, ValueNotifier<int>?> _totalInStackNotifiers =
       {};
@@ -93,10 +96,9 @@ class NotificationQueueManager {
     final effectiveAllowStacking =
         allowStacking ?? _config.defaultAllowStacking;
 
+    final notificationId = id ?? '${DateTime.now().millisecondsSinceEpoch}_${_generateUniqueCounter()}';
     final notification = NotificationMessage(
-      id:
-          id ??
-          DateTime.now().millisecondsSinceEpoch.toString(), // 🔑 使用自定义ID或生成默认ID
+      id: notificationId, // 🔑 使用自定义ID或生成默认ID
       message: message,
       type: type,
       position: effectivePosition,
@@ -520,6 +522,11 @@ class NotificationQueueManager {
   int getQueueLength(NotificationPosition position) {
     return (_queues[position]?.length ?? 0) +
         (_currentStacks[position]?.length ?? 0);
+  }
+
+  /// 生成唯一计数器
+  static int _generateUniqueCounter() {
+    return ++_idCounter;
   }
 
   /// 清理资源

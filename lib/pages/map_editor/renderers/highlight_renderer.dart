@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 // import 'dart:ui' as ui;
 // import 'dart:typed_data';
 import 'dart:math' as math;
@@ -174,6 +174,12 @@ class HighlightRenderer {
     Size size, {
     double? handleSize,
   }) {
+    // 文本元素特殊处理
+    if (element.type == DrawingElementType.text) {
+      _drawTextElementBounds(canvas, element, size, handleSize: handleSize);
+      return;
+    }
+
     // 获取所有调整手柄的位置
     final handles = getResizeHandles(element, size, handleSize: handleSize);
 
@@ -203,6 +209,94 @@ class HighlightRenderer {
 
       // 蓝色填充圆（略小）
       canvas.drawCircle(center, radius, fillPaint);
+    }
+  }
+  /// 绘制文本元素的边界框、中心十字线和调整柄
+  static void _drawTextElementBounds(
+    Canvas canvas,
+    MapDrawingElement element,
+    Size size, {
+    double? handleSize,
+  }) {
+    if (element.points.isEmpty) return;
+
+    final fontSize = element.fontSize ?? 16.0;
+    final anchorPoint = Offset(
+      element.points[0].dx * size.width,
+      element.points[0].dy * size.height,
+    );
+
+    // 创建正方形边界框，调整位置使其包围文本
+    // 与ElementInteractionManager中的计算保持一致
+    final boundingRect = Rect.fromLTWH(
+      anchorPoint.dx - fontSize / 2,
+      anchorPoint.dy - fontSize / 2,
+      fontSize,
+      fontSize,
+    );
+
+    // 绘制边界框
+    final boundsPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    canvas.drawRect(boundingRect, boundsPaint);
+
+    // --- 新增代码：绘制中心十字线 ---
+    final crosshairPaint = Paint()
+      ..color = Colors.blue
+          .withOpacity(0.5) // 使用半透明蓝色
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5; // 绘制一条细线
+
+    // 绘制水平线
+    canvas.drawLine(
+      Offset(boundingRect.left, boundingRect.center.dy),
+      Offset(boundingRect.right, boundingRect.center.dy),
+      crosshairPaint,
+    );
+
+    // 绘制垂直线
+    canvas.drawLine(
+      Offset(boundingRect.center.dx, boundingRect.top),
+      Offset(boundingRect.center.dx, boundingRect.bottom),
+      crosshairPaint,
+    );
+    // --- 新增代码结束 ---
+
+    // 绘制调整柄
+    final effectiveHandleSize = handleSize ?? 8.0;
+    final radius = effectiveHandleSize / 4.0;
+    final borderRadius = radius + 0.5;
+
+    // 外边框画笔（白色边框）
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    // 内部填充画笔（蓝色）
+    final fillPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    // 按照ResizeHandle枚举顺序绘制8个调整柄
+    final handlePositions = [
+      boundingRect.topLeft, // topLeft
+      boundingRect.topRight, // topRight
+      boundingRect.bottomLeft, // bottomLeft
+      boundingRect.bottomRight, // bottomRight
+      Offset(boundingRect.center.dx, boundingRect.top), // topCenter
+      Offset(boundingRect.center.dx, boundingRect.bottom), // bottomCenter
+      Offset(boundingRect.left, boundingRect.center.dy), // centerLeft
+      Offset(boundingRect.right, boundingRect.center.dy), // centerRight
+    ];
+
+    for (final position in handlePositions) {
+      // 白色边框圆（稍大）
+      canvas.drawCircle(position, borderRadius, borderPaint);
+      // 蓝色填充圆（略小）
+      canvas.drawCircle(position, radius, fillPaint);
     }
   }
 

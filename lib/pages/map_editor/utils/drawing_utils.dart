@@ -1,4 +1,4 @@
-﻿// drawing_utils.dart - 绘制工具函数库
+// drawing_utils.dart - 绘制工具函数库
 // 从 map_canvas.dart 中提取的通用绘制工具函数
 
 import 'package:flutter/material.dart';

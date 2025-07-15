@@ -259,10 +259,11 @@ class MapCanvasState extends State<MapCanvas> {
     // 清除元素选择
     widget.onElementSelected(null);
 
-    // // 清除便签选择
-    // if (widget.selectedStickyNote != null) {
-    //   widget.onStickyNoteSelected?.call(null);
-    // }
+    // 清除便签选择（只有在使用绘制工具时才清除，选取工具时不清除）
+    if (widget.selectedStickyNote != null && 
+        _effectiveDrawingTool == null ) {
+      widget.onStickyNoteSelected?.call(null);
+    }
   }
 
   @override
@@ -375,7 +376,10 @@ class MapCanvasState extends State<MapCanvas> {
                               return const SizedBox.shrink();
                             }
                             return CustomPaint(
-                              painter: _SelectionPainter(selectionRect),
+                              painter: _SelectionPainter(
+                                selectionRect,
+                                isTextTool: _effectiveDrawingTool == DrawingElementType.text,
+                              ),
                               size: const Size(kCanvasWidth, kCanvasHeight),
                             );
                           },
@@ -391,61 +395,33 @@ class MapCanvasState extends State<MapCanvas> {
                       top: 0,
                       width: kCanvasWidth,
                       height: kCanvasHeight,
-                      child: _effectiveDrawingTool == DrawingElementType.text
-                          ? Listener(
-                              // 监听触摸板的两指拖动事件
-                              onPointerPanZoomStart: _onTrackpadPanZoomStart,
-                              onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
-                              onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
-                              child: GestureDetector(
-                                // 排除触摸板设备，避免与PointerPanZoom事件冲突
-                                supportedDevices: {
-                                  PointerDeviceKind.touch,
-                                  PointerDeviceKind.mouse,
-                                  PointerDeviceKind.stylus,
-                                  PointerDeviceKind.invertedStylus,
-                                  // 不包含 PointerDeviceKind.trackpad
-                                },
-                                // 文本工具使用点击手势
-                                onTapDown: (details) {
-                                  final position = _getCanvasPosition(
-                                    details.localPosition,
-                                  );
-                                  _handleTextToolTap(position);
-                                },
-                                onPanStart: _onElementInteractionPanStart,
-                                onPanUpdate: _onElementInteractionPanUpdate,
-                                onPanEnd: _onElementInteractionPanEnd,
-                                behavior: HitTestBehavior.translucent,
-                              ),
-                            )
-                          : Listener(
-                              // 监听触摸板的两指拖动事件
-                              onPointerPanZoomStart: _onTrackpadPanZoomStart,
-                              onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
-                              onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
-                              child: GestureDetector(
-                                // 排除触摸板设备，避免与PointerPanZoom事件冲突
-                                supportedDevices: {
-                                  PointerDeviceKind.touch,
-                                  PointerDeviceKind.mouse,
-                                  PointerDeviceKind.stylus,
-                                  PointerDeviceKind.invertedStylus,
-                                  // 不包含 PointerDeviceKind.trackpad
-                                },
-                                // 其他工具使用拖拽手势和点击手势
-                                onTapDown: (details) {
-                                  final position = _getCanvasPosition(
-                                    details.localPosition,
-                                  );
-                                  _handleDrawingToolTap(position);
-                                },
-                                onPanStart: _onDrawingStart,
-                                onPanUpdate: _onDrawingUpdate,
-                                onPanEnd: _onDrawingEnd,
-                                behavior: HitTestBehavior.translucent,
-                              ),
-                            ),
+                      child: Listener(
+                        // 监听触摸板的两指拖动事件
+                        onPointerPanZoomStart: _onTrackpadPanZoomStart,
+                        onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
+                        onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
+                        child: GestureDetector(
+                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                          supportedDevices: {
+                            PointerDeviceKind.touch,
+                            PointerDeviceKind.mouse,
+                            PointerDeviceKind.stylus,
+                            PointerDeviceKind.invertedStylus,
+                            // 不包含 PointerDeviceKind.trackpad
+                          },
+                          // 绘制工具使用拖拽手势和点击手势
+                          onTapDown: (details) {
+                            final position = _getCanvasPosition(
+                              details.localPosition,
+                            );
+                            _handleDrawingToolTap(position);
+                          },
+                          onPanStart: _onDrawingStart,
+                          onPanUpdate: _onDrawingUpdate,
+                          onPanEnd: _onDrawingEnd,
+                          behavior: HitTestBehavior.translucent,
+                        ),
+                      ),
                     ), // Touch handler for element interaction - 当没有绘制工具选中时
                   if (_effectiveDrawingTool == null)
                     Positioned(
@@ -1147,8 +1123,30 @@ class MapCanvasState extends State<MapCanvas> {
     if (widget.selectedElementId != null) {
       // 如果当前有选中的元素
       if (hitElementId == null || hitElementId != widget.selectedElementId) {
-        // 如果点击的是空白区域或者其他元素，取消当前元素的选中
-        widget.onElementSelected.call(null);
+        // 如果点击的是空白区域或者其他元素，需要先检查是否点击了调整柄
+        final selectedElement = widget.selectedLayer?.elements
+            .where((e) => e.id == widget.selectedElementId)
+            .firstOrNull;
+
+        bool isResizeHandleHit = false;
+        if (selectedElement != null) {
+          final userPrefsProvider = Provider.of<UserPreferencesProvider>(
+            context,
+            listen: false,
+          );
+          final handleSize = userPrefsProvider.tools.handleSize;
+          final resizeHandle = _elementInteractionManager.getHitResizeHandle(
+            canvasPosition,
+            selectedElement,
+            handleSize: handleSize,
+          );
+          isResizeHandleHit = resizeHandle != null;
+        }
+
+        // 只有在没有点击调整柄的情况下才取消选中
+        if (!isResizeHandleHit) {
+          widget.onElementSelected.call(null);
+        }
       }
       // 如果点击的是当前选中的元素，保持选中状态（不做任何操作）
     }
@@ -1415,13 +1413,26 @@ class MapCanvasState extends State<MapCanvas> {
         note.size.height * kCanvasHeight,
       );
 
-      // 创建便签的矩形区域
-      final noteRect = Rect.fromLTWH(
-        notePosition.dx,
-        notePosition.dy,
-        noteSize.width,
-        noteSize.height,
-      );
+      // 如果便签是折叠状态，只检测标题栏区域
+      final Rect noteRect;
+      if (note.isCollapsed) {
+        // 折叠状态下只检测标题栏区域（高度约36px）
+        const double titleBarHeight = 36.0;
+        noteRect = Rect.fromLTWH(
+          notePosition.dx,
+          notePosition.dy,
+          noteSize.width,
+          titleBarHeight,
+        );
+      } else {
+        // 展开状态下检测整个便签区域
+        noteRect = Rect.fromLTWH(
+          notePosition.dx,
+          notePosition.dy,
+          noteSize.width,
+          noteSize.height,
+        );
+      }
 
       // 检查点击位置是否在便签区域内
       if (noteRect.contains(canvasPosition)) {
@@ -1724,6 +1735,12 @@ class MapCanvasState extends State<MapCanvas> {
   void _endSelectionDrag() {
     _isCreatingSelection = false;
     _selectionStartPosition = null;
+
+    // 如果是文本工具且有选区，处理文本创建
+    if (_effectiveDrawingTool == DrawingElementType.text && _selectionRect != null) {
+      _handleTextToolSelection(_selectionRect!);
+      return;
+    }
 
     // 检查选区大小，如果太小就清除
     if (_selectionRect != null) {
@@ -2097,7 +2114,7 @@ class MapCanvasState extends State<MapCanvas> {
       return;
     }
 
-    // 检测元素拖拽和调整大小
+    // 优先级1: 如果选中了元素且命中了调整柄，则开始调整
     if (widget.selectedElementId != null) {
       final selectedElement = widget.selectedLayer?.elements
           .where((e) => e.id == widget.selectedElementId)
@@ -2126,7 +2143,7 @@ class MapCanvasState extends State<MapCanvas> {
           return;
         }
 
-        // 检查是否拖拽选中元素
+        // 优先级2: 如果选中了元素且拖动元素内，则处理移动
         if (_elementInteractionManager.isPointInElement(
           canvasPosition,
           selectedElement,
@@ -2140,6 +2157,12 @@ class MapCanvasState extends State<MapCanvas> {
           return;
         }
       }
+    }
+
+    // 如果是文本工具，启动选区拖拽
+    if (_effectiveDrawingTool == DrawingElementType.text) {
+      _startSelectionDrag(canvasPosition);
+      return;
     }
 
     // 开始绘制时清除选区
@@ -2240,6 +2263,12 @@ class MapCanvasState extends State<MapCanvas> {
         widget.selectedLayer!,
         _getCanvasPosition,
       );
+      return;
+    }
+
+    // 如果是文本工具且正在创建选区，更新选区
+    if (_effectiveDrawingTool == DrawingElementType.text && _isCreatingSelection) {
+      _updateSelectionDrag(details);
       return;
     }
 
@@ -2360,6 +2389,12 @@ class MapCanvasState extends State<MapCanvas> {
         _elementInteractionManager.resizingElementId!,
         details,
       );
+      return;
+    }
+
+    // 如果是文本工具且正在创建选区，结束选区
+    if (_effectiveDrawingTool == DrawingElementType.text && _isCreatingSelection) {
+      _endSelectionDrag();
       return;
     }
 
@@ -2809,7 +2844,40 @@ class MapCanvasState extends State<MapCanvas> {
 
   /// 处理其他绘制工具的点击事件
   void _handleDrawingToolTap(Offset canvasPosition) {
-    clearSelection();
+    // 如果此时选中了元素，检查是否命中了调整柄
+    if (widget.selectedElementId != null) {
+      final selectedElement = widget.selectedLayer?.elements
+          .where((e) => e.id == widget.selectedElementId)
+          .firstOrNull;
+
+      if (selectedElement != null) {
+        // 检查是否点击了调整柄
+        final userPrefsProvider = Provider.of<UserPreferencesProvider>(
+          context,
+          listen: false,
+        );
+        final handleSize = userPrefsProvider.tools.handleSize;
+        final resizeHandle = _elementInteractionManager.getHitResizeHandle(
+          canvasPosition,
+          selectedElement,
+          handleSize: handleSize,
+        );
+        if (resizeHandle != null) {
+          // 命中了调整柄，不清除选择，开始调整
+          return;
+        }
+
+        // 检查是否点击了选中元素内部
+        if (_elementInteractionManager.isPointInElement(
+          canvasPosition,
+          selectedElement,
+        )) {
+          // 点击了选中元素内部，不清除选择，处理移动
+          return;
+        }
+      }
+    }
+
     // 优先检测便签点击（包括标题栏）
     final hitStickyNote = _getHitStickyNote(canvasPosition);
     if (hitStickyNote != null) {
@@ -2843,6 +2911,9 @@ class MapCanvasState extends State<MapCanvas> {
         return;
       }
     }
+
+    // 如果命中了空白，清除选择并开始绘制
+    clearSelection();
 
     // 如果没有点击便签特殊区域，不做任何处理
     // 让拖拽手势来处理绘制操作
@@ -2951,18 +3022,89 @@ class MapCanvasState extends State<MapCanvas> {
 
     return contentAreaRect.contains(canvasPosition);
   }
+
+  /// 处理文本工具的选区完成
+  void _handleTextToolSelection(Rect selectionRect) {
+    // 计算字体大小（使用选区高度）
+    final fontSize = selectionRect.height.abs();
+    
+    // 使用左上角作为文本位置
+    final textPosition = Offset(
+      math.min(selectionRect.left, selectionRect.right),
+      math.min(selectionRect.top, selectionRect.bottom),
+    );
+
+    // 清除选区
+    clearSelection();
+
+    // 首先检查是否在选中的便签内
+    if (widget.selectedStickyNote != null) {
+      final hitStickyNote = _getHitStickyNote(textPosition);
+      if (hitStickyNote != null &&
+          hitStickyNote.id == widget.selectedStickyNote!.id) {
+        // 在选中的便签内，检查是否在内容区域
+        if (_isInStickyNoteContentArea(
+          textPosition,
+          widget.selectedStickyNote!,
+        )) {
+          // 在便签内容区域，创建便签文本元素
+          _drawingToolManager.showStickyNoteTextInputDialogWithSize(
+            textPosition,
+            widget.selectedStickyNote!,
+            fontSize,
+            _effectiveColor,
+            _effectiveStrokeWidth,
+            _effectiveDensity,
+            _effectiveCurvature,
+            widget.onStickyNoteUpdated!,
+          );
+          return;
+        }
+      }
+    }
+
+    // 如果不在便签内容区域，且有选中的图层，则在图层上创建文本
+    if (widget.selectedLayer != null) {
+      _drawingToolManager.showTextInputDialogWithSize(
+        textPosition,
+        widget.selectedLayer!,
+        fontSize,
+        _effectiveColor,
+        _effectiveStrokeWidth,
+        _effectiveDensity,
+        _effectiveCurvature,
+      );
+    }
+  }
 }
 
 /// 选区绘制器
 class _SelectionPainter extends CustomPainter {
   final Rect? selectionRect;
 
-  _SelectionPainter(this.selectionRect);
+  final bool isTextTool;
+
+  _SelectionPainter(this.selectionRect, {this.isTextTool = false});
   @override
   void paint(Canvas canvas, Size size) {
     if (selectionRect == null) return;
 
-    BackgroundRenderer.drawSelection(canvas, selectionRect!);
+    if (isTextTool) {
+      // 为文本工具使用红色选区
+      final paint = Paint()
+        ..color = Colors.red.withValues(alpha: 0.2)
+        ..style = PaintingStyle.fill;
+      
+      final borderPaint = Paint()
+        ..color = Colors.red
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      
+      canvas.drawRect(selectionRect!, paint);
+      canvas.drawRect(selectionRect!, borderPaint);
+    } else {
+      BackgroundRenderer.drawSelection(canvas, selectionRect!);
+    }
   }
 
   @override
