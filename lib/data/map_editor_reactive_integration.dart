@@ -50,7 +50,7 @@ class MapEditorReactiveIntegration with ThrottleMixin {
   MapEditorIntegrationAdapter get adapter => _adapter;
 
   /// 初始化响应式系统
-  Future<void> initialize() async {
+  Future<void> initialize({String? mapAbsolutePath}) async {
     if (_isInitialized) return;
 
     debugPrint('初始化地图编辑器响应式系统'); // 1. 创建VFS地图服务
@@ -60,11 +60,12 @@ class MapEditorReactiveIntegration with ThrottleMixin {
     // 3. 创建新的响应式脚本管理器
     _newScriptManager = NewReactiveScriptManager(mapDataBloc: _mapDataBloc);
 
-    // 4. 创建集成适配器
+    // 4. 创建集成适配器（传递地图绝对路径）
     _adapter = MapEditorIntegrationAdapter(
       mapDataBloc: _mapDataBloc,
       scriptManager: _newScriptManager,
       mapService: _mapService,
+      mapAbsolutePath: mapAbsolutePath, // 传递地图绝对路径
     );
 
     // 5. 初始化脚本管理器
@@ -149,8 +150,8 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   }
 
   /// 初始化响应式系统
-  Future<void> initializeReactiveSystem() async {
-    await reactiveIntegration.initialize();
+  Future<void> initializeReactiveSystem({String? mapAbsolutePath}) async {
+    await reactiveIntegration.initialize(mapAbsolutePath: mapAbsolutePath);
   }
 
   /// 加载地图到响应式系统

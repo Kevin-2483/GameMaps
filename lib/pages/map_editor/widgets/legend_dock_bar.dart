@@ -3,7 +3,8 @@ import 'package:jovial_svg/jovial_svg.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
 import '../../../models/legend_item.dart' as legend_db;
-import '../../../services/legend_cache_manager.dart';
+import '../../../services/legend_session_manager.dart';
+
 
 /// 浮动图例dock栏组件
 /// 显示当前选中图层组或整个地图使用的图例以及数量
@@ -12,6 +13,7 @@ class LegendDockBar extends StatefulWidget {
   final List<MapLayer>? selectedLayerGroup; // 当前选中的图层组
   final MapLayer? selectedLayer; // 当前选中的图层
   final bool isVisible; // 是否显示dock栏
+  final LegendSessionManager? legendSessionManager; // 图例会话管理器
 
   const LegendDockBar({
     super.key,
@@ -19,6 +21,7 @@ class LegendDockBar extends StatefulWidget {
     this.selectedLayerGroup,
     this.selectedLayer,
     this.isVisible = true,
+    this.legendSessionManager,
   });
 
   @override
@@ -26,7 +29,7 @@ class LegendDockBar extends StatefulWidget {
 }
 
 class _LegendDockBarState extends State<LegendDockBar> {
-  final LegendCacheManager _legendCacheManager = LegendCacheManager();
+  late final LegendSessionManager _legendSessionManager;
   Map<String, int> _legendCounts = {}; // 图例路径 -> 数量
   Map<String, legend_db.LegendItem?> _legendItems = {}; // 图例路径 -> 图例数据
   bool _isLoading = false;
@@ -34,6 +37,8 @@ class _LegendDockBarState extends State<LegendDockBar> {
   @override
   void initState() {
     super.initState();
+    // 使用传入的图例会话管理器，如果没有则创建新实例
+    _legendSessionManager = widget.legendSessionManager ?? LegendSessionManager();
     _updateLegendData();
   }
 
@@ -89,30 +94,16 @@ class _LegendDockBarState extends State<LegendDockBar> {
           final legendPath = legendItem.legendPath;
           legendCounts[legendPath] = (legendCounts[legendPath] ?? 0) + 1;
           
-          // 从缓存管理器获取图例数据（如果还没有加载）
+          // 从图例会话管理器获取图例数据
           if (!legendItems.containsKey(legendPath)) {
             try {
-              // 从缓存管理器获取图例数据
-              final cachedLegends = _legendCacheManager.getAllCachedLegends();
-              if (cachedLegends.contains(legendPath)) {
-                final allCacheItems = _legendCacheManager.getAllCacheItems();
-                final cachedItem = allCacheItems[legendPath];
-                if (cachedItem != null && cachedItem.state == LegendLoadingState.loaded) {
-                  legendItems[legendPath] = cachedItem.legendData;
-                } else {
-                  // 异步加载图例数据
-                  _legendCacheManager.getLegendData(legendPath).then((loadedItem) {
-                    if (mounted && loadedItem != null) {
-                      setState(() {
-                        _legendItems[legendPath] = loadedItem;
-                      });
-                    }
-                  });
-                  legendItems[legendPath] = null;
-                }
+              // 首先尝试从会话中获取已加载的图例数据
+              final sessionLegendData = _legendSessionManager.getLegendData(legendPath);
+              if (sessionLegendData != null) {
+                legendItems[legendPath] = sessionLegendData;
               } else {
-                // 异步加载图例数据
-                _legendCacheManager.getLegendData(legendPath).then((loadedItem) {
+                // 如果会话中没有，异步加载图例数据
+                _legendSessionManager.loadLegend(legendPath).then((loadedItem) {
                   if (mounted && loadedItem != null) {
                     setState(() {
                       _legendItems[legendPath] = loadedItem;

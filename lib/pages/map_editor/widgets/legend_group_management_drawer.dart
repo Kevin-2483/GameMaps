@@ -17,6 +17,7 @@ import '../../../data/new_reactive_script_manager.dart'; // 导入新的响应�
 import 'vfs_directory_tree_display.dart'; // 导入VFS目录树显示组件
 import 'cached_legends_display.dart'; // 导入缓存图例显示组件
 import '../../../services/notification/notification_service.dart';
+import '../../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 
 
 
@@ -46,6 +47,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   final VoidCallback? onDragEnd; // 新增：拖拽结束回调（用于重新打开抽屉）
   final Function(bool isFocused)? onInputFieldFocusChanged; // 输入框焦点状态变化回调
   final String? defaultExpandedPanel; // 默认展开的面板：'settings', 'legendList', 'vfsTree', 'cacheDisplay'
+  final String? absoluteMapPath; // 地图的绝对路径，用于图例路径占位符处理
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -73,6 +75,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.onDragEnd, // 新增：拖拽结束回调
     this.onInputFieldFocusChanged, // 输入框焦点状态变化回调
     this.defaultExpandedPanel, // 默认展开的面板
+    this.absoluteMapPath, // 地图的绝对路径
   });
 
   @override
@@ -1368,7 +1371,9 @@ class _LegendGroupManagementDrawerState
     final bool isScript = url != null && url.startsWith('script://');
     final bool isVfs =
         url != null &&
-        (url.startsWith('indexeddb://') || url.contains('.legend'));
+        (url.startsWith('indexeddb://') || 
+         url.startsWith('{{MAP_DIR}}') || 
+         url.contains('.legend'));
     final bool isHttp =
         url != null &&
         (url.startsWith('http://') || url.startsWith('https://'));
@@ -1495,37 +1500,35 @@ class _LegendGroupManagementDrawerState
 
     try {
       final legendService = LegendVfsService();
-
-      // 处理完整的VFS路径
-      String actualPath = legendPath;
-
-      // 如果是完整的VFS路径，需要提取相对路径部分
-      if (legendPath.startsWith('indexeddb://')) {
-        // 格式: indexeddb://r6box/legends/[folderPath/]title.legend
-        final uri = Uri.parse(legendPath);
-        final pathSegments = uri.pathSegments;
-
-        // pathSegments 应该是 ['legends', ...folderPath, 'title.legend']
-        if (pathSegments.length >= 2 && pathSegments[0] == 'legends') {
-          // 移除 'legends' 前缀，剩下的就是相对路径
-          actualPath = pathSegments.skip(1).join('/');
-        }
-      }
-
-      // 从相对路径解析图例标题和文件夹路径
-      final pathParts = actualPath.split('/');
-      if (pathParts.isEmpty) return null;
-
-      final fileName = pathParts.last;
-      final title = fileName.replaceAll('.legend', '');
-      final folderPath = pathParts.length > 1
-          ? pathParts.sublist(0, pathParts.length - 1).join('/')
-          : null;
-
-      debugPrint(
-        '加载图例: title=$title, folderPath=$folderPath, 原始路径=$legendPath',
+      
+      // 处理占位符路径，转换为实际路径
+      final actualPath = LegendPathResolver.convertToActualPath(
+        legendPath, 
+        widget.absoluteMapPath,
       );
-      return await legendService.getLegend(title, folderPath);
+      debugPrint('图例路径转换: $legendPath -> $actualPath');
+
+      // 直接使用绝对路径，让legendService处理路径解析
+      if (actualPath.startsWith('indexeddb://')) {
+        // 传递完整的VFS路径给legendService
+        debugPrint('加载图例: 绝对路径=$actualPath');
+        return await legendService.getLegendFromAbsolutePath(actualPath);
+      } else {
+        // 兼容相对路径的旧逻辑
+        final pathParts = actualPath.split('/');
+        if (pathParts.isEmpty) return null;
+
+        final fileName = pathParts.last;
+        final title = fileName.replaceAll('.legend', '');
+        final folderPath = pathParts.length > 1
+            ? pathParts.sublist(0, pathParts.length - 1).join('/')
+            : null;
+
+        debugPrint(
+          '加载图例: title=$title, folderPath=$folderPath, 相对路径=$actualPath',
+        );
+        return await legendService.getLegend(title, folderPath);
+      }
     } catch (e) {
       debugPrint('载入图例失败: $legendPath, 错误: $e');
       return null;
@@ -1884,9 +1887,15 @@ class _LegendGroupManagementDrawerState
                       final timestamp = DateTime.now().microsecondsSinceEpoch;
                       final legendId = 'path_${fileName}_${timestamp}';
 
+                      // 使用LegendPathResolver处理路径占位符
+                      final storagePath = LegendPathResolver.convertToStoragePath(
+                        selectedLegendPath,
+                        widget.absoluteMapPath,
+                      );
+
                       final newItem = LegendItem(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        legendPath: selectedLegendPath,
+                        legendPath: storagePath,
                         legendId: legendId, // 生成向后兼容的legendId
                         position: Offset(positionX, positionY),
                         size: size,
@@ -2105,6 +2114,16 @@ class _LegendGroupManagementDrawerState
         allowDirectorySelection: false,
         selectionType: SelectionType.filesOnly,
       );
+      
+      if (selectedFile != null) {
+        // 自动转换为占位符路径（如果是地图子目录）
+        final convertedPath = LegendPathResolver.convertToStoragePath(
+          selectedFile,
+          widget.absoluteMapPath,
+        );
+        return convertedPath;
+      }
+      
       return selectedFile;
     } catch (e) {
       if (mounted) {
@@ -2120,6 +2139,13 @@ class _LegendGroupManagementDrawerState
       if (url.startsWith('indexeddb://')) {
         // VFS协议链接，使用VFS文件打开服务
         await VfsFileOpenerService.openFile(context, url);
+      } else if (url.startsWith('{{MAP_DIR}}')) {
+        // 占位符路径，先转换为实际路径再打开
+        final actualPath = LegendPathResolver.convertToActualPath(
+          url,
+          widget.absoluteMapPath,
+        );
+        await VfsFileOpenerService.openFile(context, actualPath);
       } else if (url.startsWith('http://') || url.startsWith('https://')) {
         // 网络链接，使用系统默认浏览器
         final uri = Uri.parse(url);

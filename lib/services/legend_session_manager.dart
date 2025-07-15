@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import '../models/map_item.dart';
 import '../models/legend_item.dart' as legend_db;
+import '../utils/legend_path_resolver.dart';
 import 'legend_cache_manager.dart';
 import 'dart:async';
 
@@ -75,12 +76,21 @@ class LegendSessionManager extends ChangeNotifier {
     loadingStates: {},
     failedPaths: {},
   );
+  
+  /// 当前地图的绝对路径（用于占位符路径转换）
+  String? _currentMapAbsolutePath;
 
   /// 获取当前会话数据
   LegendSessionData get sessionData => _sessionData;
 
+  /// 获取当前地图的绝对路径
+  String? get currentMapAbsolutePath => _currentMapAbsolutePath;
+
   /// 初始化会话（预加载地图中的所有图例）
-  Future<void> initializeSession(MapItem mapItem) async {
+  Future<void> initializeSession(MapItem mapItem, {String? mapAbsolutePath}) async {
+    // 设置当前地图路径
+    _currentMapAbsolutePath = mapAbsolutePath;
+    
     final allLegendPaths = <String>{};
 
     // 收集所有图例组中的图例路径
@@ -128,8 +138,12 @@ class LegendSessionManager extends ChangeNotifier {
     _updateLoadingState(legendPath, LegendLoadingState.loading);
 
     try {
+      // 转换占位符路径为实际路径
+      final actualPath = _convertToActualPath(legendPath);
+      debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
+      
       // 从缓存管理器获取数据
-      final legendData = await _cacheManager.getLegendData(legendPath);
+      final legendData = await _cacheManager.getLegendData(actualPath);
 
       if (legendData != null) {
         // 加载成功，添加到会话
@@ -273,7 +287,11 @@ class LegendSessionManager extends ChangeNotifier {
   /// 内部方法：加载单个图例
   Future<void> _loadSingleLegend(String legendPath) async {
     try {
-      final legendData = await _cacheManager.getLegendData(legendPath);
+      // 转换占位符路径为实际路径
+      final actualPath = _convertToActualPath(legendPath);
+      debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
+      
+      final legendData = await _cacheManager.getLegendData(actualPath);
 
       if (legendData != null) {
         _addLegendToSession(legendPath, legendData);
@@ -333,6 +351,15 @@ class LegendSessionManager extends ChangeNotifier {
 
     _sessionData = _sessionData.copyWith(loadingStates: newLoadingStates);
     notifyListeners();
+  }
+
+  /// 内部方法：转换占位符路径为实际路径
+  String _convertToActualPath(String legendPath) {
+    // 使用LegendPathResolver转换占位符路径
+    return LegendPathResolver.convertToActualPath(
+      legendPath,
+      _currentMapAbsolutePath,
+    );
   }
 
   @override

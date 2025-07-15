@@ -27,6 +27,9 @@ class ReactiveVersionAdapter {
   }) : _versionManager = versionManager,
        _integrationAdapter = integrationAdapter {
     _setupListeners();
+    
+    // 如果当前已经有地图数据，立即初始化图例会话
+    _initializeExistingMapData();
   }
 
   /// 获取版本管理器
@@ -50,6 +53,23 @@ class ReactiveVersionAdapter {
 
     // 监听版本管理器变化，同步到地图数据BLoC
     _versionManager.addListener(_onVersionManagerChanged);
+  }
+
+  /// 初始化已存在的地图数据（如果有的话）
+  void _initializeExistingMapData() {
+    final currentState = _integrationAdapter.currentState;
+    if (currentState is MapDataLoaded) {
+      // 异步初始化图例会话，不阻塞构造函数
+      Future.microtask(() async {
+        final mapItem = currentState.mapItem.copyWith(
+          layers: currentState.layers,
+          legendGroups: currentState.legendGroups,
+          stickyNotes: currentState.mapItem.stickyNotes,
+        );
+        await _initializeLegendSession(mapItem);
+        debugPrint('已为现有地图数据初始化图例会话');
+      });
+    }
   }
 
   /// 处理地图数据变化
@@ -119,7 +139,9 @@ class ReactiveVersionAdapter {
   /// 初始化图例会话（异步）
   Future<void> _initializeLegendSession(MapItem mapItem) async {
     try {
-      await _legendSessionManager.initializeSession(mapItem);
+      // 从集成适配器获取地图绝对路径
+      final mapAbsolutePath = _integrationAdapter.mapAbsolutePath;
+      await _legendSessionManager.initializeSession(mapItem, mapAbsolutePath: mapAbsolutePath);
       debugPrint(
         '图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}',
       );

@@ -18,6 +18,7 @@ import '../../../models/legend_item.dart' as legend_db;
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/legend_vfs/legend_vfs_service.dart'; // 导入图例VFS服务
+import '../../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 import 'sticky_note_display.dart'; // 导入便签显示组件
 // 导入渲染器
 import '../renderers/highlight_renderer.dart';
@@ -2029,6 +2030,14 @@ class MapCanvasState extends State<MapCanvas> {
       if (url.startsWith('indexeddb://')) {
         // VFS协议链接，使用VFS文件打开服务
         await VfsFileOpenerService.openFile(context, url);
+      } else if (url.startsWith('{{MAP_DIR}}')) {
+        // 占位符路径，先转换为实际路径再打开
+        final mapAbsolutePath = widget.legendSessionManager?.currentMapAbsolutePath;
+        final actualPath = LegendPathResolver.convertToActualPath(
+          url,
+          mapAbsolutePath,
+        );
+        await VfsFileOpenerService.openFile(context, actualPath);
       } else if (url.startsWith('http://') || url.startsWith('https://')) {
         // 网络链接，使用系统默认浏览器
         final uri = Uri.parse(url);

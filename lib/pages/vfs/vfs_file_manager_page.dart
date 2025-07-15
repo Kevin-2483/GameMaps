@@ -403,7 +403,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
             ? fileName
             : '$_currentPath/$fileName';
 
-        // 解析源路径以提取相对路径
+        // 解析源路径以提取相对路径和集合信息
         final sourceVfsPath = VfsProtocol.parsePath(sourcePath);
         if (sourceVfsPath == null) {
           throw VfsException('Invalid source path format', path: sourcePath);
@@ -412,7 +412,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         if (_isCutOperation) {
           // 移动文件
           await _vfsService.moveFile(
-            _selectedCollection!,
+            sourceVfsPath.collection, // 使用源文件的集合
             sourceVfsPath.path, // 使用解析后的路径
             _selectedCollection!,
             targetPath,
@@ -420,7 +420,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
         } else {
           // 复制文件
           await _vfsService.copyFile(
-            _selectedCollection!,
+            sourceVfsPath.collection, // 使用源文件的集合
             sourceVfsPath.path, // 使用解析后的路径
             _selectedCollection!,
             targetPath,

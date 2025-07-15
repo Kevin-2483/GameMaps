@@ -355,38 +355,31 @@ class LegendCacheManager extends ChangeNotifier {
     _loadingCompleters[legendPath] = completer;
 
     try {
-      // 从VFS路径解析图例标题和文件夹路径
-      String actualPath = legendPath;
-
-      // 如果是完整的VFS路径，需要提取相对路径部分
+      // 根据路径类型选择合适的加载方法
+      legend_db.LegendItem? legendData;
+      
       if (legendPath.startsWith('indexeddb://')) {
-        // 格式: indexeddb://r6box/legends/[folderPath/]title.legend
-        final uri = Uri.parse(legendPath);
-        final pathSegments = uri.pathSegments;
-
-        // pathSegments 应该是 ['legends', ...folderPath, 'title.legend']
-        if (pathSegments.length >= 2 && pathSegments[0] == 'legends') {
-          // 移除 'legends' 前缀，剩下的就是相对路径
-          actualPath = pathSegments.skip(1).join('/');
+        // 绝对VFS路径，直接使用getLegendFromAbsolutePath
+        debugPrint('图例缓存: 使用绝对路径加载 $legendPath');
+        legendData = await _legendService.getLegendFromAbsolutePath(legendPath);
+      } else {
+        // 相对路径，解析为title和folderPath
+        final pathParts = legendPath.split('/');
+        if (pathParts.isEmpty) {
+          throw Exception('无效的图例路径');
         }
+
+        final fileName = pathParts.last;
+        final title = fileName.replaceAll('.legend', '');
+        final folderPath = pathParts.length > 1
+            ? pathParts.sublist(0, pathParts.length - 1).join('/')
+            : null;
+
+        debugPrint(
+          '图例缓存: 解析相对路径 $legendPath -> title=$title, folderPath=$folderPath',
+        );
+        legendData = await _legendService.getLegend(title, folderPath);
       }
-
-      final pathParts = actualPath.split('/');
-      if (pathParts.isEmpty) {
-        throw Exception('无效的图例路径');
-      }
-
-      final fileName = pathParts.last;
-      final title = fileName.replaceAll('.legend', '');
-      final folderPath = pathParts.length > 1
-          ? pathParts.sublist(0, pathParts.length - 1).join('/')
-          : null;
-
-      // 加载图例数据
-      debugPrint(
-        '图例缓存: 解析路径 $legendPath -> title=$title, folderPath=$folderPath, actualPath=$actualPath',
-      );
-      final legendData = await _legendService.getLegend(title, folderPath);
 
       if (legendData != null) {
         // 加载成功

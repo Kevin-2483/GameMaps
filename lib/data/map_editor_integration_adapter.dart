@@ -17,14 +17,17 @@ class MapEditorIntegrationAdapter {
   final MapDataBloc _mapDataBloc;
   final NewReactiveScriptManager _scriptManager;
   final VfsMapService _mapService;
+  final String? _mapAbsolutePath; // 地图绝对路径
 
   MapEditorIntegrationAdapter({
     required MapDataBloc mapDataBloc,
     required NewReactiveScriptManager scriptManager,
     required VfsMapService mapService,
+    String? mapAbsolutePath, // 添加可选的地图绝对路径参数
   }) : _mapDataBloc = mapDataBloc,
        _scriptManager = scriptManager,
-       _mapService = mapService;
+       _mapService = mapService,
+       _mapAbsolutePath = mapAbsolutePath;
 
   /// 获取VFS地图服务实例
   VfsMapService get mapService => _mapService;
@@ -34,6 +37,9 @@ class MapEditorIntegrationAdapter {
 
   /// 获取脚本管理器实例
   NewReactiveScriptManager get scriptManager => _scriptManager;
+
+  /// 获取地图绝对路径
+  String? get mapAbsolutePath => _mapAbsolutePath;
 
   /// 初始化地图数据
   Future<void> initializeMap(MapItem mapItem) async {

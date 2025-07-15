@@ -46,11 +46,13 @@ import '../../components/color_filter_dialog.dart';
 import '../../components/common/window_controls.dart';
 import '../../widgets/compact_timer_widget.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
   final String? mapTitle; // 地图标题，用于按需加载
   final String? folderPath; // 地图所在文件夹路径
+  final String? absoluteMapPath; // 地图的绝对路径
   final bool isPreviewMode;
 
   const MapEditorPage({
@@ -58,6 +60,7 @@ class MapEditorPage extends BasePage {
     this.mapItem,
     this.mapTitle,
     this.folderPath,
+    this.absoluteMapPath,
     this.isPreviewMode = false,
   }) : assert(
          mapItem != null || mapTitle != null,
@@ -72,6 +75,7 @@ class MapEditorPage extends BasePage {
       mapItem: mapItem,
       mapTitle: mapTitle,
       folderPath: folderPath,
+      absoluteMapPath: absoluteMapPath,
       isPreviewMode: isPreviewMode,
     );
   }
@@ -81,12 +85,14 @@ class _MapEditorContent extends StatefulWidget {
   final MapItem? mapItem;
   final String? mapTitle;
   final String? folderPath;
+  final String? absoluteMapPath;
   final bool isPreviewMode;
 
   const _MapEditorContent({
     this.mapItem,
     this.mapTitle,
     this.folderPath,
+    this.absoluteMapPath,
     this.isPreviewMode = false,
   });
 
@@ -418,10 +424,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
         debugPrint('使用固定图例大小: $legendSize');
       }
 
+      // 使用LegendPathResolver处理路径占位符
+      final storagePath = LegendPathResolver.convertToStoragePath(
+        legendPath,
+        widget.absoluteMapPath,
+      );
+
       // 创建新的图例项
       final newItem = LegendItem(
         id: itemId,
-        legendPath: legendPath,
+        legendPath: storagePath,
         legendId: legendId,
         position: canvasPosition, // 使用拖拽的位置
         size: legendSize, // 根据缩放因子计算的大小
@@ -570,8 +582,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
     setState(() => _isLoading = true);
 
     try {
-      // 1. 首先初始化响应式系统
-      await initializeReactiveSystem();
+      // 1. 首先初始化响应式系统（传递地图绝对路径）
+      await initializeReactiveSystem(mapAbsolutePath: widget.absoluteMapPath);
       debugPrint('响应式系统初始化完成');
 
       // 2. 然后加载地图数据
@@ -3635,6 +3647,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                           onDragEnd: _handleDragEnd, // 添加这行
                                           onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
                                           defaultExpandedPanel: _defaultExpandedPanel, // 传递默认展开的面板
+                                          absoluteMapPath: widget.absoluteMapPath, // 传递地图的绝对路径
                                         );
                                       },
                                     ),
@@ -3764,6 +3777,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                       mapItem: _currentMap!,
                                       selectedLayerGroup: _selectedLayerGroup,
                                       selectedLayer: _selectedLayer,
+                                      legendSessionManager: versionAdapter?.legendSessionManager,
                                     ),
                                   ),
                                 ),

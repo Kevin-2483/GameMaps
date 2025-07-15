@@ -6,6 +6,7 @@ import '../../../components/color_filter_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import 'dart:async';
 
+
 class LayerPanel extends StatefulWidget {
   final List<MapLayer> layers;
   final MapLayer? selectedLayer;
@@ -65,6 +66,8 @@ class LayerPanel extends StatefulWidget {
   State<LayerPanel> createState() => _LayerPanelState();
 }
 
+
+
 class _LayerPanelState extends State<LayerPanel> {
   // 用于存储临时的透明度值，避免频繁更新数据
   final Map<String, double> _tempOpacityValues = {};
@@ -114,12 +117,22 @@ class _LayerPanelState extends State<LayerPanel> {
       );
     }
 
-    // 当图层发生变化时，更新折叠状态映射
+    // 当图层发生变化时，更新折叠状态映射并重新计算拖动绑定
     if (oldWidget.layers != widget.layers && _isInitialized) {
       // 使用 addPostFrameCallback 避免在构建期间调用 setState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _updateGroupCollapsedStates();
+          _recalculateDragBindings();
+        }
+      });
+    }
+    
+    // 当图例组发生变化时，也重新计算拖动绑定
+    if (oldWidget.allLegendGroups != widget.allLegendGroups && _isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _recalculateDragBindings();
         }
       });
     }
@@ -196,6 +209,15 @@ class _LayerPanelState extends State<LayerPanel> {
     );
   }
 
+  /// 重新计算拖动绑定
+  void _recalculateDragBindings() {
+    if (!mounted) return;
+    // 触发重建以重新计算图例组绑定关系
+    setState(() {
+      // 强制重建列表，重新计算绑定关系
+    });
+  }
+
   /// 将图层分组为链接组
   List<List<MapLayer>> _groupLinkedLayers() {
     final groups = <List<MapLayer>>[];
@@ -218,6 +240,165 @@ class _LayerPanelState extends State<LayerPanel> {
     return groups;
   }
 
+  /// 获取未绑定的图例组
+  List<LegendGroup> _getUnboundLegendGroups(List<List<MapLayer>> groups) {
+    if (widget.allLegendGroups == null) return [];
+    
+    // 获取所有绑定了图例组的图例组ID
+    final Set<String> boundLegendGroupIds = {};
+    for (final group in groups) {
+      for (final layer in group) {
+        boundLegendGroupIds.addAll(layer.legendGroupIds);
+      }
+    }
+    
+    // 返回未绑定的图例组（没有被任何现有图层绑定的图例组）
+    return widget.allLegendGroups!.where((legendGroup) {
+      return !boundLegendGroupIds.contains(legendGroup.id);
+    }).toList();
+  }
+  
+  /// 获取绑定到指定图层组的图例组（只返回首次出现的）
+  List<LegendGroup> _getBoundLegendGroupsForLayerGroup(List<MapLayer> layerGroup, int groupIndex, List<List<MapLayer>> allGroups) {
+    if (widget.allLegendGroups == null) return [];
+    
+    // 获取这个图层组中所有图层绑定的图例组ID
+    final Set<String> boundLegendGroupIds = {};
+    for (final layer in layerGroup) {
+      boundLegendGroupIds.addAll(layer.legendGroupIds);
+    }
+    
+    // 只返回在当前组是最后一次出现的图例组（即在后续组中不再出现）
+    final List<LegendGroup> result = [];
+    for (final legendGroup in widget.allLegendGroups!) {
+      if (boundLegendGroupIds.contains(legendGroup.id)) {
+        // 检查这个图例组是否在后续的组中还会出现
+        bool willAppearLater = false;
+        for (int i = groupIndex + 1; i < allGroups.length; i++) {
+          final laterGroup = allGroups[i];
+          final Set<String> laterGroupLegendIds = {};
+          for (final layer in laterGroup) {
+            laterGroupLegendIds.addAll(layer.legendGroupIds);
+          }
+          if (laterGroupLegendIds.contains(legendGroup.id)) {
+            willAppearLater = true;
+            break;
+          }
+        }
+        
+        // 只有在后续组中不会再出现的情况下才显示（即这是最后一次出现）
+        if (!willAppearLater) {
+          result.add(legendGroup);
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /// 构建未绑定的图例组项目
+  Widget _buildUnboundLegendGroupItem(LegendGroup legendGroup) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.legend_toggle,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              legendGroup.name,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Icon(
+            legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+            size: 14,
+            color: legendGroup.isVisible 
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建包含图例组的图层组
+  Widget _buildLayerGroupWithLegends(BuildContext context, List<MapLayer> group, int groupIndex, List<List<MapLayer>> allGroups) {
+    final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(group, groupIndex, allGroups);
+    
+    if (boundLegendGroups.isEmpty) {
+      // 没有绑定的图例组，使用原来的构建方法
+      return _buildLayerGroup(context, group, groupIndex);
+    }
+    
+    // 有绑定的图例组，需要特殊显示
+    return Column(
+      key: ValueKey('layer_group_with_legends_$groupIndex'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 显示图层组（移除底部边距，因为图例组会提供间隔）
+        _buildLayerGroup(context, group, groupIndex, hasLegendBelow: true),
+        // 显示绑定的图例组
+        ...boundLegendGroups.map((legendGroup) => Container(
+          margin: const EdgeInsets.only(top: 2, bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.legend_toggle,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  legendGroup.name,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              Icon(
+                legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+                size: 12,
+                color: legendGroup.isVisible 
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+              ),
+            ],
+          ),
+        )),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return widget.layers.isEmpty
@@ -233,7 +414,7 @@ class _LayerPanelState extends State<LayerPanel> {
         : _buildGroupedLayerList();
   }
 
-  /// 构建分组的图层列表
+  /// 构建分组的图层列表（包含图例组）
   Widget _buildGroupedLayerList() {
     final groups = _groupLinkedLayers();
 
@@ -249,24 +430,49 @@ class _LayerPanelState extends State<LayerPanel> {
       );
     }
 
-    return ReorderableListView.builder(
-      itemCount: groups.length,
-      onReorder: (oldIndex, newIndex) {
-        debugPrint('组重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
-        _handleGroupReorder(oldIndex, newIndex);
-      },
-      buildDefaultDragHandles: false,
-      padding: const EdgeInsets.all(8),
-      itemBuilder: (context, groupIndex) {
-        if (groupIndex >= groups.length) {
-          return Container(key: ValueKey('empty_$groupIndex'));
-        }
-        final group = groups[groupIndex];
-        if (group.isEmpty) {
-          return Container(key: ValueKey('empty_group_$groupIndex'));
-        }
-        return _buildLayerGroup(context, group, groupIndex);
-      },
+    // 获取未绑定的图例组
+    final unboundLegendGroups = _getUnboundLegendGroups(groups);
+
+    return CustomScrollView(
+      slivers: [
+        // 未绑定图例组区域（随列表滚动，但不参与排序）
+        if (unboundLegendGroups.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              child: Column(
+                children: unboundLegendGroups.map((legendGroup) => 
+                  Container(
+                    key: ValueKey('unbound_legend_${legendGroup.id}'),
+                    child: _buildUnboundLegendGroupItem(legendGroup),
+                  )
+                ).toList(),
+              ),
+            ),
+          ),
+        
+        // 图层组区域（可拖拽重排序）
+        SliverReorderableList(
+          itemCount: groups.length,
+          onReorder: (oldIndex, newIndex) {
+            debugPrint('图层组重排序：oldIndex=$oldIndex, newIndex=$newIndex');
+            _handleGroupReorder(oldIndex, newIndex);
+          },
+          itemBuilder: (context, index) {
+            if (index >= groups.length) {
+              return Container(key: ValueKey('empty_$index'));
+            }
+            return ReorderableDelayedDragStartListener(
+              key: ValueKey('layer_group_$index'),
+              index: index,
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: _buildLayerGroupWithLegends(context, groups[index], index, groups),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -274,8 +480,9 @@ class _LayerPanelState extends State<LayerPanel> {
   Widget _buildLayerGroup(
     BuildContext context,
     List<MapLayer> group,
-    int groupIndex,
-  ) {
+    int groupIndex, {
+    bool hasLegendBelow = false,
+  }) {
     final isMultiLayer = group.length > 1;
     final isGroupSelected = _isGroupSelected(group);
 
@@ -288,7 +495,7 @@ class _LayerPanelState extends State<LayerPanel> {
 
     return Container(
       key: ValueKey(groupId),
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: hasLegendBelow ? 0 : 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
@@ -389,13 +596,15 @@ class _LayerPanelState extends State<LayerPanel> {
 
           // 可点击的组信息区域（用于选择图层组）
           Expanded(
-            child: InkWell(
-              onTap: () => _handleGroupSelection(group),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-              child: Container(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _handleGroupSelection(group),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+                child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
@@ -451,7 +660,7 @@ class _LayerPanelState extends State<LayerPanel> {
               ),
             ),
           ),
-
+),
           // 组可见性切换按钮 - 折叠和展开时都显示
           IconButton(
             icon: Icon(
@@ -691,9 +900,11 @@ class _LayerPanelState extends State<LayerPanel> {
         onSecondaryTapDown: (details) {
           _showLayerContextMenu(context, layer, details.globalPosition);
         },
-        child: InkWell(
-          onTap: () => _handleLayerSelection(layer, group), // 修改点击处理
-          borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _handleLayerSelection(layer, group), // 修改点击处理
+            borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -785,6 +996,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1475,14 +1687,16 @@ class _LayerPanelState extends State<LayerPanel> {
     final boundGroupsCount = layer.legendGroupIds.length;
     final hasAllLegendGroups = widget.allLegendGroups != null;
 
-    return InkWell(
-      onTap: !hasAllLegendGroups
-          ? null
-          : () => widget.onShowLayerLegendBinding?.call(
-              layer,
-              widget.allLegendGroups!,
-            ),
-      borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: !hasAllLegendGroups
+            ? null
+            : () => widget.onShowLayerLegendBinding?.call(
+                layer,
+                widget.allLegendGroups!,
+              ),
+        borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -1525,7 +1739,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           ],
         ),
-      ),
+      ),),
     );
   }
 
@@ -1534,9 +1748,11 @@ class _LayerPanelState extends State<LayerPanel> {
     final tags = layer.tags ?? [];
     final hasAllTags = tags.isNotEmpty;
 
-    return InkWell(
-      onTap: () => _showTagsManagerDialog(layer),
-      borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showTagsManagerDialog(layer),
+        borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -1577,7 +1793,7 @@ class _LayerPanelState extends State<LayerPanel> {
             ),
           ],
         ),
-      ),
+      ),),
     );
   }
 
@@ -1688,6 +1904,7 @@ class _LayerPanelState extends State<LayerPanel> {
       ),
     );
   }
+  
 
   /// 保存图层名称
   void _saveLayerName(MapLayer layer, String newName) {

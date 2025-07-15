@@ -402,11 +402,20 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       'ReadOnlyMode',
     );
 
+    // 构建绝对路径
+    String absoluteMapPath;
+    if (_currentPath.isEmpty) {
+      absoluteMapPath = 'indexeddb://r6box/maps/$mapTitle.mapdata/';
+    } else {
+      absoluteMapPath = 'indexeddb://r6box/maps/$_currentPath/$mapTitle.mapdata/';
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MapEditorPage(
           mapTitle: mapTitle,
           folderPath: _currentPath.isEmpty ? null : _currentPath,
+          absoluteMapPath: absoluteMapPath, // 传递绝对路径
           isPreviewMode: isReadOnly, // 只读模式强制预览模式
         ),
       ),

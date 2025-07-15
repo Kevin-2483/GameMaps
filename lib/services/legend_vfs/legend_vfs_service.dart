@@ -361,6 +361,95 @@ class LegendVfsService {
     }
   }
 
+  /// 从绝对VFS路径获取图例
+  /// 支持从其他集合加载图例，例如: indexeddb://r6box/other_collection/path/title.legend
+  Future<LegendItem?> getLegendFromAbsolutePath(String absolutePath) async {
+    if (!absolutePath.startsWith('indexeddb://') || !absolutePath.endsWith('.legend')) {
+      debugPrint('无效的绝对路径格式: $absolutePath');
+      return null;
+    }
+
+    try {
+      // 解析URI获取路径信息
+      final uri = Uri.parse(absolutePath);
+      final pathSegments = uri.pathSegments;
+      
+      if (pathSegments.length < 2) {
+        debugPrint('路径段不足: $absolutePath');
+        return null;
+      }
+
+      // 提取文件名和标题
+      final fileName = pathSegments.last;
+      final title = fileName.replaceAll('.legend', '');
+      
+      debugPrint('从绝对路径获取图例: "$title", 路径: $absolutePath');
+
+      // 检查图例目录是否存在
+      if (!await _vfs.exists(absolutePath)) {
+        debugPrint('图例目录不存在: $absolutePath');
+        return null;
+      }
+
+      // 读取JSON配置 - 首先尝试使用原始标题
+      String jsonPath = '$absolutePath/$title.json';
+      debugPrint('查找JSON文件: $jsonPath (使用原始标题)');
+      
+      if (!await _vfs.exists(jsonPath)) {
+        debugPrint('原始标题JSON文件不存在，尝试sanitized标题');
+        // 如果原始标题的JSON不存在，尝试sanitized标题
+        final sanitizedTitle = _sanitizeFileName(title);
+        jsonPath = '$absolutePath/$sanitizedTitle.json';
+        debugPrint('查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")');
+        
+        if (!await _vfs.exists(jsonPath)) {
+          debugPrint('JSON文件不存在: $jsonPath');
+          return null;
+        }
+      }
+
+      final legendJson = await _vfs.readJsonFile(jsonPath);
+      if (legendJson == null) {
+        return null;
+      }
+
+      final legendData = VfsLegendData.fromJson(legendJson);
+
+      // 读取图像数据
+      Uint8List? imageData;
+      final imageFilePath = '$absolutePath/${legendData.imagePath}';
+      if (await _vfs.exists(imageFilePath)) {
+        final content = await _vfs.readFile(imageFilePath);
+        imageData = content?.data;
+      }
+
+      // 将字符串转换为LegendFileType枚举
+      LegendFileType fileType;
+      try {
+        fileType = LegendFileType.values.firstWhere(
+          (type) => type.name == legendData.fileType,
+        );
+      } catch (e) {
+        // 如果找不到匹配的类型，默认为png
+        fileType = LegendFileType.png;
+      }
+
+      return LegendItem(
+        title: legendData.title,
+        imageData: imageData,
+        centerX: legendData.centerX,
+        centerY: legendData.centerY,
+        version: legendData.version,
+        createdAt: legendData.createdAt,
+        updatedAt: legendData.updatedAt,
+        fileType: fileType,
+      );
+    } catch (e) {
+      debugPrint('从绝对路径获取图例失败: $absolutePath, 错误: $e');
+      return null;
+    }
+  }
+
   /// 获取指定文件夹下的所有图例标题
   Future<List<String>> getAllLegendTitles([String? folderPath]) async {
     try {
