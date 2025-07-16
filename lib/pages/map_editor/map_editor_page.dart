@@ -139,20 +139,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 侧边栏折叠状态
   bool _isSidebarCollapsed = false;
-  
+
   // 输入框焦点状态，用于控制快捷键启用/禁用
   bool _isInputFieldFocused = false;
-  
+
   // 主焦点节点，用于管理快捷键
   late FocusNode _mainFocusNode;
-  
+
   /// 设置输入框焦点状态
   void _setInputFieldFocused(bool focused) {
     print('DEBUG: Setting _isInputFieldFocused to $focused');
     setState(() {
       _isInputFieldFocused = focused;
     });
-    
+
     // 当输入框失去焦点时，确保主FocusNode重新获得焦点
     if (!focused) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -161,6 +161,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
     }
   }
+
   // 透明度预览状态
   final Map<String, double> _previewOpacityValues = {}; // 绘制工具预览状态
   DrawingElementType? _previewDrawingTool;
@@ -204,7 +205,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 智能隐藏状态管理（从抽屉迁移到地图编辑器）
   Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
-  
+
   // 缩放因子状态管理（统一管理）
   Map<String, double> _legendGroupZoomFactors = {}; // 图例组缩放因子状态
 
@@ -226,7 +227,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
         debugPrint('在dispose中保存智能隐藏状态失败: $e');
       });
-      
+
       // 保存缩放因子状态到扩展存储
       _saveLegendGroupZoomFactorsOnExit().catchError((e) {
         debugPrint('在dispose中保存缩放因子状态失败: $e');
@@ -254,7 +255,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 释放响应式版本管理资源（包括路径选择状态清理）
     disposeVersionManagement();
-    
+
     // 释放主焦点节点
     _mainFocusNode.dispose();
 
@@ -406,18 +407,22 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 计算图例大小 - 根据用户偏好设置和缩放因子
       double legendSize = 1.0; // 默认大小
-      
+
       // 获取用户偏好设置中的默认图例大小
-      final defaultLegendSize = _userPreferencesProvider?.mapEditor.defaultLegendSize ?? 0.0;
-      
+      final defaultLegendSize =
+          _userPreferencesProvider?.mapEditor.defaultLegendSize ?? 0.0;
+
       if (defaultLegendSize == 0.0) {
         // 使用动态公式：1/(缩放*系数)
-        final currentZoomLevel = _mapCanvasKey.currentState?.getCurrentZoomLevel() ?? 1.0;
+        final currentZoomLevel =
+            _mapCanvasKey.currentState?.getCurrentZoomLevel() ?? 1.0;
         final zoomFactor = getLegendGroupZoomFactor(
           _currentLegendGroupForManagement!.id,
         );
         legendSize = zoomFactor / currentZoomLevel;
-        debugPrint('使用动态公式计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize');
+        debugPrint(
+          '使用动态公式计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize',
+        );
       } else {
         // 使用固定大小
         legendSize = defaultLegendSize;
@@ -645,7 +650,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 初始化图例组智能隐藏状态（在地图数据加载完成后）
       _initializeLegendGroupSmartHideStates();
-      
+
       // 初始化图例组缩放因子状态
       _initializeLegendGroupZoomFactors();
 
@@ -951,7 +956,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
               _currentLegendGroupForManagement = state.legendGroups
                   .where((group) => group.id == managedGroupId)
                   .firstOrNull;
-              debugPrint('图例组管理状态已同步: ${_currentLegendGroupForManagement?.name}');
+              debugPrint(
+                '图例组管理状态已同步: ${_currentLegendGroupForManagement?.name}',
+              );
             }
 
             // 重要修复：同步未保存更改状态
@@ -1361,28 +1368,28 @@ class _MapEditorContentState extends State<_MapEditorContent>
   // 删除指定图层中的绘制元素（使用响应式系统重构）
   void _deleteElement(String elementId) {
     MapDrawingElement? elementToDelete;
-    
+
     // 优先检查便签中的元素
     if (_selectedStickyNote != null) {
       elementToDelete = _selectedStickyNote!.elements
           .where((element) => element.id == elementId)
           .firstOrNull;
-      
+
       if (elementToDelete != null) {
         // 删除便签中的元素
         try {
           final updatedElements = _selectedStickyNote!.elements
               .where((element) => element.id != elementId)
               .toList();
-          
+
           final updatedStickyNote = _selectedStickyNote!.copyWith(
             elements: updatedElements,
             updatedAt: DateTime.now(),
           );
-          
+
           updateStickyNoteReactive(updatedStickyNote);
           debugPrint('使用响应式系统删除便签绘制元素: ${_selectedStickyNote!.id}/$elementId');
-          
+
           // 如果删除的是图片元素，强制触发缓存清理
           if (elementToDelete.type == DrawingElementType.imageArea) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1391,7 +1398,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               }
             });
           }
-          
+
           // 显示删除成功消息
           _showSuccessSnackBar('已删除便签元素');
           return;
@@ -1402,7 +1409,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         }
       }
     }
-    
+
     // 如果便签中没有找到元素，检查图层中的元素
     if (_selectedLayer == null) return;
 
@@ -1679,7 +1686,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _prioritizeLayerAndGroupDisplay();
     // 清除画布上的选区
     _clearCanvasSelection();
-    
+
     // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
     _autoSwitchToFirstBoundLegendGroup();
   }
@@ -1689,25 +1696,24 @@ class _MapEditorContentState extends State<_MapEditorContent>
     setState(() {
       // 修改：不清除单图层选择，允许同时选择
       _selectedLayerGroup = group; // 设置组选择
-      
+
       // 检查用户偏好设置，是否自动选择图层组的最后一层
       final userPreferences = Provider.of<UserPreferencesProvider>(
         context,
         listen: false,
       );
-      
-      if (userPreferences.mapEditor.autoSelectLastLayerInGroup && group.isNotEmpty) {
+
+      if (userPreferences.mapEditor.autoSelectLastLayerInGroup &&
+          group.isNotEmpty) {
         // 找到图层组中的最后一层
         MapLayer? lastLayer;
-        
-        
+
         for (final layer in group) {
           if (!layer.isLinkedToNext) {
-            
             lastLayer = layer;
           }
         }
-        
+
         // 如果找到了最后一层，自动选择它
         if (lastLayer != null) {
           _selectedLayer = lastLayer;
@@ -1719,7 +1725,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _prioritizeLayerAndGroupDisplay();
     //：清除画布上的选区
     _clearCanvasSelection();
-    
+
     // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
     _autoSwitchToFirstBoundLegendGroup();
   }
@@ -2425,7 +2431,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 如果找到了包含该图例项的图例组
     if (containingGroup != null) {
       // 检查抽屉是否已经打开且是同一个图例组
-      if (_isLegendGroupManagementDrawerOpen && 
+      if (_isLegendGroupManagementDrawerOpen &&
           _currentLegendGroupForManagement?.id == containingGroup.id) {
         // 抽屉已经打开且是同一个图例组，强制更新选中项和展开状态
         // debugPrint('双击图例：抽屉已打开，更新选中项 ${item.id}');
@@ -2847,10 +2853,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       // 保存当前的选择状态
       final previousSelectedLayerId = _selectedLayer?.id;
-      final previousSelectedLayerGroupIds = _selectedLayerGroup?.map((layer) => layer.id).toList();
+      final previousSelectedLayerGroupIds = _selectedLayerGroup
+          ?.map((layer) => layer.id)
+          .toList();
       final previousSelectedElementId = _selectedElementId;
       final previousSelectedStickyNoteId = _selectedStickyNote?.id;
-      
+
       // 使用响应式版本管理切换版本
       switchVersion(versionId).then((_) {
         setState(() {
@@ -2872,9 +2880,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
             } else {
               _selectedLayer = _currentMap!.layers.first;
             }
-            
+
             // 尝试恢复选中的图层组
-            if (previousSelectedLayerGroupIds != null && previousSelectedLayerGroupIds.isNotEmpty) {
+            if (previousSelectedLayerGroupIds != null &&
+                previousSelectedLayerGroupIds.isNotEmpty) {
               final matchingLayers = <MapLayer>[];
               for (final layerId in previousSelectedLayerGroupIds) {
                 final matchingLayer = _currentMap!.layers
@@ -2899,11 +2908,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
             _selectedLayer = null;
             _selectedLayerGroup = null;
           }
-          
+
           // 尝试恢复选中的元素
           if (previousSelectedElementId != null && _selectedLayer != null) {
-            final hasElement = _selectedLayer!.elements
-                .any((element) => element.id == previousSelectedElementId);
+            final hasElement = _selectedLayer!.elements.any(
+              (element) => element.id == previousSelectedElementId,
+            );
             if (hasElement) {
               _selectedElementId = previousSelectedElementId;
             } else {
@@ -2950,7 +2960,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       // 记录删除前的当前版本ID
       final previousVersionId = currentVersionId;
-      
+
       // 使用响应式版本管理删除版本
       await deleteVersion(versionId);
 
@@ -2985,12 +2995,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 检查当前版本是否已经改变（如果删除的是当前版本）
       final newCurrentVersionId = currentVersionId;
-      if (previousVersionId == versionId && newCurrentVersionId != null && newCurrentVersionId != versionId) {
+      if (previousVersionId == versionId &&
+          newCurrentVersionId != null &&
+          newCurrentVersionId != versionId) {
         // 当前版本已经自动切换到其他版本，需要加载新版本的数据到画布
         // debugPrint('当前版本已自动切换到: $newCurrentVersionId，正在加载画布数据...');
         await switchVersion(newCurrentVersionId);
       }
-      
+
       setState(() {
         // 响应式系统会自动管理状态
       });
@@ -3272,7 +3284,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _panelStatesChanged = true;
   }
 
-
   /// 构建窗口控制按钮组
   List<Widget> _buildWindowControls() {
     return [const WindowControls(spacing: 4.0)];
@@ -3491,8 +3502,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Consumer<UserPreferencesProvider>(
@@ -3610,17 +3619,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                       listenable: newReactiveScriptManager,
                                       builder: (context, child) {
                                         return LegendGroupManagementDrawer(
-                                          mapId: widget.mapTitle, // 传递地图ID用于扩展设置隔离
+                                          mapId:
+                                              widget.mapTitle, // 传递地图ID用于扩展设置隔离
                                           legendGroup:
                                               _currentLegendGroupForManagement!,
                                           availableLegends: [], // 不再需要预载图例列表
-                                          onLegendGroupUpdated: _updateLegendGroup,
+                                          onLegendGroupUpdated:
+                                              _updateLegendGroup,
                                           isPreviewMode: widget.isPreviewMode,
                                           onClose:
                                               _closeLegendGroupManagementDrawer,
-                                          onLegendItemSelected: _selectLegendItem,
-                                          allLayers:
-                                              _currentMap?.layers, // 传递所有图层用于智能隐藏功能
+                                          onLegendItemSelected:
+                                              _selectLegendItem,
+                                          allLayers: _currentMap
+                                              ?.layers, // 传递所有图层用于智能隐藏功能
                                           selectedLayer:
                                               _selectedLayer, // 传递当前选中的图层
                                           initialSelectedLegendItemId:
@@ -3645,9 +3657,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                               _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
                                           onDragStart: _handleDragStart, // 添加这行
                                           onDragEnd: _handleDragEnd, // 添加这行
-                                          onInputFieldFocusChanged: _setInputFieldFocused, // 输入框焦点状态变化回调
-                                          defaultExpandedPanel: _defaultExpandedPanel, // 传递默认展开的面板
-                                          absoluteMapPath: widget.absoluteMapPath, // 传递地图的绝对路径
+                                          onInputFieldFocusChanged:
+                                              _setInputFieldFocused, // 输入框焦点状态变化回调
+                                          defaultExpandedPanel:
+                                              _defaultExpandedPanel, // 传递默认展开的面板
+                                          absoluteMapPath: widget
+                                              .absoluteMapPath, // 传递地图的绝对路径
                                         );
                                       },
                                     ),
@@ -3762,7 +3777,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     ),
                                   ),
                                 ),
-                              
+
                               // 图例浮动dock栏
                               Positioned(
                                 bottom: 16,
@@ -3777,7 +3792,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                       mapItem: _currentMap!,
                                       selectedLayerGroup: _selectedLayerGroup,
                                       selectedLayer: _selectedLayer,
-                                      legendSessionManager: versionAdapter?.legendSessionManager,
+                                      legendSessionManager:
+                                          versionAdapter?.legendSessionManager,
                                     ),
                                   ),
                                 ),
@@ -4509,9 +4525,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     final userPrefs = context.read<UserPreferencesProvider>();
     final mapEditorPrefs = userPrefs.mapEditor;
 
-    final copyShortcuts = mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C', 'Win+C'];
-    final undoShortcuts = mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z', 'Win+Z'];
-    final redoShortcuts = mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y', 'Win+Y'];
+    final copyShortcuts =
+        mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C', 'Win+C'];
+    final undoShortcuts =
+        mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z', 'Win+Z'];
+    final redoShortcuts =
+        mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y', 'Win+Y'];
 
     // 检查撤销快捷键
     if (_isAnyShortcutPressed(event, undoShortcuts)) {
@@ -4549,16 +4568,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
     MapEditorPreferences mapEditorPrefs,
   ) {
     // 检查选择上一个图层
-    final prevLayerShortcuts =
-        mapEditorPrefs.shortcuts['prevLayer'] ?? ['P'];
+    final prevLayerShortcuts = mapEditorPrefs.shortcuts['prevLayer'] ?? ['P'];
     if (_isAnyShortcutPressed(event, prevLayerShortcuts)) {
       _selectPreviousLayer();
       return true;
     }
 
     // 检查选择下一个图层
-    final nextLayerShortcuts =
-        mapEditorPrefs.shortcuts['nextLayer'] ?? ['N'];
+    final nextLayerShortcuts = mapEditorPrefs.shortcuts['nextLayer'] ?? ['N'];
     if (_isAnyShortcutPressed(event, nextLayerShortcuts)) {
       _selectNextLayer();
       return true;
@@ -4613,7 +4630,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     // 保存地图
-    final saveShortcuts = mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S', 'Win+S'];
+    final saveShortcuts =
+        mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S', 'Win+S'];
     if (_isAnyShortcutPressed(event, saveShortcuts)) {
       _saveMap();
       return true;
@@ -4961,8 +4979,31 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedLayerGroup = selectedGroup;
       _selectedLayer = null;
     });
+    // 检查用户偏好设置，是否自动选择图层组的最后一层
+    final userPreferences = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
+
+    if (userPreferences.mapEditor.autoSelectLastLayerInGroup &&
+        selectedGroup.isNotEmpty) {
+      // 找到图层组中的最后一层
+      MapLayer? lastLayer;
+
+      for (final layer in selectedGroup) {
+        if (!layer.isLinkedToNext) {
+          lastLayer = layer;
+        }
+      }
+
+      // 如果找到了最后一层，自动选择它
+      if (lastLayer != null) {
+        _selectedLayer = lastLayer;
+      }
+    }
+
     _prioritizeLayerAndGroupDisplay();
-    
+
     // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
     _autoSwitchToFirstBoundLegendGroup();
   }
@@ -4979,7 +5020,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     final selectedLayer = layers[index];
     setState(() {
       _selectedLayer = selectedLayer;
-      _selectedLayerGroup = null;
+      // _selectedLayerGroup = null;
     });
     _prioritizeLayerAndGroupDisplay();
   }
@@ -4987,21 +5028,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
   /// 获取当前选中图层或图层组绑定的图例组列表
   List<LegendGroup> _getBoundLegendGroups() {
     if (_currentMap == null) return [];
-    
+
     final allBoundGroupIds = <String>{};
-    
+
     // 收集选中图层绑定的图例组ID
     if (_selectedLayer != null) {
       allBoundGroupIds.addAll(_selectedLayer!.legendGroupIds);
     }
-    
+
     // 收集选中图层组中所有图层绑定的图例组ID
     if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
       for (final layer in _selectedLayerGroup!) {
         allBoundGroupIds.addAll(layer.legendGroupIds);
       }
     }
-    
+
     // 返回对应的图例组列表
     return _currentMap!.legendGroups
         .where((group) => allBoundGroupIds.contains(group.id))
@@ -5012,15 +5053,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _autoSwitchToFirstBoundLegendGroup() {
     // 只有在图例组管理抽屉打开时才执行自动切换
     if (!_isLegendGroupManagementDrawerOpen) return;
-    
+
     // 获取当前选中图层或图层组绑定的图例组
     final boundLegendGroups = _getBoundLegendGroups();
-    
+
     // 如果有绑定的图例组，切换到第一个
     if (boundLegendGroups.isNotEmpty) {
       final firstBoundGroup = boundLegendGroups.first;
       debugPrint('自动切换图例组抽屉到绑定的图例组: ${firstBoundGroup.name}');
-      
+
       // 切换到第一个绑定的图例组
       _showLegendGroupManagementDrawer(firstBoundGroup);
     } else {
@@ -5033,10 +5074,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
 
     // 根据是否有选中图层/图层组决定切换范围
-    final legendGroups = (_selectedLayer != null || (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
+    final legendGroups =
+        (_selectedLayer != null ||
+            (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
         ? _getBoundLegendGroups()
         : _currentMap!.legendGroups;
-    
+
     if (legendGroups.isEmpty) {
       if (mounted) context.showInfoSnackBar('没有可切换的图例组');
       return;
@@ -5067,10 +5110,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
 
     // 根据是否有选中图层/图层组决定切换范围
-    final legendGroups = (_selectedLayer != null || (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
+    final legendGroups =
+        (_selectedLayer != null ||
+            (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
         ? _getBoundLegendGroups()
         : _currentMap!.legendGroups;
-    
+
     if (legendGroups.isEmpty) {
       if (mounted) context.showInfoSnackBar('没有可切换的图例组');
       return;
@@ -5088,7 +5133,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       if (currentIndex < legendGroups.length - 1) {
         final nextGroup = legendGroups[currentIndex + 1];
         _showLegendGroupManagementDrawer(nextGroup);
-      } else if (currentIndex == legendGroups.length - 1 && legendGroups.length > 1) {
+      } else if (currentIndex == legendGroups.length - 1 &&
+          legendGroups.length > 1) {
         // 如果是最后一个，循环到第一个
         final firstGroup = legendGroups.first;
         _showLegendGroupManagementDrawer(firstGroup);
@@ -5118,7 +5164,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           return;
         }
       }
-      
+
       // 优先级2：当前选中图层组包含的图层绑定的图例组
       if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
         final allBoundGroupIds = <String>{};
@@ -5140,7 +5186,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           return;
         }
       }
-      
+
       // 优先级3：没有选择时，检查是否有图例组
       if (_currentMap != null && _currentMap!.legendGroups.isNotEmpty) {
         final firstGroup = _currentMap!.legendGroups.first;
@@ -5212,13 +5258,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
           if (mounted) context.showInfoSnackBar('请先选择一个图层');
           return;
         }
-        
+
         // 关闭其他抽屉
         _isLegendGroupManagementDrawerOpen = false;
         _isZIndexInspectorOpen = false;
         _currentLegendGroupForManagement = null;
         _initialSelectedLegendItemId = null;
-        
+
         // 有选中图层时，打开抽屉并绑定当前图层
         _isLayerLegendBindingDrawerOpen = true;
         _currentLayerForBinding = _selectedLayer;
