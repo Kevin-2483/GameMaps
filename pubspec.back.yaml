@@ -67,6 +67,17 @@ dependencies:
   archive: ^3.6.1
     # Image handling
   image: ^4.2.0
+
+    
+  # WebSocket and HTTP client
+  web_socket_channel: ^3.0.1
+  http: ^1.2.2
+  
+  # Secure storage
+  flutter_secure_storage: ^9.2.4
+  
+  # RSA encryption
+  fast_rsa: ^3.8.5
   
   # Clipboard support
   super_clipboard: ^0.8.21

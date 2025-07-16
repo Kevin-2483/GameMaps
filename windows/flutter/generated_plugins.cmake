@@ -5,6 +5,8 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   bitsdojo_window_windows
+  fast_rsa
+  flutter_secure_storage_windows
   flutter_tts
   irondash_engine_context
   media_kit_libs_windows_video
