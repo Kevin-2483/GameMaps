@@ -96,6 +96,10 @@ class _ExternalResourcesPageContentState
   final List<FileMapping> _fileMappings = [];
   String _tempPath = '';
 
+  // 导入预览状态
+  bool _importListCollapsed = false;
+  Map<String, dynamic>? _importMetadata;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -128,6 +132,12 @@ class _ExternalResourcesPageContentState
   }
 
   Widget _buildPreviewSection(BuildContext context) {
+    // 计算总文件数量（包括递归）
+    final totalFiles = _fileMappings.length;
+
+    // 检查是否有冲突或问题
+    final hasIssues = _fileMappings.any((mapping) => !mapping.isValidPath);
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -135,6 +145,7 @@ class _ExternalResourcesPageContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 标题和操作按钮
             Row(
               children: [
                 Icon(
@@ -144,7 +155,7 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '文件映射预览',
+                  '导入预览 (共 $totalFiles 个项目)',
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -205,41 +216,161 @@ class _ExternalResourcesPageContentState
               ],
             ),
             const SizedBox(height: 20),
+
+            // 元数据信息显示
+            if (_importMetadata != null) ...[
+              _buildImportMetadataCard(context),
+              const SizedBox(height: 20),
+            ],
+
+            // 文件列表标题和折叠控制
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(
                     context,
-                  ).colorScheme.primary.withValues(alpha: 0.2),
+                  ).colorScheme.outline.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
+                    Icons.folder_open,
                     size: 20,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '请检查并修改文件的目标路径。您可以直接编辑路径或点击文件夹图标选择目标位置。',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                  Text(
+                    '文件映射列表',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (hasIssues)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '需要处理',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _importListCollapsed = !_importListCollapsed;
+                      });
+                    },
+                    icon: Icon(
+                      _importListCollapsed
+                          ? Icons.expand_more
+                          : Icons.expand_less,
+                      size: 18,
+                    ),
+                    label: Text(_importListCollapsed ? '展开' : '折叠'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 400, // 设置固定高度以支持滚动
-              child: _buildFileMappingTable(context),
-            ),
+
+            // 提示信息（仅在展开时显示）
+            if (!_importListCollapsed) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '请检查并修改文件的目标路径。您可以直接编辑路径或点击文件夹图标选择目标位置。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 400, // 设置固定高度以支持滚动
+                child: _buildFileMappingTable(context),
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 20,
+                      color: hasIssues
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        hasIssues
+                            ? '检测到 ${_fileMappings.where((m) => !m.isValidPath).length} 个路径问题，请展开列表进行修正'
+                            : '所有文件路径检查通过，可以直接导入',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: hasIssues
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -450,6 +581,8 @@ class _ExternalResourcesPageContentState
       }
       _fileMappings.clear();
       _tempPath = '';
+      _importMetadata = null;
+      _importListCollapsed = false;
     });
   }
 
@@ -496,10 +629,18 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription('正在复制文件到目标位置...');
+      final totalFiles = _fileMappings.length;
+      int processedFiles = 0;
+      WorkStatusService().updateWorkDescription(
+        '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
+      );
 
       // 处理文件映射
       for (final mapping in _fileMappings) {
+        processedFiles++;
+        WorkStatusService().updateWorkDescription(
+          '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
+        );
         // 确保目标目录存在
         final targetDir = mapping.targetPath.substring(
           0,
@@ -676,6 +817,346 @@ class _ExternalResourcesPageContentState
     }
   }
 
+  Widget _buildMetadataInputSection(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          // 标题栏
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '元数据信息',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          // 内容区域
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // 基础字段 - 两列布局
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _exportNameController,
+                        decoration: const InputDecoration(
+                          labelText: '资源包名称 *',
+                          hintText: '输入资源包名称',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _exportVersionController,
+                        decoration: const InputDecoration(
+                          labelText: '版本 *',
+                          hintText: '如: 1.0.0',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _exportAuthorController,
+                        decoration: const InputDecoration(
+                          labelText: '作者',
+                          hintText: '输入作者名称',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _exportLicenseController,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: '使用要求',
+                          hintText: '如：不允许私自转发、仅供学习使用、需注明出处等',
+                          border: OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // 描述字段 - 全宽
+                TextField(
+                  controller: _exportDescriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: '描述',
+                    hintText: '输入资源包的详细描述',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 自定义字段
+                if (_customFields.isNotEmpty) ...[
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text(
+                    '自定义字段',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ..._customFields.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final field = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              controller: field.key,
+                              decoration: const InputDecoration(
+                                labelText: '字段名',
+                                hintText: '输入字段名',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 3,
+                            child: TextField(
+                              controller: field.value,
+                              decoration: const InputDecoration(
+                                labelText: '字段值',
+                                hintText: '输入字段值',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () => _removeCustomField(index),
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: '删除字段',
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+                // 添加自定义字段按钮
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: _addCustomField,
+                      icon: const Icon(Icons.add),
+                      label: const Text('添加自定义字段'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportMetadataCard(BuildContext context) {
+    if (_importMetadata == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.description_outlined,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '资源包信息',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              if (_importMetadata!['name'] != null)
+                _buildMetadataChip(
+                  context,
+                  '名称',
+                  _importMetadata!['name'].toString(),
+                ),
+              if (_importMetadata!['version'] != null)
+                _buildMetadataChip(
+                  context,
+                  '版本',
+                  _importMetadata!['version'].toString(),
+                ),
+              if (_importMetadata!['author'] != null)
+                _buildMetadataChip(
+                  context,
+                  '作者',
+                  _importMetadata!['author'].toString(),
+                ),
+              if (_importMetadata!['license'] != null)
+                _buildMetadataChip(
+                  context,
+                  '使用要求',
+                  _importMetadata!['license'].toString(),
+                ),
+            ],
+          ),
+
+          if (_importMetadata!['description'] != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '描述',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _importMetadata!['description'].toString(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // 显示其他自定义字段
+          ...(_importMetadata!.entries
+              .where(
+                (entry) => ![
+                  'name',
+                  'version',
+                  'author',
+                  'license',
+                  'description',
+                  'file_mappings',
+                  'export_time',
+                ].contains(entry.key),
+              )
+              .map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _buildMetadataChip(
+                    context,
+                    entry.key,
+                    entry.value.toString(),
+                  ),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetadataChip(BuildContext context, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodySmall,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildExportSection(BuildContext context) {
     return Card(
       elevation: 2,
@@ -694,9 +1175,9 @@ class _ExternalResourcesPageContentState
                 const SizedBox(width: 12),
                 Text(
                   '导出外部资源',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -704,17 +1185,25 @@ class _ExternalResourcesPageContentState
             Text(
               '选择要导出的文件或文件夹，并为它们指定导出名称。系统将创建一个包含所选资源和元数据的ZIP文件。',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 20),
-            
+
+            // 元数据字段输入区域
+            _buildMetadataInputSection(context),
+            const SizedBox(height: 20),
+
             // 导出映射列表
             if (_exportMappings.isNotEmpty) ...[
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -724,7 +1213,9 @@ class _ExternalResourcesPageContentState
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(8),
                           topRight: Radius.circular(8),
@@ -736,18 +1227,16 @@ class _ExternalResourcesPageContentState
                             flex: 3,
                             child: Text(
                               '源路径',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               '导出名称',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                           const SizedBox(width: 100), // 操作按钮空间
@@ -762,7 +1251,9 @@ class _ExternalResourcesPageContentState
                         decoration: BoxDecoration(
                           border: Border(
                             top: BorderSide(
-                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.2),
                             ),
                           ),
                         ),
@@ -779,38 +1270,67 @@ class _ExternalResourcesPageContentState
                                         hintText: '选择源文件或文件夹',
                                         border: OutlineInputBorder(
                                           borderSide: BorderSide(
-                                            color: !_isValidSourcePathField(mapping.sourcePath) 
-                                                ? Theme.of(context).colorScheme.error 
-                                                : Theme.of(context).colorScheme.outline,
+                                            color:
+                                                !_isValidSourcePathField(
+                                                  mapping.sourcePath,
+                                                )
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.error
+                                                : Theme.of(
+                                                    context,
+                                                  ).colorScheme.outline,
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderSide: BorderSide(
-                                            color: !_isValidSourcePathField(mapping.sourcePath) 
-                                                ? Theme.of(context).colorScheme.error 
-                                                : Theme.of(context).colorScheme.outline,
+                                            color:
+                                                !_isValidSourcePathField(
+                                                  mapping.sourcePath,
+                                                )
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.error
+                                                : Theme.of(
+                                                    context,
+                                                  ).colorScheme.outline,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderSide: BorderSide(
-                                            color: !_isValidSourcePathField(mapping.sourcePath) 
-                                                ? Theme.of(context).colorScheme.error 
-                                                : Theme.of(context).colorScheme.primary,
+                                            color:
+                                                !_isValidSourcePathField(
+                                                  mapping.sourcePath,
+                                                )
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.error
+                                                : Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
                                             width: 2,
                                           ),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
-                                        ),
-                                        errorText: !mapping.isValidPath && mapping.sourcePath.isNotEmpty
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                        errorText:
+                                            !mapping.isValidPath &&
+                                                mapping.sourcePath.isNotEmpty
                                             ? '路径无效'
-                                            : !_isValidSourcePathField(mapping.sourcePath)
-                                                ? '请选择源路径'
-                                                : null,
+                                            : !_isValidSourcePathField(
+                                                mapping.sourcePath,
+                                              )
+                                            ? '请选择源路径'
+                                            : null,
                                       ),
-                                      controller: TextEditingController(text: mapping.sourcePath),
-                                      onChanged: (value) => _updateExportSourcePath(index, value),
+                                      controller: TextEditingController(
+                                        text: mapping.sourcePath,
+                                      ),
+                                      onChanged: (value) =>
+                                          _updateExportSourcePath(index, value),
                                       readOnly: true,
                                     ),
                                   ),
@@ -832,23 +1352,41 @@ class _ExternalResourcesPageContentState
                                   hintText: '输入导出名称',
                                   border: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: !_isValidExportName(index, mapping.exportName) 
-                                          ? Theme.of(context).colorScheme.error 
-                                          : Theme.of(context).colorScheme.outline,
+                                      color:
+                                          !_isValidExportName(
+                                            index,
+                                            mapping.exportName,
+                                          )
+                                          ? Theme.of(context).colorScheme.error
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: !_isValidExportName(index, mapping.exportName) 
-                                          ? Theme.of(context).colorScheme.error 
-                                          : Theme.of(context).colorScheme.outline,
+                                      color:
+                                          !_isValidExportName(
+                                            index,
+                                            mapping.exportName,
+                                          )
+                                          ? Theme.of(context).colorScheme.error
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: !_isValidExportName(index, mapping.exportName) 
-                                          ? Theme.of(context).colorScheme.error 
-                                          : Theme.of(context).colorScheme.primary,
+                                      color:
+                                          !_isValidExportName(
+                                            index,
+                                            mapping.exportName,
+                                          )
+                                          ? Theme.of(context).colorScheme.error
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                       width: 2,
                                     ),
                                   ),
@@ -858,12 +1396,18 @@ class _ExternalResourcesPageContentState
                                   ),
                                   errorText: mapping.exportName.trim().isEmpty
                                       ? '请输入导出名称'
-                                      : !_isValidExportName(index, mapping.exportName)
-                                          ? '导出名称重复'
-                                          : null,
+                                      : !_isValidExportName(
+                                          index,
+                                          mapping.exportName,
+                                        )
+                                      ? '导出名称重复'
+                                      : null,
                                 ),
-                                controller: TextEditingController(text: mapping.exportName),
-                                onChanged: (value) => _updateExportName(index, value),
+                                controller: TextEditingController(
+                                  text: mapping.exportName,
+                                ),
+                                onChanged: (value) =>
+                                    _updateExportName(index, value),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -883,7 +1427,7 @@ class _ExternalResourcesPageContentState
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // 操作按钮
             Row(
               children: [
@@ -903,14 +1447,18 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  onPressed: _isExporting || _exportMappings.isEmpty ? null : _performExport,
+                  onPressed: _isExporting || _exportMappings.isEmpty
+                      ? null
+                      : _performExport,
                   icon: _isExporting
                       ? const SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Icon(Icons.download),
@@ -1268,12 +1816,19 @@ class _ExternalResourcesPageContentState
         throw Exception('ZIP文件根目录中未找到metadata.json文件');
       }
 
-      // 4. 准备文件映射预览
+      // 4. 保存元数据信息
+      _importMetadata = metadata;
+
+      // 5. 准备文件映射预览
       WorkStatusService().updateWorkDescription('正在准备文件映射预览...');
 
       await _prepareFileMappingPreview(tempPath, metadata);
 
-      // 5. 显示预览界面
+      // 6. 检查是否有路径问题，决定是否折叠列表
+      final hasIssues = _fileMappings.any((mapping) => !mapping.isValidPath);
+      _importListCollapsed = !hasIssues; // 如果没有问题就折叠，有问题就展开
+
+      // 7. 显示预览界面
       setState(() {
         _showPreview = true;
         _tempPath = tempPath;
@@ -1502,14 +2057,39 @@ class _ExternalResourcesPageContentState
   final List<ExportMapping> _exportMappings = [];
   bool _isExporting = false;
 
+  // 导出元数据字段控制器
+  final TextEditingController _exportNameController = TextEditingController();
+  final TextEditingController _exportVersionController = TextEditingController(
+    text: '1.0.0',
+  );
+  final TextEditingController _exportDescriptionController =
+      TextEditingController();
+  final TextEditingController _exportAuthorController = TextEditingController();
+  final TextEditingController _exportLicenseController =
+      TextEditingController();
+  final List<MapEntry<TextEditingController, TextEditingController>>
+  _customFields = [];
+
+  @override
+  void dispose() {
+    _exportNameController.dispose();
+    _exportVersionController.dispose();
+    _exportDescriptionController.dispose();
+    _exportAuthorController.dispose();
+    _exportLicenseController.dispose();
+    for (final field in _customFields) {
+      field.key.dispose();
+      field.value.dispose();
+    }
+    super.dispose();
+  }
+
   /// 添加导出映射
   void _addExportMapping() {
     setState(() {
-      _exportMappings.add(ExportMapping(
-        sourcePath: '',
-        exportName: '',
-        isValidPath: false,
-      ));
+      _exportMappings.add(
+        ExportMapping(sourcePath: '', exportName: '', isValidPath: false),
+      );
     });
   }
 
@@ -1517,6 +2097,24 @@ class _ExternalResourcesPageContentState
   void _removeExportMapping(int index) {
     setState(() {
       _exportMappings.removeAt(index);
+    });
+  }
+
+  /// 添加自定义字段
+  void _addCustomField() {
+    setState(() {
+      _customFields.add(
+        MapEntry(TextEditingController(), TextEditingController()),
+      );
+    });
+  }
+
+  /// 删除自定义字段
+  void _removeCustomField(int index) {
+    setState(() {
+      final field = _customFields.removeAt(index);
+      field.key.dispose();
+      field.value.dispose();
     });
   }
 
@@ -1542,7 +2140,7 @@ class _ExternalResourcesPageContentState
   /// 验证源路径是否有效
   bool _isValidSourcePath(String path) {
     if (path.isEmpty) return false;
-    
+
     // 只允许 indexeddb://r6box/ 开头的绝对路径
     if (!path.startsWith('indexeddb://r6box/')) {
       return false;
@@ -1585,7 +2183,7 @@ class _ExternalResourcesPageContentState
 
       if (result != null) {
         _updateExportSourcePath(index, result);
-        
+
         // 自动提取路径结尾填充导出名称
         final pathName = _extractPathName(result);
         if (pathName.isNotEmpty) {
@@ -1600,28 +2198,31 @@ class _ExternalResourcesPageContentState
   /// 从路径中提取文件/文件夹名称
   String _extractPathName(String path) {
     if (path.isEmpty) return '';
-    
+
     // 移除末尾的斜杠
-    String cleanPath = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
-    
+    String cleanPath = path.endsWith('/')
+        ? path.substring(0, path.length - 1)
+        : path;
+
     // 提取最后一个路径段
     final segments = cleanPath.split('/').where((s) => s.isNotEmpty).toList();
     if (segments.isEmpty) return '';
-    
+
     return segments.last;
   }
 
   /// 检查导出名称是否有效（不为空且不重复）
   bool _isValidExportName(int currentIndex, String name) {
     if (name.trim().isEmpty) return false;
-    
+
     // 检查是否与其他项重复
     for (int i = 0; i < _exportMappings.length; i++) {
-      if (i != currentIndex && _exportMappings[i].exportName.trim() == name.trim()) {
+      if (i != currentIndex &&
+          _exportMappings[i].exportName.trim() == name.trim()) {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -1638,11 +2239,14 @@ class _ExternalResourcesPageContentState
       return;
     }
 
-    final validMappings = _exportMappings.where((mapping) => 
-      mapping.isValidPath && 
-      mapping.sourcePath.isNotEmpty && 
-      mapping.exportName.isNotEmpty
-    ).toList();
+    final validMappings = _exportMappings
+        .where(
+          (mapping) =>
+              mapping.isValidPath &&
+              mapping.sourcePath.isNotEmpty &&
+              mapping.exportName.isNotEmpty,
+        )
+        .toList();
 
     if (validMappings.isEmpty) {
       _showErrorSnackBar('请确保所有导出项都有有效的源路径和导出名称');
@@ -1657,21 +2261,29 @@ class _ExternalResourcesPageContentState
       // 开始导出状态
       final workStatusService = WorkStatusService();
       workStatusService.startWorking('正在准备导出...', taskId: 'export');
-      
+
       // 创建临时文件夹
-      final tempFolderName = 'export_temp_${DateTime.now().millisecondsSinceEpoch}';
+      final tempFolderName =
+          'export_temp_${DateTime.now().millisecondsSinceEpoch}';
       final tempPath = 'indexeddb://r6box/fs/temp/$tempFolderName';
-      
+
       await _vfsService.vfs.createDirectory(tempPath);
 
       // 复制文件到临时文件夹并重命名
-      workStatusService.updateWorkDescription('正在复制文件...');
       final fileMapping = <String, String>{};
-      
+      int totalFilesCopied = 0;
+
       for (int i = 0; i < validMappings.length; i++) {
         final mapping = validMappings[i];
-        workStatusService.updateWorkDescription('正在复制文件 ${i + 1}/${validMappings.length}');
-        await _copyToTempFolder(mapping, tempPath, fileMapping);
+        workStatusService.updateWorkDescription(
+          '正在复制文件 ${i + 1}/${validMappings.length}',
+        );
+        final fileCount = await _copyToTempFolder(
+          mapping,
+          tempPath,
+          fileMapping,
+        );
+        totalFilesCopied += fileCount;
       }
 
       // 创建 metadata.json
@@ -1690,14 +2302,9 @@ class _ExternalResourcesPageContentState
       workStatusService.updateWorkDescription('正在清理临时文件...');
       await _vfsService.vfs.delete(tempPath, recursive: true);
 
-      workStatusService.updateWorkDescription('导出完成！');
       _showSuccessSnackBar('导出成功！');
-      
-      // 延迟结束工作状态以显示完成信息
-      Future.delayed(const Duration(seconds: 2), () {
-        workStatusService.stopWorking(taskId: 'export');
-      });
-      
+
+      workStatusService.stopWorking(taskId: 'export');
     } catch (e) {
       final workStatusService = WorkStatusService();
       workStatusService.updateWorkDescription('导出失败：$e');
@@ -1715,17 +2322,18 @@ class _ExternalResourcesPageContentState
   }
 
   /// 复制文件到临时文件夹
-  Future<void> _copyToTempFolder(
-    ExportMapping mapping, 
-    String tempPath, 
+  /// 返回复制的文件数量
+  Future<int> _copyToTempFolder(
+    ExportMapping mapping,
+    String tempPath,
     Map<String, String> fileMapping,
   ) async {
     final sourcePath = mapping.sourcePath;
     final exportName = mapping.exportName;
-    
+
     // 记录顶层映射（无论是文件还是文件夹）
     fileMapping[exportName] = sourcePath;
-    
+
     // 检查源路径是否存在
     final exists = await _vfsService.vfs.exists(sourcePath);
     if (!exists) {
@@ -1735,10 +2343,10 @@ class _ExternalResourcesPageContentState
     // 检查是文件还是文件夹
     final fileInfo = await _vfsService.vfs.getFileInfo(sourcePath);
     final isDirectory = fileInfo?.isDirectory ?? false;
-    
+
     if (isDirectory) {
       // 处理文件夹（不记录子文件映射）
-      await _copyDirectoryToTemp(sourcePath, tempPath, exportName);
+      return await _copyDirectoryToTemp(sourcePath, tempPath, exportName);
     } else {
       // 处理单个文件
       final fileContent = await _vfsService.vfs.readFile(sourcePath);
@@ -1749,39 +2357,48 @@ class _ExternalResourcesPageContentState
           fileContent.data,
           mimeType: fileContent.mimeType,
         );
+        return 1; // 复制了1个文件
       }
+      return 0; // 没有复制文件
     }
   }
 
   /// 递归复制文件夹到临时位置
-  Future<void> _copyDirectoryToTemp(
+  /// 返回复制的文件数量
+  Future<int> _copyDirectoryToTemp(
     String sourcePath,
     String tempPath,
     String exportName,
   ) async {
     final targetDirPath = '$tempPath/$exportName';
     await _vfsService.vfs.createDirectory(targetDirPath);
-    
+
     // 解析源路径获取collection和相对路径
-    final sourceRelativePath = sourcePath.substring('indexeddb://r6box/'.length);
+    final sourceRelativePath = sourcePath.substring(
+      'indexeddb://r6box/'.length,
+    );
     final pathParts = sourceRelativePath.split('/');
     final collection = pathParts[0];
-    final relativePath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
-    
+    final relativePath = pathParts.length > 1
+        ? pathParts.sublist(1).join('/')
+        : '';
+
     final items = await _vfsService.listFiles(collection, relativePath);
+    int totalFilesCopied = 0;
 
     for (final item in items) {
       final itemName = item.name;
       final itemSourcePath = item.path;
       final itemTargetPath = '$targetDirPath/$itemName';
-      
+
       if (item.isDirectory) {
         // 递归处理子文件夹
-        await _copyDirectoryToTemp(
+        final subFileCount = await _copyDirectoryToTemp(
           itemSourcePath,
           targetDirPath,
           itemName,
         );
+        totalFilesCopied += subFileCount;
       } else {
         // 复制文件
         final fileContent = await _vfsService.vfs.readFile(itemSourcePath);
@@ -1791,9 +2408,12 @@ class _ExternalResourcesPageContentState
             fileContent.data,
             mimeType: fileContent.mimeType,
           );
+          totalFilesCopied++;
         }
       }
     }
+
+    return totalFilesCopied;
   }
 
   /// 创建 metadata.json 文件
@@ -1801,33 +2421,60 @@ class _ExternalResourcesPageContentState
     String tempPath,
     Map<String, String> fileMapping,
   ) async {
-    final metadata = {
+    final metadata = <String, dynamic>{
       'file_mappings': fileMapping,
       'export_time': DateTime.now().toIso8601String(),
-      'version': '1.0',
     };
-    
+
+    // 添加基础字段
+    if (_exportNameController.text.trim().isNotEmpty) {
+      metadata['name'] = _exportNameController.text.trim();
+    }
+    if (_exportVersionController.text.trim().isNotEmpty) {
+      metadata['version'] = _exportVersionController.text.trim();
+    }
+    if (_exportDescriptionController.text.trim().isNotEmpty) {
+      metadata['description'] = _exportDescriptionController.text.trim();
+    }
+    if (_exportAuthorController.text.trim().isNotEmpty) {
+      metadata['author'] = _exportAuthorController.text.trim();
+    }
+    if (_exportLicenseController.text.trim().isNotEmpty) {
+      metadata['license'] = _exportLicenseController.text.trim();
+    }
+
+    // 添加自定义字段
+    for (final field in _customFields) {
+      final key = field.key.text.trim();
+      final value = field.value.text.trim();
+      if (key.isNotEmpty && value.isNotEmpty) {
+        metadata[key] = value;
+      }
+    }
+
     final metadataJson = jsonEncode(metadata);
     final metadataPath = '$tempPath/metadata.json';
-    
+
     await _vfsService.vfs.writeTextFile(metadataPath, metadataJson);
   }
 
   /// 压缩临时文件夹
   Future<Uint8List> _compressTempFolder(String tempPath) async {
     final archive = Archive();
-    
+
     // 解析临时文件夹路径
     final tempRelativePath = tempPath.substring('indexeddb://r6box/'.length);
     final pathParts = tempRelativePath.split('/');
     final collection = pathParts[0];
-    final relativePath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
-    
+    final relativePath = pathParts.length > 1
+        ? pathParts.sublist(1).join('/')
+        : '';
+
     final items = await _vfsService.listFiles(collection, relativePath);
 
     // 递归添加所有文件到压缩包
     await _addItemsToArchive(archive, items, '');
-    
+
     // 压缩
     final zipEncoder = ZipEncoder();
     return Uint8List.fromList(zipEncoder.encode(archive)!);
@@ -1841,15 +2488,22 @@ class _ExternalResourcesPageContentState
   ) async {
     for (final item in items) {
       final itemPath = basePath.isEmpty ? item.name : '$basePath/${item.name}';
-      
+
       if (item.isDirectory) {
         // 处理文件夹
-        final itemRelativePath = item.path.substring('indexeddb://r6box/'.length);
+        final itemRelativePath = item.path.substring(
+          'indexeddb://r6box/'.length,
+        );
         final itemPathParts = itemRelativePath.split('/');
         final itemCollection = itemPathParts[0];
-        final itemSubPath = itemPathParts.length > 1 ? itemPathParts.sublist(1).join('/') : '';
-        
-        final subItems = await _vfsService.listFiles(itemCollection, itemSubPath);
+        final itemSubPath = itemPathParts.length > 1
+            ? itemPathParts.sublist(1).join('/')
+            : '';
+
+        final subItems = await _vfsService.listFiles(
+          itemCollection,
+          itemSubPath,
+        );
         await _addItemsToArchive(archive, subItems, itemPath);
       } else {
         // 添加文件到压缩包
@@ -1872,7 +2526,7 @@ class _ExternalResourcesPageContentState
       // 生成默认文件名
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final defaultFileName = 'external_resources_export_$timestamp.zip';
-      
+
       // 使用文件选择器让用户选择保存位置
       final result = await FilePicker.platform.saveFile(
         dialogTitle: '保存导出文件',
@@ -1880,7 +2534,7 @@ class _ExternalResourcesPageContentState
         type: FileType.custom,
         allowedExtensions: ['zip'],
       );
-      
+
       if (result != null) {
         // 写入文件
         final file = File(result);
@@ -1898,13 +2552,13 @@ class _ExternalResourcesPageContentState
     try {
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final fileName = 'external_resources_export_$timestamp.zip';
-      
+
       if (kIsWeb) {
         // Web平台：使用WebDownloader下载
         await WebDownloader.downloadFile(zipBytes, fileName);
       } else {
         // 桌面平台：保存到下载文件夹
-        final downloadsPath = Platform.isWindows 
+        final downloadsPath = Platform.isWindows
             ? '${Platform.environment['USERPROFILE']}\\Downloads'
             : '${Platform.environment['HOME']}/Downloads';
         final file = File('$downloadsPath/$fileName');
