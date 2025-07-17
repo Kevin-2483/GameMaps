@@ -17,7 +17,7 @@ class UserPreferencesDatabaseService {
   static const String _databaseName = 'user_preferences.db';
   static const String _preferencesTable = 'user_preferences';
   static const String _metadataTable = 'preferences_metadata';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   Database? _database;
 
@@ -98,6 +98,15 @@ class UserPreferencesDatabaseService {
 
       if (kDebugMode) {
         debugPrint('数据库升级：添加 home_page_data 字段');
+      }
+    }
+
+    if (oldVersion < 3) {
+      // 为现有用户的 layout_data 添加 enableMergedWindowControls 字段
+      await _migrateLayoutDataForMergedWindowControls(db);
+
+      if (kDebugMode) {
+        debugPrint('数据库升级：为 layout_data 添加 enableMergedWindowControls 字段');
       }
     }
 
@@ -332,6 +341,60 @@ class UserPreferencesDatabaseService {
           ? DateTime.fromMillisecondsSinceEpoch(row['last_login_at'] as int)
           : null,
     );
+  }
+
+  /// 为现有用户的 layout_data 添加 enableMergedWindowControls 字段
+  Future<void> _migrateLayoutDataForMergedWindowControls(Database db) async {
+    try {
+      // 获取所有用户的 layout_data
+      final result = await db.query(
+        _preferencesTable,
+        columns: ['user_id', 'layout_data'],
+      );
+
+      for (final row in result) {
+        final userId = row['user_id'] as String;
+        final layoutDataStr = row['layout_data'] as String;
+        
+        try {
+          final layoutData = jsonDecode(layoutDataStr) as Map<String, dynamic>;
+          
+          // 检查是否已经包含 enableMergedWindowControls 字段
+          if (!layoutData.containsKey('enableMergedWindowControls')) {
+            // 添加默认值 false
+            layoutData['enableMergedWindowControls'] = false;
+            
+            // 更新数据库
+            await db.update(
+              _preferencesTable,
+              {'layout_data': jsonEncode(layoutData)},
+              where: 'user_id = ?',
+              whereArgs: [userId],
+            );
+            
+            if (kDebugMode) {
+              debugPrint('已为用户 $userId 添加 enableMergedWindowControls 字段');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('解析用户 $userId 的 layout_data 失败: $e');
+          }
+          // 如果解析失败，使用默认的 LayoutPreferences
+          final defaultLayout = LayoutPreferences.createDefault();
+          await db.update(
+            _preferencesTable,
+            {'layout_data': jsonEncode(defaultLayout.toJson())},
+            where: 'user_id = ?',
+            whereArgs: [userId],
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('迁移 layout_data 时发生错误: $e');
+      }
+    }
   }
 
   /// 关闭数据库连接

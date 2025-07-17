@@ -461,6 +461,12 @@ class LayoutPreferences {
   /// 窗口是否处于最大化状态
   final bool isMaximized;
 
+  /// 是否启用右侧垂直导航
+  final bool enableRightSideVerticalNavigation;
+
+  /// 是否启用合并窗口控件
+  final bool enableMergedWindowControls;
+
   const LayoutPreferences({
     required this.panelCollapsedStates,
     required this.panelAutoCloseStates,
@@ -479,6 +485,8 @@ class LayoutPreferences {
     this.minWindowHeight = 600.0,
     this.rememberMaximizedState = true,
     this.isMaximized = false,
+    this.enableRightSideVerticalNavigation = false,
+    this.enableMergedWindowControls = false,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -512,6 +520,8 @@ class LayoutPreferences {
       minWindowHeight: 600.0,
       rememberMaximizedState: true,
       isMaximized: false,
+      enableRightSideVerticalNavigation: false,
+      enableMergedWindowControls: false,
     );
   }
   LayoutPreferences copyWith({
@@ -532,6 +542,8 @@ class LayoutPreferences {
     double? minWindowHeight,
     bool? rememberMaximizedState,
     bool? isMaximized,
+    bool? enableRightSideVerticalNavigation,
+    bool? enableMergedWindowControls,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -554,6 +566,10 @@ class LayoutPreferences {
       rememberMaximizedState:
           rememberMaximizedState ?? this.rememberMaximizedState,
       isMaximized: isMaximized ?? this.isMaximized,
+      enableRightSideVerticalNavigation: enableRightSideVerticalNavigation ??
+          this.enableRightSideVerticalNavigation,
+      enableMergedWindowControls: enableMergedWindowControls ??
+          this.enableMergedWindowControls,
     );
   }
 

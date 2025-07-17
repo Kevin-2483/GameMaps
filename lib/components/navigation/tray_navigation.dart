@@ -13,6 +13,7 @@ import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 
+
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
   const TrayNavigation({super.key});
@@ -116,14 +117,31 @@ class _TrayNavigationState extends State<TrayNavigation>
 
     return ChangeNotifierProvider.value(
       value: WorkStatusService(),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // 根据屏幕比例决定导航位置
-          final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-          final navigationItems = PageRegistry().getNavigationItems();
+      child: Consumer<UserPreferencesProvider>(
+        builder: (context, userPrefsProvider, child) {
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              // 根据屏幕比例决定基本布局
+              final isWideScreen = constraints.maxWidth > constraints.maxHeight;
+              final enableRightSideVertical = userPrefsProvider.isInitialized &&
+                  userPrefsProvider.layout.enableRightSideVerticalNavigation;
+              
+              // 只有在宽屏且启用右侧垂直导航时才使用右侧垂直布局
+              final useRightSideVertical = isWideScreen && enableRightSideVertical;
+              // 垂直布局：宽屏时使用垂直布局（左侧或右侧），窄屏时使用水平布局（底部）
+              final useVerticalLayout = isWideScreen;
+              final navigationItems = PageRegistry().getNavigationItems();
 
-          // 直接返回导航托盘，始终显示
-          return _buildNavigationTray(context, navigationItems, isWideScreen);
+              // 构建导航托盘
+              return _buildNavigationTray(
+                context, 
+                navigationItems, 
+                useVerticalLayout,
+                useRightSideVertical,
+                userPrefsProvider,
+              );
+            },
+          );
         },
       ),
     );
@@ -133,18 +151,28 @@ class _TrayNavigationState extends State<TrayNavigation>
     BuildContext context,
     List<NavigationItem> items,
     bool isVertical,
+    bool isRightSide,
+    UserPreferencesProvider userPrefsProvider,
   ) {
     // 只在桌面平台添加拖拽功能
     final isDraggable =
         !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
     Widget navigationContent = Container(
-      width: isVertical ? 80 : double.infinity, // 宽屏时固定宽度，窄屏时占满宽度
-      height: isVertical ? double.infinity : 80, // 宽屏时占满高度，窄屏时固定高度
+      width: isVertical ? 64 : double.infinity, // 宽屏时固定宽度，窄屏时占满宽度
+      height: isVertical ? double.infinity : 64, // 宽屏时占满高度，窄屏时固定高度
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          right: isVertical
+          left: isVertical && isRightSide
+              ? BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                  width: 1,
+                )
+              : BorderSide.none,
+          right: isVertical && !isRightSide
               ? BorderSide(
                   color: Theme.of(
                     context,
@@ -164,11 +192,11 @@ class _TrayNavigationState extends State<TrayNavigation>
       ),
       child: isVertical
           ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
-                  // 顶部：关闭按钮（仅在桌面平台显示）
-                  if (isDraggable) ...[
+                  // 顶部：关闭按钮（仅在桌面平台且未启用合并控件时显示）
+                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) ...[
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
@@ -188,8 +216,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                       ],
                     ),
                   ),
-                  // 底部：窗口控制按钮（仅在桌面平台显示）
-                  if (isDraggable) ...[
+                  // 底部：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
+                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) ...[
                     const SizedBox(height: 8),
                     _buildWindowButton(
                       context,
@@ -222,15 +250,15 @@ class _TrayNavigationState extends State<TrayNavigation>
               ),
             )
           : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
                   // 左侧：导航按钮
                   _buildNavigationOrWorkStatus(context, items, false),
                   // 中间：拖拽区域（占用剩余空间）
                   const Expanded(child: SizedBox()),
-                  // 右侧：窗口控制按钮
-                  _buildWindowControls(context),
+                  // 右侧：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
+                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) _buildWindowControls(context),
                 ],
               ),
             ),
@@ -245,9 +273,9 @@ class _TrayNavigationState extends State<TrayNavigation>
         },
         child: navigationContent,
       );
+    } else {
+      return navigationContent;
     }
-
-    return navigationContent;
   }
 
   List<Widget> _buildNavigationButtons(
@@ -460,9 +488,9 @@ class _TrayNavigationState extends State<TrayNavigation>
           ),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: isVertical ? 64 : 64, // 水平和垂直都使用相同宽度
-            height: isVertical ? 64 : 64, // 水平和垂直都使用相同高度
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            width: isVertical ? 48 : 48, // 水平和垂直都使用相同宽度
+            height: isVertical ? 48 : 48, // 水平和垂直都使用相同高度
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
               color: isActive
                   ? Theme.of(context).colorScheme.primaryContainer
@@ -564,9 +592,9 @@ class _TrayNavigationState extends State<TrayNavigation>
             ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 64,
-              height: 64,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              width: 48,
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
