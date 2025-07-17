@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../../models/map_item.dart';
+import '../../models/map_item_summary.dart';
 import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
 
@@ -9,6 +10,8 @@ import '../../models/sticky_note.dart';
 abstract class VfsMapService {
   // 地图CRUD操作
   Future<List<MapItem>> getAllMaps([String? folderPath]);
+  Future<List<MapItemSummary>> getAllMapsSummary([String? folderPath]);
+  Future<int> getMapCount([String? folderPath]);
   Future<MapItem?> getMapById(String id); // 兼容性方法，内部转换为标题查找
   Future<MapItem?> getMapByTitle(String title, [String? folderPath]);
   Future<String> saveMap(MapItem map, [String? folderPath]); // 返回标题作为标识符

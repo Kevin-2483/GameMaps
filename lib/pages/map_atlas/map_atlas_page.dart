@@ -78,38 +78,15 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         );
       }
 
-      // 获取当前目录下的地图
-      final maps = await _vfsMapService.getAllMaps(
+      // 获取当前目录下的地图摘要
+      final mapSummaries = await _vfsMapService.getAllMapsSummary(
         _currentPath.isEmpty ? null : _currentPath,
       );
 
-      for (final map in maps) {
-        // 读取封面图片
-        Uint8List? coverImage;
-        try {
-          final basePath = _currentPath.isEmpty ? '' : _currentPath + '/';
-          final coverPath =
-              'indexeddb://r6box/maps/${basePath}${FilenameSanitizer.sanitize(map.title)}.mapdata/cover.png';
-          if (await _storageService.exists(coverPath)) {
-            final coverFile = await _storageService.readFile(coverPath);
-            coverImage = coverFile?.data;
-          }
-        } catch (e) {
-          debugPrint('加载封面图片失败: $e');
-        }
-
-        final mapSummary = MapItemSummary(
-          id: map.title.hashCode,
-          title: map.title,
-          imageData: coverImage,
-          version: map.version,
-          createdAt: map.createdAt,
-          updatedAt: map.updatedAt,
-        );
-
+      for (final mapSummary in mapSummaries) {
         items.add(
           MapFileItem(
-            name: map.title,
+            name: mapSummary.title,
             path: _currentPath,
             mapSummary: mapSummary,
           ),
@@ -141,9 +118,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
   Future<int> _countMapsInFolder(String folderPath) async {
     try {
-      // 递归计算文件夹中的地图数量
-      final maps = await _vfsMapService.getAllMaps(folderPath);
-      int count = maps.length;
+      // 递归计算文件夹中的地图数量 - 使用轻量级方法只检查.mapdata目录
+      int count = await _vfsMapService.getMapCount(folderPath);
 
       final subFolders = await _vfsMapService.getFolders(folderPath);
       for (final subFolder in subFolders) {

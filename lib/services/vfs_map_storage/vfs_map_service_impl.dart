@@ -7,6 +7,7 @@ import '../virtual_file_system/vfs_storage_service.dart';
 import '../virtual_file_system/vfs_protocol.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
+import '../../models/map_item_summary.dart';
 import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
 import '../../utils/filename_sanitizer.dart';
@@ -170,6 +171,102 @@ class VfsMapServiceImpl implements VfsMapService {
     } catch (e) {
       debugPrint('获取所有地图失败: $e');
       return [];
+    }
+  }
+
+  @override
+  Future<List<MapItemSummary>> getAllMapsSummary([String? folderPath]) async {
+    try {
+      final basePath = folderPath == null || folderPath.isEmpty
+          ? ''
+          : folderPath.replaceAll(RegExp(r'^/+|/+$'), '') + '/';
+
+      final files = await _storageService.listDirectory(
+        _buildVfsPath(basePath),
+      );
+      final summaries = <MapItemSummary>[];
+
+      for (final file in files) {
+        if (file.isDirectory && file.name.endsWith('.mapdata')) {
+          // 从文件名提取标题
+          final mapTitle = file.name.replaceAll('.mapdata', '');
+          final desanitizedTitle = FilenameSanitizer.desanitize(mapTitle);
+          
+          try {
+            // 读取元数据
+            final metaPath = _buildVfsPath(_getMapMetaPath(desanitizedTitle, folderPath));
+            final metaData = await _storageService.readFile(metaPath);
+            
+            if (metaData == null) continue;
+            
+            final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+            
+            // 检查标题是否与文件夹名称一致，如果不一致则更新
+            final metaTitle = metaJson['title'] as String;
+            if (metaTitle != desanitizedTitle) {
+              metaJson['title'] = desanitizedTitle;
+              metaJson['updatedAt'] = DateTime.now().toIso8601String();
+              
+              // 保存更新后的元数据
+              final updatedMetaData = utf8.encode(jsonEncode(metaJson));
+              await _storageService.writeFile(metaPath, updatedMetaData);
+            }
+            
+            // 读取封面图片
+            Uint8List? coverData;
+            try {
+              final coverPath = _buildVfsPath(_getMapCoverPath(desanitizedTitle, folderPath));
+              final coverFile = await _storageService.readFile(coverPath);
+              coverData = coverFile?.data;
+            } catch (e) {
+              debugPrint('加载地图封面失败: $e');
+            }
+            
+            final summary = MapItemSummary(
+              id: int.tryParse(metaJson['id'] as String? ?? '') ?? desanitizedTitle.hashCode,
+              title: desanitizedTitle,
+              imageData: coverData ?? Uint8List(0),
+              version: metaJson['version'] as int,
+              createdAt: DateTime.parse(metaJson['createdAt'] as String),
+              updatedAt: DateTime.parse(metaJson['updatedAt'] as String),
+            );
+            
+            summaries.add(summary);
+          } catch (e) {
+            debugPrint('加载地图摘要失败 [$desanitizedTitle]: $e');
+          }
+        }
+      }
+
+      return summaries;
+    } catch (e) {
+      debugPrint('获取所有地图摘要失败: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<int> getMapCount([String? folderPath]) async {
+    try {
+      final basePath = folderPath == null || folderPath.isEmpty
+          ? ''
+          : folderPath.replaceAll(RegExp(r'^/+|/+$'), '') + '/';
+
+      final files = await _storageService.listDirectory(
+        _buildVfsPath(basePath),
+      );
+      
+      int count = 0;
+      for (final file in files) {
+        if (file.isDirectory && file.name.endsWith('.mapdata')) {
+          count++;
+        }
+      }
+
+      return count;
+    } catch (e) {
+      debugPrint('获取地图数量失败: $e');
+      return 0;
     }
   }
 
