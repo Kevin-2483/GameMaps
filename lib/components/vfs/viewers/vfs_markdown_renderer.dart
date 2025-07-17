@@ -1861,8 +1861,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     return '';
   }
 
-  /// 解析相对路径为绝对路径
-  String _resolveRelativePath(String currentDir, String relativePath) {
+  /// 解析相对路径为绝对路径，支持中文字符URL解码
+   String _resolveRelativePath(String currentDir, String relativePath) {
     // 如果是绝对路径，直接返回
     if (relativePath.startsWith('/') ||
         relativePath.startsWith('indexeddb://')) {
@@ -1872,33 +1872,47 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 从当前VFS路径中提取数据库和集合信息
     final currentVfsPath = VfsProtocol.parsePath(widget.vfsPath);
     if (currentVfsPath == null) {
+      debugPrint('路径解析失败: 无法解析当前VFS路径 ${widget.vfsPath}');
       return relativePath; // 如果解析失败，返回原路径
     }
 
-    // 处理相对路径
+    // 处理相对路径，先按路径分隔符分割
     List<String> currentParts = currentDir.isEmpty ? [] : currentDir.split('/');
     List<String> relativeParts = relativePath.split('/');
 
+    debugPrint('路径解析: 当前目录=$currentDir, 相对路径=$relativePath');
+    debugPrint('路径解析: 当前路径段=$currentParts, 相对路径段=$relativeParts');
+
     // 处理 ".." 和 "." 路径段
-    for (String part in relativeParts) {
-      if (part == '..') {
-        if (currentParts.isNotEmpty) {
-          currentParts.removeLast();
-        }
-      } else if (part != '.' && part.isNotEmpty) {
-        currentParts.add(part);
-      }
-    }
+     for (String part in relativeParts) {
+       if (part == '..') {
+         if (currentParts.isNotEmpty) {
+           currentParts.removeLast();
+         }
+       } else if (part != '.' && part.isNotEmpty) {
+         // 对于中文路径，需要进行URL解码以还原中文字符
+         try {
+           final decodedPart = Uri.decodeComponent(part);
+           currentParts.add(decodedPart);
+           debugPrint('URL解码: $part -> $decodedPart');
+         } catch (e) {
+           // 如果解码失败，使用原始字符串
+           currentParts.add(part);
+           debugPrint('URL解码失败，使用原始路径: $part');
+         }
+       }
+     }
 
     // 构建最终路径
     final finalRelativePath = currentParts.join('/');
-
-    // 使用VfsProtocol构建完整的VFS路径
-    return VfsProtocol.buildPath(
+    final absolutePath = VfsProtocol.buildPath(
       currentVfsPath.database,
       currentVfsPath.collection,
       finalRelativePath,
     );
+
+    debugPrint('路径解析结果: $absolutePath');
+    return absolutePath;
   }
 
   /// 获取无序列表标记装饰
