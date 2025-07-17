@@ -9,6 +9,7 @@ import '../../features/page_registry.dart';
 import '../../services/window_manager_service.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/cleanup_service.dart';
+import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 
@@ -306,52 +307,113 @@ class _TrayNavigationState extends State<TrayNavigation>
     bool isVertical,
     String workDescription,
   ) {
-    return isVertical
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
+    return Consumer<WorkStatusService>(
+      builder: (context, workStatusService, child) {
+        final actions = workStatusService.actions;
+        
+        return isVertical
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 操作控件（垂直布局时显示在顶部）
+                  if (actions.isNotEmpty) ..._buildActionButtons(context, actions, true),
+                  if (actions.isNotEmpty) const SizedBox(height: 8),
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Flexible(child: _buildVerticalText(context, workDescription)),
-            ],
-          )
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
+                  const SizedBox(height: 8),
+                  Flexible(child: _buildVerticalText(context, workDescription)),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 操作控件（水平布局时显示在左侧）
+                  if (actions.isNotEmpty) ..._buildActionButtons(context, actions, false),
+                  if (actions.isNotEmpty) const SizedBox(width: 8),
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  workDescription,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      workDescription,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          );
+                ],
+              );
+      },
+    );
+  }
+
+  /// 构建操作控件按钮
+  List<Widget> _buildActionButtons(BuildContext context, List<WorkStatusAction> actions, bool isVertical) {
+    return actions.map((action) => _buildActionButton(context, action)).toList();
+  }
+
+  /// 构建单个操作控件按钮
+  Widget _buildActionButton(BuildContext context, WorkStatusAction action) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: action.enabled ? action.onPressed : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Tooltip(
+          message: action.tooltip,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.inverseSurface,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onInverseSurface,
+            fontSize: 12,
+          ),
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: action.enabled
+                  ? (action.isDangerous
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Theme.of(context).colorScheme.surfaceContainerHighest)
+                  : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              action.icon,
+              size: 16,
+              color: action.enabled
+                  ? (action.isDangerous
+                      ? Colors.red
+                      : Theme.of(context).colorScheme.onSurface)
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildVerticalText(BuildContext context, String text) {

@@ -32,6 +32,46 @@ class VfsPlatformIO {
     return File(path);
   }
 
+  /// 获取WebDAV导入临时目录
+  static Future<Directory> getWebDAVImportTempDirectory() async {
+    // 获取基础临时目录
+    final tempDir = await getTempDirectory();
+    
+    // 在基础目录下创建webdav_import子目录
+    final webdavImportDir = createDirectory('${tempDir.path}/webdav_import');
+    
+    // 确保目录存在
+    if (!await webdavImportDir.exists()) {
+      await webdavImportDir.create(recursive: true);
+      debugPrint('🔗 VfsPlatformIO: 创建WebDAV导入临时目录 - ${webdavImportDir.path}');
+    }
+    
+    return webdavImportDir;
+  }
+
+  /// 生成WebDAV导入临时文件路径
+  static Future<String> generateWebDAVImportTempFilePath(String fileName) async {
+    final webdavImportDir = await getWebDAVImportTempDirectory();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final safeFileName = _sanitizeFileName(fileName);
+    return '${webdavImportDir.path}/webdav_import_${timestamp}_$safeFileName';
+  }
+
+  /// 清理WebDAV导入临时文件
+  static Future<void> cleanupWebDAVImportTempFiles() async {
+    try {
+      final tempDir = await getTempDirectory();
+      final webdavImportDir = createDirectory('${tempDir.path}/webdav_import');
+
+      if (await webdavImportDir.exists()) {
+        await webdavImportDir.delete(recursive: true);
+        debugPrint('🔗 VfsPlatformIO: 已清理WebDAV导入临时文件');
+      }
+    } catch (e) {
+      debugPrint('🔗 VfsPlatformIO: 清理WebDAV导入临时文件失败 - $e');
+    }
+  }
+
   /// 清理VFS临时文件
   static Future<void> cleanupTempFiles() async {
     try {
@@ -45,6 +85,14 @@ class VfsPlatformIO {
     } catch (e) {
       debugPrint('🔗 VfsPlatformIO: 清理临时文件失败 - $e');
     }
+  }
+
+  /// 清理所有临时文件（包括VFS和WebDAV导入）
+  static Future<void> cleanupAllTempFiles() async {
+    await Future.wait([
+      cleanupTempFiles(),
+      cleanupWebDAVImportTempFiles(),
+    ]);
   }
 
   /// 生成临时文件
@@ -297,5 +345,15 @@ class VfsPlatformIO {
       if (a[i] != b[i]) return false;
     }
     return true;
+  }
+
+  /// 清理文件名中的非法字符
+  static String _sanitizeFileName(String fileName) {
+    // 移除或替换文件名中的非法字符
+    return fileName
+        .replaceAll(RegExp(r'[<>:"/\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
   }
 }

@@ -12,6 +12,7 @@ import '../features/page-modules/vfs_file_manager_page_module.dart';
 import '../features/page-modules/external_resources_page_module.dart';
 
 import '../features/page-modules/websocket_connection_manager_page_module.dart';
+import '../features/page-modules/webdav_manager_page_module.dart';
 // import '../features/page-modules/notification_test_page_module.dart';
 import '../components/layout/app_shell.dart';
 
@@ -72,6 +73,7 @@ class AppRouter {
     registry.register(VfsFileManagerPageModule());
 
     registry.register(WebSocketConnectionManagerPageModule());
+    registry.register(WebDavManagerPageModule());
     // registry.register(NotificationTestPageModule());
   }
 }

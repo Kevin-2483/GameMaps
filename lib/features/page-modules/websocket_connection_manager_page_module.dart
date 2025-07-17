@@ -19,6 +19,9 @@ class WebSocketConnectionManagerPageModule extends PageModule {
   bool get isEnabled => true;
 
   @override
+  bool get showInNavigation => false; // 从导航栏隐藏
+
+  @override
   int get priority => 70; // 在其他页面之后
 
   @override

@@ -283,6 +283,14 @@ class CleanupService {
             await _cleanupDirectory(clipboardFilesDir);
           }
 
+          // 清理WebDAV导入临时文件子目录
+          final webdavImportDir = Directory(
+            path.join(appTempDir.path, 'webdav_import'),
+          );
+          if (await webdavImportDir.exists()) {
+            await _cleanupDirectory(webdavImportDir);
+          }
+
           // 清理其他可能的临时文件（直接在temp目录下的文件）
           await for (final entity in appTempDir.list()) {
             if (entity is File) {

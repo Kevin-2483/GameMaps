@@ -65,6 +65,9 @@ dependencies:
   
   # Archive support for compression
   archive: ^3.6.1
+  
+  # Cryptographic functions
+  crypto: ^3.0.3
     # Image handling
   image: ^4.2.0
   
@@ -77,6 +80,12 @@ dependencies:
   
   # RSA encryption
   fast_rsa: ^3.8.5
+  
+  # WebDAV client (non-web platforms only)
+  webdav_client: ^1.2.2
+  
+  # Chinese to Pinyin conversion
+  lpinyin: ^2.0.3
   
   # Clipboard support
   super_clipboard: ^0.8.21

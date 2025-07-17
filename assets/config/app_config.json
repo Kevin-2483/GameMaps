@@ -9,6 +9,7 @@
         "LegendManagerPage",
         "VfsFileManagerPage",
         "WebSocketConnectionManagerPage",
+        "WebDavManagerPage",
         "NotificationTestPage"
       ],
       "features": [
@@ -23,7 +24,8 @@
         "MapAtlasPage",
         "LegendManagerPage",
         "VfsFileManagerPage",
-        "WebSocketConnectionManagerPage"
+        "WebSocketConnectionManagerPage",
+        "WebDavManagerPage"
       ],
       "features": [
         "TrayNavigation"
@@ -37,7 +39,8 @@
         "MapAtlasPage",
         "LegendManagerPage",
         "VfsFileManagerPage",
-        "WebSocketConnectionManagerPage"
+        "WebSocketConnectionManagerPage",
+        "WebDavManagerPage"
       ],
       "features": [
         "TrayNavigation"
@@ -51,7 +54,8 @@
         "MapAtlasPage",
         "LegendManagerPage",
         "VfsFileManagerPage",
-        "WebSocketConnectionManagerPage"
+        "WebSocketConnectionManagerPage",
+        "WebDavManagerPage"
       ],
       "features": [
         "TrayNavigation"
@@ -65,7 +69,8 @@
         "MapAtlasPage",
         "LegendManagerPage",
         "VfsFileManagerPage",
-        "WebSocketConnectionManagerPage"
+        "WebSocketConnectionManagerPage",
+        "WebDavManagerPage"
       ],
       "features": [
         "TrayNavigation"

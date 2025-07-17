@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 
 import 'package:intl/intl.dart';
 import '../../utils/web_download_stub.dart'
@@ -13,11 +14,16 @@ import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../services/virtual_file_system/vfs_platform_io.dart';
 import '../../services/work_status_service.dart';
+import '../../services/work_status_action.dart';
 import '../../services/notification/notification_service.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
+import '../../services/webdav/webdav_client_service.dart';
+import '../../services/webdav/webdav_database_service.dart';
+import '../../models/webdav_config.dart';
 
 class ExternalResourcesPage extends BasePage {
   const ExternalResourcesPage({super.key});
@@ -89,6 +95,8 @@ class ExportMapping {
 class _ExternalResourcesPageContentState
     extends State<_ExternalResourcesPageContent> {
   final VfsServiceProvider _vfsService = VfsServiceProvider();
+  final WebDavClientService _webdavClientService = WebDavClientService();
+  final WebDavDatabaseService _webdavDbService = WebDavDatabaseService();
   bool _isUploading = false;
 
   // 预览状态
@@ -99,6 +107,7 @@ class _ExternalResourcesPageContentState
   // 导入预览状态
   bool _importListCollapsed = false;
   Map<String, dynamic>? _importMetadata;
+  WorkStatusService? _webdavWorkStatusService; // 用于WebDAV导入的工作状态服务
 
   @override
   Widget build(BuildContext context) {
@@ -561,8 +570,13 @@ class _ExternalResourcesPageContentState
   }
 
   void _cancelPreview() async {
-    // 清理工作状态
-    WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+    // 清理工作状态（检查是否是WebDAV导入）
+    if (_webdavWorkStatusService != null) {
+      _webdavWorkStatusService!.stopWorking(taskId: 'webdav_import');
+      _webdavWorkStatusService = null;
+    } else {
+      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+    }
 
     // 清理临时文件
     if (_tempPath.isNotEmpty) {
@@ -596,13 +610,17 @@ class _ExternalResourcesPageContentState
       return;
     }
 
+    // 检查是否是WebDAV导入，如果是则使用保存的工作状态服务
+    final workStatusService = _webdavWorkStatusService ?? WorkStatusService();
+    final taskId = _webdavWorkStatusService != null ? 'webdav_import' : 'upload_external_resources';
+
     try {
       setState(() {
         _isUploading = true;
       });
-
+      
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription('正在验证文件路径...');
+      workStatusService.updateWorkDescription('正在验证文件路径...');
 
       // 再次检查路径合法性（防止用户手动修改后未更新isValidPath）
       for (final mapping in _fileMappings) {
@@ -614,7 +632,7 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription('正在检查文件冲突...');
+      workStatusService.updateWorkDescription('正在检查文件冲突...');
 
       // 检查文件冲突
       final conflicts = await _checkFileConflicts();
@@ -631,14 +649,14 @@ class _ExternalResourcesPageContentState
       // 更新工作状态描述
       final totalFiles = _fileMappings.length;
       int processedFiles = 0;
-      WorkStatusService().updateWorkDescription(
+      workStatusService.updateWorkDescription(
         '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
       );
 
       // 处理文件映射
       for (final mapping in _fileMappings) {
         processedFiles++;
-        WorkStatusService().updateWorkDescription(
+        workStatusService.updateWorkDescription(
           '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
         );
         // 确保目标目录存在
@@ -676,19 +694,30 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription('正在清理临时文件...');
+      workStatusService.updateWorkDescription('正在清理临时文件...');
 
       // 清理临时文件
       await _cleanupTempFiles(_tempPath);
 
       // 清理工作状态
-      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+      workStatusService.stopWorking(taskId: taskId);
+      
+      // 清理WebDAV工作状态服务引用
+      if (_webdavWorkStatusService != null) {
+        _webdavWorkStatusService = null;
+      }
 
       _showSuccessSnackBar('外部资源更新成功');
       _cancelPreview();
     } catch (e) {
       // 发生错误时清理工作状态
-      WorkStatusService().stopWorking(taskId: 'upload_external_resources');
+      workStatusService.stopWorking(taskId: taskId);
+      
+      // 清理WebDAV工作状态服务引用
+      if (_webdavWorkStatusService != null) {
+        _webdavWorkStatusService = null;
+      }
+      
       _showErrorSnackBar('更新失败：$e');
     } finally {
       setState(() {
@@ -1446,36 +1475,105 @@ class _ExternalResourcesPageContentState
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _isExporting || _exportMappings.isEmpty
-                      ? null
-                      : _performExport,
-                  icon: _isExporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                if (kIsWeb)
+                  // Web平台：只显示下载按钮
+                  ElevatedButton.icon(
+                    onPressed: _isExporting || _exportMappings.isEmpty
+                        ? null
+                        : _performDirectDownload,
+                    icon: _isExporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
+                          )
+                        : const Icon(Icons.download),
+                    label: Text(_isExporting ? '导出中...' : '下载导出文件'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                      elevation: _isExporting ? 0 : 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                  )
+                else
+                  // 桌面平台：显示两个按钮
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _isExporting || _exportMappings.isEmpty
+                            ? null
+                            : _performLocalExport,
+                        icon: _isExporting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.folder),
+                        label: Text(_isExporting ? '导出中...' : '导出到文件夹'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          elevation: _isExporting ? 0 : 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        )
-                      : const Icon(Icons.download),
-                  label: Text(_isExporting ? '导出中...' : '开始导出'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                    elevation: _isExporting ? 0 : 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _isExporting || _exportMappings.isEmpty
+                            ? null
+                            : _performWebDAVExport,
+                        icon: _isExporting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.cloud_upload),
+                        label: Text(_isExporting ? '上传中...' : '上传到WebDAV'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          elevation: _isExporting ? 0 : 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
               ],
             ),
           ],
@@ -1531,38 +1629,113 @@ class _ExternalResourcesPageContentState
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _isUploading ? null : _handleUpdateExternalResources,
-                style: ElevatedButton.styleFrom(
-                  elevation: _isUploading ? 0 : 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            if (kIsWeb)
+              // Web平台：只显示本地导入按钮
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _isUploading ? null : _handleUpdateExternalResources,
+                  style: ElevatedButton.styleFrom(
+                    elevation: _isUploading ? 0 : 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: _isUploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.upload_file, size: 20),
+                  label: Text(
+                    _isUploading ? '正在处理...' : '选择并上传ZIP文件',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-                icon: _isUploading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+              )
+            else
+              // 桌面平台：显示两个按钮
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: _isUploading ? null : _handleUpdateExternalResources,
+                        style: ElevatedButton.styleFrom(
+                          elevation: _isUploading ? 0 : 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      )
-                    : const Icon(Icons.upload_file, size: 20),
-                label: Text(
-                  _isUploading ? '正在处理...' : '选择并上传ZIP文件',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                        icon: _isUploading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.upload_file, size: 20),
+                        label: Text(
+                          _isUploading ? '正在处理...' : '本地导入',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: _isUploading ? null : _handleWebDAVImport,
+                        style: ElevatedButton.styleFrom(
+                          elevation: _isUploading ? 0 : 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: _isUploading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.cloud_download, size: 20),
+                        label: Text(
+                          _isUploading ? '正在处理...' : 'WebDAV导入',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
           ],
         ),
       ),
@@ -2052,6 +2225,11 @@ class _ExternalResourcesPageContentState
     context.showErrorSnackBar(message);
   }
 
+  void _showInfoSnackBar(String message) {
+    // 使用新的通知系统替换 SnackBar
+    context.showInfoSnackBar(message);
+  }
+
   // ==================== 导出功能 ====================
 
   final List<ExportMapping> _exportMappings = [];
@@ -2231,12 +2409,53 @@ class _ExternalResourcesPageContentState
     return path.trim().isNotEmpty;
   }
 
-  /// 执行导出
-  Future<void> _performExport() async {
-    // 验证导出映射
+  /// Web平台直接下载
+  Future<void> _performDirectDownload() async {
+    final validMappings = _getValidMappings();
+    if (validMappings == null) return;
+
+    await _performExportWithOption(validMappings, {'type': 'local'});
+  }
+
+  /// 桌面平台本地导出
+  Future<void> _performLocalExport() async {
+    final validMappings = _getValidMappings();
+    if (validMappings == null) return;
+
+    await _performExportWithOption(validMappings, {'type': 'local'});
+  }
+
+  /// 桌面平台WebDAV导出
+  Future<void> _performWebDAVExport() async {
+    final validMappings = _getValidMappings();
+    if (validMappings == null) return;
+
+    // 获取可用的WebDAV配置
+    final webdavConfigs = await _webdavDbService.getAllConfigs();
+    final enabledWebdavConfigs = webdavConfigs.where((config) => config.isEnabled).toList();
+
+    if (enabledWebdavConfigs.isEmpty) {
+      _showErrorSnackBar('没有可用的WebDAV配置，请先在WebDAV管理页面添加配置');
+      return;
+    }
+
+    if (!mounted) return;
+
+    // 显示WebDAV配置选择对话框
+    final selectedConfig = await _showWebDAVConfigDialog(enabledWebdavConfigs);
+    if (selectedConfig != null) {
+      await _performExportWithOption(validMappings, {
+        'type': 'webdav',
+        'config': selectedConfig,
+      });
+    }
+  }
+
+  /// 获取有效的导出映射
+  List<ExportMapping>? _getValidMappings() {
     if (_exportMappings.isEmpty) {
       _showErrorSnackBar('请至少添加一个导出项');
-      return;
+      return null;
     }
 
     final validMappings = _exportMappings
@@ -2250,9 +2469,42 @@ class _ExternalResourcesPageContentState
 
     if (validMappings.isEmpty) {
       _showErrorSnackBar('请确保所有导出项都有有效的源路径和导出名称');
-      return;
+      return null;
     }
 
+    return validMappings;
+  }
+
+  /// 显示WebDAV配置选择对话框
+  Future<WebDavConfig?> _showWebDAVConfigDialog(List<WebDavConfig> configs) async {
+    return await showDialog<WebDavConfig>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('选择WebDAV配置'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: configs.map((config) => ListTile(
+            leading: const Icon(Icons.cloud),
+            title: Text(config.displayName),
+            subtitle: Text(config.serverUrl),
+            onTap: () => Navigator.of(context).pop(config),
+          )).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 根据选择的选项执行导出
+  Future<void> _performExportWithOption(
+    List<ExportMapping> validMappings,
+    Map<String, dynamic> option,
+  ) async {
     setState(() {
       _isExporting = true;
     });
@@ -2271,19 +2523,17 @@ class _ExternalResourcesPageContentState
 
       // 复制文件到临时文件夹并重命名
       final fileMapping = <String, String>{};
-      int totalFilesCopied = 0;
 
       for (int i = 0; i < validMappings.length; i++) {
         final mapping = validMappings[i];
         workStatusService.updateWorkDescription(
           '正在复制文件 ${i + 1}/${validMappings.length}',
         );
-        final fileCount = await _copyToTempFolder(
+        await _copyToTempFolder(
           mapping,
           tempPath,
           fileMapping,
         );
-        totalFilesCopied += fileCount;
       }
 
       // 创建 metadata.json
@@ -2294,9 +2544,22 @@ class _ExternalResourcesPageContentState
       workStatusService.updateWorkDescription('正在压缩文件...');
       final zipBytes = await _compressTempFolder(tempPath);
 
-      // 让用户选择保存位置并下载
-      workStatusService.updateWorkDescription('正在保存文件...');
-      await _saveExportFile(zipBytes);
+      // 根据选择的选项进行保存
+      final exportType = option['type'] as String;
+      if (exportType == 'local') {
+        // 本地保存
+        workStatusService.updateWorkDescription('正在保存文件...');
+        if (kIsWeb) {
+          await _downloadFile(zipBytes);
+        } else {
+          await _saveExportFile(zipBytes);
+        }
+      } else if (exportType == 'webdav') {
+        // WebDAV上传
+        final config = option['config'] as WebDavConfig;
+        workStatusService.updateWorkDescription('正在上传到WebDAV...');
+        await _uploadToWebDAV(zipBytes, config, fileMapping);
+      }
 
       // 清理临时文件
       workStatusService.updateWorkDescription('正在清理临时文件...');
@@ -2318,6 +2581,166 @@ class _ExternalResourcesPageContentState
       setState(() {
         _isExporting = false;
       });
+    }
+  }
+
+  /// 计算数据的SHA256哈希值
+  String _calculateDataHash(Uint8List data) {
+    final digest = sha256.convert(data);
+    return digest.toString().substring(0, 8); // 取前8位作为短哈希
+  }
+
+  /// 上传到WebDAV
+  Future<void> _uploadToWebDAV(
+    Uint8List zipBytes, 
+    WebDavConfig config, 
+    Map<String, String> fileMapping,
+  ) async {
+    try {
+      // 计算文件内容的哈希值
+      final contentHash = _calculateDataHash(zipBytes);
+      
+      // 获取导出名称，如果为空则使用默认名称
+      final exportName = _exportNameController.text.trim().isNotEmpty 
+          ? _exportNameController.text.trim() 
+          : 'external_resources';
+      
+      // 生成文件夹名称：hash + 导出名称
+      final folderName = '${contentHash}_$exportName';
+      final fileName = '$exportName.zip';
+      
+      // 检查WebDAV上是否已存在相同的文件夹
+      final folderExists = await _webdavClientService.checkPathExists(
+        config.configId,
+        folderName,
+      );
+      
+      if (folderExists) {
+        // 如果文件夹已存在，说明相同内容已经上传过，跳过上传
+        debugPrint('WebDAV上已存在相同内容的导出，跳过上传：$folderName');
+        return;
+      }
+      
+      // 写入到VFS临时文件
+      final tempVfsPath = 'indexeddb://r6box/fs/temp/$fileName';
+      await _vfsService.vfs.writeBinaryFile(
+        tempVfsPath,
+        zipBytes,
+        mimeType: 'application/zip',
+      );
+
+      // 使用VFS服务生成系统临时文件路径
+      final systemTempPath = await _vfsService.generateFileUrl(tempVfsPath);
+      if (systemTempPath == null) {
+        throw Exception('无法生成系统临时文件路径');
+      }
+
+      // 上传ZIP文件到WebDAV的指定文件夹中
+      final remotePath = '$folderName/$fileName';
+      final success = await _webdavClientService.uploadFile(
+        config.configId,
+        systemTempPath,
+        remotePath,
+      );
+
+      if (!success) {
+        throw Exception('WebDAV上传失败');
+      }
+
+      // 生成并上传metadata.json文件
+      await _uploadMetadataToWebDAV(config, folderName, fileMapping);
+
+      // 清理VFS临时文件
+      await _vfsService.vfs.delete(tempVfsPath);
+      
+      debugPrint('成功上传到WebDAV：$remotePath');
+    } catch (e) {
+      throw Exception('WebDAV上传失败：$e');
+    }
+  }
+
+  /// 上传metadata.json文件到WebDAV
+  Future<void> _uploadMetadataToWebDAV(
+    WebDavConfig config,
+    String folderName,
+    Map<String, String> fileMapping,
+  ) async {
+    try {
+      // 生成metadata.json内容
+      final metadata = <String, dynamic>{};
+      
+      // 按固定顺序添加字段以确保确定性
+      
+      // 1. 文件映射（排序后的）
+      final sortedFileMapping = Map<String, String>.fromEntries(
+        fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+      );
+      metadata['file_mappings'] = sortedFileMapping;
+      
+      // 2. 基础字段（按字母顺序）
+      if (_exportAuthorController.text.trim().isNotEmpty) {
+        metadata['author'] = _exportAuthorController.text.trim();
+      }
+      if (_exportDescriptionController.text.trim().isNotEmpty) {
+        metadata['description'] = _exportDescriptionController.text.trim();
+      }
+      if (_exportLicenseController.text.trim().isNotEmpty) {
+        metadata['license'] = _exportLicenseController.text.trim();
+      }
+      if (_exportNameController.text.trim().isNotEmpty) {
+        metadata['name'] = _exportNameController.text.trim();
+      }
+      if (_exportVersionController.text.trim().isNotEmpty) {
+        metadata['version'] = _exportVersionController.text.trim();
+      }
+
+      // 3. 自定义字段（按键名排序）
+      final customFieldsMap = <String, String>{};
+      for (final field in _customFields) {
+        final key = field.key.text.trim();
+        final value = field.value.text.trim();
+        if (key.isNotEmpty && value.isNotEmpty) {
+          customFieldsMap[key] = value;
+        }
+      }
+      
+      // 按键名排序添加自定义字段
+      final sortedCustomFields = customFieldsMap.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      for (final entry in sortedCustomFields) {
+        metadata[entry.key] = entry.value;
+      }
+
+      final metadataJson = jsonEncode(metadata);
+      
+      // 写入到VFS临时文件
+      final tempMetadataPath = 'indexeddb://r6box/fs/temp/metadata.json';
+      await _vfsService.vfs.writeTextFile(tempMetadataPath, metadataJson);
+      
+      // 使用VFS服务生成系统临时文件路径
+      final systemTempPath = await _vfsService.generateFileUrl(tempMetadataPath);
+      if (systemTempPath == null) {
+        throw Exception('无法生成metadata.json系统临时文件路径');
+      }
+
+      // 上传metadata.json到WebDAV的指定文件夹中
+      final remoteMetadataPath = '$folderName/metadata.json';
+      final success = await _webdavClientService.uploadFile(
+        config.configId,
+        systemTempPath,
+        remoteMetadataPath,
+      );
+
+      if (!success) {
+        throw Exception('metadata.json WebDAV上传失败');
+      }
+
+      // 清理VFS临时文件
+      await _vfsService.vfs.delete(tempMetadataPath);
+      
+      debugPrint('成功上传metadata.json到WebDAV：$remoteMetadataPath');
+    } catch (e) {
+      throw Exception('metadata.json WebDAV上传失败：$e');
     }
   }
 
@@ -2421,35 +2844,49 @@ class _ExternalResourcesPageContentState
     String tempPath,
     Map<String, String> fileMapping,
   ) async {
-    final metadata = <String, dynamic>{
-      'file_mappings': fileMapping,
-      'export_time': DateTime.now().toIso8601String(),
-    };
-
-    // 添加基础字段
+    // 使用LinkedHashMap确保字段顺序一致
+    final metadata = <String, dynamic>{};
+    
+    // 按固定顺序添加字段以确保确定性
+    
+    // 1. 文件映射（排序后的）
+    final sortedFileMapping = Map<String, String>.fromEntries(
+      fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+    );
+    metadata['file_mappings'] = sortedFileMapping;
+    
+    // 2. 基础字段（按字母顺序）
+    if (_exportAuthorController.text.trim().isNotEmpty) {
+      metadata['author'] = _exportAuthorController.text.trim();
+    }
+    if (_exportDescriptionController.text.trim().isNotEmpty) {
+      metadata['description'] = _exportDescriptionController.text.trim();
+    }
+    if (_exportLicenseController.text.trim().isNotEmpty) {
+      metadata['license'] = _exportLicenseController.text.trim();
+    }
     if (_exportNameController.text.trim().isNotEmpty) {
       metadata['name'] = _exportNameController.text.trim();
     }
     if (_exportVersionController.text.trim().isNotEmpty) {
       metadata['version'] = _exportVersionController.text.trim();
     }
-    if (_exportDescriptionController.text.trim().isNotEmpty) {
-      metadata['description'] = _exportDescriptionController.text.trim();
-    }
-    if (_exportAuthorController.text.trim().isNotEmpty) {
-      metadata['author'] = _exportAuthorController.text.trim();
-    }
-    if (_exportLicenseController.text.trim().isNotEmpty) {
-      metadata['license'] = _exportLicenseController.text.trim();
-    }
 
-    // 添加自定义字段
+    // 3. 自定义字段（按键名排序）
+    final customFieldsMap = <String, String>{};
     for (final field in _customFields) {
       final key = field.key.text.trim();
       final value = field.value.text.trim();
       if (key.isNotEmpty && value.isNotEmpty) {
-        metadata[key] = value;
+        customFieldsMap[key] = value;
       }
+    }
+    
+    // 按键名排序添加自定义字段
+    final sortedCustomFields = customFieldsMap.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    for (final entry in sortedCustomFields) {
+      metadata[entry.key] = entry.value;
     }
 
     final metadataJson = jsonEncode(metadata);
@@ -2486,7 +2923,11 @@ class _ExternalResourcesPageContentState
     List<VfsFileInfo> items,
     String basePath,
   ) async {
-    for (final item in items) {
+    // 对文件列表进行排序以确保确定性顺序
+    final sortedItems = List<VfsFileInfo>.from(items)
+      ..sort((a, b) => a.name.compareTo(b.name));
+    
+    for (final item in sortedItems) {
       final itemPath = basePath.isEmpty ? item.name : '$basePath/${item.name}';
 
       if (item.isDirectory) {
@@ -2514,6 +2955,8 @@ class _ExternalResourcesPageContentState
             fileContent.data.length,
             fileContent.data,
           );
+          // 设置固定的时间戳以确保确定性
+          archiveFile.lastModTime = 0;
           archive.addFile(archiveFile);
         }
       }
@@ -2614,4 +3057,420 @@ class _ExternalResourcesPageContentState
       debugPrint('处理文件夹映射失败：$folderName, 错误：$e');
     }
   }
+
+  /// 处理WebDAV导入
+  Future<void> _handleWebDAVImport() async {
+    // 开始WebDAV导入工作状态
+    final workStatusService = WorkStatusService();
+    
+    // 添加取消操作控件
+    final cancelAction = WorkStatusAction.cancel(
+      onPressed: () {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        if (mounted) {
+          _showInfoSnackBar('WebDAV导入已取消');
+        }
+      },
+      tooltip: '取消WebDAV导入',
+    );
+    
+    workStatusService.startWorking(
+      '正在连接WebDAV...', 
+      taskId: 'webdav_import',
+      actions: [cancelAction],
+    );
+    
+    try {
+      // 获取可用的WebDAV配置
+      final webdavConfigs = await _webdavDbService.getAllConfigs();
+      final enabledWebdavConfigs = webdavConfigs.where((config) => config.isEnabled).toList();
+
+      if (enabledWebdavConfigs.isEmpty) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        _showErrorSnackBar('没有可用的WebDAV配置，请先在WebDAV管理页面添加配置');
+        return;
+      }
+
+      // 让用户选择WebDAV配置
+      final selectedConfig = await _showWebDAVConfigDialog(enabledWebdavConfigs);
+      if (selectedConfig == null) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        return;
+      }
+
+      try {
+        // 更新工作状态
+        workStatusService.updateWorkDescription('正在读取WebDAV目录...');
+        
+        // 读取WebDAV根目录
+        final directories = await _webdavClientService.listDirectory(
+          selectedConfig.configId,
+          '',
+        );
+
+        if (directories == null) {
+          workStatusService.stopWorking(taskId: 'webdav_import');
+          _showErrorSnackBar('无法读取WebDAV目录');
+          return;
+        }
+
+        // 筛选出目录
+        final dirList = directories.where((item) {
+          return item.isDir == true;
+        }).toList();
+
+        if (dirList.isEmpty) {
+          workStatusService.stopWorking(taskId: 'webdav_import');
+          _showErrorSnackBar('WebDAV中没有找到任何目录');
+          return;
+        }
+
+        // 更新工作状态
+        workStatusService.updateWorkDescription('正在扫描目录...');
+        
+        // 读取每个目录的metadata.json
+        final importItems = <WebDAVImportItem>[];
+        for (final dir in dirList) {
+          final dirName = dir.name;
+          if (dirName == null) continue;
+
+          try {
+            // 读取目录内容，检查是否包含metadata.json
+            final dirContents = await _webdavClientService.listDirectory(
+              selectedConfig.configId,
+              dirName,
+            );
+
+            if (dirContents != null) {
+              // 检查目录中是否包含metadata.json文件
+              final hasMetadata = dirContents.any((file) => 
+                file.name == 'metadata.json' && file.isDir != true
+              );
+
+              if (hasMetadata) {
+                // 下载并解析metadata.json
+                final metadataPath = '$dirName/metadata.json';
+                final tempMetadataFile = File(await VfsPlatformIO.generateWebDAVImportTempFilePath('temp_metadata_${DateTime.now().millisecondsSinceEpoch}.json'));
+                
+                final downloadSuccess = await _webdavClientService.downloadFile(
+                  selectedConfig.configId,
+                  metadataPath,
+                  tempMetadataFile.path,
+                );
+
+                if (downloadSuccess && await tempMetadataFile.exists()) {
+                  final metadataContent = await tempMetadataFile.readAsString();
+                  final metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
+                  
+                  importItems.add(WebDAVImportItem(
+                    directoryName: dirName,
+                    metadata: metadata,
+                    config: selectedConfig,
+                  ));
+
+                  // 清理临时文件
+                  await tempMetadataFile.delete();
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint('读取目录 $dirName 的内容失败: $e');
+          }
+        }
+
+        if (importItems.isEmpty) {
+          workStatusService.stopWorking(taskId: 'webdav_import');
+          _showErrorSnackBar('没有找到包含有效metadata.json的目录');
+          return;
+        }
+
+        // 更新工作状态为等待用户选择
+        workStatusService.updateWorkDescription('等待用户选择导入项...');
+        
+        // 显示导入项列表对话框
+        _showWebDAVImportDialog(importItems, workStatusService);
+      } catch (e) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        _showErrorSnackBar('读取WebDAV目录失败: $e');
+      }
+    } catch (e) {
+      workStatusService.stopWorking(taskId: 'webdav_import');
+      _showErrorSnackBar('WebDAV导入失败: $e');
+    }
+  }
+
+  /// 显示WebDAV导入项列表对话框
+  void _showWebDAVImportDialog(List<WebDAVImportItem> importItems, WorkStatusService workStatusService) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('WebDAV导入列表'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: importItems.length,
+            itemBuilder: (context, index) {
+              final item = importItems[index];
+              final metadata = item.metadata;
+              
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  metadata['name']?.toString() ?? item.directoryName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (metadata['version'] != null)
+                                  Text(
+                                    '版本: ${metadata['version']}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                if (metadata['author'] != null)
+                                  Text(
+                                    '作者: ${metadata['author']}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              // 添加短暂延迟以确保对话框完全关闭
+                              await Future.delayed(const Duration(milliseconds: 100));
+                              if (mounted) {
+                                await _downloadAndImportFromWebDAV(item, workStatusService);
+                              }
+                            },
+                            icon: const Icon(Icons.download, size: 16),
+                            label: const Text('下载并导入'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (metadata['description'] != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          metadata['description'].toString(),
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '目录: ${item.directoryName}',
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              workStatusService.stopWorking(taskId: 'webdav_import');
+              Navigator.of(context).pop();
+            },
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 从WebDAV下载并导入
+  Future<void> _downloadAndImportFromWebDAV(WebDAVImportItem item, WorkStatusService workStatusService) async {
+    try {
+      // 更新取消操作控件
+      final cancelAction = WorkStatusAction.cancel(
+        onPressed: () {
+          workStatusService.stopWorking(taskId: 'webdav_import');
+          if (mounted) {
+            _showInfoSnackBar('WebDAV下载已取消');
+          }
+        },
+        tooltip: '取消WebDAV下载',
+      );
+      
+      workStatusService.updateActions([cancelAction]);
+      
+      // 更新工作状态
+      workStatusService.updateWorkDescription('正在准备下载...');
+      // 查找ZIP文件
+      final directories = await _webdavClientService.listDirectory(
+        item.config.configId,
+        item.directoryName,
+      );
+
+      if (directories == null) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        if (mounted) {
+          _showErrorSnackBar('无法读取目录内容');
+        }
+        return;
+      }
+
+      // 查找ZIP文件
+      final zipFiles = directories.where((file) {
+        return file.isDir != true && 
+               file.name != null && 
+               file.name!.toLowerCase().endsWith('.zip');
+      }).toList();
+
+      if (zipFiles.isEmpty) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        if (mounted) {
+          _showErrorSnackBar('目录中没有找到ZIP文件');
+        }
+        return;
+      }
+
+      // 使用第一个ZIP文件
+      final zipFile = zipFiles.first;
+      final zipFileName = zipFile.name!;
+
+      // 更新工作状态
+      workStatusService.updateWorkDescription('正在下载 $zipFileName...');
+
+      // 下载ZIP文件到自定义临时目录
+      final tempZipFilePath = await VfsPlatformIO.generateWebDAVImportTempFilePath(zipFileName);
+      final tempZipFile = File(tempZipFilePath);
+      
+      final downloadSuccess = await _webdavClientService.downloadFile(
+        item.config.configId,
+        '${item.directoryName}/$zipFileName',
+        tempZipFile.path,
+      );
+
+      if (!downloadSuccess || !await tempZipFile.exists()) {
+        workStatusService.stopWorking(taskId: 'webdav_import');
+        if (mounted) {
+          _showErrorSnackBar('下载ZIP文件失败');
+        }
+        return;
+      }
+
+      // 更新工作状态
+      workStatusService.updateWorkDescription('正在处理ZIP文件...');
+      
+      // 读取ZIP文件内容
+      final zipBytes = await tempZipFile.readAsBytes();
+      
+      // 清理临时文件
+      await tempZipFile.delete();
+
+      // 调用现有的导入流程（不重复设置工作状态）
+      if (mounted) {
+        await _handleZipImportForWebDAV(zipBytes, zipFileName, workStatusService);
+      }
+    } catch (e) {
+      workStatusService.stopWorking(taskId: 'webdav_import');
+      if (mounted) {
+        _showErrorSnackBar('下载并导入失败: $e');
+      }
+    }
+  }
+
+  /// 处理ZIP文件导入（用于WebDAV，使用传入的工作状态服务）
+  Future<void> _handleZipImportForWebDAV(Uint8List zipBytes, String fileName, WorkStatusService workStatusService) async {
+    try {
+      // 保存WebDAV工作状态服务，以便在确认导入时继续使用
+      _webdavWorkStatusService = workStatusService;
+      
+      // 更新工作状态到预览阶段
+      workStatusService.updateWorkDescription('正在准备预览...');
+      
+      // 清理之前的状态
+      setState(() {
+        _showPreview = false;
+        _fileMappings.clear();
+        _importMetadata = null;
+      });
+
+      // 处理ZIP文件并显示预览
+      await _processZipFileForPreview(zipBytes, fileName);
+      
+      // 更新工作状态到等待用户确认
+      workStatusService.updateWorkDescription('等待用户确认导入...');
+    } catch (e) {
+      // 出错时停止工作状态
+      workStatusService.stopWorking(taskId: 'webdav_import');
+      _webdavWorkStatusService = null;
+      _showErrorSnackBar('处理ZIP文件失败: $e');
+    }
+  }
+
+  /// 处理ZIP文件导入（用于常规导入）
+  Future<void> _handleZipImport(Uint8List zipBytes, String fileName) async {
+    try {
+      // 开始工作状态
+      final workStatusService = WorkStatusService();
+      workStatusService.startWorking('正在处理ZIP文件...', taskId: 'import');
+
+      // 清理之前的状态
+      setState(() {
+        _showPreview = false;
+        _fileMappings.clear();
+        _importMetadata = null;
+      });
+
+      // 处理ZIP文件并显示预览
+      await _processZipFileForPreview(zipBytes, fileName);
+
+      // 完成工作状态
+      workStatusService.stopWorking(taskId: 'import');
+    } catch (e) {
+      // 完成工作状态（即使出错）
+      WorkStatusService().stopWorking(taskId: 'import');
+      _showErrorSnackBar('处理ZIP文件失败: $e');
+    }
+  }
+}
+
+/// WebDAV导入项
+class WebDAVImportItem {
+  final String directoryName;
+  final Map<String, dynamic> metadata;
+  final WebDavConfig config;
+
+  WebDAVImportItem({
+    required this.directoryName,
+    required this.metadata,
+    required this.config,
+  });
 }

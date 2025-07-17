@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
+
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
@@ -90,6 +92,23 @@ class _SettingsPageContent extends StatelessWidget {
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/external-resources'),
             ),
+            const Divider(),
+            // WebDAV管理 - 仅在非web平台显示
+            if (!kIsWeb)
+              ListTile(
+                leading: const Icon(Icons.cloud),
+                title: const Text('WebDAV 管理'),
+                subtitle: const Text('配置和管理 WebDAV 云存储连接'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () => context.go('/webdav-manager'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.wifi),
+              title: const Text('WebSocket 连接管理'),
+              subtitle: const Text('管理 WebSocket 客户端连接配置'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () => context.go('/websocket-manager'),
+            ),
           ],
         ),
       ),
@@ -117,4 +136,8 @@ class _SettingsPageContent extends StatelessWidget {
       ),
     );
   }
+
+
+
+
 }
