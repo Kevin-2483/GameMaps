@@ -2024,8 +2024,13 @@ class MapCanvasState extends State<MapCanvas> {
       return;
     }
 
+    // 如果图例项已经被选中，不打开链接，直接返回
+    if (widget.selectedElementId == item.id) {
+      return;
+    }
+
     // 选中图例项，高亮显示
-    widget.onLegendItemSelected.call(item.id);
+    // widget.onLegendItemSelected.call(item.id);
 
     // 如果图例项有URL链接
     if (item.url != null && item.url!.isNotEmpty) {

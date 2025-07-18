@@ -901,14 +901,51 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
       // 解析文件路径，移除协议前缀
       String cleanPath = selectedFile.path;
+      String? targetDatabase;
+      String? targetCollection;
+      
       if (cleanPath.startsWith('indexeddb://')) {
         final uri = Uri.parse(cleanPath);
-        final pathSegments = uri.pathSegments;
+        final pathSegments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
         debugPrint('🧭 URI path segments: $pathSegments');
+        debugPrint('🧭 URI host: ${uri.host}');
 
-        if (pathSegments.length >= 3) {
-          // pathSegments: [database, collection, ...path]
-          cleanPath = pathSegments.skip(2).join('/');
+        if (pathSegments.length >= 1) {
+          targetDatabase = uri.host; // 数据库名在host部分
+          targetCollection = pathSegments[0]; // 集合名是第一个路径段
+          
+          // 检查是否需要切换数据库/集合
+          if (targetDatabase != _selectedDatabase || targetCollection != _selectedCollection) {
+            debugPrint('🧭 Switching to database: $targetDatabase, collection: $targetCollection');
+            
+            // 先切换数据库并加载集合列表
+            if (targetDatabase != _selectedDatabase) {
+              setState(() {
+                _selectedDatabase = targetDatabase;
+                _selectedCollection = null; // 先清空集合选择
+              });
+              await _loadCollections(targetDatabase!);
+            }
+            
+            // 然后设置集合（确保集合存在于列表中）
+            if (_collections[targetDatabase]?.contains(targetCollection) == true) {
+              setState(() {
+                _selectedCollection = targetCollection;
+              });
+            } else {
+              debugPrint('🧭 Warning: Collection $targetCollection not found in database $targetDatabase');
+              setState(() {
+                _selectedCollection = null;
+              });
+            }
+          }
+          
+          // 构建相对于集合根目录的路径
+          if (pathSegments.length > 1) {
+            cleanPath = pathSegments.skip(1).join('/');
+          } else {
+            cleanPath = '';
+          }
           debugPrint('🧭 Clean path after processing: "$cleanPath"');
         }
       }
