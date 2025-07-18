@@ -60,21 +60,21 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/quiet /norestart"; \
   StatusMsg: "正在安装 VC++ 运行库..."; Flags: waituntilterminated; \
-  Check: ShouldInstallVCRedist
+
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
-[Code]
-function IsVCRedistInstalled(): Boolean;
-var
-  installValue: Cardinal;
-  keyExists: Boolean;
-begin
-  keyExists := RegQueryDWordValue(HKEY_LOCAL_MACHINE,
-    'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installValue);
-  Result := keyExists and (installValue = 1);
-end;
+; [Code]
+; function IsVCRedistInstalled(): Boolean;
+; var
+;   installValue: Cardinal;
+;   keyExists: Boolean;
+; begin
+;   keyExists := RegQueryDWordValue(HKEY_LOCAL_MACHINE,
+;     'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installValue);
+;   Result := keyExists and (installValue = 1);
+; end;
 
-function ShouldInstallVCRedist(): Boolean;
-begin
-  Result := not IsVCRedistInstalled();
-end;
+; function ShouldInstallVCRedist(): Boolean;
+; begin
+;   Result := not IsVCRedistInstalled();
+; end;

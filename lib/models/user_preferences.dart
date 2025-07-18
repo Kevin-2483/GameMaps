@@ -511,7 +511,7 @@ class LayoutPreferences {
       animationDuration: 300,
       enableAnimations: true,
       autoRestorePanelStates: true,
-      enableExtensionStorage: false, // 明确设置默认值
+      enableExtensionStorage: true, // 明确设置默认值
       drawerWidth: 400.0,
       autoSaveWindowSize: true,
       windowWidth: 1280.0,
@@ -521,7 +521,7 @@ class LayoutPreferences {
       rememberMaximizedState: true,
       isMaximized: false,
       enableRightSideVerticalNavigation: false,
-      enableMergedWindowControls: false,
+      enableMergedWindowControls: true,
     );
   }
   LayoutPreferences copyWith({
@@ -749,7 +749,7 @@ class ToolPreferences {
         'imageArea',
       ],
       showAdvancedTools: false,
-      handleSize: 8.0,
+      handleSize: 16.0,
       customTags: const [
         '重要',
         '紧急',
