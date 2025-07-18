@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
@@ -12,6 +13,7 @@ enum ResizeHandle {
   bottomCenter,
   centerLeft,
   centerRight,
+  rotation,
 }
 
 /// 绘画元素交互管理器
@@ -112,6 +114,7 @@ class ElementInteractionManager {
   static List<Rect> getResizeHandles(
     MapDrawingElement element, {
     double? handleSize,
+    bool includeRotationHandle = false,
   }) {
     const size = Size(kCanvasWidth, kCanvasHeight);
     final effectiveHandleSize = handleSize ?? 8.0;
@@ -277,6 +280,23 @@ class ElementInteractionManager {
       ),
     );
 
+    // 添加旋转拖动柄（如果需要）
+    if (includeRotationHandle) {
+      // 旋转拖动柄位置在元素上方，距离为元素高度的60%
+      final rotationHandleDistance = rect.height * 0.6;
+      final rotationHandleCenter = Offset(
+        rect.center.dx,
+        rect.top - rotationHandleDistance,
+      );
+      handles.add(
+        Rect.fromCenter(
+          center: rotationHandleCenter,
+          width: effectiveHandleSize,
+          height: effectiveHandleSize,
+        ),
+      );
+    }
+
     return handles;
   }
 
@@ -285,8 +305,9 @@ class ElementInteractionManager {
     Offset canvasPosition,
     MapDrawingElement element, {
     double? handleSize,
+    bool includeRotationHandle = false,
   }) {
-    final handles = getResizeHandles(element, handleSize: handleSize);
+    final handles = getResizeHandles(element, handleSize: handleSize, includeRotationHandle: includeRotationHandle);
 
     // Debug output for text elements
     if (element.type == DrawingElementType.text) {
@@ -603,6 +624,9 @@ class ElementInteractionManager {
       case ResizeHandle.centerRight:
         right += delta.dx;
         break;
+      case ResizeHandle.rotation:
+        // 旋转柄不改变边界，这里不做任何操作
+        break;
     }
 
     // 确保最小尺寸
@@ -692,5 +716,59 @@ class ElementInteractionManager {
     _activeResizeHandle = null;
     _resizeStartPosition = null;
     _originalElementBounds = null;
+  }
+
+  /// 获取LegendItem的旋转拖动柄位置
+  static Rect? getLegendRotationHandle(
+    Offset legendCenter,
+    double legendSize,
+    double handleSize, {
+    double rotation = 0.0, // 图例的旋转角度（度数）
+  }) {
+    // 旋转拖动柄位置在图例上方，距离为图例大小的60%
+    final rotationHandleDistance = legendSize * 0.6;
+    
+    // 将角度转换为弧度，现在旋转指示器在Transform.rotate内部
+    // 直接使用图例的旋转角度，不需要额外调整
+    final angleInRadians = rotation * (math.pi / 180);
+    
+    // 根据旋转角度计算手柄位置
+    final rotationHandleCenter = Offset(
+      legendCenter.dx + rotationHandleDistance * math.cos(angleInRadians),
+      legendCenter.dy + rotationHandleDistance * math.sin(angleInRadians),
+    );
+    
+    return Rect.fromCenter(
+      center: rotationHandleCenter,
+      width: handleSize,
+      height: handleSize,
+    );
+  }
+
+  /// 检测点击位置是否命中LegendItem的旋转拖动柄
+  static bool isHitLegendRotationHandle(
+    Offset canvasPosition,
+    Offset legendCenter,
+    double legendSize,
+    double handleSize, {
+    double rotation = 0.0, // 图例的旋转角度（度数）
+  }) {
+    final rotationHandle = getLegendRotationHandle(
+      legendCenter, 
+      legendSize, 
+      handleSize, 
+      rotation: rotation,
+    );
+    if (rotationHandle == null) return false;
+    
+    // 增加检测区域，使拖动柄更容易被点击
+    const double hitAreaMultiplier = 1.5;
+    final expandedHandle = Rect.fromCenter(
+      center: rotationHandle.center,
+      width: rotationHandle.width * hitAreaMultiplier,
+      height: rotationHandle.height * hitAreaMultiplier,
+    );
+    
+    return expandedHandle.contains(canvasPosition);
   }
 }
