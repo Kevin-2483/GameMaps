@@ -1034,12 +1034,12 @@ class MapCanvasState extends State<MapCanvas> {
               if (widget.selectedElementId == item.id)
                 Consumer<UserPreferencesProvider>(
                   builder: (context, userPrefs, child) {
-                    final legendSize = item.size * 50.0;
+                    // 使用与图例相同的尺寸计算，确保一致性
                     return CustomPaint(
-                      size: Size(legendSize, legendSize),
+                      size: Size(imageSize, imageSize),
                       painter: _RotationIndicatorPainter(
                          rotation: 0, // 在Transform.rotate内部，指示器本身不需要额外旋转
-                         radius: legendSize * 0.6,
+                         radius: imageSize * 0.6,
                          handleSize: userPrefs.tools.handleSize,
                          centerX: legend.centerX,
                          centerY: legend.centerY,
@@ -1174,7 +1174,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dx * kCanvasWidth,
               legendItem.position.dy * kCanvasHeight,
             );
-            final legendSize = legendItem.size * 50.0;
+            final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
             
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
@@ -1585,7 +1585,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dx * kCanvasWidth,
               legendItem.position.dy * kCanvasHeight,
             );
-            final legendSize = legendItem.size * 50.0;
+            final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
             
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
@@ -1964,7 +1964,14 @@ class MapCanvasState extends State<MapCanvas> {
       }
       
       // 计算新的旋转角度（基于初始角度加上总的角度增量）
-      final newRotation = (_initialRotation! + angleDelta + 360) % 360;
+      var newRotation = _initialRotation! + angleDelta;
+      // 将角度规范化到-180到180范围
+      while (newRotation > 180) {
+        newRotation -= 360;
+      }
+      while (newRotation <= -180) {
+        newRotation += 360;
+      }
       
       // 更新图例项的旋转角度
       _updateLegendItemRotation(item, newRotation);
@@ -2351,7 +2358,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dx * kCanvasWidth,
               legendItem.position.dy * kCanvasHeight,
             );
-            final legendSize = legendItem.size * 50.0;
+            final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
             
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
@@ -3133,7 +3140,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dx * kCanvasWidth,
               legendItem.position.dy * kCanvasHeight,
             );
-            final legendSize = legendItem.size * 50.0;
+            final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
             
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,

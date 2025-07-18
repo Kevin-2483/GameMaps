@@ -486,7 +486,7 @@ class LayoutPreferences {
     this.rememberMaximizedState = true,
     this.isMaximized = false,
     this.enableRightSideVerticalNavigation = false,
-    this.enableMergedWindowControls = false,
+    this.enableMergedWindowControls = true,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(

@@ -154,7 +154,7 @@ LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
       enableRightSideVerticalNavigation:
           json['enableRightSideVerticalNavigation'] as bool? ?? false,
       enableMergedWindowControls:
-          json['enableMergedWindowControls'] as bool? ?? false,
+          json['enableMergedWindowControls'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
@@ -237,7 +237,7 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .map((e) => e as String)
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
-      handleSize: (json['handleSize'] as num?)?.toDouble() ?? 8.0,
+      handleSize: (json['handleSize'] as num?)?.toDouble() ?? 16.0,
       customTags: (json['customTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??

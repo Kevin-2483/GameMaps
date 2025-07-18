@@ -1191,8 +1191,8 @@ class _LegendGroupManagementDrawerState
                       _buildSliderControl(
                         label: '旋转',
                         value: item.rotation,
-                        min: 0.0,
-                        max: 360.0,
+                        min: -180.0,
+                        max: 180.0,
                         divisions: 72,
                         displayValue: '${item.rotation.toStringAsFixed(0)}°',
                         onChanged: (value) =>
