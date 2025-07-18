@@ -685,8 +685,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   int _calculateCrossAxisCount(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const cardWidth = 300.0; // 每个卡片的最小宽度
-    return (screenWidth / cardWidth).floor().clamp(1, 6);
+    const cardWidth = 150.0; // 每个卡片的最小宽度（缩小到四分之一）
+    return (screenWidth / cardWidth).floor().clamp(2, 8);
   }
 
   @override
@@ -696,21 +696,29 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       body: Column(
         children: [
           DraggableTitleBar(
-            title: l10n.legendManager,
             icon: Icons.legend_toggle,
+            titleWidget: Row(
+              children: [
+                Text(
+                  l10n.legendManager,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
             actions: [
-              // 创建文件夹按钮
-              IconButton(
-                onPressed: _createFolder,
-                icon: const Icon(Icons.create_new_folder),
-                tooltip: '创建文件夹',
-              ),
               // 功能菜单
               PopupMenuButton<String>(
                 onSelected: (value) {
                   switch (value) {
                     case 'add':
                       _addLegend();
+                      break;
+                    case 'add_folder':
+                      _createFolder();
                       break;
                     case 'root':
                       _navigateToRoot();
@@ -723,6 +731,13 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                     child: ListTile(
                       leading: Icon(Icons.add),
                       title: Text('添加图例'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'add_folder',
+                    child: ListTile(
+                      leading: Icon(Icons.create_new_folder),
+                      title: Text('创建文件夹'),
                     ),
                   ),
                   const PopupMenuItem(
@@ -766,40 +781,207 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       );
     }
 
+    // 对文件夹和图例进行排序
+    final sortedFolders = List<String>.from(_folders)..sort(_compareNames);
+    final sortedLegends = List<LegendItem>.from(_legends)..sort((a, b) => _compareNames(a.title, b.title));
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _calculateCrossAxisCount(context),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 2.5, // 长方形卡片比例
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 文件夹部分
+            if (sortedFolders.isNotEmpty) ...[
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _calculateCrossAxisCount(context),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: sortedFolders.length,
+                itemBuilder: (context, index) {
+                  final folderName = sortedFolders[index];
+                  return _FolderCard(
+                    folderName: folderName,
+                    onTap: () => _navigateToFolder(folderName),
+                    onDelete: () => _deleteFolder(folderName),
+                    onRename: () => _renameFolder(folderName),
+                    onCheckEmpty: () => _isFolderEmpty(folderName),
+                  );
+                },
+              ),
+            ],
+            // 分割线
+            if (sortedFolders.isNotEmpty && sortedLegends.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const Divider(thickness: 1),
+              const SizedBox(height: 24),
+            ],
+            // 图例部分
+            if (sortedLegends.isNotEmpty) ...[
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _calculateCrossAxisCount(context),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: sortedLegends.length,
+                itemBuilder: (context, index) {
+                  final legend = sortedLegends[index];
+                  return _LegendCard(
+                    legend: legend,
+                    onDelete: () => _deleteLegend(legend),
+                    onEdit: () => _editLegend(legend),
+                    onTap: () {
+                      // 暂时不实现点击事件
+                    },
+                  );
+                },
+              ),
+            ],
+          ],
         ),
-        itemCount: _folders.length + _legends.length,
-        itemBuilder: (context, index) {
-          if (index < _folders.length) {
-            // 文件夹项
-            final folderName = _folders[index];
-            return _FolderCard(
-              folderName: folderName,
-              onTap: () => _navigateToFolder(folderName),
-            );
-          } else {
-            // 图例项
-            final legendIndex = index - _folders.length;
-            final legend = _legends[legendIndex];
-            return _LegendCard(
-              legend: legend,
-              onDelete: () => _deleteLegend(legend),
-              onEdit: () => _editLegend(legend),
-              onTap: () {
-                // 暂时不实现点击事件
-              },
-            );
-          }
-        },
       ),
     );
+  }
+
+  /// 比较名称，中文转拼音排序
+  int _compareNames(String a, String b) {
+    // 简单的中文转拼音排序，这里使用字符编码比较
+    // 在实际项目中可能需要使用专门的拼音库
+    return a.toLowerCase().compareTo(b.toLowerCase());
+  }
+
+  /// 删除文件夹
+  Future<void> _deleteFolder(String folderName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('删除文件夹'),
+          content: Text('确定要删除文件夹 "$folderName" 吗？\n\n注意：只能删除空文件夹。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('删除'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        final folderPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
+        final success = await _vfsService.deleteFolder(folderPath);
+        if (success) {
+          await _loadLegends();
+          _showSuccessSnackBar('文件夹删除成功');
+        } else {
+          _showErrorSnackBar('删除失败：文件夹不为空或不存在');
+        }
+      } catch (e) {
+        _showErrorSnackBar('删除文件夹失败: ${e.toString()}');
+      }
+    }
+  }
+
+  /// 检查文件夹是否为空
+  Future<bool> _isFolderEmpty(String folderName) async {
+    try {
+      final folderPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
+      
+      // 检查文件夹中的图例
+      final legends = await _vfsService.getAllLegendTitles(folderPath);
+      if (legends.isNotEmpty) {
+        return false;
+      }
+      
+      // 检查文件夹中的子文件夹
+      final subFolders = await _vfsService.getFolders(folderPath);
+      if (subFolders.isNotEmpty) {
+        return false;
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('检查文件夹是否为空失败: $folderName, 错误: $e');
+      return false;
+    }
+  }
+
+  /// 重命名文件夹
+  Future<void> _renameFolder(String oldFolderName) async {
+    final controller = TextEditingController(text: oldFolderName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('重命名文件夹'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: '文件夹名称',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty && name != oldFolderName) {
+                  Navigator.of(context).pop(name);
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newName != null && newName != oldFolderName) {
+      try {
+        final oldPath = _currentPath.isEmpty ? oldFolderName : '$_currentPath/$oldFolderName';
+        final newPath = _currentPath.isEmpty ? newName : '$_currentPath/$newName';
+        
+        // 检查新名称是否已存在
+        final folders = await _vfsService.getFolders(_currentPath.isEmpty ? null : _currentPath);
+        if (folders.contains(newName)) {
+          _showErrorSnackBar('文件夹名称已存在');
+          return;
+        }
+        
+        // 使用VFS的move方法来重命名文件夹
+        final success = await _vfsService.renameFolder(oldPath, newPath);
+        if (success) {
+          await _loadLegends();
+          _showSuccessSnackBar('文件夹重命名成功');
+        } else {
+          _showErrorSnackBar('重命名失败');
+        }
+      } catch (e) {
+        _showErrorSnackBar('重命名文件夹失败: ${e.toString()}');
+      }
+    }
   }
 }
 
@@ -891,92 +1073,59 @@ class _LegendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onSecondaryTapDown: onEdit != null || onDelete != null
-            ? (details) => _showLegendContextMenu(context, details)
-            : null,
-        child: Row(
-          children: [
-            // 左半部分：图片
-            Expanded(
-              flex: 1,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Stack(
-                  children: [
-                    // 图片
-                    Positioned.fill(
-                      child: legend.imageData != null
-                          ? _buildImageWidget(legend)
-                          : Container(
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
+    return Column(
+      children: [
+        // 卡片部分：只显示图片
+        Expanded(
+          child: Card(
+            elevation: 4,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              onSecondaryTapDown: onEdit != null || onDelete != null
+                  ? (details) => _showLegendContextMenu(context, details)
+                  : null,
+              child: Stack(
+                children: [
+                  // 图片
+                  Positioned.fill(
+                    child: legend.imageData != null
+                        ? _buildImageWidget(legend)
+                        : Container(
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 32,
+                              color: Colors.grey,
                             ),
-                    ),
-                    // 中心点指示器
-                    if (legend.imageData != null)
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: CenterPointIndicatorPainter(
-                            legend.centerX,
-                            legend.centerY,
                           ),
+                  ),
+                  // 中心点指示器
+                  if (legend.imageData != null)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: CenterPointIndicatorPainter(
+                          legend.centerX,
+                          legend.centerY,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
-            // 右半部分：标题和操作
-            Expanded(
-              flex: 1,
-              child: Container(
-                height: double.infinity,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Stack(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            legend.title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'v${legend.version}',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '中心点: (${(legend.centerX * 100).round()}%, ${(legend.centerY * 100).round()}%)',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        // 标题部分：显示在卡片外下方
+        const SizedBox(height: 4),
+        Text(
+           legend.title,
+           style: Theme.of(context).textTheme.bodySmall
+               ?.copyWith(fontWeight: FontWeight.bold),
+           maxLines: 1,
+           overflow: TextOverflow.ellipsis,
+           textAlign: TextAlign.center,
+         ),
+      ],
     );
   }
 }
@@ -984,70 +1133,103 @@ class _LegendCard extends StatelessWidget {
 class _FolderCard extends StatelessWidget {
   final String folderName;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRename;
+  final Future<bool> Function()? onCheckEmpty;
 
-  const _FolderCard({required this.folderName, required this.onTap});
+  const _FolderCard({
+    required this.folderName,
+    required this.onTap,
+    this.onDelete,
+    this.onRename,
+    this.onCheckEmpty,
+  });
+
+  /// 显示文件夹右键菜单
+  void _showFolderContextMenu(BuildContext context, TapDownDetails details) async {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    // 检查文件夹是否为空（用于决定是否显示删除选项）
+    bool isEmpty = false;
+    if (onCheckEmpty != null && onDelete != null) {
+      isEmpty = await onCheckEmpty!();
+    }
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        details.globalPosition & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        if (onRename != null)
+          const PopupMenuItem<String>(
+            value: 'rename',
+            child: Row(
+              children: [
+                Icon(Icons.edit, size: 16, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('重命名'),
+              ],
+            ),
+          ),
+        if (onDelete != null && isEmpty)
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete, size: 16, color: Colors.red),
+                SizedBox(width: 8),
+                Text('删除'),
+              ],
+            ),
+          ),
+      ],
+    ).then((value) {
+      switch (value) {
+        case 'rename':
+          onRename?.call();
+          break;
+        case 'delete':
+          onDelete?.call();
+          break;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          ),
-          child: Row(
-            children: [
-              // 左半部分：文件夹图标
-              Expanded(
-                flex: 1,
-                child: Container(
-                  height: double.infinity,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.1),
-                  child: Icon(
-                    Icons.folder,
-                    size: 48,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+    return Column(
+      children: [
+        // 卡片部分：只显示文件夹图标
+        Expanded(
+          child: InkWell(
+            onTap: onTap,
+            onSecondaryTapDown: onDelete != null || onRename != null
+                ? (details) => _showFolderContextMenu(context, details)
+                : null,
+            child: Container(
+              width: double.infinity,
+              child: Icon(
+                Icons.folder,
+                size: 108,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              // 右半部分：文件夹名称
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        folderName,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '文件夹',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        // 标题部分：显示在卡片外下方
+        const SizedBox(height: 4),
+        Text(
+          folderName,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

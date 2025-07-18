@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:lpinyin/lpinyin.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/layout/page_configuration.dart';
 import '../../components/web/web_readonly_components.dart';
@@ -14,6 +15,7 @@ import '../../models/map_directory_item.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/virtual_file_system/vfs_storage_service.dart';
+import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../mixins/map_localization_mixin.dart';
 // import '../../components/common/config_aware_widgets.dart';
 import '../../config/config_manager.dart';
@@ -41,16 +43,161 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
   final VfsStorageService _storageService = VfsStorageService();
+  final VfsServiceProvider _vfsServiceProvider = VfsServiceProvider();
   List<MapDirectoryItem> _items = [];
+  List<MapDirectoryItem> _filteredItems = []; // 筛选后的项目
   bool _isLoading = true;
   Map<String, String> _localizedTitles = {};
   String _currentPath = ''; // 当前目录路径
   List<BreadcrumbItem> _breadcrumbs = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadDirectoryContents();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+    });
+    _applyFilter().then((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  /// 应用搜索筛选
+  Future<void> _applyFilter() async {
+    if (_searchQuery.isEmpty) {
+      _filteredItems = List.from(_items);
+      return;
+    }
+
+    try {
+      // 使用VFS搜索功能搜索子目录
+      final pattern = '*$_searchQuery*';
+      final searchResults = await _vfsServiceProvider.searchFiles(
+        'maps', // collection
+        pattern,
+        caseSensitive: false,
+        includeDirectories: true,
+        maxResults: 1000,
+      );
+
+      // 过滤搜索结果，只包含.mapdata之前的路径
+      final filteredResults = searchResults.where((file) {
+        final relativePath = file.path.replaceFirst(
+          'indexeddb://r6box/maps/',
+          '',
+        );
+        
+        // 只搜索.mapdata路径之前的内容
+        if (relativePath.contains('.mapdata/')) {
+          return false;
+        }
+        
+        // 确保在当前路径下或其子目录中
+        if (_currentPath.isNotEmpty) {
+          final expectedPrefix = _currentPath.endsWith('/')
+              ? _currentPath
+              : '$_currentPath/';
+          if (!relativePath.startsWith(expectedPrefix) &&
+              relativePath != _currentPath.replaceAll('/', '')) {
+            return false;
+          }
+        }
+        
+        return true;
+      }).toList();
+
+      // 将VFS搜索结果转换为MapDirectoryItem
+      final searchItems = <MapDirectoryItem>[];
+      for (final file in filteredResults) {
+        final relativePath = file.path.replaceFirst(
+          'indexeddb://r6box/maps/',
+          '',
+        );
+        
+        debugPrint('DEBUG: Processing file - name: ${file.name}, path: ${file.path}, relativePath: $relativePath');
+        
+        if (file.isDirectory && file.name.endsWith('.mapdata')) {
+             // .mapdata目录 - 这是地图文件
+             final mapName = file.name.replaceAll('.mapdata', '');
+             
+             // 使用新的getMapSummaryByPath方法加载地图摘要
+             try {
+               final realSummary = await _vfsMapService.getMapSummaryByPath(relativePath);
+               
+               if (realSummary != null) {
+                 searchItems.add(MapFileItem(
+                   name: mapName,
+                   path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                   mapSummary: realSummary,
+                 ));
+               } else {
+                 // 如果无法加载真实摘要，创建基本的MapItemSummary
+                 final mapSummary = MapItemSummary(
+                   id: mapName.hashCode,
+                   title: mapName,
+                   version: 1,
+                   createdAt: file.createdAt,
+                   updatedAt: file.modifiedAt,
+                 );
+                 searchItems.add(MapFileItem(
+                   name: mapName,
+                   path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                   mapSummary: mapSummary,
+                 ));
+               }
+             } catch (e) {
+               debugPrint('加载地图摘要失败: $e');
+               // 创建基本的MapItemSummary作为回退
+               final mapSummary = MapItemSummary(
+                 id: mapName.hashCode,
+                 title: mapName,
+                 version: 1,
+                 createdAt: file.createdAt,
+                 updatedAt: file.modifiedAt,
+               );
+               searchItems.add(MapFileItem(
+                 name: mapName,
+                 path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                 mapSummary: mapSummary,
+               ));
+             }
+           } else if (file.isDirectory) {
+            // 普通文件夹项
+            searchItems.add(MapFolderItem(
+              name: file.name,
+              path: relativePath,
+              mapCount: 0, // 搜索结果中暂时设为0，实际计数需要额外查询
+            ));
+          }
+      }
+
+      // 只显示搜索结果，不与当前目录内容合并
+      _filteredItems = searchItems;
+    } catch (e) {
+      // 如果VFS搜索失败，回退到本地筛选
+      _filteredItems = _items.where((item) {
+        final name = item.name.toLowerCase();
+        final query = _searchQuery.toLowerCase();
+        final pinyin = PinyinHelper.getPinyinE(item.name).toLowerCase();
+        return name.contains(query) || pinyin.contains(query);
+      }).toList();
+    }
   }
 
   Future<void> _loadDirectoryContents([String? folderPath]) async {
@@ -83,10 +230,14 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       );
 
       for (final mapSummary in mapSummaries) {
+        // 构建完整的地图路径，包含.mapdata
+        final mapPath = _currentPath.isEmpty 
+            ? '${mapSummary.title}.mapdata'
+            : '$_currentPath/${mapSummary.title}.mapdata';
         items.add(
           MapFileItem(
             name: mapSummary.title,
-            path: _currentPath,
+            path: mapPath, // 使用包含.mapdata的完整路径
             mapSummary: mapSummary,
           ),
         );
@@ -105,6 +256,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           _localizedTitles = localizedTitles;
           _isLoading = false;
         });
+        
+        // 应用当前筛选
+        await _applyFilter();
+        if (mounted) {
+          setState(() {});
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -419,11 +576,241 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     }
   }
 
+  void _openMapEditorWithPath(String mapTitle, String itemPath) async {
+    debugPrint('DEBUG: _openMapEditorWithPath called with mapTitle: $mapTitle, itemPath: $itemPath');
+    
+    final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
+      'ReadOnlyMode',
+    );
+
+    // itemPath是从搜索结果来的，格式是完整的相对路径，包含.mapdata
+    // 例如: "排名战地图/杜耶托夫斯基咖啡馆.mapdata"
+    String absoluteMapPath;
+    String? folderPath;
+    
+    // 构建绝对路径，确保以/结尾
+    absoluteMapPath = 'indexeddb://r6box/maps/$itemPath/';
+    
+    // 从itemPath中提取folderPath
+    if (itemPath.contains('/')) {
+      // 有文件夹路径，提取除了最后的.mapdata文件名部分
+      final lastSlashIndex = itemPath.lastIndexOf('/');
+      folderPath = itemPath.substring(0, lastSlashIndex);
+    } else {
+      // 根目录下的地图
+      folderPath = null;
+    }
+    
+    debugPrint('DEBUG: Passing to MapEditorPage - mapTitle: $mapTitle, folderPath: $folderPath, absoluteMapPath: $absoluteMapPath');
+    
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MapEditorPage(
+          mapTitle: mapTitle,
+          folderPath: folderPath,
+          absoluteMapPath: absoluteMapPath,
+          isPreviewMode: isReadOnly,
+        ),
+      ),
+    );
+    
+    // 地图编辑器关闭后，强制重新检查页面配置
+    if (mounted) {
+      // 使用延迟确保页面已完全恢复
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // 发送页面配置通知以重新显示TrayNavigation
+          PageConfigurationNotification(
+            showTrayNavigation: true,
+          ).dispatch(context);
+        }
+      });
+    }
+  }
+
   int _calculateCrossAxisCount(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const cardWidth = 300.0; // 每个卡片的最小宽度
-    return (screenWidth / cardWidth).floor().clamp(1, 6);
+    const cardWidth = 200.0; // 每个卡片的最小宽度（适应新的4:3垂直布局）
+    return (screenWidth / cardWidth).floor().clamp(2, 8);
   }
+
+  /// 获取排序键，中文转拼音，符号和无法转换的字符排在最前
+  String _getSortKey(String name) {
+    if (name.isEmpty) return '';
+    
+    final firstChar = name[0];
+    
+    // 检查是否为中文字符
+    if (RegExp(r'[\u4e00-\u9fa5]').hasMatch(firstChar)) {
+      final pinyin = PinyinHelper.getPinyinE(firstChar);
+      return pinyin.isNotEmpty ? pinyin.toLowerCase() : '~$name';
+    }
+    
+    // 检查是否为英文字母
+    if (RegExp(r'[a-zA-Z]').hasMatch(firstChar)) {
+      return firstChar.toLowerCase();
+    }
+    
+    // 符号和其他字符排在最前面
+    return '~$name';
+  }
+
+  /// 对项目列表进行排序
+  List<MapDirectoryItem> _sortItems(List<MapDirectoryItem> items) {
+    final folders = items.whereType<MapFolderItem>().toList();
+    final maps = items.whereType<MapFileItem>().toList();
+    
+    // 分别对文件夹和地图进行排序
+    folders.sort((a, b) => _getSortKey(a.name).compareTo(_getSortKey(b.name)));
+    maps.sort((a, b) => _getSortKey(a.name).compareTo(_getSortKey(b.name)));
+    
+    // 文件夹在前，地图在后
+     return [...folders, ...maps];
+   }
+
+   /// 构建分组内容
+   Widget _buildGroupedContent(BuildContext context) {
+     final sortedItems = _sortItems(_filteredItems);
+     final folders = sortedItems.whereType<MapFolderItem>().toList();
+     final maps = sortedItems.whereType<MapFileItem>().toList();
+     
+     return SingleChildScrollView(
+       padding: const EdgeInsets.all(16.0),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           // 文件夹部分
+           if (folders.isNotEmpty) ...[
+             Text(
+               '文件夹',
+               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                 fontWeight: FontWeight.bold,
+                 color: Theme.of(context).colorScheme.primary,
+               ),
+             ),
+             const SizedBox(height: 12),
+             _buildGridSection(context, folders),
+           ],
+           
+           // 分割线
+           if (folders.isNotEmpty && maps.isNotEmpty) ...[
+             const SizedBox(height: 24),
+             Divider(
+               color: Theme.of(context).colorScheme.outline,
+               thickness: 1,
+             ),
+             const SizedBox(height: 24),
+           ],
+           
+           // 地图部分
+           if (maps.isNotEmpty) ...[
+             Text(
+               '地图',
+               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                 fontWeight: FontWeight.bold,
+                 color: Theme.of(context).colorScheme.primary,
+               ),
+             ),
+             const SizedBox(height: 12),
+             _buildGridSection(context, maps),
+           ],
+         ],
+       ),
+     );
+   }
+
+   /// 构建网格部分
+   Widget _buildGridSection(BuildContext context, List<MapDirectoryItem> items) {
+     final crossAxisCount = _calculateCrossAxisCount(context);
+     
+     return GridView.builder(
+       shrinkWrap: true,
+       physics: const NeverScrollableScrollPhysics(),
+       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+         crossAxisCount: crossAxisCount,
+         crossAxisSpacing: 16,
+         mainAxisSpacing: 24,
+         childAspectRatio: 1.1, // 3:2比例 + 标题空间
+       ),
+       itemCount: items.length,
+       itemBuilder: (context, index) {
+         return _buildItemCard(context, items[index]);
+       },
+     );
+   }
+
+   /// 构建单个项目卡片
+   Widget _buildItemCard(BuildContext context, MapDirectoryItem item) {
+     if (item is MapFolderItem) {
+       return _FolderCard(
+         folder: item,
+         onTap: () => _loadDirectoryContents(item.path),
+         onDelete: item.mapCount == 0 ? () async {
+           final isReadOnly = await ConfigManager.instance
+               .isFeatureEnabled('ReadOnlyMode');
+           if (isReadOnly) {
+             WebReadOnlyDialog.show(context, '删除文件夹');
+           } else {
+             _deleteFolder(item);
+           }
+         } : null,
+         onRename: () async {
+           final isReadOnly = await ConfigManager.instance
+               .isFeatureEnabled('ReadOnlyMode');
+           if (isReadOnly) {
+             WebReadOnlyDialog.show(context, '重命名文件夹');
+           } else {
+             _showRenameFolderDialog(item);
+           }
+         },
+       );
+     } else if (item is MapFileItem) {
+       final map = item.mapSummary;
+       return _MapCard(
+         map: map,
+         localizedTitle: _localizedTitles[map.title] ?? map.title,
+         onDelete: () async {
+           final isReadOnly = await ConfigManager.instance
+               .isFeatureEnabled('ReadOnlyMode');
+           if (isReadOnly) {
+             WebReadOnlyDialog.show(context, '删除地图');
+           } else {
+             _deleteMap(map);
+           }
+         },
+         onTap: () {
+           // 对于搜索结果中的地图，需要特殊处理路径
+           if (item is MapFileItem) {
+             debugPrint('DEBUG: Opening map with title: ${item.mapSummary.title}, path: ${item.path}');
+             _openMapEditorWithPath(item.mapSummary.title, item.path);
+           } else {
+             debugPrint('DEBUG: Opening map with title: ${map.title}');
+             _openMapEditor(map.title);
+           }
+         },
+         onRename: () async {
+           final isReadOnly = await ConfigManager.instance
+               .isFeatureEnabled('ReadOnlyMode');
+           if (isReadOnly) {
+             WebReadOnlyDialog.show(context, '重命名地图');
+           } else {
+             _showRenameMapDialog(map.title);
+           }
+         },
+         onUpdateCover: () async {
+           final isReadOnly = await ConfigManager.instance
+               .isFeatureEnabled('ReadOnlyMode');
+           if (isReadOnly) {
+             WebReadOnlyDialog.show(context, '更换封面');
+           } else {
+             _showUpdateCoverDialog(map.title);
+           }
+         },
+       );
+     }
+     
+     return const SizedBox();
+   }
 
   @override
   Widget build(BuildContext context) {
@@ -432,15 +819,72 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       body: Column(
         children: [
           DraggableTitleBar(
-            title: l10n.mapAtlas,
             icon: Icons.map,
+            titleWidget: Row(
+              children: [
+                Text(
+                  l10n.mapAtlas,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Container(
+                  height: 36,
+                  width: 200,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: '搜索地图和文件夹...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
             actions: [
               // 上传本地化文件按钮
-              IconButton(
-                onPressed: _uploadLocalizationFile,
-                icon: const Icon(Icons.translate),
-                tooltip: '上传本地化文件',
-              ),
+              // IconButton(
+              //   onPressed: _uploadLocalizationFile,
+              //   icon: const Icon(Icons.translate),
+              //   tooltip: '上传本地化文件',
+              // ),
               // 功能菜单
               PopupMenuButton<String>(
                 onSelected: (value) async {
@@ -469,6 +913,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     case 'add_folder':
                       _showCreateFolderDialog();
                       break;
+                    case 'root':
+                      _loadDirectoryContents(null);
+                      break;
                   }
                 },
                 itemBuilder: (context) => [
@@ -484,6 +931,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                     child: const ListTile(
                       leading: Icon(Icons.create_new_folder),
                       title: Text('创建文件夹'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'root',
+                    child: ListTile(
+                      leading: Icon(Icons.home),
+                      title: Text('回到根目录'),
                     ),
                   ),
                 ],
@@ -568,99 +1022,59 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ),
         // 内容区域
         Expanded(
-          child: _items.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.folder_open,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _items.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.folder_open,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '点击右上角菜单添加地图或创建文件夹',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '点击右上角菜单添加地图或创建文件夹',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: _calculateCrossAxisCount(context),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 2.5, // 长方形卡片比例
-                    ),
-                    itemCount: _items.length,
-                    itemBuilder: (context, index) {
-                      final item = _items[index];
-
-                      if (item is MapFolderItem) {
-                        return _FolderCard(
-                          folder: item,
-                          onTap: () => _loadDirectoryContents(item.path),
-                          onDelete: () async {
-                            final isReadOnly = await ConfigManager.instance
-                                .isFeatureEnabled('ReadOnlyMode');
-                            if (isReadOnly) {
-                              WebReadOnlyDialog.show(context, '删除文件夹');
-                            } else {
-                              _deleteFolder(item);
-                            }
-                          },
-                        );
-                      } else if (item is MapFileItem) {
-                        final map = item.mapSummary;
-                        return _MapCard(
-                          map: map,
-                          localizedTitle:
-                              _localizedTitles[map.title] ?? map.title,
-                          onDelete: () async {
-                            final isReadOnly = await ConfigManager.instance
-                                .isFeatureEnabled('ReadOnlyMode');
-                            if (isReadOnly) {
-                              WebReadOnlyDialog.show(context, '删除地图');
-                            } else {
-                              _deleteMap(map);
-                            }
-                          },
-                          onTap: () => _openMapEditor(map.title),
-                          onRename: () async {
-                            final isReadOnly = await ConfigManager.instance
-                                .isFeatureEnabled('ReadOnlyMode');
-                            if (isReadOnly) {
-                              WebReadOnlyDialog.show(context, '重命名地图');
-                            } else {
-                              _showRenameMapDialog(map.title);
-                            }
-                          },
-                          onUpdateCover: () async {
-                            final isReadOnly = await ConfigManager.instance
-                                .isFeatureEnabled('ReadOnlyMode');
-                            if (isReadOnly) {
-                              WebReadOnlyDialog.show(context, '更换封面');
-                            } else {
-                              _showUpdateCoverDialog(map.title);
-                            }
-                          },
-                        );
-                      }
-
-                      return const SizedBox(); // 不应该到达这里
-                    },
-                  ),
-                ),
+                    )
+                  : _filteredItems.isEmpty && _searchQuery.isNotEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                '未找到匹配的结果',
+                                style: Theme.of(context).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '尝试使用不同的关键词搜索',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _buildGroupedContent(context),
         ),
       ],
     );
@@ -747,6 +1161,57 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         _showSuccessSnackBar('文件夹删除成功');
       } catch (e) {
         _showErrorSnackBar('删除文件夹失败: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _showRenameFolderDialog(MapFolderItem folder) async {
+    final controller = TextEditingController(text: folder.name);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('重命名文件夹'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: '新文件夹名称',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty && newName != folder.name) {
+                Navigator.of(context).pop(newName);
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      try {
+        // 构建新的路径
+        final parentPath = folder.path.contains('/') 
+            ? folder.path.substring(0, folder.path.lastIndexOf('/'))
+            : '';
+        final newPath = parentPath.isEmpty ? result : '$parentPath/$result';
+        
+        await _vfsMapService.renameFolder(folder.path, newPath);
+        _showSuccessSnackBar('文件夹重命名成功');
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+      } catch (e) {
+        _showErrorSnackBar('重命名失败: ${e.toString()}');
       }
     }
   }
@@ -855,74 +1320,63 @@ class _MapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onSecondaryTapDown: (details) {
-          if (onRename != null || onUpdateCover != null || onDelete != null) {
-            _showMapContextMenu(context, details.globalPosition);
-          }
-        },
-        child: Row(
-          children: [
-            // 左半部分：图片
-            Expanded(
-              flex: 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 图片卡片 - 4:3比例
+        Expanded(
+          child: Card(
+            elevation: 4,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              onSecondaryTapDown: (details) {
+                if (onRename != null || onUpdateCover != null || onDelete != null) {
+                  _showMapContextMenu(context, details.globalPosition);
+                }
+              },
               child: AspectRatio(
-                aspectRatio: 1,
+                 aspectRatio: 3 / 2, // 3:2比例
                 child: map.imageData != null
                     ? Image.memory(map.imageData!, fit: BoxFit.cover)
                     : Container(
-                        color: Colors.grey[300],
-                        child: const Icon(
+                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        child: Icon(
                           Icons.image_not_supported,
                           size: 48,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
               ),
             ),
-            // 右半部分：标题和操作
-            Expanded(
-              flex: 1,
-              child: Container(
-                height: double.infinity,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              localizedTitle,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'v${map.version}',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        // 标题显示在卡片外下方
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                localizedTitle,
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'v${map.version}',
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -989,88 +1443,120 @@ class _MapCard extends StatelessWidget {
 class _FolderCard extends StatelessWidget {
   final MapFolderItem folder;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRename;
 
   const _FolderCard({
     required this.folder,
     required this.onTap,
-    required this.onDelete,
+    this.onDelete,
+    this.onRename,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          children: [
-            // 左半部分：文件夹图标
-            Expanded(
-              flex: 1,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.folder,
-                    size: 48,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            ),
-            // 右半部分：文件夹名称和信息
-            Expanded(
-              flex: 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 文件夹图标 - 无背景，直接放大图标
+        Expanded(
+          child: InkWell(
+            onTap: onTap,
+            onSecondaryTapDown: (onDelete != null || onRename != null)
+                ? (details) {
+                    _showFolderContextMenu(context, details.globalPosition);
+                  }
+                : null,
+            borderRadius: BorderRadius.circular(8),
+            child: AspectRatio(
+              aspectRatio: 3 / 2, // 3:2比例
               child: Container(
+                width: double.infinity,
                 height: double.infinity,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              folder.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${folder.mapCount} 个地图',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // 删除按钮
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: IconButton(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete, size: 20),
-                          color: Colors.red,
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.folder,
+                  size: 120, // 放大图标到和卡片等宽
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        // 标题显示在图标下方
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                folder.name,
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${folder.mapCount} 个地图',
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
+  }
+
+  void _showFolderContextMenu(BuildContext context, Offset position) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
+      items: [
+        if (onRename != null)
+          PopupMenuItem(
+            value: 'rename',
+            child: const Row(
+              children: [
+                Icon(Icons.edit, size: 16),
+                SizedBox(width: 8),
+                Text('重命名'),
+              ],
+            ),
+          ),
+        // 只有空文件夹才显示删除选项
+        if (folder.mapCount == 0 && onDelete != null)
+          PopupMenuItem(
+            value: 'delete',
+            child: const Row(
+              children: [
+                Icon(Icons.delete, size: 16, color: Colors.red),
+                SizedBox(width: 8),
+                Text('删除', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+      ],
+    ).then((value) {
+      switch (value) {
+        case 'rename':
+          onRename?.call();
+          break;
+        case 'delete':
+          onDelete?.call();
+          break;
+      }
+    });
   }
 }

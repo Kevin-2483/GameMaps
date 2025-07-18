@@ -614,6 +614,30 @@ class LegendVfsService {
     }
   }
 
+  /// 获取指定路径下的直接子文件夹
+  Future<List<String>> getFolders([String? folderPath]) async {
+    try {
+      final cleanFolderPath = folderPath?.replaceAll(RegExp(r'^/+|/+$'), '') ?? '';
+      final fullPath = cleanFolderPath.isEmpty
+          ? 'indexeddb://$_database/$_collection'
+          : 'indexeddb://$_database/$_collection/$cleanFolderPath';
+
+      final entries = await _vfs.listDirectory(fullPath);
+      final folders = <String>[];
+
+      for (final entry in entries) {
+        if (entry.isDirectory && !entry.name.endsWith('.legend')) {
+          folders.add(entry.name);
+        }
+      }
+
+      return folders..sort();
+    } catch (e) {
+      debugPrint('获取文件夹列表失败: $folderPath, 错误: $e');
+      return [];
+    }
+  }
+
   /// 递归获取子文件夹
   Future<List<String>> _getSubFolders(String parentPath) async {
     try {
@@ -669,6 +693,35 @@ class LegendVfsService {
       return true;
     } catch (e) {
       debugPrint('删除文件夹失败: $folderPath, 错误: $e');
+      return false;
+    }
+  }
+
+  /// 重命名文件夹
+  Future<bool> renameFolder(String oldPath, String newPath) async {
+    try {
+      final oldFullPath =
+          'indexeddb://$_database/$_collection/${oldPath.replaceAll(RegExp(r'^/+|/+$'), '')}';
+      final newFullPath =
+          'indexeddb://$_database/$_collection/${newPath.replaceAll(RegExp(r'^/+|/+$'), '')}';
+
+      // 检查旧路径是否存在
+      if (!await _vfs.exists(oldFullPath)) {
+        debugPrint('源文件夹不存在: $oldPath');
+        return false;
+      }
+
+      // 检查新路径是否已存在
+      if (await _vfs.exists(newFullPath)) {
+        debugPrint('目标文件夹已存在: $newPath');
+        return false;
+      }
+
+      // 使用VFS的move方法重命名文件夹
+      final success = await _vfs.move(oldFullPath, newFullPath);
+      return success;
+    } catch (e) {
+      debugPrint('重命名文件夹失败: $oldPath -> $newPath, 错误: $e');
       return false;
     }
   }

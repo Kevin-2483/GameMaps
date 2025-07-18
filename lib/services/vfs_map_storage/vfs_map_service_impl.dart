@@ -246,6 +246,59 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
+  Future<MapItemSummary?> getMapSummaryByPath(String mapPath) async {
+    try {
+      // mapPath 格式: "folder1/folder2/mapname.mapdata" 或 "mapname.mapdata"
+      String mapTitle;
+      String? folderPath;
+      
+      if (mapPath.contains('/')) {
+        final pathParts = mapPath.split('/');
+        final mapdataName = pathParts.last;
+        mapTitle = mapdataName.replaceAll('.mapdata', '');
+        folderPath = pathParts.sublist(0, pathParts.length - 1).join('/');
+      } else {
+        mapTitle = mapPath.replaceAll('.mapdata', '');
+        folderPath = null;
+      }
+      
+      final desanitizedTitle = FilenameSanitizer.desanitize(mapTitle);
+      
+      // 读取元数据
+      final metaPath = _buildVfsPath(_getMapMetaPath(desanitizedTitle, folderPath));
+      final metaData = await _storageService.readFile(metaPath);
+      
+      if (metaData == null) return null;
+      
+      final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+      
+      // 读取封面图片
+      Uint8List? coverData;
+      try {
+        final coverPath = _buildVfsPath(_getMapCoverPath(desanitizedTitle, folderPath));
+        final coverFile = await _storageService.readFile(coverPath);
+        coverData = coverFile?.data;
+      } catch (e) {
+        debugPrint('加载地图封面失败: $e');
+      }
+      
+      final summary = MapItemSummary(
+        id: int.tryParse(metaJson['id'] as String? ?? '') ?? desanitizedTitle.hashCode,
+        title: desanitizedTitle,
+        imageData: coverData ?? Uint8List(0),
+        version: metaJson['version'] as int,
+        createdAt: DateTime.parse(metaJson['createdAt'] as String),
+        updatedAt: DateTime.parse(metaJson['updatedAt'] as String),
+      );
+      
+      return summary;
+    } catch (e) {
+      debugPrint('根据路径获取地图摘要失败 [$mapPath]: $e');
+      return null;
+    }
+  }
+
+  @override
   Future<int> getMapCount([String? folderPath]) async {
     try {
       final basePath = folderPath == null || folderPath.isEmpty
@@ -1983,6 +2036,36 @@ class VfsMapServiceImpl implements VfsMapService {
       await _storageService.delete(vfsPath, recursive: true);
     } catch (e) {
       debugPrint('删除文件夹失败 [$folderPath]: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> renameFolder(String oldPath, String newPath) async {
+    try {
+      final oldCleanPath = oldPath.replaceAll(RegExp(r'^/+|/+$'), '');
+      final newCleanPath = newPath.replaceAll(RegExp(r'^/+|/+$'), '');
+      final oldVfsPath = _buildVfsPath(oldCleanPath);
+      final newVfsPath = _buildVfsPath(newCleanPath);
+
+      // 检查旧路径是否存在
+      final oldExists = await _storageService.exists(oldVfsPath);
+      if (!oldExists) {
+        throw Exception('源文件夹不存在: $oldPath');
+      }
+
+      // 检查新路径是否已存在
+      final newExists = await _storageService.exists(newVfsPath);
+      if (newExists) {
+        throw Exception('目标文件夹已存在: $newPath');
+      }
+
+      // 使用VFS的move方法重命名文件夹
+      await _storageService.move(oldVfsPath, newVfsPath);
+      
+      debugPrint('文件夹重命名成功: $oldPath -> $newPath');
+    } catch (e) {
+      debugPrint('重命名文件夹失败 [$oldPath -> $newPath]: $e');
       rethrow;
     }
   }

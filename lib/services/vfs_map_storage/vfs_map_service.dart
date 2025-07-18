@@ -11,6 +11,7 @@ abstract class VfsMapService {
   // 地图CRUD操作
   Future<List<MapItem>> getAllMaps([String? folderPath]);
   Future<List<MapItemSummary>> getAllMapsSummary([String? folderPath]);
+  Future<MapItemSummary?> getMapSummaryByPath(String mapPath);
   Future<int> getMapCount([String? folderPath]);
   Future<MapItem?> getMapById(String id); // 兼容性方法，内部转换为标题查找
   Future<MapItem?> getMapByTitle(String title, [String? folderPath]);
@@ -21,6 +22,7 @@ abstract class VfsMapService {
   Future<List<String>> getFolders([String? parentPath]);
   Future<void> createFolder(String folderPath);
   Future<void> deleteFolder(String folderPath);
+  Future<void> renameFolder(String oldPath, String newPath);
   Future<void> moveMap(String mapTitle, String? fromFolder, String? toFolder);
 
   Future<void> updateMapMeta(
