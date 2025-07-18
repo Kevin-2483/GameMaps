@@ -334,6 +334,25 @@ class VfsServiceProvider {
     return await _vfs.copy(fromFullPath, toFullPath);
   }
 
+  /// 复制文件（带冲突检测）
+  Future<bool> copyFileWithConflictCheck(
+    String fromCollection,
+    String fromPath,
+    String toCollection,
+    String toPath, {
+    bool overwriteExisting = false,
+  }) async {
+    final fromFullPath = 'indexeddb://r6box/$fromCollection/$fromPath';
+    final toFullPath = 'indexeddb://r6box/$toCollection/$toPath';
+    return await _storage.copyWithConflictCheck(
+      fromFullPath,
+      toFullPath,
+      overwriteExisting: overwriteExisting,
+    );
+  }
+
+
+
   /// 移动文件
   Future<bool> moveFile(
     String fromCollection,

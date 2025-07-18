@@ -2064,4 +2064,93 @@ class VfsMapServiceImpl implements VfsMapService {
       rethrow;
     }
   }
+
+  @override
+  Future<void> renameMap(String oldTitle, String newTitle, [String? folderPath]) async {
+    try {
+      // 1. 检查新标题是否已存在
+      final newMapDataPath = _buildVfsPath(_getMapPath(newTitle, folderPath));
+      final newMapDataExists = await _storageService.exists(newMapDataPath);
+      if (newMapDataExists) {
+        throw Exception('地图标题 "$newTitle" 已存在');
+      }
+
+      // 2. 获取旧地图路径
+      final oldMapDataPath = _buildVfsPath(_getMapPath(oldTitle, folderPath));
+      final oldMapDataExists = await _storageService.exists(oldMapDataPath);
+      if (!oldMapDataExists) {
+        throw Exception('找不到地图: $oldTitle');
+      }
+
+      // 3. 读取并更新JSON元数据
+      final metaPath = _buildVfsPath(_getMapMetaPath(oldTitle, folderPath));
+      final metaData = await _storageService.readFile(metaPath);
+      if (metaData != null) {
+        final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+        metaJson['title'] = newTitle;
+        metaJson['updatedAt'] = DateTime.now().toIso8601String();
+        
+        // 保存更新后的元数据到旧路径
+        await _storageService.writeFile(metaPath, utf8.encode(jsonEncode(metaJson)));
+      }
+
+      // 4. 重命名地图数据文件夹
+      await _storageService.move(oldMapDataPath, newMapDataPath);
+
+      // 5. 清除相关缓存
+      final oldCacheKey = folderPath == null ? oldTitle : '$folderPath/$oldTitle';
+      final newCacheKey = folderPath == null ? newTitle : '$folderPath/$newTitle';
+      _mapCache.remove(oldCacheKey);
+      _mapCache.remove(newCacheKey);
+      
+      final oldLayerCacheKey = folderPath == null
+          ? '$oldTitle:default'
+          : '$folderPath/$oldTitle:default';
+      final newLayerCacheKey = folderPath == null
+          ? '$newTitle:default'
+          : '$folderPath/$newTitle:default';
+      _layerCache.remove(oldLayerCacheKey);
+      _layerCache.remove(newLayerCacheKey);
+
+      debugPrint('地图重命名成功: $oldTitle -> $newTitle');
+    } catch (e) {
+      debugPrint('重命名地图失败 [$oldTitle -> $newTitle]: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateMapCover(String mapTitle, Uint8List imageData, [String? folderPath]) async {
+    try {
+      // 1. 检查地图是否存在
+      final mapDataPath = _buildVfsPath(_getMapPath(mapTitle, folderPath));
+      final mapDataExists = await _storageService.exists(mapDataPath);
+      if (!mapDataExists) {
+        throw Exception('找不到地图: $mapTitle');
+      }
+
+      // 2. 直接保存新的封面图片文件
+      await _saveMapCover(mapTitle, imageData, folderPath);
+
+      // 3. 读取并更新JSON元数据中的updatedAt时间
+      final metaPath = _buildVfsPath(_getMapMetaPath(mapTitle, folderPath));
+      final metaData = await _storageService.readFile(metaPath);
+      if (metaData != null) {
+        final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+        metaJson['updatedAt'] = DateTime.now().toIso8601String();
+        
+        // 保存更新后的元数据
+        await _storageService.writeFile(metaPath, utf8.encode(jsonEncode(metaJson)));
+      }
+
+      // 4. 清除缓存
+      final cacheKey = folderPath == null ? mapTitle : '$folderPath/$mapTitle';
+      _mapCache.remove(cacheKey);
+
+      debugPrint('地图封面更新成功: $mapTitle');
+    } catch (e) {
+      debugPrint('更新地图封面失败 [$mapTitle]: $e');
+      rethrow;
+    }
+  }
 }

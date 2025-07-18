@@ -148,7 +148,7 @@ class VfsDatabaseInitializer {
       data: utf8.encode(
         json.encode({
           'initialized_at': DateTime.now().toIso8601String(),
-          'version': '1.1.0',
+          'version': '1.2.0',
           'description': 'Clean root file system for user file management',
         }),
       ),

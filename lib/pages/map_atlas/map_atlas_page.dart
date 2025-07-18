@@ -18,7 +18,6 @@ import '../../mixins/map_localization_mixin.dart';
 // import '../../components/common/config_aware_widgets.dart';
 import '../../config/config_manager.dart';
 import '../map_editor/map_editor_page.dart';
-import '../../utils/filename_sanitizer.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../../services/notification/notification_service.dart';
 
@@ -176,30 +175,35 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       final fileName = result.files.single.name.toLowerCase();
       final isPng = fileName.endsWith('.png');
       final isSvg = fileName.endsWith('.svg');
-      
+
       // 处理图片 - PNG和SVG保持原始文件，只压缩JPG/JPEG
-      final processedImage = (isPng || isSvg) ? imageBytes : _compressImage(imageBytes);
+      final processedImage = (isPng || isSvg)
+          ? imageBytes
+          : _compressImage(imageBytes);
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         final mapInfo = await _showAddMapDialog(l10n);
         if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {
           try {
             final mapTitle = mapInfo['title'] as String;
-            
+
             // 检查地图是否已存在
             final existingMap = await _vfsMapService.getMapByTitle(
               mapTitle,
               _currentPath.isEmpty ? null : _currentPath,
             );
-            
+
             if (existingMap != null) {
               // 显示覆盖确认对话框
-              final shouldOverwrite = await _showOverwriteConfirmDialog(l10n, mapTitle);
+              final shouldOverwrite = await _showOverwriteConfirmDialog(
+                l10n,
+                mapTitle,
+              );
               if (shouldOverwrite != true) {
                 return; // 用户取消覆盖
               }
             }
-            
+
             final mapItem = MapItem(
               title: mapTitle,
               imageData: processedImage,
@@ -240,7 +244,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     return imageBytes;
   }
 
-  Future<bool?> _showOverwriteConfirmDialog(AppLocalizations l10n, String mapTitle) async {
+  Future<bool?> _showOverwriteConfirmDialog(
+    AppLocalizations l10n,
+    String mapTitle,
+  ) async {
     return showDialog<bool>(
       context: context,
       builder: (context) {
@@ -383,7 +390,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     if (_currentPath.isEmpty) {
       absoluteMapPath = 'indexeddb://r6box/maps/$mapTitle.mapdata/';
     } else {
-      absoluteMapPath = 'indexeddb://r6box/maps/$_currentPath/$mapTitle.mapdata/';
+      absoluteMapPath =
+          'indexeddb://r6box/maps/$_currentPath/$mapTitle.mapdata/';
     }
 
     await Navigator.of(context).push(
@@ -628,6 +636,24 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                             }
                           },
                           onTap: () => _openMapEditor(map.title),
+                          onRename: () async {
+                            final isReadOnly = await ConfigManager.instance
+                                .isFeatureEnabled('ReadOnlyMode');
+                            if (isReadOnly) {
+                              WebReadOnlyDialog.show(context, '重命名地图');
+                            } else {
+                              _showRenameMapDialog(map.title);
+                            }
+                          },
+                          onUpdateCover: () async {
+                            final isReadOnly = await ConfigManager.instance
+                                .isFeatureEnabled('ReadOnlyMode');
+                            if (isReadOnly) {
+                              WebReadOnlyDialog.show(context, '更换封面');
+                            } else {
+                              _showUpdateCoverDialog(map.title);
+                            }
+                          },
                         );
                       }
 
@@ -724,6 +750,90 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       }
     }
   }
+
+  Future<void> _showRenameMapDialog(String currentTitle) async {
+    final controller = TextEditingController(text: currentTitle);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('重命名地图'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: '新地图名称',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newTitle = controller.text.trim();
+              if (newTitle.isNotEmpty && newTitle != currentTitle) {
+                Navigator.of(context).pop(newTitle);
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      try {
+        await _vfsMapService.renameMap(
+          currentTitle,
+          result,
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+        _showSuccessSnackBar('地图重命名成功');
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+      } catch (e) {
+        _showErrorSnackBar('重命名失败: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _showUpdateCoverDialog(String mapTitle) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final Uint8List imageBytes;
+        if (kIsWeb) {
+          imageBytes = result.files.single.bytes!;
+        } else {
+          final file = File(result.files.single.path!);
+          imageBytes = await file.readAsBytes();
+        }
+
+        // 压缩图片
+        final compressedImage = _compressImage(imageBytes);
+
+        await _vfsMapService.updateMapCover(
+          mapTitle,
+          compressedImage,
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+
+        _showSuccessSnackBar('地图封面更新成功');
+        await _loadDirectoryContents(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+      }
+    } catch (e) {
+      _showErrorSnackBar('更新封面失败: ${e.toString()}');
+    }
+  }
 }
 
 class _MapCard extends StatelessWidget {
@@ -731,12 +841,16 @@ class _MapCard extends StatelessWidget {
   final String localizedTitle;
   final VoidCallback onDelete;
   final VoidCallback onTap;
+  final VoidCallback? onRename;
+  final VoidCallback? onUpdateCover;
 
   const _MapCard({
     required this.map,
     required this.localizedTitle,
     required this.onDelete,
     required this.onTap,
+    this.onRename,
+    this.onUpdateCover,
   });
 
   @override
@@ -746,6 +860,11 @@ class _MapCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onSecondaryTapDown: (details) {
+          if (onRename != null || onUpdateCover != null || onDelete != null) {
+            _showMapContextMenu(context, details.globalPosition);
+          }
+        },
         child: Row(
           children: [
             // 左半部分：图片
@@ -796,17 +915,6 @@ class _MapCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // 删除按钮
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: IconButton(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete, size: 20),
-                          color: Colors.red,
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -816,6 +924,65 @@ class _MapCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showMapContextMenu(BuildContext context, Offset position) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
+      items: [
+        if (onRename != null)
+          PopupMenuItem(
+            value: 'rename',
+            child: const Row(
+              children: [
+                Icon(Icons.edit, size: 16),
+                SizedBox(width: 8),
+                Text('重命名'),
+              ],
+            ),
+          ),
+        if (onUpdateCover != null)
+          PopupMenuItem(
+            value: 'update_cover',
+            child: const Row(
+              children: [
+                Icon(Icons.image, size: 16),
+                SizedBox(width: 8),
+                Text('更换封面'),
+              ],
+            ),
+          ),
+        if (onDelete != null)
+          PopupMenuItem(
+            value: 'delete',
+            child: const Row(
+              children: [
+                Icon(Icons.delete, size: 16, color: Colors.red),
+                SizedBox(width: 8),
+                Text('删除', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+      ],
+    ).then((value) {
+      switch (value) {
+        case 'rename':
+          onRename?.call();
+          break;
+        case 'update_cover':
+          onUpdateCover?.call();
+          break;
+        case 'delete':
+          onDelete?.call();
+          break;
+      }
+    });
   }
 }
 

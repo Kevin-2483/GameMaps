@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -124,7 +124,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       }
 
       // 处理图片 - PNG保持原始文件，只压缩JPG/JPEG
-      final processedImage = fileType == LegendFileType.svg || fileType == LegendFileType.png
+      final processedImage =
+          fileType == LegendFileType.svg || fileType == LegendFileType.png
           ? imageBytes
           : _compressImage(imageBytes);
 
@@ -138,21 +139,24 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         if (legendInfo != null && legendInfo['title']?.isNotEmpty == true) {
           try {
             final legendTitle = legendInfo['title'] as String;
-            
+
             // 检查图例是否已存在
             final existingLegend = await _vfsService.getLegend(
               legendTitle,
               _currentPath.isEmpty ? null : _currentPath,
             );
-            
+
             if (existingLegend != null) {
               // 显示覆盖确认对话框
-              final shouldOverwrite = await _showOverwriteConfirmDialog(l10n, legendTitle);
+              final shouldOverwrite = await _showOverwriteConfirmDialog(
+                l10n,
+                legendTitle,
+              );
               if (shouldOverwrite != true) {
                 return; // 用户取消覆盖
               }
             }
-            
+
             final legendItem = LegendItem(
               title: legendTitle,
               imageData: processedImage,
@@ -192,7 +196,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     return imageBytes;
   }
 
-  Future<bool?> _showOverwriteConfirmDialog(AppLocalizations l10n, String legendTitle) async {
+  Future<bool?> _showOverwriteConfirmDialog(
+    AppLocalizations l10n,
+    String legendTitle,
+  ) async {
     return showDialog<bool>(
       context: context,
       builder: (context) {
@@ -209,6 +216,100 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               child: const Text('覆盖'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// 显示编辑图例对话框
+  Future<Map<String, dynamic>?> _showEditLegendDialog(
+    AppLocalizations l10n,
+    LegendItem legend,
+  ) async {
+    final TextEditingController titleController = TextEditingController(
+      text: legend.title,
+    );
+    final TextEditingController versionController = TextEditingController(
+      text: legend.version.toString(),
+    );
+    double centerX = legend.centerX;
+    double centerY = legend.centerY;
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('编辑图例'),
+              content: SizedBox(
+                width: 500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: InputDecoration(
+                          labelText: l10n.legendTitle,
+                          hintText: l10n.enterLegendTitle,
+                        ),
+                        autofocus: true,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: versionController,
+                        decoration: InputDecoration(
+                          labelText: l10n.legendVersion,
+                          hintText: '输入图例版本号',
+                        ),
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.selectCenterPoint,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      CenterPointSelector(
+                        imageData: legend.imageData!,
+                        fileType: legend.fileType,
+                        initialX: centerX,
+                        initialY: centerY,
+                        onCenterChanged: (x, y) {
+                          centerX = x;
+                          centerY = y;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final version = int.tryParse(versionController.text) ?? 1;
+                    if (title.isNotEmpty) {
+                      Navigator.of(context).pop({
+                        'title': title,
+                        'version': version,
+                        'centerX': centerX,
+                        'centerY': centerY,
+                      });
+                    }
+                  },
+                  child: const Text('确定'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -305,6 +406,65 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         );
       },
     );
+  }
+
+  /// 编辑图例
+  Future<void> _editLegend(LegendItem legend) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final result = await _showEditLegendDialog(l10n, legend);
+    if (result != null) {
+      try {
+        // 创建更新后的图例项
+        final updatedLegend = LegendItem(
+          title: result['title'] as String,
+          version: result['version'] as int,
+          centerX: result['centerX'] as double,
+          centerY: result['centerY'] as double,
+          imageData: legend.imageData,
+          fileType: legend.fileType,
+          createdAt: legend.createdAt,
+          updatedAt: DateTime.now(),
+        );
+
+        // 如果标题发生变化，需要删除旧图例并创建新图例
+        if (legend.title != updatedLegend.title) {
+          // 检查新标题是否已存在
+          final existingLegend = await _vfsService.getLegend(
+            updatedLegend.title,
+            _currentPath.isEmpty ? null : _currentPath,
+          );
+
+          if (existingLegend != null) {
+            // 显示覆盖确认对话框
+            final shouldOverwrite = await _showOverwriteConfirmDialog(
+              l10n,
+              updatedLegend.title,
+            );
+            if (shouldOverwrite != true) {
+              return;
+            }
+          }
+
+          // 删除旧图例
+          await _vfsService.deleteLegend(
+            legend.title,
+            _currentPath.isEmpty ? null : _currentPath,
+          );
+        }
+
+        // 保存更新后的图例
+        await _vfsService.saveLegend(
+          updatedLegend,
+          _currentPath.isEmpty ? null : _currentPath,
+        );
+
+        await _loadLegends();
+        _showSuccessSnackBar('图例更新成功');
+      } catch (e) {
+        _showErrorSnackBar('更新图例失败: ${e.toString()}');
+      }
+    }
   }
 
   Future<void> _deleteLegend(LegendItem legend) async {
@@ -631,6 +791,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
             return _LegendCard(
               legend: legend,
               onDelete: () => _deleteLegend(legend),
+              onEdit: () => _editLegend(legend),
               onTap: () {
                 // 暂时不实现点击事件
               },
@@ -646,12 +807,60 @@ class _LegendCard extends StatelessWidget {
   final LegendItem legend;
   final VoidCallback onDelete;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   const _LegendCard({
     required this.legend,
     required this.onDelete,
     required this.onTap,
+    this.onEdit,
   });
+
+  /// 显示图例右键菜单
+  void _showLegendContextMenu(BuildContext context, TapDownDetails details) {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        details.globalPosition & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        if (onEdit != null)
+          const PopupMenuItem<String>(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit, size: 16, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('编辑'),
+              ],
+            ),
+          ),
+        const PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete, size: 16, color: Colors.red),
+              SizedBox(width: 8),
+              Text('删除'),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      switch (value) {
+        case 'edit':
+          onEdit?.call();
+          break;
+        case 'delete':
+          onDelete.call();
+          break;
+      }
+    });
+  }
 
   Widget _buildImageWidget(LegendItem legend) {
     if (legend.fileType == LegendFileType.svg) {
@@ -687,6 +896,9 @@ class _LegendCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onSecondaryTapDown: onEdit != null || onDelete != null
+            ? (details) => _showLegendContextMenu(context, details)
+            : null,
         child: Row(
           children: [
             // 左半部分：图片
@@ -756,17 +968,6 @@ class _LegendCard extends StatelessWidget {
                                 ?.copyWith(color: Colors.grey[600]),
                           ),
                         ],
-                      ),
-                      // 删除按钮
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: IconButton(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete, size: 20),
-                          color: Colors.red,
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
                       ),
                     ],
                   ),

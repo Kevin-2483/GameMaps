@@ -478,8 +478,14 @@ class VfsStorageService {
     });
   }
 
-  /// 复制文件或目录
-  Future<bool> copy(String fromPath, String toPath) async {
+
+
+  /// 复制文件或目录（带冲突检测）
+  Future<bool> copyWithConflictCheck(
+    String fromPath,
+    String toPath, {
+    bool overwriteExisting = false,
+  }) async {
     final fromVfsPath = VfsProtocol.parsePath(fromPath);
     final toVfsPath = VfsProtocol.parsePath(toPath);
 
@@ -510,6 +516,20 @@ class VfsStorageService {
         return false;
       }
 
+      // 如果不允许覆盖，检查目标是否存在
+      if (!overwriteExisting) {
+        final existingTarget = await txn.query(
+          _filesTableName,
+          where: 'database_name = ? AND collection_name = ? AND file_path = ?',
+          whereArgs: [toVfsPath.database, toVfsPath.collection, toVfsPath.path],
+          limit: 1,
+        );
+        
+        if (existingTarget.isNotEmpty) {
+          throw VfsException('Target already exists', path: toPath, code: 'FILE_EXISTS');
+        }
+      }
+
       for (final item in sourceItems) {
         final oldPath = item['file_path'] as String;
         final newPath = oldPath == fromVfsPath.path
@@ -530,11 +550,16 @@ class VfsStorageService {
           'created_at': now,
           'modified_at': now,
           'metadata_json': item['metadata_json'],
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }, conflictAlgorithm: overwriteExisting ? ConflictAlgorithm.replace : ConflictAlgorithm.abort);
       }
 
       return true;
     });
+  }
+
+  /// 复制文件或目录（保持向后兼容）
+  Future<bool> copy(String fromPath, String toPath) async {
+    return copyWithConflictCheck(fromPath, toPath, overwriteExisting: true);
   }
 
   /// 获取数据库统计信息

@@ -368,7 +368,7 @@ class UserPreferencesService {
   Future<String> exportSettings() async {
     final current = await getCurrentPreferences();
     final exportData = {
-      'version': '1.1.0',
+      'version': '1.2.0',
       'exportTime': DateTime.now().toIso8601String(),
       'preferences': current.toJson(),
     };

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "R6Box"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.2.0"
 #define MyAppPublisher "Kevin-2483"
 #define MyAppURL "https://github.com/Kevin-2483/GameMaps"
 #define MyAppExeName "r6box.exe"

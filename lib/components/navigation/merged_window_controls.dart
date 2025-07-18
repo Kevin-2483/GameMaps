@@ -30,7 +30,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     super.initState();
     _isFullScreen = FullScreen.isFullScreen;
     FullScreen.addListener(this);
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -61,7 +61,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     setState(() {
       _isExpanded = isHovering;
     });
-    
+
     if (isHovering) {
       _animationController.forward();
     } else {
@@ -131,102 +131,123 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
   @override
   Widget build(BuildContext context) {
     // 只在桌面平台显示
-    if (kIsWeb || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return const SizedBox.shrink();
     }
 
-    return Consumer<UserPreferencesProvider>(builder: (context, userPrefsProvider, child) {
-      if (!userPrefsProvider.isInitialized || !userPrefsProvider.layout.enableMergedWindowControls) {
-        return const SizedBox.shrink();
-      }
+    return Consumer<UserPreferencesProvider>(
+      builder: (context, userPrefsProvider, child) {
+        if (!userPrefsProvider.isInitialized ||
+            !userPrefsProvider.layout.enableMergedWindowControls) {
+          return const SizedBox.shrink();
+        }
 
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          // 根据屏幕比例决定布局模式
-          final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-          final enableRightSideVertical = userPrefsProvider.layout.enableRightSideVerticalNavigation;
-          
-          // 宽屏时使用垂直导航布局，窄屏时使用水平导航布局
-          final useVerticalLayout = isWideScreen;
-          
-          return Stack(
-            children: [
-              Positioned(
-                top: useVerticalLayout ? 8 : null,
-                bottom: useVerticalLayout ? null : 8,
-                right: useVerticalLayout ? (enableRightSideVertical ? 8 : null) : 8,
-                left: useVerticalLayout ? (enableRightSideVertical ? null : 8) : null,
-        child: MouseRegion(
-          onEnter: (_) => _onHover(true),
-          onExit: (_) => _onHover(false),
-          child: AnimatedBuilder(
-            animation: _expandAnimation,
-            builder: (context, child) {
-              return Material(
-                elevation: 16,
-                borderRadius: BorderRadius.circular(24),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                      width: 1,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // 根据屏幕比例决定布局模式
+            final isWideScreen = constraints.maxWidth > constraints.maxHeight;
+            final enableRightSideVertical =
+                userPrefsProvider.layout.enableRightSideVerticalNavigation;
+
+            // 宽屏时使用垂直导航布局，窄屏时使用水平导航布局
+            final useVerticalLayout = isWideScreen;
+
+            return Stack(
+              children: [
+                Positioned(
+                  top: useVerticalLayout ? 8 : null,
+                  bottom: useVerticalLayout ? null : 8,
+                  right: useVerticalLayout
+                      ? (enableRightSideVertical ? 8 : null)
+                      : 8,
+                  left: useVerticalLayout
+                      ? (enableRightSideVertical ? null : 8)
+                      : null,
+                  child: MouseRegion(
+                    onEnter: (_) => _onHover(true),
+                    onExit: (_) => _onHover(false),
+                    child: AnimatedBuilder(
+                      animation: _expandAnimation,
+                      builder: (context, child) {
+                        return Material(
+                          elevation: 16,
+                          borderRadius: BorderRadius.circular(24),
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surface.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outline.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: useVerticalLayout
+                                  ? (enableRightSideVertical
+                                        ? [
+                                            // 右侧垂直导航时：展开按钮在左，关闭按钮在右（固定位置）
+                                            if (_expandAnimation.value > 0)
+                                              ..._buildExpandedButtons(context),
+                                            _buildWindowButton(
+                                              context,
+                                              icon: Icons.power_settings_new,
+                                              onPressed: () =>
+                                                  _handleAppClose(context),
+                                              tooltip: '关闭',
+                                              isCloseButton: true,
+                                            ),
+                                          ]
+                                        : [
+                                            // 左侧垂直导航时：关闭按钮在左（固定位置），展开按钮在右
+                                            _buildWindowButton(
+                                              context,
+                                              icon: Icons.power_settings_new,
+                                              onPressed: () =>
+                                                  _handleAppClose(context),
+                                              tooltip: '关闭',
+                                              isCloseButton: true,
+                                            ),
+                                            if (_expandAnimation.value > 0)
+                                              ..._buildExpandedButtons(context),
+                                          ])
+                                  : [
+                                      // 水平导航时：关闭按钮在右（固定位置），展开按钮在左
+                                      if (_expandAnimation.value > 0)
+                                        ..._buildExpandedButtons(context),
+                                      _buildWindowButton(
+                                        context,
+                                        icon: Icons.power_settings_new,
+                                        onPressed: () =>
+                                            _handleAppClose(context),
+                                        tooltip: '关闭',
+                                        isCloseButton: true,
+                                      ),
+                                    ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: useVerticalLayout
-                      ? (enableRightSideVertical ? [
-                          // 右侧垂直导航时：展开按钮在左，关闭按钮在右（固定位置）
-                          if (_expandAnimation.value > 0) ..._buildExpandedButtons(context),
-                          _buildWindowButton(
-                            context,
-                            icon: Icons.power_settings_new,
-                            onPressed: () => _handleAppClose(context),
-                            tooltip: '关闭',
-                            isCloseButton: true,
-                          ),
-                        ] : [
-                          // 左侧垂直导航时：关闭按钮在左（固定位置），展开按钮在右
-                          _buildWindowButton(
-                            context,
-                            icon: Icons.power_settings_new,
-                            onPressed: () => _handleAppClose(context),
-                            tooltip: '关闭',
-                            isCloseButton: true,
-                          ),
-                          if (_expandAnimation.value > 0) ..._buildExpandedButtons(context),
-                        ])
-                      : [
-                          // 水平导航时：关闭按钮在右（固定位置），展开按钮在左
-                          if (_expandAnimation.value > 0) ..._buildExpandedButtons(context),
-                          _buildWindowButton(
-                            context,
-                            icon: Icons.power_settings_new,
-                            onPressed: () => _handleAppClose(context),
-                            tooltip: '关闭',
-                            isCloseButton: true,
-                          ),
-                        ],
                 ),
-                ),
-              );
-            },
-          ),
-        ),
-               ),
-             ],
-           );
-        },
-      );
-    });
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   List<Widget> _buildExpandedButtons(BuildContext context) {
     List<Widget> buttons = [];
-    
+
     // 最小化按钮
     buttons.add(
       SizeTransition(
@@ -243,7 +264,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
         ),
       ),
     );
-    
+
     // 最大化按钮
     buttons.add(
       SizeTransition(
@@ -260,7 +281,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
         ),
       ),
     );
-    
+
     // 全屏按钮（macOS显示）
     if (Platform.isMacOS) {
       buttons.add(
@@ -281,7 +302,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
         ),
       );
     }
-    
+
     return buttons;
   }
 
@@ -293,7 +314,10 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     bool isCloseButton = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 4, // 左右各4像素
+        vertical: 4, // 上下各8像素
+      ),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),

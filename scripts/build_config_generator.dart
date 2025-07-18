@@ -84,7 +84,7 @@ class BuildConfigGenerator {
         '--dart-define=APP_NAME=${buildConfig['appName'] ?? 'R6Box'}',
       );
       buildParams.add(
-        '--dart-define=APP_VERSION=${buildConfig['version'] ?? '1.1.0'}',
+        '--dart-define=APP_VERSION=${buildConfig['version'] ?? '1.2.0'}',
       );
       buildParams.add(
         '--dart-define=BUILD_NUMBER=${buildConfig['buildNumber'] ?? '1'}',

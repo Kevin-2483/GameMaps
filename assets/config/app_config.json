@@ -93,7 +93,7 @@
   },
   "build": {
     "appName": "R6Box",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "buildNumber": "1",
     "enableLogging": true
   }

@@ -15,6 +15,7 @@ import '../../utils/web_download_utils.dart';
 import 'vfs_file_metadata_dialog.dart';
 import 'vfs_file_rename_dialog.dart';
 import 'vfs_file_search_dialog.dart';
+import 'vfs_file_conflict_dialog.dart';
 import 'vfs_permission_dialog.dart';
 import '../common/floating_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
@@ -616,6 +617,50 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     _showInfoSnackBar('已剪切 ${files.length} 个项目');
   }
 
+  /// 生成唯一的文件名建议
+  Future<String> _generateUniqueFileName(String originalName, String targetPath) async {
+    if (_selectedCollection == null) return originalName;
+    
+    // 分离文件名和扩展名
+    String baseName;
+    String extension;
+    
+    final lastDotIndex = originalName.lastIndexOf('.');
+    if (lastDotIndex > 0 && lastDotIndex < originalName.length - 1) {
+      baseName = originalName.substring(0, lastDotIndex);
+      extension = originalName.substring(lastDotIndex);
+    } else {
+      baseName = originalName;
+      extension = '';
+    }
+    
+    // 检查基本的副本名称
+    String suggestedName = '$baseName (副本)$extension';
+    String testPath = _currentPath.isEmpty ? suggestedName : '$_currentPath/$suggestedName';
+    
+    final existingFile = await _vfsService.getFileInfo(_selectedCollection!, testPath);
+    if (existingFile == null) {
+      return suggestedName;
+    }
+    
+    // 如果副本也存在，尝试带数字的版本
+    int counter = 2;
+    while (counter <= 100) { // 限制尝试次数避免无限循环
+      suggestedName = '$baseName (副本 $counter)$extension';
+      testPath = _currentPath.isEmpty ? suggestedName : '$_currentPath/$suggestedName';
+      
+      final testFile = await _vfsService.getFileInfo(_selectedCollection!, testPath);
+      if (testFile == null) {
+        return suggestedName;
+      }
+      counter++;
+    }
+    
+    // 如果都存在，返回带时间戳的版本
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return '$baseName (副本 $timestamp)$extension';
+  }
+
   /// 粘贴文件
   Future<void> _pasteFiles() async {
     if (_clipboardFiles.isEmpty ||
@@ -629,6 +674,57 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     });
 
     try {
+      // 收集所有冲突信息
+      final conflicts = <VfsConflictInfo>[];
+      
+      for (final file in _clipboardFiles) {
+        final fileName = file.name;
+        final targetPath = _currentPath.isEmpty
+            ? fileName
+            : '$_currentPath/$fileName';
+
+        // 检查目标文件是否存在
+        final existingFile = await _vfsService.getFileInfo(
+          _selectedCollection!,
+          targetPath,
+        );
+
+        if (existingFile != null) {
+          // 生成唯一的建议名称
+          final suggestedName = await _generateUniqueFileName(file.name, targetPath);
+          
+          conflicts.add(VfsConflictInfo(
+            fileName: file.name,
+            isDirectory: file.isDirectory,
+            existingFile: existingFile,
+            sourceFile: file,
+            suggestedName: suggestedName,
+          ));
+        }
+      }
+
+      // 如果有冲突，显示批量冲突处理对话框
+      Map<String, VfsConflictResult>? conflictResults;
+      if (conflicts.isNotEmpty) {
+        final results = await VfsBatchConflictDialog.show(
+          context,
+          conflicts,
+        );
+        
+        if (results == null) {
+          // 用户取消了操作
+          return;
+        }
+        
+        // 将结果列表转换为以文件路径为键的映射
+        conflictResults = {};
+        for (int i = 0; i < conflicts.length && i < results.length; i++) {
+          conflictResults[conflicts[i].sourceFile.path] = results[i];
+        }
+      }
+
+      // 执行文件操作
+      int successCount = 0;
       for (final file in _clipboardFiles) {
         final sourcePath = file.path;
         final fileName = file.name;
@@ -642,22 +738,95 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           throw VfsException('Invalid source path format', path: sourcePath);
         }
 
-        if (_isCutOperation) {
-          // 移动文件
-          await _vfsService.moveFile(
-            sourceVfsPath.collection, // 使用源文件的集合
-            sourceVfsPath.path, // 使用解析后的路径
-            _selectedCollection!,
-            targetPath,
-          );
-        } else {
-          // 复制文件
-          await _vfsService.copyFile(
-            sourceVfsPath.collection, // 使用源文件的集合
-            sourceVfsPath.path, // 使用解析后的路径
-            _selectedCollection!,
-            targetPath,
-          );
+        // 检查是否有冲突处理结果
+        final conflictResult = conflictResults?[file.path];
+        String finalTargetPath = targetPath;
+        bool shouldSkip = false;
+        bool shouldMerge = false;
+
+        if (conflictResult != null) {
+          switch (conflictResult.action) {
+            case VfsConflictAction.skip:
+              shouldSkip = true;
+              break;
+            case VfsConflictAction.rename:
+              final pathSegments = targetPath.split('/');
+              pathSegments[pathSegments.length - 1] = conflictResult.newName!;
+              finalTargetPath = pathSegments.join('/');
+              
+              // 再次检查重命名后的路径是否仍有冲突
+              final renamedFileExists = await _vfsService.getFileInfo(
+                _selectedCollection!,
+                finalTargetPath,
+              );
+              if (renamedFileExists != null) {
+                // 如果重命名后仍有冲突，生成一个真正唯一的名称
+                final uniqueName = await _generateUniqueFileName(
+                  conflictResult.newName!,
+                  finalTargetPath,
+                );
+                pathSegments[pathSegments.length - 1] = uniqueName;
+                finalTargetPath = pathSegments.join('/');
+              }
+              break;
+            case VfsConflictAction.merge:
+              shouldMerge = true;
+              break;
+            case VfsConflictAction.overwrite:
+              // 使用原始目标路径，允许覆盖
+              break;
+          }
+        }
+
+        if (shouldSkip) {
+          continue;
+        }
+
+        try {
+          if (_isCutOperation) {
+            // 移动文件
+            await _vfsService.moveFile(
+              sourceVfsPath.collection,
+              sourceVfsPath.path,
+              _selectedCollection!,
+              finalTargetPath,
+            );
+          } else {
+            // 复制文件
+            if (shouldMerge && file.isDirectory) {
+              // 对于目录合并，需要递归处理子文件
+              final defaultFileAction = ValueNotifier<VfsConflictAction?>(null);
+              final defaultDirectoryAction = ValueNotifier<VfsConflictAction?>(null);
+              
+              try {
+                await _mergeDirectory(
+                  sourceVfsPath.collection,
+                  sourceVfsPath.path,
+                  _selectedCollection!,
+                  finalTargetPath,
+                  defaultFileAction: defaultFileAction,
+                  defaultDirectoryAction: defaultDirectoryAction,
+                );
+              } finally {
+                defaultFileAction.dispose();
+                defaultDirectoryAction.dispose();
+              }
+            } else {
+              // 使用带冲突检测的复制方法
+              final overwriteExisting = conflictResult?.action == VfsConflictAction.overwrite;
+              await _vfsService.copyFileWithConflictCheck(
+                sourceVfsPath.collection,
+                sourceVfsPath.path,
+                _selectedCollection!,
+                finalTargetPath,
+                overwriteExisting: overwriteExisting,
+              );
+            }
+          }
+          successCount++;
+        } catch (e) {
+          // 记录单个文件的错误，但继续处理其他文件
+          debugPrint('处理文件 ${file.name} 时出错: $e');
         }
       }
 
@@ -667,13 +836,146 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       }
 
       await _navigateToPath(_currentPath);
-      _showInfoSnackBar('粘贴完成');
+      _showInfoSnackBar('粘贴完成，成功处理 $successCount 个项目');
     } catch (e) {
       _showErrorSnackBar('粘贴失败: $e');
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  /// 合并目录（递归处理子文件冲突）
+  Future<void> _mergeDirectory(
+    String sourceCollection,
+    String sourcePath,
+    String targetCollection,
+    String targetPath, {
+    ValueNotifier<VfsConflictAction?>? defaultFileAction,
+    ValueNotifier<VfsConflictAction?>? defaultDirectoryAction,
+  }) async {
+    // 获取源目录下的所有文件
+    final sourceFiles = await _vfsService.listFiles(
+      sourceCollection,
+      sourcePath.isEmpty ? null : sourcePath,
+    );
+
+    for (final sourceFile in sourceFiles) {
+      final relativePath = sourceFile.path
+          .replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', '')
+          .replaceFirst(sourcePath.isEmpty ? '' : '$sourcePath/', '');
+      
+      final newTargetPath = targetPath.isEmpty
+          ? relativePath
+          : '$targetPath/$relativePath';
+
+      // 检查目标文件是否存在
+      final existingFile = await _vfsService.getFileInfo(
+        targetCollection,
+        newTargetPath,
+      );
+
+      if (existingFile != null) {
+        // 检查是否有对应类型的默认操作
+        VfsConflictResult? conflictResult;
+        final hasDefaultAction = sourceFile.isDirectory 
+            ? defaultDirectoryAction?.value != null
+            : defaultFileAction?.value != null;
+            
+        if (hasDefaultAction) {
+          // 使用默认操作
+          final defaultAction = sourceFile.isDirectory 
+              ? defaultDirectoryAction!.value!
+              : defaultFileAction!.value!;
+          conflictResult = VfsConflictResult(
+            action: defaultAction,
+            newName: defaultAction == VfsConflictAction.rename 
+                ? await _generateUniqueFileName(sourceFile.name, newTargetPath)
+                : null,
+          );
+        } else {
+          // 显示冲突对话框
+          final suggestedName = await _generateUniqueFileName(sourceFile.name, newTargetPath);
+          
+          conflictResult = await VfsFileConflictDialog.show(
+            context,
+            VfsConflictInfo(
+              fileName: sourceFile.name,
+              isDirectory: sourceFile.isDirectory,
+              existingFile: existingFile,
+              sourceFile: sourceFile,
+              suggestedName: suggestedName,
+            ),
+            showApplyToAll: true,
+          );
+          
+          // 如果用户选择了"应用到全部"，更新对应类型的默认操作
+          if (conflictResult?.applyToAll == true) {
+            if (sourceFile.isDirectory) {
+              defaultDirectoryAction?.value = conflictResult!.action;
+            } else {
+              defaultFileAction?.value = conflictResult!.action;
+            }
+          }
+        }
+
+        if (conflictResult == null || conflictResult.action == VfsConflictAction.skip) {
+          continue;
+        }
+
+        String finalPath = newTargetPath;
+        if (conflictResult.action == VfsConflictAction.rename) {
+          final pathSegments = newTargetPath.split('/');
+          pathSegments[pathSegments.length - 1] = conflictResult.newName!;
+          finalPath = pathSegments.join('/');
+          
+          // 再次检查重命名后的路径是否仍有冲突
+          final renamedFileExists = await _vfsService.getFileInfo(
+            targetCollection,
+            finalPath,
+          );
+          if (renamedFileExists != null) {
+            // 如果重命名后仍有冲突，生成一个真正唯一的名称
+            final uniqueName = await _generateUniqueFileName(
+              conflictResult.newName!,
+              finalPath,
+            );
+            pathSegments[pathSegments.length - 1] = uniqueName;
+            finalPath = pathSegments.join('/');
+          }
+        }
+
+        if (sourceFile.isDirectory && conflictResult.action == VfsConflictAction.merge) {
+          // 对于目录合并，递归处理子文件，传递默认操作
+          await _mergeDirectory(
+            sourceCollection,
+            sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+            targetCollection,
+            finalPath,
+            defaultFileAction: defaultFileAction,
+            defaultDirectoryAction: defaultDirectoryAction,
+          );
+        } else {
+          // 对于文件或重命名/覆盖的目录
+          await _vfsService.copyFileWithConflictCheck(
+            sourceCollection,
+            sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+            targetCollection,
+            finalPath,
+            overwriteExisting: conflictResult.action == VfsConflictAction.overwrite,
+          );
+        }
+      } else {
+        // 没有冲突，直接复制
+        await _vfsService.copyFileWithConflictCheck(
+          sourceCollection,
+          sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+          targetCollection,
+          newTargetPath,
+          overwriteExisting: false,
+        );
+      }
     }
   }
 
