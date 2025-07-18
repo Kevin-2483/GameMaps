@@ -1,14 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../services/user_preferences/user_preferences_config_service.dart';
 
-class UserManagementSection extends StatelessWidget {
+class UserManagementSection extends StatefulWidget {
   final UserPreferences preferences;
 
   const UserManagementSection({super.key, required this.preferences});
+
+  @override
+  State<UserManagementSection> createState() => _UserManagementSectionState();
+}
+
+class _UserManagementSectionState extends State<UserManagementSection> {
+  List<ConfigInfo> _configs = [];
+  bool _isLoadingConfigs = false;
+  String? _configError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConfigs();
+  }
+
+  Future<void> _loadConfigs() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoadingConfigs = true;
+      _configError = null;
+    });
+
+    try {
+      final provider = context.read<UserPreferencesProvider>();
+      final configs = await provider.getAllConfigs();
+      if (mounted) {
+        setState(() {
+          _configs = configs;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _configError = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingConfigs = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
@@ -42,8 +91,8 @@ class UserManagementSection extends StatelessWidget {
                     backgroundImage: _getAvatarImage(),
                     child: _getAvatarImage() == null
                         ? Text(
-                            preferences.displayName.isNotEmpty
-                                ? preferences.displayName[0].toUpperCase()
+                            widget.preferences.displayName.isNotEmpty
+                                ? widget.preferences.displayName[0].toUpperCase()
                                 : 'U',
                             style: TextStyle(
                               color: Colors.white,
@@ -59,14 +108,14 @@ class UserManagementSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          preferences.displayName,
+                          widget.preferences.displayName,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        if (preferences.userId != null) ...[
+                        if (widget.preferences.userId != null) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'ID: ${preferences.userId}',
+                            'ID: ${widget.preferences.userId}',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -77,7 +126,7 @@ class UserManagementSection extends StatelessWidget {
                         ],
                         const SizedBox(height: 4),
                         Text(
-                          '创建时间: ${_formatDate(preferences.createdAt)}',
+                          '创建时间: ${_formatDate(widget.preferences.createdAt)}',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -85,10 +134,10 @@ class UserManagementSection extends StatelessWidget {
                                 ).colorScheme.onSurfaceVariant,
                               ),
                         ),
-                        if (preferences.lastLoginAt != null) ...[
+                        if (widget.preferences.lastLoginAt != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            '最后登录: ${_formatDate(preferences.lastLoginAt!)}',
+                            '最后登录: ${_formatDate(widget.preferences.lastLoginAt!)}',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -106,39 +155,89 @@ class UserManagementSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 用户配置文件管理
+            // 配置管理
             Text(
-              '配置文件管理',
+              '配置管理',
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
 
-            // 创建新配置文件
+            // 保存当前配置
             ListTile(
-              leading: Icon(Icons.person_add, color: Colors.green),
-              title: Text('创建新配置文件'),
-              subtitle: Text('为不同用户或用途创建独立配置'),
-              onTap: () => _createNewProfile(context, provider),
+              leading: Icon(Icons.save, color: Colors.green),
+              title: Text('保存当前配置'),
+              subtitle: Text('将当前设置保存为新配置'),
+              onTap: () => _showSaveConfigDialog(context, provider),
             ),
 
-            // 切换配置文件
-            ListTile(
-              leading: Icon(Icons.switch_account, color: Colors.blue),
-              title: Text('切换配置文件'),
-              subtitle: Text('在多个用户配置之间切换'),
-              onTap: () => _switchProfile(context, provider),
-            ),
-
-            // 删除当前配置文件
-            if (preferences.userId != null)
-              ListTile(
-                leading: Icon(Icons.person_remove, color: Colors.red),
-                title: Text('删除当前配置文件'),
-                subtitle: Text('永久删除当前用户配置文件'),
-                onTap: () => _deleteCurrentProfile(context, provider),
+            // 配置列表
+            if (_isLoadingConfigs)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_configError != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Icon(Icons.error, color: Colors.red),
+                    const SizedBox(height: 8),
+                    Text('加载配置失败: $_configError'),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: _loadConfigs,
+                      child: Text('重试'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_configs.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text(
+                      '暂无保存的配置',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(
+                          '已保存的配置 (${_configs.length})',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: _loadConfigs,
+                          child: Text('刷新'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ..._configs.map((config) => _buildConfigTile(context, provider, config)),
+                ],
               ),
+
+            // 导入配置
+            ListTile(
+              leading: Icon(Icons.upload, color: Colors.blue),
+              title: Text('导入配置'),
+              subtitle: Text('从JSON数据导入配置'),
+              onTap: () => _showImportConfigDialog(context, provider),
+            ),
 
             const SizedBox(height: 16),
 
@@ -155,7 +254,7 @@ class UserManagementSection extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.badge),
               title: Text('显示名称'),
-              subtitle: Text(preferences.displayName),
+              subtitle: Text(widget.preferences.displayName),
               trailing: Icon(Icons.edit),
               onTap: () => _changeDisplayName(context, provider),
             ), // 更改头像
@@ -171,7 +270,7 @@ class UserManagementSection extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.language),
               title: Text('语言'),
-              subtitle: Text(_getLanguageDisplayName(preferences.locale)),
+              subtitle: Text(_getLanguageDisplayName(widget.preferences.locale)),
               trailing: Icon(Icons.edit),
               onTap: () => _changeLanguage(context, provider),
             ),
@@ -199,73 +298,27 @@ class UserManagementSection extends StatelessWidget {
 
   /// 获取头像图片提供者
   ImageProvider? _getAvatarImage() {
-    if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
-      return MemoryImage(preferences.avatarData!);
-    } else if (preferences.avatarPath != null &&
-        preferences.avatarPath!.isNotEmpty) {
-      return NetworkImage(preferences.avatarPath!);
+    if (widget.preferences.avatarData != null && widget.preferences.avatarData!.isNotEmpty) {
+      return MemoryImage(widget.preferences.avatarData!);
+    } else if (widget.preferences.avatarPath != null &&
+        widget.preferences.avatarPath!.isNotEmpty) {
+      return NetworkImage(widget.preferences.avatarPath!);
     }
     return null;
   }
 
   /// 获取头像显示文本
   String _getAvatarDisplayText() {
-    if (preferences.avatarData != null && preferences.avatarData!.isNotEmpty) {
-      return '本地图片 (${(preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
-    } else if (preferences.avatarPath != null &&
-        preferences.avatarPath!.isNotEmpty) {
-      return preferences.avatarPath!;
+    if (widget.preferences.avatarData != null && widget.preferences.avatarData!.isNotEmpty) {
+      return '本地图片 (${(widget.preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
+    } else if (widget.preferences.avatarPath != null &&
+        widget.preferences.avatarPath!.isNotEmpty) {
+      return widget.preferences.avatarPath!;
     }
     return '未设置';
   }
 
-  void _createNewProfile(
-    BuildContext context,
-    UserPreferencesProvider provider,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => _CreateProfileDialog(provider: provider),
-    );
-  }
 
-  void _switchProfile(BuildContext context, UserPreferencesProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => _SwitchProfileDialog(provider: provider),
-    );
-  }
-
-  void _deleteCurrentProfile(
-    BuildContext context,
-    UserPreferencesProvider provider,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('删除配置文件'),
-        content: Text('确定要删除当前配置文件"${preferences.displayName}"吗？此操作不可撤销。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              // 实现删除配置文件的逻辑
-              Navigator.of(context).pop();
-              context.showSuccessSnackBar('配置文件已删除');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text('删除'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _changeDisplayName(
     BuildContext context,
@@ -274,7 +327,7 @@ class UserManagementSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => _DisplayNameDialog(
-        currentName: preferences.displayName,
+        currentName: widget.preferences.displayName,
         provider: provider,
       ),
     );
@@ -304,8 +357,8 @@ class UserManagementSection extends StatelessWidget {
                 _uploadLocalImage(context, provider);
               },
             ),
-            if (preferences.avatarPath != null ||
-                preferences.avatarData != null)
+            if (widget.preferences.avatarPath != null ||
+                widget.preferences.avatarData != null)
               ListTile(
                 leading: Icon(Icons.clear, color: Colors.red),
                 title: Text('移除头像'),
@@ -327,7 +380,7 @@ class UserManagementSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => _AvatarUrlDialog(
-        currentUrl: preferences.avatarPath ?? '',
+        currentUrl: widget.preferences.avatarPath ?? '',
         provider: provider,
       ),
     );
@@ -401,6 +454,293 @@ class UserManagementSection extends StatelessWidget {
     }
   }
 
+  // 配置管理相关方法
+  Future<void> _showSaveConfigDialog(BuildContext context, UserPreferencesProvider provider) async {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('保存当前配置'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: '配置名称',
+                hintText: '请输入配置名称',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(
+                labelText: '配置描述',
+                hintText: '请输入配置描述（可选）',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.trim().isEmpty) {
+                context.showErrorSnackBar('请输入配置名称');
+                return;
+              }
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      try {
+        final configId = await provider.saveCurrentAsConfig(
+          name: nameController.text.trim(),
+          description: descriptionController.text.trim(),
+        );
+        
+        if (configId != null && mounted) {
+          context.showSuccessSnackBar('配置保存成功');
+          _loadConfigs();
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showErrorSnackBar('保存配置失败: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  Widget _buildConfigTile(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) {
+    return ListTile(
+      leading: Icon(Icons.settings_backup_restore),
+      title: Text(config.name),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (config.description.isNotEmpty) Text(config.description),
+          Text(
+            '创建时间: ${_formatDateTime(config.createdAt)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      trailing: PopupMenuButton<String>(
+        onSelected: (value) {
+          switch (value) {
+            case 'load':
+              _loadConfig(context, provider, config);
+              break;
+            case 'export':
+              _exportConfig(context, provider, config);
+              break;
+            case 'delete':
+              _deleteConfig(context, provider, config);
+              break;
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'load',
+            child: Row(
+              children: [
+                Icon(Icons.download),
+                SizedBox(width: 8),
+                Text('加载配置'),
+              ],
+            ),
+          ),
+          const PopupMenuItem(
+            value: 'export',
+            child: Row(
+              children: [
+                Icon(Icons.share),
+                SizedBox(width: 8),
+                Text('导出配置'),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(),
+          const PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete, color: Colors.red),
+                SizedBox(width: 8),
+                Text(
+                  '删除配置',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('加载配置'),
+        content: Text('确定要加载配置 "${config.name}" 吗？\n\n这将覆盖当前的所有设置（用户信息除外）。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final success = await provider.loadAndApplyConfig(config.id);
+        
+        if (success && mounted) {
+          context.showSuccessSnackBar('配置加载成功');
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showErrorSnackBar('加载配置失败: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除配置'),
+        content: Text('确定要删除配置 "${config.name}" 吗？\n\n此操作无法撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final success = await provider.deleteConfig(config.id);
+        
+        if (success && mounted) {
+          context.showSuccessSnackBar('配置删除成功');
+          _loadConfigs();
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showErrorSnackBar('删除配置失败: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  Future<void> _exportConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+    try {
+      final jsonData = await provider.exportConfigAsJson(config.id);
+      
+      if (jsonData != null) {
+        await Clipboard.setData(ClipboardData(text: jsonData));
+        context.showSuccessSnackBar('配置已复制到剪贴板');
+      }
+    } catch (e) {
+      context.showErrorSnackBar('导出配置失败: ${e.toString()}');
+    }
+  }
+
+  Future<void> _showImportConfigDialog(BuildContext context, UserPreferencesProvider provider) async {
+    final controller = TextEditingController();
+    
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('导入配置'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('请粘贴配置JSON数据：'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'JSON数据',
+                hintText: '粘贴配置JSON数据...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 8,
+              minLines: 4,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                context.showErrorSnackBar('请输入JSON数据');
+                return;
+              }
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('导入'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      try {
+        final configId = await provider.importConfigFromJson(controller.text.trim());
+        
+        if (configId != null && mounted) {
+          context.showSuccessSnackBar('配置导入成功');
+          _loadConfigs();
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showErrorSnackBar('导入配置失败: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
   void _changeLanguage(BuildContext context, UserPreferencesProvider provider) {
     final List<Map<String, String>> languages = [
       {'code': 'zh_CN', 'name': '简体中文'},
@@ -417,9 +757,9 @@ class UserManagementSection extends StatelessWidget {
             return RadioListTile<String>(
               title: Text(language['name']!),
               value: language['code']!,
-              groupValue: preferences.locale,
+              groupValue: widget.preferences.locale,
               onChanged: (value) async {
-                if (value != null && value != preferences.locale) {
+                if (value != null && value != widget.preferences.locale) {
                   try {
                     await provider.updateUserInfo(locale: value);
                     Navigator.of(context).pop();
@@ -580,51 +920,6 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
   }
 }
 
-// 切换配置文件对话框
-class _SwitchProfileDialog extends StatelessWidget {
-  final UserPreferencesProvider provider;
-
-  const _SwitchProfileDialog({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('切换配置文件'),
-      content: Container(
-        width: 300,
-        height: 400,
-        child: Column(
-          children: [
-            Text('选择要切换到的配置文件：'),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: [
-                  // 这里会显示所有可用的配置文件列表
-                  ListTile(
-                    leading: CircleAvatar(child: Text('D')),
-                    title: Text('默认配置'),
-                    subtitle: Text('2024-01-01 创建'),
-                    onTap: () {
-                      // 切换到选定的配置文件
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('取消'),
-        ),
-      ],
-    );
-  }
-}
 
 // 显示名称编辑对话框
 class _DisplayNameDialog extends StatefulWidget {

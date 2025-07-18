@@ -714,7 +714,7 @@ class ToolPreferences {
     required this.favoriteStrokeWidths,
     required this.toolbarLayout,
     this.showAdvancedTools = false,
-    this.handleSize = 8.0,
+    this.handleSize = 16.0,
     this.customTags = const [],
     this.recentTags = const [],
     required this.tts,

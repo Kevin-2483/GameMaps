@@ -113,11 +113,14 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   late CodeController _codeController;
   bool _isReadOnly = true;
   bool? _isDarkTheme; // 使用null表示自动模式
+  double _lineNumberWidth = 60; // 行号容器宽度，根据行数动态计算
 
   @override
   void initState() {
     super.initState();
     _codeController = CodeController();
+    // 监听文本变化以更新行号宽度
+    _codeController.addListener(_onTextChanged);
     _loadTextFile();
   }
 
@@ -139,6 +142,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
 
   @override
   void dispose() {
+    _codeController.removeListener(_onTextChanged);
     _codeController.dispose();
     super.dispose();
   }
@@ -164,6 +168,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         // 设置代码编辑器内容和语言
         _codeController.text = textContent;
         _setLanguageMode();
+        _updateLineNumberWidth();
 
         setState(() {
           _fileInfo = widget.fileInfo;
@@ -181,6 +186,29 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         _isLoading = false;
       });
     }
+  }
+
+  /// 文本内容变化监听器
+  void _onTextChanged() {
+    final newLineCount = _codeController.text.split('\n').length;
+    final newDigits = newLineCount.toString().length;
+    // 增加每位数字的宽度和边距，确保行号完整显示
+    final newWidth = (newDigits * 12 + 32).toDouble().clamp(50.0, 150.0);
+    
+    // 只有当宽度发生变化时才更新UI
+    if (newWidth != _lineNumberWidth) {
+      setState(() {
+        _lineNumberWidth = newWidth;
+      });
+    }
+  }
+
+  /// 计算行号容器宽度
+  void _updateLineNumberWidth() {
+    final lineCount = _codeController.text.split('\n').length;
+    // 计算行号数字的位数，每位数字大约需要12像素，加上更多边距
+    final digits = lineCount.toString().length;
+    _lineNumberWidth = (digits * 12 + 32).toDouble().clamp(50.0, 150.0);
   }
 
   /// 根据文件扩展名设置语言模式
@@ -365,7 +393,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               showErrors: true,
               showFoldingHandles: true,
               margin: 8,
-              width: 60,
+              width: _lineNumberWidth,
               background: _effectiveIsDarkTheme
                   ? const Color(0xFF3C3C3C)
                   : const Color(0xFFF5F5F5),
@@ -376,7 +404,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
             ),
             wrap: true,
             lineNumberStyle: LineNumberStyle(
-              width: 60,
+              width: _lineNumberWidth,
               margin: 8,
               textAlign: TextAlign.right,
               background: _effectiveIsDarkTheme
