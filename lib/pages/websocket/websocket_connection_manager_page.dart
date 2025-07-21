@@ -56,6 +56,7 @@ class _WebSocketConnectionManagerPageState
   StreamSubscription? _configsSubscription;
   StreamSubscription? _activeConfigSubscription;
   StreamSubscription? _pingDelaySubscription;
+  StreamSubscription? _messageSubscription;
 
   @override
   void initState() {
@@ -71,6 +72,7 @@ class _WebSocketConnectionManagerPageState
     _configsSubscription?.cancel();
     _activeConfigSubscription?.cancel();
     _pingDelaySubscription?.cancel();
+    _messageSubscription?.cancel();
     _logScrollController.dispose();
     super.dispose();
   }
@@ -122,7 +124,7 @@ class _WebSocketConnectionManagerPageState
     });
 
     // 监听WebSocket消息（包括用户状态广播）
-    _manager.messageStream.listen((message) {
+    _messageSubscription = _manager.messageStream.listen((message) {
       if (message.type == 'user_status_broadcast') {
         final data = message.data;
         final userId = data['user_id'] as String?;
@@ -183,6 +185,9 @@ class _WebSocketConnectionManagerPageState
     final timestamp = DateTime.now().toString().substring(11, 19);
     final logMessage = '[$timestamp] $message';
 
+    // 检查组件是否仍然挂载
+    if (!mounted) return;
+    
     setState(() {
       _logs.add(logMessage);
       // 限制日志数量，避免内存溢出

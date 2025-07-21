@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
+
 import '../blocs/presence/presence_bloc.dart';
 import '../blocs/presence/presence_event.dart';
 import '../utils/image_compression_utils.dart';
@@ -38,11 +40,16 @@ class MapSyncService {
         );
         
         if (compressedCoverBase64 == null) {
-          print('地图封面压缩失败，将不同步封面信息');
+          debugPrint('地图封面压缩失败，将不同步封面信息');
         }
       }
       
       // 发送更新事件到PresenceBloc
+      debugPrint('[MapSyncService] 同步地图信息到PresenceBloc:');
+      debugPrint('[MapSyncService]   - mapId: $mapId');
+      debugPrint('[MapSyncService]   - mapTitle: $mapTitle');
+      debugPrint('[MapSyncService]   - 封面: ${compressedCoverBase64 != null ? '${(compressedCoverBase64!.length * 0.75 / 1024).toStringAsFixed(1)}KB' : '无'}');
+      
       _presenceBloc.add(UpdateCurrentMapInfo(
         mapId: mapId,
         mapTitle: mapTitle,
@@ -52,7 +59,7 @@ class MapSyncService {
       
       return true;
     } catch (e) {
-      print('同步地图信息失败: $e');
+      debugPrint('同步地图信息失败: $e');
       return false;
     }
   }
@@ -93,7 +100,7 @@ class MapSyncService {
       ));
       return true;
     } catch (e) {
-      print('更新地图标题失败: $e');
+      debugPrint('更新地图标题失败: $e');
       return false;
     }
   }
@@ -114,7 +121,7 @@ class MapSyncService {
       );
       
       if (compressedCoverBase64 == null) {
-        print('地图封面压缩失败');
+        debugPrint('地图封面压缩失败');
         return false;
       }
       
@@ -126,7 +133,7 @@ class MapSyncService {
       
       return true;
     } catch (e) {
-      print('更新地图封面失败: $e');
+      debugPrint('更新地图封面失败: $e');
       return false;
     }
   }

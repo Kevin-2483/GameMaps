@@ -91,10 +91,13 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     final currentState = state;
     if (currentState is! PresenceLoaded) return;
     
+    // 如果没有提供新的metadata，保留现有的metadata
+    final newMetadata = event.metadata ?? currentState.currentUser.metadata;
+    
     final updatedUser = currentState.currentUser.copyWith(
       status: event.status,
       lastSeen: DateTime.now(),
-      metadata: event.metadata,
+      metadata: newMetadata,
     );
     
     emit(currentState.copyWithCurrentUser(updatedUser));
@@ -114,21 +117,28 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     // 构建新的元数据
     final newMetadata = Map<String, dynamic>.from(currentState.currentUser.metadata);
     
+    debugPrint('[PresenceBloc] UpdateCurrentMapInfo - 更新地图信息:');
     if (event.mapId != null) {
       newMetadata['currentMapId'] = event.mapId;
+      debugPrint('[PresenceBloc]   - mapId: ${event.mapId}');
     }
     
     if (event.mapTitle != null) {
       newMetadata['currentMapTitle'] = event.mapTitle;
+      debugPrint('[PresenceBloc]   - mapTitle: ${event.mapTitle}');
     }
     
     if (event.mapCoverBase64 != null) {
       newMetadata['currentMapCover'] = event.mapCoverBase64;
+      debugPrint('[PresenceBloc]   - mapCover: ${(event.mapCoverBase64!.length * 0.75 / 1024).toStringAsFixed(1)}KB');
     }
     
     if (event.coverQuality != null) {
       newMetadata['mapCoverQuality'] = event.coverQuality.toString();
+      debugPrint('[PresenceBloc]   - coverQuality: ${event.coverQuality}');
     }
+    
+    debugPrint('[PresenceBloc] 更新后的metadata包含的地图字段: ${newMetadata.keys.where((k) => k.startsWith('current')).toList()}');
     
     final updatedUser = currentState.currentUser.copyWith(
       lastSeen: DateTime.now(),
@@ -263,7 +273,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       }
     } catch (error) {
       // 记录错误但不中断处理
-      print('处理WebSocket消息时出错: $error');
+      debugPrint('处理WebSocket消息时出错: $error');
     }
   }
 
@@ -325,7 +335,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       
       add(ReceiveRemoteUserPresence(userPresence: userPresence));
     } catch (error) {
-      print('处理用户状态广播时出错: $error');
+      debugPrint('处理用户状态广播时出错: $error');
     }
   }
 
@@ -364,18 +374,27 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       // 添加地图信息字段（如果存在）
       if (userPresence.metadata.containsKey('currentMapId')) {
         statusData['current_map_id'] = userPresence.metadata['currentMapId'];
+        debugPrint('[PresenceBloc] 添加地图ID到状态数据: ${userPresence.metadata['currentMapId']}');
+      } else {
+        debugPrint('[PresenceBloc] 警告：metadata中没有currentMapId字段');
       }
       if (userPresence.metadata.containsKey('currentMapTitle')) {
         statusData['current_map_title'] = userPresence.metadata['currentMapTitle'];
+        debugPrint('[PresenceBloc] 添加地图标题到状态数据: ${userPresence.metadata['currentMapTitle']}');
+      } else {
+        debugPrint('[PresenceBloc] 警告：metadata中没有currentMapTitle字段');
       }
       if (userPresence.metadata.containsKey('currentMapCover')) {
         final mapCover = userPresence.metadata['currentMapCover'] as String?;
         if (mapCover != null && mapCover.isNotEmpty) {
+          debugPrint('[PresenceBloc] 处理地图封面，原始大小: ${(mapCover.length * 0.75 / 1024).toStringAsFixed(1)}KB');
           // 检查地图封面大小是否超过限制
           final coverSizeBytes = mapCover.length * 0.75; // Base64编码大约增加33%，所以原始大小约为75%
           if (coverSizeBytes <= maxCoverSizeBytes) {
             statusData['current_map_cover'] = mapCover;
+            debugPrint('[PresenceBloc] 地图封面大小符合要求，已添加到状态数据');
           } else {
+            debugPrint('[PresenceBloc] 地图封面过大，需要重新压缩');
             // 使用自适应压缩重新压缩地图封面
              try {
                final imageBytes = base64Decode(mapCover);
@@ -389,26 +408,36 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
                  final newSizeBytes = compressedBase64.length * 0.75;
                  
                  if (kDebugMode) {
-                   print('地图封面已重新压缩: ${(coverSizeBytes / 1024).toStringAsFixed(1)}KB -> ${(newSizeBytes / 1024).toStringAsFixed(1)}KB');
+                   debugPrint('地图封面已重新压缩: ${(coverSizeBytes / 1024).toStringAsFixed(1)}KB -> ${(newSizeBytes / 1024).toStringAsFixed(1)}KB');
                  }
                } else {
                  if (kDebugMode) {
-                   print('地图封面压缩失败，无法满足大小限制，跳过发送');
+                   debugPrint('地图封面压缩失败，无法满足大小限制，跳过发送');
                  }
                }
              } catch (compressionError) {
                if (kDebugMode) {
-                 print('地图封面压缩失败: $compressionError，跳过发送');
+                 debugPrint('地图封面压缩失败: $compressionError，跳过发送');
                }
              }
           }
+        } else {
+          debugPrint('[PresenceBloc] 警告：metadata中没有currentMapCover字段或为空');
         }
       }
+      
+      // 打印最终发送的状态数据（不包含图片内容）
+      final logData = Map<String, dynamic>.from(statusData);
+      if (logData.containsKey('current_map_cover')) {
+        final coverSize = (logData['current_map_cover'] as String).length;
+        logData['current_map_cover'] = '[封面数据 ${(coverSize * 0.75 / 1024).toStringAsFixed(1)}KB]';
+      }
+      debugPrint('[PresenceBloc] 发送用户状态更新: $logData');
       
       // 使用扩展的状态更新API
       await _webSocketManager.sendUserStatusUpdateWithData(statusData);
     } catch (error) {
-      print('广播用户状态更新失败: $error');
+      debugPrint('广播用户状态更新失败: $error');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/presence/presence_bloc.dart';
 import '../blocs/presence/presence_event.dart';
@@ -71,21 +72,28 @@ class AutoPresenceManager {
   /// [mapTitle] 地图标题
   /// [mapCover] 地图封面（可选）
   /// [mapDataBloc] 地图数据Bloc，用于监听编辑操作
-  void enterMapEditor({
+  Future<void> enterMapEditor({
     required String mapId,
     required String mapTitle,
     Uint8List? mapCover,
     Bloc? mapDataBloc,
-  }) {
+  }) async {
+    debugPrint('[AutoPresenceManager] enterMapEditor called with mapId: $mapId, mapTitle: $mapTitle, mapCover length: ${mapCover?.length}');
+    
     _isInEditor = true;
     _isEditingMap = false;
+    _currentMapId = mapId; // 保存当前地图ID
+    
+    debugPrint('[AutoPresenceManager] 保存当前地图ID: $_currentMapId');
     
     // 同步地图信息
-    _mapSyncService.syncCurrentMapInfo(
+    await _mapSyncService.syncCurrentMapInfo(
       mapId: mapId,
       mapTitle: mapTitle,
       mapCover: mapCover,
     );
+    
+    debugPrint('[AutoPresenceManager] 地图信息同步完成');
     
     // 设置为查看状态
     _updateStatus(UserActivityStatus.viewing);
@@ -100,6 +108,7 @@ class AutoPresenceManager {
   void exitMapEditor() {
     _isInEditor = false;
     _isEditingMap = false;
+    _currentMapId = null; // 清除当前地图ID
     
     // 清理地图数据监听
     _mapDataSubscription?.cancel();
@@ -125,19 +134,34 @@ class AutoPresenceManager {
     _resetEditingTimer();
   }
   
+  // 当前地图信息
+  String? _currentMapId;
+  
   /// 更新地图标题
   void updateMapTitle(String newTitle) {
-    if (!_isInEditor) return;
+    debugPrint('[AutoPresenceManager] updateMapTitle called: $newTitle');
+    debugPrint('[AutoPresenceManager] _isInEditor: $_isInEditor, _currentMapId: $_currentMapId');
     
-    _mapSyncService.updateMapTitle('current', newTitle);
+    if (!_isInEditor || _currentMapId == null) {
+      debugPrint('[AutoPresenceManager] 跳过更新地图标题：不在编辑器中或mapId为空');
+      return;
+    }
+    
+    _mapSyncService.updateMapTitle(_currentMapId!, newTitle);
     triggerEditingState();
   }
   
   /// 更新地图封面
   void updateMapCover(Uint8List newCover) {
-    if (!_isInEditor) return;
+    debugPrint('[AutoPresenceManager] updateMapCover called, 封面大小: ${(newCover.length / 1024).toStringAsFixed(1)}KB');
+    debugPrint('[AutoPresenceManager] _isInEditor: $_isInEditor, _currentMapId: $_currentMapId');
     
-    _mapSyncService.updateMapCover('current', newCover);
+    if (!_isInEditor || _currentMapId == null) {
+      debugPrint('[AutoPresenceManager] 跳过更新地图封面：不在编辑器中或mapId为空');
+      return;
+    }
+    
+    _mapSyncService.updateMapCover(_currentMapId!, newCover);
     triggerEditingState();
   }
   
