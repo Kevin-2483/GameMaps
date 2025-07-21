@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fast_rsa/fast_rsa.dart';
 
 /// RSA 密钥对
@@ -106,14 +108,22 @@ class WebSocketSecureStorageService {
       final privateKeyId = DateTime.now().millisecondsSinceEpoch.toString();
       final storageKey = '$_privateKeyPrefix$privateKeyId';
       
-      // 存储私钥
-      await _secureStorage.write(
-        key: storageKey,
-        value: privateKeyPem,
-      );
-      
-      if (kDebugMode) {
-        debugPrint('私钥已安全存储: $privateKeyId');
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(storageKey, privateKeyPem);
+        if (kDebugMode) {
+          debugPrint('私钥已存储到 SharedPreferences (macOS): $privateKeyId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        await _secureStorage.write(
+          key: storageKey,
+          value: privateKeyPem,
+        );
+        if (kDebugMode) {
+          debugPrint('私钥已安全存储: $privateKeyId');
+        }
       }
       
       return privateKeyId;
@@ -129,7 +139,22 @@ class WebSocketSecureStorageService {
   Future<String?> getPrivateKey(String privateKeyId) async {
     try {
       final storageKey = '$_privateKeyPrefix$privateKeyId';
-      final privateKeyPem = await _secureStorage.read(key: storageKey);
+      String? privateKeyPem;
+      
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        privateKeyPem = prefs.getString(storageKey);
+        if (kDebugMode && privateKeyPem != null) {
+          debugPrint('私钥从 SharedPreferences 获取成功 (macOS): $privateKeyId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        privateKeyPem = await _secureStorage.read(key: storageKey);
+        if (kDebugMode && privateKeyPem != null) {
+          debugPrint('私钥获取成功: $privateKeyId');
+        }
+      }
       
       if (privateKeyPem == null) {
         if (kDebugMode) {
@@ -150,10 +175,20 @@ class WebSocketSecureStorageService {
   Future<void> deletePrivateKey(String privateKeyId) async {
     try {
       final storageKey = '$_privateKeyPrefix$privateKeyId';
-      await _secureStorage.delete(key: storageKey);
       
-      if (kDebugMode) {
-        debugPrint('私钥已删除: $privateKeyId');
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(storageKey);
+        if (kDebugMode) {
+          debugPrint('私钥已从 SharedPreferences 删除 (macOS): $privateKeyId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        await _secureStorage.delete(key: storageKey);
+        if (kDebugMode) {
+          debugPrint('私钥已删除: $privateKeyId');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -257,16 +292,37 @@ class WebSocketSecureStorageService {
   /// 清理所有私钥（谨慎使用）
   Future<void> clearAllPrivateKeys() async {
     try {
-      final allKeys = await _secureStorage.readAll();
+      List<String> privateKeyKeys = [];
       
-      for (final key in allKeys.keys) {
-        if (key.startsWith(_privateKeyPrefix)) {
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        final allKeys = prefs.getKeys();
+        privateKeyKeys = allKeys
+            .where((key) => key.startsWith(_privateKeyPrefix))
+            .toList();
+        
+        for (final key in privateKeyKeys) {
+          await prefs.remove(key);
+        }
+        
+        if (kDebugMode) {
+          debugPrint('已从 SharedPreferences 清理 ${privateKeyKeys.length} 个私钥 (macOS)');
+        }
+      } else {
+        // 其他平台使用安全存储
+        final allKeys = await _secureStorage.readAll();
+        privateKeyKeys = allKeys.keys
+            .where((key) => key.startsWith(_privateKeyPrefix))
+            .toList();
+        
+        for (final key in privateKeyKeys) {
           await _secureStorage.delete(key: key);
         }
-      }
-      
-      if (kDebugMode) {
-        debugPrint('所有私钥已清理');
+        
+        if (kDebugMode) {
+          debugPrint('已清理 ${privateKeyKeys.length} 个私钥');
+        }
       }
     } catch (e) {
       if (kDebugMode) {

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// WebDAV安全存储服务
 /// 使用flutter_secure_storage安全存储WebDAV认证凭据
@@ -42,14 +44,22 @@ class WebDavSecureStorageService {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
       
-      // 存储密码
-      await _secureStorage.write(
-        key: storageKey,
-        value: password,
-      );
-      
-      if (kDebugMode) {
-        debugPrint('WebDAV密码已安全存储: $authAccountId');
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(storageKey, password);
+        if (kDebugMode) {
+          debugPrint('WebDAV密码已存储到 SharedPreferences (macOS): $authAccountId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        await _secureStorage.write(
+          key: storageKey,
+          value: password,
+        );
+        if (kDebugMode) {
+          debugPrint('WebDAV密码已安全存储: $authAccountId');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -63,7 +73,22 @@ class WebDavSecureStorageService {
   Future<String?> getPassword(String authAccountId) async {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
-      final password = await _secureStorage.read(key: storageKey);
+      String? password;
+      
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        password = prefs.getString(storageKey);
+        if (kDebugMode && password != null) {
+          debugPrint('WebDAV密码从 SharedPreferences 获取成功 (macOS): $authAccountId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        password = await _secureStorage.read(key: storageKey);
+        if (kDebugMode && password != null) {
+          debugPrint('WebDAV密码获取成功: $authAccountId');
+        }
+      }
       
       if (password == null) {
         if (kDebugMode) {
@@ -84,10 +109,20 @@ class WebDavSecureStorageService {
   Future<void> deletePassword(String authAccountId) async {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
-      await _secureStorage.delete(key: storageKey);
       
-      if (kDebugMode) {
-        debugPrint('WebDAV密码已删除: $authAccountId');
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(storageKey);
+        if (kDebugMode) {
+          debugPrint('WebDAV密码已从 SharedPreferences 删除 (macOS): $authAccountId');
+        }
+      } else {
+        // 其他平台使用安全存储
+        await _secureStorage.delete(key: storageKey);
+        if (kDebugMode) {
+          debugPrint('WebDAV密码已删除: $authAccountId');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -101,7 +136,17 @@ class WebDavSecureStorageService {
   Future<bool> hasPassword(String authAccountId) async {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
-      final password = await _secureStorage.read(key: storageKey);
+      String? password;
+      
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        password = prefs.getString(storageKey);
+      } else {
+        // 其他平台使用安全存储
+        password = await _secureStorage.read(key: storageKey);
+      }
+      
       return password != null;
     } catch (e) {
       if (kDebugMode) {
@@ -114,13 +159,28 @@ class WebDavSecureStorageService {
   /// 获取所有存储的认证账户ID
   Future<List<String>> getAllAuthAccountIds() async {
     try {
-      final allKeys = await _secureStorage.readAll();
       final authAccountIds = <String>[];
       
-      for (final key in allKeys.keys) {
-        if (key.startsWith(_passwordPrefix)) {
-          final authAccountId = key.substring(_passwordPrefix.length);
-          authAccountIds.add(authAccountId);
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        final allKeys = prefs.getKeys();
+        
+        for (final key in allKeys) {
+          if (key.startsWith(_passwordPrefix)) {
+            final authAccountId = key.substring(_passwordPrefix.length);
+            authAccountIds.add(authAccountId);
+          }
+        }
+      } else {
+        // 其他平台使用安全存储
+        final allKeys = await _secureStorage.readAll();
+        
+        for (final key in allKeys.keys) {
+          if (key.startsWith(_passwordPrefix)) {
+            final authAccountId = key.substring(_passwordPrefix.length);
+            authAccountIds.add(authAccountId);
+          }
         }
       }
       
@@ -136,16 +196,33 @@ class WebDavSecureStorageService {
   /// 清理所有密码（谨慎使用）
   Future<void> clearAllPasswords() async {
     try {
-      final allKeys = await _secureStorage.readAll();
-      
-      for (final key in allKeys.keys) {
-        if (key.startsWith(_passwordPrefix)) {
-          await _secureStorage.delete(key: key);
+      // macOS 平台使用 SharedPreferences 作为回退方案
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        final allKeys = prefs.getKeys();
+        
+        for (final key in allKeys) {
+          if (key.startsWith(_passwordPrefix)) {
+            await prefs.remove(key);
+          }
         }
-      }
-      
-      if (kDebugMode) {
-        debugPrint('所有WebDAV密码已清理');
+        
+        if (kDebugMode) {
+          debugPrint('所有WebDAV密码已从 SharedPreferences 清理 (macOS)');
+        }
+      } else {
+        // 其他平台使用安全存储
+        final allKeys = await _secureStorage.readAll();
+        
+        for (final key in allKeys.keys) {
+          if (key.startsWith(_passwordPrefix)) {
+            await _secureStorage.delete(key: key);
+          }
+        }
+        
+        if (kDebugMode) {
+          debugPrint('所有WebDAV密码已清理');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
