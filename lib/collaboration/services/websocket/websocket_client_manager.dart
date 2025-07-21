@@ -325,6 +325,24 @@ class WebSocketClientManager {
     return await _clientService.sendJson(data);
   }
 
+  /// 发送用户状态更新
+  Future<bool> sendUserStatusUpdate({
+    required String onlineStatus,
+    required String activityStatus,
+  }) async {
+    _ensureInitialized();
+    return await _clientService.sendUserStatusUpdate(
+      onlineStatus: onlineStatus,
+      activityStatus: activityStatus,
+    );
+  }
+
+  /// 发送包含地图信息的用户状态更新
+  Future<bool> sendUserStatusUpdateWithData(Map<String, dynamic> statusData) async {
+    _ensureInitialized();
+    return await _clientService.sendUserStatusUpdateWithData(statusData);
+  }
+
   /// 获取连接统计信息
   Map<String, dynamic> getConnectionStats() {
     _ensureInitialized();

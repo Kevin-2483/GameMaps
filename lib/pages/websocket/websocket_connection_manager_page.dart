@@ -121,6 +121,19 @@ class _WebSocketConnectionManagerPageState
       _addLog('延迟更新: ${delay}ms');
     });
 
+    // 监听WebSocket消息（包括用户状态广播）
+    _manager.messageStream.listen((message) {
+      if (message.type == 'user_status_broadcast') {
+        final data = message.data;
+        final userId = data['user_id'] as String?;
+        final onlineStatus = data['online_status'] as String?;
+        final activityStatus = data['activity_status'] as String?;
+        final spaceId = data['space_id'] as String?;
+        
+        _addLog('用户状态广播: 用户=$userId, 在线状态=$onlineStatus, 活动状态=$activityStatus, 空间=$spaceId');
+      }
+    });
+
     // 监听配置变化
     _configsSubscription = _manager.configsStream.listen((configs) {
       setState(() {

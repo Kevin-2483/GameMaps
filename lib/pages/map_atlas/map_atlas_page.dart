@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:lpinyin/lpinyin.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/layout/page_configuration.dart';
 import '../../components/web/web_readonly_components.dart';
@@ -22,6 +24,11 @@ import '../../config/config_manager.dart';
 import '../map_editor/map_editor_page.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../collaboration/mixins/auto_presence_mixin.dart'; // 导入在线状态管理混入
+import '../../collaboration/models/user_presence.dart'; // 导入用户状态枚举
+import '../../collaboration/blocs/presence/presence_event.dart'; // 导入状态事件
+import '../../collaboration/blocs/presence/presence_bloc.dart'; // 导入状态管理
+import '../../collaboration/blocs/presence/presence_state.dart'; // 导入状态定义
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -39,7 +46,7 @@ class _MapAtlasContent extends StatefulWidget {
 }
 
 class _MapAtlasContentState extends State<_MapAtlasContent>
-    with MapLocalizationMixin {
+    with MapLocalizationMixin, AutoPresenceMixin {
   final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
   final VfsStorageService _storageService = VfsStorageService();
@@ -53,17 +60,34 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // 实现AutoPresenceMixin的抽象方法
+  @override
+  String getCurrentUserId() {
+    // 返回当前用户ID，这里使用设备标识符或用户配置
+    return 'user_${DateTime.now().millisecondsSinceEpoch.hashCode}';
+  }
+
+  @override
+  String getCurrentUserName() {
+    // 返回当前用户名，这里使用默认名称
+    return '用户';
+  }
+
   @override
   void initState() {
     super.initState();
     _loadDirectoryContents();
     _searchController.addListener(_onSearchChanged);
+    // 初始化在线状态管理
+    initializeCollaboration();
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    // 清理在线状态管理资源
+    disposeCollaboration();
     super.dispose();
   }
 
@@ -77,6 +101,396 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       }
     });
   }
+
+   /// 构建在线用户部分
+   Widget _buildOnlineUsersSection(BuildContext context) {
+     if (!isCollaborationInitialized) {
+       return Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           Text(
+             '在线用户',
+             style: Theme.of(context).textTheme.titleMedium?.copyWith(
+               fontWeight: FontWeight.bold,
+               color: Theme.of(context).colorScheme.primary,
+             ),
+           ),
+           const SizedBox(height: 12),
+           Container(
+             height: 100,
+             alignment: Alignment.center,
+             child: Text(
+               '协作服务未初始化',
+               style: TextStyle(
+                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+               ),
+             ),
+           ),
+         ],
+       );
+     }
+     
+     return BlocBuilder<PresenceBloc, PresenceState>(
+       bloc: presenceBloc,
+       builder: (context, state) {
+         if (state is! PresenceLoaded) {
+           return Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text(
+                 '在线用户',
+                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                   fontWeight: FontWeight.bold,
+                   color: Theme.of(context).colorScheme.primary,
+                 ),
+               ),
+               const SizedBox(height: 12),
+               const Center(child: CircularProgressIndicator()),
+             ],
+           );
+         }
+
+         final onlineUsers = state.allUsers;
+         if (onlineUsers.isEmpty) {
+           return Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text(
+                 '在线用户',
+                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                   fontWeight: FontWeight.bold,
+                   color: Theme.of(context).colorScheme.primary,
+                 ),
+               ),
+               const SizedBox(height: 12),
+               Container(
+                 height: 100,
+                 alignment: Alignment.center,
+                 child: Text(
+                   '暂无在线用户',
+                   style: TextStyle(
+                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                   ),
+                 ),
+               ),
+             ],
+           );
+         }
+
+         return Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             Text(
+               '在线用户 (${onlineUsers.length})',
+               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                 fontWeight: FontWeight.bold,
+                 color: Theme.of(context).colorScheme.primary,
+               ),
+             ),
+             const SizedBox(height: 12),
+             GridView.builder(
+               shrinkWrap: true,
+               physics: const NeverScrollableScrollPhysics(),
+               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                 crossAxisCount: _calculateCrossAxisCount(context),
+                 crossAxisSpacing: 16,
+                 mainAxisSpacing: 16,
+                 childAspectRatio: 1.0, // 方形卡片
+               ),
+               itemCount: onlineUsers.length,
+               itemBuilder: (context, index) {
+                 final user = onlineUsers[index];
+                 final isCurrentUser = user.userId == state.currentUser.userId;
+                 return Card(
+                   elevation: isCurrentUser ? 4 : 2,
+                   color: isCurrentUser 
+                       ? Theme.of(context).colorScheme.primaryContainer
+                       : null,
+                   child: Padding(
+                     padding: const EdgeInsets.all(12),
+                     child: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: [
+                         Icon(
+                           Icons.person,
+                           size: 32,
+                           color: isCurrentUser
+                               ? Theme.of(context).colorScheme.onPrimaryContainer
+                               : _getStatusColor(context, user.status),
+                         ),
+                         const SizedBox(height: 8),
+                         Text(
+                           isCurrentUser ? '${user.userName} (我)' : user.userName,
+                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                             fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                             color: isCurrentUser
+                                 ? Theme.of(context).colorScheme.onPrimaryContainer
+                                 : null,
+                           ),
+                           textAlign: TextAlign.center,
+                           maxLines: 2,
+                           overflow: TextOverflow.ellipsis,
+                         ),
+                         const SizedBox(height: 4),
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                           decoration: BoxDecoration(
+                             color: _getStatusColor(context, user.status).withValues(alpha: 0.2),
+                             borderRadius: BorderRadius.circular(12),
+                           ),
+                           child: Text(
+                             _getStatusText(user.status),
+                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                               color: _getStatusColor(context, user.status),
+                               fontWeight: FontWeight.w500,
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 );
+               },
+             ),
+           ],
+         );
+       },
+     );
+   }
+
+   /// 构建活跃地图部分
+   Widget _buildActiveMapsSection(BuildContext context) {
+     if (!isCollaborationInitialized) {
+       return Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           Text(
+             '活跃地图',
+             style: Theme.of(context).textTheme.titleMedium?.copyWith(
+               fontWeight: FontWeight.bold,
+               color: Theme.of(context).colorScheme.primary,
+             ),
+           ),
+           const SizedBox(height: 12),
+           Container(
+             height: 100,
+             alignment: Alignment.center,
+             child: Text(
+               '协作服务未初始化',
+               style: TextStyle(
+                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+               ),
+             ),
+           ),
+         ],
+       );
+     }
+     
+     return BlocBuilder<PresenceBloc, PresenceState>(
+       bloc: presenceBloc,
+       builder: (context, state) {
+         if (state is! PresenceLoaded) {
+           return Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text(
+                 '活跃地图',
+                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                   fontWeight: FontWeight.bold,
+                   color: Theme.of(context).colorScheme.primary,
+                 ),
+               ),
+               const SizedBox(height: 12),
+               const Center(child: CircularProgressIndicator()),
+             ],
+           );
+         }
+
+         // 按地图ID分组用户
+         final mapGroups = <String, List<UserPresence>>{};
+         for (final user in state.allUsers) {
+           if (user.currentMapId != null && user.currentMapId!.isNotEmpty) {
+             mapGroups.putIfAbsent(user.currentMapId!, () => []).add(user);
+           }
+         }
+
+         if (mapGroups.isEmpty) {
+           return Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text(
+                 '活跃地图',
+                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                   fontWeight: FontWeight.bold,
+                   color: Theme.of(context).colorScheme.primary,
+                 ),
+               ),
+               const SizedBox(height: 12),
+               Container(
+                 height: 100,
+                 alignment: Alignment.center,
+                 child: Text(
+                   '暂无活跃地图',
+                   style: TextStyle(
+                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                   ),
+                 ),
+               ),
+             ],
+           );
+         }
+
+         return Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             Text(
+               '活跃地图 (${mapGroups.length})',
+               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                 fontWeight: FontWeight.bold,
+                 color: Theme.of(context).colorScheme.primary,
+               ),
+             ),
+             const SizedBox(height: 12),
+             GridView.builder(
+               shrinkWrap: true,
+               physics: const NeverScrollableScrollPhysics(),
+               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                 crossAxisCount: _calculateCrossAxisCount(context),
+                 crossAxisSpacing: 16,
+                 mainAxisSpacing: 24,
+                 childAspectRatio: 1.1, // 3:2比例 + 标题空间
+               ),
+               itemCount: mapGroups.length,
+               itemBuilder: (context, index) {
+                 final mapId = mapGroups.keys.elementAt(index);
+                 final users = mapGroups[mapId]!;
+                 final firstUser = users.first;
+                 final mapTitle = firstUser.currentMapTitle ?? mapId;
+                 final mapCover = firstUser.currentMapCoverBase64;
+
+                 return Card(
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       // 地图封面和标题
+                       AspectRatio(
+                         aspectRatio: 3 / 2,
+                         child: Container(
+                           decoration: BoxDecoration(
+                             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                             image: mapCover != null && mapCover.isNotEmpty
+                                 ? DecorationImage(
+                                     image: MemoryImage(
+                                       mapCover.startsWith('data:') || mapCover.contains('base64,')
+                                           ? base64Decode(mapCover.split(',').last)
+                                           : base64Decode(mapCover),
+                                     ),
+                                     fit: BoxFit.cover,
+                                   )
+                                 : null,
+                             color: mapCover == null || mapCover.isEmpty
+                                 ? Theme.of(context).colorScheme.surfaceContainer
+                                 : null,
+                           ),
+                           child: mapCover == null || mapCover.isEmpty
+                               ? Icon(
+                                   Icons.map,
+                                   size: 48,
+                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                 )
+                               : null,
+                         ),
+                       ),
+                       Padding(
+                         padding: const EdgeInsets.all(12),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             Text(
+                               mapTitle,
+                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                 fontWeight: FontWeight.bold,
+                               ),
+                               maxLines: 2,
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                             const SizedBox(height: 8),
+                             ...users.map((user) {
+                               final isCurrentUser = user.userId == state.currentUser.userId;
+                               return Padding(
+                                 padding: const EdgeInsets.only(bottom: 4),
+                                 child: Row(
+                                   children: [
+                                     Container(
+                                       width: 6,
+                                       height: 6,
+                                       decoration: BoxDecoration(
+                                         shape: BoxShape.circle,
+                                         color: _getStatusColor(context, user.status),
+                                       ),
+                                     ),
+                                     const SizedBox(width: 6),
+                                     Expanded(
+                                       child: Text(
+                                         isCurrentUser ? '${user.userName} (我)' : user.userName,
+                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                           fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                                         ),
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                       ),
+                                     ),
+                                     Text(
+                                       _getStatusText(user.status),
+                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                         color: _getStatusColor(context, user.status),
+                                       ),
+                                     ),
+                                   ],
+                                 ),
+                               );
+                             }).toList(),
+                           ],
+                         ),
+                       ),
+                     ],
+                   ),
+                 );
+               },
+             ),
+           ],
+         );
+       },
+     );
+   }
+
+   /// 获取状态颜色
+   Color _getStatusColor(BuildContext context, UserActivityStatus status) {
+     switch (status) {
+       case UserActivityStatus.editing:
+         return Colors.red;
+       case UserActivityStatus.viewing:
+         return Colors.blue;
+       case UserActivityStatus.idle:
+         return Colors.green;
+       case UserActivityStatus.offline:
+         return Colors.grey;
+     }
+   }
+
+   /// 获取状态文本
+   String _getStatusText(UserActivityStatus status) {
+     switch (status) {
+       case UserActivityStatus.editing:
+         return '编辑中';
+       case UserActivityStatus.viewing:
+         return '查看中';
+       case UserActivityStatus.idle:
+         return '在线';
+       case UserActivityStatus.offline:
+         return '离线';
+     }
+   }
 
   /// 应用搜索筛选
   Future<void> _applyFilter() async {
@@ -551,6 +965,27 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           'indexeddb://r6box/maps/$_currentPath/$mapTitle.mapdata/';
     }
 
+    // 获取地图摘要信息用于在线状态更新
+    MapItemSummary? mapSummary;
+    try {
+      final summaries = await _vfsMapService.getAllMapsSummary(_currentPath.isEmpty ? null : _currentPath);
+      mapSummary = summaries.firstWhere((summary) => summary.title == mapTitle);
+    } catch (e) {
+      debugPrint('获取地图摘要失败: $e');
+    }
+
+    // 更新在线状态为viewing
+    if (mapSummary != null) {
+      presenceBloc.add(UpdateCurrentUserStatus(
+        status: UserActivityStatus.viewing,
+        metadata: {
+          'mapId': mapSummary.id.toString(),
+          'mapTitle': mapSummary.title,
+          'mapCover': mapSummary.imageData,
+        },
+      ));
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MapEditorPage(
@@ -561,6 +996,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         ),
       ),
     );
+
+    // 退出编辑器后恢复在线状态
+    presenceBloc.add(const UpdateCurrentUserStatus(status: UserActivityStatus.idle));
 
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
@@ -601,6 +1039,26 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       folderPath = null;
     }
     
+    // 获取地图摘要信息用于在线状态更新
+    MapItemSummary? mapSummary;
+    try {
+      mapSummary = await _vfsMapService.getMapSummaryByPath(itemPath);
+    } catch (e) {
+      debugPrint('获取地图摘要失败: $e');
+    }
+
+    // 更新在线状态为viewing
+    if (mapSummary != null) {
+      presenceBloc.add(UpdateCurrentUserStatus(
+        status: UserActivityStatus.viewing,
+        metadata: {
+          'mapId': mapSummary.id.toString(),
+          'mapTitle': mapSummary.title,
+          'mapCover': mapSummary.imageData,
+        },
+      ));
+    }
+    
     debugPrint('DEBUG: Passing to MapEditorPage - mapTitle: $mapTitle, folderPath: $folderPath, absoluteMapPath: $absoluteMapPath');
     
     await Navigator.of(context).push(
@@ -613,6 +1071,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         ),
       ),
     );
+
+    // 退出编辑器后恢复在线状态
+    presenceBloc.add(const UpdateCurrentUserStatus(status: UserActivityStatus.idle));
     
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
@@ -714,6 +1175,28 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
              const SizedBox(height: 12),
              _buildGridSection(context, maps),
            ],
+           
+           // 分割线
+           const SizedBox(height: 24),
+           Divider(
+             color: Theme.of(context).colorScheme.outline,
+             thickness: 1,
+           ),
+           const SizedBox(height: 24),
+           
+           // 在线用户部分
+           _buildOnlineUsersSection(context),
+           
+           // 分割线
+           const SizedBox(height: 24),
+           Divider(
+             color: Theme.of(context).colorScheme.outline,
+             thickness: 1,
+           ),
+           const SizedBox(height: 24),
+           
+           // 活跃地图部分
+           _buildActiveMapsSection(context),
          ],
        ),
      );

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
@@ -47,6 +48,7 @@ import '../../components/common/window_controls.dart';
 import '../../widgets/compact_timer_widget.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
+import '../../collaboration/mixins/auto_presence_mixin.dart'; // 导入在线状态管理混入
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -101,7 +103,25 @@ class _MapEditorContent extends StatefulWidget {
 }
 
 class _MapEditorContentState extends State<_MapEditorContent>
-    with MapEditorReactiveMixin, ReactiveVersionMixin {
+    with MapEditorReactiveMixin, ReactiveVersionMixin, AutoPresenceMixin {
+  
+  // 实现AutoPresenceMixin的抽象方法
+  @override
+  String getCurrentUserId() {
+    // 返回当前用户ID，这里使用设备标识符或用户配置
+    return 'user_${DateTime.now().millisecondsSinceEpoch.hashCode}';
+  }
+
+  @override
+  String getCurrentUserName() {
+    // 返回当前用户名，这里使用默认名称
+    return '用户';
+  }
+
+  @override
+  Bloc<dynamic, dynamic>? getMapDataBloc() {
+    return reactiveIntegration.mapDataBloc;
+  }
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final VfsMapService _vfsMapService =
@@ -249,6 +269,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
     } catch (e) {
       debugPrint('在dispose中清理颜色滤镜失败: $e');
     }
+
+    // 释放在线状态管理资源
+    disposeCollaboration();
+    debugPrint('在线状态管理资源已释放');
 
     // 释放响应式系统资源
     disposeReactiveIntegration();
@@ -604,7 +628,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
         // 5. 立即初始化响应式版本管理系统
         await _initializeReactiveVersionManagement();
-      } // 6. 重新初始化脚本引擎以确保外部函数声明正确
+        
+        // 6. 初始化在线状态管理（不设置地图信息，因为已在地图册页面设置）
+        initializeCollaboration();
+        debugPrint('在线状态管理初始化完成');
+      } // 7. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
       debugPrint('新脚本引擎重新初始化完成');
     } catch (e) {

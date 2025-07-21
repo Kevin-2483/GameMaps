@@ -20,7 +20,7 @@ enum WebSocketConnectionState {
 /// WebSocket 消息类型
 class WebSocketMessage {
   final String type;
-  final Map<String, dynamic> data;
+  final dynamic data;
   final DateTime timestamp;
 
   WebSocketMessage({
@@ -30,9 +30,19 @@ class WebSocketMessage {
   }) : timestamp = timestamp ?? DateTime.now();
 
   factory WebSocketMessage.fromJson(Map<String, dynamic> json) {
+    // 提取data字段，如果不存在则使用除type外的所有字段
+    dynamic data;
+    if (json.containsKey('data')) {
+      data = json['data'];
+    } else {
+      // 兼容旧格式：除了type字段外的所有字段都作为data
+      data = Map<String, dynamic>.from(json);
+      (data as Map<String, dynamic>).remove('type');
+    }
+    
     return WebSocketMessage(
       type: json['type'] as String,
-      data: Map<String, dynamic>.from(json),
+      data: data,
       timestamp: DateTime.now(),
     );
   }
@@ -40,7 +50,7 @@ class WebSocketMessage {
   Map<String, dynamic> toJson() {
     return {
       'type': type,
-      ...data,
+      'data': data,
     };
   }
 }
@@ -149,15 +159,6 @@ class WebSocketClientService {
       
       // 连接成功，进行认证
       _updateConnectionState(WebSocketConnectionState.authenticating);
-      
-      // 发送认证消息
-      final authMessage = WebSocketMessage(
-        type: 'auth',
-        data: {
-          'type': 'auth',
-          'data': config.clientId,
-        },
-      );
       
       // 直接发送到 WebSocket，因为 sendMessage 需要连接状态为 connected
       final messageJson = jsonEncode({
@@ -279,6 +280,35 @@ class WebSocketClientService {
     return await sendMessage(message);
   }
 
+  /// 发送用户状态更新
+  Future<bool> sendUserStatusUpdate({
+    required String onlineStatus,
+    required String activityStatus,
+  }) async {
+    final message = WebSocketMessage(
+      type: 'user_status_update',
+      data: {
+        'online_status': onlineStatus,
+        'activity_status': activityStatus,
+      },
+    );
+    
+    if (kDebugMode) {
+      debugPrint('发送用户状态更新: online=$onlineStatus, activity=$activityStatus');
+    }
+    
+    return await sendMessage(message);
+  }
+
+  /// 发送包含地图信息的用户状态更新
+  Future<bool> sendUserStatusUpdateWithData(Map<String, dynamic> statusData) async {
+    final message = WebSocketMessage(
+      type: 'user_status_update',
+      data: statusData,
+    );
+    return await sendMessage(message);
+  }
+
   /// 开始消息监听
   void _startMessageListener() {
     _messageSubscription?.cancel();
@@ -325,6 +355,9 @@ class WebSocketClientService {
       case 'error':
         _handleServerError(message);
         break;
+      case 'user_status_broadcast':
+        _handleUserStatusBroadcast(message);
+        break;
       case 'challenge':
       case 'auth_success':
       case 'auth_failed':
@@ -368,6 +401,21 @@ class WebSocketClientService {
     _handleError('服务器错误: $errorMsg');
   }
 
+  /// 处理用户状态广播
+  void _handleUserStatusBroadcast(WebSocketMessage message) {
+    if (kDebugMode) {
+      final userId = message.data['user_id'] as String?;
+      final onlineStatus = message.data['online_status'] as String?;
+      final activityStatus = message.data['activity_status'] as String?;
+      final spaceId = message.data['space_id'] as String?;
+      
+      debugPrint('收到用户状态广播: user=$userId, online=$onlineStatus, activity=$activityStatus, space=$spaceId');
+    }
+    
+    // 将用户状态广播消息转发给监听者（如PresenceBloc）
+    _messageController.add(message);
+  }
+
   /// 开始心跳循环
   void _startPingLoop() {
     _pingTimer?.cancel();
@@ -395,7 +443,6 @@ class WebSocketClientService {
       data: {
         'type': 'ping',
         'timestamp': _lastPingTime!.millisecondsSinceEpoch,
-        'client_id': _currentConfig?.clientId,
       },
     );
     

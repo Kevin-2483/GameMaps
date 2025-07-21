@@ -132,10 +132,7 @@ class WebSocketClientAuthService {
     // 将原始 stream 转换为 WebSocketMessage 流
     final messageStream = stream.map((message) {
       final messageData = jsonDecode(message as String) as Map<String, dynamic>;
-      return WebSocketMessage(
-        type: messageData['type'] as String? ?? '',
-        data: messageData,
-      );
+      return WebSocketMessage.fromJson(messageData);
     });
     
     // 复用 WebSocketMessage 流处理逻辑
@@ -180,7 +177,9 @@ class WebSocketClientAuthService {
           try {
             switch (message.type) {
               case 'challenge':
-                final challenge = message.data['data'] as String?;
+                final challenge = message.data is Map<String, dynamic> 
+                    ? message.data['data'] as String?
+                    : message.data as String?;
                 if (challenge != null) {
                   if (kDebugMode) {
                     debugPrint('收到服务器挑战');
@@ -204,10 +203,7 @@ class WebSocketClientAuthService {
                   // 发送挑战响应 - 需要通过回调发送
                    final responseMessage = WebSocketMessage(
                      type: 'challenge_response',
-                     data: {
-                       'type': 'challenge_response',
-                       'data': decryptedChallenge,
-                     },
+                     data: decryptedChallenge,
                    );
                    
                    final sendResult = await sendMessage(responseMessage);
@@ -227,7 +223,9 @@ class WebSocketClientAuthService {
                 return;
                 
               case 'auth_failed':
-                final reason = message.data['reason'] as String? ?? '未知原因';
+                final reason = message.data is Map<String, dynamic>
+                    ? message.data['reason'] as String? ?? '未知原因'
+                    : message.data as String? ?? '未知原因';
                 if (kDebugMode) {
                   debugPrint('认证失败: $reason');
                 }
@@ -236,7 +234,9 @@ class WebSocketClientAuthService {
                 return;
                 
               case 'error':
-                final error = message.data['message'] as String? ?? '未知错误';
+                final error = message.data is Map<String, dynamic>
+                    ? message.data['message'] as String? ?? '未知错误'
+                    : message.data as String? ?? '未知错误';
                 if (kDebugMode) {
                   debugPrint('服务器返回错误: $error');
                 }

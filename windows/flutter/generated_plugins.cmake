@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   flutter_tts
   irondash_engine_context
+  media_kit_libs_windows_video
   media_kit_video
   screen_retriever_windows
   super_native_extensions
