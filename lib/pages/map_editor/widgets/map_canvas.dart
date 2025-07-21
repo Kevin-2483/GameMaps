@@ -261,8 +261,7 @@ class MapCanvasState extends State<MapCanvas> {
     widget.onElementSelected(null);
 
     // 清除便签选择（只有在使用绘制工具时才清除，选取工具时不清除）
-    if (widget.selectedStickyNote != null && 
-        _effectiveDrawingTool == null ) {
+    if (widget.selectedStickyNote != null && _effectiveDrawingTool == null) {
       widget.onStickyNoteSelected?.call(null);
     }
   }
@@ -379,7 +378,9 @@ class MapCanvasState extends State<MapCanvas> {
                             return CustomPaint(
                               painter: _SelectionPainter(
                                 selectionRect,
-                                isTextTool: _effectiveDrawingTool == DrawingElementType.text,
+                                isTextTool:
+                                    _effectiveDrawingTool ==
+                                    DrawingElementType.text,
                               ),
                               size: const Size(kCanvasWidth, kCanvasHeight),
                             );
@@ -1023,7 +1024,10 @@ class MapCanvasState extends State<MapCanvas> {
         onDoubleTap: () => _onLegendDoubleTap(item),
         child: Transform.rotate(
           angle: item.rotation * (3.14159 / 180), // 转换为弧度
-          alignment: Alignment(legend.centerX * 2 - 1, legend.centerY * 2 - 1), // 使用图例的实际中心点
+          alignment: Alignment(
+            legend.centerX * 2 - 1,
+            legend.centerY * 2 - 1,
+          ), // 使用图例的实际中心点
           child: Stack(
             children: [
               Opacity(
@@ -1038,12 +1042,12 @@ class MapCanvasState extends State<MapCanvas> {
                     return CustomPaint(
                       size: Size(imageSize, imageSize),
                       painter: _RotationIndicatorPainter(
-                         rotation: 0, // 在Transform.rotate内部，指示器本身不需要额外旋转
-                         radius: imageSize * 0.6,
-                         handleSize: userPrefs.tools.handleSize,
-                         centerX: legend.centerX,
-                         centerY: legend.centerY,
-                       ),
+                        rotation: 0, // 在Transform.rotate内部，指示器本身不需要额外旋转
+                        radius: imageSize * 0.6,
+                        handleSize: userPrefs.tools.handleSize,
+                        centerX: legend.centerX,
+                        centerY: legend.centerY,
+                      ),
                     );
                   },
                 ),
@@ -1082,7 +1086,7 @@ class MapCanvasState extends State<MapCanvas> {
   // 图例拖拽相关方法
   LegendItem? _draggingLegendItem;
   Offset? _dragStartOffset; // 记录拖拽开始时的偏移量
-  
+
   // 图例旋转拖拽相关方法
   LegendItem? _rotatingLegendItem;
   double? _rotationStartAngle;
@@ -1091,23 +1095,21 @@ class MapCanvasState extends State<MapCanvas> {
   /// 处理图例旋转更新
   void _onLegendRotationUpdate(LegendItem item, DragUpdateDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // 计算图例中心点
     final legendCenter = Offset(
       item.position.dx * kCanvasWidth,
       item.position.dy * kCanvasHeight,
     );
-    
+
     // 计算从中心点到当前拖拽位置的角度
     final deltaX = canvasPosition.dx - legendCenter.dx;
     final deltaY = canvasPosition.dy - legendCenter.dy;
     final currentAngle = math.atan2(deltaY, deltaX) * (180 / math.pi);
-    
+
     // 更新图例旋转角度
-    final updatedItem = item.copyWith(
-      rotation: currentAngle,
-    );
-    
+    final updatedItem = item.copyWith(rotation: currentAngle);
+
     // 通知上层更新图例
     _updateLegendItemRotation(item, currentAngle);
   }
@@ -1175,7 +1177,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dy * kCanvasHeight,
             );
             final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
-            
+
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
               legendCenter,
@@ -1586,7 +1588,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dy * kCanvasHeight,
             );
             final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
-            
+
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
               legendCenter,
@@ -1604,7 +1606,7 @@ class MapCanvasState extends State<MapCanvas> {
         }
       }
     }
-    
+
     // ---：然后检测图例本体 ---
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null) {
@@ -1870,7 +1872,8 @@ class MapCanvasState extends State<MapCanvas> {
     _selectionStartPosition = null;
 
     // 如果是文本工具且有选区，处理文本创建
-    if (_effectiveDrawingTool == DrawingElementType.text && _selectionRect != null) {
+    if (_effectiveDrawingTool == DrawingElementType.text &&
+        _selectionRect != null) {
       _handleTextToolSelection(_selectionRect!);
       return;
     }
@@ -1892,14 +1895,20 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // 检查是否点击了旋转拖动柄
     if (widget.selectedElementId == item.id) {
-      final handleSize = context.read<UserPreferencesProvider>().tools.handleSize;
+      final handleSize = context
+          .read<UserPreferencesProvider>()
+          .tools
+          .handleSize;
       final legendSize = item.size * 50.0; // 基础大小50像素乘以缩放比例
       if (ElementInteractionManager.isHitLegendRotationHandle(
         canvasPosition,
-        Offset(item.position.dx * kCanvasWidth, item.position.dy * kCanvasHeight),
+        Offset(
+          item.position.dx * kCanvasWidth,
+          item.position.dy * kCanvasHeight,
+        ),
         legendSize,
         handleSize,
         rotation: item.rotation,
@@ -1932,37 +1941,37 @@ class MapCanvasState extends State<MapCanvas> {
 
   void _onLegendDragUpdate(LegendItem item, DragUpdateDetails details) {
     final canvasPosition = _getCanvasPosition(details.localPosition);
-    
+
     // 处理旋转拖动
     if (_rotatingLegendItem?.id == item.id) {
       final itemCanvasPosition = Offset(
         item.position.dx * kCanvasWidth,
         item.position.dy * kCanvasHeight,
       );
-      
+
       // 计算从图例中心到当前拖动位置的角度
       final deltaX = canvasPosition.dx - itemCanvasPosition.dx;
       final deltaY = canvasPosition.dy - itemCanvasPosition.dy;
       // 使用atan2计算角度
       final currentAngle = math.atan2(deltaY, deltaX) * (180 / math.pi);
-      
+
       // 如果是第一次拖动，记录起始角度和初始旋转角度
       if (_rotationStartAngle == null) {
         _rotationStartAngle = currentAngle;
         _initialRotation = item.rotation;
         return;
       }
-      
+
       // 计算角度差值
       var angleDelta = currentAngle - _rotationStartAngle!;
-      
+
       // 处理角度跨越边界的情况（-180到180度）
       if (angleDelta > 180) {
         angleDelta -= 360;
       } else if (angleDelta < -180) {
         angleDelta += 360;
       }
-      
+
       // 计算新的旋转角度（基于初始角度加上总的角度增量）
       var newRotation = _initialRotation! + angleDelta;
       // 将角度规范化到-180到180范围
@@ -1972,12 +1981,12 @@ class MapCanvasState extends State<MapCanvas> {
       while (newRotation <= -180) {
         newRotation += 360;
       }
-      
+
       // 更新图例项的旋转角度
       _updateLegendItemRotation(item, newRotation);
       return;
     }
-    
+
     // 处理位置拖动
     if (_draggingLegendItem?.id != item.id || _dragStartOffset == null) return;
 
@@ -2010,7 +2019,7 @@ class MapCanvasState extends State<MapCanvas> {
       _rotationStartAngle = null;
       _initialRotation = null;
     }
-    
+
     _draggingLegendItem = null;
     _dragStartOffset = null; // 清理偏移量
     // 保存更改到撤销历史
@@ -2243,7 +2252,8 @@ class MapCanvasState extends State<MapCanvas> {
         await VfsFileOpenerService.openFile(context, url);
       } else if (url.startsWith('{{MAP_DIR}}')) {
         // 占位符路径，先转换为实际路径再打开
-        final mapAbsolutePath = widget.legendSessionManager?.currentMapAbsolutePath;
+        final mapAbsolutePath =
+            widget.legendSessionManager?.currentMapAbsolutePath;
         final actualPath = LegendPathResolver.convertToActualPath(
           url,
           mapAbsolutePath,
@@ -2364,7 +2374,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dy * kCanvasHeight,
             );
             final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
-            
+
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
               legendCenter,
@@ -2380,7 +2390,7 @@ class MapCanvasState extends State<MapCanvas> {
         }
       }
     }
-    
+
     // 然后检测图例本体
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null && widget.selectedElementId == hitLegendItem.id) {
@@ -2548,7 +2558,8 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     // 如果是文本工具且正在创建选区，更新选区
-    if (_effectiveDrawingTool == DrawingElementType.text && _isCreatingSelection) {
+    if (_effectiveDrawingTool == DrawingElementType.text &&
+        _isCreatingSelection) {
       _updateSelectionDrag(details);
       return;
     }
@@ -2680,7 +2691,8 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     // 如果是文本工具且正在创建选区，结束选区
-    if (_effectiveDrawingTool == DrawingElementType.text && _isCreatingSelection) {
+    if (_effectiveDrawingTool == DrawingElementType.text &&
+        _isCreatingSelection) {
       _endSelectionDrag();
       return;
     }
@@ -2944,14 +2956,16 @@ class MapCanvasState extends State<MapCanvas> {
     }
 
     //：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
-    if (oldWidget.mapItem != widget.mapItem) {
-      // 清理所有图片缓存，因为地图数据已经完全改变
-      _clearAllImageCache();
-      _preloadAllLayerImages();
-    } else {
-      // 检查图层元素是否发生变化（撤销/重做等操作）
-      _checkAndCleanOrphanedImageCache();
-    }
+    // if (oldWidget.mapItem != widget.mapItem) {
+    //   // 清理所有图片缓存，因为地图数据已经完全改变
+    //   _clearAllImageCache();
+    //   _preloadAllLayerImages();
+    // } else {
+    //   // 检查图层元素是否发生变化（撤销/重做等操作）
+    //   _checkAndCleanOrphanedImageCache();
+    // }
+    // 检查图层元素是否发生变化（撤销/重做等操作）
+    _checkAndCleanOrphanedImageCache();
   }
 
   /// 清理所有图片缓存
@@ -3146,7 +3160,7 @@ class MapCanvasState extends State<MapCanvas> {
               legendItem.position.dy * kCanvasHeight,
             );
             final legendSize = 60.0 * legendItem.size; // 使用与图例实际尺寸一致的计算
-            
+
             if (ElementInteractionManager.isHitLegendRotationHandle(
               canvasPosition,
               legendCenter,
@@ -3160,7 +3174,7 @@ class MapCanvasState extends State<MapCanvas> {
         }
       }
     }
-    
+
     // 然后检查是否点击了图例本体
     final hitLegendItem = _getHitLegendItem(canvasPosition);
     if (hitLegendItem != null && widget.selectedElementId == hitLegendItem.id) {
@@ -3243,8 +3257,6 @@ class MapCanvasState extends State<MapCanvas> {
     // 让拖拽手势来处理绘制操作
   }
 
-
-
   /// 检查点击位置是否在便签的内容区域内
   bool _isInStickyNoteContentArea(Offset canvasPosition, StickyNote note) {
     // 转换便签的相对坐标到画布坐标
@@ -3275,7 +3287,7 @@ class MapCanvasState extends State<MapCanvas> {
   void _handleTextToolSelection(Rect selectionRect) {
     // 计算字体大小（使用选区高度）
     final fontSize = selectionRect.height.abs();
-    
+
     // 使用左上角作为文本位置
     final textPosition = Offset(
       math.min(selectionRect.left, selectionRect.right),
@@ -3342,12 +3354,12 @@ class _SelectionPainter extends CustomPainter {
       final paint = Paint()
         ..color = Colors.red.withValues(alpha: 0.2)
         ..style = PaintingStyle.fill;
-      
+
       final borderPaint = Paint()
         ..color = Colors.red
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
-      
+
       canvas.drawRect(selectionRect!, paint);
       canvas.drawRect(selectionRect!, borderPaint);
     } else {
@@ -3722,20 +3734,20 @@ class _RotationIndicatorPainter extends CustomPainter {
 
     // 计算图例的实际中心点（基于图例数据的centerX和centerY）
     final center = Offset(size.width * centerX, size.height * centerY);
-    
+
     // 将角度转换为弧度，注意Flutter中0度是向右，我们需要调整为向上
     // 减去90度使0度指向上方，然后转换为弧度
     final angleInRadians = (rotation - 0) * (math.pi / 180);
-    
+
     // 计算线段终点
     final endPoint = Offset(
       center.dx + radius * math.cos(angleInRadians),
       center.dy + radius * math.sin(angleInRadians),
     );
-    
+
     // 绘制从中心点到终点的线段
     canvas.drawLine(center, endPoint, paint);
-    
+
     // 在线段末端绘制拖动柄，使用与其他元素相同的样式
     // 外边框画笔（白色边框）
     final borderPaint = Paint()
@@ -3760,10 +3772,10 @@ class _RotationIndicatorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RotationIndicatorPainter oldDelegate) {
-    return oldDelegate.rotation != rotation || 
-           oldDelegate.radius != radius ||
-           oldDelegate.handleSize != handleSize ||
-           oldDelegate.centerX != centerX ||
-           oldDelegate.centerY != centerY;
+    return oldDelegate.rotation != rotation ||
+        oldDelegate.radius != radius ||
+        oldDelegate.handleSize != handleSize ||
+        oldDelegate.centerX != centerX ||
+        oldDelegate.centerY != centerY;
   }
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../../models/websocket_client_config.dart';
+import '../../../models/websocket_client_config.dart';
 import 'websocket_client_init_service.dart';
 import 'websocket_client_service.dart';
 import 'websocket_client_database_service.dart';

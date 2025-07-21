@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../../models/websocket_client_config.dart';
+import '../../../models/websocket_client_config.dart';
 import 'websocket_secure_storage_service.dart';
 import 'websocket_client_service.dart';
 

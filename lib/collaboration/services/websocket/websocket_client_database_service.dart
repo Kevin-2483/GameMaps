@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import '../../models/websocket_client_config.dart';
-import '../database_path_service.dart';
+import '../../../models/websocket_client_config.dart';
+import '../../../services/database_path_service.dart';
 
 /// WebSocket 客户端配置数据库服务
 /// 管理多个 WebSocket 客户端身份配置

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../components/common/draggable_title_bar.dart';
 import '../../components/layout/main_layout.dart';
-import '../../services/websocket/websocket_client_manager.dart';
-import '../../services/websocket/websocket_client_service.dart';
+import '../../collaboration/services/websocket/websocket_client_manager.dart';
+import '../../collaboration/services/websocket/websocket_client_service.dart';
 import '../../models/websocket_client_config.dart';
-import '../../services/websocket/websocket_client_init_service.dart';
+import '../../collaboration/services/websocket/websocket_client_init_service.dart';
 
 /// WebSocket 连接管理页面
 class WebSocketConnectionManagerPage extends BasePage {

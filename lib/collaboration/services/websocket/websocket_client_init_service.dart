@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:fast_rsa/fast_rsa.dart';
-import '../../models/websocket_client_config.dart';
+import '../../../models/websocket_client_config.dart';
 import 'websocket_client_database_service.dart';
 import 'websocket_secure_storage_service.dart';
 

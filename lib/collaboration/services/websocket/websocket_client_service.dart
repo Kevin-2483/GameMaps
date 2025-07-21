@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
-import '../../models/websocket_client_config.dart';
+import '../../../models/websocket_client_config.dart';
 import 'websocket_client_auth_service.dart';
 import 'websocket_client_database_service.dart';
 

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/websocket_client_config.dart';
-import '../../services/websocket/websocket_client_manager.dart';
-import '../../services/websocket/websocket_client_service.dart';
+import '../../collaboration/services/websocket/websocket_client_manager.dart';
+import '../../collaboration/services/websocket/websocket_client_service.dart';
 
 /// WebSocket 客户端演示页面
 class WebSocketClientDemoPage extends StatefulWidget {
