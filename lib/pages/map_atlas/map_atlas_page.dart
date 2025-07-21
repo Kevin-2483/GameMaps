@@ -369,38 +369,35 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                  final mapCover = firstUser.currentMapCoverBase64;
 
                  return Card(
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                       // 地图封面和标题
-                       AspectRatio(
-                         aspectRatio: 3 / 2,
-                         child: Container(
-                           decoration: BoxDecoration(
-                             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                             image: mapCover != null && mapCover.isNotEmpty
-                                 ? DecorationImage(
-                                     image: MemoryImage(
-                                       mapCover.startsWith('data:') || mapCover.contains('base64,')
-                                           ? base64Decode(mapCover.split(',').last)
-                                           : base64Decode(mapCover),
-                                     ),
-                                     fit: BoxFit.cover,
-                                   )
-                                 : null,
-                             color: mapCover == null || mapCover.isEmpty
-                                 ? Theme.of(context).colorScheme.surfaceContainer
-                                 : null,
-                           ),
-                           child: mapCover == null || mapCover.isEmpty
-                               ? Icon(
-                                   Icons.map,
-                                   size: 48,
-                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
+                   elevation: 4,
+                   clipBehavior: Clip.antiAlias,
+                   child: InkWell(
+                     onTap: () {
+                       // 可以添加点击进入地图的功能
+                       context.showInfoSnackBar('进入活跃地图: $mapTitle');
+                     },
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         // 地图封面和标题
+                         AspectRatio(
+                           aspectRatio: 3 / 2,
+                           child: mapCover != null && mapCover.isNotEmpty
+                               ? Image.memory(
+                                   mapCover.startsWith('data:') || mapCover.contains('base64,')
+                                       ? base64Decode(mapCover.split(',').last)
+                                       : base64Decode(mapCover),
+                                   fit: BoxFit.cover,
                                  )
-                               : null,
+                               : Container(
+                                   color: Theme.of(context).colorScheme.surfaceVariant,
+                                   child: Icon(
+                                     Icons.image_not_supported,
+                                     size: 48,
+                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                   ),
+                                 ),
                          ),
-                       ),
                        Padding(
                          padding: const EdgeInsets.all(12),
                          child: Column(
@@ -455,7 +452,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                        ),
                      ],
                    ),
-                 );
+                 ),);
                },
              ),
            ],

@@ -629,10 +629,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
         // 5. 立即初始化响应式版本管理系统
         await _initializeReactiveVersionManagement();
         
-        // 6. 初始化在线状态管理（不设置地图信息，因为已在地图册页面设置）
-        initializeCollaboration();
+        // 6. 初始化在线状态管理
+        await initializeCollaboration();
         debugPrint('在线状态管理初始化完成');
-      } // 7. 重新初始化脚本引擎以确保外部函数声明正确
+        
+        // 7. 进入地图编辑器模式，设置地图信息用于协作
+        await enterMapEditor(
+          mapId: _currentMap!.id?.toString() ?? _currentMap!.title,
+          mapTitle: _currentMap!.title,
+          mapCover: _currentMap!.imageData,
+        );
+        debugPrint('已进入地图编辑器协作模式: ${_currentMap!.title}');
+      } // 8. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
       debugPrint('新脚本引擎重新初始化完成');
     } catch (e) {
@@ -3808,21 +3816,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
                               // 图例浮动dock栏
                               Positioned(
-                                bottom: 16,
+                                bottom: 20,
                                 left: 0,
                                 right: 0,
-                                child: Positioned(
-                                  bottom: 20,
-                                  left: 0,
-                                  right: 0,
-                                  child: Center(
-                                    child: LegendDockBar(
-                                      mapItem: _currentMap!,
-                                      selectedLayerGroup: _selectedLayerGroup,
-                                      selectedLayer: _selectedLayer,
-                                      legendSessionManager:
-                                          versionAdapter?.legendSessionManager,
-                                    ),
+                                child: Center(
+                                  child: LegendDockBar(
+                                    mapItem: _currentMap!,
+                                    selectedLayerGroup: _selectedLayerGroup,
+                                    selectedLayer: _selectedLayer,
+                                    legendSessionManager:
+                                        versionAdapter?.legendSessionManager,
                                   ),
                                 ),
                               ),

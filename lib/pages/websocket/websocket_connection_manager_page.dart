@@ -56,6 +56,7 @@ class _WebSocketConnectionManagerPageState
   StreamSubscription? _configsSubscription;
   StreamSubscription? _activeConfigSubscription;
   StreamSubscription? _pingDelaySubscription;
+  StreamSubscription? _messageSubscription;
 
   @override
   void initState() {
@@ -71,12 +72,14 @@ class _WebSocketConnectionManagerPageState
     _configsSubscription?.cancel();
     _activeConfigSubscription?.cancel();
     _pingDelaySubscription?.cancel();
+    _messageSubscription?.cancel();
     _logScrollController.dispose();
     super.dispose();
   }
 
   /// 初始化管理器
   Future<void> _initializeManager() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -87,11 +90,13 @@ class _WebSocketConnectionManagerPageState
       await _loadConfigs();
       _addLog('WebSocket 连接管理器初始化成功');
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = '初始化失败: $e';
       });
       _addLog('初始化失败: $e');
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -102,6 +107,7 @@ class _WebSocketConnectionManagerPageState
   void _setupSubscriptions() {
     // 监听连接状态变化
     _stateSubscription = _manager.connectionStateStream.listen((state) {
+      if (!mounted) return;
       setState(() {
         _connectionState = state;
       });
@@ -115,6 +121,7 @@ class _WebSocketConnectionManagerPageState
 
     // 监听延迟变化
     _pingDelaySubscription = _manager.pingDelayStream.listen((delay) {
+      if (!mounted) return;
       setState(() {
         _currentPingDelay = delay;
       });
@@ -122,7 +129,7 @@ class _WebSocketConnectionManagerPageState
     });
 
     // 监听WebSocket消息（包括用户状态广播）
-    _manager.messageStream.listen((message) {
+    _messageSubscription = _manager.messageStream.listen((message) {
       if (message.type == 'user_status_broadcast') {
         final data = message.data;
         final userId = data['user_id'] as String?;
@@ -136,6 +143,7 @@ class _WebSocketConnectionManagerPageState
 
     // 监听配置变化
     _configsSubscription = _manager.configsStream.listen((configs) {
+      if (!mounted) return;
       setState(() {
         _configs = configs;
       });
@@ -144,6 +152,7 @@ class _WebSocketConnectionManagerPageState
 
     // 监听活跃配置变化
     _activeConfigSubscription = _manager.activeConfigStream.listen((config) {
+      if (!mounted) return;
       setState(() {
         _activeConfig = config;
       });
@@ -161,6 +170,7 @@ class _WebSocketConnectionManagerPageState
       final configs = await _manager.getAllConfigs();
       final activeConfig = await _manager.getActiveConfig();
 
+      if (!mounted) return;
       setState(() {
         _configs = configs;
         _activeConfig = activeConfig;
@@ -183,6 +193,9 @@ class _WebSocketConnectionManagerPageState
     final timestamp = DateTime.now().toString().substring(11, 19);
     final logMessage = '[$timestamp] $message';
 
+    // 检查组件是否仍然挂载
+    if (!mounted) return;
+
     setState(() {
       _logs.add(logMessage);
       // 限制日志数量，避免内存溢出
@@ -193,7 +206,7 @@ class _WebSocketConnectionManagerPageState
 
     // 自动滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_logScrollController.hasClients) {
+      if (mounted && _logScrollController.hasClients) {
         _logScrollController.animateTo(
           _logScrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 100),
@@ -452,6 +465,7 @@ class _WebSocketConnectionManagerPageState
 
   /// 清空日志
   void _clearLogs() {
+    if (!mounted) return;
     setState(() {
       _logs.clear();
     });

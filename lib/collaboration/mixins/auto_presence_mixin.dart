@@ -38,7 +38,7 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
   Bloc? getMapDataBloc() => null;
   
   /// 初始化协作服务
-  void initializeCollaboration() async {
+  Future<void> initializeCollaboration() async {
     if (_collaborationInitialized) return;
     
     try {
@@ -61,10 +61,12 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
       }
       
       // 启动WebSocket连接
-      // final connected = await _webSocketManager.connect();
-      // if (!connected) {
-      //   debugPrint('WebSocket连接失败');
-      // }
+      final connected = await _webSocketManager.connect();
+      if (!connected) {
+        debugPrint('WebSocket连接失败');
+      } else {
+        debugPrint('WebSocket连接成功');
+      }
       
       // 初始化PresenceBloc
         _presenceBloc = PresenceBloc(
@@ -113,19 +115,26 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
   }
   
   /// 进入地图编辑器
-  void enterMapEditor({
+  Future<void> enterMapEditor({
     required String mapId,
     required String mapTitle,
     Uint8List? mapCover,
-  }) {
-    if (!_collaborationInitialized) return;
+  }) async {
+    debugPrint('[AutoPresenceMixin] enterMapEditor called with mapId: $mapId, mapTitle: $mapTitle');
     
-    _autoPresenceManager.enterMapEditor(
+    if (!_collaborationInitialized) {
+      debugPrint('[AutoPresenceMixin] 协作服务未初始化，跳过enterMapEditor');
+      return;
+    }
+    
+    debugPrint('[AutoPresenceMixin] 调用AutoPresenceManager.enterMapEditor');
+    await _autoPresenceManager.enterMapEditor(
       mapId: mapId,
       mapTitle: mapTitle,
       mapCover: mapCover,
       mapDataBloc: getMapDataBloc(),
     );
+    debugPrint('[AutoPresenceMixin] AutoPresenceManager.enterMapEditor 调用完成');
   }
   
   /// 退出地图编辑器
