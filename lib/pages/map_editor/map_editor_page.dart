@@ -105,11 +105,10 @@ class _MapEditorContent extends StatefulWidget {
 
 class _MapEditorContentState extends State<_MapEditorContent>
     with MapEditorReactiveMixin, ReactiveVersionMixin, AutoPresenceMixin {
-  
   // 缓存的客户端信息
   String? _cachedClientId;
   String? _cachedClientName;
-  
+
   // 实现AutoPresenceMixin的抽象方法
   @override
   String getCurrentClientId() {
@@ -120,7 +119,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   String getCurrentUserName() {
     return _cachedClientName ?? '未知客户端';
   }
-  
+
   /// 异步获取并缓存客户端信息
   Future<void> _loadClientInfo() async {
     try {
@@ -132,7 +131,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _cachedClientName = activeConfig.displayName;
         });
         if (kDebugMode) {
-          debugPrint('客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}');
+          debugPrint(
+            '客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}',
+          );
         }
       } else {
         if (kDebugMode) {
@@ -150,6 +151,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   Bloc<dynamic, dynamic>? getMapDataBloc() {
     return reactiveIntegration.mapDataBloc;
   }
+
   final GlobalKey<MapCanvasState> _mapCanvasKey = GlobalKey<MapCanvasState>();
   MapItem? _currentMap; // 可能为空，需要加载
   final VfsMapService _vfsMapService =
@@ -196,7 +198,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 设置输入框焦点状态
   void _setInputFieldFocused(bool focused) {
-    print('DEBUG: Setting _isInputFieldFocused to $focused');
+    debugPrint('DEBUG: Setting _isInputFieldFocused to $focused');
     setState(() {
       _isInputFieldFocused = focused;
     });
@@ -205,7 +207,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (!focused) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _mainFocusNode.requestFocus();
-        print('DEBUG: Requested focus back to main FocusNode');
+        debugPrint('DEBUG: Requested focus back to main FocusNode');
       });
     }
   }
@@ -324,7 +326,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _initializeWithClientInfo();
     // 脚本管理器现在通过响应式系统自动初始化
   }
-  
+
   /// 先加载客户端信息，然后初始化协作
   Future<void> _initializeWithClientInfo() async {
     await _loadClientInfo();
@@ -664,11 +666,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
         // 5. 立即初始化响应式版本管理系统
         await _initializeReactiveVersionManagement();
-        
+
         // 6. 初始化在线状态管理
         await initializeCollaboration();
         debugPrint('在线状态管理初始化完成');
-        
+
         // 7. 进入地图编辑器模式，设置地图信息用于协作
         await enterMapEditor(
           mapId: _currentMap!.id?.toString() ?? _currentMap!.title,
@@ -4583,10 +4585,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 如果输入框正在被编辑，忽略快捷键
     if (_isInputFieldFocused) {
-      print('DEBUG: Ignoring shortcut because _isInputFieldFocused is true');
+      debugPrint(
+        'DEBUG: Ignoring shortcut because _isInputFieldFocused is true',
+      );
       return KeyEventResult.ignored;
     }
-    print('DEBUG: Processing shortcut because _isInputFieldFocused is false');
+    debugPrint(
+      'DEBUG: Processing shortcut because _isInputFieldFocused is false',
+    );
 
     // 获取用户偏好设置
     final userPrefs = context.read<UserPreferencesProvider>();
@@ -5542,7 +5548,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 动态获取按键对应的LogicalKeyboardKey
     LogicalKeyboardKey? targetKey = _getLogicalKeyFromString(key);
     if (targetKey == null) {
-      print('不支持的按键: $key');
+      debugPrint('不支持的按键: $key');
       return false;
     }
 
@@ -5578,7 +5584,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         (altRequired == altPressed) &&
         (winRequired == winPressed);
 
-    print(
+    debugPrint(
       '快捷键检查: $shortcut, 主键匹配: $keyMatch, 修饰键匹配: ${(ctrlRequired == ctrlPressed) && (shiftRequired == shiftPressed) && (altRequired == altPressed) && (winRequired == winPressed)}, 最终结果: $result',
     );
     return result;

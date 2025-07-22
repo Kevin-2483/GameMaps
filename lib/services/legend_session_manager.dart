@@ -76,7 +76,7 @@ class LegendSessionManager extends ChangeNotifier {
     loadingStates: {},
     failedPaths: {},
   );
-  
+
   /// 当前地图的绝对路径（用于占位符路径转换）
   String? _currentMapAbsolutePath;
 
@@ -87,10 +87,13 @@ class LegendSessionManager extends ChangeNotifier {
   String? get currentMapAbsolutePath => _currentMapAbsolutePath;
 
   /// 初始化会话（预加载地图中的所有图例）
-  Future<void> initializeSession(MapItem mapItem, {String? mapAbsolutePath}) async {
+  Future<void> initializeSession(
+    MapItem mapItem, {
+    String? mapAbsolutePath,
+  }) async {
     // 设置当前地图路径
     _currentMapAbsolutePath = mapAbsolutePath;
-    
+
     final allLegendPaths = <String>{};
 
     // 收集所有图例组中的图例路径
@@ -141,7 +144,7 @@ class LegendSessionManager extends ChangeNotifier {
       // 转换占位符路径为实际路径
       final actualPath = _convertToActualPath(legendPath);
       debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
-      
+
       // 从缓存管理器获取数据
       final legendData = await _cacheManager.getLegendData(actualPath);
 
@@ -290,7 +293,7 @@ class LegendSessionManager extends ChangeNotifier {
       // 转换占位符路径为实际路径
       final actualPath = _convertToActualPath(legendPath);
       debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
-      
+
       final legendData = await _cacheManager.getLegendData(actualPath);
 
       if (legendData != null) {

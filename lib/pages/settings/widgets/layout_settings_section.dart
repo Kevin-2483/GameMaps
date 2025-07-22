@@ -130,7 +130,9 @@ class LayoutSettingsSection extends StatelessWidget {
               title: Text('右侧垂直导航'),
               subtitle: Text('将导航栏显示在屏幕右侧（垂直布局）'),
               value: layout.enableRightSideVerticalNavigation,
-              onChanged: (value) => provider.updateLayout(enableRightSideVerticalNavigation: value),
+              onChanged: (value) => provider.updateLayout(
+                enableRightSideVerticalNavigation: value,
+              ),
             ),
 
             const SizedBox(height: 8),
@@ -140,7 +142,8 @@ class LayoutSettingsSection extends StatelessWidget {
               title: Text('合并窗口控件'),
               subtitle: Text('将窗口控制按钮合并到悬浮托盘中，鼠标悬停时展开'),
               value: layout.enableMergedWindowControls,
-              onChanged: (value) => provider.updateLayout(enableMergedWindowControls: value),
+              onChanged: (value) =>
+                  provider.updateLayout(enableMergedWindowControls: value),
             ),
 
             const SizedBox(height: 8),
@@ -372,7 +375,8 @@ class LayoutSettingsSection extends StatelessWidget {
                 animationDuration: defaultLayout.animationDuration,
                 enableAnimations: defaultLayout.enableAnimations,
                 autoRestorePanelStates: defaultLayout.autoRestorePanelStates,
-                enableRightSideVerticalNavigation: defaultLayout.enableRightSideVerticalNavigation,
+                enableRightSideVerticalNavigation:
+                    defaultLayout.enableRightSideVerticalNavigation,
               );
               Navigator.of(context).pop();
               context.showSuccessSnackBar('布局设置已重置');

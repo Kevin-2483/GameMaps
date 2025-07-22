@@ -5,7 +5,6 @@ import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 
-
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
 
@@ -136,8 +135,4 @@ class _SettingsPageContent extends StatelessWidget {
       ),
     );
   }
-
-
-
-
 }

@@ -357,7 +357,7 @@ class LegendCacheManager extends ChangeNotifier {
     try {
       // 根据路径类型选择合适的加载方法
       legend_db.LegendItem? legendData;
-      
+
       if (legendPath.startsWith('indexeddb://')) {
         // 绝对VFS路径，直接使用getLegendFromAbsolutePath
         debugPrint('图例缓存: 使用绝对路径加载 $legendPath');

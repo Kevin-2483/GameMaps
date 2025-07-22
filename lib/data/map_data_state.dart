@@ -69,7 +69,8 @@ class MapDataLoaded extends MapDataState {
       timers: timers ?? this.timers,
       lastModified: lastModified ?? this.lastModified,
       metadata: metadata ?? this.metadata,
-      manuallyClosedLegendGroups: manuallyClosedLegendGroups ?? this.manuallyClosedLegendGroups,
+      manuallyClosedLegendGroups:
+          manuallyClosedLegendGroups ?? this.manuallyClosedLegendGroups,
     );
   }
 

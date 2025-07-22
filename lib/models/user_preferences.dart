@@ -566,10 +566,11 @@ class LayoutPreferences {
       rememberMaximizedState:
           rememberMaximizedState ?? this.rememberMaximizedState,
       isMaximized: isMaximized ?? this.isMaximized,
-      enableRightSideVerticalNavigation: enableRightSideVerticalNavigation ??
+      enableRightSideVerticalNavigation:
+          enableRightSideVerticalNavigation ??
           this.enableRightSideVerticalNavigation,
-      enableMergedWindowControls: enableMergedWindowControls ??
-          this.enableMergedWindowControls,
+      enableMergedWindowControls:
+          enableMergedWindowControls ?? this.enableMergedWindowControls,
     );
   }
 

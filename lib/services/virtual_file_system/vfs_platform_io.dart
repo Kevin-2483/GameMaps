@@ -36,21 +36,23 @@ class VfsPlatformIO {
   static Future<Directory> getWebDAVImportTempDirectory() async {
     // 获取基础临时目录
     final tempDir = await getTempDirectory();
-    
+
     // 在基础目录下创建webdav_import子目录
     final webdavImportDir = createDirectory('${tempDir.path}/webdav_import');
-    
+
     // 确保目录存在
     if (!await webdavImportDir.exists()) {
       await webdavImportDir.create(recursive: true);
       debugPrint('🔗 VfsPlatformIO: 创建WebDAV导入临时目录 - ${webdavImportDir.path}');
     }
-    
+
     return webdavImportDir;
   }
 
   /// 生成WebDAV导入临时文件路径
-  static Future<String> generateWebDAVImportTempFilePath(String fileName) async {
+  static Future<String> generateWebDAVImportTempFilePath(
+    String fileName,
+  ) async {
     final webdavImportDir = await getWebDAVImportTempDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final safeFileName = _sanitizeFileName(fileName);
@@ -89,10 +91,7 @@ class VfsPlatformIO {
 
   /// 清理所有临时文件（包括VFS和WebDAV导入）
   static Future<void> cleanupAllTempFiles() async {
-    await Future.wait([
-      cleanupTempFiles(),
-      cleanupWebDAVImportTempFiles(),
-    ]);
+    await Future.wait([cleanupTempFiles(), cleanupWebDAVImportTempFiles()]);
   }
 
   /// 生成临时文件

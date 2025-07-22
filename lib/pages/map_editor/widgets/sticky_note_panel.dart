@@ -364,7 +364,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
             // 当用户点击输入框外部时保存标题
             if (controller.text.trim() != note.title) {
               final updatedNote = note.copyWith(
-                title: controller.text.trim().isEmpty ? '无标题便签' : controller.text.trim(),
+                title: controller.text.trim().isEmpty
+                    ? '无标题便签'
+                    : controller.text.trim(),
                 updatedAt: DateTime.now(),
               );
               widget.onStickyNoteUpdated(updatedNote);
@@ -376,7 +378,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
             // 当用户完成编辑时保存标题
             if (controller.text.trim() != note.title) {
               final updatedNote = note.copyWith(
-                title: controller.text.trim().isEmpty ? '无标题便签' : controller.text.trim(),
+                title: controller.text.trim().isEmpty
+                    ? '无标题便签'
+                    : controller.text.trim(),
                 updatedAt: DateTime.now(),
               );
               widget.onStickyNoteUpdated(updatedNote);

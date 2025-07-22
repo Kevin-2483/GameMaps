@@ -60,7 +60,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   List<BreadcrumbItem> _breadcrumbs = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  
+
   // 缓存的客户端信息
   String? _cachedClientId;
   String? _cachedClientName;
@@ -75,7 +75,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   String getCurrentUserName() {
     return _cachedClientName ?? '未知客户端';
   }
-  
+
   /// 异步获取并缓存客户端信息
   Future<void> _loadClientInfo() async {
     try {
@@ -87,7 +87,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           _cachedClientName = activeConfig.displayName;
         });
         if (kDebugMode) {
-          debugPrint('客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}');
+          debugPrint(
+            '客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}',
+          );
         }
       } else {
         if (kDebugMode) {
@@ -136,448 +138,489 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     });
   }
 
-   /// 构建在线用户部分
-   Widget _buildOnlineUsersSection(BuildContext context) {
-     if (!isCollaborationInitialized) {
-       return Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           Text(
-             '在线用户',
-             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-               fontWeight: FontWeight.bold,
-               color: Theme.of(context).colorScheme.primary,
-             ),
-           ),
-           const SizedBox(height: 12),
-           Container(
-             height: 100,
-             alignment: Alignment.center,
-             child: Text(
-               '协作服务未初始化',
-               style: TextStyle(
-                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-               ),
-             ),
-           ),
-         ],
-       );
-     }
-     
-     return BlocBuilder<PresenceBloc, PresenceState>(
-       bloc: presenceBloc,
-       builder: (context, state) {
-         if (state is! PresenceLoaded) {
-           return Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text(
-                 '在线用户',
-                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: Theme.of(context).colorScheme.primary,
-                 ),
-               ),
-               const SizedBox(height: 12),
-               const Center(child: CircularProgressIndicator()),
-             ],
-           );
-         }
+  /// 构建在线用户部分
+  Widget _buildOnlineUsersSection(BuildContext context) {
+    if (!isCollaborationInitialized) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '在线用户',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 100,
+            alignment: Alignment.center,
+            child: Text(
+              '协作服务未初始化',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
-         final onlineUsers = state.allUsers;
-         if (onlineUsers.isEmpty) {
-           return Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text(
-                 '在线用户',
-                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: Theme.of(context).colorScheme.primary,
-                 ),
-               ),
-               const SizedBox(height: 12),
-               Container(
-                 height: 100,
-                 alignment: Alignment.center,
-                 child: Text(
-                   '暂无在线用户',
-                   style: TextStyle(
-                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                   ),
-                 ),
-               ),
-             ],
-           );
-         }
+    return BlocBuilder<PresenceBloc, PresenceState>(
+      bloc: presenceBloc,
+      builder: (context, state) {
+        if (state is! PresenceLoaded) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '在线用户',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          );
+        }
 
-         return Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           children: [
-             Text(
-               '在线用户 (${onlineUsers.length})',
-               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                 fontWeight: FontWeight.bold,
-                 color: Theme.of(context).colorScheme.primary,
-               ),
-             ),
-             const SizedBox(height: 12),
-             GridView.builder(
-               shrinkWrap: true,
-               physics: const NeverScrollableScrollPhysics(),
-               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                 crossAxisCount: _calculateCrossAxisCount(context),
-                 crossAxisSpacing: 16,
-                 mainAxisSpacing: 16,
-                 childAspectRatio: 1.0, // 方形卡片
-               ),
-               itemCount: onlineUsers.length,
-               itemBuilder: (context, index) {
-                 final user = onlineUsers[index];
-                 final isCurrentUser = user.clientId == state.currentUser.clientId;
-                 return Card(
-                   elevation: isCurrentUser ? 4 : 2,
-                   color: isCurrentUser 
-                       ? Theme.of(context).colorScheme.primaryContainer
-                       : null,
-                   child: Padding(
-                     padding: const EdgeInsets.all(12),
-                     child: Column(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       children: [
-                         _buildUserAvatar(user, isCurrentUser, context),
-                         const SizedBox(height: 8),
-                         Text(
-                           isCurrentUser ? '${user.displayName ?? user.userName} (我)' : (user.displayName ?? user.userName),
-                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                             fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
-                             color: isCurrentUser
-                                 ? Theme.of(context).colorScheme.onPrimaryContainer
-                                 : null,
-                           ),
-                           textAlign: TextAlign.center,
-                           maxLines: 2,
-                           overflow: TextOverflow.ellipsis,
-                         ),
-                         const SizedBox(height: 4),
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                           decoration: BoxDecoration(
-                             color: _getStatusColor(context, user.status).withValues(alpha: 0.2),
-                             borderRadius: BorderRadius.circular(12),
-                           ),
-                           child: Text(
-                             _getStatusText(user.status),
-                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                               color: _getStatusColor(context, user.status),
-                               fontWeight: FontWeight.w500,
-                             ),
-                           ),
-                         ),
-                       ],
-                     ),
-                   ),
-                 );
-               },
-             ),
-           ],
-         );
-       },
-     );
-   }
+        final onlineUsers = state.allUsers;
+        if (onlineUsers.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '在线用户',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 100,
+                alignment: Alignment.center,
+                child: Text(
+                  '暂无在线用户',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
 
-   /// 构建活跃地图部分
-   Widget _buildActiveMapsSection(BuildContext context) {
-     if (!isCollaborationInitialized) {
-       return Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           Text(
-             '活跃地图',
-             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-               fontWeight: FontWeight.bold,
-               color: Theme.of(context).colorScheme.primary,
-             ),
-           ),
-           const SizedBox(height: 12),
-           Container(
-             height: 100,
-             alignment: Alignment.center,
-             child: Text(
-               '协作服务未初始化',
-               style: TextStyle(
-                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-               ),
-             ),
-           ),
-         ],
-       );
-     }
-     
-     return BlocBuilder<PresenceBloc, PresenceState>(
-       bloc: presenceBloc,
-       builder: (context, state) {
-         if (state is! PresenceLoaded) {
-           return Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text(
-                 '活跃地图',
-                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: Theme.of(context).colorScheme.primary,
-                 ),
-               ),
-               const SizedBox(height: 12),
-               const Center(child: CircularProgressIndicator()),
-             ],
-           );
-         }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '在线用户 (${onlineUsers.length})',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _calculateCrossAxisCount(context),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.0, // 方形卡片
+              ),
+              itemCount: onlineUsers.length,
+              itemBuilder: (context, index) {
+                final user = onlineUsers[index];
+                final isCurrentUser =
+                    user.clientId == state.currentUser.clientId;
+                return Card(
+                  elevation: isCurrentUser ? 4 : 2,
+                  color: isCurrentUser
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildUserAvatar(user, isCurrentUser, context),
+                        const SizedBox(height: 8),
+                        Text(
+                          isCurrentUser
+                              ? '${user.displayName ?? user.userName} (我)'
+                              : (user.displayName ?? user.userName),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isCurrentUser
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isCurrentUser
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer
+                                    : null,
+                              ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                              context,
+                              user.status,
+                            ).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _getStatusText(user.status),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: _getStatusColor(context, user.status),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-         // 按地图ID分组用户
-         final mapGroups = <String, List<UserPresence>>{};
-         for (final user in state.allUsers) {
-           if (user.currentMapId != null && user.currentMapId!.isNotEmpty) {
-             mapGroups.putIfAbsent(user.currentMapId!, () => []).add(user);
-           }
-         }
+  /// 构建活跃地图部分
+  Widget _buildActiveMapsSection(BuildContext context) {
+    if (!isCollaborationInitialized) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '活跃地图',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 100,
+            alignment: Alignment.center,
+            child: Text(
+              '协作服务未初始化',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
-         if (mapGroups.isEmpty) {
-           return Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text(
-                 '活跃地图',
-                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: Theme.of(context).colorScheme.primary,
-                 ),
-               ),
-               const SizedBox(height: 12),
-               Container(
-                 height: 100,
-                 alignment: Alignment.center,
-                 child: Text(
-                   '暂无活跃地图',
-                   style: TextStyle(
-                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                   ),
-                 ),
-               ),
-             ],
-           );
-         }
+    return BlocBuilder<PresenceBloc, PresenceState>(
+      bloc: presenceBloc,
+      builder: (context, state) {
+        if (state is! PresenceLoaded) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '活跃地图',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          );
+        }
 
-         return Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           children: [
-             Text(
-               '活跃地图 (${mapGroups.length})',
-               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                 fontWeight: FontWeight.bold,
-                 color: Theme.of(context).colorScheme.primary,
-               ),
-             ),
-             const SizedBox(height: 12),
-             GridView.builder(
-               shrinkWrap: true,
-               physics: const NeverScrollableScrollPhysics(),
-               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                 crossAxisCount: _calculateCrossAxisCount(context),
-                 crossAxisSpacing: 16,
-                 mainAxisSpacing: 24,
-                 childAspectRatio: 1.1, // 3:2比例 + 标题空间
-               ),
-               itemCount: mapGroups.length,
-               itemBuilder: (context, index) {
-                 final mapId = mapGroups.keys.elementAt(index);
-                 final users = mapGroups[mapId]!;
-                 final firstUser = users.first;
-                 final mapTitle = firstUser.currentMapTitle ?? mapId;
-                 final mapCover = firstUser.currentMapCoverBase64;
+        // 按地图ID分组用户
+        final mapGroups = <String, List<UserPresence>>{};
+        for (final user in state.allUsers) {
+          if (user.currentMapId != null && user.currentMapId!.isNotEmpty) {
+            mapGroups.putIfAbsent(user.currentMapId!, () => []).add(user);
+          }
+        }
 
-                 return Card(
-                   elevation: 4,
-                   clipBehavior: Clip.antiAlias,
-                   child: InkWell(
-                     onTap: () {
-                       // 可以添加点击进入地图的功能
-                       context.showInfoSnackBar('进入活跃地图: $mapTitle');
-                     },
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         // 地图封面和标题
-                         AspectRatio(
-                           aspectRatio: 3 / 2,
-                           child: mapCover != null && mapCover.isNotEmpty
-                               ? Image.memory(
-                                   mapCover.startsWith('data:') || mapCover.contains('base64,')
-                                       ? base64Decode(mapCover.split(',').last)
-                                       : base64Decode(mapCover),
-                                   fit: BoxFit.cover,
-                                 )
-                               : Container(
-                                   color: Theme.of(context).colorScheme.surfaceVariant,
-                                   child: Icon(
-                                     Icons.image_not_supported,
-                                     size: 48,
-                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                   ),
-                                 ),
-                         ),
-                       Padding(
-                         padding: const EdgeInsets.all(12),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Text(
-                               mapTitle,
-                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                 fontWeight: FontWeight.bold,
-                               ),
-                               maxLines: 2,
-                               overflow: TextOverflow.ellipsis,
-                             ),
-                             const SizedBox(height: 8),
-                             ...users.map((user) {
-                               final isCurrentUser = user.clientId == state.currentUser.clientId;
-                               return Padding(
-                                 padding: const EdgeInsets.only(bottom: 4),
-                                 child: Row(
-                                   children: [
-                                     Container(
-                                       width: 6,
-                                       height: 6,
-                                       decoration: BoxDecoration(
-                                         shape: BoxShape.circle,
-                                         color: _getStatusColor(context, user.status),
-                                       ),
-                                     ),
-                                     const SizedBox(width: 6),
-                                     Expanded(
-                                       child: Text(
-                                         isCurrentUser ? '${user.userName} (我)' : user.userName,
-                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                           fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
-                                         ),
-                                         maxLines: 1,
-                                         overflow: TextOverflow.ellipsis,
-                                       ),
-                                     ),
-                                     Text(
-                                       _getStatusText(user.status),
-                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                         color: _getStatusColor(context, user.status),
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               );
-                             }).toList(),
-                           ],
-                         ),
-                       ),
-                     ],
-                   ),
-                 ),);
-               },
-             ),
-           ],
-         );
-       },
-     );
-   }
+        if (mapGroups.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '活跃地图',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 100,
+                alignment: Alignment.center,
+                child: Text(
+                  '暂无活跃地图',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
 
-   /// 获取状态颜色
-   Color _getStatusColor(BuildContext context, UserActivityStatus status) {
-     switch (status) {
-       case UserActivityStatus.editing:
-         return Colors.red;
-       case UserActivityStatus.viewing:
-         return Colors.blue;
-       case UserActivityStatus.idle:
-         return Colors.green;
-       case UserActivityStatus.offline:
-         return Colors.grey;
-     }
-   }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '活跃地图 (${mapGroups.length})',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _calculateCrossAxisCount(context),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 24,
+                childAspectRatio: 1.1, // 3:2比例 + 标题空间
+              ),
+              itemCount: mapGroups.length,
+              itemBuilder: (context, index) {
+                final mapId = mapGroups.keys.elementAt(index);
+                final users = mapGroups[mapId]!;
+                final firstUser = users.first;
+                final mapTitle = firstUser.currentMapTitle ?? mapId;
+                final mapCover = firstUser.currentMapCoverBase64;
 
-   /// 获取状态文本
-   String _getStatusText(UserActivityStatus status) {
-     switch (status) {
-       case UserActivityStatus.editing:
-         return '编辑中';
-       case UserActivityStatus.viewing:
-         return '查看中';
-       case UserActivityStatus.idle:
-         return '在线';
-       case UserActivityStatus.offline:
-         return '离线';
-     }
-   }
+                return Card(
+                  elevation: 4,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () {
+                      // 可以添加点击进入地图的功能
+                      context.showInfoSnackBar('进入活跃地图: $mapTitle');
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 地图封面和标题
+                        AspectRatio(
+                          aspectRatio: 3 / 2,
+                          child: mapCover != null && mapCover.isNotEmpty
+                              ? Image.memory(
+                                  mapCover.startsWith('data:') ||
+                                          mapCover.contains('base64,')
+                                      ? base64Decode(mapCover.split(',').last)
+                                      : base64Decode(mapCover),
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceVariant,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: 48,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                mapTitle,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              ...users.map((user) {
+                                final isCurrentUser =
+                                    user.clientId == state.currentUser.clientId;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: _getStatusColor(
+                                            context,
+                                            user.status,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          isCurrentUser
+                                              ? '${user.userName} (我)'
+                                              : user.userName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                fontWeight: isCurrentUser
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                              ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text(
+                                        _getStatusText(user.status),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: _getStatusColor(
+                                                context,
+                                                user.status,
+                                              ),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-   /// 构建用户头像
-   Widget _buildUserAvatar(UserPresence user, bool isCurrentUser, BuildContext context) {
-     final size = 32.0;
-     final statusColor = isCurrentUser
-         ? Theme.of(context).colorScheme.onPrimaryContainer
-         : _getStatusColor(context, user.status);
+  /// 获取状态颜色
+  Color _getStatusColor(BuildContext context, UserActivityStatus status) {
+    switch (status) {
+      case UserActivityStatus.editing:
+        return Colors.red;
+      case UserActivityStatus.viewing:
+        return Colors.blue;
+      case UserActivityStatus.idle:
+        return Colors.green;
+      case UserActivityStatus.offline:
+        return Colors.grey;
+    }
+  }
 
-     // 如果有头像数据
-     if (user.avatar != null && user.avatar!.isNotEmpty) {
-       try {
-         // 检查是否为base64编码的图片
-         if (user.avatar!.startsWith('data:image/') || 
-             (user.avatar!.length > 100 && !user.avatar!.startsWith('http'))) {
-           // base64图片
-           final base64String = user.avatar!.startsWith('data:image/')
-               ? user.avatar!.split(',')[1]
-               : user.avatar!;
-           final imageBytes = base64Decode(base64String);
-           return CircleAvatar(
-             radius: size / 2,
-             backgroundImage: MemoryImage(imageBytes),
-             backgroundColor: statusColor,
-             onBackgroundImageError: (exception, stackTrace) {
-               // 如果图片加载失败，显示默认头像
-             },
-             child: null,
-           );
-         } else if (user.avatar!.startsWith('http')) {
-           // 网络图片
-           return CircleAvatar(
-             radius: size / 2,
-             backgroundImage: NetworkImage(user.avatar!),
-             backgroundColor: statusColor,
-             onBackgroundImageError: (exception, stackTrace) {
-               // 如果图片加载失败，显示默认头像
-             },
-             child: null,
-           );
-         }
-       } catch (e) {
-         // 如果解析失败，显示默认头像
-       }
-     }
+  /// 获取状态文本
+  String _getStatusText(UserActivityStatus status) {
+    switch (status) {
+      case UserActivityStatus.editing:
+        return '编辑中';
+      case UserActivityStatus.viewing:
+        return '查看中';
+      case UserActivityStatus.idle:
+        return '在线';
+      case UserActivityStatus.offline:
+        return '离线';
+    }
+  }
 
-     // 默认头像：显示用户名首字母
-     final displayName = user.displayName ?? user.userName;
-     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
-     
-     return CircleAvatar(
-       radius: size / 2,
-       backgroundColor: statusColor,
-       child: Text(
-         initial,
-         style: TextStyle(
-           color: Colors.white,
-           fontSize: size * 0.4,
-           fontWeight: FontWeight.bold,
-         ),
-       ),
-     );
-   }
+  /// 构建用户头像
+  Widget _buildUserAvatar(
+    UserPresence user,
+    bool isCurrentUser,
+    BuildContext context,
+  ) {
+    final size = 32.0;
+    final statusColor = isCurrentUser
+        ? Theme.of(context).colorScheme.onPrimaryContainer
+        : _getStatusColor(context, user.status);
+
+    // 如果有头像数据
+    if (user.avatar != null && user.avatar!.isNotEmpty) {
+      try {
+        // 检查是否为base64编码的图片
+        if (user.avatar!.startsWith('data:image/') ||
+            (user.avatar!.length > 100 && !user.avatar!.startsWith('http'))) {
+          // base64图片
+          final base64String = user.avatar!.startsWith('data:image/')
+              ? user.avatar!.split(',')[1]
+              : user.avatar!;
+          final imageBytes = base64Decode(base64String);
+          return CircleAvatar(
+            radius: size / 2,
+            backgroundImage: MemoryImage(imageBytes),
+            backgroundColor: statusColor,
+            onBackgroundImageError: (exception, stackTrace) {
+              // 如果图片加载失败，显示默认头像
+            },
+            child: null,
+          );
+        } else if (user.avatar!.startsWith('http')) {
+          // 网络图片
+          return CircleAvatar(
+            radius: size / 2,
+            backgroundImage: NetworkImage(user.avatar!),
+            backgroundColor: statusColor,
+            onBackgroundImageError: (exception, stackTrace) {
+              // 如果图片加载失败，显示默认头像
+            },
+            child: null,
+          );
+        }
+      } catch (e) {
+        // 如果解析失败，显示默认头像
+      }
+    }
+
+    // 默认头像：显示用户名首字母
+    final displayName = user.displayName ?? user.userName;
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: statusColor,
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.4,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
 
   /// 应用搜索筛选
   Future<void> _applyFilter() async {
@@ -603,12 +646,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           'indexeddb://r6box/maps/',
           '',
         );
-        
+
         // 只搜索.mapdata路径之前的内容
         if (relativePath.contains('.mapdata/')) {
           return false;
         }
-        
+
         // 确保在当前路径下或其子目录中
         if (_currentPath.isNotEmpty) {
           final expectedPrefix = _currentPath.endsWith('/')
@@ -619,7 +662,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             return false;
           }
         }
-        
+
         return true;
       }).toList();
 
@@ -630,62 +673,74 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           'indexeddb://r6box/maps/',
           '',
         );
-        
-        debugPrint('DEBUG: Processing file - name: ${file.name}, path: ${file.path}, relativePath: $relativePath');
-        
+
+        debugPrint(
+          'DEBUG: Processing file - name: ${file.name}, path: ${file.path}, relativePath: $relativePath',
+        );
+
         if (file.isDirectory && file.name.endsWith('.mapdata')) {
-             // .mapdata目录 - 这是地图文件
-             final mapName = file.name.replaceAll('.mapdata', '');
-             
-             // 使用新的getMapSummaryByPath方法加载地图摘要
-             try {
-               final realSummary = await _vfsMapService.getMapSummaryByPath(relativePath);
-               
-               if (realSummary != null) {
-                 searchItems.add(MapFileItem(
-                   name: mapName,
-                   path: relativePath, // relativePath已经包含完整路径包括.mapdata
-                   mapSummary: realSummary,
-                 ));
-               } else {
-                 // 如果无法加载真实摘要，创建基本的MapItemSummary
-                 final mapSummary = MapItemSummary(
-                   id: mapName.hashCode,
-                   title: mapName,
-                   version: 1,
-                   createdAt: file.createdAt,
-                   updatedAt: file.modifiedAt,
-                 );
-                 searchItems.add(MapFileItem(
-                   name: mapName,
-                   path: relativePath, // relativePath已经包含完整路径包括.mapdata
-                   mapSummary: mapSummary,
-                 ));
-               }
-             } catch (e) {
-               debugPrint('加载地图摘要失败: $e');
-               // 创建基本的MapItemSummary作为回退
-               final mapSummary = MapItemSummary(
-                 id: mapName.hashCode,
-                 title: mapName,
-                 version: 1,
-                 createdAt: file.createdAt,
-                 updatedAt: file.modifiedAt,
-               );
-               searchItems.add(MapFileItem(
-                 name: mapName,
-                 path: relativePath, // relativePath已经包含完整路径包括.mapdata
-                 mapSummary: mapSummary,
-               ));
-             }
-           } else if (file.isDirectory) {
-            // 普通文件夹项
-            searchItems.add(MapFolderItem(
+          // .mapdata目录 - 这是地图文件
+          final mapName = file.name.replaceAll('.mapdata', '');
+
+          // 使用新的getMapSummaryByPath方法加载地图摘要
+          try {
+            final realSummary = await _vfsMapService.getMapSummaryByPath(
+              relativePath,
+            );
+
+            if (realSummary != null) {
+              searchItems.add(
+                MapFileItem(
+                  name: mapName,
+                  path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                  mapSummary: realSummary,
+                ),
+              );
+            } else {
+              // 如果无法加载真实摘要，创建基本的MapItemSummary
+              final mapSummary = MapItemSummary(
+                id: mapName.hashCode,
+                title: mapName,
+                version: 1,
+                createdAt: file.createdAt,
+                updatedAt: file.modifiedAt,
+              );
+              searchItems.add(
+                MapFileItem(
+                  name: mapName,
+                  path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                  mapSummary: mapSummary,
+                ),
+              );
+            }
+          } catch (e) {
+            debugPrint('加载地图摘要失败: $e');
+            // 创建基本的MapItemSummary作为回退
+            final mapSummary = MapItemSummary(
+              id: mapName.hashCode,
+              title: mapName,
+              version: 1,
+              createdAt: file.createdAt,
+              updatedAt: file.modifiedAt,
+            );
+            searchItems.add(
+              MapFileItem(
+                name: mapName,
+                path: relativePath, // relativePath已经包含完整路径包括.mapdata
+                mapSummary: mapSummary,
+              ),
+            );
+          }
+        } else if (file.isDirectory) {
+          // 普通文件夹项
+          searchItems.add(
+            MapFolderItem(
               name: file.name,
               path: relativePath,
               mapCount: 0, // 搜索结果中暂时设为0，实际计数需要额外查询
-            ));
-          }
+            ),
+          );
+        }
       }
 
       // 只显示搜索结果，不与当前目录内容合并
@@ -732,7 +787,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
       for (final mapSummary in mapSummaries) {
         // 构建完整的地图路径，包含.mapdata
-        final mapPath = _currentPath.isEmpty 
+        final mapPath = _currentPath.isEmpty
             ? '${mapSummary.title}.mapdata'
             : '$_currentPath/${mapSummary.title}.mapdata';
         items.add(
@@ -757,7 +812,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           _localizedTitles = localizedTitles;
           _isLoading = false;
         });
-        
+
         // 应用当前筛选
         await _applyFilter();
         if (mounted) {
@@ -1055,7 +1110,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     // 获取地图摘要信息用于在线状态更新
     MapItemSummary? mapSummary;
     try {
-      final summaries = await _vfsMapService.getAllMapsSummary(_currentPath.isEmpty ? null : _currentPath);
+      final summaries = await _vfsMapService.getAllMapsSummary(
+        _currentPath.isEmpty ? null : _currentPath,
+      );
       mapSummary = summaries.firstWhere((summary) => summary.title == mapTitle);
     } catch (e) {
       debugPrint('获取地图摘要失败: $e');
@@ -1063,14 +1120,16 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
     // 更新在线状态为viewing
     if (mapSummary != null) {
-      presenceBloc.add(UpdateCurrentUserStatus(
-        status: UserActivityStatus.viewing,
-        metadata: {
-          'mapId': mapSummary.id.toString(),
-          'mapTitle': mapSummary.title,
-          'mapCover': mapSummary.imageData,
-        },
-      ));
+      presenceBloc.add(
+        UpdateCurrentUserStatus(
+          status: UserActivityStatus.viewing,
+          metadata: {
+            'mapId': mapSummary.id.toString(),
+            'mapTitle': mapSummary.title,
+            'mapCover': mapSummary.imageData,
+          },
+        ),
+      );
     }
 
     await Navigator.of(context).push(
@@ -1101,8 +1160,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   }
 
   void _openMapEditorWithPath(String mapTitle, String itemPath) async {
-    debugPrint('DEBUG: _openMapEditorWithPath called with mapTitle: $mapTitle, itemPath: $itemPath');
-    
+    debugPrint(
+      'DEBUG: _openMapEditorWithPath called with mapTitle: $mapTitle, itemPath: $itemPath',
+    );
+
     final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
       'ReadOnlyMode',
     );
@@ -1111,10 +1172,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     // 例如: "排名战地图/杜耶托夫斯基咖啡馆.mapdata"
     String absoluteMapPath;
     String? folderPath;
-    
+
     // 构建绝对路径，确保以/结尾
     absoluteMapPath = 'indexeddb://r6box/maps/$itemPath/';
-    
+
     // 从itemPath中提取folderPath
     if (itemPath.contains('/')) {
       // 有文件夹路径，提取除了最后的.mapdata文件名部分
@@ -1124,7 +1185,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       // 根目录下的地图
       folderPath = null;
     }
-    
+
     // 获取地图摘要信息用于在线状态更新
     MapItemSummary? mapSummary;
     try {
@@ -1135,18 +1196,22 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
     // 更新在线状态为viewing
     if (mapSummary != null) {
-      presenceBloc.add(UpdateCurrentUserStatus(
-        status: UserActivityStatus.viewing,
-        metadata: {
-          'mapId': mapSummary.id.toString(),
-          'mapTitle': mapSummary.title,
-          'mapCover': mapSummary.imageData,
-        },
-      ));
+      presenceBloc.add(
+        UpdateCurrentUserStatus(
+          status: UserActivityStatus.viewing,
+          metadata: {
+            'mapId': mapSummary.id.toString(),
+            'mapTitle': mapSummary.title,
+            'mapCover': mapSummary.imageData,
+          },
+        ),
+      );
     }
-    
-    debugPrint('DEBUG: Passing to MapEditorPage - mapTitle: $mapTitle, folderPath: $folderPath, absoluteMapPath: $absoluteMapPath');
-    
+
+    debugPrint(
+      'DEBUG: Passing to MapEditorPage - mapTitle: $mapTitle, folderPath: $folderPath, absoluteMapPath: $absoluteMapPath',
+    );
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MapEditorPage(
@@ -1159,7 +1224,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     );
 
     // 退出编辑器后的状态清理由AutoPresenceManager自动处理
-    
+
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
       // 使用延迟确保页面已完全恢复
@@ -1183,20 +1248,20 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   /// 获取排序键，中文转拼音，符号和无法转换的字符排在最前
   String _getSortKey(String name) {
     if (name.isEmpty) return '';
-    
+
     final firstChar = name[0];
-    
+
     // 检查是否为中文字符
     if (RegExp(r'[\u4e00-\u9fa5]').hasMatch(firstChar)) {
       final pinyin = PinyinHelper.getPinyinE(firstChar);
       return pinyin.isNotEmpty ? pinyin.toLowerCase() : '~$name';
     }
-    
+
     // 检查是否为英文字母
     if (RegExp(r'[a-zA-Z]').hasMatch(firstChar)) {
       return firstChar.toLowerCase();
     }
-    
+
     // 符号和其他字符排在最前面
     return '~$name';
   }
@@ -1205,180 +1270,179 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   List<MapDirectoryItem> _sortItems(List<MapDirectoryItem> items) {
     final folders = items.whereType<MapFolderItem>().toList();
     final maps = items.whereType<MapFileItem>().toList();
-    
+
     // 分别对文件夹和地图进行排序
     folders.sort((a, b) => _getSortKey(a.name).compareTo(_getSortKey(b.name)));
     maps.sort((a, b) => _getSortKey(a.name).compareTo(_getSortKey(b.name)));
-    
+
     // 文件夹在前，地图在后
-     return [...folders, ...maps];
-   }
+    return [...folders, ...maps];
+  }
 
-   /// 构建分组内容
-   Widget _buildGroupedContent(BuildContext context) {
-     final sortedItems = _sortItems(_filteredItems);
-     final folders = sortedItems.whereType<MapFolderItem>().toList();
-     final maps = sortedItems.whereType<MapFileItem>().toList();
-     
-     return SingleChildScrollView(
-       padding: const EdgeInsets.all(16.0),
-       child: Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           // 文件夹部分
-           if (folders.isNotEmpty) ...[
-             Text(
-               '文件夹',
-               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                 fontWeight: FontWeight.bold,
-                 color: Theme.of(context).colorScheme.primary,
-               ),
-             ),
-             const SizedBox(height: 12),
-             _buildGridSection(context, folders),
-           ],
-           
-           // 分割线
-           if (folders.isNotEmpty && maps.isNotEmpty) ...[
-             const SizedBox(height: 24),
-             Divider(
-               color: Theme.of(context).colorScheme.outline,
-               thickness: 1,
-             ),
-             const SizedBox(height: 24),
-           ],
-           
-           // 地图部分
-           if (maps.isNotEmpty) ...[
-             Text(
-               '地图',
-               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                 fontWeight: FontWeight.bold,
-                 color: Theme.of(context).colorScheme.primary,
-               ),
-             ),
-             const SizedBox(height: 12),
-             _buildGridSection(context, maps),
-           ],
-           
-           // 分割线
-           const SizedBox(height: 24),
-           Divider(
-             color: Theme.of(context).colorScheme.outline,
-             thickness: 1,
-           ),
-           const SizedBox(height: 24),
-           
-           // 在线用户部分
-           _buildOnlineUsersSection(context),
-           
-           // 分割线
-           const SizedBox(height: 24),
-           Divider(
-             color: Theme.of(context).colorScheme.outline,
-             thickness: 1,
-           ),
-           const SizedBox(height: 24),
-           
-           // 活跃地图部分
-           _buildActiveMapsSection(context),
-         ],
-       ),
-     );
-   }
+  /// 构建分组内容
+  Widget _buildGroupedContent(BuildContext context) {
+    final sortedItems = _sortItems(_filteredItems);
+    final folders = sortedItems.whereType<MapFolderItem>().toList();
+    final maps = sortedItems.whereType<MapFileItem>().toList();
 
-   /// 构建网格部分
-   Widget _buildGridSection(BuildContext context, List<MapDirectoryItem> items) {
-     final crossAxisCount = _calculateCrossAxisCount(context);
-     
-     return GridView.builder(
-       shrinkWrap: true,
-       physics: const NeverScrollableScrollPhysics(),
-       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-         crossAxisCount: crossAxisCount,
-         crossAxisSpacing: 16,
-         mainAxisSpacing: 24,
-         childAspectRatio: 1.1, // 3:2比例 + 标题空间
-       ),
-       itemCount: items.length,
-       itemBuilder: (context, index) {
-         return _buildItemCard(context, items[index]);
-       },
-     );
-   }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 文件夹部分
+          if (folders.isNotEmpty) ...[
+            Text(
+              '文件夹',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildGridSection(context, folders),
+          ],
 
-   /// 构建单个项目卡片
-   Widget _buildItemCard(BuildContext context, MapDirectoryItem item) {
-     if (item is MapFolderItem) {
-       return _FolderCard(
-         folder: item,
-         onTap: () => _loadDirectoryContents(item.path),
-         onDelete: item.mapCount == 0 ? () async {
-           final isReadOnly = await ConfigManager.instance
-               .isFeatureEnabled('ReadOnlyMode');
-           if (isReadOnly) {
-             WebReadOnlyDialog.show(context, '删除文件夹');
-           } else {
-             _deleteFolder(item);
-           }
-         } : null,
-         onRename: () async {
-           final isReadOnly = await ConfigManager.instance
-               .isFeatureEnabled('ReadOnlyMode');
-           if (isReadOnly) {
-             WebReadOnlyDialog.show(context, '重命名文件夹');
-           } else {
-             _showRenameFolderDialog(item);
-           }
-         },
-       );
-     } else if (item is MapFileItem) {
-       final map = item.mapSummary;
-       return _MapCard(
-         map: map,
-         localizedTitle: _localizedTitles[map.title] ?? map.title,
-         onDelete: () async {
-           final isReadOnly = await ConfigManager.instance
-               .isFeatureEnabled('ReadOnlyMode');
-           if (isReadOnly) {
-             WebReadOnlyDialog.show(context, '删除地图');
-           } else {
-             _deleteMap(map);
-           }
-         },
-         onTap: () {
-           // 对于搜索结果中的地图，需要特殊处理路径
-           if (item is MapFileItem) {
-             debugPrint('DEBUG: Opening map with title: ${item.mapSummary.title}, path: ${item.path}');
-             _openMapEditorWithPath(item.mapSummary.title, item.path);
-           } else {
-             debugPrint('DEBUG: Opening map with title: ${map.title}');
-             _openMapEditor(map.title);
-           }
-         },
-         onRename: () async {
-           final isReadOnly = await ConfigManager.instance
-               .isFeatureEnabled('ReadOnlyMode');
-           if (isReadOnly) {
-             WebReadOnlyDialog.show(context, '重命名地图');
-           } else {
-             _showRenameMapDialog(map.title);
-           }
-         },
-         onUpdateCover: () async {
-           final isReadOnly = await ConfigManager.instance
-               .isFeatureEnabled('ReadOnlyMode');
-           if (isReadOnly) {
-             WebReadOnlyDialog.show(context, '更换封面');
-           } else {
-             _showUpdateCoverDialog(map.title);
-           }
-         },
-       );
-     }
-     
-     return const SizedBox();
-   }
+          // 分割线
+          if (folders.isNotEmpty && maps.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Divider(color: Theme.of(context).colorScheme.outline, thickness: 1),
+            const SizedBox(height: 24),
+          ],
+
+          // 地图部分
+          if (maps.isNotEmpty) ...[
+            Text(
+              '地图',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildGridSection(context, maps),
+          ],
+
+          // 分割线
+          const SizedBox(height: 24),
+          Divider(color: Theme.of(context).colorScheme.outline, thickness: 1),
+          const SizedBox(height: 24),
+
+          // 在线用户部分
+          _buildOnlineUsersSection(context),
+
+          // 分割线
+          const SizedBox(height: 24),
+          Divider(color: Theme.of(context).colorScheme.outline, thickness: 1),
+          const SizedBox(height: 24),
+
+          // 活跃地图部分
+          _buildActiveMapsSection(context),
+        ],
+      ),
+    );
+  }
+
+  /// 构建网格部分
+  Widget _buildGridSection(BuildContext context, List<MapDirectoryItem> items) {
+    final crossAxisCount = _calculateCrossAxisCount(context);
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 24,
+        childAspectRatio: 1.1, // 3:2比例 + 标题空间
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return _buildItemCard(context, items[index]);
+      },
+    );
+  }
+
+  /// 构建单个项目卡片
+  Widget _buildItemCard(BuildContext context, MapDirectoryItem item) {
+    if (item is MapFolderItem) {
+      return _FolderCard(
+        folder: item,
+        onTap: () => _loadDirectoryContents(item.path),
+        onDelete: item.mapCount == 0
+            ? () async {
+                final isReadOnly = await ConfigManager.instance
+                    .isFeatureEnabled('ReadOnlyMode');
+                if (isReadOnly) {
+                  WebReadOnlyDialog.show(context, '删除文件夹');
+                } else {
+                  _deleteFolder(item);
+                }
+              }
+            : null,
+        onRename: () async {
+          final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
+            'ReadOnlyMode',
+          );
+          if (isReadOnly) {
+            WebReadOnlyDialog.show(context, '重命名文件夹');
+          } else {
+            _showRenameFolderDialog(item);
+          }
+        },
+      );
+    } else if (item is MapFileItem) {
+      final map = item.mapSummary;
+      return _MapCard(
+        map: map,
+        localizedTitle: _localizedTitles[map.title] ?? map.title,
+        onDelete: () async {
+          final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
+            'ReadOnlyMode',
+          );
+          if (isReadOnly) {
+            WebReadOnlyDialog.show(context, '删除地图');
+          } else {
+            _deleteMap(map);
+          }
+        },
+        onTap: () {
+          // 对于搜索结果中的地图，需要特殊处理路径
+          if (item is MapFileItem) {
+            debugPrint(
+              'DEBUG: Opening map with title: ${item.mapSummary.title}, path: ${item.path}',
+            );
+            _openMapEditorWithPath(item.mapSummary.title, item.path);
+          } else {
+            debugPrint('DEBUG: Opening map with title: ${map.title}');
+            _openMapEditor(map.title);
+          }
+        },
+        onRename: () async {
+          final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
+            'ReadOnlyMode',
+          );
+          if (isReadOnly) {
+            WebReadOnlyDialog.show(context, '重命名地图');
+          } else {
+            _showRenameMapDialog(map.title);
+          }
+        },
+        onUpdateCover: () async {
+          final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
+            'ReadOnlyMode',
+          );
+          if (isReadOnly) {
+            WebReadOnlyDialog.show(context, '更换封面');
+          } else {
+            _showUpdateCoverDialog(map.title);
+          }
+        },
+      );
+    }
+
+    return const SizedBox();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1593,87 +1657,93 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _items.isEmpty
-                  ? SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 空状态提示
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.folder_open,
-                                  size: 64,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
-                                  style: Theme.of(context).textTheme.headlineSmall,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '点击右上角菜单添加地图或创建文件夹',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 空状态提示
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.folder_open,
+                              size: 64,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                          
-                          // 分割线
-                          const SizedBox(height: 32),
-                          Divider(
-                            color: Theme.of(context).colorScheme.outline,
-                            thickness: 1,
-                          ),
-                          const SizedBox(height: 24),
-                          
-                          // 在线用户部分
-                          _buildOnlineUsersSection(context),
-                          
-                          // 分割线
-                          const SizedBox(height: 24),
-                          Divider(
-                            color: Theme.of(context).colorScheme.outline,
-                            thickness: 1,
-                          ),
-                          const SizedBox(height: 24),
-                          
-                          // 活跃地图部分
-                          _buildActiveMapsSection(context),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              _currentPath.isEmpty
+                                  ? l10n.mapAtlasEmpty
+                                  : '此文件夹为空',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '点击右上角菜单添加地图或创建文件夹',
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    )
-                  : _filteredItems.isEmpty && _searchQuery.isNotEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.search_off,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                '未找到匹配的结果',
-                                style: Theme.of(context).textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '尝试使用不同的关键词搜索',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _buildGroupedContent(context),
+
+                      // 分割线
+                      const SizedBox(height: 32),
+                      Divider(
+                        color: Theme.of(context).colorScheme.outline,
+                        thickness: 1,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 在线用户部分
+                      _buildOnlineUsersSection(context),
+
+                      // 分割线
+                      const SizedBox(height: 24),
+                      Divider(
+                        color: Theme.of(context).colorScheme.outline,
+                        thickness: 1,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 活跃地图部分
+                      _buildActiveMapsSection(context),
+                    ],
+                  ),
+                )
+              : _filteredItems.isEmpty && _searchQuery.isNotEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '未找到匹配的结果',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '尝试使用不同的关键词搜索',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : _buildGroupedContent(context),
         ),
       ],
     );
@@ -1799,11 +1869,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     if (result != null) {
       try {
         // 构建新的路径
-        final parentPath = folder.path.contains('/') 
+        final parentPath = folder.path.contains('/')
             ? folder.path.substring(0, folder.path.lastIndexOf('/'))
             : '';
         final newPath = parentPath.isEmpty ? result : '$parentPath/$result';
-        
+
         await _vfsMapService.renameFolder(folder.path, newPath);
         _showSuccessSnackBar('文件夹重命名成功');
         await _loadDirectoryContents(
@@ -1930,12 +2000,14 @@ class _MapCard extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               onSecondaryTapDown: (details) {
-                if (onRename != null || onUpdateCover != null || onDelete != null) {
+                if (onRename != null ||
+                    onUpdateCover != null ||
+                    onDelete != null) {
                   _showMapContextMenu(context, details.globalPosition);
                 }
               },
               child: AspectRatio(
-                 aspectRatio: 3 / 2, // 3:2比例
+                aspectRatio: 3 / 2, // 3:2比例
                 child: map.imageData != null
                     ? Image.memory(map.imageData!, fit: BoxFit.cover)
                     : Container(
@@ -1959,18 +2031,18 @@ class _MapCard extends StatelessWidget {
             children: [
               Text(
                 localizedTitle,
-                style: Theme.of(context).textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
               Text(
                 'v${map.version}',
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -2091,8 +2163,9 @@ class _FolderCard extends StatelessWidget {
             children: [
               Text(
                 folder.name,
-                style: Theme.of(context).textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -2100,10 +2173,9 @@ class _FolderCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '${folder.mapCount} 个地图',
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

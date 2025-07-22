@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:squadron/squadron.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'script_worker_service.activator.g.dart';
@@ -186,9 +187,13 @@ base class ScriptWorkerService {
     List<dynamic> arguments,
   ) async {
     // 调试信息
-    print('[ScriptWorkerService] Calling external function: $functionName');
-    print('[ScriptWorkerService] Arguments type: ${arguments.runtimeType}');
-    print('[ScriptWorkerService] Arguments: $arguments');
+    debugPrint(
+      '[ScriptWorkerService] Calling external function: $functionName',
+    );
+    debugPrint(
+      '[ScriptWorkerService] Arguments type: ${arguments.runtimeType}',
+    );
+    debugPrint('[ScriptWorkerService] Arguments: $arguments');
 
     // 生成唯一的调用ID
     final callId =
@@ -200,7 +205,7 @@ base class ScriptWorkerService {
     _pendingExternalCalls[callId] = completer;
     // 直接使用传入的参数列表
     final argumentsToSend = arguments;
-    print(
+    debugPrint(
       '[ScriptWorkerService] Arguments to send: $argumentsToSend (type: ${argumentsToSend.runtimeType})',
     );
     // 构造外部函数调用请求
@@ -212,11 +217,11 @@ base class ScriptWorkerService {
       'executionId': executionId,
     };
 
-    print('[ScriptWorkerService] Request data: $requestData');
+    debugPrint('[ScriptWorkerService] Request data: $requestData');
 
     // 通过Stream发送外部函数调用请求
     final requestJson = jsonEncode(requestData);
-    print('[ScriptWorkerService] Request JSON: $requestJson');
+    debugPrint('[ScriptWorkerService] Request JSON: $requestJson');
     _externalCallController.add(requestJson);
 
     try {

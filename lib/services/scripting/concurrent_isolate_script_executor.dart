@@ -246,42 +246,48 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
         // 处理异步结果
         if (result is Future) {
           debugPrint('[DEBUG] 处理异步外部函数: ${call.functionName}');
-          result.then((asyncResult) {
-            debugPrint('[DEBUG] 异步函数 ${call.functionName} 完成，结果类型: ${asyncResult.runtimeType}');
-            final serializedResult = _serializeResult(asyncResult);
-            debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
-            
-            final response = ExternalFunctionResponse(
-              callId: call.callId,
-              result: serializedResult,
-            );
+          result
+              .then((asyncResult) {
+                debugPrint(
+                  '[DEBUG] 异步函数 ${call.functionName} 完成，结果类型: ${asyncResult.runtimeType}',
+                );
+                final serializedResult = _serializeResult(asyncResult);
+                debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
 
-            final responseMessage = ScriptMessage(
-              type: ScriptMessageType.externalFunctionResponse,
-              data: response.toJson(),
-            );
+                final response = ExternalFunctionResponse(
+                  callId: call.callId,
+                  result: serializedResult,
+                );
 
-            _isolateSendPort?.send(responseMessage.toJson());
-          }).catchError((error) {
-            debugPrint('[DEBUG] 异步函数 ${call.functionName} 出错: $error');
-            final response = ExternalFunctionResponse(
-              callId: call.callId,
-              error: error.toString(),
-            );
+                final responseMessage = ScriptMessage(
+                  type: ScriptMessageType.externalFunctionResponse,
+                  data: response.toJson(),
+                );
 
-            final responseMessage = ScriptMessage(
-              type: ScriptMessageType.externalFunctionResponse,
-              data: response.toJson(),
-            );
+                _isolateSendPort?.send(responseMessage.toJson());
+              })
+              .catchError((error) {
+                debugPrint('[DEBUG] 异步函数 ${call.functionName} 出错: $error');
+                final response = ExternalFunctionResponse(
+                  callId: call.callId,
+                  error: error.toString(),
+                );
 
-            _isolateSendPort?.send(responseMessage.toJson());
-          });
+                final responseMessage = ScriptMessage(
+                  type: ScriptMessageType.externalFunctionResponse,
+                  data: response.toJson(),
+                );
+
+                _isolateSendPort?.send(responseMessage.toJson());
+              });
         } else {
           // 处理同步结果
-          debugPrint('[DEBUG] 处理同步外部函数: ${call.functionName}，结果类型: ${result.runtimeType}');
+          debugPrint(
+            '[DEBUG] 处理同步外部函数: ${call.functionName}，结果类型: ${result.runtimeType}',
+          );
           final serializedResult = _serializeResult(result);
           debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
-          
+
           final response = ExternalFunctionResponse(
             callId: call.callId,
             result: serializedResult,
@@ -330,17 +336,17 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
     if (result == null) {
       return null;
     }
-    
+
     // 基本类型直接返回
     if (result is String || result is num || result is bool) {
       return result;
     }
-    
+
     // 列表类型递归序列化
     if (result is List) {
       return result.map((item) => _serializeResult(item)).toList();
     }
-    
+
     // Map类型递归序列化
     if (result is Map) {
       final Map<String, dynamic> serializedMap = {};
@@ -349,7 +355,7 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       });
       return serializedMap;
     }
-    
+
     // 其他类型转换为字符串
     return result.toString();
   }

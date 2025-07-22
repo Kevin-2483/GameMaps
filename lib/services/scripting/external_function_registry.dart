@@ -236,11 +236,10 @@ class ExternalFunctionRegistry {
           return null; // 立即返回，不等待结果
         };
 
-    functions['moveElement'] =
-        (String elementId, String positionJson) {
-          callFireAndForgetFunction('moveElement', [elementId, positionJson]);
-          return null; // 立即返回，不等待结果
-        };
+    functions['moveElement'] = (String elementId, String positionJson) {
+      callFireAndForgetFunction('moveElement', [elementId, positionJson]);
+      return null; // 立即返回，不等待结果
+    };
   }
 
   /// 注册文本和UI函数
@@ -349,7 +348,9 @@ class ExternalFunctionRegistry {
     };
 
     functions['filterLegendGroupsByTags'] = (String tagsJson) async {
-      return await callAwaitableFunction('filterLegendGroupsByTags', [tagsJson]);
+      return await callAwaitableFunction('filterLegendGroupsByTags', [
+        tagsJson,
+      ]);
     };
 
     functions['filterLegendItemsByTags'] = (String tagsJson) async {
@@ -448,7 +449,9 @@ class ExternalFunctionRegistry {
     functions['filterLegendItemsInGroupByTags'] =
         (String groupId, String tagsJson, [String? mode]) async {
           // 只有当mode不为null时才传递，避免参数不匹配
-          final args = mode != null ? [groupId, tagsJson, mode] : [groupId, tagsJson];
+          final args = mode != null
+              ? [groupId, tagsJson, mode]
+              : [groupId, tagsJson];
           return await callAwaitableFunction(
             'filterLegendItemsInGroupByTags',
             args,

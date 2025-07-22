@@ -382,7 +382,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
 
     // 确保当前值在选项列表中
     final currentValue = _controllers[param.name]?.text;
-    if (currentValue != null && currentValue.isNotEmpty && !options.contains(currentValue)) {
+    if (currentValue != null &&
+        currentValue.isNotEmpty &&
+        !options.contains(currentValue)) {
       // 如果当前值不在选项中，添加到选项列表
       options.add(currentValue);
     }
@@ -395,10 +397,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         isDense: true,
       ),
       items: options.map((String option) {
-        return DropdownMenuItem<String>(
-          value: option,
-          child: Text(option),
-        );
+        return DropdownMenuItem<String>(value: option, child: Text(option));
       }).toList(),
       onChanged: (String? newValue) {
         setState(() {

@@ -65,55 +65,53 @@ class _AppShellState extends State<AppShell> {
         children: [
           Consumer<UserPreferencesProvider>(
             builder: (context, userPrefsProvider, child) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              // 根据屏幕比例决定导航位置
-              final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-              final enableRightSideVertical = userPrefsProvider.isInitialized &&
-                  userPrefsProvider.layout.enableRightSideVerticalNavigation;
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  // 根据屏幕比例决定导航位置
+                  final isWideScreen =
+                      constraints.maxWidth > constraints.maxHeight;
+                  final enableRightSideVertical =
+                      userPrefsProvider.isInitialized &&
+                      userPrefsProvider
+                          .layout
+                          .enableRightSideVerticalNavigation;
 
-              if (isWideScreen) {
-                // 宽屏：根据用户设置决定导航栏位置
-                final pageContent = Expanded(
-                  child: _PageConfigDetector(
-                    onConfigChanged: _updateTrayNavigationVisibility,
-                    child: AnimatedPageContent(child: widget.child),
-                  ),
-                );
-                
-                if (enableRightSideVertical) {
-                  // 右侧垂直导航
-                  return Row(
-                    children: [
-                      pageContent,
-                      const TrayNavigation(),
-                    ],
-                  );
-                } else {
-                  // 左侧垂直导航（默认）
-                  return Row(
-                    children: [
-                      const TrayNavigation(),
-                      pageContent,
-                    ],
-                  );
-                }
-              } else {
-                // 窄屏：导航栏在底部（不受右侧设置影响）
-                return Column(
-                  children: [
-                    Expanded(
+                  if (isWideScreen) {
+                    // 宽屏：根据用户设置决定导航栏位置
+                    final pageContent = Expanded(
                       child: _PageConfigDetector(
                         onConfigChanged: _updateTrayNavigationVisibility,
                         child: AnimatedPageContent(child: widget.child),
                       ),
-                    ),
-                    const TrayNavigation(),
-                  ],
-                );
-              }
-            },
-          );
+                    );
+
+                    if (enableRightSideVertical) {
+                      // 右侧垂直导航
+                      return Row(
+                        children: [pageContent, const TrayNavigation()],
+                      );
+                    } else {
+                      // 左侧垂直导航（默认）
+                      return Row(
+                        children: [const TrayNavigation(), pageContent],
+                      );
+                    }
+                  } else {
+                    // 窄屏：导航栏在底部（不受右侧设置影响）
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: _PageConfigDetector(
+                            onConfigChanged: _updateTrayNavigationVisibility,
+                            child: AnimatedPageContent(child: widget.child),
+                          ),
+                        ),
+                        const TrayNavigation(),
+                      ],
+                    );
+                  }
+                },
+              );
             },
           ),
           // 合并窗口控件（最上层）

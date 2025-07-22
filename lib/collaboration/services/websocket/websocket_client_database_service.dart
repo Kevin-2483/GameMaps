@@ -197,13 +197,10 @@ class WebSocketClientDatabaseService {
   /// 设置活跃的客户端配置
   Future<void> setActiveClientConfig(String clientId) async {
     final db = await database;
-    
+
     // 首先将所有配置设为非活跃
-    await db.update(
-      _clientsTable,
-      {'is_active': 0},
-    );
-    
+    await db.update(_clientsTable, {'is_active': 0});
+
     // 设置指定配置为活跃
     await db.update(
       _clientsTable,
@@ -211,10 +208,10 @@ class WebSocketClientDatabaseService {
       where: 'client_id = ?',
       whereArgs: [clientId],
     );
-    
+
     // 更新元数据
     await _setActiveClientId(clientId);
-    
+
     if (kDebugMode) {
       debugPrint('活跃 WebSocket 客户端配置已设置: $clientId');
     }
@@ -256,10 +253,7 @@ class WebSocketClientDatabaseService {
     final db = await database;
     await db.update(
       _metadataTable,
-      {
-        'value': clientId,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'value': clientId, 'updated_at': DateTime.now().millisecondsSinceEpoch},
       where: 'key = ?',
       whereArgs: ['active_client_id'],
     );
@@ -286,7 +280,9 @@ class WebSocketClientDatabaseService {
       createdAt: DateTime.fromMillisecondsSinceEpoch(data['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data['updated_at'] as int),
       lastConnectedAt: data['last_connected_at'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(data['last_connected_at'] as int)
+          ? DateTime.fromMillisecondsSinceEpoch(
+              data['last_connected_at'] as int,
+            )
           : null,
       isActive: (data['is_active'] as int) == 1,
     );

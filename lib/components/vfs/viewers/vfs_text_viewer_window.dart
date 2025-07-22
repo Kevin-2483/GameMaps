@@ -194,7 +194,7 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
     final newDigits = newLineCount.toString().length;
     // 增加每位数字的宽度和边距，确保行号完整显示
     final newWidth = (newDigits * 12 + 32).toDouble().clamp(50.0, 150.0);
-    
+
     // 只有当宽度发生变化时才更新UI
     if (newWidth != _lineNumberWidth) {
       setState(() {

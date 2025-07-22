@@ -6,7 +6,6 @@ import '../../../components/color_filter_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import 'dart:async';
 
-
 class LayerPanel extends StatefulWidget {
   final List<MapLayer> layers;
   final MapLayer? selectedLayer;
@@ -65,8 +64,6 @@ class LayerPanel extends StatefulWidget {
   @override
   State<LayerPanel> createState() => _LayerPanelState();
 }
-
-
 
 class _LayerPanelState extends State<LayerPanel> {
   // 用于存储临时的透明度值，避免频繁更新数据
@@ -127,7 +124,7 @@ class _LayerPanelState extends State<LayerPanel> {
         }
       });
     }
-    
+
     // 当图例组发生变化时，也重新计算拖动绑定
     if (oldWidget.allLegendGroups != widget.allLegendGroups && _isInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -243,7 +240,7 @@ class _LayerPanelState extends State<LayerPanel> {
   /// 获取未绑定的图例组
   List<LegendGroup> _getUnboundLegendGroups(List<List<MapLayer>> groups) {
     if (widget.allLegendGroups == null) return [];
-    
+
     // 获取所有绑定了图例组的图例组ID
     final Set<String> boundLegendGroupIds = {};
     for (final group in groups) {
@@ -251,23 +248,27 @@ class _LayerPanelState extends State<LayerPanel> {
         boundLegendGroupIds.addAll(layer.legendGroupIds);
       }
     }
-    
+
     // 返回未绑定的图例组（没有被任何现有图层绑定的图例组）
     return widget.allLegendGroups!.where((legendGroup) {
       return !boundLegendGroupIds.contains(legendGroup.id);
     }).toList();
   }
-  
+
   /// 获取绑定到指定图层组的图例组（只返回首次出现的）
-  List<LegendGroup> _getBoundLegendGroupsForLayerGroup(List<MapLayer> layerGroup, int groupIndex, List<List<MapLayer>> allGroups) {
+  List<LegendGroup> _getBoundLegendGroupsForLayerGroup(
+    List<MapLayer> layerGroup,
+    int groupIndex,
+    List<List<MapLayer>> allGroups,
+  ) {
     if (widget.allLegendGroups == null) return [];
-    
+
     // 获取这个图层组中所有图层绑定的图例组ID
     final Set<String> boundLegendGroupIds = {};
     for (final layer in layerGroup) {
       boundLegendGroupIds.addAll(layer.legendGroupIds);
     }
-    
+
     // 只返回在当前组是最后一次出现的图例组（即在后续组中不再出现）
     final List<LegendGroup> result = [];
     for (final legendGroup in widget.allLegendGroups!) {
@@ -285,14 +286,14 @@ class _LayerPanelState extends State<LayerPanel> {
             break;
           }
         }
-        
+
         // 只有在后续组中不会再出现的情况下才显示（即这是最后一次出现）
         if (!willAppearLater) {
           result.add(legendGroup);
         }
       }
     }
-    
+
     return result;
   }
 
@@ -330,9 +331,11 @@ class _LayerPanelState extends State<LayerPanel> {
           Icon(
             legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
             size: 14,
-            color: legendGroup.isVisible 
+            color: legendGroup.isVisible
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.5),
           ),
         ],
       ),
@@ -340,14 +343,23 @@ class _LayerPanelState extends State<LayerPanel> {
   }
 
   /// 构建包含图例组的图层组
-  Widget _buildLayerGroupWithLegends(BuildContext context, List<MapLayer> group, int groupIndex, List<List<MapLayer>> allGroups) {
-    final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(group, groupIndex, allGroups);
-    
+  Widget _buildLayerGroupWithLegends(
+    BuildContext context,
+    List<MapLayer> group,
+    int groupIndex,
+    List<List<MapLayer>> allGroups,
+  ) {
+    final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(
+      group,
+      groupIndex,
+      allGroups,
+    );
+
     if (boundLegendGroups.isEmpty) {
       // 没有绑定的图例组，使用原来的构建方法
       return _buildLayerGroup(context, group, groupIndex);
     }
-    
+
     // 有绑定的图例组，需要特殊显示
     return Column(
       key: ValueKey('layer_group_with_legends_$groupIndex'),
@@ -356,45 +368,51 @@ class _LayerPanelState extends State<LayerPanel> {
         // 显示图层组（移除底部边距，因为图例组会提供间隔）
         _buildLayerGroup(context, group, groupIndex, hasLegendBelow: true),
         // 显示绑定的图例组
-        ...boundLegendGroups.map((legendGroup) => Container(
-          margin: const EdgeInsets.only(top: 2, bottom: 0),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.legend_toggle,
-                size: 14,
-                color: Theme.of(context).colorScheme.primary,
+        ...boundLegendGroups.map(
+          (legendGroup) => Container(
+            margin: const EdgeInsets.only(top: 2, bottom: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                width: 1,
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  legendGroup.name,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.primary,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.legend_toggle,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    legendGroup.name,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
-              ),
-              Icon(
-                legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
-                size: 12,
-                color: legendGroup.isVisible 
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-              ),
-            ],
+                Icon(
+                  legendGroup.isVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  size: 12,
+                  color: legendGroup.isVisible
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -441,16 +459,18 @@ class _LayerPanelState extends State<LayerPanel> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
               child: Column(
-                children: unboundLegendGroups.map((legendGroup) => 
-                  Container(
-                    key: ValueKey('unbound_legend_${legendGroup.id}'),
-                    child: _buildUnboundLegendGroupItem(legendGroup),
-                  )
-                ).toList(),
+                children: unboundLegendGroups
+                    .map(
+                      (legendGroup) => Container(
+                        key: ValueKey('unbound_legend_${legendGroup.id}'),
+                        child: _buildUnboundLegendGroupItem(legendGroup),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ),
-        
+
         // 图层组区域（可拖拽重排序）
         SliverReorderableList(
           itemCount: groups.length,
@@ -467,7 +487,12 @@ class _LayerPanelState extends State<LayerPanel> {
               index: index,
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: _buildLayerGroupWithLegends(context, groups[index], index, groups),
+                child: _buildLayerGroupWithLegends(
+                  context,
+                  groups[index],
+                  index,
+                  groups,
+                ),
               ),
             );
           },
@@ -605,62 +630,65 @@ class _LayerPanelState extends State<LayerPanel> {
                   topRight: Radius.circular(8),
                 ),
                 child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    // 折叠/展开图标
-                    GestureDetector(
-                      onTap: () => _toggleGroupCollapse(groupId),
-                      child: Icon(
-                        isCollapsed
-                            ? Icons.keyboard_arrow_right
-                            : Icons.keyboard_arrow_down,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSurface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      // 折叠/展开图标
+                      GestureDetector(
+                        onTap: () => _toggleGroupCollapse(groupId),
+                        child: Icon(
+                          isCollapsed
+                              ? Icons.keyboard_arrow_right
+                              : Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                    // 组信息
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 修改显示文本以反映新的选择逻辑
-                          Text(
-                            _buildGroupSelectionText(group, isGroupSelected),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isGroupSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isGroupSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface,
+                      // 组信息
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 修改显示文本以反映新的选择逻辑
+                            Text(
+                              _buildGroupSelectionText(group, isGroupSelected),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isGroupSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isGroupSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            group.map((l) => l.name).join(', '),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                            const SizedBox(height: 2),
+                            Text(
+                              group.map((l) => l.name).join(', '),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-),
           // 组可见性切换按钮 - 折叠和展开时都显示
           IconButton(
             icon: Icon(
@@ -905,98 +933,99 @@ class _LayerPanelState extends State<LayerPanel> {
           child: InkWell(
             onTap: () => _handleLayerSelection(layer, group), // 修改点击处理
             borderRadius: isMultiLayer ? null : BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // 让列收缩到内容大小
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 第一排：选择状态指示器 + 可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
-                Row(
-                  children: [
-                    // 添加选择状态指示器
-                    if (isSelected || isGroupSelected)
-                      Container(
-                        width: 4,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.secondary,
-                          borderRadius: BorderRadius.circular(2),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // 让列收缩到内容大小
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 第一排：选择状态指示器 + 可见性按钮 + 图层名称输入框 + 链接按钮 + 操作按钮
+                  Row(
+                    children: [
+                      // 添加选择状态指示器
+                      if (isSelected || isGroupSelected)
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                      ),
-                    if (isSelected || isGroupSelected) const SizedBox(width: 8),
+                      if (isSelected || isGroupSelected)
+                        const SizedBox(width: 8),
 
-                    // 可见性按钮 - 禁用 tooltip
-                    IconButton(
-                      icon: Icon(
-                        layer.isVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        size: 18,
-                        color: layer.isVisible
-                            ? null
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        final updatedLayer = layer.copyWith(
-                          isVisible: !layer.isVisible,
-                          updatedAt: DateTime.now(),
-                        );
-                        widget.onLayerUpdated(updatedLayer);
-                      },
-                      constraints: const BoxConstraints(),
-                      padding: EdgeInsets.zero,
-                      tooltip: '', // 禁用 tooltip
-                    ),
-                    const SizedBox(width: 8),
-
-                    // 图层名称输入框
-                    Expanded(child: _buildLayerNameEditor(layer)),
-
-                    // 链接按钮
-                    // if (!widget.isPreviewMode)
-                    _buildLinkButton(layer, isLastLayer),
-
-                    // 操作按钮
-                    // if (!widget.isPreviewMode)
-                    ...[
-                      // 图片管理按钮 - 使用 GestureDetector 替代 PopupMenuButton
-                      GestureDetector(
-                        onTap: () => _showImageMenu(context, layer),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          child: const Icon(Icons.image, size: 16),
+                      // 可见性按钮 - 禁用 tooltip
+                      IconButton(
+                        icon: Icon(
+                          layer.isVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          size: 18,
+                          color: layer.isVisible
+                              ? null
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                        onPressed: () {
+                          final updatedLayer = layer.copyWith(
+                            isVisible: !layer.isVisible,
+                            updatedAt: DateTime.now(),
+                          );
+                          widget.onLayerUpdated(updatedLayer);
+                        },
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        tooltip: '', // 禁用 tooltip
                       ),
+                      const SizedBox(width: 8),
 
-                      // 删除按钮 - 禁用 tooltip
-                      if (widget.layers.length > 1)
-                        IconButton(
-                          icon: const Icon(Icons.delete, size: 16),
-                          onPressed: () => _showDeleteDialog(context, layer),
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                          tooltip: '', // 禁用 tooltip
+                      // 图层名称输入框
+                      Expanded(child: _buildLayerNameEditor(layer)),
+
+                      // 链接按钮
+                      // if (!widget.isPreviewMode)
+                      _buildLinkButton(layer, isLastLayer),
+
+                      // 操作按钮
+                      // if (!widget.isPreviewMode)
+                      ...[
+                        // 图片管理按钮 - 使用 GestureDetector 替代 PopupMenuButton
+                        GestureDetector(
+                          onTap: () => _showImageMenu(context, layer),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(Icons.image, size: 16),
+                          ),
                         ),
+
+                        // 删除按钮 - 禁用 tooltip
+                        if (widget.layers.length > 1)
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 16),
+                            onPressed: () => _showDeleteDialog(context, layer),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                            tooltip: '', // 禁用 tooltip
+                          ),
+                      ],
                     ],
-                  ],
-                ),
+                  ),
 
-                // 第二排：透明度滑块
-                const SizedBox(height: 8),
-                _buildOpacitySlider(
-                  layer,
-                  group,
-                  layerIndexInGroup,
-                  isMultiLayer,
-                ),
-              ],
+                  // 第二排：透明度滑块
+                  const SizedBox(height: 8),
+                  _buildOpacitySlider(
+                    layer,
+                    group,
+                    layerIndexInGroup,
+                    isMultiLayer,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -1697,49 +1726,52 @@ class _LayerPanelState extends State<LayerPanel> {
                 widget.allLegendGroups!,
               ),
         borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: boundGroupsCount > 0
-              ? Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
             color: boundGroupsCount > 0
                 ? Theme.of(
                     context,
-                  ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.legend_toggle,
-              size: 12,
+                  ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
               color: boundGroupsCount > 0
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primary.withAlpha((0.3 * 255).toInt())
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 4),
-            Text(
-              boundGroupsCount > 0
-                  ? '已绑定 $boundGroupsCount 个图例组'
-                  : (hasAllLegendGroups ? '点击绑定图例组' : '图例组不可用'),
-              style: TextStyle(
-                fontSize: 10,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.legend_toggle,
+                size: 12,
                 color: boundGroupsCount > 0
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                boundGroupsCount > 0
+                    ? '已绑定 $boundGroupsCount 个图例组'
+                    : (hasAllLegendGroups ? '点击绑定图例组' : '图例组不可用'),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: boundGroupsCount > 0
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: boundGroupsCount > 0 ? FontWeight.w500 : null,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),),
+      ),
     );
   }
 
@@ -1753,47 +1785,50 @@ class _LayerPanelState extends State<LayerPanel> {
       child: InkWell(
         onTap: () => _showTagsManagerDialog(layer),
         borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: hasAllTags
-              ? Theme.of(
-                  context,
-                ).colorScheme.secondaryContainer.withAlpha((0.3 * 255).toInt())
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
             color: hasAllTags
-                ? Theme.of(
-                    context,
-                  ).colorScheme.secondary.withAlpha((0.3 * 255).toInt())
-                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.local_offer,
-              size: 12,
+                ? Theme.of(context).colorScheme.secondaryContainer.withAlpha(
+                    (0.3 * 255).toInt(),
+                  )
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
               color: hasAllTags
-                  ? Theme.of(context).colorScheme.secondary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.secondary.withAlpha((0.3 * 255).toInt())
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 4),
-            Text(
-              hasAllTags ? '${tags.length} 个标签' : '添加标签',
-              style: TextStyle(
-                fontSize: 10,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_offer,
+                size: 12,
                 color: hasAllTags
                     ? Theme.of(context).colorScheme.secondary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: hasAllTags ? FontWeight.w500 : null,
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                hasAllTags ? '${tags.length} 个标签' : '添加标签',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: hasAllTags
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: hasAllTags ? FontWeight.w500 : null,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),),
+      ),
     );
   }
 
@@ -1904,7 +1939,6 @@ class _LayerPanelState extends State<LayerPanel> {
       ),
     );
   }
-  
 
   /// 保存图层名称
   void _saveLayerName(MapLayer layer, String newName) {

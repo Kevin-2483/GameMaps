@@ -141,7 +141,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   void _handleToolSelection(DrawingElementType? tool) {
     // 立即通知预览（如果提供了回调）
     widget.onToolPreview?.call(tool);
-    
+
     // 立即提交工具选择更改
     widget.onToolSelected(tool);
   }

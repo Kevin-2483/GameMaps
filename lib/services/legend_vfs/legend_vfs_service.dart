@@ -276,16 +276,16 @@ class LegendVfsService {
     // 首先尝试使用原始标题构建路径（不进行sanitize）
     final pathPrefix = 'indexeddb://$_database/$_collection';
     String legendPath;
-    
+
     if (folderPath != null && folderPath.isNotEmpty) {
       final cleanFolderPath = folderPath.replaceAll(RegExp(r'^/+|/+$'), '');
-      legendPath = cleanFolderPath.isNotEmpty 
+      legendPath = cleanFolderPath.isNotEmpty
           ? '$pathPrefix/$cleanFolderPath/$title.legend'
           : '$pathPrefix/$title.legend';
     } else {
       legendPath = '$pathPrefix/$title.legend';
     }
-    
+
     debugPrint('获取图例: "$title", 尝试原始路径: $legendPath');
 
     try {
@@ -295,7 +295,7 @@ class LegendVfsService {
         // 如果不存在，尝试使用sanitized路径
         legendPath = _buildLegendPath(title, folderPath);
         debugPrint('尝试sanitized路径: $legendPath');
-        
+
         if (!await _vfs.exists(legendPath)) {
           debugPrint('图例目录不存在: $legendPath');
           return null;
@@ -305,14 +305,16 @@ class LegendVfsService {
       // 读取JSON配置 - 首先尝试使用原始标题
       String jsonPath = '$legendPath/$title.json';
       debugPrint('查找JSON文件: $jsonPath (使用原始标题)');
-      
+
       if (!await _vfs.exists(jsonPath)) {
         debugPrint('原始标题JSON文件不存在，尝试sanitized标题');
         // 如果原始标题的JSON不存在，尝试sanitized标题
         final sanitizedTitle = _sanitizeFileName(title);
         jsonPath = '$legendPath/$sanitizedTitle.json';
-        debugPrint('查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")');
-        
+        debugPrint(
+          '查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")',
+        );
+
         if (!await _vfs.exists(jsonPath)) {
           debugPrint('JSON文件不存在: $jsonPath');
           return null;
@@ -364,7 +366,8 @@ class LegendVfsService {
   /// 从绝对VFS路径获取图例
   /// 支持从其他集合加载图例，例如: indexeddb://r6box/other_collection/path/title.legend
   Future<LegendItem?> getLegendFromAbsolutePath(String absolutePath) async {
-    if (!absolutePath.startsWith('indexeddb://') || !absolutePath.endsWith('.legend')) {
+    if (!absolutePath.startsWith('indexeddb://') ||
+        !absolutePath.endsWith('.legend')) {
       debugPrint('无效的绝对路径格式: $absolutePath');
       return null;
     }
@@ -373,7 +376,7 @@ class LegendVfsService {
       // 解析URI获取路径信息
       final uri = Uri.parse(absolutePath);
       final pathSegments = uri.pathSegments;
-      
+
       if (pathSegments.length < 2) {
         debugPrint('路径段不足: $absolutePath');
         return null;
@@ -382,7 +385,7 @@ class LegendVfsService {
       // 提取文件名和标题
       final fileName = pathSegments.last;
       final title = fileName.replaceAll('.legend', '');
-      
+
       debugPrint('从绝对路径获取图例: "$title", 路径: $absolutePath');
 
       // 检查图例目录是否存在
@@ -394,14 +397,16 @@ class LegendVfsService {
       // 读取JSON配置 - 首先尝试使用原始标题
       String jsonPath = '$absolutePath/$title.json';
       debugPrint('查找JSON文件: $jsonPath (使用原始标题)');
-      
+
       if (!await _vfs.exists(jsonPath)) {
         debugPrint('原始标题JSON文件不存在，尝试sanitized标题');
         // 如果原始标题的JSON不存在，尝试sanitized标题
         final sanitizedTitle = _sanitizeFileName(title);
         jsonPath = '$absolutePath/$sanitizedTitle.json';
-        debugPrint('查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")');
-        
+        debugPrint(
+          '查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")',
+        );
+
         if (!await _vfs.exists(jsonPath)) {
           debugPrint('JSON文件不存在: $jsonPath');
           return null;
@@ -460,10 +465,12 @@ class LegendVfsService {
       debugPrint('获取图例列表，路径: $basePath');
       final entries = await _vfs.listDirectory(basePath);
       debugPrint('VFS返回的条目数量: ${entries.length}');
-      
-      final legendEntries = entries.where((entry) => entry.isDirectory && entry.name.endsWith('.legend')).toList();
+
+      final legendEntries = entries
+          .where((entry) => entry.isDirectory && entry.name.endsWith('.legend'))
+          .toList();
       debugPrint('找到的.legend文件夹: ${legendEntries.map((e) => e.name).toList()}');
-      
+
       final titles = legendEntries
           .map((entry) => entry.name.replaceAll('.legend', ''))
           .map((name) {
@@ -472,7 +479,7 @@ class LegendVfsService {
             return desanitized;
           })
           .toList();
-      
+
       debugPrint('最终图例标题列表: $titles');
       return titles;
     } catch (e) {
@@ -617,7 +624,8 @@ class LegendVfsService {
   /// 获取指定路径下的直接子文件夹
   Future<List<String>> getFolders([String? folderPath]) async {
     try {
-      final cleanFolderPath = folderPath?.replaceAll(RegExp(r'^/+|/+$'), '') ?? '';
+      final cleanFolderPath =
+          folderPath?.replaceAll(RegExp(r'^/+|/+$'), '') ?? '';
       final fullPath = cleanFolderPath.isEmpty
           ? 'indexeddb://$_database/$_collection'
           : 'indexeddb://$_database/$_collection/$cleanFolderPath';

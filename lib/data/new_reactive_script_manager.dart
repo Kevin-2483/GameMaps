@@ -462,8 +462,13 @@ class NewReactiveScriptManager extends ChangeNotifier {
             // 解析选项列表（仅对枚举类型）
             List<String>? options;
             final paramType = _parseParameterType(type);
-            if (paramType == ScriptParameterType.enumeration && optionsStr.isNotEmpty) {
-              options = optionsStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+            if (paramType == ScriptParameterType.enumeration &&
+                optionsStr.isNotEmpty) {
+              options = optionsStr
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
             }
 
             parameters[name] = ScriptParameter(
@@ -569,7 +574,8 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
       String valueStr;
       if ((isInDoubleQuotes || isInSingleQuotes) &&
-          (paramType == ScriptParameterType.string || paramType == ScriptParameterType.enumeration)) {
+          (paramType == ScriptParameterType.string ||
+              paramType == ScriptParameterType.enumeration)) {
         // 如果占位符已经在引号内且是字符串或枚举类型，直接使用原值
         valueStr = paramValue.toString();
         if (isInDoubleQuotes) {

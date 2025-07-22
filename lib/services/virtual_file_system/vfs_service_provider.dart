@@ -351,8 +351,6 @@ class VfsServiceProvider {
     );
   }
 
-
-
   /// 移动文件
   Future<bool> moveFile(
     String fromCollection,

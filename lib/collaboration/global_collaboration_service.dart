@@ -7,7 +7,8 @@ import 'blocs/presence/presence_bloc.dart';
 /// 全局协作服务
 /// 管理WebSocket连接和PresenceBloc的全局实例
 class GlobalCollaborationService {
-  static final GlobalCollaborationService _instance = GlobalCollaborationService._internal();
+  static final GlobalCollaborationService _instance =
+      GlobalCollaborationService._internal();
   factory GlobalCollaborationService() => _instance;
   GlobalCollaborationService._internal();
 
@@ -103,10 +104,10 @@ class GlobalCollaborationService {
       }
 
       final success = await _webSocketManager.connect(clientId);
-      
+
       if (success) {
         // WebSocket连接成功，PresenceBloc会自动处理连接状态
-        
+
         if (kDebugMode) {
           debugPrint('GlobalCollaborationService WebSocket连接成功');
         }
@@ -137,9 +138,9 @@ class GlobalCollaborationService {
       }
 
       // WebSocket断开连接，PresenceBloc会自动处理断开状态
-      
+
       await _webSocketManager.disconnect();
-      
+
       if (kDebugMode) {
         debugPrint('GlobalCollaborationService WebSocket连接已断开');
       }
@@ -155,7 +156,7 @@ class GlobalCollaborationService {
     if (!_isInitialized) {
       throw Exception('GlobalCollaborationService 未初始化');
     }
-    
+
     // 确保WebSocket已连接
     if (!_webSocketManager.isConnected) {
       final connected = await _webSocketManager.connect();
@@ -163,43 +164,44 @@ class GlobalCollaborationService {
         return false;
       }
     }
-    
+
     return await _webSocketManager.requestOnlineStatusList();
   }
-  
+
   /// 获取WebSocket连接状态
   bool get isWebSocketConnected => _webSocketManager.isConnected;
-  
+
   /// 获取WebSocket连接状态（别名）
   bool get isConnected => _webSocketManager.isConnected;
-  
+
   /// 获取WebSocket连接状态流
-  Stream<WebSocketConnectionState> get connectionStateStream => _webSocketManager.connectionStateStream;
-  
+  Stream<WebSocketConnectionState> get connectionStateStream =>
+      _webSocketManager.connectionStateStream;
+
   /// 获取WebSocket消息流
   Stream<WebSocketMessage> get messageStream => _webSocketManager.messageStream;
-  
+
   /// 获取WebSocket错误流
   Stream<String> get errorStream => _webSocketManager.errorStream;
-  
+
   /// 获取WebSocket延迟流
   Stream<int> get pingDelayStream => _webSocketManager.pingDelayStream;
-  
+
   /// 发送WebSocket消息
   Future<bool> sendMessage(WebSocketMessage message) async {
     if (!_isInitialized) {
       throw Exception('GlobalCollaborationService 未初始化');
     }
-    
+
     return await _webSocketManager.sendMessage(message);
   }
-  
+
   /// 发送JSON消息
   Future<bool> sendJson(Map<String, dynamic> data) async {
     if (!_isInitialized) {
       throw Exception('GlobalCollaborationService 未初始化');
     }
-    
+
     return await _webSocketManager.sendJson(data);
   }
 
@@ -216,9 +218,9 @@ class GlobalCollaborationService {
 
       await _presenceBloc.close();
       await _webSocketManager.dispose();
-      
+
       _isInitialized = false;
-      
+
       if (kDebugMode) {
         debugPrint('GlobalCollaborationService 资源释放完成');
       }

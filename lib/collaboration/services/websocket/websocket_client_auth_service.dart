@@ -28,7 +28,7 @@ class WebSocketClientAuthService {
 
       // 2. 使用单一监听器处理整个认证流程
       final authResult = await _handleAuthenticationFlow(channel, config);
-      
+
       if (kDebugMode) {
         debugPrint('认证结果: ${authResult ? "成功" : "失败"}');
       }
@@ -54,8 +54,12 @@ class WebSocketClientAuthService {
       }
 
       // 处理认证流程
-      final authResult = await _handleAuthenticationFlowWithStream(messageStream, config, sendMessage);
-      
+      final authResult = await _handleAuthenticationFlowWithStream(
+        messageStream,
+        config,
+        sendMessage,
+      );
+
       if (kDebugMode) {
         debugPrint('认证结果: ${authResult ? "成功" : "失败"}');
       }
@@ -76,7 +80,7 @@ class WebSocketClientAuthService {
   ) async {
     final authMessage = {
       'type': 'auth',
-      'data': config.clientId,  // 服务器期望的格式
+      'data': config.clientId, // 服务器期望的格式
     };
 
     final messageJson = jsonEncode(authMessage);
@@ -95,9 +99,13 @@ class WebSocketClientAuthService {
     try {
       // 发送认证请求
       await _sendAuthMessage(channel, config);
-      
+
       // 处理认证流程
-      return await _handleAuthenticationFlowInternal(channel.stream, config, channel);
+      return await _handleAuthenticationFlowInternal(
+        channel.stream,
+        config,
+        channel,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('认证流程处理错误: $e');
@@ -114,7 +122,11 @@ class WebSocketClientAuthService {
   ) async {
     try {
       // 处理认证流程
-      return await _handleAuthenticationFlowFromMessages(messageStream, config, sendMessage);
+      return await _handleAuthenticationFlowFromMessages(
+        messageStream,
+        config,
+        sendMessage,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('认证流程处理错误: $e');
@@ -134,20 +146,18 @@ class WebSocketClientAuthService {
       final messageData = jsonDecode(message as String) as Map<String, dynamic>;
       return WebSocketMessage.fromJson(messageData);
     });
-    
+
     // 复用 WebSocketMessage 流处理逻辑
-    return await _handleAuthenticationFlowFromMessages(
-      messageStream,
-      config,
-      (message) async {
-        final messageJson = jsonEncode(message.toJson());
-        channel.sink.add(messageJson);
-        if (kDebugMode) {
-          debugPrint('已发送认证消息: ${message.type}');
-        }
-        return true;
-      },
-    );
+    return await _handleAuthenticationFlowFromMessages(messageStream, config, (
+      message,
+    ) async {
+      final messageJson = jsonEncode(message.toJson());
+      channel.sink.add(messageJson);
+      if (kDebugMode) {
+        debugPrint('已发送认证消息: ${message.type}');
+      }
+      return true;
+    });
   }
 
   /// 处理来自 WebSocketMessage 流的认证流程
@@ -171,26 +181,26 @@ class WebSocketClientAuthService {
       // 使用 StreamSubscription 来控制监听
       late StreamSubscription subscription;
       final completer = Completer<bool>();
-      
+
       subscription = stream.listen(
         (message) async {
           try {
             switch (message.type) {
               case 'challenge':
-                final challenge = message.data is Map<String, dynamic> 
+                final challenge = message.data is Map<String, dynamic>
                     ? message.data['data'] as String?
                     : message.data as String?;
                 if (challenge != null) {
                   if (kDebugMode) {
                     debugPrint('收到服务器挑战');
                   }
-                  
+
                   // 解密挑战
                   final decryptedChallenge = await _decryptChallenge(
                     challenge,
                     config.keys.privateKeyId,
                   );
-                  
+
                   if (decryptedChallenge == null) {
                     if (kDebugMode) {
                       debugPrint('认证失败: 挑战解密失败');
@@ -199,21 +209,21 @@ class WebSocketClientAuthService {
                     if (!completer.isCompleted) completer.complete(false);
                     return;
                   }
-                  
+
                   // 发送挑战响应 - 需要通过回调发送
-                   final responseMessage = WebSocketMessage(
-                     type: 'challenge_response',
-                     data: decryptedChallenge,
-                   );
-                   
-                   final sendResult = await sendMessage(responseMessage);
-                   
-                   if (kDebugMode) {
-                     debugPrint('已发送挑战响应，结果: $sendResult');
-                   }
+                  final responseMessage = WebSocketMessage(
+                    type: 'challenge_response',
+                    data: decryptedChallenge,
+                  );
+
+                  final sendResult = await sendMessage(responseMessage);
+
+                  if (kDebugMode) {
+                    debugPrint('已发送挑战响应，结果: $sendResult');
+                  }
                 }
                 break;
-                
+
               case 'auth_success':
                 if (kDebugMode) {
                   debugPrint('认证成功');
@@ -221,7 +231,7 @@ class WebSocketClientAuthService {
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(true);
                 return;
-                
+
               case 'auth_failed':
                 final reason = message.data is Map<String, dynamic>
                     ? message.data['reason'] as String? ?? '未知原因'
@@ -232,7 +242,7 @@ class WebSocketClientAuthService {
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(false);
                 return;
-                
+
               case 'error':
                 final error = message.data is Map<String, dynamic>
                     ? message.data['message'] as String? ?? '未知错误'
@@ -243,7 +253,7 @@ class WebSocketClientAuthService {
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(false);
                 return;
-                
+
               default:
                 // 忽略其他类型的消息
                 if (kDebugMode) {
@@ -271,7 +281,7 @@ class WebSocketClientAuthService {
           if (!completer.isCompleted) completer.complete(false);
         },
       );
-      
+
       return await completer.future;
     } catch (e) {
       if (kDebugMode) {
@@ -292,11 +302,11 @@ class WebSocketClientAuthService {
         privateKeyId,
         encryptedChallenge,
       );
-      
+
       if (kDebugMode) {
         debugPrint('挑战解密成功');
       }
-      
+
       return decrypted;
     } catch (e) {
       if (kDebugMode) {
@@ -305,10 +315,6 @@ class WebSocketClientAuthService {
       return null;
     }
   }
-
-
-
-
 
   /// 验证消息签名（可选功能）
   Future<bool> verifyMessageSignature(
@@ -322,11 +328,11 @@ class WebSocketClientAuthService {
         signature,
         publicKey,
       );
-      
+
       if (kDebugMode) {
         debugPrint('消息签名验证结果: ${isValid ? "有效" : "无效"}');
       }
-      
+
       return isValid;
     } catch (e) {
       if (kDebugMode) {
@@ -337,20 +343,17 @@ class WebSocketClientAuthService {
   }
 
   /// 对消息进行签名（可选功能）
-  Future<String?> signMessage(
-    String message,
-    String privateKeyId,
-  ) async {
+  Future<String?> signMessage(String message, String privateKeyId) async {
     try {
       final signature = await _secureStorage.signWithPrivateKey(
         privateKeyId,
         message,
       );
-      
+
       if (kDebugMode) {
         debugPrint('消息签名成功');
       }
-      
+
       return signature;
     } catch (e) {
       if (kDebugMode) {
@@ -368,15 +371,15 @@ class WebSocketClientAuthService {
       'timestamp': timestamp,
       'nonce': _generateNonce(),
     };
-    
+
     final tokenJson = jsonEncode(tokenData);
     final tokenBytes = utf8.encode(tokenJson);
     final token = base64Encode(tokenBytes);
-    
+
     if (kDebugMode) {
       debugPrint('生成认证令牌: $clientId');
     }
-    
+
     return token;
   }
 
@@ -386,40 +389,40 @@ class WebSocketClientAuthService {
       final tokenBytes = base64Decode(token);
       final tokenJson = utf8.decode(tokenBytes);
       final tokenData = jsonDecode(tokenJson) as Map<String, dynamic>;
-      
+
       final clientId = tokenData['client_id'] as String?;
       final timestamp = tokenData['timestamp'] as int?;
-      
+
       if (clientId != expectedClientId) {
         if (kDebugMode) {
           debugPrint('令牌验证失败: 客户端ID不匹配');
         }
         return false;
       }
-      
+
       if (timestamp == null) {
         if (kDebugMode) {
           debugPrint('令牌验证失败: 时间戳缺失');
         }
         return false;
       }
-      
+
       // 检查令牌是否过期（5分钟有效期）
       final now = DateTime.now().millisecondsSinceEpoch;
       final tokenAge = now - timestamp;
       const maxAge = 5 * 60 * 1000; // 5分钟
-      
+
       if (tokenAge > maxAge) {
         if (kDebugMode) {
           debugPrint('令牌验证失败: 令牌已过期');
         }
         return false;
       }
-      
+
       if (kDebugMode) {
         debugPrint('令牌验证成功: $clientId');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {

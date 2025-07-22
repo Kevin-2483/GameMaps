@@ -180,7 +180,10 @@ class NewReactiveScriptEngine {
   }
 
   /// 注册外部函数到指定执行器
-  void _registerExternalFunctions(IScriptExecutor executor, ExternalFunctionHandler functionHandler) {
+  void _registerExternalFunctions(
+    IScriptExecutor executor,
+    ExternalFunctionHandler functionHandler,
+  ) {
     // 基础函数
     executor.registerExternalFunction('log', functionHandler.handleLog);
 
@@ -335,10 +338,7 @@ class NewReactiveScriptEngine {
 
     // 语音合成函数
     executor.registerExternalFunction('say', functionHandler.handleSay);
-    executor.registerExternalFunction(
-      'ttsStop',
-      functionHandler.handleTtsStop,
-    );
+    executor.registerExternalFunction('ttsStop', functionHandler.handleTtsStop);
     executor.registerExternalFunction(
       'ttsGetLanguages',
       functionHandler.handleTtsGetLanguages,
@@ -425,7 +425,7 @@ class NewReactiveScriptEngine {
       _executorPool[scriptId]!.dispose();
       _executorPool.remove(scriptId);
     }
-    
+
     // 同时清理对应的函数处理器
     if (_functionHandlerPool.containsKey(scriptId)) {
       debugPrint('清理脚本函数处理器: $scriptId');
@@ -446,7 +446,7 @@ class NewReactiveScriptEngine {
       entry.value.dispose();
     }
     _executorPool.clear();
-    
+
     // 清理所有函数处理器
     _functionHandlerPool.clear();
 

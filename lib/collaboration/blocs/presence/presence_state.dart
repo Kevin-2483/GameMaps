@@ -35,10 +35,7 @@ class PresenceLoaded extends PresenceState {
   List<Object?> get props => [currentUser, remoteUsers, lastUpdated];
 
   /// 获取所有在线用户（包括当前用户）
-  List<UserPresence> get allUsers => [
-    currentUser,
-    ...remoteUsers.values,
-  ];
+  List<UserPresence> get allUsers => [currentUser, ...remoteUsers.values];
 
   /// 获取所有远程用户
   List<UserPresence> get allRemoteUsers => remoteUsers.values.toList();
@@ -54,9 +51,8 @@ class PresenceLoaded extends PresenceState {
       .toList();
 
   /// 获取在线但空闲的用户
-  List<UserPresence> get idleUsers => allUsers
-      .where((user) => user.status == UserActivityStatus.idle)
-      .toList();
+  List<UserPresence> get idleUsers =>
+      allUsers.where((user) => user.status == UserActivityStatus.idle).toList();
 
   /// 获取离线用户
   List<UserPresence> get offlineUsers => allUsers
@@ -101,8 +97,8 @@ class PresenceLoaded extends PresenceState {
   int get viewingUserCount => viewingUsers.length;
 
   /// 检查是否有其他用户正在编辑
-  bool get hasOtherEditingUsers => editingUsers
-      .any((user) => user.clientId != currentUser.clientId);
+  bool get hasOtherEditingUsers =>
+      editingUsers.any((user) => user.clientId != currentUser.clientId);
 
   /// 检查是否有其他用户在线
   bool get hasOtherOnlineUsers => allUsers
@@ -125,7 +121,7 @@ class PresenceLoaded extends PresenceState {
   PresenceLoaded copyWithRemoteUser(UserPresence remoteUser) {
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
     newRemoteUsers[remoteUser.clientId] = remoteUser;
-    
+
     return PresenceLoaded(
       currentUser: currentUser,
       remoteUsers: newRemoteUsers,
@@ -137,7 +133,7 @@ class PresenceLoaded extends PresenceState {
   PresenceLoaded copyWithoutRemoteUser(String clientId) {
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
     newRemoteUsers.remove(clientId);
-    
+
     return PresenceLoaded(
       currentUser: currentUser,
       remoteUsers: newRemoteUsers,
@@ -149,12 +145,12 @@ class PresenceLoaded extends PresenceState {
   PresenceLoaded copyWithCleanup(Duration offlineThreshold) {
     final now = DateTime.now();
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
-    
+
     newRemoteUsers.removeWhere((clientId, user) {
       return user.status == UserActivityStatus.offline ||
-             now.difference(user.lastSeen).compareTo(offlineThreshold) > 0;
+          now.difference(user.lastSeen).compareTo(offlineThreshold) > 0;
     });
-    
+
     return PresenceLoaded(
       currentUser: currentUser,
       remoteUsers: newRemoteUsers,
@@ -169,11 +165,7 @@ class PresenceError extends PresenceState {
   final dynamic error;
   final StackTrace? stackTrace;
 
-  const PresenceError({
-    required this.message,
-    this.error,
-    this.stackTrace,
-  });
+  const PresenceError({required this.message, this.error, this.stackTrace});
 
   @override
   List<Object?> get props => [message, error, stackTrace];

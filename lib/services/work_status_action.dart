@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 enum WorkStatusActionType {
   /// 取消/关闭操作
   cancel,
+
   /// 暂停操作
   pause,
+
   /// 重试操作
   retry,
+
   /// 自定义操作
   custom,
 }
@@ -16,19 +19,19 @@ enum WorkStatusActionType {
 class WorkStatusAction {
   /// 操作类型
   final WorkStatusActionType type;
-  
+
   /// 操作图标
   final IconData icon;
-  
+
   /// 操作提示文本
   final String tooltip;
-  
+
   /// 操作回调函数
   final VoidCallback onPressed;
-  
+
   /// 是否为危险操作（使用红色样式）
   final bool isDangerous;
-  
+
   /// 是否启用（默认为true）
   final bool enabled;
 

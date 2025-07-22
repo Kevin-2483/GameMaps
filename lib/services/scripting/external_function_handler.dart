@@ -139,12 +139,16 @@ class ExternalFunctionHandler {
       addExecutionLog('获取TTS语音列表: ${voices?.length ?? 0} 种语音');
       // 转换为可序列化的Map列表
       return voices?.map((voice) {
-        if (voice is Map) {
-          return Map<String, dynamic>.from(voice.map((key, value) => 
-            MapEntry(key.toString(), value?.toString())));
-        }
-        return {'name': voice.toString()};
-      }).toList() ?? [];
+            if (voice is Map) {
+              return Map<String, dynamic>.from(
+                voice.map(
+                  (key, value) => MapEntry(key.toString(), value?.toString()),
+                ),
+              );
+            }
+            return {'name': voice.toString()};
+          }).toList() ??
+          [];
     } catch (e) {
       debugPrint('获取TTS语音列表失败: $e');
       addExecutionLog('获取TTS语音列表失败: $e');

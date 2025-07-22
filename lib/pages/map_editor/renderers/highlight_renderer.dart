@@ -211,6 +211,7 @@ class HighlightRenderer {
       canvas.drawCircle(center, radius, fillPaint);
     }
   }
+
   /// 绘制文本元素的边界框、中心十字线和调整柄
   static void _drawTextElementBounds(
     Canvas canvas,

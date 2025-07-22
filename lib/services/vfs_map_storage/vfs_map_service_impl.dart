@@ -191,46 +191,53 @@ class VfsMapServiceImpl implements VfsMapService {
           // 从文件名提取标题
           final mapTitle = file.name.replaceAll('.mapdata', '');
           final desanitizedTitle = FilenameSanitizer.desanitize(mapTitle);
-          
+
           try {
             // 读取元数据
-            final metaPath = _buildVfsPath(_getMapMetaPath(desanitizedTitle, folderPath));
+            final metaPath = _buildVfsPath(
+              _getMapMetaPath(desanitizedTitle, folderPath),
+            );
             final metaData = await _storageService.readFile(metaPath);
-            
+
             if (metaData == null) continue;
-            
-            final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
-            
+
+            final metaJson =
+                jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+
             // 检查标题是否与文件夹名称一致，如果不一致则更新
             final metaTitle = metaJson['title'] as String;
             if (metaTitle != desanitizedTitle) {
               metaJson['title'] = desanitizedTitle;
               metaJson['updatedAt'] = DateTime.now().toIso8601String();
-              
+
               // 保存更新后的元数据
               final updatedMetaData = utf8.encode(jsonEncode(metaJson));
               await _storageService.writeFile(metaPath, updatedMetaData);
             }
-            
+
             // 读取封面图片
             Uint8List? coverData;
             try {
-              final coverPath = _buildVfsPath(_getMapCoverPath(desanitizedTitle, folderPath));
+              final coverPath = _buildVfsPath(
+                _getMapCoverPath(desanitizedTitle, folderPath),
+              );
               final coverFile = await _storageService.readFile(coverPath);
               coverData = coverFile?.data;
             } catch (e) {
               debugPrint('加载地图封面失败: $e');
             }
-            
+
             final summary = MapItemSummary(
-              id: int.tryParse(metaJson['id'] as String? ?? '') ?? desanitizedTitle.hashCode,
+              id:
+                  int.tryParse(metaJson['id'] as String? ?? '') ??
+                  desanitizedTitle.hashCode,
               title: desanitizedTitle,
               imageData: coverData ?? Uint8List(0),
               version: metaJson['version'] as int,
               createdAt: DateTime.parse(metaJson['createdAt'] as String),
               updatedAt: DateTime.parse(metaJson['updatedAt'] as String),
             );
-            
+
             summaries.add(summary);
           } catch (e) {
             debugPrint('加载地图摘要失败 [$desanitizedTitle]: $e');
@@ -251,7 +258,7 @@ class VfsMapServiceImpl implements VfsMapService {
       // mapPath 格式: "folder1/folder2/mapname.mapdata" 或 "mapname.mapdata"
       String mapTitle;
       String? folderPath;
-      
+
       if (mapPath.contains('/')) {
         final pathParts = mapPath.split('/');
         final mapdataName = pathParts.last;
@@ -261,36 +268,43 @@ class VfsMapServiceImpl implements VfsMapService {
         mapTitle = mapPath.replaceAll('.mapdata', '');
         folderPath = null;
       }
-      
+
       final desanitizedTitle = FilenameSanitizer.desanitize(mapTitle);
-      
+
       // 读取元数据
-      final metaPath = _buildVfsPath(_getMapMetaPath(desanitizedTitle, folderPath));
+      final metaPath = _buildVfsPath(
+        _getMapMetaPath(desanitizedTitle, folderPath),
+      );
       final metaData = await _storageService.readFile(metaPath);
-      
+
       if (metaData == null) return null;
-      
-      final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
-      
+
+      final metaJson =
+          jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+
       // 读取封面图片
       Uint8List? coverData;
       try {
-        final coverPath = _buildVfsPath(_getMapCoverPath(desanitizedTitle, folderPath));
+        final coverPath = _buildVfsPath(
+          _getMapCoverPath(desanitizedTitle, folderPath),
+        );
         final coverFile = await _storageService.readFile(coverPath);
         coverData = coverFile?.data;
       } catch (e) {
         debugPrint('加载地图封面失败: $e');
       }
-      
+
       final summary = MapItemSummary(
-        id: int.tryParse(metaJson['id'] as String? ?? '') ?? desanitizedTitle.hashCode,
+        id:
+            int.tryParse(metaJson['id'] as String? ?? '') ??
+            desanitizedTitle.hashCode,
         title: desanitizedTitle,
         imageData: coverData ?? Uint8List(0),
         version: metaJson['version'] as int,
         createdAt: DateTime.parse(metaJson['createdAt'] as String),
         updatedAt: DateTime.parse(metaJson['updatedAt'] as String),
       );
-      
+
       return summary;
     } catch (e) {
       debugPrint('根据路径获取地图摘要失败 [$mapPath]: $e');
@@ -308,7 +322,7 @@ class VfsMapServiceImpl implements VfsMapService {
       final files = await _storageService.listDirectory(
         _buildVfsPath(basePath),
       );
-      
+
       int count = 0;
       for (final file in files) {
         if (file.isDirectory && file.name.endsWith('.mapdata')) {
@@ -2062,7 +2076,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
       // 使用VFS的move方法重命名文件夹
       await _storageService.move(oldVfsPath, newVfsPath);
-      
+
       debugPrint('文件夹重命名成功: $oldPath -> $newPath');
     } catch (e) {
       debugPrint('重命名文件夹失败 [$oldPath -> $newPath]: $e');
@@ -2149,7 +2163,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> renameMap(String oldTitle, String newTitle, [String? folderPath]) async {
+  Future<void> renameMap(
+    String oldTitle,
+    String newTitle, [
+    String? folderPath,
+  ]) async {
     try {
       // 1. 检查新标题是否已存在
       final newMapDataPath = _buildVfsPath(_getMapPath(newTitle, folderPath));
@@ -2169,23 +2187,31 @@ class VfsMapServiceImpl implements VfsMapService {
       final metaPath = _buildVfsPath(_getMapMetaPath(oldTitle, folderPath));
       final metaData = await _storageService.readFile(metaPath);
       if (metaData != null) {
-        final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+        final metaJson =
+            jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
         metaJson['title'] = newTitle;
         metaJson['updatedAt'] = DateTime.now().toIso8601String();
-        
+
         // 保存更新后的元数据到旧路径
-        await _storageService.writeFile(metaPath, utf8.encode(jsonEncode(metaJson)));
+        await _storageService.writeFile(
+          metaPath,
+          utf8.encode(jsonEncode(metaJson)),
+        );
       }
 
       // 4. 重命名地图数据文件夹
       await _storageService.move(oldMapDataPath, newMapDataPath);
 
       // 5. 清除相关缓存
-      final oldCacheKey = folderPath == null ? oldTitle : '$folderPath/$oldTitle';
-      final newCacheKey = folderPath == null ? newTitle : '$folderPath/$newTitle';
+      final oldCacheKey = folderPath == null
+          ? oldTitle
+          : '$folderPath/$oldTitle';
+      final newCacheKey = folderPath == null
+          ? newTitle
+          : '$folderPath/$newTitle';
       _mapCache.remove(oldCacheKey);
       _mapCache.remove(newCacheKey);
-      
+
       final oldLayerCacheKey = folderPath == null
           ? '$oldTitle:default'
           : '$folderPath/$oldTitle:default';
@@ -2203,7 +2229,11 @@ class VfsMapServiceImpl implements VfsMapService {
   }
 
   @override
-  Future<void> updateMapCover(String mapTitle, Uint8List imageData, [String? folderPath]) async {
+  Future<void> updateMapCover(
+    String mapTitle,
+    Uint8List imageData, [
+    String? folderPath,
+  ]) async {
     try {
       // 1. 检查地图是否存在
       final mapDataPath = _buildVfsPath(_getMapPath(mapTitle, folderPath));
@@ -2219,11 +2249,15 @@ class VfsMapServiceImpl implements VfsMapService {
       final metaPath = _buildVfsPath(_getMapMetaPath(mapTitle, folderPath));
       final metaData = await _storageService.readFile(metaPath);
       if (metaData != null) {
-        final metaJson = jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
+        final metaJson =
+            jsonDecode(utf8.decode(metaData.data)) as Map<String, dynamic>;
         metaJson['updatedAt'] = DateTime.now().toIso8601String();
-        
+
         // 保存更新后的元数据
-        await _storageService.writeFile(metaPath, utf8.encode(jsonEncode(metaJson)));
+        await _storageService.writeFile(
+          metaPath,
+          utf8.encode(jsonEncode(metaJson)),
+        );
       }
 
       // 4. 清除缓存

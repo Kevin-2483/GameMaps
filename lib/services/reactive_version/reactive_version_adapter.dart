@@ -27,7 +27,7 @@ class ReactiveVersionAdapter {
   }) : _versionManager = versionManager,
        _integrationAdapter = integrationAdapter {
     _setupListeners();
-    
+
     // 如果当前已经有地图数据，立即初始化图例会话
     _initializeExistingMapData();
   }
@@ -141,7 +141,10 @@ class ReactiveVersionAdapter {
     try {
       // 从集成适配器获取地图绝对路径
       final mapAbsolutePath = _integrationAdapter.mapAbsolutePath;
-      await _legendSessionManager.initializeSession(mapItem, mapAbsolutePath: mapAbsolutePath);
+      await _legendSessionManager.initializeSession(
+        mapItem,
+        mapAbsolutePath: mapAbsolutePath,
+      );
       debugPrint(
         '图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}',
       );

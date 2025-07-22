@@ -13,16 +13,12 @@ class WebDavSecureStorageService {
 
   /// 安全存储实例
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
     lOptions: LinuxOptions(),
-    wOptions: WindowsOptions(
-      useBackwardCompatibility: false,
-    ),
+    wOptions: WindowsOptions(useBackwardCompatibility: false),
     mOptions: MacOsOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
@@ -43,7 +39,7 @@ class WebDavSecureStorageService {
   Future<void> storePassword(String authAccountId, String password) async {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
-      
+
       // macOS 平台使用 SharedPreferences 作为回退方案
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
@@ -53,10 +49,7 @@ class WebDavSecureStorageService {
         }
       } else {
         // 其他平台使用安全存储
-        await _secureStorage.write(
-          key: storageKey,
-          value: password,
-        );
+        await _secureStorage.write(key: storageKey, value: password);
         if (kDebugMode) {
           debugPrint('WebDAV密码已安全存储: $authAccountId');
         }
@@ -74,13 +67,15 @@ class WebDavSecureStorageService {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
       String? password;
-      
+
       // macOS 平台使用 SharedPreferences 作为回退方案
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
         password = prefs.getString(storageKey);
         if (kDebugMode && password != null) {
-          debugPrint('WebDAV密码从 SharedPreferences 获取成功 (macOS): $authAccountId');
+          debugPrint(
+            'WebDAV密码从 SharedPreferences 获取成功 (macOS): $authAccountId',
+          );
         }
       } else {
         // 其他平台使用安全存储
@@ -89,13 +84,13 @@ class WebDavSecureStorageService {
           debugPrint('WebDAV密码获取成功: $authAccountId');
         }
       }
-      
+
       if (password == null) {
         if (kDebugMode) {
           debugPrint('WebDAV密码未找到: $authAccountId');
         }
       }
-      
+
       return password;
     } catch (e) {
       if (kDebugMode) {
@@ -109,7 +104,7 @@ class WebDavSecureStorageService {
   Future<void> deletePassword(String authAccountId) async {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
-      
+
       // macOS 平台使用 SharedPreferences 作为回退方案
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
@@ -137,7 +132,7 @@ class WebDavSecureStorageService {
     try {
       final storageKey = '$_passwordPrefix$authAccountId';
       String? password;
-      
+
       // macOS 平台使用 SharedPreferences 作为回退方案
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
@@ -146,7 +141,7 @@ class WebDavSecureStorageService {
         // 其他平台使用安全存储
         password = await _secureStorage.read(key: storageKey);
       }
-      
+
       return password != null;
     } catch (e) {
       if (kDebugMode) {
@@ -160,12 +155,12 @@ class WebDavSecureStorageService {
   Future<List<String>> getAllAuthAccountIds() async {
     try {
       final authAccountIds = <String>[];
-      
+
       // macOS 平台使用 SharedPreferences 作为回退方案
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
         final allKeys = prefs.getKeys();
-        
+
         for (final key in allKeys) {
           if (key.startsWith(_passwordPrefix)) {
             final authAccountId = key.substring(_passwordPrefix.length);
@@ -175,7 +170,7 @@ class WebDavSecureStorageService {
       } else {
         // 其他平台使用安全存储
         final allKeys = await _secureStorage.readAll();
-        
+
         for (final key in allKeys.keys) {
           if (key.startsWith(_passwordPrefix)) {
             final authAccountId = key.substring(_passwordPrefix.length);
@@ -183,7 +178,7 @@ class WebDavSecureStorageService {
           }
         }
       }
-      
+
       return authAccountIds;
     } catch (e) {
       if (kDebugMode) {
@@ -200,26 +195,26 @@ class WebDavSecureStorageService {
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
         final allKeys = prefs.getKeys();
-        
+
         for (final key in allKeys) {
           if (key.startsWith(_passwordPrefix)) {
             await prefs.remove(key);
           }
         }
-        
+
         if (kDebugMode) {
           debugPrint('所有WebDAV密码已从 SharedPreferences 清理 (macOS)');
         }
       } else {
         // 其他平台使用安全存储
         final allKeys = await _secureStorage.readAll();
-        
+
         for (final key in allKeys.keys) {
           if (key.startsWith(_passwordPrefix)) {
             await _secureStorage.delete(key: key);
           }
         }
-        
+
         if (kDebugMode) {
           debugPrint('所有WebDAV密码已清理');
         }
@@ -241,7 +236,7 @@ class WebDavSecureStorageService {
   Future<Map<String, dynamic>> getStorageStats() async {
     try {
       final authAccountIds = await getAllAuthAccountIds();
-      
+
       return {
         'password_count': authAccountIds.length,
         'auth_account_ids': authAccountIds,
@@ -267,17 +262,17 @@ class WebDavSecureStorageService {
     try {
       // 如果没有提供密码，从安全存储获取
       final actualPassword = password ?? await getPassword(authAccountId);
-      
+
       if (actualPassword == null) {
         if (kDebugMode) {
           debugPrint('WebDAV认证凭据验证失败：密码未找到');
         }
         return false;
       }
-      
+
       // 这里可以添加更多的验证逻辑
       // 比如检查用户名格式、密码强度等
-      
+
       return username.isNotEmpty && actualPassword.isNotEmpty;
     } catch (e) {
       if (kDebugMode) {

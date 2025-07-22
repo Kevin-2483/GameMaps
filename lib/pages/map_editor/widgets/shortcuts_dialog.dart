@@ -9,10 +9,7 @@ class ShortcutsDialog extends StatelessWidget {
 
   /// 显示快捷键对话框
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const ShortcutsDialog(),
-    );
+    showDialog(context: context, builder: (context) => const ShortcutsDialog());
   }
 
   @override
@@ -36,84 +33,122 @@ class ShortcutsDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 基本操作
-              _buildShortcutCategory('基本操作', {
-                'undo': '撤销',
-                'redo': '重做',
-                'save': '保存',
-                'clearLayerSelection': '清除选择',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '基本操作',
+                {
+                  'undo': '撤销',
+                  'redo': '重做',
+                  'save': '保存',
+                  'clearLayerSelection': '清除选择',
+                },
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 界面控制
-              _buildShortcutCategory('界面控制', {
-                'toggleSidebar': '切换侧边栏',
-                'openZInspector': '打开Z层级检视器',
-                'toggleLegendGroupDrawer': '切换图例组抽屉',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '界面控制',
+                {
+                  'toggleSidebar': '切换侧边栏',
+                  'openZInspector': '打开Z层级检视器',
+                  'toggleLegendGroupDrawer': '切换图例组抽屉',
+                },
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 图层操作
-              _buildShortcutCategory('图层操作', {
-                'prevLayer': '上一个图层',
-                'nextLayer': '下一个图层',
-                'hideOtherLayers': '隐藏其他图层',
-                'hideOtherLayerGroups': '隐藏其他图层组',
-                'showCurrentLayer': '显示当前图层',
-                'showCurrentLayerGroup': '显示当前图层组',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '图层操作',
+                {
+                  'prevLayer': '上一个图层',
+                  'nextLayer': '下一个图层',
+                  'hideOtherLayers': '隐藏其他图层',
+                  'hideOtherLayerGroups': '隐藏其他图层组',
+                  'showCurrentLayer': '显示当前图层',
+                  'showCurrentLayerGroup': '显示当前图层组',
+                },
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 图例操作
-              _buildShortcutCategory('图例操作', {
-                'prevLegendGroup': '上一个图例组',
-                'nextLegendGroup': '下一个图例组',
-                'openLegendDrawer': '打开图例组绑定抽屉',
-                'hideOtherLegendGroups': '隐藏其他图例组',
-              'showCurrentLegendGroup': '显示当前图例组',
-            }, shortcuts, context),
-            _buildShortcutCategory('帮助', {
-              'showShortcuts': '显示快捷键列表',
-            }, shortcuts, context),
+              _buildShortcutCategory(
+                '图例操作',
+                {
+                  'prevLegendGroup': '上一个图例组',
+                  'nextLegendGroup': '下一个图例组',
+                  'openLegendDrawer': '打开图例组绑定抽屉',
+                  'hideOtherLegendGroups': '隐藏其他图例组',
+                  'showCurrentLegendGroup': '显示当前图例组',
+                },
+                shortcuts,
+                context,
+              ),
+              _buildShortcutCategory(
+                '帮助',
+                {'showShortcuts': '显示快捷键列表'},
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 版本管理
-              _buildShortcutCategory('版本管理', {
-                'prevVersion': '上一个版本',
-                'nextVersion': '下一个版本',
-                'createNewVersion': '创建新版本',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '版本管理',
+                {
+                  'prevVersion': '上一个版本',
+                  'nextVersion': '下一个版本',
+                  'createNewVersion': '创建新版本',
+                },
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 快速选择
-              _buildShortcutCategory('快速选择 (图层组)', {
-                'selectLayerGroup1': '选择图层组 1',
-                'selectLayerGroup2': '选择图层组 2',
-                'selectLayerGroup3': '选择图层组 3',
-                'selectLayerGroup4': '选择图层组 4',
-                'selectLayerGroup5': '选择图层组 5',
-                'selectLayerGroup6': '选择图层组 6',
-                'selectLayerGroup7': '选择图层组 7',
-                'selectLayerGroup8': '选择图层组 8',
-                'selectLayerGroup9': '选择图层组 9',
-                'selectLayerGroup10': '选择图层组 10',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '快速选择 (图层组)',
+                {
+                  'selectLayerGroup1': '选择图层组 1',
+                  'selectLayerGroup2': '选择图层组 2',
+                  'selectLayerGroup3': '选择图层组 3',
+                  'selectLayerGroup4': '选择图层组 4',
+                  'selectLayerGroup5': '选择图层组 5',
+                  'selectLayerGroup6': '选择图层组 6',
+                  'selectLayerGroup7': '选择图层组 7',
+                  'selectLayerGroup8': '选择图层组 8',
+                  'selectLayerGroup9': '选择图层组 9',
+                  'selectLayerGroup10': '选择图层组 10',
+                },
+                shortcuts,
+                context,
+              ),
               const SizedBox(height: 16),
-              
+
               // 快速选择图层
-              _buildShortcutCategory('快速选择 (图层)', {
-                'selectLayer1': '选择图层 1',
-                'selectLayer2': '选择图层 2',
-                'selectLayer3': '选择图层 3',
-                'selectLayer4': '选择图层 4',
-                'selectLayer5': '选择图层 5',
-                'selectLayer6': '选择图层 6',
-                'selectLayer7': '选择图层 7',
-                'selectLayer8': '选择图层 8',
-                'selectLayer9': '选择图层 9',
-                'selectLayer10': '选择图层 10',
-                'selectLayer11': '选择图层 11',
-                'selectLayer12': '选择图层 12',
-              }, shortcuts, context),
+              _buildShortcutCategory(
+                '快速选择 (图层)',
+                {
+                  'selectLayer1': '选择图层 1',
+                  'selectLayer2': '选择图层 2',
+                  'selectLayer3': '选择图层 3',
+                  'selectLayer4': '选择图层 4',
+                  'selectLayer5': '选择图层 5',
+                  'selectLayer6': '选择图层 6',
+                  'selectLayer7': '选择图层 7',
+                  'selectLayer8': '选择图层 8',
+                  'selectLayer9': '选择图层 9',
+                  'selectLayer10': '选择图层 10',
+                  'selectLayer11': '选择图层 11',
+                  'selectLayer12': '选择图层 12',
+                },
+                shortcuts,
+                context,
+              ),
             ],
           ),
         ),
@@ -149,7 +184,7 @@ class ShortcutsDialog extends StatelessWidget {
           final shortcutKey = entry.key;
           final description = entry.value;
           final keys = allShortcuts[shortcutKey] ?? [];
-          
+
           return _buildShortcutRow(description, keys, context);
         }).toList(),
       ],
@@ -157,7 +192,11 @@ class ShortcutsDialog extends StatelessWidget {
   }
 
   /// 构建快捷键行
-  Widget _buildShortcutRow(String description, List<String> shortcuts, BuildContext context) {
+  Widget _buildShortcutRow(
+    String description,
+    List<String> shortcuts,
+    BuildContext context,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -170,9 +209,7 @@ class ShortcutsDialog extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          Expanded(
-            child: _buildShortcutChips(shortcuts, context),
-          ),
+          Expanded(child: _buildShortcutChips(shortcuts, context)),
         ],
       ),
     );
@@ -321,7 +358,7 @@ class ShortcutsDialog extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurface,
         );
     }
-    
+
     // 对于其他键，显示文本
     return Text(
       _getKeyDisplayName(key),

@@ -888,7 +888,11 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
               )
             : Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: ListView.builder(
@@ -902,7 +906,10 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
                       ),
                       decoration: BoxDecoration(
                         color: index.isEven
-                            ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                            ? Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withValues(alpha: 0.3)
                             : Theme.of(context).colorScheme.surface,
                       ),
                       child: Row(
@@ -913,7 +920,9 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
                             style: TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 11,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(width: 8),

@@ -10,7 +10,8 @@ class WebSocketClientDemoPage extends StatefulWidget {
   const WebSocketClientDemoPage({super.key});
 
   @override
-  State<WebSocketClientDemoPage> createState() => _WebSocketClientDemoPageState();
+  State<WebSocketClientDemoPage> createState() =>
+      _WebSocketClientDemoPageState();
 }
 
 class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
@@ -18,13 +19,20 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
   final TextEditingController _webApiKeyController = TextEditingController();
   final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _hostController = TextEditingController(text: 'localhost');
-  final TextEditingController _portController = TextEditingController(text: '8080');
-  final TextEditingController _pathController = TextEditingController(text: '/ws/client');
-  
+  final TextEditingController _hostController = TextEditingController(
+    text: 'localhost',
+  );
+  final TextEditingController _portController = TextEditingController(
+    text: '8080',
+  );
+  final TextEditingController _pathController = TextEditingController(
+    text: '/ws/client',
+  );
+
   List<WebSocketClientConfig> _configs = [];
   WebSocketClientConfig? _activeConfig;
-  WebSocketConnectionState _connectionState = WebSocketConnectionState.disconnected;
+  WebSocketConnectionState _connectionState =
+      WebSocketConnectionState.disconnected;
   List<String> _messages = [];
   List<String> _errors = [];
   bool _isInitialized = false;
@@ -38,7 +46,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
   Future<void> _initializeManager() async {
     try {
       await _manager.initialize();
-      
+
       // 监听配置变化
       _manager.configsStream.listen((configs) {
         if (mounted) {
@@ -47,7 +55,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           });
         }
       });
-      
+
       // 监听活跃配置变化
       _manager.activeConfigStream.listen((config) {
         if (mounted) {
@@ -56,7 +64,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           });
         }
       });
-      
+
       // 监听连接状态变化
       _manager.connectionStateStream.listen((state) {
         if (mounted) {
@@ -65,7 +73,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           });
         }
       });
-      
+
       // 监听消息
       _manager.messageStream.listen((message) {
         if (mounted) {
@@ -74,7 +82,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           });
         }
       });
-      
+
       // 监听错误
       _manager.errorStream.listen((error) {
         if (mounted) {
@@ -84,11 +92,11 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           _showSnackBar('错误: $error', isError: true);
         }
       });
-      
+
       setState(() {
         _isInitialized = true;
       });
-      
+
       _showSnackBar('WebSocket 客户端管理器初始化成功');
     } catch (e) {
       _showSnackBar('初始化失败: $e', isError: true);
@@ -98,11 +106,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -135,7 +139,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
   Widget _buildConnectionStatus() {
     Color statusColor;
     String statusText;
-    
+
     switch (_connectionState) {
       case WebSocketConnectionState.connected:
         statusColor = Colors.green;
@@ -168,10 +172,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '连接状态',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('连接状态', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -191,7 +192,9 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
               const SizedBox(height: 8),
               Text('活跃客户端: ${_activeConfig!.displayName}'),
               Text('客户端ID: ${_activeConfig!.clientId}'),
-              Text('服务器: ${_activeConfig!.server.host}:${_activeConfig!.server.port}'),
+              Text(
+                '服务器: ${_activeConfig!.server.host}:${_activeConfig!.server.port}',
+              ),
             ],
           ],
         ),
@@ -206,12 +209,9 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '客户端管理',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('客户端管理', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
-            
+
             // Web API Key 创建
             TextField(
               controller: _webApiKeyController,
@@ -247,7 +247,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
                 ),
               ],
             ),
-            
+
             // 默认客户端配置
             const SizedBox(height: 16),
             ExpansionTile(
@@ -279,7 +279,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
                 ),
               ],
             ),
-            
+
             // 客户端列表
             const SizedBox(height: 16),
             Text(
@@ -296,7 +296,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
 
   Widget _buildClientTile(WebSocketClientConfig config) {
     final isActive = _activeConfig?.clientId == config.clientId;
-    
+
     return Card(
       color: isActive ? Theme.of(context).colorScheme.primaryContainer : null,
       child: ListTile(
@@ -309,22 +309,10 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           onSelected: (value) => _handleClientAction(value, config),
           itemBuilder: (context) => [
             if (!isActive)
-              const PopupMenuItem(
-                value: 'activate',
-                child: Text('设为活跃'),
-              ),
-            const PopupMenuItem(
-              value: 'validate',
-              child: Text('验证配置'),
-            ),
-            const PopupMenuItem(
-              value: 'export',
-              child: Text('导出配置'),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text('删除'),
-            ),
+              const PopupMenuItem(value: 'activate', child: Text('设为活跃')),
+            const PopupMenuItem(value: 'validate', child: Text('验证配置')),
+            const PopupMenuItem(value: 'export', child: Text('导出配置')),
+            const PopupMenuItem(value: 'delete', child: Text('删除')),
           ],
         ),
         leading: Icon(
@@ -342,10 +330,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '连接控制',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('连接控制', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -386,10 +371,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '消息控制',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('消息控制', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
             TextField(
               controller: _messageController,
@@ -528,12 +510,12 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
   Future<void> _createClientWithWebApiKey() async {
     final webApiKey = _webApiKeyController.text.trim();
     final displayName = _displayNameController.text.trim();
-    
+
     if (webApiKey.isEmpty || displayName.isEmpty) {
       _showSnackBar('请填写 Web API Key 和显示名称', isError: true);
       return;
     }
-    
+
     try {
       await _manager.createClientWithWebApiKey(webApiKey, displayName);
       _webApiKeyController.clear();
@@ -546,24 +528,24 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
 
   Future<void> _createDefaultClient() async {
     final displayName = _displayNameController.text.trim();
-    
+
     if (displayName.isEmpty) {
       _showSnackBar('请填写显示名称', isError: true);
       return;
     }
-    
+
     try {
       final host = _hostController.text.trim();
       final port = int.tryParse(_portController.text.trim()) ?? 8080;
       final path = _pathController.text.trim();
-      
+
       await _manager.createDefaultClient(
         displayName,
         host: host,
         port: port,
         path: path,
       );
-      
+
       _displayNameController.clear();
       _showSnackBar('默认客户端创建成功');
     } catch (e) {
@@ -571,7 +553,10 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
     }
   }
 
-  Future<void> _handleClientAction(String action, WebSocketClientConfig config) async {
+  Future<void> _handleClientAction(
+    String action,
+    WebSocketClientConfig config,
+  ) async {
     switch (action) {
       case 'activate':
         try {
@@ -581,7 +566,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           _showSnackBar('设置活跃客户端失败: $e', isError: true);
         }
         break;
-        
+
       case 'validate':
         try {
           final isValid = await _manager.validateConfig(config.clientId);
@@ -590,7 +575,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           _showSnackBar('验证配置失败: $e', isError: true);
         }
         break;
-        
+
       case 'export':
         try {
           final exportData = await _manager.exportConfig(config.clientId);
@@ -602,7 +587,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           _showSnackBar('导出配置失败: $e', isError: true);
         }
         break;
-        
+
       case 'delete':
         final confirmed = await _showConfirmDialog(
           '确认删除',
@@ -653,7 +638,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
       _showSnackBar('请输入消息内容', isError: true);
       return;
     }
-    
+
     try {
       final messageData = jsonDecode(messageText) as Map<String, dynamic>;
       final success = await _manager.sendJson(messageData);
@@ -692,7 +677,7 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

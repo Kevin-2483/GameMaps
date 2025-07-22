@@ -51,11 +51,11 @@ class WebSocketClientInitService {
 
       // 3. 解析 Web API Key URL
       final uri = Uri.parse(webApiKey);
-      
+
       // 4. 添加公钥作为查询参数
       final queryParams = Map<String, String>.from(uri.queryParameters);
       queryParams['publickey'] = publicKeyPem;
-      
+
       final requestUri = uri.replace(queryParameters: queryParams);
 
       if (kDebugMode) {
@@ -74,9 +74,7 @@ class WebSocketClientInitService {
       // 6. 检查响应内容类型
       final contentType = response.headers['content-type'];
       if (contentType == null || !contentType.contains('application/json')) {
-        throw Exception(
-          '意外的内容类型: $contentType 响应内容: ${response.body}',
-        );
+        throw Exception('意外的内容类型: $contentType 响应内容: ${response.body}');
       }
 
       if (kDebugMode) {
@@ -85,7 +83,7 @@ class WebSocketClientInitService {
 
       // 7. 解析响应
       final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-      
+
       if (responseData['status'] != 'success') {
         throw Exception('API 响应状态错误: ${responseData['status']}');
       }
@@ -97,8 +95,8 @@ class WebSocketClientInitService {
 
       // 解析服务器主机名（去掉端口号）
       final serverHost = serverData['host'] as String;
-      final hostOnly = serverHost.contains(':') 
-          ? serverHost.split(':')[0] 
+      final hostOnly = serverHost.contains(':')
+          ? serverHost.split(':')[0]
           : serverHost;
       final serverPort = serverData['port'] as int;
 
@@ -107,10 +105,7 @@ class WebSocketClientInitService {
       final config = WebSocketClientConfig(
         clientId: clientId,
         displayName: displayName,
-        server: ServerConfig(
-          host: hostOnly,
-          port: serverPort,
-        ),
+        server: ServerConfig(host: hostOnly, port: serverPort),
         webSocket: WebSocketConfig(
           path: webSocketData['path'] as String,
           pingInterval: (webSocketData['ping_interval'] as num).toDouble(),
@@ -171,10 +166,7 @@ class WebSocketClientInitService {
       final config = WebSocketClientConfig(
         clientId: clientId,
         displayName: displayName,
-        server: ServerConfig(
-          host: host,
-          port: port,
-        ),
+        server: ServerConfig(host: host, port: port),
         webSocket: WebSocketConfig(
           path: path,
           pingInterval: pingInterval,
@@ -266,7 +258,7 @@ class WebSocketClientInitService {
       final hasPrivateKey = await _secureStorage.hasPrivateKey(
         config.keys.privateKeyId,
       );
-      
+
       if (!hasPrivateKey) {
         if (kDebugMode) {
           debugPrint('配置验证失败: 私钥不存在 ${config.keys.privateKeyId}');
@@ -328,10 +320,7 @@ class WebSocketClientInitService {
   Future<Map<String, dynamic>> getStorageStats() async {
     final dbStats = await _dbService.getStorageStats();
     final secureStorageStats = await _secureStorage.getStorageStats();
-    
-    return {
-      'database': dbStats,
-      'secure_storage': secureStorageStats,
-    };
+
+    return {'database': dbStats, 'secure_storage': secureStorageStats};
   }
 }

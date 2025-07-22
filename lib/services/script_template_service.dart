@@ -5,7 +5,7 @@ import '../models/script_data.dart';
 /// 负责从assets文件中加载脚本模板内容
 class ScriptTemplateService {
   static const String _basePath = 'assets/scripts';
-  
+
   /// 脚本类型到模板文件的映射
   static const Map<ScriptType, String> _templateFiles = {
     ScriptType.automation: '$_basePath/automation_template.ht',
@@ -13,12 +13,12 @@ class ScriptTemplateService {
     ScriptType.filter: '$_basePath/filter_template.ht',
     ScriptType.statistics: '$_basePath/statistics_template.ht',
   };
-  
+
   /// 模板内容缓存
   static final Map<ScriptType, String> _templateCache = {};
-  
+
   /// 获取指定类型的脚本模板内容
-  /// 
+  ///
   /// [type] 脚本类型
   /// 返回模板内容字符串，如果加载失败则返回默认内容
   static Future<String> getTemplateContent(ScriptType type) async {
@@ -26,34 +26,34 @@ class ScriptTemplateService {
     if (_templateCache.containsKey(type)) {
       return _templateCache[type]!;
     }
-    
+
     try {
       final templateFile = _templateFiles[type];
       if (templateFile == null) {
         throw Exception('Unknown script type: $type');
       }
-      
+
       // 从assets加载模板内容
       final content = await rootBundle.loadString(templateFile);
-      
+
       // 缓存内容
       _templateCache[type] = content;
-      
+
       return content;
     } catch (e) {
       // 如果加载失败，返回默认内容
       return _getDefaultContent(type);
     }
   }
-  
+
   /// 获取默认模板内容（同步方法，用于向后兼容）
-  /// 
+  ///
   /// [type] 脚本类型
   /// 返回默认模板内容字符串
   static String getDefaultTemplate(ScriptType type) {
     return _getDefaultContent(type);
   }
-  
+
   /// 同步获取模板内容（仅从缓存或默认内容）
   /// 注意：如果缓存中没有内容，将返回默认模板
   static String getTemplateContentSync(ScriptType type) {
@@ -61,17 +61,17 @@ class ScriptTemplateService {
     if (_templateCache.containsKey(type)) {
       return _templateCache[type]!;
     }
-    
+
     // 如果缓存中没有，返回默认内容
     return _getDefaultContent(type);
   }
-  
+
   /// 清除模板缓存
   /// 主要用于开发阶段或需要重新加载模板时
   static void clearCache() {
     _templateCache.clear();
   }
-  
+
   /// 预加载所有模板
   /// 可以在应用启动时调用以提高性能
   static Future<void> preloadTemplates() async {
@@ -79,7 +79,7 @@ class ScriptTemplateService {
       await getTemplateContent(type);
     }
   }
-  
+
   /// 获取默认模板内容（作为fallback）
   static String _getDefaultContent(ScriptType type) {
     switch (type) {

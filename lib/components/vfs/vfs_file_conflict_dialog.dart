@@ -5,10 +5,13 @@ import '../../services/virtual_file_system/vfs_protocol.dart';
 enum VfsConflictAction {
   /// 重命名
   rename,
+
   /// 覆盖
   overwrite,
+
   /// 跳过
   skip,
+
   /// 合并（仅适用于文件夹）
   merge,
 }
@@ -92,7 +95,7 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
   void initState() {
     super.initState();
     _originalName = widget.conflictInfo.fileName;
-    
+
     // 分离文件名和扩展名
     if (!widget.conflictInfo.isDirectory) {
       final lastDotIndex = _originalName.lastIndexOf('.');
@@ -114,7 +117,7 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
       // 使用预生成的唯一建议名称，需要去掉扩展名
       final suggested = widget.conflictInfo.suggestedName!;
       if (!widget.conflictInfo.isDirectory && _extension.isNotEmpty) {
-        suggestedName = suggested.endsWith(_extension) 
+        suggestedName = suggested.endsWith(_extension)
             ? suggested.substring(0, suggested.length - _extension.length)
             : suggested;
       } else {
@@ -138,7 +141,7 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
     // 生成唯一的建议名称，如 "文件名 (副本)", "文件名 (副本 2)" 等
     String suggestedName = '$baseName (副本)';
     int counter = 2;
-    
+
     // 这里应该检查目标路径是否存在同名文件，但由于我们在对话框中
     // 无法直接访问VFS服务，所以先返回基本的建议名称
     // 实际的唯一性检查应该在调用方进行
@@ -173,9 +176,28 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
 
   bool _isReservedName(String name) {
     const reservedNames = [
-      'CON', 'PRN', 'AUX', 'NUL',
-      'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
-      'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+      'CON',
+      'PRN',
+      'AUX',
+      'NUL',
+      'COM1',
+      'COM2',
+      'COM3',
+      'COM4',
+      'COM5',
+      'COM6',
+      'COM7',
+      'COM8',
+      'COM9',
+      'LPT1',
+      'LPT2',
+      'LPT3',
+      'LPT4',
+      'LPT5',
+      'LPT6',
+      'LPT7',
+      'LPT8',
+      'LPT9',
     ];
     return reservedNames.contains(name.toUpperCase());
   }
@@ -326,7 +348,11 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                     // 重命名输入框
                     if (_selectedAction == VfsConflictAction.rename) ...[
                       Padding(
-                        padding: const EdgeInsets.only(left: 56, right: 16, bottom: 8),
+                        padding: const EdgeInsets.only(
+                          left: 56,
+                          right: 16,
+                          bottom: 8,
+                        ),
                         child: Row(
                           children: [
                             Expanded(
@@ -355,13 +381,16 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                                   vertical: 12,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                                  color: colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   _extension,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -449,7 +478,9 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
-                  onPressed: (_selectedAction == VfsConflictAction.rename && !_isValidName)
+                  onPressed:
+                      (_selectedAction == VfsConflictAction.rename &&
+                          !_isValidName)
                       ? null
                       : _handleConfirm,
                   child: const Text('确定'),
@@ -467,10 +498,7 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
 class VfsBatchConflictDialog extends StatefulWidget {
   final List<VfsConflictInfo> conflicts;
 
-  const VfsBatchConflictDialog({
-    super.key,
-    required this.conflicts,
-  });
+  const VfsBatchConflictDialog({super.key, required this.conflicts});
 
   @override
   State<VfsBatchConflictDialog> createState() => _VfsBatchConflictDialogState();
@@ -513,7 +541,7 @@ class _VfsBatchConflictDialogState extends State<VfsBatchConflictDialog> {
     final remainingCount = widget.conflicts.length - _currentIndex - 1;
 
     if (!mounted) return;
-    
+
     final result = await VfsFileConflictDialog.show(
       context,
       currentConflict,
@@ -522,7 +550,7 @@ class _VfsBatchConflictDialogState extends State<VfsBatchConflictDialog> {
     );
 
     if (!mounted) return;
-    
+
     if (result != null) {
       _handleConflictResult(result);
     } else {
@@ -544,25 +572,30 @@ class _VfsBatchConflictDialogState extends State<VfsBatchConflictDialog> {
       for (int i = _currentIndex + 1; i < widget.conflicts.length; i++) {
         final conflict = widget.conflicts[i];
         String? newName;
-        
+
         if (result.action == VfsConflictAction.rename) {
           // 为每个文件生成唯一的重命名
-          final baseName = conflict.isDirectory 
+          final baseName = conflict.isDirectory
               ? conflict.fileName
-              : conflict.fileName.substring(0, conflict.fileName.lastIndexOf('.'));
-          final extension = conflict.isDirectory 
+              : conflict.fileName.substring(
+                  0,
+                  conflict.fileName.lastIndexOf('.'),
+                );
+          final extension = conflict.isDirectory
               ? ''
               : conflict.fileName.substring(conflict.fileName.lastIndexOf('.'));
           newName = '$baseName (副本)$extension';
         }
-        
-        _results.add(VfsConflictResult(
-          action: result.action,
-          newName: newName,
-          applyToAll: false,
-        ));
+
+        _results.add(
+          VfsConflictResult(
+            action: result.action,
+            newName: newName,
+            applyToAll: false,
+          ),
+        );
       }
-      
+
       // 完成处理
       if (mounted) {
         Navigator.of(context).pop(_results);

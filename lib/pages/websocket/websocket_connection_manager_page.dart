@@ -136,8 +136,10 @@ class _WebSocketConnectionManagerPageState
         final onlineStatus = data['online_status'] as String?;
         final activityStatus = data['activity_status'] as String?;
         final spaceId = data['space_id'] as String?;
-        
-        _addLog('用户状态广播: 用户=$userId, 在线状态=$onlineStatus, 活动状态=$activityStatus, 空间=$spaceId');
+
+        _addLog(
+          '用户状态广播: 用户=$userId, 在线状态=$onlineStatus, 活动状态=$activityStatus, 空间=$spaceId',
+        );
       }
     });
 
@@ -751,7 +753,7 @@ class _WebSocketConnectionManagerPageState
             ),
           ],
         ),
-        
+
         // 浮动的连接状态信息
         if (_activeConfig != null)
           Positioned(

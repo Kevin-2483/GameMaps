@@ -320,7 +320,7 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     if (!layerToDelete.isLinkedToNext && deleteIndex > 0) {
       final previousLayerIndex = deleteIndex - 1;
       final previousLayer = newLayers[previousLayerIndex];
-      
+
       // 如果上一层有链接，说明删除的图层是组内最后一个
       // 删除后，上一层应该成为新的组末尾，需要断开其链接
       if (previousLayer.isLinkedToNext) {
@@ -903,8 +903,10 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     if (state is! MapDataLoaded) return;
 
     final currentState = state as MapDataLoaded;
-    final updatedFlags = Map<String, bool>.from(currentState.manuallyClosedLegendGroups);
-    
+    final updatedFlags = Map<String, bool>.from(
+      currentState.manuallyClosedLegendGroups,
+    );
+
     if (event.isManuallyClosed) {
       updatedFlags[event.groupId] = true;
     } else {

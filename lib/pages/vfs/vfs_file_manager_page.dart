@@ -385,13 +385,16 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
   }
 
   /// 生成唯一的文件名建议
-  Future<String> _generateUniqueFileName(String originalName, String targetPath) async {
+  Future<String> _generateUniqueFileName(
+    String originalName,
+    String targetPath,
+  ) async {
     if (_selectedCollection == null) return originalName;
-    
+
     // 分离文件名和扩展名
     String baseName;
     String extension;
-    
+
     final lastDotIndex = originalName.lastIndexOf('.');
     if (lastDotIndex > 0 && lastDotIndex < originalName.length - 1) {
       baseName = originalName.substring(0, lastDotIndex);
@@ -400,29 +403,40 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       baseName = originalName;
       extension = '';
     }
-    
+
     // 检查基本的副本名称
     String suggestedName = '$baseName (副本)$extension';
-    String testPath = _currentPath.isEmpty ? suggestedName : '$_currentPath/$suggestedName';
-    
-    final existingFile = await _vfsService.getFileInfo(_selectedCollection!, testPath);
+    String testPath = _currentPath.isEmpty
+        ? suggestedName
+        : '$_currentPath/$suggestedName';
+
+    final existingFile = await _vfsService.getFileInfo(
+      _selectedCollection!,
+      testPath,
+    );
     if (existingFile == null) {
       return suggestedName;
     }
-    
+
     // 如果副本也存在，尝试带数字的版本
     int counter = 2;
-    while (counter <= 100) { // 限制尝试次数避免无限循环
+    while (counter <= 100) {
+      // 限制尝试次数避免无限循环
       suggestedName = '$baseName (副本 $counter)$extension';
-      testPath = _currentPath.isEmpty ? suggestedName : '$_currentPath/$suggestedName';
-      
-      final testFile = await _vfsService.getFileInfo(_selectedCollection!, testPath);
+      testPath = _currentPath.isEmpty
+          ? suggestedName
+          : '$_currentPath/$suggestedName';
+
+      final testFile = await _vfsService.getFileInfo(
+        _selectedCollection!,
+        testPath,
+      );
       if (testFile == null) {
         return suggestedName;
       }
       counter++;
     }
-    
+
     // 如果都存在，返回带时间戳的版本
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     return '$baseName (副本 $timestamp)$extension';
@@ -443,7 +457,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     try {
       // 收集所有冲突信息
       final conflicts = <VfsConflictInfo>[];
-      
+
       for (final file in _clipboardFiles) {
         final fileName = file.name;
         final targetPath = _currentPath.isEmpty
@@ -458,15 +472,20 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
         if (existingFile != null) {
           // 生成唯一的建议名称
-          final suggestedName = await _generateUniqueFileName(file.name, targetPath);
-          
-          conflicts.add(VfsConflictInfo(
-            fileName: file.name,
-            isDirectory: file.isDirectory,
-            existingFile: existingFile,
-            sourceFile: file,
-            suggestedName: suggestedName,
-          ));
+          final suggestedName = await _generateUniqueFileName(
+            file.name,
+            targetPath,
+          );
+
+          conflicts.add(
+            VfsConflictInfo(
+              fileName: file.name,
+              isDirectory: file.isDirectory,
+              existingFile: existingFile,
+              sourceFile: file,
+              suggestedName: suggestedName,
+            ),
+          );
         }
       }
 
@@ -474,16 +493,13 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       Map<String, VfsConflictResult>? conflictResults;
       if (conflicts.isNotEmpty) {
         if (!mounted) return;
-        final results = await VfsBatchConflictDialog.show(
-          context,
-          conflicts,
-        );
-        
+        final results = await VfsBatchConflictDialog.show(context, conflicts);
+
         if (results == null) {
           // 用户取消了操作
           return;
         }
-        
+
         // 将结果列表转换为以文件路径为键的映射
         conflictResults = {};
         for (int i = 0; i < conflicts.length && i < results.length; i++) {
@@ -521,7 +537,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
               final pathSegments = targetPath.split('/');
               pathSegments[pathSegments.length - 1] = conflictResult.newName!;
               finalTargetPath = pathSegments.join('/');
-              
+
               // 再次检查重命名后的路径是否仍有冲突
               final renamedFileExists = await _vfsService.getFileInfo(
                 _selectedCollection!,
@@ -565,8 +581,10 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
               // 对于目录合并，需要递归处理子文件
               // 创建ValueNotifier来跟踪批量操作设置
               final defaultFileAction = ValueNotifier<VfsConflictAction?>(null);
-              final defaultDirectoryAction = ValueNotifier<VfsConflictAction?>(null);
-              
+              final defaultDirectoryAction = ValueNotifier<VfsConflictAction?>(
+                null,
+              );
+
               await _mergeDirectory(
                 sourceVfsPath.collection,
                 sourceVfsPath.path,
@@ -575,13 +593,14 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
                 defaultFileAction: defaultFileAction,
                 defaultDirectoryAction: defaultDirectoryAction,
               );
-              
+
               // 清理ValueNotifier
               defaultFileAction.dispose();
               defaultDirectoryAction.dispose();
             } else {
               // 使用带冲突检测的复制方法
-              final overwriteExisting = conflictResult?.action == VfsConflictAction.overwrite;
+              final overwriteExisting =
+                  conflictResult?.action == VfsConflictAction.overwrite;
               await _vfsService.copyFileWithConflictCheck(
                 sourceVfsPath.collection,
                 sourceVfsPath.path,
@@ -633,7 +652,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       final relativePath = sourceFile.path
           .replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', '')
           .replaceFirst(sourcePath.isEmpty ? '' : '$sourcePath/', '');
-      
+
       final newTargetPath = targetPath.isEmpty
           ? relativePath
           : '$targetPath/$relativePath';
@@ -646,47 +665,48 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
       if (existingFile != null) {
         // 检查是否有对应类型的默认操作
-         VfsConflictResult? conflictResult;
-         final hasDefaultAction = sourceFile.isDirectory 
-             ? defaultDirectoryAction?.value != null
-             : defaultFileAction?.value != null;
-             
-         if (hasDefaultAction) {
-           // 使用默认操作
-           final defaultAction = sourceFile.isDirectory 
-               ? defaultDirectoryAction!.value!
-               : defaultFileAction!.value!;
-           conflictResult = VfsConflictResult(
-             action: defaultAction,
-             newName: defaultAction == VfsConflictAction.rename 
-                 ? await _generateUniqueFileName(sourceFile.name, newTargetPath)
-                 : null,
-           );
-        } else {
-           // 显示冲突对话框
-           if (!mounted) return;
-           conflictResult = await VfsFileConflictDialog.show(
-             context,
-             VfsConflictInfo(
-               fileName: sourceFile.name,
-               isDirectory: sourceFile.isDirectory,
-               existingFile: existingFile,
-               sourceFile: sourceFile,
-             ),
-             showApplyToAll: true,
-           );
-           
-           // 如果用户选择了"应用到全部"，更新对应类型的默认操作
-            if (conflictResult?.applyToAll == true) {
-              if (sourceFile.isDirectory) {
-                defaultDirectoryAction?.value = conflictResult!.action;
-              } else {
-                defaultFileAction?.value = conflictResult!.action;
-              }
-            }
-         }
+        VfsConflictResult? conflictResult;
+        final hasDefaultAction = sourceFile.isDirectory
+            ? defaultDirectoryAction?.value != null
+            : defaultFileAction?.value != null;
 
-        if (conflictResult == null || conflictResult.action == VfsConflictAction.skip) {
+        if (hasDefaultAction) {
+          // 使用默认操作
+          final defaultAction = sourceFile.isDirectory
+              ? defaultDirectoryAction!.value!
+              : defaultFileAction!.value!;
+          conflictResult = VfsConflictResult(
+            action: defaultAction,
+            newName: defaultAction == VfsConflictAction.rename
+                ? await _generateUniqueFileName(sourceFile.name, newTargetPath)
+                : null,
+          );
+        } else {
+          // 显示冲突对话框
+          if (!mounted) return;
+          conflictResult = await VfsFileConflictDialog.show(
+            context,
+            VfsConflictInfo(
+              fileName: sourceFile.name,
+              isDirectory: sourceFile.isDirectory,
+              existingFile: existingFile,
+              sourceFile: sourceFile,
+            ),
+            showApplyToAll: true,
+          );
+
+          // 如果用户选择了"应用到全部"，更新对应类型的默认操作
+          if (conflictResult?.applyToAll == true) {
+            if (sourceFile.isDirectory) {
+              defaultDirectoryAction?.value = conflictResult!.action;
+            } else {
+              defaultFileAction?.value = conflictResult!.action;
+            }
+          }
+        }
+
+        if (conflictResult == null ||
+            conflictResult.action == VfsConflictAction.skip) {
           continue;
         }
 
@@ -695,7 +715,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           final pathSegments = newTargetPath.split('/');
           pathSegments[pathSegments.length - 1] = conflictResult.newName!;
           finalPath = pathSegments.join('/');
-          
+
           // 再次检查重命名后的路径是否仍有冲突
           final renamedFileExists = await _vfsService.getFileInfo(
             targetCollection,
@@ -703,20 +723,24 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           );
           if (renamedFileExists != null) {
             // 如果重命名后仍有冲突，生成一个真正唯一的名称
-             final uniqueName = await _generateUniqueFileName(
-               conflictResult.newName!,
-               finalPath,
-             );
+            final uniqueName = await _generateUniqueFileName(
+              conflictResult.newName!,
+              finalPath,
+            );
             pathSegments[pathSegments.length - 1] = uniqueName;
             finalPath = pathSegments.join('/');
           }
         }
 
-        if (sourceFile.isDirectory && conflictResult.action == VfsConflictAction.merge) {
+        if (sourceFile.isDirectory &&
+            conflictResult.action == VfsConflictAction.merge) {
           // 对于目录合并，递归处理子文件，传递默认操作
           await _mergeDirectory(
             sourceCollection,
-            sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+            sourceFile.path.replaceFirst(
+              'indexeddb://$_selectedDatabase/$sourceCollection/',
+              '',
+            ),
             targetCollection,
             finalPath,
             defaultFileAction: defaultFileAction,
@@ -726,17 +750,24 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
           // 对于文件或重命名/覆盖的目录
           await _vfsService.copyFileWithConflictCheck(
             sourceCollection,
-            sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+            sourceFile.path.replaceFirst(
+              'indexeddb://$_selectedDatabase/$sourceCollection/',
+              '',
+            ),
             targetCollection,
             finalPath,
-            overwriteExisting: conflictResult.action == VfsConflictAction.overwrite,
+            overwriteExisting:
+                conflictResult.action == VfsConflictAction.overwrite,
           );
         }
       } else {
         // 没有冲突，直接复制
         await _vfsService.copyFileWithConflictCheck(
           sourceCollection,
-          sourceFile.path.replaceFirst('indexeddb://$_selectedDatabase/$sourceCollection/', ''),
+          sourceFile.path.replaceFirst(
+            'indexeddb://$_selectedDatabase/$sourceCollection/',
+            '',
+          ),
           targetCollection,
           newTargetPath,
           overwriteExisting: false,
@@ -903,21 +934,26 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
       String cleanPath = selectedFile.path;
       String? targetDatabase;
       String? targetCollection;
-      
+
       if (cleanPath.startsWith('indexeddb://')) {
         final uri = Uri.parse(cleanPath);
-        final pathSegments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+        final pathSegments = uri.pathSegments
+            .where((s) => s.isNotEmpty)
+            .toList();
         debugPrint('🧭 URI path segments: $pathSegments');
         debugPrint('🧭 URI host: ${uri.host}');
 
         if (pathSegments.length >= 1) {
           targetDatabase = uri.host; // 数据库名在host部分
           targetCollection = pathSegments[0]; // 集合名是第一个路径段
-          
+
           // 检查是否需要切换数据库/集合
-          if (targetDatabase != _selectedDatabase || targetCollection != _selectedCollection) {
-            debugPrint('🧭 Switching to database: $targetDatabase, collection: $targetCollection');
-            
+          if (targetDatabase != _selectedDatabase ||
+              targetCollection != _selectedCollection) {
+            debugPrint(
+              '🧭 Switching to database: $targetDatabase, collection: $targetCollection',
+            );
+
             // 先切换数据库并加载集合列表
             if (targetDatabase != _selectedDatabase) {
               setState(() {
@@ -926,20 +962,23 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
               });
               await _loadCollections(targetDatabase!);
             }
-            
+
             // 然后设置集合（确保集合存在于列表中）
-            if (_collections[targetDatabase]?.contains(targetCollection) == true) {
+            if (_collections[targetDatabase]?.contains(targetCollection) ==
+                true) {
               setState(() {
                 _selectedCollection = targetCollection;
               });
             } else {
-              debugPrint('🧭 Warning: Collection $targetCollection not found in database $targetDatabase');
+              debugPrint(
+                '🧭 Warning: Collection $targetCollection not found in database $targetDatabase',
+              );
               setState(() {
                 _selectedCollection = null;
               });
             }
           }
-          
+
           // 构建相对于集合根目录的路径
           if (pathSegments.length > 1) {
             cleanPath = pathSegments.skip(1).join('/');

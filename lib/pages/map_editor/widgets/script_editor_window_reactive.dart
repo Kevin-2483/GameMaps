@@ -125,15 +125,12 @@ class _ReactiveScriptEditorWindowState
     });
   }
 
-
-
   /// 构建窗口控制按钮组
 
   /// 构建窗口控制按钮组
   List<Widget> _buildWindowControls() {
     return [const WindowControls(spacing: 4.0)];
   }
-
 
   /// 执行脚本（支持参数输入）
   void _executeScript() async {

@@ -31,13 +31,17 @@ class WebSocketClientManager {
 
   // Getters
   bool get isInitialized => _isInitialized;
-  Stream<List<WebSocketClientConfig>> get configsStream => _configsController.stream;
-  Stream<WebSocketClientConfig?> get activeConfigStream => _activeConfigController.stream;
-  Stream<WebSocketConnectionState> get connectionStateStream => _clientService.stateStream;
+  Stream<List<WebSocketClientConfig>> get configsStream =>
+      _configsController.stream;
+  Stream<WebSocketClientConfig?> get activeConfigStream =>
+      _activeConfigController.stream;
+  Stream<WebSocketConnectionState> get connectionStateStream =>
+      _clientService.stateStream;
   Stream<WebSocketMessage> get messageStream => _clientService.messageStream;
   Stream<String> get errorStream => _clientService.errorStream;
   Stream<int> get pingDelayStream => _clientService.pingDelayStream;
-  WebSocketConnectionState get connectionState => _clientService.connectionState;
+  WebSocketConnectionState get connectionState =>
+      _clientService.connectionState;
   bool get isConnected => _clientService.isConnected;
   int get currentPingDelay => _clientService.currentPingDelay;
 
@@ -52,7 +56,7 @@ class WebSocketClientManager {
 
       // 初始化数据库服务
       await _dbService.initialize();
-      
+
       // 初始化安全存储服务
       await _secureStorage.initialize();
 
@@ -91,7 +95,7 @@ class WebSocketClientManager {
       );
 
       await _refreshConfigs();
-      
+
       if (kDebugMode) {
         debugPrint('客户端创建成功: ${config.clientId}');
       }
@@ -131,7 +135,7 @@ class WebSocketClientManager {
       );
 
       await _refreshConfigs();
-      
+
       if (kDebugMode) {
         debugPrint('默认客户端创建成功: ${config.clientId}');
       }
@@ -282,7 +286,7 @@ class WebSocketClientManager {
       }
 
       final success = await _clientService.connect(clientId);
-      
+
       if (success && _clientService.currentConfig != null) {
         await _refreshActiveConfig();
       }
@@ -338,7 +342,9 @@ class WebSocketClientManager {
   }
 
   /// 发送包含地图信息的用户状态更新
-  Future<bool> sendUserStatusUpdateWithData(Map<String, dynamic> statusData) async {
+  Future<bool> sendUserStatusUpdateWithData(
+    Map<String, dynamic> statusData,
+  ) async {
     _ensureInitialized();
     return await _clientService.sendUserStatusUpdateWithData(statusData);
   }
@@ -404,7 +410,7 @@ class WebSocketClientManager {
 
       // 获取所有配置
       final configs = await _dbService.getAllClientConfigs();
-      
+
       // 检查每个配置的有效性
       for (final config in configs) {
         final isValid = await _initService.validateConfig(config);

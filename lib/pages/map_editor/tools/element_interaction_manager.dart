@@ -123,13 +123,13 @@ class ElementInteractionManager {
     // 文本元素特殊处理
     if (element.type == DrawingElementType.text) {
       if (element.points.isEmpty) return [];
-      
+
       final fontSize = element.fontSize ?? 16.0;
       final anchorPoint = Offset(
         element.points[0].dx * size.width,
         element.points[0].dy * size.height,
       );
-      
+
       // 创建正方形边界框，调整位置使其包围文本
       final boundingRect = Rect.fromLTWH(
         anchorPoint.dx - fontSize / 2,
@@ -137,7 +137,7 @@ class ElementInteractionManager {
         fontSize,
         fontSize,
       );
-      
+
       // 按照ResizeHandle枚举顺序添加调整柄
       // topLeft
       handles.add(
@@ -203,7 +203,7 @@ class ElementInteractionManager {
           height: effectiveHandleSize,
         ),
       );
-      
+
       return handles;
     }
 
@@ -307,15 +307,19 @@ class ElementInteractionManager {
     double? handleSize,
     bool includeRotationHandle = false,
   }) {
-    final handles = getResizeHandles(element, handleSize: handleSize, includeRotationHandle: includeRotationHandle);
+    final handles = getResizeHandles(
+      element,
+      handleSize: handleSize,
+      includeRotationHandle: includeRotationHandle,
+    );
 
     // Debug output for text elements
     if (element.type == DrawingElementType.text) {
-      print('Text element hit test:');
-      print('  Canvas position: $canvasPosition');
-      print('  Element points: ${element.points}');
-      print('  Font size: ${element.fontSize}');
-      print('  Number of handles: ${handles.length}');
+      debugPrint('Text element hit test:');
+      debugPrint('  Canvas position: $canvasPosition');
+      debugPrint('  Element points: ${element.points}');
+      debugPrint('  Font size: ${element.fontSize}');
+      debugPrint('  Number of handles: ${handles.length}');
       for (int i = 0; i < handles.length; i++) {
         final handle = handles[i];
         final expandedHandle = Rect.fromCenter(
@@ -323,16 +327,18 @@ class ElementInteractionManager {
           width: handle.width * 1.5,
           height: handle.height * 1.5,
         );
-        print('  Handle $i (${ResizeHandle.values[i]}): ${handle.center} -> expanded: $expandedHandle');
+        debugPrint(
+          '  Handle $i (${ResizeHandle.values[i]}): ${handle.center} -> expanded: $expandedHandle',
+        );
         if (expandedHandle.contains(canvasPosition)) {
-          print('  -> HIT!');
+          debugPrint('  -> HIT!');
         }
       }
     }
 
     // 增加检测区域，使调整柄更容易被点击
     const double hitAreaMultiplier = 1.5; // 检测区域放大1.5倍
-    
+
     for (int i = 0; i < handles.length; i++) {
       final handle = handles[i];
       // 创建一个放大的检测区域
@@ -341,7 +347,7 @@ class ElementInteractionManager {
         width: handle.width * hitAreaMultiplier,
         height: handle.height * hitAreaMultiplier,
       );
-      
+
       if (expandedHandle.contains(canvasPosition)) {
         return ResizeHandle.values[i];
       }
@@ -489,7 +495,7 @@ class ElementInteractionManager {
     final element = selectedLayer.elements
         .where((e) => e.id == elementId)
         .first;
-    
+
     // 文本元素特殊处理
     if (element.type == DrawingElementType.text) {
       if (element.points.isNotEmpty) {
@@ -538,13 +544,13 @@ class ElementInteractionManager {
 
     final currentPosition = getCanvasPosition(details.localPosition);
     final delta = currentPosition - _resizeStartPosition!;
-    
+
     final element = selectedLayer.elements
         .where((e) => e.id == elementId)
         .first;
 
     Rect newBounds;
-    
+
     // 文本元素特殊处理
     if (element.type == DrawingElementType.text) {
       // 调整字体大小（保持正方形）
@@ -553,15 +559,10 @@ class ElementInteractionManager {
         _activeResizeHandle!,
         delta,
       );
-      
+
       // 确保文本框保持正方形
       final size = (newBounds.width + newBounds.height) / 2;
-      newBounds = Rect.fromLTWH(
-        newBounds.left,
-        newBounds.top,
-        size,
-        size,
-      );
+      newBounds = Rect.fromLTWH(newBounds.left, newBounds.top, size, size);
     } else {
       // 其他元素的处理
       newBounds = calculateNewBounds(
@@ -670,24 +671,27 @@ class ElementInteractionManager {
     );
 
     MapDrawingElement updatedElement;
-    
+
     // 文本元素特殊处理
-     if (element.type == DrawingElementType.text) {
-       // 对于文本元素，更新锚点位置和字体大小
-       // 锚点应该是边界框中心对应的位置
-       final normalizedAnchor = Offset(
-         ((newBounds.left + newBounds.width / 2) / kCanvasWidth).clamp(0.0, 1.0),
-         ((newBounds.top + newBounds.height / 2) / kCanvasHeight).clamp(0.0, 1.0),
-       );
-       
-       // 字体大小等于选择框的高度（只限制最小值）
-       final newFontSize = newBounds.height.clamp(8.0, double.infinity);
-       
-       updatedElement = element.copyWith(
-         points: [normalizedAnchor],
-         fontSize: newFontSize,
-       );
-     } else {
+    if (element.type == DrawingElementType.text) {
+      // 对于文本元素，更新锚点位置和字体大小
+      // 锚点应该是边界框中心对应的位置
+      final normalizedAnchor = Offset(
+        ((newBounds.left + newBounds.width / 2) / kCanvasWidth).clamp(0.0, 1.0),
+        ((newBounds.top + newBounds.height / 2) / kCanvasHeight).clamp(
+          0.0,
+          1.0,
+        ),
+      );
+
+      // 字体大小等于选择框的高度（只限制最小值）
+      final newFontSize = newBounds.height.clamp(8.0, double.infinity);
+
+      updatedElement = element.copyWith(
+        points: [normalizedAnchor],
+        fontSize: newFontSize,
+      );
+    } else {
       // 其他元素的处理
       final normalizedStart = Offset(
         (newBounds.left / kCanvasWidth).clamp(0.0, 1.0),
@@ -727,17 +731,17 @@ class ElementInteractionManager {
   }) {
     // 旋转拖动柄位置在图例上方，距离为图例大小的60%
     final rotationHandleDistance = legendSize * 0.6;
-    
+
     // 将角度转换为弧度，现在旋转指示器在Transform.rotate内部
     // 直接使用图例的旋转角度，不需要额外调整
     final angleInRadians = rotation * (math.pi / 180);
-    
+
     // 根据旋转角度计算手柄位置
     final rotationHandleCenter = Offset(
       legendCenter.dx + rotationHandleDistance * math.cos(angleInRadians),
       legendCenter.dy + rotationHandleDistance * math.sin(angleInRadians),
     );
-    
+
     return Rect.fromCenter(
       center: rotationHandleCenter,
       width: handleSize,
@@ -754,13 +758,13 @@ class ElementInteractionManager {
     double rotation = 0.0, // 图例的旋转角度（度数）
   }) {
     final rotationHandle = getLegendRotationHandle(
-      legendCenter, 
-      legendSize, 
-      handleSize, 
+      legendCenter,
+      legendSize,
+      handleSize,
       rotation: rotation,
     );
     if (rotationHandle == null) return false;
-    
+
     // 增加检测区域，使拖动柄更容易被点击
     const double hitAreaMultiplier = 1.5;
     final expandedHandle = Rect.fromCenter(
@@ -768,7 +772,7 @@ class ElementInteractionManager {
       width: rotationHandle.width * hitAreaMultiplier,
       height: rotationHandle.height * hitAreaMultiplier,
     );
-    
+
     return expandedHandle.contains(canvasPosition);
   }
 }

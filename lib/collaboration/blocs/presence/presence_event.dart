@@ -28,10 +28,7 @@ class UpdateCurrentUserStatus extends PresenceEvent {
   final UserActivityStatus status;
   final Map<String, dynamic>? metadata;
 
-  const UpdateCurrentUserStatus({
-    required this.status,
-    this.metadata,
-  });
+  const UpdateCurrentUserStatus({required this.status, this.metadata});
 
   @override
   List<Object?> get props => [status, metadata];
@@ -89,10 +86,7 @@ class UserLeftCollaboration extends PresenceEvent {
   final String clientId;
   final DateTime leftAt;
 
-  const UserLeftCollaboration({
-    required this.clientId,
-    required this.leftAt,
-  });
+  const UserLeftCollaboration({required this.clientId, required this.leftAt});
 
   @override
   List<Object?> get props => [clientId, leftAt];
@@ -102,7 +96,9 @@ class UserLeftCollaboration extends PresenceEvent {
 class CleanupOfflineUsers extends PresenceEvent {
   final Duration offlineThreshold;
 
-  const CleanupOfflineUsers({this.offlineThreshold = const Duration(minutes: 5)});
+  const CleanupOfflineUsers({
+    this.offlineThreshold = const Duration(minutes: 5),
+  });
 
   @override
   List<Object?> get props => [offlineThreshold];

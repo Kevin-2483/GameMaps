@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1862,7 +1862,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   }
 
   /// 解析相对路径为绝对路径，支持中文字符URL解码
-   String _resolveRelativePath(String currentDir, String relativePath) {
+  String _resolveRelativePath(String currentDir, String relativePath) {
     // 如果是绝对路径，直接返回
     if (relativePath.startsWith('/') ||
         relativePath.startsWith('indexeddb://')) {
@@ -1884,24 +1884,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     debugPrint('路径解析: 当前路径段=$currentParts, 相对路径段=$relativeParts');
 
     // 处理 ".." 和 "." 路径段
-     for (String part in relativeParts) {
-       if (part == '..') {
-         if (currentParts.isNotEmpty) {
-           currentParts.removeLast();
-         }
-       } else if (part != '.' && part.isNotEmpty) {
-         // 对于中文路径，需要进行URL解码以还原中文字符
-         try {
-           final decodedPart = Uri.decodeComponent(part);
-           currentParts.add(decodedPart);
-           debugPrint('URL解码: $part -> $decodedPart');
-         } catch (e) {
-           // 如果解码失败，使用原始字符串
-           currentParts.add(part);
-           debugPrint('URL解码失败，使用原始路径: $part');
-         }
-       }
-     }
+    for (String part in relativeParts) {
+      if (part == '..') {
+        if (currentParts.isNotEmpty) {
+          currentParts.removeLast();
+        }
+      } else if (part != '.' && part.isNotEmpty) {
+        // 对于中文路径，需要进行URL解码以还原中文字符
+        try {
+          final decodedPart = Uri.decodeComponent(part);
+          currentParts.add(decodedPart);
+          debugPrint('URL解码: $part -> $decodedPart');
+        } catch (e) {
+          // 如果解码失败，使用原始字符串
+          currentParts.add(part);
+          debugPrint('URL解码失败，使用原始路径: $part');
+        }
+      }
+    }
 
     // 构建最终路径
     final finalRelativePath = currentParts.join('/');

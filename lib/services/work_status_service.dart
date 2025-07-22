@@ -33,7 +33,11 @@ class WorkStatusService extends ChangeNotifier {
   /// [description] 工作描述，用于在对话框中显示
   /// [taskId] 可选的任务ID，用于标识特定任务
   /// [actions] 可选的操作控件列表，如取消、暂停等
-  void startWorking(String description, {String? taskId, List<WorkStatusAction>? actions}) {
+  void startWorking(
+    String description, {
+    String? taskId,
+    List<WorkStatusAction>? actions,
+  }) {
     if (taskId != null && !_workingTasks.contains(taskId)) {
       _workingTasks.add(taskId);
     }
@@ -46,7 +50,7 @@ class WorkStatusService extends ChangeNotifier {
       _workDescription = description;
       notifyListeners();
       if (kDebugMode) {
-        print('工作状态开始: $description');
+        debugPrint('工作状态开始: $description');
       }
     } else if (_workDescription != description) {
       _workDescription = description;
@@ -74,7 +78,7 @@ class WorkStatusService extends ChangeNotifier {
       _actions = []; // 清空操作控件
       notifyListeners();
       if (kDebugMode) {
-        print('工作状态结束');
+        debugPrint('工作状态结束');
       }
     }
   }
@@ -104,7 +108,7 @@ class WorkStatusService extends ChangeNotifier {
       _actions = []; // 清空操作控件
       notifyListeners();
       if (kDebugMode) {
-        print('强制结束所有工作状态');
+        debugPrint('强制结束所有工作状态');
       }
     }
   }

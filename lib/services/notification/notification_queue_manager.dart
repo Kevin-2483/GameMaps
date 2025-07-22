@@ -96,7 +96,9 @@ class NotificationQueueManager {
     final effectiveAllowStacking =
         allowStacking ?? _config.defaultAllowStacking;
 
-    final notificationId = id ?? '${DateTime.now().millisecondsSinceEpoch}_${_generateUniqueCounter()}';
+    final notificationId =
+        id ??
+        '${DateTime.now().millisecondsSinceEpoch}_${_generateUniqueCounter()}';
     final notification = NotificationMessage(
       id: notificationId, // 🔑 使用自定义ID或生成默认ID
       message: message,
@@ -381,7 +383,7 @@ class NotificationQueueManager {
 
     // 防止空值错误
     if (updateNotifier == null || queueStateNotifier == null) {
-      print(
+      debugPrint(
         'Warning: Failed to create notifiers for ${notification.id} at position $position',
       );
       return;

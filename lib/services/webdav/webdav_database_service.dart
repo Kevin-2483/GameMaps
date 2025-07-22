@@ -6,7 +6,8 @@ import '../database_path_service.dart';
 /// WebDAV数据库服务
 /// 管理WebDAV配置和认证账户的数据库操作
 class WebDavDatabaseService {
-  static final WebDavDatabaseService _instance = WebDavDatabaseService._internal();
+  static final WebDavDatabaseService _instance =
+      WebDavDatabaseService._internal();
   factory WebDavDatabaseService() => _instance;
   WebDavDatabaseService._internal();
 
@@ -73,8 +74,12 @@ class WebDavDatabaseService {
     ''');
 
     // 创建索引
-    await db.execute('CREATE INDEX idx_webdav_configs_auth_account ON $_configsTable (auth_account_id)');
-    await db.execute('CREATE INDEX idx_webdav_configs_enabled ON $_configsTable (is_enabled)');
+    await db.execute(
+      'CREATE INDEX idx_webdav_configs_auth_account ON $_configsTable (auth_account_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_webdav_configs_enabled ON $_configsTable (is_enabled)',
+    );
   }
 
   /// 数据库升级
@@ -87,17 +92,13 @@ class WebDavDatabaseService {
   /// 创建认证账户
   Future<void> createAuthAccount(WebDavAuthAccount account) async {
     final db = await database;
-    await db.insert(
-      _authAccountsTable,
-      {
-        'auth_account_id': account.authAccountId,
-        'display_name': account.displayName,
-        'username': account.username,
-        'created_at': account.createdAt.millisecondsSinceEpoch,
-        'updated_at': account.updatedAt.millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_authAccountsTable, {
+      'auth_account_id': account.authAccountId,
+      'display_name': account.displayName,
+      'username': account.username,
+      'created_at': account.createdAt.millisecondsSinceEpoch,
+      'updated_at': account.updatedAt.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     if (kDebugMode) {
       debugPrint('WebDAV认证账户已创建: ${account.authAccountId}');
@@ -152,7 +153,7 @@ class WebDavDatabaseService {
   /// 删除认证账户
   Future<void> deleteAuthAccount(String authAccountId) async {
     final db = await database;
-    
+
     // 检查是否有配置使用此认证账户
     final configs = await getConfigsByAuthAccount(authAccountId);
     if (configs.isNotEmpty) {
@@ -175,20 +176,16 @@ class WebDavDatabaseService {
   /// 创建WebDAV配置
   Future<void> createConfig(WebDavConfig config) async {
     final db = await database;
-    await db.insert(
-      _configsTable,
-      {
-        'config_id': config.configId,
-        'display_name': config.displayName,
-        'server_url': config.serverUrl,
-        'storage_path': config.storagePath,
-        'auth_account_id': config.authAccountId,
-        'is_enabled': config.isEnabled ? 1 : 0,
-        'created_at': config.createdAt.millisecondsSinceEpoch,
-        'updated_at': config.updatedAt.millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_configsTable, {
+      'config_id': config.configId,
+      'display_name': config.displayName,
+      'server_url': config.serverUrl,
+      'storage_path': config.storagePath,
+      'auth_account_id': config.authAccountId,
+      'is_enabled': config.isEnabled ? 1 : 0,
+      'created_at': config.createdAt.millisecondsSinceEpoch,
+      'updated_at': config.updatedAt.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     if (kDebugMode) {
       debugPrint('WebDAV配置已创建: ${config.configId}');
@@ -235,7 +232,9 @@ class WebDavDatabaseService {
   }
 
   /// 根据认证账户获取配置
-  Future<List<WebDavConfig>> getConfigsByAuthAccount(String authAccountId) async {
+  Future<List<WebDavConfig>> getConfigsByAuthAccount(
+    String authAccountId,
+  ) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       _configsTable,
@@ -300,18 +299,26 @@ class WebDavDatabaseService {
   /// 获取存储统计信息
   Future<Map<String, dynamic>> getStorageStats() async {
     final db = await database;
-    
-    final configCount = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $_configsTable'),
-    ) ?? 0;
-    
-    final enabledConfigCount = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $_configsTable WHERE is_enabled = 1'),
-    ) ?? 0;
-    
-    final authAccountCount = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $_authAccountsTable'),
-    ) ?? 0;
+
+    final configCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM $_configsTable'),
+        ) ??
+        0;
+
+    final enabledConfigCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM $_configsTable WHERE is_enabled = 1',
+          ),
+        ) ??
+        0;
+
+    final authAccountCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM $_authAccountsTable'),
+        ) ??
+        0;
 
     return {
       'total_configs': configCount,

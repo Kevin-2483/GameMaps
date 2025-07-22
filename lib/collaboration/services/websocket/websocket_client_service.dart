@@ -39,7 +39,7 @@ class WebSocketMessage {
       data = Map<String, dynamic>.from(json);
       (data as Map<String, dynamic>).remove('type');
     }
-    
+
     return WebSocketMessage(
       type: json['type'] as String,
       data: data,
@@ -48,10 +48,7 @@ class WebSocketMessage {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'data': data,
-    };
+    return {'type': type, 'data': data};
   }
 }
 
@@ -63,23 +60,23 @@ class WebSocketClientService {
   factory WebSocketClientService() => _instance;
   WebSocketClientService._internal();
 
-  final WebSocketClientAuthService _authService =
-      WebSocketClientAuthService();
+  final WebSocketClientAuthService _authService = WebSocketClientAuthService();
   final WebSocketClientDatabaseService _dbService =
       WebSocketClientDatabaseService();
 
   // 连接状态
-  WebSocketConnectionState _connectionState = WebSocketConnectionState.disconnected;
+  WebSocketConnectionState _connectionState =
+      WebSocketConnectionState.disconnected;
   WebSocketChannel? _channel;
   WebSocketClientConfig? _currentConfig;
   StreamSubscription? _messageSubscription;
   Timer? _pingTimer;
   Timer? _reconnectTimer;
-  
+
   // 心跳相关
   DateTime? _lastPingTime;
   int _lastPingDelay = 0; // 延迟毫秒数
-  
+
   // 流控制器
   final StreamController<WebSocketConnectionState> _stateController =
       StreamController<WebSocketConnectionState>.broadcast();
@@ -102,7 +99,8 @@ class WebSocketClientService {
   Stream<WebSocketMessage> get messageStream => _messageController.stream;
   Stream<String> get errorStream => _errorController.stream;
   Stream<int> get pingDelayStream => _pingDelayController.stream;
-  bool get isConnected => _connectionState == WebSocketConnectionState.connected;
+  bool get isConnected =>
+      _connectionState == WebSocketConnectionState.connected;
   int get currentPingDelay => _lastPingDelay;
 
   /// 连接到 WebSocket 服务器
@@ -133,57 +131,57 @@ class WebSocketClientService {
       _updateConnectionState(WebSocketConnectionState.connecting);
 
       if (kDebugMode) {
-        debugPrint('开始连接到 WebSocket 服务器: ${config.server.host}:${config.server.port}');
+        debugPrint(
+          '开始连接到 WebSocket 服务器: ${config.server.host}:${config.server.port}',
+        );
       }
 
       // 构建 WebSocket URL
       final scheme = config.server.port == 443 ? 'wss' : 'ws';
-      final url = '$scheme://${config.server.host}:${config.server.port}${config.webSocket.path}';
-      
+      final url =
+          '$scheme://${config.server.host}:${config.server.port}${config.webSocket.path}';
+
       if (kDebugMode) {
         debugPrint('WebSocket URL: $url');
       }
 
       // 创建 WebSocket 连接
       _channel = WebSocketChannel.connect(Uri.parse(url));
-      
+
       // 等待连接建立
       await _channel!.ready;
-      
+
       if (kDebugMode) {
         debugPrint('WebSocket 连接已建立');
       }
 
       // 先开始消息监听
       _startMessageListener();
-      
+
       // 连接成功，进行认证
       _updateConnectionState(WebSocketConnectionState.authenticating);
-      
+
       // 直接发送到 WebSocket，因为 sendMessage 需要连接状态为 connected
-      final messageJson = jsonEncode({
-        'type': 'auth',
-        'data': config.clientId,
-      });
+      final messageJson = jsonEncode({'type': 'auth', 'data': config.clientId});
       _channel!.sink.add(messageJson);
-      
+
       if (kDebugMode) {
         debugPrint('已发送认证消息: ${config.clientId}');
       }
-      
+
       // 创建认证消息控制器
       _authMessageController = StreamController<WebSocketMessage>.broadcast();
-      
+
       final authSuccess = await _authService.authenticateWithController(
-        _authMessageController!.stream, 
+        _authMessageController!.stream,
         config,
         (message) => _sendMessageDuringAuth(message),
       );
-      
+
       // 清理认证消息控制器
       await _authMessageController?.close();
       _authMessageController = null;
-      
+
       if (!authSuccess) {
         _handleError('认证失败');
         await _closeConnection();
@@ -233,11 +231,11 @@ class WebSocketClientService {
     try {
       final messageJson = jsonEncode(message.toJson());
       _channel!.sink.add(messageJson);
-      
+
       // if (kDebugMode) {
       //   debugPrint('已发送消息: ${message.type}');
       // }
-      
+
       return true;
     } catch (e) {
       _handleError('发送消息失败: $e');
@@ -257,11 +255,11 @@ class WebSocketClientService {
     try {
       final messageJson = jsonEncode(message.toJson());
       _channel!.sink.add(messageJson);
-      
+
       if (kDebugMode) {
         debugPrint('已发送认证消息: ${message.type}');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -287,21 +285,20 @@ class WebSocketClientService {
   }) async {
     final message = WebSocketMessage(
       type: 'user_status_update',
-      data: {
-        'online_status': onlineStatus,
-        'activity_status': activityStatus,
-      },
+      data: {'online_status': onlineStatus, 'activity_status': activityStatus},
     );
-    
+
     if (kDebugMode) {
       debugPrint('发送用户状态更新: online=$onlineStatus, activity=$activityStatus');
     }
-    
+
     return await sendMessage(message);
   }
 
   /// 发送包含地图信息的用户状态更新
-  Future<bool> sendUserStatusUpdateWithData(Map<String, dynamic> statusData) async {
+  Future<bool> sendUserStatusUpdateWithData(
+    Map<String, dynamic> statusData,
+  ) async {
     final message = WebSocketMessage(
       type: 'user_status_update',
       data: statusData,
@@ -315,28 +312,29 @@ class WebSocketClientService {
       type: 'request_online_status_list',
       data: {},
     );
-    
+
     if (kDebugMode) {
       debugPrint('请求在线状态列表');
     }
-    
+
     return await sendMessage(message);
   }
 
   /// 开始消息监听
   void _startMessageListener() {
     _messageSubscription?.cancel();
-    
+
     _messageSubscription = _channel!.stream.listen(
       (data) {
         try {
-          final messageData = jsonDecode(data as String) as Map<String, dynamic>;
+          final messageData =
+              jsonDecode(data as String) as Map<String, dynamic>;
           final message = WebSocketMessage.fromJson(messageData);
-          
+
           if (kDebugMode) {
             debugPrint('收到消息: ${message.type}');
           }
-          
+
           _handleIncomingMessage(message);
         } catch (e) {
           if (kDebugMode) {
@@ -396,7 +394,7 @@ class WebSocketClientService {
       final now = DateTime.now();
       _lastPingDelay = now.difference(_lastPingTime!).inMilliseconds;
       _pingDelayController.add(_lastPingDelay);
-      
+
       // if (kDebugMode) {
       //   debugPrint('收到 pong 消息，延迟: ${_lastPingDelay}ms');
       // }
@@ -425,10 +423,12 @@ class WebSocketClientService {
       final onlineStatus = message.data['online_status'] as String?;
       final activityStatus = message.data['activity_status'] as String?;
       final spaceId = message.data['space_id'] as String?;
-      
-      debugPrint('收到用户状态广播: client=$clientId, online=$onlineStatus, activity=$activityStatus, space=$spaceId');
+
+      debugPrint(
+        '收到用户状态广播: client=$clientId, online=$onlineStatus, activity=$activityStatus, space=$spaceId',
+      );
     }
-    
+
     // 将用户状态广播消息转发给监听者（如PresenceBloc）
     _messageController.add(message);
   }
@@ -439,7 +439,7 @@ class WebSocketClientService {
       final success = message.data['success'] as bool? ?? false;
       final users = message.data['users'] as List? ?? [];
       final spaceId = message.data['space_id'] as String?;
-      
+
       if (success) {
         debugPrint('收到在线状态列表响应: space=$spaceId, users_count=${users.length}');
       } else {
@@ -447,7 +447,7 @@ class WebSocketClientService {
         debugPrint('在线状态列表请求失败: $error');
       }
     }
-    
+
     // 将在线状态列表响应转发给监听者（如PresenceBloc）
     _messageController.add(message);
   }
@@ -455,17 +455,19 @@ class WebSocketClientService {
   /// 开始心跳循环
   void _startPingLoop() {
     _pingTimer?.cancel();
-    
+
     if (_currentConfig == null) return;
-    
-    final pingInterval = Duration(milliseconds: (_currentConfig!.webSocket.pingInterval * 1000).round());
-    
+
+    final pingInterval = Duration(
+      milliseconds: (_currentConfig!.webSocket.pingInterval * 1000).round(),
+    );
+
     _pingTimer = Timer.periodic(pingInterval, (timer) {
       if (!isConnected) {
         timer.cancel();
         return;
       }
-      
+
       _sendPing();
     });
   }
@@ -473,7 +475,7 @@ class WebSocketClientService {
   /// 发送心跳消息
   void _sendPing() {
     _lastPingTime = DateTime.now();
-    
+
     final pingMessage = WebSocketMessage(
       type: 'ping',
       data: {
@@ -481,7 +483,7 @@ class WebSocketClientService {
         'timestamp': _lastPingTime!.millisecondsSinceEpoch,
       },
     );
-    
+
     sendMessage(pingMessage);
   }
 
@@ -501,12 +503,12 @@ class WebSocketClientService {
     _reconnectAttempts++;
 
     final delay = _currentConfig?.webSocket.reconnectDelay ?? 5;
-    final reconnectDelay = Duration(
-      seconds: delay * _reconnectAttempts,
-    );
+    final reconnectDelay = Duration(seconds: delay * _reconnectAttempts);
 
     if (kDebugMode) {
-      debugPrint('将在 ${reconnectDelay.inSeconds} 秒后进行第 $_reconnectAttempts 次重连');
+      debugPrint(
+        '将在 ${reconnectDelay.inSeconds} 秒后进行第 $_reconnectAttempts 次重连',
+      );
     }
 
     _reconnectTimer?.cancel();
@@ -522,7 +524,7 @@ class WebSocketClientService {
     _pingTimer?.cancel();
     _reconnectTimer?.cancel();
     _messageSubscription?.cancel();
-    
+
     if (_channel != null) {
       await _channel!.sink.close(status.normalClosure);
       _channel = null;
@@ -534,7 +536,7 @@ class WebSocketClientService {
     if (_connectionState != newState) {
       _connectionState = newState;
       _stateController.add(newState);
-      
+
       if (kDebugMode) {
         debugPrint('连接状态变更: ${newState.name}');
       }

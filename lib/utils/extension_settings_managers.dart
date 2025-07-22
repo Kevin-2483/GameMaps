@@ -118,7 +118,9 @@ class LegendGroupZoomFactorManager {
   static Map<String, double> getAllZoomFactors(String mapId) {
     if (!ExtensionSettingsManager.isInitialized) return {};
 
-    return ExtensionSettingsManager.instance.getAllLegendGroupZoomFactors(mapId);
+    return ExtensionSettingsManager.instance.getAllLegendGroupZoomFactors(
+      mapId,
+    );
   }
 
   /// 清除地图的所有图例组缩放因子设置

@@ -42,7 +42,7 @@ class WebWorkerScriptExecutor implements IScriptExecutor {
       _logController.stream.listen((log) {
         _executionLogs.add(log);
         if (kDebugMode) {
-          print('[WebWorkerScriptExecutor] $log');
+          debugPrint('[WebWorkerScriptExecutor] $log');
         }
       });
     } catch (e) {

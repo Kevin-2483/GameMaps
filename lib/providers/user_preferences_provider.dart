@@ -11,7 +11,8 @@ import 'theme_provider.dart';
 /// 用户偏好设置状态管理Provider
 class UserPreferencesProvider extends ChangeNotifier {
   final UserPreferencesService _service = UserPreferencesService();
-  final UserPreferencesConfigService _configService = UserPreferencesConfigService();
+  final UserPreferencesConfigService _configService =
+      UserPreferencesConfigService();
 
   UserPreferences? _currentPreferences;
   bool _isLoading = false;
@@ -726,11 +727,11 @@ class UserPreferencesProvider extends ChangeNotifier {
         description: description,
         preferences: _currentPreferences!,
       );
-      
+
       if (kDebugMode) {
         debugPrint('配置保存成功: $name ($configId)');
       }
-      
+
       return configId;
     } catch (e) {
       _setError('保存配置失败: ${e.toString()}');
@@ -744,7 +745,7 @@ class UserPreferencesProvider extends ChangeNotifier {
   Future<bool> loadAndApplyConfig(String configId) async {
     try {
       _setLoading(true);
-      
+
       final preferences = await _configService.loadConfig(configId);
       if (preferences == null) {
         _setError('配置不存在或加载失败');
@@ -772,10 +773,10 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       await _service.savePreferences(updatedPreferences, immediate: true);
       _currentPreferences = await _service.getCurrentPreferences();
-      
+
       // 通知监听器更新UI
       notifyListeners();
-      
+
       // 同步主题设置到ThemeProvider
       if (_themeProvider != null) {
         Future.microtask(() {
@@ -788,11 +789,11 @@ class UserPreferencesProvider extends ChangeNotifier {
           );
         });
       }
-      
+
       if (kDebugMode) {
         debugPrint('配置加载并应用成功: $configId');
       }
-      
+
       return true;
     } catch (e) {
       _setError('加载配置失败: ${e.toString()}');
@@ -806,7 +807,7 @@ class UserPreferencesProvider extends ChangeNotifier {
   Future<bool> deleteConfig(String configId) async {
     try {
       _setLoading(true);
-      
+
       final success = await _configService.deleteConfig(configId);
       if (success) {
         if (kDebugMode) {
@@ -815,7 +816,7 @@ class UserPreferencesProvider extends ChangeNotifier {
       } else {
         _setError('删除配置失败');
       }
-      
+
       return success;
     } catch (e) {
       _setError('删除配置失败: ${e.toString()}');
@@ -858,7 +859,7 @@ class UserPreferencesProvider extends ChangeNotifier {
   }) async {
     try {
       _setLoading(true);
-      
+
       final configPreferences = preferences ?? _currentPreferences;
       if (configPreferences == null) {
         _setError('没有可更新的偏好设置');
@@ -871,11 +872,11 @@ class UserPreferencesProvider extends ChangeNotifier {
         preferences: configPreferences,
         configId: configId,
       );
-      
+
       if (kDebugMode) {
         debugPrint('配置更新成功: $name ($configId)');
       }
-      
+
       return true;
     } catch (e) {
       _setError('更新配置失败: ${e.toString()}');
@@ -893,20 +894,20 @@ class UserPreferencesProvider extends ChangeNotifier {
         _setError('配置不存在');
         return null;
       }
-      
+
       final configInfo = await _configService.getConfigInfo(configId);
       if (configInfo == null) {
         _setError('获取配置信息失败');
         return null;
       }
-      
+
       final exportData = {
         'configInfo': configInfo.toJson(),
         'preferences': preferences.toJson(),
         'exportedAt': DateTime.now().toIso8601String(),
         'version': '1.0',
       };
-      
+
       return jsonEncode(exportData);
     } catch (e) {
       _setError('导出配置失败: ${e.toString()}');
@@ -918,25 +919,29 @@ class UserPreferencesProvider extends ChangeNotifier {
   Future<String?> importConfigFromJson(String jsonData) async {
     try {
       _setLoading(true);
-      
+
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
-      final configInfo = ConfigInfo.fromJson(data['configInfo'] as Map<String, dynamic>);
-      final preferences = UserPreferences.fromJson(data['preferences'] as Map<String, dynamic>);
-      
+      final configInfo = ConfigInfo.fromJson(
+        data['configInfo'] as Map<String, dynamic>,
+      );
+      final preferences = UserPreferences.fromJson(
+        data['preferences'] as Map<String, dynamic>,
+      );
+
       // 生成新的配置ID以避免冲突
       final newConfigId = DateTime.now().millisecondsSinceEpoch.toString();
-      
+
       final importedConfigId = await _configService.saveConfig(
         name: '${configInfo.name} (导入)',
         description: '${configInfo.description} (从JSON导入)',
         preferences: preferences,
         configId: newConfigId,
       );
-      
+
       if (kDebugMode) {
         debugPrint('配置导入成功: ${configInfo.name} ($importedConfigId)');
       }
-      
+
       return importedConfigId;
     } catch (e) {
       _setError('导入配置失败: ${e.toString()}');

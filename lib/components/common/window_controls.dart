@@ -13,16 +13,16 @@ import '../../services/window_manager_service.dart';
 class WindowControls extends StatefulWidget {
   /// 按钮样式配置
   final WindowControlsStyle style;
-  
+
   /// 是否显示关闭按钮
   final bool showCloseButton;
-  
+
   /// 关闭按钮回调
   final VoidCallback? onClose;
-  
+
   /// 按钮间距
   final double spacing;
-  
+
   const WindowControls({
     super.key,
     this.style = const WindowControlsStyle(),
@@ -35,7 +35,8 @@ class WindowControls extends StatefulWidget {
   State<WindowControls> createState() => _WindowControlsState();
 }
 
-class _WindowControlsState extends State<WindowControls> with FullScreenListener {
+class _WindowControlsState extends State<WindowControls>
+    with FullScreenListener {
   bool _isFullScreen = false;
 
   @override
@@ -101,7 +102,8 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
   @override
   Widget build(BuildContext context) {
     // 只在桌面平台显示窗口控制按钮
-    if (kIsWeb || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return const SizedBox.shrink();
     }
 
@@ -115,9 +117,9 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
         },
         tooltip: '最小化',
       ),
-      
+
       SizedBox(width: widget.spacing),
-      
+
       // 最大化/还原按钮
       _buildWindowButton(
         icon: Icons.crop_square,
@@ -127,11 +129,11 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
         },
         tooltip: '最大化/还原',
       ),
-      
+
       // 在Windows平台上不显示全屏按钮
       if (!Platform.isWindows) ...[
         SizedBox(width: widget.spacing),
-        
+
         // 全屏按钮
         _buildWindowButton(
           icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
@@ -165,10 +167,7 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
       ]);
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: buttons,
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: buttons);
   }
 
   /// 构建窗口控制按钮
@@ -224,34 +223,34 @@ class _WindowControlsState extends State<WindowControls> with FullScreenListener
 class WindowControlsStyle {
   /// 按钮大小
   final double buttonSize;
-  
+
   /// 图标大小
   final double iconSize;
-  
+
   /// 内边距
   final double padding;
-  
+
   /// 圆角半径
   final double borderRadius;
-  
+
   const WindowControlsStyle({
     this.buttonSize = 36.0,
     this.iconSize = 18.0,
     this.padding = 6.0,
     this.borderRadius = 12.0,
   });
-  
+
   /// 小尺寸样式
   const WindowControlsStyle.small()
-      : buttonSize = 32.0,
-        iconSize = 16.0,
-        padding = 4.0,
-        borderRadius = 8.0;
-  
+    : buttonSize = 32.0,
+      iconSize = 16.0,
+      padding = 4.0,
+      borderRadius = 8.0;
+
   /// 大尺寸样式
   const WindowControlsStyle.large()
-      : buttonSize = 48.0,
-        iconSize = 24.0,
-        padding = 8.0,
-        borderRadius = 16.0;
+    : buttonSize = 48.0,
+      iconSize = 24.0,
+      padding = 8.0,
+      borderRadius = 16.0;
 }

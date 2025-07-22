@@ -263,7 +263,7 @@ class MapEditorSettingsSection extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurface,
         );
     }
-    
+
     // 对于其他键，显示文本
     return Text(
       _getKeyDisplayName(key),
@@ -499,17 +499,18 @@ class MapEditorSettingsSection extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               // 获取默认快捷键设置
-              final defaultShortcuts = MapEditorPreferences.createDefault().shortcuts;
-              
+              final defaultShortcuts =
+                  MapEditorPreferences.createDefault().shortcuts;
+
               // 更新用户偏好设置
               provider.updateMapEditor(shortcuts: defaultShortcuts);
-              
+
               // 关闭确认对话框
               Navigator.of(context).pop();
-              
+
               // 关闭快捷键管理对话框
               Navigator.of(context).pop();
-              
+
               // 显示成功提示
               context.showSuccessSnackBar('已恢复所有快捷键到默认设置');
             },
@@ -999,16 +1000,16 @@ class MapEditorSettingsSection extends StatelessWidget {
                     min: 0.0,
                     max: 200.0,
                     divisions: 20,
-                    label: mapEditor.radialMenuSubMenuDelay == 0 
-                        ? '立即进入' 
+                    label: mapEditor.radialMenuSubMenuDelay == 0
+                        ? '立即进入'
                         : '${mapEditor.radialMenuSubMenuDelay}ms',
                     onChanged: (value) => provider.updateMapEditor(
                       radialMenuSubMenuDelay: value.round(),
                     ),
                   ),
                   Text(
-                    mapEditor.radialMenuSubMenuDelay == 0 
-                        ? '立即进入子菜单' 
+                    mapEditor.radialMenuSubMenuDelay == 0
+                        ? '立即进入子菜单'
                         : '鼠标停止移动${mapEditor.radialMenuSubMenuDelay}ms后进入子菜单',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
@@ -1070,9 +1071,8 @@ class MapEditorSettingsSection extends StatelessWidget {
               title: Text(l10n.autoSelectLastLayerInGroup),
               subtitle: Text(l10n.autoSelectLastLayerInGroupDescription),
               value: mapEditor.autoSelectLastLayerInGroup,
-              onChanged: (value) => provider.updateMapEditor(
-                autoSelectLastLayerInGroup: value,
-              ),
+              onChanged: (value) =>
+                  provider.updateMapEditor(autoSelectLastLayerInGroup: value),
             ),
 
             const SizedBox(height: 16),

@@ -172,7 +172,9 @@ class VfsStorageService {
       fileName = vfsPath.path;
     }
 
-    debugPrint('🗂️ VFS: Creating directory - path: "${vfsPath.path}", fileName: "$fileName"');
+    debugPrint(
+      '🗂️ VFS: Creating directory - path: "${vfsPath.path}", fileName: "$fileName"',
+    );
 
     await db.insert(_filesTableName, {
       'database_name': vfsPath.database,
@@ -457,7 +459,7 @@ class VfsStorageService {
         } else if (toVfsPath.path.isNotEmpty) {
           newFileName = toVfsPath.path;
         }
-        
+
         await txn.update(
           _filesTableName,
           {
@@ -477,8 +479,6 @@ class VfsStorageService {
       return true;
     });
   }
-
-
 
   /// 复制文件或目录（带冲突检测）
   Future<bool> copyWithConflictCheck(
@@ -524,9 +524,13 @@ class VfsStorageService {
           whereArgs: [toVfsPath.database, toVfsPath.collection, toVfsPath.path],
           limit: 1,
         );
-        
+
         if (existingTarget.isNotEmpty) {
-          throw VfsException('Target already exists', path: toPath, code: 'FILE_EXISTS');
+          throw VfsException(
+            'Target already exists',
+            path: toPath,
+            code: 'FILE_EXISTS',
+          );
         }
       }
 
@@ -538,19 +542,25 @@ class VfsStorageService {
 
         final newFileName = newPath.split('/').last;
 
-        await txn.insert(_filesTableName, {
-          'database_name': toVfsPath.database,
-          'collection_name': toVfsPath.collection,
-          'file_path': newPath,
-          'file_name': newFileName,
-          'is_directory': item['is_directory'],
-          'content_data': item['content_data'],
-          'mime_type': item['mime_type'],
-          'file_size': item['file_size'],
-          'created_at': now,
-          'modified_at': now,
-          'metadata_json': item['metadata_json'],
-        }, conflictAlgorithm: overwriteExisting ? ConflictAlgorithm.replace : ConflictAlgorithm.abort);
+        await txn.insert(
+          _filesTableName,
+          {
+            'database_name': toVfsPath.database,
+            'collection_name': toVfsPath.collection,
+            'file_path': newPath,
+            'file_name': newFileName,
+            'is_directory': item['is_directory'],
+            'content_data': item['content_data'],
+            'mime_type': item['mime_type'],
+            'file_size': item['file_size'],
+            'created_at': now,
+            'modified_at': now,
+            'metadata_json': item['metadata_json'],
+          },
+          conflictAlgorithm: overwriteExisting
+              ? ConflictAlgorithm.replace
+              : ConflictAlgorithm.abort,
+        );
       }
 
       return true;
@@ -851,7 +861,9 @@ class VfsStorageService {
       fileName = vfsPath.path;
     }
 
-    debugPrint('📄 VFS: Writing file - path: "${vfsPath.path}", fileName: "$fileName"');
+    debugPrint(
+      '📄 VFS: Writing file - path: "${vfsPath.path}", fileName: "$fileName"',
+    );
 
     await db.insert(_filesTableName, {
       'database_name': vfsPath.database,

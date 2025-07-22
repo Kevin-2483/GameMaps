@@ -612,13 +612,15 @@ class _ExternalResourcesPageContentState
 
     // 检查是否是WebDAV导入，如果是则使用保存的工作状态服务
     final workStatusService = _webdavWorkStatusService ?? WorkStatusService();
-    final taskId = _webdavWorkStatusService != null ? 'webdav_import' : 'upload_external_resources';
+    final taskId = _webdavWorkStatusService != null
+        ? 'webdav_import'
+        : 'upload_external_resources';
 
     try {
       setState(() {
         _isUploading = true;
       });
-      
+
       // 更新工作状态描述
       workStatusService.updateWorkDescription('正在验证文件路径...');
 
@@ -701,7 +703,7 @@ class _ExternalResourcesPageContentState
 
       // 清理工作状态
       workStatusService.stopWorking(taskId: taskId);
-      
+
       // 清理WebDAV工作状态服务引用
       if (_webdavWorkStatusService != null) {
         _webdavWorkStatusService = null;
@@ -712,12 +714,12 @@ class _ExternalResourcesPageContentState
     } catch (e) {
       // 发生错误时清理工作状态
       workStatusService.stopWorking(taskId: taskId);
-      
+
       // 清理WebDAV工作状态服务引用
       if (_webdavWorkStatusService != null) {
         _webdavWorkStatusService = null;
       }
-      
+
       _showErrorSnackBar('更新失败：$e');
     } finally {
       setState(() {
@@ -1496,7 +1498,9 @@ class _ExternalResourcesPageContentState
                     label: Text(_isExporting ? '导出中...' : '下载导出文件'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
-                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSecondary,
                       elevation: _isExporting ? 0 : 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1529,8 +1533,12 @@ class _ExternalResourcesPageContentState
                             : const Icon(Icons.folder),
                         label: Text(_isExporting ? '导出中...' : '导出到文件夹'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSecondary,
                           elevation: _isExporting ? 0 : 2,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -1560,8 +1568,12 @@ class _ExternalResourcesPageContentState
                             : const Icon(Icons.cloud_upload),
                         label: Text(_isExporting ? '上传中...' : '上传到WebDAV'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
                           elevation: _isExporting ? 0 : 2,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -1635,7 +1647,9 @@ class _ExternalResourcesPageContentState
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: _isUploading ? null : _handleUpdateExternalResources,
+                  onPressed: _isUploading
+                      ? null
+                      : _handleUpdateExternalResources,
                   style: ElevatedButton.styleFrom(
                     elevation: _isUploading ? 0 : 2,
                     shape: RoundedRectangleBorder(
@@ -1671,7 +1685,9 @@ class _ExternalResourcesPageContentState
                     child: SizedBox(
                       height: 48,
                       child: ElevatedButton.icon(
-                        onPressed: _isUploading ? null : _handleUpdateExternalResources,
+                        onPressed: _isUploading
+                            ? null
+                            : _handleUpdateExternalResources,
                         style: ElevatedButton.styleFrom(
                           elevation: _isUploading ? 0 : 2,
                           shape: RoundedRectangleBorder(
@@ -2432,7 +2448,9 @@ class _ExternalResourcesPageContentState
 
     // 获取可用的WebDAV配置
     final webdavConfigs = await _webdavDbService.getAllConfigs();
-    final enabledWebdavConfigs = webdavConfigs.where((config) => config.isEnabled).toList();
+    final enabledWebdavConfigs = webdavConfigs
+        .where((config) => config.isEnabled)
+        .toList();
 
     if (enabledWebdavConfigs.isEmpty) {
       _showErrorSnackBar('没有可用的WebDAV配置，请先在WebDAV管理页面添加配置');
@@ -2476,19 +2494,25 @@ class _ExternalResourcesPageContentState
   }
 
   /// 显示WebDAV配置选择对话框
-  Future<WebDavConfig?> _showWebDAVConfigDialog(List<WebDavConfig> configs) async {
+  Future<WebDavConfig?> _showWebDAVConfigDialog(
+    List<WebDavConfig> configs,
+  ) async {
     return await showDialog<WebDavConfig>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('选择WebDAV配置'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: configs.map((config) => ListTile(
-            leading: const Icon(Icons.cloud),
-            title: Text(config.displayName),
-            subtitle: Text(config.serverUrl),
-            onTap: () => Navigator.of(context).pop(config),
-          )).toList(),
+          children: configs
+              .map(
+                (config) => ListTile(
+                  leading: const Icon(Icons.cloud),
+                  title: Text(config.displayName),
+                  subtitle: Text(config.serverUrl),
+                  onTap: () => Navigator.of(context).pop(config),
+                ),
+              )
+              .toList(),
         ),
         actions: [
           TextButton(
@@ -2529,11 +2553,7 @@ class _ExternalResourcesPageContentState
         workStatusService.updateWorkDescription(
           '正在复制文件 ${i + 1}/${validMappings.length}',
         );
-        await _copyToTempFolder(
-          mapping,
-          tempPath,
-          fileMapping,
-        );
+        await _copyToTempFolder(mapping, tempPath, fileMapping);
       }
 
       // 创建 metadata.json
@@ -2592,35 +2612,35 @@ class _ExternalResourcesPageContentState
 
   /// 上传到WebDAV
   Future<void> _uploadToWebDAV(
-    Uint8List zipBytes, 
-    WebDavConfig config, 
+    Uint8List zipBytes,
+    WebDavConfig config,
     Map<String, String> fileMapping,
   ) async {
     try {
       // 计算文件内容的哈希值
       final contentHash = _calculateDataHash(zipBytes);
-      
+
       // 获取导出名称，如果为空则使用默认名称
-      final exportName = _exportNameController.text.trim().isNotEmpty 
-          ? _exportNameController.text.trim() 
+      final exportName = _exportNameController.text.trim().isNotEmpty
+          ? _exportNameController.text.trim()
           : 'external_resources';
-      
+
       // 生成文件夹名称：hash + 导出名称
       final folderName = '${contentHash}_$exportName';
       final fileName = '$exportName.zip';
-      
+
       // 检查WebDAV上是否已存在相同的文件夹
       final folderExists = await _webdavClientService.checkPathExists(
         config.configId,
         folderName,
       );
-      
+
       if (folderExists) {
         // 如果文件夹已存在，说明相同内容已经上传过，跳过上传
         debugPrint('WebDAV上已存在相同内容的导出，跳过上传：$folderName');
         return;
       }
-      
+
       // 写入到VFS临时文件
       final tempVfsPath = 'indexeddb://r6box/fs/temp/$fileName';
       await _vfsService.vfs.writeBinaryFile(
@@ -2652,7 +2672,7 @@ class _ExternalResourcesPageContentState
 
       // 清理VFS临时文件
       await _vfsService.vfs.delete(tempVfsPath);
-      
+
       debugPrint('成功上传到WebDAV：$remotePath');
     } catch (e) {
       throw Exception('WebDAV上传失败：$e');
@@ -2668,15 +2688,15 @@ class _ExternalResourcesPageContentState
     try {
       // 生成metadata.json内容
       final metadata = <String, dynamic>{};
-      
+
       // 按固定顺序添加字段以确保确定性
-      
+
       // 1. 文件映射（排序后的）
       final sortedFileMapping = Map<String, String>.fromEntries(
-        fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+        fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
       );
       metadata['file_mappings'] = sortedFileMapping;
-      
+
       // 2. 基础字段（按字母顺序）
       if (_exportAuthorController.text.trim().isNotEmpty) {
         metadata['author'] = _exportAuthorController.text.trim();
@@ -2703,7 +2723,7 @@ class _ExternalResourcesPageContentState
           customFieldsMap[key] = value;
         }
       }
-      
+
       // 按键名排序添加自定义字段
       final sortedCustomFields = customFieldsMap.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key));
@@ -2712,13 +2732,15 @@ class _ExternalResourcesPageContentState
       }
 
       final metadataJson = jsonEncode(metadata);
-      
+
       // 写入到VFS临时文件
       final tempMetadataPath = 'indexeddb://r6box/fs/temp/metadata.json';
       await _vfsService.vfs.writeTextFile(tempMetadataPath, metadataJson);
-      
+
       // 使用VFS服务生成系统临时文件路径
-      final systemTempPath = await _vfsService.generateFileUrl(tempMetadataPath);
+      final systemTempPath = await _vfsService.generateFileUrl(
+        tempMetadataPath,
+      );
       if (systemTempPath == null) {
         throw Exception('无法生成metadata.json系统临时文件路径');
       }
@@ -2737,7 +2759,7 @@ class _ExternalResourcesPageContentState
 
       // 清理VFS临时文件
       await _vfsService.vfs.delete(tempMetadataPath);
-      
+
       debugPrint('成功上传metadata.json到WebDAV：$remoteMetadataPath');
     } catch (e) {
       throw Exception('metadata.json WebDAV上传失败：$e');
@@ -2846,15 +2868,15 @@ class _ExternalResourcesPageContentState
   ) async {
     // 使用LinkedHashMap确保字段顺序一致
     final metadata = <String, dynamic>{};
-    
+
     // 按固定顺序添加字段以确保确定性
-    
+
     // 1. 文件映射（排序后的）
     final sortedFileMapping = Map<String, String>.fromEntries(
-      fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+      fileMapping.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     );
     metadata['file_mappings'] = sortedFileMapping;
-    
+
     // 2. 基础字段（按字母顺序）
     if (_exportAuthorController.text.trim().isNotEmpty) {
       metadata['author'] = _exportAuthorController.text.trim();
@@ -2881,7 +2903,7 @@ class _ExternalResourcesPageContentState
         customFieldsMap[key] = value;
       }
     }
-    
+
     // 按键名排序添加自定义字段
     final sortedCustomFields = customFieldsMap.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
@@ -2926,7 +2948,7 @@ class _ExternalResourcesPageContentState
     // 对文件列表进行排序以确保确定性顺序
     final sortedItems = List<VfsFileInfo>.from(items)
       ..sort((a, b) => a.name.compareTo(b.name));
-    
+
     for (final item in sortedItems) {
       final itemPath = basePath.isEmpty ? item.name : '$basePath/${item.name}';
 
@@ -3062,7 +3084,7 @@ class _ExternalResourcesPageContentState
   Future<void> _handleWebDAVImport() async {
     // 开始WebDAV导入工作状态
     final workStatusService = WorkStatusService();
-    
+
     // 添加取消操作控件
     final cancelAction = WorkStatusAction.cancel(
       onPressed: () {
@@ -3073,17 +3095,19 @@ class _ExternalResourcesPageContentState
       },
       tooltip: '取消WebDAV导入',
     );
-    
+
     workStatusService.startWorking(
-      '正在连接WebDAV...', 
+      '正在连接WebDAV...',
       taskId: 'webdav_import',
       actions: [cancelAction],
     );
-    
+
     try {
       // 获取可用的WebDAV配置
       final webdavConfigs = await _webdavDbService.getAllConfigs();
-      final enabledWebdavConfigs = webdavConfigs.where((config) => config.isEnabled).toList();
+      final enabledWebdavConfigs = webdavConfigs
+          .where((config) => config.isEnabled)
+          .toList();
 
       if (enabledWebdavConfigs.isEmpty) {
         workStatusService.stopWorking(taskId: 'webdav_import');
@@ -3092,7 +3116,9 @@ class _ExternalResourcesPageContentState
       }
 
       // 让用户选择WebDAV配置
-      final selectedConfig = await _showWebDAVConfigDialog(enabledWebdavConfigs);
+      final selectedConfig = await _showWebDAVConfigDialog(
+        enabledWebdavConfigs,
+      );
       if (selectedConfig == null) {
         workStatusService.stopWorking(taskId: 'webdav_import');
         return;
@@ -3101,7 +3127,7 @@ class _ExternalResourcesPageContentState
       try {
         // 更新工作状态
         workStatusService.updateWorkDescription('正在读取WebDAV目录...');
-        
+
         // 读取WebDAV根目录
         final directories = await _webdavClientService.listDirectory(
           selectedConfig.configId,
@@ -3127,7 +3153,7 @@ class _ExternalResourcesPageContentState
 
         // 更新工作状态
         workStatusService.updateWorkDescription('正在扫描目录...');
-        
+
         // 读取每个目录的metadata.json
         final importItems = <WebDAVImportItem>[];
         for (final dir in dirList) {
@@ -3143,15 +3169,19 @@ class _ExternalResourcesPageContentState
 
             if (dirContents != null) {
               // 检查目录中是否包含metadata.json文件
-              final hasMetadata = dirContents.any((file) => 
-                file.name == 'metadata.json' && file.isDir != true
+              final hasMetadata = dirContents.any(
+                (file) => file.name == 'metadata.json' && file.isDir != true,
               );
 
               if (hasMetadata) {
                 // 下载并解析metadata.json
                 final metadataPath = '$dirName/metadata.json';
-                final tempMetadataFile = File(await VfsPlatformIO.generateWebDAVImportTempFilePath('temp_metadata_${DateTime.now().millisecondsSinceEpoch}.json'));
-                
+                final tempMetadataFile = File(
+                  await VfsPlatformIO.generateWebDAVImportTempFilePath(
+                    'temp_metadata_${DateTime.now().millisecondsSinceEpoch}.json',
+                  ),
+                );
+
                 final downloadSuccess = await _webdavClientService.downloadFile(
                   selectedConfig.configId,
                   metadataPath,
@@ -3160,13 +3190,16 @@ class _ExternalResourcesPageContentState
 
                 if (downloadSuccess && await tempMetadataFile.exists()) {
                   final metadataContent = await tempMetadataFile.readAsString();
-                  final metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
-                  
-                  importItems.add(WebDAVImportItem(
-                    directoryName: dirName,
-                    metadata: metadata,
-                    config: selectedConfig,
-                  ));
+                  final metadata =
+                      jsonDecode(metadataContent) as Map<String, dynamic>;
+
+                  importItems.add(
+                    WebDAVImportItem(
+                      directoryName: dirName,
+                      metadata: metadata,
+                      config: selectedConfig,
+                    ),
+                  );
 
                   // 清理临时文件
                   await tempMetadataFile.delete();
@@ -3186,7 +3219,7 @@ class _ExternalResourcesPageContentState
 
         // 更新工作状态为等待用户选择
         workStatusService.updateWorkDescription('等待用户选择导入项...');
-        
+
         // 显示导入项列表对话框
         _showWebDAVImportDialog(importItems, workStatusService);
       } catch (e) {
@@ -3200,7 +3233,10 @@ class _ExternalResourcesPageContentState
   }
 
   /// 显示WebDAV导入项列表对话框
-  void _showWebDAVImportDialog(List<WebDAVImportItem> importItems, WorkStatusService workStatusService) {
+  void _showWebDAVImportDialog(
+    List<WebDAVImportItem> importItems,
+    WorkStatusService workStatusService,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -3213,7 +3249,7 @@ class _ExternalResourcesPageContentState
             itemBuilder: (context, index) {
               final item = importItems[index];
               final metadata = item.metadata;
-              
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: Padding(
@@ -3228,7 +3264,8 @@ class _ExternalResourcesPageContentState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  metadata['name']?.toString() ?? item.directoryName,
+                                  metadata['name']?.toString() ??
+                                      item.directoryName,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -3257,9 +3294,14 @@ class _ExternalResourcesPageContentState
                             onPressed: () async {
                               Navigator.of(context).pop();
                               // 添加短暂延迟以确保对话框完全关闭
-                              await Future.delayed(const Duration(milliseconds: 100));
+                              await Future.delayed(
+                                const Duration(milliseconds: 100),
+                              );
                               if (mounted) {
-                                await _downloadAndImportFromWebDAV(item, workStatusService);
+                                await _downloadAndImportFromWebDAV(
+                                  item,
+                                  workStatusService,
+                                );
                               }
                             },
                             icon: const Icon(Icons.download, size: 16),
@@ -3288,10 +3330,7 @@ class _ExternalResourcesPageContentState
                       const SizedBox(height: 8),
                       Text(
                         '目录: ${item.directoryName}',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 11),
                       ),
                     ],
                   ),
@@ -3314,7 +3353,10 @@ class _ExternalResourcesPageContentState
   }
 
   /// 从WebDAV下载并导入
-  Future<void> _downloadAndImportFromWebDAV(WebDAVImportItem item, WorkStatusService workStatusService) async {
+  Future<void> _downloadAndImportFromWebDAV(
+    WebDAVImportItem item,
+    WorkStatusService workStatusService,
+  ) async {
     try {
       // 更新取消操作控件
       final cancelAction = WorkStatusAction.cancel(
@@ -3326,9 +3368,9 @@ class _ExternalResourcesPageContentState
         },
         tooltip: '取消WebDAV下载',
       );
-      
+
       workStatusService.updateActions([cancelAction]);
-      
+
       // 更新工作状态
       workStatusService.updateWorkDescription('正在准备下载...');
       // 查找ZIP文件
@@ -3347,9 +3389,9 @@ class _ExternalResourcesPageContentState
 
       // 查找ZIP文件
       final zipFiles = directories.where((file) {
-        return file.isDir != true && 
-               file.name != null && 
-               file.name!.toLowerCase().endsWith('.zip');
+        return file.isDir != true &&
+            file.name != null &&
+            file.name!.toLowerCase().endsWith('.zip');
       }).toList();
 
       if (zipFiles.isEmpty) {
@@ -3368,9 +3410,10 @@ class _ExternalResourcesPageContentState
       workStatusService.updateWorkDescription('正在下载 $zipFileName...');
 
       // 下载ZIP文件到自定义临时目录
-      final tempZipFilePath = await VfsPlatformIO.generateWebDAVImportTempFilePath(zipFileName);
+      final tempZipFilePath =
+          await VfsPlatformIO.generateWebDAVImportTempFilePath(zipFileName);
       final tempZipFile = File(tempZipFilePath);
-      
+
       final downloadSuccess = await _webdavClientService.downloadFile(
         item.config.configId,
         '${item.directoryName}/$zipFileName',
@@ -3387,16 +3430,20 @@ class _ExternalResourcesPageContentState
 
       // 更新工作状态
       workStatusService.updateWorkDescription('正在处理ZIP文件...');
-      
+
       // 读取ZIP文件内容
       final zipBytes = await tempZipFile.readAsBytes();
-      
+
       // 清理临时文件
       await tempZipFile.delete();
 
       // 调用现有的导入流程（不重复设置工作状态）
       if (mounted) {
-        await _handleZipImportForWebDAV(zipBytes, zipFileName, workStatusService);
+        await _handleZipImportForWebDAV(
+          zipBytes,
+          zipFileName,
+          workStatusService,
+        );
       }
     } catch (e) {
       workStatusService.stopWorking(taskId: 'webdav_import');
@@ -3407,14 +3454,18 @@ class _ExternalResourcesPageContentState
   }
 
   /// 处理ZIP文件导入（用于WebDAV，使用传入的工作状态服务）
-  Future<void> _handleZipImportForWebDAV(Uint8List zipBytes, String fileName, WorkStatusService workStatusService) async {
+  Future<void> _handleZipImportForWebDAV(
+    Uint8List zipBytes,
+    String fileName,
+    WorkStatusService workStatusService,
+  ) async {
     try {
       // 保存WebDAV工作状态服务，以便在确认导入时继续使用
       _webdavWorkStatusService = workStatusService;
-      
+
       // 更新工作状态到预览阶段
       workStatusService.updateWorkDescription('正在准备预览...');
-      
+
       // 清理之前的状态
       setState(() {
         _showPreview = false;
@@ -3424,7 +3475,7 @@ class _ExternalResourcesPageContentState
 
       // 处理ZIP文件并显示预览
       await _processZipFileForPreview(zipBytes, fileName);
-      
+
       // 更新工作状态到等待用户确认
       workStatusService.updateWorkDescription('等待用户确认导入...');
     } catch (e) {

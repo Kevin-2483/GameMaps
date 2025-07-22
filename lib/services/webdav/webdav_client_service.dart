@@ -17,13 +17,14 @@ class WebDavClientService {
   WebDavClientService._internal();
 
   final WebDavDatabaseService _dbService = WebDavDatabaseService();
-  final WebDavSecureStorageService _secureStorage = WebDavSecureStorageService();
+  final WebDavSecureStorageService _secureStorage =
+      WebDavSecureStorageService();
 
   /// 初始化服务
   Future<void> initialize() async {
     await _dbService.initialize();
     await _secureStorage.initialize();
-    
+
     if (kDebugMode) {
       debugPrint('WebDAV客户端服务初始化完成');
     }
@@ -40,7 +41,9 @@ class WebDavClientService {
         return null;
       }
 
-      final authAccount = await _dbService.getAuthAccountById(config.authAccountId);
+      final authAccount = await _dbService.getAuthAccountById(
+        config.authAccountId,
+      );
       if (authAccount == null) {
         if (kDebugMode) {
           debugPrint('WebDAV认证账户未找到: ${config.authAccountId}');
@@ -81,7 +84,7 @@ class WebDavClientService {
   /// 测试WebDAV连接
   Future<WebDavTestResult> testConnection(String configId) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       final client = await _createClient(configId);
       if (client == null) {
@@ -93,25 +96,23 @@ class WebDavClientService {
 
       final config = await _dbService.getConfigById(configId);
       if (config == null) {
-        return const WebDavTestResult(
-          success: false,
-          errorMessage: '配置未找到',
-        );
+        return const WebDavTestResult(success: false, errorMessage: '配置未找到');
       }
 
       // 测试连接 - 尝试列出根目录
       await client.readDir('/');
-      
+
       // 测试存储路径是否存在，如果不存在则尝试创建
-      final storagePath = config.storagePath.startsWith('/') 
-          ? config.storagePath 
+      final storagePath = config.storagePath.startsWith('/')
+          ? config.storagePath
           : '/${config.storagePath}';
-      
+
       try {
         await client.readDir(storagePath);
       } catch (e) {
         // 如果目录不存在，尝试创建
-        if (e.toString().contains('404') || e.toString().contains('Not Found')) {
+        if (e.toString().contains('404') ||
+            e.toString().contains('Not Found')) {
           await client.mkdirAll(storagePath);
           if (kDebugMode) {
             debugPrint('WebDAV存储目录已创建: $storagePath');
@@ -122,7 +123,7 @@ class WebDavClientService {
       }
 
       stopwatch.stop();
-      
+
       // 尝试获取服务器信息
       String? serverInfo;
       try {
@@ -139,11 +140,13 @@ class WebDavClientService {
       );
     } catch (e) {
       stopwatch.stop();
-      
+
       String errorMessage = '连接失败';
-      if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
+      if (e.toString().contains('401') ||
+          e.toString().contains('Unauthorized')) {
         errorMessage = '认证失败，请检查用户名和密码';
-      } else if (e.toString().contains('404') || e.toString().contains('Not Found')) {
+      } else if (e.toString().contains('404') ||
+          e.toString().contains('Not Found')) {
         errorMessage = '服务器地址不正确或路径不存在';
       } else if (e.toString().contains('timeout')) {
         errorMessage = '连接超时，请检查网络和服务器地址';
@@ -178,7 +181,7 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remoteFilePath);
-      
+
       // 确保目录存在
       final remoteDirPath = _getDirectoryPath(fullRemotePath);
       if (remoteDirPath.isNotEmpty) {
@@ -187,11 +190,11 @@ class WebDavClientService {
 
       // 上传文件
       await client.writeFromFile(localFilePath, fullRemotePath);
-      
+
       if (kDebugMode) {
         debugPrint('文件上传成功: $localFilePath -> $fullRemotePath');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -220,14 +223,14 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remoteFilePath);
-      
+
       // 下载文件
       await client.read2File(fullRemotePath, localFilePath);
-      
+
       if (kDebugMode) {
         debugPrint('文件下载成功: $fullRemotePath -> $localFilePath');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -255,14 +258,14 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remotePath);
-      
+
       // 列出目录内容
       final files = await client.readDir(fullRemotePath);
-      
+
       if (kDebugMode) {
         debugPrint('目录列表获取成功: $fullRemotePath (${files.length} 个项目)');
       }
-      
+
       return files;
     } catch (e) {
       if (kDebugMode) {
@@ -273,10 +276,7 @@ class WebDavClientService {
   }
 
   /// 删除WebDAV文件或目录
-  Future<bool> delete(
-    String configId,
-    String remotePath,
-  ) async {
+  Future<bool> delete(String configId, String remotePath) async {
     try {
       final client = await _createClient(configId);
       if (client == null) {
@@ -290,14 +290,14 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remotePath);
-      
+
       // 删除文件或目录
       await client.remove(fullRemotePath);
-      
+
       if (kDebugMode) {
         debugPrint('删除成功: $fullRemotePath');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -308,10 +308,7 @@ class WebDavClientService {
   }
 
   /// 创建WebDAV目录
-  Future<bool> createDirectory(
-    String configId,
-    String remotePath,
-  ) async {
+  Future<bool> createDirectory(String configId, String remotePath) async {
     try {
       final client = await _createClient(configId);
       if (client == null) {
@@ -325,14 +322,14 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remotePath);
-      
+
       // 创建目录
       await client.mkdirAll(fullRemotePath);
-      
+
       if (kDebugMode) {
         debugPrint('目录创建成功: $fullRemotePath');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -343,10 +340,7 @@ class WebDavClientService {
   }
 
   /// 检查WebDAV路径是否存在
-  Future<bool> checkPathExists(
-    String configId,
-    String remotePath,
-  ) async {
+  Future<bool> checkPathExists(String configId, String remotePath) async {
     try {
       final client = await _createClient(configId);
       if (client == null) {
@@ -360,14 +354,14 @@ class WebDavClientService {
 
       // 构建完整的远程路径
       final fullRemotePath = _buildFullPath(config.storagePath, remotePath);
-      
+
       // 尝试读取路径信息来检查是否存在
       await client.readDir(fullRemotePath);
-      
+
       if (kDebugMode) {
         debugPrint('路径存在: $fullRemotePath');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -429,27 +423,27 @@ class WebDavClientService {
   /// 构建完整路径
   String _buildFullPath(String storagePath, String relativePath) {
     // 确保存储路径以 / 开头
-    final normalizedStoragePath = storagePath.startsWith('/') 
-        ? storagePath 
+    final normalizedStoragePath = storagePath.startsWith('/')
+        ? storagePath
         : '/$storagePath';
-    
+
     // 确保存储路径以 / 结尾（如果不是根路径）
-    final baseStoragePath = normalizedStoragePath == '/' 
-        ? '/' 
-        : normalizedStoragePath.endsWith('/') 
-            ? normalizedStoragePath 
-            : '$normalizedStoragePath/';
-    
+    final baseStoragePath = normalizedStoragePath == '/'
+        ? '/'
+        : normalizedStoragePath.endsWith('/')
+        ? normalizedStoragePath
+        : '$normalizedStoragePath/';
+
     // 处理相对路径
     if (relativePath.isEmpty || relativePath == '/') {
       return _processPathForWebDAV(normalizedStoragePath);
     }
-    
+
     // 移除相对路径开头的 /
-    final normalizedRelativePath = relativePath.startsWith('/') 
-        ? relativePath.substring(1) 
+    final normalizedRelativePath = relativePath.startsWith('/')
+        ? relativePath.substring(1)
         : relativePath;
-    
+
     final fullPath = '$baseStoragePath$normalizedRelativePath';
     return _processPathForWebDAV(fullPath);
   }

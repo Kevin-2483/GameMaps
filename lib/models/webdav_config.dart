@@ -7,25 +7,25 @@ part 'webdav_config.g.dart';
 class WebDavConfig {
   /// 配置ID
   final String configId;
-  
+
   /// 显示名称
   final String displayName;
-  
+
   /// 服务器URL
   final String serverUrl;
-  
+
   /// 存储文件夹路径
   final String storagePath;
-  
+
   /// 认证账户ID（关联到认证凭据）
   final String authAccountId;
-  
+
   /// 是否启用
   final bool isEnabled;
-  
+
   /// 创建时间
   final DateTime createdAt;
-  
+
   /// 更新时间
   final DateTime updatedAt;
 
@@ -90,16 +90,16 @@ class WebDavConfig {
 class WebDavAuthAccount {
   /// 认证账户ID
   final String authAccountId;
-  
+
   /// 显示名称
   final String displayName;
-  
+
   /// 用户名
   final String username;
-  
+
   /// 创建时间
   final DateTime createdAt;
-  
+
   /// 更新时间
   final DateTime updatedAt;
 
@@ -154,13 +154,13 @@ class WebDavAuthAccount {
 class WebDavTestResult {
   /// 是否成功
   final bool success;
-  
+
   /// 错误消息（如果失败）
   final String? errorMessage;
-  
+
   /// 响应时间（毫秒）
   final int? responseTimeMs;
-  
+
   /// 服务器信息
   final String? serverInfo;
 

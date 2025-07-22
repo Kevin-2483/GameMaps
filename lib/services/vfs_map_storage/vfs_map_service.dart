@@ -254,10 +254,18 @@ abstract class VfsMapService {
   Future<void> duplicateMap(String sourceTitle, String newTitle);
   Future<void> exportMap(String mapTitle, String exportPath);
   Future<String> importMap(String importPath, {bool overwrite = false});
-  
+
   // 地图重命名操作
-  Future<void> renameMap(String oldTitle, String newTitle, [String? folderPath]);
-  
+  Future<void> renameMap(
+    String oldTitle,
+    String newTitle, [
+    String? folderPath,
+  ]);
+
   // 更新地图封面
-  Future<void> updateMapCover(String mapTitle, Uint8List imageData, [String? folderPath]);
+  Future<void> updateMapCover(
+    String mapTitle,
+    Uint8List imageData, [
+    String? folderPath,
+  ]);
 }

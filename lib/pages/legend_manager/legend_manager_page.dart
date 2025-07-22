@@ -783,7 +783,8 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     // 对文件夹和图例进行排序
     final sortedFolders = List<String>.from(_folders)..sort(_compareNames);
-    final sortedLegends = List<LegendItem>.from(_legends)..sort((a, b) => _compareNames(a.title, b.title));
+    final sortedLegends = List<LegendItem>.from(_legends)
+      ..sort((a, b) => _compareNames(a.title, b.title));
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -883,7 +884,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     if (confirmed == true) {
       try {
-        final folderPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
+        final folderPath = _currentPath.isEmpty
+            ? folderName
+            : '$_currentPath/$folderName';
         final success = await _vfsService.deleteFolder(folderPath);
         if (success) {
           await _loadLegends();
@@ -900,20 +903,22 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   /// 检查文件夹是否为空
   Future<bool> _isFolderEmpty(String folderName) async {
     try {
-      final folderPath = _currentPath.isEmpty ? folderName : '$_currentPath/$folderName';
-      
+      final folderPath = _currentPath.isEmpty
+          ? folderName
+          : '$_currentPath/$folderName';
+
       // 检查文件夹中的图例
       final legends = await _vfsService.getAllLegendTitles(folderPath);
       if (legends.isNotEmpty) {
         return false;
       }
-      
+
       // 检查文件夹中的子文件夹
       final subFolders = await _vfsService.getFolders(folderPath);
       if (subFolders.isNotEmpty) {
         return false;
       }
-      
+
       return true;
     } catch (e) {
       debugPrint('检查文件夹是否为空失败: $folderName, 错误: $e');
@@ -960,16 +965,22 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     if (newName != null && newName != oldFolderName) {
       try {
-        final oldPath = _currentPath.isEmpty ? oldFolderName : '$_currentPath/$oldFolderName';
-        final newPath = _currentPath.isEmpty ? newName : '$_currentPath/$newName';
-        
+        final oldPath = _currentPath.isEmpty
+            ? oldFolderName
+            : '$_currentPath/$oldFolderName';
+        final newPath = _currentPath.isEmpty
+            ? newName
+            : '$_currentPath/$newName';
+
         // 检查新名称是否已存在
-        final folders = await _vfsService.getFolders(_currentPath.isEmpty ? null : _currentPath);
+        final folders = await _vfsService.getFolders(
+          _currentPath.isEmpty ? null : _currentPath,
+        );
         if (folders.contains(newName)) {
           _showErrorSnackBar('文件夹名称已存在');
           return;
         }
-        
+
         // 使用VFS的move方法来重命名文件夹
         final success = await _vfsService.renameFolder(oldPath, newPath);
         if (success) {
@@ -1118,13 +1129,14 @@ class _LegendCard extends StatelessWidget {
         // 标题部分：显示在卡片外下方
         const SizedBox(height: 4),
         Text(
-           legend.title,
-           style: Theme.of(context).textTheme.bodySmall
-               ?.copyWith(fontWeight: FontWeight.bold),
-           maxLines: 1,
-           overflow: TextOverflow.ellipsis,
-           textAlign: TextAlign.center,
-         ),
+          legend.title,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
@@ -1146,7 +1158,10 @@ class _FolderCard extends StatelessWidget {
   });
 
   /// 显示文件夹右键菜单
-  void _showFolderContextMenu(BuildContext context, TapDownDetails details) async {
+  void _showFolderContextMenu(
+    BuildContext context,
+    TapDownDetails details,
+  ) async {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -1223,8 +1238,9 @@ class _FolderCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           folderName,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,

@@ -420,7 +420,7 @@ class ZIndexInspector extends StatelessWidget {
             '${element.triangleCut}',
             element: element,
             propertyName: 'triangleCut',
-          )
+          ),
       ],
     );
   }

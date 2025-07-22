@@ -29,17 +29,18 @@ class _WebDavManagerPageContent extends StatefulWidget {
 class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     with TickerProviderStateMixin {
   final WebDavDatabaseService _dbService = WebDavDatabaseService();
-  final WebDavSecureStorageService _secureStorage = WebDavSecureStorageService();
+  final WebDavSecureStorageService _secureStorage =
+      WebDavSecureStorageService();
   final WebDavClientService _clientService = WebDavClientService();
-  
+
   late TabController _tabController;
-  
+
   // 状态管理
   bool _isLoading = false;
   String? _errorMessage;
   List<WebDavConfig> _configs = [];
   List<WebDavAuthAccount> _authAccounts = [];
-  
+
   // 测试状态
   final Map<String, bool> _testingConfigs = {};
   final Map<String, WebDavTestResult?> _testResults = {};
@@ -83,7 +84,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     try {
       final configs = await _dbService.getAllConfigs();
       final authAccounts = await _dbService.getAllAuthAccounts();
-      
+
       setState(() {
         _configs = configs;
         _authAccounts = authAccounts;
@@ -100,10 +101,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(
-            title: 'WebDAV 管理',
-            icon: Icons.cloud_sync,
-          ),
+          DraggableTitleBar(title: 'WebDAV 管理', icon: Icons.cloud_sync),
           if (_errorMessage != null)
             Container(
               width: double.infinity,
@@ -128,10 +126,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                 ? const Center(child: CircularProgressIndicator())
                 : TabBarView(
                     controller: _tabController,
-                    children: [
-                      _buildConfigsTab(),
-                      _buildAuthAccountsTab(),
-                    ],
+                    children: [_buildConfigsTab(), _buildAuthAccountsTab()],
                   ),
           ),
         ],
@@ -169,7 +164,10 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                       SizedBox(height: 16),
                       Text('暂无 WebDAV 配置'),
                       SizedBox(height: 8),
-                      Text('点击"添加配置"开始使用', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        '点击"添加配置"开始使用',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ],
                   ),
                 )
@@ -212,11 +210,18 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.account_circle_outlined, size: 64, color: Colors.grey),
+                      Icon(
+                        Icons.account_circle_outlined,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
                       SizedBox(height: 16),
                       Text('暂无认证账户'),
                       SizedBox(height: 8),
-                      Text('点击"添加账户"开始使用', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        '点击"添加账户"开始使用',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ],
                   ),
                 )
@@ -245,7 +250,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
         updatedAt: DateTime.now(),
       ),
     );
-    
+
     final isTestingThis = _testingConfigs[config.configId] ?? false;
     final testResult = _testResults[config.configId];
 
@@ -283,7 +288,10 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             // 配置信息
             _buildInfoRow('服务器', config.serverUrl),
             _buildInfoRow('存储路径', config.storagePath),
-            _buildInfoRow('认证账户', '${authAccount.displayName} (${authAccount.username})'),
+            _buildInfoRow(
+              '认证账户',
+              '${authAccount.displayName} (${authAccount.username})',
+            ),
             if (testResult != null) ...[
               const SizedBox(height: 8),
               _buildTestResultInfo(testResult),
@@ -293,8 +301,10 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: isTestingThis ? null : () => _testConnection(config.configId),
-                  icon: isTestingThis 
+                  onPressed: isTestingThis
+                      ? null
+                      : () => _testConnection(config.configId),
+                  icon: isTestingThis
                       ? const SizedBox(
                           width: 16,
                           height: 16,
@@ -332,8 +342,10 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
   /// 构建认证账户卡片
   Widget _buildAuthAccountCard(WebDavAuthAccount account) {
     // 查找使用此账户的配置数量
-    final configCount = _configs.where((config) => config.authAccountId == account.authAccountId).length;
-    
+    final configCount = _configs
+        .where((config) => config.authAccountId == account.authAccountId)
+        .length;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -355,7 +367,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                 if (configCount > 0)
                   Chip(
                     label: Text('$configCount 个配置'),
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
                   ),
               ],
             ),
@@ -410,10 +424,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(value, style: const TextStyle(color: Colors.grey)),
           ),
         ],
       ),
@@ -425,8 +436,8 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: result.success 
-            ? Colors.green.withOpacity(0.1) 
+        color: result.success
+            ? Colors.green.withOpacity(0.1)
             : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
@@ -511,20 +522,13 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     try {
       await _dbService.toggleConfigEnabled(config.configId);
       await _loadData();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            config.isEnabled ? '配置已禁用' : '配置已启用',
-          ),
-        ),
+        SnackBar(content: Text(config.isEnabled ? '配置已禁用' : '配置已启用')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('操作失败: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('操作失败: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -554,16 +558,13 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       try {
         await _dbService.deleteConfig(config.configId);
         await _loadData();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('配置已删除')),
-        );
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('配置已删除')));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('删除失败: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('删除失败: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -595,16 +596,13 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
         await _dbService.deleteAuthAccount(account.authAccountId);
         await _secureStorage.deletePassword(account.authAccountId);
         await _loadData();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('认证账户已删除')),
-        );
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('认证账户已删除')));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('删除失败: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('删除失败: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -660,7 +658,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
   /// 格式化日期时间
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -685,7 +683,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
   final _displayNameController = TextEditingController();
   final _serverUrlController = TextEditingController();
   final _storagePathController = TextEditingController();
-  
+
   String? _selectedAuthAccountId;
   bool _isEnabled = true;
   bool _isSaving = false;
@@ -693,7 +691,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.config != null) {
       _displayNameController.text = widget.config!.displayName;
       _serverUrlController.text = widget.config!.serverUrl;
@@ -716,7 +714,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.config != null;
-    
+
     return AlertDialog(
       title: Text(isEditing ? '编辑 WebDAV 配置' : '添加 WebDAV 配置'),
       content: SizedBox(
@@ -763,36 +761,37 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                 decoration: const InputDecoration(
                   labelText: '存储文件夹',
                   hintText: '/r6box',
-                  helperText: '只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)，不能包含中文字符，长度不超过100字符',
+                  helperText:
+                      '只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)，不能包含中文字符，长度不超过100字符',
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return '请输入存储文件夹路径';
                   }
-                  
+
                   final trimmedValue = value.trim();
-                  
+
                   // 检查长度限制
                   if (trimmedValue.length > 100) {
                     return '存储路径长度不能超过100个字符';
                   }
-                  
+
                   // 检查是否包含中文字符
                   if (_containsChinese(trimmedValue)) {
                     return '存储路径不能包含中文字符';
                   }
-                  
+
                   // 检查是否包含特殊字符（只允许字母、数字、斜杠、下划线、连字符）
                   if (!_isValidPathCharacters(trimmedValue)) {
                     return '存储路径只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)';
                   }
-                  
+
                   // 验证路径格式
                   final normalizedPath = _normalizeStoragePath(trimmedValue);
                   if (normalizedPath.isEmpty) {
                     return '无效的路径格式';
                   }
-                  
+
                   return null;
                 },
                 onChanged: (value) {
@@ -808,9 +807,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedAuthAccountId,
-                decoration: const InputDecoration(
-                  labelText: '认证账户',
-                ),
+                decoration: const InputDecoration(labelText: '认证账户'),
                 items: widget.authAccounts.map((account) {
                   return DropdownMenuItem(
                     value: account.authAccountId,
@@ -879,23 +876,23 @@ class _ConfigDialogState extends State<_ConfigDialog> {
     if (path.isEmpty) {
       return '';
     }
-    
+
     // 去除前后空格
     String normalized = path.trim();
-    
+
     // 移除多余的斜杠
     normalized = normalized.replaceAll(RegExp(r'/+'), '/');
-    
+
     // 确保以斜杠开头
     if (!normalized.startsWith('/')) {
       normalized = '/$normalized';
     }
-    
+
     // 移除末尾的斜杠（除非是根路径）
     if (normalized.length > 1 && normalized.endsWith('/')) {
       normalized = normalized.substring(0, normalized.length - 1);
     }
-    
+
     return normalized;
   }
 
@@ -930,18 +927,13 @@ class _ConfigDialogState extends State<_ConfigDialog> {
 
       widget.onSaved();
       Navigator.of(context).pop();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.config != null ? '配置已更新' : '配置已添加'),
-        ),
+        SnackBar(content: Text(widget.config != null ? '配置已更新' : '配置已添加')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('保存失败: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() {
@@ -956,10 +948,7 @@ class _AuthAccountDialog extends StatefulWidget {
   final WebDavAuthAccount? account;
   final VoidCallback onSaved;
 
-  const _AuthAccountDialog({
-    this.account,
-    required this.onSaved,
-  });
+  const _AuthAccountDialog({this.account, required this.onSaved});
 
   @override
   State<_AuthAccountDialog> createState() => _AuthAccountDialogState();
@@ -970,14 +959,14 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isSaving = false;
   bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.account != null) {
       _displayNameController.text = widget.account!.displayName;
       _usernameController.text = widget.account!.username;
@@ -996,7 +985,7 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.account != null;
-    
+
     return AlertDialog(
       title: Text(isEditing ? '编辑认证账户' : '添加认证账户'),
       content: SizedBox(
@@ -1022,9 +1011,7 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: '用户名',
-                ),
+                decoration: const InputDecoration(labelText: '用户名'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return '请输入用户名';
@@ -1039,7 +1026,9 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
                   labelText: isEditing ? '密码（留空保持不变）' : '密码',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -1100,7 +1089,7 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
 
       final dbService = WebDavDatabaseService();
       final secureStorage = WebDavSecureStorageService();
-      
+
       if (widget.account != null) {
         await dbService.updateAuthAccount(account);
         // 只有在用户输入了新密码时才更新密码
@@ -1120,18 +1109,13 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
 
       widget.onSaved();
       Navigator.of(context).pop();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.account != null ? '账户已更新' : '账户已添加'),
-        ),
+        SnackBar(content: Text(widget.account != null ? '账户已更新' : '账户已添加')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('保存失败: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() {

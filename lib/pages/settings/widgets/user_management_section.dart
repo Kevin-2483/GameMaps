@@ -29,7 +29,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   Future<void> _loadConfigs() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoadingConfigs = true;
       _configError = null;
@@ -92,7 +92,8 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                     child: _getAvatarImage() == null
                         ? Text(
                             widget.preferences.displayName.isNotEmpty
-                                ? widget.preferences.displayName[0].toUpperCase()
+                                ? widget.preferences.displayName[0]
+                                      .toUpperCase()
                                 : 'U',
                             style: TextStyle(
                               color: Colors.white,
@@ -187,10 +188,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                     const SizedBox(height: 8),
                     Text('加载配置失败: $_configError'),
                     const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: _loadConfigs,
-                      child: Text('重试'),
-                    ),
+                    ElevatedButton(onPressed: _loadConfigs, child: Text('重试')),
                   ],
                 ),
               )
@@ -201,10 +199,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                   children: [
                     Icon(Icons.inbox, color: Colors.grey),
                     const SizedBox(height: 8),
-                    Text(
-                      '暂无保存的配置',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    Text('暂无保存的配置', style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               )
@@ -220,14 +215,13 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const Spacer(),
-                        TextButton(
-                          onPressed: _loadConfigs,
-                          child: Text('刷新'),
-                        ),
+                        TextButton(onPressed: _loadConfigs, child: Text('刷新')),
                       ],
                     ),
                   ),
-                  ..._configs.map((config) => _buildConfigTile(context, provider, config)),
+                  ..._configs.map(
+                    (config) => _buildConfigTile(context, provider, config),
+                  ),
                 ],
               ),
 
@@ -270,7 +264,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             ListTile(
               leading: Icon(Icons.language),
               title: Text('语言'),
-              subtitle: Text(_getLanguageDisplayName(widget.preferences.locale)),
+              subtitle: Text(
+                _getLanguageDisplayName(widget.preferences.locale),
+              ),
               trailing: Icon(Icons.edit),
               onTap: () => _changeLanguage(context, provider),
             ),
@@ -298,7 +294,8 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   /// 获取头像图片提供者
   ImageProvider? _getAvatarImage() {
-    if (widget.preferences.avatarData != null && widget.preferences.avatarData!.isNotEmpty) {
+    if (widget.preferences.avatarData != null &&
+        widget.preferences.avatarData!.isNotEmpty) {
       return MemoryImage(widget.preferences.avatarData!);
     } else if (widget.preferences.avatarPath != null &&
         widget.preferences.avatarPath!.isNotEmpty) {
@@ -309,7 +306,8 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   /// 获取头像显示文本
   String _getAvatarDisplayText() {
-    if (widget.preferences.avatarData != null && widget.preferences.avatarData!.isNotEmpty) {
+    if (widget.preferences.avatarData != null &&
+        widget.preferences.avatarData!.isNotEmpty) {
       return '本地图片 (${(widget.preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
     } else if (widget.preferences.avatarPath != null &&
         widget.preferences.avatarPath!.isNotEmpty) {
@@ -317,8 +315,6 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     }
     return '未设置';
   }
-
-
 
   void _changeDisplayName(
     BuildContext context,
@@ -455,10 +451,13 @@ class _UserManagementSectionState extends State<UserManagementSection> {
   }
 
   // 配置管理相关方法
-  Future<void> _showSaveConfigDialog(BuildContext context, UserPreferencesProvider provider) async {
+  Future<void> _showSaveConfigDialog(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) async {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -510,7 +509,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
           name: nameController.text.trim(),
           description: descriptionController.text.trim(),
         );
-        
+
         if (configId != null && mounted) {
           context.showSuccessSnackBar('配置保存成功');
           _loadConfigs();
@@ -523,7 +522,11 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     }
   }
 
-  Widget _buildConfigTile(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) {
+  Widget _buildConfigTile(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    ConfigInfo config,
+  ) {
     return ListTile(
       leading: Icon(Icons.settings_backup_restore),
       title: Text(config.name),
@@ -565,11 +568,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
           const PopupMenuItem(
             value: 'export',
             child: Row(
-              children: [
-                Icon(Icons.share),
-                SizedBox(width: 8),
-                Text('导出配置'),
-              ],
+              children: [Icon(Icons.share), SizedBox(width: 8), Text('导出配置')],
             ),
           ),
           const PopupMenuDivider(),
@@ -579,10 +578,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
               children: [
                 Icon(Icons.delete, color: Colors.red),
                 SizedBox(width: 8),
-                Text(
-                  '删除配置',
-                  style: TextStyle(color: Colors.red),
-                ),
+                Text('删除配置', style: TextStyle(color: Colors.red)),
               ],
             ),
           ),
@@ -591,7 +587,11 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     );
   }
 
-  Future<void> _loadConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+  Future<void> _loadConfig(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    ConfigInfo config,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -613,7 +613,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     if (confirmed == true && mounted) {
       try {
         final success = await provider.loadAndApplyConfig(config.id);
-        
+
         if (success && mounted) {
           context.showSuccessSnackBar('配置加载成功');
         }
@@ -625,7 +625,11 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     }
   }
 
-  Future<void> _deleteConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+  Future<void> _deleteConfig(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    ConfigInfo config,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -651,7 +655,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     if (confirmed == true && mounted) {
       try {
         final success = await provider.deleteConfig(config.id);
-        
+
         if (success && mounted) {
           context.showSuccessSnackBar('配置删除成功');
           _loadConfigs();
@@ -664,10 +668,14 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     }
   }
 
-  Future<void> _exportConfig(BuildContext context, UserPreferencesProvider provider, ConfigInfo config) async {
+  Future<void> _exportConfig(
+    BuildContext context,
+    UserPreferencesProvider provider,
+    ConfigInfo config,
+  ) async {
     try {
       final jsonData = await provider.exportConfigAsJson(config.id);
-      
+
       if (jsonData != null) {
         await Clipboard.setData(ClipboardData(text: jsonData));
         context.showSuccessSnackBar('配置已复制到剪贴板');
@@ -677,9 +685,12 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     }
   }
 
-  Future<void> _showImportConfigDialog(BuildContext context, UserPreferencesProvider provider) async {
+  Future<void> _showImportConfigDialog(
+    BuildContext context,
+    UserPreferencesProvider provider,
+  ) async {
     final controller = TextEditingController();
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -722,8 +733,10 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
     if (result == true && mounted) {
       try {
-        final configId = await provider.importConfigFromJson(controller.text.trim());
-        
+        final configId = await provider.importConfigFromJson(
+          controller.text.trim(),
+        );
+
         if (configId != null && mounted) {
           context.showSuccessSnackBar('配置导入成功');
           _loadConfigs();
@@ -738,7 +751,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   void _changeLanguage(BuildContext context, UserPreferencesProvider provider) {
@@ -919,7 +932,6 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
     );
   }
 }
-
 
 // 显示名称编辑对话框
 class _DisplayNameDialog extends StatefulWidget {

@@ -13,7 +13,6 @@ import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 
-
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
   const TrayNavigation({super.key});
@@ -26,22 +25,22 @@ class _TrayNavigationState extends State<TrayNavigation>
     with AutomaticKeepAliveClientMixin, FullScreenListener {
   @override
   bool get wantKeepAlive => true;
-  
+
   bool _isFullScreen = false;
-  
+
   @override
   void initState() {
     super.initState();
     _isFullScreen = FullScreen.isFullScreen;
     FullScreen.addListener(this);
   }
-  
+
   @override
   void dispose() {
     FullScreen.removeListener(this);
     super.dispose();
   }
-  
+
   @override
   void onFullScreenChanged(bool enabled, dynamic systemUiMode) {
     if (mounted) {
@@ -123,19 +122,21 @@ class _TrayNavigationState extends State<TrayNavigation>
             builder: (context, constraints) {
               // 根据屏幕比例决定基本布局
               final isWideScreen = constraints.maxWidth > constraints.maxHeight;
-              final enableRightSideVertical = userPrefsProvider.isInitialized &&
+              final enableRightSideVertical =
+                  userPrefsProvider.isInitialized &&
                   userPrefsProvider.layout.enableRightSideVerticalNavigation;
-              
+
               // 只有在宽屏且启用右侧垂直导航时才使用右侧垂直布局
-              final useRightSideVertical = isWideScreen && enableRightSideVertical;
+              final useRightSideVertical =
+                  isWideScreen && enableRightSideVertical;
               // 垂直布局：宽屏时使用垂直布局（左侧或右侧），窄屏时使用水平布局（底部）
               final useVerticalLayout = isWideScreen;
               final navigationItems = PageRegistry().getNavigationItems();
 
               // 构建导航托盘
               return _buildNavigationTray(
-                context, 
-                navigationItems, 
+                context,
+                navigationItems,
                 useVerticalLayout,
                 useRightSideVertical,
                 userPrefsProvider,
@@ -196,7 +197,8 @@ class _TrayNavigationState extends State<TrayNavigation>
               child: Column(
                 children: [
                   // 顶部：关闭按钮（仅在桌面平台且未启用合并控件时显示）
-                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) ...[
+                  if (isDraggable &&
+                      !userPrefsProvider.layout.enableMergedWindowControls) ...[
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
@@ -217,7 +219,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                     ),
                   ),
                   // 底部：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
-                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) ...[
+                  if (isDraggable &&
+                      !userPrefsProvider.layout.enableMergedWindowControls) ...[
                     const SizedBox(height: 8),
                     _buildWindowButton(
                       context,
@@ -258,7 +261,9 @@ class _TrayNavigationState extends State<TrayNavigation>
                   // 中间：拖拽区域（占用剩余空间）
                   const Expanded(child: SizedBox()),
                   // 右侧：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
-                  if (isDraggable && !userPrefsProvider.layout.enableMergedWindowControls) _buildWindowControls(context),
+                  if (isDraggable &&
+                      !userPrefsProvider.layout.enableMergedWindowControls)
+                    _buildWindowControls(context),
                 ],
               ),
             ),
@@ -338,13 +343,14 @@ class _TrayNavigationState extends State<TrayNavigation>
     return Consumer<WorkStatusService>(
       builder: (context, workStatusService, child) {
         final actions = workStatusService.actions;
-        
+
         return isVertical
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // 操作控件（垂直布局时显示在顶部）
-                  if (actions.isNotEmpty) ..._buildActionButtons(context, actions, true),
+                  if (actions.isNotEmpty)
+                    ..._buildActionButtons(context, actions, true),
                   if (actions.isNotEmpty) const SizedBox(height: 8),
                   SizedBox(
                     width: 24,
@@ -364,7 +370,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // 操作控件（水平布局时显示在左侧）
-                  if (actions.isNotEmpty) ..._buildActionButtons(context, actions, false),
+                  if (actions.isNotEmpty)
+                    ..._buildActionButtons(context, actions, false),
                   if (actions.isNotEmpty) const SizedBox(width: 8),
                   SizedBox(
                     width: 24,
@@ -396,8 +403,14 @@ class _TrayNavigationState extends State<TrayNavigation>
   }
 
   /// 构建操作控件按钮
-  List<Widget> _buildActionButtons(BuildContext context, List<WorkStatusAction> actions, bool isVertical) {
-    return actions.map((action) => _buildActionButton(context, action)).toList();
+  List<Widget> _buildActionButtons(
+    BuildContext context,
+    List<WorkStatusAction> actions,
+    bool isVertical,
+  ) {
+    return actions
+        .map((action) => _buildActionButton(context, action))
+        .toList();
   }
 
   /// 构建单个操作控件按钮
@@ -424,9 +437,10 @@ class _TrayNavigationState extends State<TrayNavigation>
             decoration: BoxDecoration(
               color: action.enabled
                   ? (action.isDangerous
-                      ? Colors.red.withValues(alpha: 0.1)
-                      : Theme.of(context).colorScheme.surfaceContainerHighest)
-                  : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Theme.of(context).colorScheme.surfaceContainerHighest)
+                  : Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -434,9 +448,11 @@ class _TrayNavigationState extends State<TrayNavigation>
               size: 16,
               color: action.enabled
                   ? (action.isDangerous
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.onSurface)
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.onSurface)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),

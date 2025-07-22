@@ -119,8 +119,7 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
     if (key == LogicalKeyboardKey.metaLeft ||
         key == LogicalKeyboardKey.metaRight)
       return 'Win';
-    if (key == LogicalKeyboardKey.capsLock)
-      return 'CapsLock';
+    if (key == LogicalKeyboardKey.capsLock) return 'CapsLock';
 
     // 特殊键
     if (key == LogicalKeyboardKey.space) return 'Space';
@@ -347,7 +346,7 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
         );
       // case 'escape': // 移除escape键的图标显示，让它显示为文本
     }
-    
+
     // 对于其他键，显示文本
     return Text(
       _getKeyDisplayName(key),

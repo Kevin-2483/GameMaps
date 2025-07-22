@@ -24,7 +24,7 @@ import 'collaboration/global_collaboration_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize flutter_fullscreen
   await FullScreen.ensureInitialized();
 

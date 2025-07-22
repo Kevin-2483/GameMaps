@@ -355,15 +355,15 @@ class UserPreferencesDatabaseService {
       for (final row in result) {
         final userId = row['user_id'] as String;
         final layoutDataStr = row['layout_data'] as String;
-        
+
         try {
           final layoutData = jsonDecode(layoutDataStr) as Map<String, dynamic>;
-          
+
           // 检查是否已经包含 enableMergedWindowControls 字段
           if (!layoutData.containsKey('enableMergedWindowControls')) {
             // 添加默认值 false
             layoutData['enableMergedWindowControls'] = false;
-            
+
             // 更新数据库
             await db.update(
               _preferencesTable,
@@ -371,7 +371,7 @@ class UserPreferencesDatabaseService {
               where: 'user_id = ?',
               whereArgs: [userId],
             );
-            
+
             if (kDebugMode) {
               debugPrint('已为用户 $userId 添加 enableMergedWindowControls 字段');
             }

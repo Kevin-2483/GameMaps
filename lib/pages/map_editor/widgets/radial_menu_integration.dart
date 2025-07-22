@@ -321,7 +321,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
       } else {
         displayText = '空便签';
       }
-      
+
       items.add(
         RadialMenuItem(
           id: 'sticky_note_${note.id}',

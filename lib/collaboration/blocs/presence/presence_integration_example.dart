@@ -7,7 +7,7 @@ import '../../services/map_sync_service.dart';
 import 'presence.dart';
 
 /// PresenceBloc与MapDataBloc集成示例
-/// 
+///
 /// 这个示例展示了如何在应用中正确设置和使用PresenceBloc，
 /// 以及如何与现有的MapDataBloc系统集成。
 class PresenceIntegrationExample extends StatelessWidget {
@@ -19,15 +19,13 @@ class PresenceIntegrationExample extends StatelessWidget {
       providers: [
         // 假设MapDataBloc已经在更高层级提供
         // BlocProvider<MapDataBloc>(...),
-        
+
         // 提供PresenceBloc
         BlocProvider<PresenceBloc>(
           create: (context) {
             final webSocketManager = WebSocketClientManager();
-            
-            return PresenceBloc(
-              webSocketManager: webSocketManager,
-            );
+
+            return PresenceBloc(webSocketManager: webSocketManager);
           },
         ),
       ],
@@ -46,18 +44,20 @@ class PresenceAwareMapView extends StatefulWidget {
 
 class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
   MapSyncService? _mapSyncService;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // 初始化用户在线状态
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PresenceBloc>().add(const InitializePresence(
-        currentClientId: 'client123', // 实际应用中从WebSocket客户端管理器获取
-        currentUserName: '用户名', // 实际应用中从用户配置获取
-      ));
-      
+      context.read<PresenceBloc>().add(
+        const InitializePresence(
+          currentClientId: 'client123', // 实际应用中从WebSocket客户端管理器获取
+          currentUserName: '用户名', // 实际应用中从用户配置获取
+        ),
+      );
+
       // 初始化MapSyncService
       setState(() {
         _mapSyncService = MapSyncService(context.read<PresenceBloc>());
@@ -82,7 +82,9 @@ class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
                     children: [
                       Icon(
                         Icons.people,
-                        color: state.onlineUserCount > 1 ? Colors.green : Colors.grey,
+                        color: state.onlineUserCount > 1
+                            ? Colors.green
+                            : Colors.grey,
                       ),
                       const SizedBox(width: 4),
                       Text('${state.onlineUserCount}'),
@@ -99,7 +101,7 @@ class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
         children: [
           // 协作状态栏
           const CollaborationStatusBar(),
-          
+
           // 主要地图视图
           Expanded(
             child: Stack(
@@ -138,18 +140,18 @@ class CollaborationStatusBar extends StatelessWidget {
                 '我: ${_getStatusText(state.currentUser.status)}',
                 _getStatusColor(state.currentUser.status),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // 其他用户状态
               if (state.hasOtherEditingUsers)
                 _buildStatusChip(
                   '${state.editingUserCount - (state.currentUser.isEditing ? 1 : 0)} 人正在编辑',
                   Colors.orange,
                 ),
-              
+
               const Spacer(),
-              
+
               // 连接状态 - 注意：WebSocketClientService 已更新为 WebSocketClientManager
               // 此部分需要根据新的连接状态管理方式进行调整
               Icon(
@@ -172,10 +174,7 @@ class CollaborationStatusBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
-      child: Text(
-        text,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
+      child: Text(text, style: TextStyle(color: color, fontSize: 12)),
     );
   }
 
@@ -209,7 +208,7 @@ class CollaborationStatusBar extends StatelessWidget {
 /// 地图内容（占位符）
 class MapContent extends StatelessWidget {
   final MapSyncService? mapSyncService;
-  
+
   const MapContent({super.key, this.mapSyncService});
 
   @override
@@ -222,7 +221,7 @@ class MapContent extends StatelessWidget {
         children: [
           const Text('地图内容区域'),
           const SizedBox(height: 20),
-          
+
           // 地图信息同步演示按钮
           if (mapSyncService != null)
             MapSyncDemoButtons(mapSyncService: mapSyncService!),
@@ -235,7 +234,7 @@ class MapContent extends StatelessWidget {
 /// 地图同步演示按钮
 class MapSyncDemoButtons extends StatelessWidget {
   final MapSyncService mapSyncService;
-  
+
   const MapSyncDemoButtons({super.key, required this.mapSyncService});
 
   @override
@@ -244,7 +243,7 @@ class MapSyncDemoButtons extends StatelessWidget {
       children: [
         const Text('地图信息同步演示:', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
-        
+
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -270,62 +269,58 @@ class MapSyncDemoButtons extends StatelessWidget {
       ],
     );
   }
-  
+
   void _syncDemoMap1(BuildContext context) {
-    
     // 创建模拟的地图封面数据（简单的彩色方块）
     final demoImageData = _createDemoImageData(Colors.blue);
-    
+
     mapSyncService.syncCurrentMapInfo(
       mapId: 'demo_map_1',
       mapTitle: '演示地图 - 蓝色主题',
       mapCover: demoImageData,
       coverQuality: 70,
     );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已同步演示地图1信息')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已同步演示地图1信息')));
   }
-  
+
   void _syncDemoMap2(BuildContext context) {
-    
     // 创建模拟的地图封面数据（简单的彩色方块）
     final demoImageData = _createDemoImageData(Colors.green);
-    
+
     mapSyncService.syncCurrentMapInfo(
       mapId: 'demo_map_2',
       mapTitle: '演示地图 - 绿色主题',
       mapCover: demoImageData,
       coverQuality: 80,
     );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已同步演示地图2信息')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已同步演示地图2信息')));
   }
-  
+
   void _updateMapTitle(BuildContext context) {
-    
     mapSyncService.updateMapTitle(
       'demo_map_1',
       '演示地图 - 已重命名 ${DateTime.now().millisecondsSinceEpoch}',
     );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已更新地图标题')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已更新地图标题')));
   }
-  
+
   void _clearMapInfo(BuildContext context) {
-    
     mapSyncService.clearCurrentMapInfo();
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已清除地图信息')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已清除地图信息')));
   }
-  
+
   /// 创建演示用的图片数据（简单的彩色方块）
   Uint8List _createDemoImageData(Color color) {
     // 创建一个简单的PNG图片数据（实际应用中会使用真实的地图封面）
@@ -346,7 +341,7 @@ class MapSyncDemoButtons extends StatelessWidget {
       0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,
       0xAE, 0x42, 0x60, 0x82,
     ];
-    
+
     return Uint8List.fromList(pngData);
   }
 }
@@ -381,10 +376,12 @@ class OnlineUsersDrawer extends StatelessWidget {
                   children: [
                     // 当前用户
                     _buildUserTile(state.currentUser, isCurrentUser: true),
-                    
+
                     if (state.allRemoteUsers.isNotEmpty) ...[
                       const Divider(),
-                      ...state.allRemoteUsers.map((user) => _buildUserTile(user)),
+                      ...state.allRemoteUsers.map(
+                        (user) => _buildUserTile(user),
+                      ),
                     ],
                   ],
                 );
@@ -407,14 +404,18 @@ class OnlineUsersDrawer extends StatelessWidget {
               leading: CircleAvatar(
                 backgroundColor: _getStatusColor(user.status),
                 child: Text(
-                  user.userName.isNotEmpty ? user.userName[0].toUpperCase() : '?',
+                  user.userName.isNotEmpty
+                      ? user.userName[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
               title: Text(
                 isCurrentUser ? '${user.userName} (我)' : user.userName,
                 style: TextStyle(
-                  fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isCurrentUser
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
               ),
               subtitle: Text(_getStatusText(user.status)),
@@ -422,7 +423,7 @@ class OnlineUsersDrawer extends StatelessWidget {
                   ? const Icon(Icons.circle, color: Colors.green, size: 12)
                   : const Icon(Icons.circle, color: Colors.grey, size: 12),
             ),
-            
+
             // 显示当前编辑的地图信息
             if (user.hasMapTitle || user.hasMapCover) ...[
               const Divider(height: 8),
@@ -433,7 +434,7 @@ class OnlineUsersDrawer extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildMapInfo(UserPresence user) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -475,9 +476,9 @@ class OnlineUsersDrawer extends StatelessWidget {
               ),
               child: const Icon(Icons.map, size: 20, color: Colors.grey),
             ),
-          
+
           const SizedBox(width: 8),
-          
+
           // 地图标题和状态
           Expanded(
             child: Column(
@@ -485,10 +486,7 @@ class OnlineUsersDrawer extends StatelessWidget {
               children: [
                 Text(
                   '正在编辑:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Text(
                   user.currentMapTitle ?? '未知地图',

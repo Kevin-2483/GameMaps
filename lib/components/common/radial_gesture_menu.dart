@@ -85,7 +85,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   bool _isInCenterArea = false;
   Offset? _lastPointerPosition;
   DateTime? _lastPointerMoveTime;
-  
+
   // 子菜单延迟进入相关
   Timer? _subMenuDelayTimer;
   RadialMenuItem? _pendingSubMenuItem;
@@ -204,7 +204,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     // 取消所有计时器
     _centerAreaTimer?.cancel();
     _subMenuDelayTimer?.cancel();
-    
+
     // 同时隐藏所有动画
     _plateAnimationController.reverse();
     for (final controller in _cardAnimationControllers) {
@@ -414,12 +414,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
       // 取消之前的子菜单延迟计时器（因为悬停项目改变了）
       _subMenuDelayTimer?.cancel();
       _pendingSubMenuItem = null;
-      
+
       // 如果是主菜单项目且有子项目，切换到子菜单
       if (!_isInSubMenu &&
           selectedItem.subItems != null &&
           selectedItem.subItems!.isNotEmpty) {
-        
         // 如果延迟为0，立即进入子菜单（保持原来的行为）
         if (widget.subMenuDelay == Duration.zero) {
           _enterSubMenu(selectedItem);
@@ -429,27 +428,35 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
         } else {
           // 设置新的待处理子菜单项目
           _pendingSubMenuItem = selectedItem;
-          
+
           // 使用类似中心区域的逻辑，检查鼠标是否停止移动
-          _subMenuDelayTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-            if (!mounted || _hoveredItem != selectedItem || _isInSubMenu || _pendingSubMenuItem != selectedItem) {
-              timer.cancel();
-              return;
-            }
-            
-            // 检查鼠标是否停止移动了足够长的时间
-             if (_lastPointerMoveTime != null) {
-               final timeSinceLastMove = DateTime.now().difference(_lastPointerMoveTime!);
-               if (timeSinceLastMove >= widget.subMenuDelay) {
-                 timer.cancel();
-                 _enterSubMenu(selectedItem);
-                 if (widget.debugMode) {
-                   debugPrint('鼠标停止移动，延迟进入子菜单: ${selectedItem.label}');
-                 }
-               }
-             }
-           });
-          
+          _subMenuDelayTimer = Timer.periodic(
+            const Duration(milliseconds: 10),
+            (timer) {
+              if (!mounted ||
+                  _hoveredItem != selectedItem ||
+                  _isInSubMenu ||
+                  _pendingSubMenuItem != selectedItem) {
+                timer.cancel();
+                return;
+              }
+
+              // 检查鼠标是否停止移动了足够长的时间
+              if (_lastPointerMoveTime != null) {
+                final timeSinceLastMove = DateTime.now().difference(
+                  _lastPointerMoveTime!,
+                );
+                if (timeSinceLastMove >= widget.subMenuDelay) {
+                  timer.cancel();
+                  _enterSubMenu(selectedItem);
+                  if (widget.debugMode) {
+                    debugPrint('鼠标停止移动，延迟进入子菜单: ${selectedItem.label}');
+                  }
+                }
+              }
+            },
+          );
+
           if (widget.debugMode) {
             debugPrint('设置子菜单延迟计时器: ${selectedItem.label}');
           }
