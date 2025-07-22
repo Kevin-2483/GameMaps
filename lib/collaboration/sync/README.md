@@ -111,13 +111,13 @@ class OTEngine {
 ```dart
 abstract class Operation {
   final String id;
-  final String userId;
+  final String clientId;
   final DateTime timestamp;
   final VectorClock vectorClock;
   
   Operation({
     required this.id,
-    required this.userId,
+    required this.clientId,
     required this.timestamp,
     required this.vectorClock,
   });
@@ -514,7 +514,7 @@ class OperationComposer {
   
   bool _canCompose(Operation op1, Operation op2) {
     // 相同用户的连续操作可以合并
-    return op1.userId == op2.userId &&
+    return op1.clientId == op2.clientId &&
            op1.runtimeType == op2.runtimeType &&
            op2.timestamp.difference(op1.timestamp).inMilliseconds < 1000;
   }

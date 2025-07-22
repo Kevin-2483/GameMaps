@@ -49,6 +49,7 @@ import '../../widgets/compact_timer_widget.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 import '../../collaboration/mixins/auto_presence_mixin.dart'; // 导入在线状态管理混入
+import '../../collaboration/services/websocket/websocket_client_manager.dart'; // 导入WebSocket客户端管理器
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -105,17 +106,44 @@ class _MapEditorContent extends StatefulWidget {
 class _MapEditorContentState extends State<_MapEditorContent>
     with MapEditorReactiveMixin, ReactiveVersionMixin, AutoPresenceMixin {
   
+  // 缓存的客户端信息
+  String? _cachedClientId;
+  String? _cachedClientName;
+  
   // 实现AutoPresenceMixin的抽象方法
   @override
-  String getCurrentUserId() {
-    // 返回当前用户ID，这里使用设备标识符或用户配置
-    return 'user_${DateTime.now().millisecondsSinceEpoch.hashCode}';
+  String getCurrentClientId() {
+    return _cachedClientId ?? 'unknown_client';
   }
 
   @override
   String getCurrentUserName() {
-    // 返回当前用户名，这里使用默认名称
-    return '用户';
+    return _cachedClientName ?? '未知客户端';
+  }
+  
+  /// 异步获取并缓存客户端信息
+  Future<void> _loadClientInfo() async {
+    try {
+      final manager = WebSocketClientManager();
+      final activeConfig = await manager.getActiveConfig();
+      if (activeConfig != null) {
+        setState(() {
+          _cachedClientId = activeConfig.clientId;
+          _cachedClientName = activeConfig.displayName;
+        });
+        if (kDebugMode) {
+          debugPrint('客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}');
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('未找到活跃的客户端配置');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('获取客户端信息失败: $e');
+      }
+    }
   }
 
   @override
@@ -292,7 +320,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _mainFocusNode = FocusNode();
     _initializeMapAndReactiveSystem();
     _initializeLayoutFromPreferences();
+    // 先异步加载客户端信息，然后初始化在线状态管理
+    _initializeWithClientInfo();
     // 脚本管理器现在通过响应式系统自动初始化
+  }
+  
+  /// 先加载客户端信息，然后初始化协作
+  Future<void> _initializeWithClientInfo() async {
+    await _loadClientInfo();
+    initializeCollaboration();
   }
 
   // 添加用户偏好设置提供者的引用

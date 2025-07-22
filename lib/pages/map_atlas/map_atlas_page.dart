@@ -29,6 +29,7 @@ import '../../collaboration/models/user_presence.dart'; // 导入用户状态枚
 import '../../collaboration/blocs/presence/presence_event.dart'; // 导入状态事件
 import '../../collaboration/blocs/presence/presence_bloc.dart'; // 导入状态管理
 import '../../collaboration/blocs/presence/presence_state.dart'; // 导入状态定义
+import '../../collaboration/services/websocket/websocket_client_manager.dart'; // 导入WebSocket客户端管理器
 
 class MapAtlasPage extends BasePage {
   const MapAtlasPage({super.key});
@@ -59,18 +60,45 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   List<BreadcrumbItem> _breadcrumbs = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  
+  // 缓存的客户端信息
+  String? _cachedClientId;
+  String? _cachedClientName;
 
   // 实现AutoPresenceMixin的抽象方法
   @override
-  String getCurrentUserId() {
-    // 返回当前用户ID，这里使用设备标识符或用户配置
-    return 'user_${DateTime.now().millisecondsSinceEpoch.hashCode}';
+  String getCurrentClientId() {
+    return _cachedClientId ?? 'unknown_client';
   }
 
   @override
   String getCurrentUserName() {
-    // 返回当前用户名，这里使用默认名称
-    return '用户';
+    return _cachedClientName ?? '未知客户端';
+  }
+  
+  /// 异步获取并缓存客户端信息
+  Future<void> _loadClientInfo() async {
+    try {
+      final manager = WebSocketClientManager();
+      final activeConfig = await manager.getActiveConfig();
+      if (activeConfig != null) {
+        setState(() {
+          _cachedClientId = activeConfig.clientId;
+          _cachedClientName = activeConfig.displayName;
+        });
+        if (kDebugMode) {
+          debugPrint('客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}');
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('未找到活跃的客户端配置');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('获取客户端信息失败: $e');
+      }
+    }
   }
 
   @override
@@ -78,7 +106,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     super.initState();
     _loadDirectoryContents();
     _searchController.addListener(_onSearchChanged);
-    // 初始化在线状态管理
+    // 先异步加载客户端信息，然后初始化在线状态管理
+    _initializeWithClientInfo();
+  }
+
+  /// 先加载客户端信息，然后初始化协作
+  Future<void> _initializeWithClientInfo() async {
+    await _loadClientInfo();
     initializeCollaboration();
   }
 
@@ -200,7 +234,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                itemCount: onlineUsers.length,
                itemBuilder: (context, index) {
                  final user = onlineUsers[index];
-                 final isCurrentUser = user.userId == state.currentUser.userId;
+                 final isCurrentUser = user.clientId == state.currentUser.clientId;
                  return Card(
                    elevation: isCurrentUser ? 4 : 2,
                    color: isCurrentUser 
@@ -211,16 +245,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                      child: Column(
                        mainAxisAlignment: MainAxisAlignment.center,
                        children: [
-                         Icon(
-                           Icons.person,
-                           size: 32,
-                           color: isCurrentUser
-                               ? Theme.of(context).colorScheme.onPrimaryContainer
-                               : _getStatusColor(context, user.status),
-                         ),
+                         _buildUserAvatar(user, isCurrentUser, context),
                          const SizedBox(height: 8),
                          Text(
-                           isCurrentUser ? '${user.userName} (我)' : user.userName,
+                           isCurrentUser ? '${user.displayName ?? user.userName} (我)' : (user.displayName ?? user.userName),
                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                              fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
                              color: isCurrentUser
@@ -413,7 +441,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                              ),
                              const SizedBox(height: 8),
                              ...users.map((user) {
-                               final isCurrentUser = user.userId == state.currentUser.userId;
+                               final isCurrentUser = user.clientId == state.currentUser.clientId;
                                return Padding(
                                  padding: const EdgeInsets.only(bottom: 4),
                                  child: Row(
@@ -487,6 +515,68 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
        case UserActivityStatus.offline:
          return '离线';
      }
+   }
+
+   /// 构建用户头像
+   Widget _buildUserAvatar(UserPresence user, bool isCurrentUser, BuildContext context) {
+     final size = 32.0;
+     final statusColor = isCurrentUser
+         ? Theme.of(context).colorScheme.onPrimaryContainer
+         : _getStatusColor(context, user.status);
+
+     // 如果有头像数据
+     if (user.avatar != null && user.avatar!.isNotEmpty) {
+       try {
+         // 检查是否为base64编码的图片
+         if (user.avatar!.startsWith('data:image/') || 
+             (user.avatar!.length > 100 && !user.avatar!.startsWith('http'))) {
+           // base64图片
+           final base64String = user.avatar!.startsWith('data:image/')
+               ? user.avatar!.split(',')[1]
+               : user.avatar!;
+           final imageBytes = base64Decode(base64String);
+           return CircleAvatar(
+             radius: size / 2,
+             backgroundImage: MemoryImage(imageBytes),
+             backgroundColor: statusColor,
+             onBackgroundImageError: (exception, stackTrace) {
+               // 如果图片加载失败，显示默认头像
+             },
+             child: null,
+           );
+         } else if (user.avatar!.startsWith('http')) {
+           // 网络图片
+           return CircleAvatar(
+             radius: size / 2,
+             backgroundImage: NetworkImage(user.avatar!),
+             backgroundColor: statusColor,
+             onBackgroundImageError: (exception, stackTrace) {
+               // 如果图片加载失败，显示默认头像
+             },
+             child: null,
+           );
+         }
+       } catch (e) {
+         // 如果解析失败，显示默认头像
+       }
+     }
+
+     // 默认头像：显示用户名首字母
+     final displayName = user.displayName ?? user.userName;
+     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+     
+     return CircleAvatar(
+       radius: size / 2,
+       backgroundColor: statusColor,
+       child: Text(
+         initial,
+         style: TextStyle(
+           color: Colors.white,
+           fontSize: size * 0.4,
+           fontWeight: FontWeight.bold,
+         ),
+       ),
+     );
    }
 
   /// 应用搜索筛选
@@ -994,8 +1084,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       ),
     );
 
-    // 退出编辑器后恢复在线状态
-    presenceBloc.add(const UpdateCurrentUserStatus(status: UserActivityStatus.idle));
+    // 退出编辑器后的状态清理由AutoPresenceManager自动处理
 
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
@@ -1069,8 +1158,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       ),
     );
 
-    // 退出编辑器后恢复在线状态
-    presenceBloc.add(const UpdateCurrentUserStatus(status: UserActivityStatus.idle));
+    // 退出编辑器后的状态清理由AutoPresenceManager自动处理
     
     // 地图编辑器关闭后，强制重新检查页面配置
     if (mounted) {
@@ -1505,27 +1593,58 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _items.isEmpty
-                  ? Center(
+                  ? SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.folder_open,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '点击右上角菜单添加地图或创建文件夹',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          // 空状态提示
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.folder_open,
+                                  size: 64,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _currentPath.isEmpty ? l10n.mapAtlasEmpty : '此文件夹为空',
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '点击右上角菜单添加地图或创建文件夹',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          
+                          // 分割线
+                          const SizedBox(height: 32),
+                          Divider(
+                            color: Theme.of(context).colorScheme.outline,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // 在线用户部分
+                          _buildOnlineUsersSection(context),
+                          
+                          // 分割线
+                          const SizedBox(height: 24),
+                          Divider(
+                            color: Theme.of(context).colorScheme.outline,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // 活跃地图部分
+                          _buildActiveMapsSection(context),
                         ],
                       ),
                     )

@@ -25,7 +25,7 @@
 // 
 // // 3. 初始化用户状态
 // presenceBloc.add(InitializePresence(
-//   currentUserId: 'user123',
+//   currentClientId: 'client123',
 //   currentUserName: '用户名',
 // ));
 // ```

@@ -54,7 +54,7 @@ class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
     // 初始化用户在线状态
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PresenceBloc>().add(const InitializePresence(
-        currentUserId: 'user123', // 实际应用中从认证服务获取
+        currentClientId: 'client123', // 实际应用中从WebSocket客户端管理器获取
         currentUserName: '用户名', // 实际应用中从用户配置获取
       ));
       

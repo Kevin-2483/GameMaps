@@ -63,29 +63,29 @@ class PresenceLoaded extends PresenceState {
       .where((user) => user.status == UserActivityStatus.offline)
       .toList();
 
-  /// 根据用户ID获取用户状态
-  UserPresence? getUserById(String userId) {
-    if (currentUser.userId == userId) {
+  /// 根据客户端ID获取用户状态
+  UserPresence? getUserByClientId(String clientId) {
+    if (currentUser.clientId == clientId) {
       return currentUser;
     }
-    return remoteUsers[userId];
+    return remoteUsers[clientId];
   }
 
   /// 检查用户是否在线
-  bool isUserOnline(String userId) {
-    final user = getUserById(userId);
+  bool isUserOnline(String clientId) {
+    final user = getUserByClientId(clientId);
     return user != null && user.status != UserActivityStatus.offline;
   }
 
   /// 检查用户是否正在编辑
-  bool isUserEditing(String userId) {
-    final user = getUserById(userId);
+  bool isUserEditing(String clientId) {
+    final user = getUserByClientId(clientId);
     return user != null && user.status == UserActivityStatus.editing;
   }
 
   /// 检查用户是否正在查看
-  bool isUserViewing(String userId) {
-    final user = getUserById(userId);
+  bool isUserViewing(String clientId) {
+    final user = getUserByClientId(clientId);
     return user != null && user.status == UserActivityStatus.viewing;
   }
 
@@ -102,11 +102,11 @@ class PresenceLoaded extends PresenceState {
 
   /// 检查是否有其他用户正在编辑
   bool get hasOtherEditingUsers => editingUsers
-      .any((user) => user.userId != currentUser.userId);
+      .any((user) => user.clientId != currentUser.clientId);
 
   /// 检查是否有其他用户在线
   bool get hasOtherOnlineUsers => allUsers
-      .where((user) => user.userId != currentUser.userId)
+      .where((user) => user.clientId != currentUser.clientId)
       .any((user) => user.status != UserActivityStatus.offline);
 
   // 注意：选中元素和光标位置相关的方法已被移除
@@ -124,7 +124,7 @@ class PresenceLoaded extends PresenceState {
   /// 复制状态并更新远程用户
   PresenceLoaded copyWithRemoteUser(UserPresence remoteUser) {
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
-    newRemoteUsers[remoteUser.userId] = remoteUser;
+    newRemoteUsers[remoteUser.clientId] = remoteUser;
     
     return PresenceLoaded(
       currentUser: currentUser,
@@ -134,9 +134,9 @@ class PresenceLoaded extends PresenceState {
   }
 
   /// 复制状态并移除远程用户
-  PresenceLoaded copyWithoutRemoteUser(String userId) {
+  PresenceLoaded copyWithoutRemoteUser(String clientId) {
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
-    newRemoteUsers.remove(userId);
+    newRemoteUsers.remove(clientId);
     
     return PresenceLoaded(
       currentUser: currentUser,
@@ -150,7 +150,7 @@ class PresenceLoaded extends PresenceState {
     final now = DateTime.now();
     final newRemoteUsers = Map<String, UserPresence>.from(remoteUsers);
     
-    newRemoteUsers.removeWhere((userId, user) {
+    newRemoteUsers.removeWhere((clientId, user) {
       return user.status == UserActivityStatus.offline ||
              now.difference(user.lastSeen).compareTo(offlineThreshold) > 0;
     });

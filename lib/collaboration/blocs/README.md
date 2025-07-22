@@ -81,7 +81,7 @@ abstract class CollaborationEvent {}
 
 class StartCollaboration extends CollaborationEvent {
   final String sessionId;
-  final String userId;
+  final String clientId;
 }
 
 class StopCollaboration extends CollaborationEvent {}

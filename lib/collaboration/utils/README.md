@@ -193,7 +193,7 @@ class OperationConverter implements JsonConverter<Operation> {
     return {
       'id': operation.id,
       'type': operation.runtimeType.toString(),
-      'userId': operation.userId,
+      'clientId': operation.clientId,
       'timestamp': operation.timestamp.toIso8601String(),
       'vectorClock': operation.vectorClock.toJson(),
       'data': _serializeOperationData(operation),
@@ -753,7 +753,7 @@ class PerformanceTimer {
 ```dart
 extension StringExtensions on String {
   // 验证是否为有效的用户ID
-  bool get isValidUserId {
+  bool get isValidClientId {
     return RegExp(r'^[a-zA-Z0-9_-]{3,50}$').hasMatch(this);
   }
   
@@ -892,12 +892,12 @@ class TestUtils {
     return List.generate(count, (i) => generateTestNode('node$i'));
   }
   
-  static Operation generateTestOperation(String userId) {
+  static Operation generateTestOperation(String clientId) {
     return UpdateOperation(
       id: UuidGenerator.generateV4(),
       elementId: 'element_${Random().nextInt(100)}',
       changes: {'color': 'red', 'size': Random().nextInt(100)},
-      userId: userId,
+      clientId: clientId,
       timestamp: DateTime.now(),
       vectorClock: VectorClock(),
     );

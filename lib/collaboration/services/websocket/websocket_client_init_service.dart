@@ -30,12 +30,24 @@ class WebSocketClientInitService {
       }
 
       // 1. 生成服务器兼容的 RSA 密钥对（PUBLIC KEY 格式）
+      if (kDebugMode) {
+        debugPrint('步骤1: 开始生成RSA密钥对...');
+      }
       final keyPair = await _secureStorage.generateServerCompatibleKeyPair();
+      if (kDebugMode) {
+        debugPrint('步骤1: RSA密钥对生成完成');
+      }
       final publicKeyPem = keyPair.publicKey;
       final privateKeyPem = keyPair.privateKey;
 
       // 2. 存储私钥到安全存储
+      if (kDebugMode) {
+        debugPrint('步骤2: 开始存储私钥到安全存储...');
+      }
       final privateKeyId = await _secureStorage.storePrivateKey(privateKeyPem);
+      if (kDebugMode) {
+        debugPrint('步骤2: 私钥存储完成，ID: $privateKeyId');
+      }
 
       // 3. 解析 Web API Key URL
       final uri = Uri.parse(webApiKey);
@@ -101,7 +113,7 @@ class WebSocketClientInitService {
         ),
         webSocket: WebSocketConfig(
           path: webSocketData['path'] as String,
-          pingInterval: webSocketData['ping_interval'] as int,
+          pingInterval: (webSocketData['ping_interval'] as num).toDouble(),
           reconnectDelay: webSocketData['reconnect_delay'] as int,
         ),
         keys: ClientKeyConfig(
@@ -135,7 +147,7 @@ class WebSocketClientInitService {
     String host = 'localhost',
     int port = 8080,
     String path = '/ws/client',
-    int pingInterval = 3,
+    double pingInterval = 0.5,
     int reconnectDelay = 5,
   }) async {
     try {

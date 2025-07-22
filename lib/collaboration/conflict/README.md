@@ -691,14 +691,14 @@ void main() {
       final op1 = UpdateOperation(
         elementId: 'element1',
         changes: {'color': 'red'},
-        userId: 'user1',
+        clientId: 'client1',
         timestamp: DateTime.now(),
       );
       
       final op2 = UpdateOperation(
         elementId: 'element1',
         changes: {'color': 'blue'},
-        userId: 'user2',
+        clientId: 'client2',
         timestamp: DateTime.now(),
       );
       
@@ -712,14 +712,14 @@ void main() {
       final op1 = UpdateOperation(
         elementId: 'element1',
         changes: {'color': 'red'},
-        userId: 'user1',
+        clientId: 'client1',
         timestamp: DateTime.now(),
       );
       
       final op2 = UpdateOperation(
         elementId: 'element2',
         changes: {'color': 'blue'},
-        userId: 'user2',
+        clientId: 'client2',
         timestamp: DateTime.now(),
       );
       
@@ -746,13 +746,13 @@ void main() {
         operation1: UpdateOperation(
           elementId: 'element1',
           changes: {'color': 'red'},
-          userId: 'user1',
+          clientId: 'client1',
           timestamp: now,
         ),
         operation2: UpdateOperation(
           elementId: 'element1',
           changes: {'color': 'blue'},
-          userId: 'user2',
+          clientId: 'client2',
           timestamp: now.add(Duration(seconds: 1)),
         ),
         detectedAt: DateTime.now(),

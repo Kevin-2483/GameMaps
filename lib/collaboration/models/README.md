@@ -37,7 +37,7 @@ models/
 **用途**：表示用户的协作操作
 **关键字段**：
 - `id`: 操作唯一标识
-- `userId`: 操作用户ID
+- `clientId`: 操作客户端ID
 - `type`: 操作类型 (addLayer, updateLayer等)
 - `data`: 操作数据
 - `vectorClock`: 向量时钟
@@ -46,7 +46,7 @@ models/
 ### UserPresence
 **用途**：跟踪用户在线状态和活动
 **关键字段**：
-- `userId`: 用户ID
+- `clientId`: 客户端ID
 - `status`: 在线状态
 - `lastActivity`: 最后活动时间
 - `cursorPosition`: 光标位置

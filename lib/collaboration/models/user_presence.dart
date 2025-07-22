@@ -16,11 +16,17 @@ enum UserActivityStatus {
 
 /// 用户在线状态信息
 class UserPresence extends Equatable {
-  /// 用户ID
-  final String userId;
+  /// 客户端ID
+  final String clientId;
   
-  /// 用户名
+  /// 用户名（用于显示，不需要唯一）
   final String userName;
+  
+  /// 用户显示名称（从用户偏好设置获取）
+  final String displayName;
+  
+  /// 用户头像（base64编码或网络链接）
+  final String? avatar;
   
   /// 用户活动状态
   final UserActivityStatus status;
@@ -38,8 +44,10 @@ class UserPresence extends Equatable {
   final Map<String, dynamic> metadata;
 
   const UserPresence({
-    required this.userId,
+    required this.clientId,
     required this.userName,
+    required this.displayName,
+    this.avatar,
     required this.status,
     required this.lastSeen,
     required this.joinedAt,
@@ -48,8 +56,10 @@ class UserPresence extends Equatable {
 
   @override
   List<Object?> get props => [
-    userId,
+    clientId,
     userName,
+    displayName,
+    avatar,
     status,
     lastSeen,
     joinedAt,
@@ -127,8 +137,10 @@ class UserPresence extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
+      'client_id': clientId,
       'userName': userName,
+      'displayName': displayName,
+      'avatar': avatar,
       'status': status.name,
       'lastSeen': lastSeen.toIso8601String(),
       'joinedAt': joinedAt.toIso8601String(),
@@ -138,8 +150,10 @@ class UserPresence extends Equatable {
 
   factory UserPresence.fromJson(Map<String, dynamic> json) {
     return UserPresence(
-      userId: json['userId'],
+      clientId: json['client_id'],
       userName: json['userName'],
+      displayName: json['displayName'] ?? json['userName'], // 向后兼容
+      avatar: json['avatar'],
       status: UserActivityStatus.values.firstWhere(
         (status) => status.name == json['status'],
         orElse: () => UserActivityStatus.offline,
@@ -151,16 +165,20 @@ class UserPresence extends Equatable {
   }
 
   UserPresence copyWith({
-    String? userId,
+    String? clientId,
     String? userName,
+    String? displayName,
+    String? avatar,
     UserActivityStatus? status,
     DateTime? lastSeen,
     DateTime? joinedAt,
     Map<String, dynamic>? metadata,
   }) {
     return UserPresence(
-      userId: userId ?? this.userId,
+      clientId: clientId ?? this.clientId,
       userName: userName ?? this.userName,
+      displayName: displayName ?? this.displayName,
+      avatar: avatar ?? this.avatar,
       status: status ?? this.status,
       lastSeen: lastSeen ?? this.lastSeen,
       joinedAt: joinedAt ?? this.joinedAt,
@@ -170,7 +188,8 @@ class UserPresence extends Equatable {
 
   @override
   String toString() {
-    return 'UserPresence(userId: $userId, userName: $userName, status: $status, '
+    return 'UserPresence(clientId: $clientId, userName: $userName, displayName: $displayName, '
+           'avatar: ${avatar != null ? "[有头像]" : "[无头像]"}, status: $status, '
            'lastSeen: $lastSeen, isOnline: $isOnline)';
   }
 }

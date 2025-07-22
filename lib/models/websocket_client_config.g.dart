@@ -51,7 +51,7 @@ Map<String, dynamic> _$ServerConfigToJson(ServerConfig instance) =>
 WebSocketConfig _$WebSocketConfigFromJson(Map<String, dynamic> json) =>
     WebSocketConfig(
       path: json['path'] as String,
-      pingInterval: (json['pingInterval'] as num).toInt(),
+      pingInterval: (json['pingInterval'] as num).toDouble(),
       reconnectDelay: (json['reconnectDelay'] as num).toInt(),
     );
 

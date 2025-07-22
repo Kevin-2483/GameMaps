@@ -276,7 +276,7 @@ class WebSocketClientDatabaseService {
       ),
       webSocket: WebSocketConfig(
         path: data['websocket_path'] as String,
-        pingInterval: data['ping_interval'] as int,
+        pingInterval: (data['ping_interval'] as num).toDouble(),
         reconnectDelay: data['reconnect_delay'] as int,
       ),
       keys: ClientKeyConfig(

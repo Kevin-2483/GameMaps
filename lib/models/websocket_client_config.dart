@@ -112,7 +112,7 @@ class WebSocketConfig {
   final String path;
   
   /// 心跳检测间隔（秒）
-  final int pingInterval;
+  final double pingInterval;
   
   /// 重连延迟（秒）
   final int reconnectDelay;
@@ -130,7 +130,7 @@ class WebSocketConfig {
 
   WebSocketConfig copyWith({
     String? path,
-    int? pingInterval,
+    double? pingInterval,
     int? reconnectDelay,
   }) {
     return WebSocketConfig(

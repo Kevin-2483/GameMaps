@@ -76,7 +76,7 @@ void _initializeCollaborationServices() {
   
   // 初始化用户状态
   _presenceBloc.add(InitializePresence(
-    currentUserId: 'user_${DateTime.now().millisecondsSinceEpoch}', // 使用实际用户ID
+    currentClientId: 'client_${DateTime.now().millisecondsSinceEpoch}', // 使用实际客户端ID
     currentUserName: '当前用户', // 使用实际用户名
   ));
 }
@@ -310,7 +310,7 @@ void _initializeCollaborationServices() {
   
   // 初始化用户状态
   _presenceBloc.add(InitializePresence(
-    currentUserId: 'user_${DateTime.now().millisecondsSinceEpoch}', // 使用实际用户ID
+    currentClientId: 'client_${DateTime.now().millisecondsSinceEpoch}', // 使用实际客户端ID
     currentUserName: '当前用户', // 使用实际用户名
   ));
 }

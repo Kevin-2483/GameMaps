@@ -171,6 +171,10 @@ flutter:
     - assets/scripts/
     - LICENSE
     - assets/images/r6operators_flat/
+    # fast_rsa Web platform assets
+    - packages/fast_rsa/web/assets/worker.js
+    - packages/fast_rsa/web/assets/wasm_exec.js
+    - packages/fast_rsa/web/assets/rsa.wasm
 
   # To add assets to your application, add an assets section, like this:
   # assets:

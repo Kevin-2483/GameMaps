@@ -121,8 +121,12 @@ class AutoPresenceManager {
     // 清除地图信息
     _mapSyncService.clearCurrentMapInfo();
     
-    // 回归在线状态
-    _updateStatus(UserActivityStatus.idle);
+    // 根据WebSocket连接状态设置用户状态
+    if (_webSocketManager.isConnected) {
+      _updateStatus(UserActivityStatus.idle);
+    } else {
+      _updateStatus(UserActivityStatus.offline);
+    }
   }
   
   /// 手动触发编辑状态（用于无法监听MapDataBloc的情况）

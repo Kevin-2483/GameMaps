@@ -111,7 +111,7 @@ class WebSocketClientManager {
     String host = 'localhost',
     int port = 8080,
     String path = '/ws/client',
-    int pingInterval = 3,
+    double pingInterval = 0.5,
     int reconnectDelay = 5,
   }) async {
     _ensureInitialized();
@@ -341,6 +341,12 @@ class WebSocketClientManager {
   Future<bool> sendUserStatusUpdateWithData(Map<String, dynamic> statusData) async {
     _ensureInitialized();
     return await _clientService.sendUserStatusUpdateWithData(statusData);
+  }
+
+  /// 请求在线状态列表
+  Future<bool> requestOnlineStatusList() async {
+    _ensureInitialized();
+    return await _clientService.requestOnlineStatusList();
   }
 
   /// 获取连接统计信息

@@ -34,7 +34,7 @@
 #### UserPresence
 ```dart
 class UserPresence {
-  final String userId;           // 用户ID
+  final String clientId;         // 客户端ID
   final String userName;         // 用户名
   final UserActivityStatus status; // 活动状态
   final DateTime lastSeen;       // 最后活跃时间
@@ -94,7 +94,7 @@ MultiBlocProvider(
 // 在应用启动时初始化
 context.read<PresenceBloc>().add(
   InitializePresence(
-    currentUserId: 'user123',
+    currentClientId: 'client123',
     currentUserName: '张三',
   ),
 );
@@ -153,8 +153,8 @@ context.read<PresenceBloc>().add(
 ### 1. 自定义用户颜色
 
 ```dart
-Color getUserColor(String userId) {
-  final hash = userId.hashCode;
+Color getUserColor(String clientId) {
+  final hash = clientId.hashCode;
   final colors = [
     Colors.red,
     Colors.blue,
@@ -247,7 +247,7 @@ BlocListener<PresenceBloc, PresenceState>(
               // 重新初始化
               context.read<PresenceBloc>().add(
                 InitializePresence(
-                  currentUserId: getCurrentUserId(),
+                  currentClientId: getCurrentClientId(),
                   currentUserName: getCurrentUserName(),
                 ),
               );
@@ -311,7 +311,7 @@ void main() {
       build: () => presenceBloc,
       act: (bloc) => bloc.add(
         InitializePresence(
-          currentUserId: 'user123',
+          currentClientId: 'client123',
           currentUserName: '测试用户',
         ),
       ),

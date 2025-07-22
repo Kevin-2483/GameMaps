@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../models/user_presence.dart';
 import '../../services/websocket/websocket_client_manager.dart';
 import '../../services/websocket/websocket_client_service.dart'; // 添加WebSocketMessage导入
 import '../../utils/image_compression_utils.dart';
+import '../../../services/user_preferences/user_preferences_service.dart';
 // 注意：map_data_bloc 和 map_data_state 的导入已被移除
 // 当前实现不再直接依赖 MapDataBloc
 import 'presence_event.dart';
@@ -15,19 +15,20 @@ import 'presence_state.dart';
 /// 用户在线状态管理Bloc
 class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
   final WebSocketClientManager _webSocketManager;
+  final UserPreferencesService _userPreferencesService;
   
   StreamSubscription<WebSocketMessage>? _messageSubscription;
   StreamSubscription? _mapDataSubscription; // 保留字段但不再使用
-  Timer? _heartbeatTimer;
   Timer? _cleanupTimer;
   
-  static const Duration _heartbeatInterval = Duration(seconds: 30);
   static const Duration _cleanupInterval = Duration(minutes: 2);
   static const Duration _offlineThreshold = Duration(minutes: 5);
 
   PresenceBloc({
     required WebSocketClientManager webSocketManager,
+    UserPreferencesService? userPreferencesService,
   }) : _webSocketManager = webSocketManager,
+       _userPreferencesService = userPreferencesService ?? UserPreferencesService(),
        super(const PresenceInitial()) {
     
     // 注册事件处理器
@@ -57,12 +58,50 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     emit(const PresenceLoading());
     
     try {
+      // 根据WebSocket连接状态设置初始状态
+      final isConnected = _webSocketManager.isConnected;
+      final initialStatus = isConnected ? UserActivityStatus.idle : UserActivityStatus.offline;
+      
+      // 获取用户偏好设置中的displayName和avatar
+      String? displayName;
+      String? avatar;
+      try {
+        final userPreferences = await _userPreferencesService.getCurrentPreferences();
+        displayName = userPreferences.displayName;
+        
+        // 处理头像数据
+        if (userPreferences.avatarData != null && userPreferences.avatarData!.isNotEmpty) {
+          // 如果有本地头像数据，进行压缩并转换为base64
+          final compressedData = await ImageCompressionUtils.adaptiveCompress(
+            userPreferences.avatarData!,
+            maxSizeKB: 50, // 限制头像大小为50KB
+          );
+          if (compressedData != null) {
+            avatar = compressedData;
+          }
+        } else if (userPreferences.avatarPath != null && userPreferences.avatarPath!.isNotEmpty) {
+          // 如果有网络头像路径，直接使用
+          avatar = userPreferences.avatarPath;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('获取用户偏好设置失败: $e');
+        }
+        // 使用默认值
+        displayName = event.currentUserName;
+      }
+      
       final currentUser = UserPresence(
-        userId: event.currentUserId,
+        clientId: event.currentClientId,
         userName: event.currentUserName,
-        status: UserActivityStatus.idle,
+        displayName: displayName ?? event.currentUserName,
+        avatar: avatar,
+        status: initialStatus,
         lastSeen: DateTime.now(),
         joinedAt: DateTime.now(),
+        metadata: {
+          'online_status': isConnected ? 'online' : 'offline',
+        },
       );
       
       emit(PresenceLoaded(
@@ -71,8 +110,14 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         lastUpdated: DateTime.now(),
       ));
       
-      // 广播当前用户加入
-      await _broadcastPresenceUpdate(currentUser);
+      // 只有在WebSocket连接时才广播当前用户加入
+      if (isConnected) {
+        await _broadcastPresenceUpdate(currentUser);
+      } else {
+        if (kDebugMode) {
+          print('WebSocket未连接，跳过广播用户状态（离线模式）');
+        }
+      }
       
     } catch (error, stackTrace) {
       emit(PresenceError(
@@ -91,7 +136,36 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     final currentState = state;
     if (currentState is! PresenceLoaded) return;
     
-    final updatedUser = currentState.currentUser.copyWith(
+    final currentUser = currentState.currentUser;
+    
+    // 检查状态是否真正发生变化
+    bool statusChanged = false;
+    
+    // 检查活动状态变化
+    if (event.status != currentUser.status) {
+      statusChanged = true;
+    }
+    
+    // 检查元数据变化
+    if (event.metadata != null) {
+      // 比较关键的元数据字段
+      final currentMetadata = currentUser.metadata;
+      final newMetadata = event.metadata!;
+      
+      // 检查在线状态变化
+      if (newMetadata['online_status'] != currentMetadata['online_status']) {
+        statusChanged = true;
+      }
+      
+      // 检查地图相关信息变化
+      if (newMetadata['currentMapId'] != currentMetadata['currentMapId'] ||
+          newMetadata['currentMapTitle'] != currentMetadata['currentMapTitle'] ||
+          newMetadata['currentMapCover'] != currentMetadata['currentMapCover']) {
+        statusChanged = true;
+      }
+    }
+    
+    final updatedUser = currentUser.copyWith(
       status: event.status,
       lastSeen: DateTime.now(),
       metadata: event.metadata,
@@ -99,8 +173,17 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     
     emit(currentState.copyWithCurrentUser(updatedUser));
     
-    // 广播状态更新
-    await _broadcastPresenceUpdate(updatedUser);
+    // 只有状态真正变化时才广播
+    if (statusChanged) {
+      if (kDebugMode) {
+        print('用户状态发生变化，准备广播: ${currentUser.status} -> ${event.status}');
+      }
+      await _broadcastPresenceUpdate(updatedUser);
+    } else {
+      if (kDebugMode) {
+        print('用户状态无变化，跳过广播');
+      }
+    }
   }
 
   /// 更新当前编辑的地图信息
@@ -111,34 +194,71 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     final currentState = state;
     if (currentState is! PresenceLoaded) return;
     
+    final currentUser = currentState.currentUser;
+    final currentMetadata = currentUser.metadata;
+    
     // 构建新的元数据
-    final newMetadata = Map<String, dynamic>.from(currentState.currentUser.metadata);
+    final newMetadata = Map<String, dynamic>.from(currentMetadata);
     
-    if (event.mapId != null) {
-      newMetadata['currentMapId'] = event.mapId;
+    // 检查地图信息是否真正发生变化
+    bool mapInfoChanged = false;
+    
+    // 处理mapId（包括清空操作）
+    if (event.mapId != currentMetadata['currentMapId']) {
+      mapInfoChanged = true;
+      if (event.mapId != null) {
+        newMetadata['currentMapId'] = event.mapId;
+      } else {
+        newMetadata.remove('currentMapId');
+      }
     }
     
-    if (event.mapTitle != null) {
-      newMetadata['currentMapTitle'] = event.mapTitle;
+    // 处理mapTitle（包括清空操作）
+    if (event.mapTitle != currentMetadata['currentMapTitle']) {
+      mapInfoChanged = true;
+      if (event.mapTitle != null) {
+        newMetadata['currentMapTitle'] = event.mapTitle;
+      } else {
+        newMetadata.remove('currentMapTitle');
+      }
     }
     
-    if (event.mapCoverBase64 != null) {
-      newMetadata['currentMapCover'] = event.mapCoverBase64;
+    // 处理mapCover（包括清空操作）
+    if (event.mapCoverBase64 != currentMetadata['currentMapCover']) {
+      mapInfoChanged = true;
+      if (event.mapCoverBase64 != null) {
+        newMetadata['currentMapCover'] = event.mapCoverBase64;
+      } else {
+        newMetadata.remove('currentMapCover');
+      }
     }
     
     if (event.coverQuality != null) {
-      newMetadata['mapCoverQuality'] = event.coverQuality.toString();
+      final newQuality = event.coverQuality.toString();
+      if (currentMetadata['mapCoverQuality'] != newQuality) {
+        mapInfoChanged = true;
+      }
+      newMetadata['mapCoverQuality'] = newQuality;
     }
     
-    final updatedUser = currentState.currentUser.copyWith(
+    final updatedUser = currentUser.copyWith(
       lastSeen: DateTime.now(),
       metadata: newMetadata,
     );
     
     emit(currentState.copyWithCurrentUser(updatedUser));
     
-    // 广播地图信息更新
-    await _broadcastPresenceUpdate(updatedUser);
+    // 只有地图信息真正变化时才广播
+    if (mapInfoChanged) {
+      if (kDebugMode) {
+        print('地图信息发生变化，准备广播: mapId=${event.mapId}, mapTitle=${event.mapTitle}');
+      }
+      await _broadcastPresenceUpdate(updatedUser);
+    } else {
+      if (kDebugMode) {
+        print('地图信息无变化，跳过广播');
+      }
+    }
   }
 
   // 注意：根据简化需求，移除了光标位置和选中元素相关的处理逻辑
@@ -153,7 +273,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     if (currentState is! PresenceLoaded) return;
     
     // 不处理自己的状态更新
-    if (event.userPresence.userId == currentState.currentUser.userId) {
+    if (event.userPresence.clientId == currentState.currentUser.clientId) {
       return;
     }
     
@@ -169,11 +289,12 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     if (currentState is! PresenceLoaded) return;
     
     // 不处理自己的加入事件
-    if (event.userId == currentState.currentUser.userId) return;
+    if (event.clientId == currentState.currentUser.clientId) return;
     
     final newUser = UserPresence(
-      userId: event.userId,
+      clientId: event.clientId,
       userName: event.userName,
+      displayName: event.userName, // 使用userName作为默认displayName
       status: UserActivityStatus.idle,
       lastSeen: event.joinedAt,
       joinedAt: event.joinedAt,
@@ -190,7 +311,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     final currentState = state;
     if (currentState is! PresenceLoaded) return;
     
-    emit(currentState.copyWithoutRemoteUser(event.userId));
+    emit(currentState.copyWithoutRemoteUser(event.clientId));
   }
 
   /// 清理离线用户
@@ -220,7 +341,8 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     _messageSubscription = _webSocketManager.messageStream
         .where((message) => 
             message.type == 'presence' || 
-            message.type == 'user_status_broadcast')
+            message.type == 'user_status_broadcast' ||
+            message.type == 'online_status_list_response')
         .listen((message) {
       _handleWebSocketMessage(message);
     });
@@ -237,6 +359,12 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         return;
       }
       
+      if (message.type == 'online_status_list_response') {
+        // 处理在线状态列表响应
+        _handleOnlineStatusListResponse(message.data);
+        return;
+      }
+      
       // 处理传统的presence消息
       final action = message.data['action'] as String?;
       
@@ -248,7 +376,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
           
         case 'user_joined':
           add(UserJoinedCollaboration(
-            userId: message.data['userId'],
+            clientId: message.data['client_id'],
             userName: message.data['userName'],
             joinedAt: DateTime.parse(message.data['joinedAt']),
           ));
@@ -256,7 +384,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
           
         case 'user_left':
           add(UserLeftCollaboration(
-            userId: message.data['userId'],
+            clientId: message.data['client_id'],
             leftAt: DateTime.parse(message.data['leftAt']),
           ));
           break;
@@ -270,16 +398,17 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
   /// 处理用户状态广播
   void _handleUserStatusBroadcast(Map<String, dynamic> data) {
     try {
-      final userId = data['user_id'] as String?;
-      final ownerId = data['owner_id'] as String?;
+      final clientId = data['client_id'] as String?;
       final onlineStatus = data['online_status'] as String?;
       final activityStatus = data['activity_status'] as String?;
       final spaceId = data['space_id'] as String?;
       final currentMapId = data['current_map_id'] as String?;
       final currentMapTitle = data['current_map_title'] as String?;
       final currentMapCover = data['current_map_cover'] as String?;
+      final displayName = data['display_name'] as String?;
+      final avatar = data['avatar'] as String?;
       
-      if (userId == null || ownerId == null) return;
+      if (clientId == null) return;
       
       // 转换状态
       UserActivityStatus? userActivityStatus;
@@ -313,13 +442,29 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         metadata['currentMapCover'] = currentMapCover;
       }
       
+      // 获取当前状态以保留已存在用户的joinedAt时间
+      final currentState = state;
+      DateTime joinedAt = DateTime.now();
+      String userName = clientId;
+      
+      // 如果用户已存在，保留其joinedAt时间和用户名
+      if (currentState is PresenceLoaded) {
+        final existingUser = currentState.remoteUsers[clientId];
+        if (existingUser != null) {
+          joinedAt = existingUser.joinedAt;
+          userName = existingUser.userName;
+        }
+      }
+      
       // 创建UserPresence对象
       final userPresence = UserPresence(
-        userId: userId,
-        userName: ownerId, // 使用ownerId作为用户名，实际应用中可能需要查询用户信息
+        clientId: clientId,
+        userName: userName,
+        displayName: displayName ?? userName, // 使用接收到的displayName，如果没有则使用userName
+        avatar: avatar, // 使用接收到的avatar
         status: userActivityStatus,
         lastSeen: DateTime.now(),
-        joinedAt: DateTime.now(), // 添加必需的joinedAt参数
+        joinedAt: joinedAt,
         metadata: metadata,
       );
       
@@ -329,10 +474,43 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     }
   }
 
+  /// 处理在线状态列表响应
+  void _handleOnlineStatusListResponse(Map<String, dynamic> data) {
+    try {
+      final success = data['success'] as bool? ?? false;
+      
+      if (!success) {
+        print('获取在线状态列表失败: ${data['error'] ?? "未知错误"}');
+        return;
+      }
+      
+      final usersList = data['users'] as List<dynamic>? ?? [];
+      
+      // 处理每个用户的状态信息
+      for (final userInfo in usersList) {
+        if (userInfo is Map<String, dynamic>) {
+          _handleUserStatusBroadcast(userInfo);
+        }
+      }
+      
+      print('成功处理在线状态列表，共 ${usersList.length} 个用户');
+    } catch (error) {
+      print('处理在线状态列表响应时出错: $error');
+    }
+  }
+
 
 
   /// 广播用户状态更新
   Future<void> _broadcastPresenceUpdate(UserPresence userPresence) async {
+    // 检查WebSocket连接状态，如果未连接则不广播
+    if (!_webSocketManager.isConnected) {
+      if (kDebugMode) {
+        print('WebSocket未连接，跳过广播用户状态更新（离线模式）');
+      }
+      return;
+    }
+    
     try {
       // TODO: 将压缩限制大小添加到配置列表中，允许用户自定义设置
       const int maxCoverSizeBytes = 1000 * 1024; // 1000KB 压缩限制
@@ -359,51 +537,51 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       final statusData = <String, dynamic>{
         'online_status': onlineStatus,
         'activity_status': activityStatus,
+        'display_name': userPresence.displayName,
+        'avatar': userPresence.avatar,
       };
       
-      // 添加地图信息字段（如果存在）
-      if (userPresence.metadata.containsKey('currentMapId')) {
-        statusData['current_map_id'] = userPresence.metadata['currentMapId'];
-      }
-      if (userPresence.metadata.containsKey('currentMapTitle')) {
-        statusData['current_map_title'] = userPresence.metadata['currentMapTitle'];
-      }
-      if (userPresence.metadata.containsKey('currentMapCover')) {
-        final mapCover = userPresence.metadata['currentMapCover'] as String?;
-        if (mapCover != null && mapCover.isNotEmpty) {
-          // 检查地图封面大小是否超过限制
-          final coverSizeBytes = mapCover.length * 0.75; // Base64编码大约增加33%，所以原始大小约为75%
-          if (coverSizeBytes <= maxCoverSizeBytes) {
-            statusData['current_map_cover'] = mapCover;
-          } else {
-            // 使用自适应压缩重新压缩地图封面
-             try {
-               final imageBytes = base64Decode(mapCover);
-               final compressedBase64 = await ImageCompressionUtils.adaptiveCompress(
-                 imageBytes,
-                 maxSizeKB: maxCoverSizeBytes ~/ 1024, // 转换为KB
-               );
-               
-               if (compressedBase64 != null) {
-                 statusData['current_map_cover'] = compressedBase64;
-                 final newSizeBytes = compressedBase64.length * 0.75;
-                 
-                 if (kDebugMode) {
-                   print('地图封面已重新压缩: ${(coverSizeBytes / 1024).toStringAsFixed(1)}KB -> ${(newSizeBytes / 1024).toStringAsFixed(1)}KB');
-                 }
-               } else {
-                 if (kDebugMode) {
-                   print('地图封面压缩失败，无法满足大小限制，跳过发送');
-                 }
-               }
-             } catch (compressionError) {
-               if (kDebugMode) {
-                 print('地图封面压缩失败: $compressionError，跳过发送');
-               }
-             }
-          }
-        }
-      }
+      // 添加地图信息字段（包括空值以确保清空操作能正确发送）
+      statusData['current_map_id'] = userPresence.metadata['currentMapId'] ?? '';
+      statusData['current_map_title'] = userPresence.metadata['currentMapTitle'] ?? '';
+      
+      final mapCover = userPresence.metadata['currentMapCover'] as String?;
+       if (mapCover != null && mapCover.isNotEmpty) {
+         // 检查地图封面大小是否超过限制
+         final coverSizeBytes = mapCover.length * 0.75; // Base64编码大约增加33%，所以原始大小约为75%
+         if (coverSizeBytes <= maxCoverSizeBytes) {
+           statusData['current_map_cover'] = mapCover;
+         } else {
+           // 使用自适应压缩重新压缩地图封面
+            try {
+              final imageBytes = base64Decode(mapCover);
+              final compressedBase64 = await ImageCompressionUtils.adaptiveCompress(
+                imageBytes,
+                maxSizeKB: maxCoverSizeBytes ~/ 1024, // 转换为KB
+              );
+              
+              if (compressedBase64 != null) {
+                statusData['current_map_cover'] = compressedBase64;
+                final newSizeBytes = compressedBase64.length * 0.75;
+                
+                if (kDebugMode) {
+                  print('地图封面已重新压缩: ${(coverSizeBytes / 1024).toStringAsFixed(1)}KB -> ${(newSizeBytes / 1024).toStringAsFixed(1)}KB');
+                }
+              } else {
+                if (kDebugMode) {
+                  print('地图封面压缩失败，无法满足大小限制，跳过发送');
+                }
+              }
+            } catch (compressionError) {
+              if (kDebugMode) {
+                print('地图封面压缩失败: $compressionError，跳过发送');
+              }
+            }
+         }
+       } else {
+         // 确保即使封面为空也发送空值
+         statusData['current_map_cover'] = '';
+       }
       
       // 使用扩展的状态更新API
       await _webSocketManager.sendUserStatusUpdateWithData(statusData);
@@ -414,20 +592,13 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
 
   /// 启动定时任务
   void _startPeriodicTasks() {
-    // 心跳任务
-    _heartbeatTimer = Timer.periodic(_heartbeatInterval, (_) {
-      final currentState = state;
-      if (currentState is PresenceLoaded) {
-        add(UpdateCurrentUserStatus(
-          status: currentState.currentUser.status,
-        ));
-      }
-    });
-    
     // 清理任务
     _cleanupTimer = Timer.periodic(_cleanupInterval, (_) {
       add(const CleanupOfflineUsers(offlineThreshold: _offlineThreshold));
     });
+    
+    // 注意：心跳任务已移除，现在使用WebSocket客户端服务的ping机制来维持连接
+    // 状态更新只在数据真正变化时发送
   }
 
   /// 获取当前用户状态
@@ -466,11 +637,19 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     return false;
   }
 
+  /// 请求在线状态列表
+  Future<void> requestOnlineStatusList() async {
+    try {
+      await _webSocketManager.requestOnlineStatusList();
+    } catch (error) {
+      print('请求在线状态列表失败: $error');
+    }
+  }
+
   @override
   Future<void> close() {
     _messageSubscription?.cancel();
     _mapDataSubscription?.cancel();
-    _heartbeatTimer?.cancel();
     _cleanupTimer?.cancel();
     return super.close();
   }

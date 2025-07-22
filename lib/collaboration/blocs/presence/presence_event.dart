@@ -11,16 +11,16 @@ abstract class PresenceEvent extends Equatable {
 
 /// 初始化用户在线状态
 class InitializePresence extends PresenceEvent {
-  final String currentUserId;
+  final String currentClientId;
   final String currentUserName;
 
   const InitializePresence({
-    required this.currentUserId,
+    required this.currentClientId,
     required this.currentUserName,
   });
 
   @override
-  List<Object?> get props => [currentUserId, currentUserName];
+  List<Object?> get props => [currentClientId, currentUserName];
 }
 
 /// 更新当前用户状态
@@ -70,32 +70,32 @@ class ReceiveRemoteUserPresence extends PresenceEvent {
 
 /// 用户加入协作
 class UserJoinedCollaboration extends PresenceEvent {
-  final String userId;
+  final String clientId;
   final String userName;
   final DateTime joinedAt;
 
   const UserJoinedCollaboration({
-    required this.userId,
+    required this.clientId,
     required this.userName,
     required this.joinedAt,
   });
 
   @override
-  List<Object?> get props => [userId, userName, joinedAt];
+  List<Object?> get props => [clientId, userName, joinedAt];
 }
 
 /// 用户离开协作
 class UserLeftCollaboration extends PresenceEvent {
-  final String userId;
+  final String clientId;
   final DateTime leftAt;
 
   const UserLeftCollaboration({
-    required this.userId,
+    required this.clientId,
     required this.leftAt,
   });
 
   @override
-  List<Object?> get props => [userId, leftAt];
+  List<Object?> get props => [clientId, leftAt];
 }
 
 /// 清理离线用户

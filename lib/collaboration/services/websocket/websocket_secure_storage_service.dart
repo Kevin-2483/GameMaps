@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,9 +85,19 @@ class WebSocketSecureStorageService {
   /// 生成服务器兼容的密钥对（PUBLIC KEY 格式）
   Future<KeyPair> generateServerCompatibleKeyPair() async {
     try {
+      if (kDebugMode) {
+        debugPrint('开始生成2048位RSA密钥对...');
+      }
+      
       final keyPair = await RSA.generate(2048);
+      if (kDebugMode) {
+        debugPrint('RSA密钥对生成完成，开始转换公钥格式...');
+      }
       // 转换公钥为 PKIX 格式 (PUBLIC KEY)
       final pkixPublicKey = await convertPublicKeyToPKIX(keyPair.publicKey);
+      if (kDebugMode) {
+        debugPrint('公钥格式转换完成');
+      }
       
       return KeyPair(
         publicKey: pkixPublicKey,
@@ -108,12 +118,12 @@ class WebSocketSecureStorageService {
       final privateKeyId = DateTime.now().millisecondsSinceEpoch.toString();
       final storageKey = '$_privateKeyPrefix$privateKeyId';
       
-      // macOS 平台使用 SharedPreferences 作为回退方案
-      if (Platform.isMacOS) {
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+       if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(storageKey, privateKeyPem);
         if (kDebugMode) {
-          debugPrint('私钥已存储到 SharedPreferences (macOS): $privateKeyId');
+          debugPrint('私钥已存储到 SharedPreferences ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId');
         }
       } else {
         // 其他平台使用安全存储
@@ -141,12 +151,12 @@ class WebSocketSecureStorageService {
       final storageKey = '$_privateKeyPrefix$privateKeyId';
       String? privateKeyPem;
       
-      // macOS 平台使用 SharedPreferences 作为回退方案
-      if (Platform.isMacOS) {
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+      if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
         final prefs = await SharedPreferences.getInstance();
         privateKeyPem = prefs.getString(storageKey);
         if (kDebugMode && privateKeyPem != null) {
-          debugPrint('私钥从 SharedPreferences 获取成功 (macOS): $privateKeyId');
+          debugPrint('私钥从 SharedPreferences 获取成功 ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId');
         }
       } else {
         // 其他平台使用安全存储
@@ -176,12 +186,12 @@ class WebSocketSecureStorageService {
     try {
       final storageKey = '$_privateKeyPrefix$privateKeyId';
       
-      // macOS 平台使用 SharedPreferences 作为回退方案
-      if (Platform.isMacOS) {
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+      if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(storageKey);
         if (kDebugMode) {
-          debugPrint('私钥已从 SharedPreferences 删除 (macOS): $privateKeyId');
+          debugPrint('私钥已从 SharedPreferences 删除 ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId');
         }
       } else {
         // 其他平台使用安全存储
@@ -257,7 +267,16 @@ class WebSocketSecureStorageService {
   Future<bool> hasPrivateKey(String privateKeyId) async {
     try {
       final storageKey = '$_privateKeyPrefix$privateKeyId';
-      final privateKeyPem = await _secureStorage.read(key: storageKey);
+      String? privateKeyPem;
+      
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+      if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
+        final prefs = await SharedPreferences.getInstance();
+        privateKeyPem = prefs.getString(storageKey);
+      } else {
+        privateKeyPem = await _secureStorage.read(key: storageKey);
+      }
+      
       return privateKeyPem != null;
     } catch (e) {
       if (kDebugMode) {
@@ -270,13 +289,27 @@ class WebSocketSecureStorageService {
   /// 获取所有存储的私钥ID
   Future<List<String>> getAllPrivateKeyIds() async {
     try {
-      final allKeys = await _secureStorage.readAll();
       final privateKeyIds = <String>[];
       
-      for (final key in allKeys.keys) {
-        if (key.startsWith(_privateKeyPrefix)) {
-          final privateKeyId = key.substring(_privateKeyPrefix.length);
-          privateKeyIds.add(privateKeyId);
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+      if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
+        final prefs = await SharedPreferences.getInstance();
+        final allKeys = prefs.getKeys();
+        
+        for (final key in allKeys) {
+          if (key.startsWith(_privateKeyPrefix)) {
+            final privateKeyId = key.substring(_privateKeyPrefix.length);
+            privateKeyIds.add(privateKeyId);
+          }
+        }
+      } else {
+        final allKeys = await _secureStorage.readAll();
+        
+        for (final key in allKeys.keys) {
+          if (key.startsWith(_privateKeyPrefix)) {
+            final privateKeyId = key.substring(_privateKeyPrefix.length);
+            privateKeyIds.add(privateKeyId);
+          }
         }
       }
       
@@ -294,8 +327,8 @@ class WebSocketSecureStorageService {
     try {
       List<String> privateKeyKeys = [];
       
-      // macOS 平台使用 SharedPreferences 作为回退方案
-      if (Platform.isMacOS) {
+      // Web平台或macOS平台使用 SharedPreferences 作为回退方案
+      if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
         final prefs = await SharedPreferences.getInstance();
         final allKeys = prefs.getKeys();
         privateKeyKeys = allKeys
@@ -307,7 +340,7 @@ class WebSocketSecureStorageService {
         }
         
         if (kDebugMode) {
-          debugPrint('已从 SharedPreferences 清理 ${privateKeyKeys.length} 个私钥 (macOS)');
+          debugPrint('已从 SharedPreferences 清理 ${privateKeyKeys.length} 个私钥 ${kIsWeb ? "(Web)" : "(macOS)"}');
         }
       } else {
         // 其他平台使用安全存储

@@ -5,11 +5,13 @@ import '../blocs/presence/presence_bloc.dart';
 import '../blocs/presence/presence_event.dart';
 import '../blocs/presence/presence_state.dart';
 import '../services/websocket/websocket_client_manager.dart';
+import '../services/websocket/websocket_client_service.dart';
 import '../services/map_sync_service.dart';
 import '../services/auto_presence_manager.dart';
 import '../models/user_presence.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
+import '../global_collaboration_service.dart';
 
 /// 自动在线状态管理Mixin
 /// 
@@ -28,8 +30,8 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
   // 初始化标志
   bool _collaborationInitialized = false;
   
-  /// 获取当前用户ID（子类需要实现）
-  String getCurrentUserId();
+  /// 获取当前客户端ID（子类需要实现）
+  String getCurrentClientId();
   
   /// 获取当前用户名（子类需要实现）
   String getCurrentUserName();
@@ -42,36 +44,20 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
     if (_collaborationInitialized) return;
     
     try {
-      // 初始化WebSocket服务
-      _webSocketManager = WebSocketClientManager();
-      await _webSocketManager.initialize();
+      // 使用全局协作服务
+      final globalService = GlobalCollaborationService.instance;
       
-      // 检查是否有活跃的配置，如果没有则创建默认配置
-      var activeConfig = await _webSocketManager.getActiveConfig();
-      if (activeConfig == null) {
-        debugPrint('没有找到活跃的WebSocket配置，创建默认配置');
-        final defaultConfig = await _webSocketManager.createDefaultClient(
-          '地图集客户端',
-          host: 'localhost',
-          port: 8080,
-          path: '/ws/client',
-        );
-        await _webSocketManager.setActiveConfig(defaultConfig.clientId);
-        activeConfig = defaultConfig;
+      // 确保全局服务已初始化
+      if (!globalService.isInitialized) {
+        await globalService.initialize();
       }
       
-      // 启动WebSocket连接
-      final connected = await _webSocketManager.connect();
-      if (!connected) {
-        debugPrint('WebSocket连接失败');
-      } else {
-        debugPrint('WebSocket连接成功');
-      }
+      // 获取全局服务的实例
+      _webSocketManager = globalService.webSocketManager;
+      _presenceBloc = globalService.presenceBloc;
       
-      // 初始化PresenceBloc
-        _presenceBloc = PresenceBloc(
-          webSocketManager: _webSocketManager,
-        );
+      // 不自动连接WebSocket，让用户手动决定是否连接
+      debugPrint('协作服务已初始化，WebSocket连接状态: ${globalService.isConnected ? "已连接" : "未连接（离线模式）"}');
       
       // 初始化MapSyncService
       _mapSyncService = MapSyncService(_presenceBloc);
@@ -88,12 +74,26 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
       
       // 初始化用户状态
       _presenceBloc.add(InitializePresence(
-        currentUserId: getCurrentUserId(),
+        currentClientId: getCurrentClientId(),
         currentUserName: getCurrentUserName(),
       ));
       
       _collaborationInitialized = true;
       debugPrint('协作服务初始化完成，WebSocket连接状态: ${_webSocketManager.connectionState}');
+      
+      // 如果WebSocket已连接，立即请求在线状态列表
+      if (globalService.isConnected) {
+        debugPrint('WebSocket已连接，请求在线状态列表');
+        await _presenceBloc.requestOnlineStatusList();
+      }
+      
+      // 监听WebSocket连接状态变化，在连接成功后请求在线状态列表
+      _webSocketManager.connectionStateStream.listen((state) {
+        if (state == WebSocketConnectionState.connected) {
+          debugPrint('WebSocket连接成功，请求在线状态列表');
+          _presenceBloc.requestOnlineStatusList();
+        }
+      });
     } catch (e) {
       debugPrint('协作服务初始化失败: $e');
     }
@@ -104,10 +104,9 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
     if (!_collaborationInitialized) return;
     
     try {
-      // _autoPresenceManager.dispose();
-      // await _webSocketManager.disconnect();
-      // _presenceBloc.close();
-      // _collaborationInitialized = false;
+      // 先退出地图编辑器，清理状态
+      _autoPresenceManager.exitMapEditor();
+
       debugPrint('协作服务已清理');
     } catch (e) {
       debugPrint('协作服务清理失败: $e');

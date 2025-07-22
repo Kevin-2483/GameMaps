@@ -20,6 +20,7 @@ import 'components/web/web_context_menu_handler.dart';
 import 'services/window_manager_service.dart';
 import 'services/notification/notification_service.dart';
 import 'services/notification/notification_models.dart';
+import 'collaboration/global_collaboration_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,15 @@ void main() async {
     if (shouldPreloadData) {
       await WebDatabaseImporter.importFromAssets();
     }
+  }
+
+  // Initialize global collaboration service (without auto-connect)
+  try {
+    await GlobalCollaborationService.instance.initialize();
+    debugPrint('全局协作服务初始化成功');
+  } catch (e) {
+    debugPrint('全局协作服务初始化失败: $e');
+    // 协作服务初始化失败不应该阻止应用启动，只记录错误
   }
 
   runApp(const R6BoxApp());

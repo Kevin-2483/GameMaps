@@ -234,9 +234,9 @@ class WebSocketClientService {
       final messageJson = jsonEncode(message.toJson());
       _channel!.sink.add(messageJson);
       
-      if (kDebugMode) {
-        debugPrint('已发送消息: ${message.type}');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('已发送消息: ${message.type}');
+      // }
       
       return true;
     } catch (e) {
@@ -309,6 +309,20 @@ class WebSocketClientService {
     return await sendMessage(message);
   }
 
+  /// 请求在线状态列表
+  Future<bool> requestOnlineStatusList() async {
+    final message = WebSocketMessage(
+      type: 'request_online_status_list',
+      data: {},
+    );
+    
+    if (kDebugMode) {
+      debugPrint('请求在线状态列表');
+    }
+    
+    return await sendMessage(message);
+  }
+
   /// 开始消息监听
   void _startMessageListener() {
     _messageSubscription?.cancel();
@@ -358,6 +372,9 @@ class WebSocketClientService {
       case 'user_status_broadcast':
         _handleUserStatusBroadcast(message);
         break;
+      case 'online_status_list_response':
+        _handleOnlineStatusListResponse(message);
+        break;
       case 'challenge':
       case 'auth_success':
       case 'auth_failed':
@@ -380,9 +397,9 @@ class WebSocketClientService {
       _lastPingDelay = now.difference(_lastPingTime!).inMilliseconds;
       _pingDelayController.add(_lastPingDelay);
       
-      if (kDebugMode) {
-        debugPrint('收到 pong 消息，延迟: ${_lastPingDelay}ms');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('收到 pong 消息，延迟: ${_lastPingDelay}ms');
+      // }
     }
     // 可以在这里处理服务器状态信息
   }
@@ -404,15 +421,34 @@ class WebSocketClientService {
   /// 处理用户状态广播
   void _handleUserStatusBroadcast(WebSocketMessage message) {
     if (kDebugMode) {
-      final userId = message.data['user_id'] as String?;
+      final clientId = message.data['client_id'] as String?;
       final onlineStatus = message.data['online_status'] as String?;
       final activityStatus = message.data['activity_status'] as String?;
       final spaceId = message.data['space_id'] as String?;
       
-      debugPrint('收到用户状态广播: user=$userId, online=$onlineStatus, activity=$activityStatus, space=$spaceId');
+      debugPrint('收到用户状态广播: client=$clientId, online=$onlineStatus, activity=$activityStatus, space=$spaceId');
     }
     
     // 将用户状态广播消息转发给监听者（如PresenceBloc）
+    _messageController.add(message);
+  }
+
+  /// 处理在线状态列表响应
+  void _handleOnlineStatusListResponse(WebSocketMessage message) {
+    if (kDebugMode) {
+      final success = message.data['success'] as bool? ?? false;
+      final users = message.data['users'] as List? ?? [];
+      final spaceId = message.data['space_id'] as String?;
+      
+      if (success) {
+        debugPrint('收到在线状态列表响应: space=$spaceId, users_count=${users.length}');
+      } else {
+        final error = message.data['error'] as String? ?? '未知错误';
+        debugPrint('在线状态列表请求失败: $error');
+      }
+    }
+    
+    // 将在线状态列表响应转发给监听者（如PresenceBloc）
     _messageController.add(message);
   }
 
@@ -422,7 +458,7 @@ class WebSocketClientService {
     
     if (_currentConfig == null) return;
     
-    final pingInterval = Duration(seconds: _currentConfig!.webSocket.pingInterval);
+    final pingInterval = Duration(milliseconds: (_currentConfig!.webSocket.pingInterval * 1000).round());
     
     _pingTimer = Timer.periodic(pingInterval, (timer) {
       if (!isConnected) {
