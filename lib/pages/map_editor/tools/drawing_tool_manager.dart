@@ -2,10 +2,11 @@
 // 用于管理所有绘制相关的操作和状态
 
 import 'package:flutter/material.dart';
-import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../widgets/map_canvas.dart';
+import 'preview_queue_manager.dart';
 
 /// 绘制工具管理器 - 负责管理所有绘制工具相关的操作
 class DrawingToolManager {
@@ -18,24 +19,57 @@ class DrawingToolManager {
   // 绘制预览通知器
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier =
       ValueNotifier(null);
+  
+  // 预览队列管理器
+  late final PreviewQueueManager _previewQueueManager;
   // 画布尺寸常量 - 与 map_canvas.dart 中的常量保持一致
   static const double kCanvasWidth = 1600.0;
   static const double kCanvasHeight = 1600.0;
   // 回调函数
   Function(MapLayer)? onLayerUpdated;
+  Function(String layerId, MapDrawingElement element)? addDrawingElement;
   BuildContext? context;
+  
+  // 获取当前选中图层的函数
+  String? Function()? _getSelectedLayerId;
+  
+  // 获取图层最大z值的函数
+  int Function(String layerId)? getLayerMaxZIndex;
+  
+  // 获取便签最大z值的函数
+  int Function(String stickyNoteId)? getStickyNoteMaxZIndex;
 
   // Sticky note drawing support
   StickyNote? _currentDrawingStickyNote;
 
-  DrawingToolManager({this.onLayerUpdated, this.context});
+  DrawingToolManager({
+    this.onLayerUpdated, 
+    this.addDrawingElement,
+    this.context,
+    String? Function()? getSelectedLayerId,
+    this.getLayerMaxZIndex,
+    this.getStickyNoteMaxZIndex,
+  }) : _getSelectedLayerId = getSelectedLayerId {
+    // 初始化预览队列管理器
+    _previewQueueManager = PreviewQueueManager(
+      onElementReadyToAdd: _handleElementFromQueue,
+      onQueueChanged: () {
+        // 队列变化时的处理逻辑
+      },
+      onGetLayerMaxZIndex: getLayerMaxZIndex ?? _getLayerMaxZIndex,
+      onGetStickyNoteMaxZIndex: getStickyNoteMaxZIndex ?? _getStickyNoteMaxZIndex,
+    );
+  }
   // Getters
   ValueNotifier<DrawingPreviewData?> get drawingPreviewNotifier =>
       _drawingPreviewNotifier;
+  
+  PreviewQueueManager get previewQueueManager => _previewQueueManager;
 
   bool get isDrawing => _isDrawing;
   List<Offset> get freeDrawingPath => _freeDrawingPath;
   Offset? get currentDrawingStart => _currentDrawingStart;
+  Offset? get currentDrawingEnd => _currentDrawingEnd;
 
   // Getters for sticky note drawing
   StickyNote? get currentDrawingStickyNote => _currentDrawingStickyNote;
@@ -202,32 +236,24 @@ class DrawingToolManager {
     double effectiveCurvature,
     TriangleCutType effectiveTriangleCut,
   ) {
-    // 计算橡皮擦的 z 值（比当前 z 值大 1）
-    final maxZIndex = selectedLayer.elements.isEmpty
-        ? 0
-        : selectedLayer.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
-    // 创建一个橡皮擦元素，用于遮挡下方的绘制元素
-    final eraserElement = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.eraser,
-      points: [normalizedStart, normalizedEnd],
+    // 创建橡皮擦预览数据
+    final previewData = DrawingPreviewData(
+      start: normalizedStart,
+      end: normalizedEnd,
+      elementType: DrawingElementType.eraser,
       color: Colors.transparent, // 橡皮擦本身是透明的
       strokeWidth: 0.0,
-      curvature: effectiveCurvature, // 保存曲率参数
+      density: 1.0,
+      curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
-      zIndex: maxZIndex + 1,
-      createdAt: DateTime.now(),
     );
 
-    final updatedLayer = selectedLayer.copyWith(
-      elements: [...selectedLayer.elements, eraserElement],
-      updatedAt: DateTime.now(),
+    // 通过预览队列管理器处理橡皮擦元素添加
+    // 如果图层被锁定，元素将进入队列等待；否则立即添加
+    _previewQueueManager.addPreviewToQueue(
+      previewData: previewData,
+      targetLayerId: selectedLayer.id,
     );
-
-    onLayerUpdated?.call(updatedLayer);
   }
 
   /// 5. 处理自由绘制结束
@@ -247,32 +273,25 @@ class DrawingToolManager {
         )
         .toList();
 
-    // 计算新元素的 z 值
-    final maxZIndex = selectedLayer.elements.isEmpty
-        ? 0
-        : selectedLayer.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
-    // 创建自由绘制元素
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.freeDrawing,
-      points: normalizedPoints,
+    // 创建自由绘制预览数据
+    final previewData = DrawingPreviewData(
+      start: normalizedPoints.first,
+      end: normalizedPoints.last,
+      elementType: DrawingElementType.freeDrawing,
       color: effectiveColor,
       strokeWidth: effectiveStrokeWidth,
       density: effectiveDensity,
       curvature: effectiveCurvature,
-      zIndex: maxZIndex + 1,
-      createdAt: DateTime.now(),
+      triangleCut: TriangleCutType.none,
+      freeDrawingPath: normalizedPoints,
     );
 
-    final updatedLayer = selectedLayer.copyWith(
-      elements: [...selectedLayer.elements, element],
-      updatedAt: DateTime.now(),
+    // 通过预览队列管理器处理自由绘制元素添加
+    // 如果图层被锁定，元素将进入队列等待；否则立即添加
+    _previewQueueManager.addPreviewToQueue(
+      previewData: previewData,
+      targetLayerId: selectedLayer.id,
     );
-
-    onLayerUpdated?.call(updatedLayer);
 
     // 清空路径
     _freeDrawingPath.clear();
@@ -294,32 +313,26 @@ class DrawingToolManager {
       position.dy / kCanvasHeight,
     );
 
-    final maxZIndex = selectedLayer.elements.isEmpty
-        ? 0
-        : selectedLayer.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: DrawingElementType.text,
-      points: [normalizedPosition],
+    // 创建文本预览数据
+    final previewData = DrawingPreviewData(
+      start: normalizedPosition,
+      end: normalizedPosition, // 文本元素只需要一个点
+      elementType: DrawingElementType.text,
       color: effectiveColor,
       strokeWidth: effectiveStrokeWidth,
       density: effectiveDensity,
       curvature: effectiveCurvature,
-      zIndex: maxZIndex + 1,
+      triangleCut: TriangleCutType.none,
       text: text,
       fontSize: fontSize,
-      createdAt: DateTime.now(),
     );
 
-    final updatedLayer = selectedLayer.copyWith(
-      elements: [...selectedLayer.elements, element],
-      updatedAt: DateTime.now(),
+    // 通过预览队列管理器处理文本元素添加
+    // 如果图层被锁定，元素将进入队列等待；否则立即添加
+    _previewQueueManager.addPreviewToQueue(
+      previewData: previewData,
+      targetLayerId: selectedLayer.id,
     );
-
-    onLayerUpdated?.call(updatedLayer);
   }
 
   /// 7. 显示文本输入对话框
@@ -484,12 +497,6 @@ class DrawingToolManager {
       targetStickyNote,
     );
 
-    final maxZIndex = targetStickyNote.elements.isEmpty
-        ? 0
-        : targetStickyNote.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
     final element = MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.text,
@@ -498,14 +505,18 @@ class DrawingToolManager {
       strokeWidth: effectiveStrokeWidth,
       density: effectiveDensity,
       curvature: effectiveCurvature,
-      zIndex: maxZIndex + 1,
+      zIndex: 0, // z值将在队列处理时实时计算
       text: text,
       fontSize: fontSize,
       createdAt: DateTime.now(),
     );
 
-    final updatedStickyNote = targetStickyNote.addElement(element);
-    onStickyNoteUpdated(updatedStickyNote);
+    // 使用队列处理便签元素
+    _previewQueueManager.addStickyNotePreviewToQueue(
+      targetStickyNote,
+      element,
+      onStickyNoteUpdated,
+    );
   }
 
   /// 12. 显示便签文本输入对话框
@@ -666,39 +677,24 @@ class DrawingToolManager {
     Uint8List? imageBufferData,
     BoxFit imageBufferFit,
   ) {
-    // 计算新元素的 z 值（比当前最大 z 值大 1）
-    final maxZIndex = selectedLayer.elements.isEmpty
-        ? 0
-        : selectedLayer.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
-    final element = MapDrawingElement(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: elementType,
-      points: [normalizedStart, normalizedEnd],
+    // 创建预览数据
+    final previewData = DrawingPreviewData(
+      start: normalizedStart,
+      end: normalizedEnd,
+      elementType: elementType,
       color: effectiveColor,
       strokeWidth: effectiveStrokeWidth,
       density: effectiveDensity,
       curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
-      zIndex: maxZIndex + 1,
-      createdAt: DateTime.now(),
-      // 对于图片选区工具，将缓冲区数据复制到元素中，使其独立于缓冲区
-      imageData: elementType == DrawingElementType.imageArea
-          ? imageBufferData
-          : null,
-      imageFit: elementType == DrawingElementType.imageArea
-          ? imageBufferFit
-          : null,
     );
 
-    final updatedLayer = selectedLayer.copyWith(
-      elements: [...selectedLayer.elements, element],
-      updatedAt: DateTime.now(),
+    // 通过预览队列管理器处理元素添加
+    // 如果图层被锁定，元素将进入队列等待；否则立即添加
+    _previewQueueManager.addPreviewToQueue(
+      previewData: previewData,
+      targetLayerId: selectedLayer.id,
     );
-
-    onLayerUpdated?.call(updatedLayer);
   }
 
   /// 清理绘制状态
@@ -805,8 +801,9 @@ class DrawingToolManager {
   ) {
     if (!_isDrawing ||
         _currentDrawingStickyNote == null ||
-        effectiveDrawingTool == null)
+        effectiveDrawingTool == null) {
       return;
+    }
 
     // Convert canvas position to sticky note local coordinates
     final stickyNotePosition = _convertCanvasToStickyNoteCoordinates(
@@ -868,7 +865,9 @@ class DrawingToolManager {
         effectiveDrawingTool == null) {
       _clearStickyNoteDrawingState();
       return;
-    } // 调试信息：检查图片选区工具的缓冲区数据
+    }
+
+    // 调试信息：检查图片选区工具的缓冲区数据
     if (effectiveDrawingTool == DrawingElementType.imageArea) {
       debugPrint(
         '便签创建图片选区: 缓冲区数据=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}',
@@ -877,8 +876,8 @@ class DrawingToolManager {
 
     // 处理不同类型的绘制工具
     if (effectiveDrawingTool == DrawingElementType.eraser) {
-      // 橡皮擦处理：创建橡皮擦元素
-      final eraserElement = _createStickyNoteDrawingElement(
+      // 橡皮擦处理：使用队列机制
+      _createStickyNoteStandardElement(
         _currentDrawingStart!,
         _currentDrawingEnd!,
         effectiveDrawingTool,
@@ -887,32 +886,27 @@ class DrawingToolManager {
         effectiveDensity,
         effectiveCurvature,
         effectiveTriangleCut,
+        _currentDrawingStickyNote!,
+        onStickyNoteUpdated,
+        imageBufferData,
+        imageBufferFit,
       );
-
-      // Add eraser element to sticky note
-      final updatedStickyNote = _currentDrawingStickyNote!.addElement(
-        eraserElement,
-      );
-      onStickyNoteUpdated(updatedStickyNote);
     } else if (effectiveDrawingTool == DrawingElementType.freeDrawing) {
-      // 自由绘制处理
+      // 自由绘制处理：使用队列机制
       if (_freeDrawingPath.isNotEmpty) {
-        final freeDrawingElement = _createStickyNoteFreeDrawingElement(
+        _createStickyNoteFreeDrawingElementWithQueue(
           effectiveColor,
           effectiveStrokeWidth,
           effectiveDensity,
           effectiveCurvature,
+          _currentDrawingStickyNote!,
+          onStickyNoteUpdated,
         );
-
-        final updatedStickyNote = _currentDrawingStickyNote!.addElement(
-          freeDrawingElement,
-        );
-        onStickyNoteUpdated(updatedStickyNote);
         _freeDrawingPath.clear();
       }
     } else {
-      // 标准绘制元素处理
-      final element = _createStickyNoteDrawingElement(
+      // 标准绘制元素处理：使用队列机制
+      _createStickyNoteStandardElement(
         _currentDrawingStart!,
         _currentDrawingEnd!,
         effectiveDrawingTool,
@@ -921,13 +915,11 @@ class DrawingToolManager {
         effectiveDensity,
         effectiveCurvature,
         effectiveTriangleCut,
-        imageBufferData, // 传递图片缓冲区数据
-        imageBufferFit, // 传递图片适应方式
+        _currentDrawingStickyNote!,
+        onStickyNoteUpdated,
+        imageBufferData,
+        imageBufferFit,
       );
-
-      // Add element to sticky note
-      final updatedStickyNote = _currentDrawingStickyNote!.addElement(element);
-      onStickyNoteUpdated(updatedStickyNote);
     }
 
     _clearStickyNoteDrawingState();
@@ -981,12 +973,6 @@ class DrawingToolManager {
     Uint8List? imageBufferData, // 图片缓冲区数据
     BoxFit? imageBufferFit, // 图片适应方式
   ]) {
-    final stickyNote = _currentDrawingStickyNote!;
-    final maxZIndex = stickyNote.elements.isEmpty
-        ? 0
-        : stickyNote.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
     List<Offset> points;
     if (elementType == DrawingElementType.freeDrawing) {
       points = List.from(_freeDrawingPath);
@@ -1008,7 +994,7 @@ class DrawingToolManager {
       density: density,
       curvature: curvature,
       triangleCut: triangleCut,
-      zIndex: maxZIndex + 1,
+      zIndex: 0, // z值将在队列处理时实时计算
       createdAt: DateTime.now(),
       // 对于图片选区工具，将缓冲区数据复制到元素中，使其独立于缓冲区
       imageData: elementType == DrawingElementType.imageArea
@@ -1027,13 +1013,6 @@ class DrawingToolManager {
     double density,
     double curvature,
   ) {
-    final stickyNote = _currentDrawingStickyNote!;
-    final maxZIndex = stickyNote.elements.isEmpty
-        ? 0
-        : stickyNote.elements
-              .map((e) => e.zIndex)
-              .reduce((a, b) => a > b ? a : b);
-
     return MapDrawingElement(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: DrawingElementType.freeDrawing,
@@ -1043,7 +1022,7 @@ class DrawingToolManager {
       density: density,
       curvature: curvature,
       triangleCut: TriangleCutType.none, // 自由绘制不需要三角形切割
-      zIndex: maxZIndex + 1,
+      zIndex: 0, // z值将在队列处理时实时计算
       createdAt: DateTime.now(),
     );
   }
@@ -1052,5 +1031,121 @@ class DrawingToolManager {
   void _clearStickyNoteDrawingState() {
     _currentDrawingStickyNote = null;
     _clearDrawingState();
+  }
+
+  /// 创建便签标准元素（使用队列机制）
+  void _createStickyNoteStandardElement(
+    Offset startPoint,
+    Offset endPoint,
+    DrawingElementType type,
+    Color color,
+    double strokeWidth,
+    double density,
+    double curvature,
+    TriangleCutType triangleCut,
+    StickyNote stickyNote,
+    Function(StickyNote) onStickyNoteUpdated,
+    Uint8List? imageBufferData,
+    BoxFit imageBufferFit,
+  ) {
+    // 创建绘制元素
+    final element = _createStickyNoteDrawingElement(
+      startPoint,
+      endPoint,
+      type,
+      color,
+      strokeWidth,
+      density,
+      curvature,
+      triangleCut,
+      imageBufferData,
+      imageBufferFit,
+    );
+    
+    // 使用预览队列管理器处理便签绘制
+    _previewQueueManager.addStickyNotePreviewToQueue(
+      stickyNote,
+      element,
+      onStickyNoteUpdated,
+    );
+  }
+
+  /// 创建便签自由绘制元素（使用队列机制）
+  void _createStickyNoteFreeDrawingElementWithQueue(
+    Color color,
+    double strokeWidth,
+    double density,
+    double curvature,
+    StickyNote stickyNote,
+    Function(StickyNote) onStickyNoteUpdated,
+  ) {
+    // 创建自由绘制元素
+    final element = _createStickyNoteFreeDrawingElement(
+      color,
+      strokeWidth,
+      density,
+      curvature,
+    );
+    
+    // 使用预览队列管理器处理便签绘制
+    _previewQueueManager.addStickyNotePreviewToQueue(
+      stickyNote,
+      element,
+      onStickyNoteUpdated,
+    );
+  }
+
+  /// 处理从预览队列中取出的元素
+  void _handleElementFromQueue(MapDrawingElement element, String layerId) {
+    debugPrint('处理队列元素: ${element.id} 添加到图层: $layerId');
+    
+    // 获取当前选中的图层ID，如果没有提供layerId的话
+    String targetLayerId = layerId;
+    if (layerId.isEmpty && _getSelectedLayerId != null) {
+      final selectedLayerId = _getSelectedLayerId!();
+      if (selectedLayerId != null && selectedLayerId.isNotEmpty) {
+        targetLayerId = selectedLayerId;
+      }
+    }
+    
+    // 通过addDrawingElement回调来添加绘图元素
+    // 这个回调应该连接到响应式系统的addDrawingElementReactive方法
+    if (addDrawingElement != null && targetLayerId.isNotEmpty) {
+      addDrawingElement!(targetLayerId, element);
+    } else {
+      debugPrint('DrawingToolManager: addDrawingElement回调未设置或目标图层ID为空，无法添加元素');
+    }
+  }
+  
+  /// 处理队列中等待的预览项
+  void processWaitingPreviews() {
+    _previewQueueManager.processWaitingPreviews();
+  }
+  
+  /// 获取预览队列中的项目数量
+  int get queuedPreviewsCount => _previewQueueManager.totalQueueCount;
+  
+  /// 获取指定图层的最大z值（默认实现）
+  /// 用于预览队列管理器计算新元素的z值
+  int _getLayerMaxZIndex(String layerId) {
+    // 如果有外部提供的回调函数，优先使用
+    if (getLayerMaxZIndex != null) {
+      return getLayerMaxZIndex!(layerId);
+    }
+    
+    // 默认返回0，表示没有现有元素
+    return 0;
+  }
+  
+  /// 获取指定便签的最大z值（默认实现）
+  /// 用于预览队列管理器计算新便签元素的z值
+  int _getStickyNoteMaxZIndex(String stickyNoteId) {
+    // 如果有外部提供的回调函数，优先使用
+    if (getStickyNoteMaxZIndex != null) {
+      return getStickyNoteMaxZIndex!(stickyNoteId);
+    }
+    
+    // 默认返回0，表示没有现有元素
+    return 0;
   }
 }

@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:vector_math/vector_math_64.dart' show Matrix4; // 添加Matrix4导入
+
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/map_item.dart';
@@ -28,6 +28,7 @@ import '../renderers/background_renderer.dart';
 // 导入绘制工具管理器
 import '../tools/drawing_tool_manager.dart';
 import '../tools/element_interaction_manager.dart';
+import '../tools/preview_queue_manager.dart';
 import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
 import '../../../components/color_filter_dialog.dart'; // 导入色彩滤镜组件
 import '../../../services/notification/notification_service.dart';
@@ -48,6 +49,8 @@ class DrawingPreviewData {
   final TriangleCutType triangleCut; // 三角形切割类型
   final List<Offset>? freeDrawingPath; // 自由绘制路径
   final StickyNote? targetStickyNote; // 目标便签（如果在便签上绘制）
+  final String? text; // 文本内容（用于文本框）
+  final double? fontSize; // 字体大小（用于文本框）
 
   const DrawingPreviewData({
     required this.start,
@@ -60,6 +63,8 @@ class DrawingPreviewData {
     required this.triangleCut,
     this.freeDrawingPath,
     this.targetStickyNote,
+    this.text,
+    this.fontSize,
   });
 }
 
@@ -95,6 +100,9 @@ class MapCanvas extends StatefulWidget {
   final LegendSessionManager? legendSessionManager; // 新的图例会话管理器
   final bool isPreviewMode;
   final Function(MapLayer) onLayerUpdated;
+  final Function(String layerId, MapDrawingElement element)? addDrawingElement;
+  final String? Function()? getSelectedLayerId;
+  final int Function(String layerId)? getLayerMaxZIndex;
   final Function(LegendGroup) onLegendGroupUpdated;
   final Function(String) onLegendItemSelected;
   final Function(LegendItem) onLegendItemDoubleClicked;
@@ -125,6 +133,7 @@ class MapCanvas extends StatefulWidget {
   final NewReactiveScriptManager? scriptManager; // 新增：脚本管理器参数
   final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽图例到画布的回调
   final bool isMenuButtonDown; // 中键按下状态
+  final PreviewQueueManager? previewQueueManager; // 预览队列管理器
 
   const MapCanvas({
     super.key,
@@ -139,6 +148,9 @@ class MapCanvas extends StatefulWidget {
     this.legendSessionManager, // 新的图例会话管理器
     required this.isPreviewMode,
     required this.onLayerUpdated,
+    this.addDrawingElement,
+    this.getSelectedLayerId,
+    this.getLayerMaxZIndex,
     required this.onLegendGroupUpdated,
     required this.onLegendItemSelected,
     required this.onLegendItemDoubleClicked,
@@ -169,13 +181,14 @@ class MapCanvas extends StatefulWidget {
     this.scriptManager, // 新增：脚本管理器参数
     this.onLegendDragToCanvas, // 新增：拖拽图例到画布的回调
     this.isMenuButtonDown = false, // 中键按下状态
+    this.previewQueueManager, // 预览队列管理器
   });
 
   @override
   State<MapCanvas> createState() => MapCanvasState();
 }
 
-class MapCanvasState extends State<MapCanvas> {
+class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   Rect? get currentSelectionRect => _selectionRect;
   final TransformationController _transformationController =
       TransformationController();
@@ -183,6 +196,9 @@ class MapCanvasState extends State<MapCanvas> {
   late final DrawingToolManager _drawingToolManager;
   // 元素交互管理器
   late final ElementInteractionManager _elementInteractionManager;
+  // 队列旋转动画控制器
+  late final AnimationController _queueSpinnerController;
+  late final Animation<double> _queueSpinnerAnimation;
 
   // 添加图片缓存 - 支持实时解码
   final Map<String, ui.Image> _imageCache = {};
@@ -226,7 +242,10 @@ class MapCanvasState extends State<MapCanvas> {
     super.initState(); // 初始化绘制工具管理器
     _drawingToolManager = DrawingToolManager(
       onLayerUpdated: widget.onLayerUpdated,
+      addDrawingElement: widget.addDrawingElement,
       context: context,
+      getSelectedLayerId: widget.getSelectedLayerId,
+      getLayerMaxZIndex: widget.getLayerMaxZIndex,
     );
 
     // 初始化元素交互管理器
@@ -238,6 +257,16 @@ class MapCanvasState extends State<MapCanvas> {
         }
       },
     );
+
+    // 初始化队列旋转动画控制器
+    _queueSpinnerController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+    _queueSpinnerAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_queueSpinnerController);
 
     // 在组件初始化时预加载所有图层的图片
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -285,6 +314,9 @@ class MapCanvasState extends State<MapCanvas> {
     _imageDecodingFutures.clear();
 
     _imageBufferCachedImage?.dispose();
+
+    // 清理动画控制器
+    _queueSpinnerController.dispose();
 
     _transformationController.dispose();
     _drawingPreviewNotifier.dispose();
@@ -343,6 +375,8 @@ class MapCanvasState extends State<MapCanvas> {
                         ),
                         // 按层级顺序渲染所有元素
                         ..._buildLayeredElements(),
+                        // 队列渲染层 - 在图层之上，预览之下
+                        ..._buildQueueRenderLayers(),
                         ValueListenableBuilder<DrawingPreviewData?>(
                           valueListenable:
                               _drawingToolManager.drawingPreviewNotifier,
@@ -725,6 +759,7 @@ class MapCanvasState extends State<MapCanvas> {
             currentImageBufferData: widget.imageBufferData,
             imageBufferFit: widget.imageBufferFit,
             context: context,
+            animation: _queueSpinnerAnimation,
           ),
         ),
       ),
@@ -803,6 +838,7 @@ class MapCanvasState extends State<MapCanvas> {
           imageBufferCachedImage: _imageBufferCachedImage,
           currentImageBufferData: widget.imageBufferData,
           imageBufferFit: widget.imageBufferFit,
+          previewQueueManager: _drawingToolManager.previewQueueManager,
         ),
       ),
     );
@@ -1106,9 +1142,6 @@ class MapCanvasState extends State<MapCanvas> {
     final deltaX = canvasPosition.dx - legendCenter.dx;
     final deltaY = canvasPosition.dy - legendCenter.dy;
     final currentAngle = math.atan2(deltaY, deltaX) * (180 / math.pi);
-
-    // 更新图例旋转角度
-    final updatedItem = item.copyWith(rotation: currentAngle);
 
     // 通知上层更新图例
     _updateLegendItemRotation(item, currentAngle);
@@ -2932,6 +2965,78 @@ class MapCanvasState extends State<MapCanvas> {
     return allElements.map((e) => e.widget).toList();
   }
 
+  /// 构建队列渲染层
+  /// 为每个图层创建独立的队列渲染层，显示该图层队列中的元素
+  /// 利用按图层隔离的队列结构提高渲染效率
+  List<Widget> _buildQueueRenderLayers() {
+    final queueLayers = <Widget>[];
+    
+    // 获取所有有队列的图层ID列表
+    final layersWithQueue = _drawingToolManager.previewQueueManager.getLayersWithQueue();
+    
+    if (layersWithQueue.isEmpty) {
+      return queueLayers;
+    }
+    
+    // 获取图层渲染顺序
+    final layersToRender = widget.displayOrderLayers ?? widget.mapItem.layers;
+    final sortedLayers = List<MapLayer>.from(layersToRender);
+    
+    if (widget.displayOrderLayers == null) {
+      sortedLayers.sort((a, b) => a.order.compareTo(b.order));
+    }
+    
+    for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
+      final layer = sortedLayers[layerIndex];
+      
+      // 跳过没有队列项的图层
+      if (!layersWithQueue.contains(layer.id)) {
+        continue;
+      }
+      
+      // 只为可见图层创建队列渲染层
+      if (!layer.isVisible) {
+        continue;
+      }
+      
+      // 创建该图层的队列渲染层
+      queueLayers.add(
+        ValueListenableBuilder<List<PreviewQueueItem>>(
+          valueListenable: _drawingToolManager.previewQueueManager.queueNotifier,
+          builder: (context, allQueueItems, child) {
+            // 直接从PreviewQueueManager获取该图层的队列项
+            final layerQueueItems = _drawingToolManager.previewQueueManager
+                .getLayerQueue(layer.id);
+            
+            if (layerQueueItems.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            
+            return AnimatedBuilder(
+              animation: _queueSpinnerAnimation,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: const Size(kCanvasWidth, kCanvasHeight),
+                  painter: _QueueRenderPainter(
+                    queueItems: layerQueueItems,
+                    layer: layer,
+                    imageCache: _imageCache,
+                    context: context,
+                    animation: _queueSpinnerAnimation,
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      );
+    }
+    
+    return queueLayers;
+  }
+
+
+
   // 绘画元素选择和操作相关方法
   /// 检测点击位置是否命中某个绘画元素
   String? _getHitElement(Offset canvasPosition) {
@@ -3383,6 +3488,7 @@ class _LayerPainter extends CustomPainter {
   final Uint8List? currentImageBufferData; // 当前图片缓冲区数据
   final BoxFit imageBufferFit; // 图片缓冲区适应方式
   final BuildContext? context; // 添加context用于主题适配
+  final Animation<double>? animation; // 彩虹动画控制器
 
   _LayerPainter({
     required this.layer,
@@ -3394,7 +3500,8 @@ class _LayerPainter extends CustomPainter {
     this.currentImageBufferData,
     this.imageBufferFit = BoxFit.contain,
     this.context,
-  });
+    this.animation,
+  }) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3510,7 +3617,7 @@ class _LayerPainter extends CustomPainter {
           .where((e) => e.id == selectedElementId)
           .firstOrNull;
       if (selectedElement != null) {
-        HighlightRenderer.drawRainbowHighlight(canvas, selectedElement, size);
+        HighlightRenderer.drawRainbowHighlight(canvas, selectedElement, size, animation: animation);
         HighlightRenderer.drawResizeHandles(
           canvas,
           selectedElement,
@@ -3777,5 +3884,138 @@ class _RotationIndicatorPainter extends CustomPainter {
         oldDelegate.handleSize != handleSize ||
         oldDelegate.centerX != centerX ||
         oldDelegate.centerY != centerY;
+  }
+}
+
+/// 队列渲染画笔
+/// 用于渲染队列中等待提交的绘制元素
+class _QueueRenderPainter extends CustomPainter {
+  final List<PreviewQueueItem> queueItems;
+  final MapLayer layer;
+  final Map<String, ui.Image> imageCache;
+  final BuildContext? context;
+  final Animation<double>? animation;
+
+  _QueueRenderPainter({
+    required this.queueItems,
+    required this.layer,
+    required this.imageCache,
+    this.context,
+    this.animation,
+  }) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (queueItems.isEmpty) return;
+
+    // 按创建时间排序队列项，确保渲染顺序正确
+    final sortedItems = List<PreviewQueueItem>.from(queueItems)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    // 渲染每个队列项
+    for (final item in sortedItems) {
+      _renderQueueItem(canvas, size, item);
+    }
+  }
+
+  /// 渲染单个队列项
+  void _renderQueueItem(Canvas canvas, Size size, PreviewQueueItem item) {
+    final previewData = item.previewData;
+    
+    // 将归一化坐标转换为画布坐标
+    final canvasStart = Offset(
+      previewData.start.dx * size.width,
+      previewData.start.dy * size.height,
+    );
+    final canvasEnd = Offset(
+      previewData.end.dx * size.width,
+      previewData.end.dy * size.height,
+    );
+    
+    // 转换自由绘制路径坐标
+    List<Offset>? canvasFreeDrawingPath;
+    if (previewData.freeDrawingPath != null) {
+      canvasFreeDrawingPath = previewData.freeDrawingPath!.map((point) => Offset(
+        point.dx * size.width,
+        point.dy * size.height,
+      )).toList();
+    }
+    
+    // 使用PreviewRenderer来渲染队列中的元素，保持原始样式
+    PreviewRenderer.drawCurrentDrawing(
+      canvas,
+      size,
+      start: canvasStart,
+      end: canvasEnd,
+      elementType: previewData.elementType,
+      color: previewData.color, // 使用原始颜色
+      strokeWidth: previewData.strokeWidth, // 使用原始线条宽度
+      density: previewData.density,
+      curvature: previewData.curvature,
+      triangleCut: previewData.triangleCut,
+      freeDrawingPath: canvasFreeDrawingPath,
+    );
+    
+    // 在队列元素的起始位置绘制旋转小圆圈表示未提交状态
+    _drawQueueSpinner(canvas, canvasStart, item.createdAt);
+  }
+
+  /// 绘制队列旋转指示器
+  /// 在队列元素的起始位置绘制旋转小圆圈表示未提交状态
+  void _drawQueueSpinner(Canvas canvas, Offset position, DateTime createdAt) {
+    // 使用动画值计算旋转角度
+    final rotationAngle = (animation?.value ?? 0.0) * 2 * math.pi;
+    
+    // 外圆背景
+    final backgroundPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.9)
+      ..style = PaintingStyle.fill;
+    
+    // 旋转指示器
+    final spinnerPaint = Paint()
+      ..color = Colors.blue.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+    
+    const radius = 4.0;
+    
+    // 绘制白色背景圆
+    canvas.drawCircle(position, radius + 1, backgroundPaint);
+    
+    // 绘制旋转的弧形指示器
+    canvas.save();
+    canvas.translate(position.dx, position.dy);
+    canvas.rotate(rotationAngle);
+    
+    // 绘制3/4圆弧作为旋转指示器
+    final rect = Rect.fromCircle(center: Offset.zero, radius: radius);
+    canvas.drawArc(
+      rect,
+      0, // 起始角度
+      3 * math.pi / 2, // 扫描角度（3/4圆）
+      false,
+      spinnerPaint,
+    );
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _QueueRenderPainter oldDelegate) {
+    return oldDelegate.queueItems.length != queueItems.length ||
+        !_listEquals(oldDelegate.queueItems, queueItems) ||
+        oldDelegate.layer.id != layer.id;
+  }
+
+  /// 比较两个队列项列表是否相等
+  bool _listEquals(List<PreviewQueueItem> a, List<PreviewQueueItem> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].createdAt != b[i].createdAt) {
+        return false;
+      }
+    }
+    return true;
   }
 }

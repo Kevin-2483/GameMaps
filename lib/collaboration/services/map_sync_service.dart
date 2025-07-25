@@ -49,7 +49,7 @@ class MapSyncService {
       debugPrint('[MapSyncService]   - mapId: $mapId');
       debugPrint('[MapSyncService]   - mapTitle: $mapTitle');
       debugPrint(
-        '[MapSyncService]   - 封面: ${compressedCoverBase64 != null ? '${(compressedCoverBase64!.length * 0.75 / 1024).toStringAsFixed(1)}KB' : '无'}',
+        '[MapSyncService]   - 封面: ${compressedCoverBase64 != null ? '${(compressedCoverBase64.length * 0.75 / 1024).toStringAsFixed(1)}KB' : '无'}',
       );
 
       _presenceBloc.add(

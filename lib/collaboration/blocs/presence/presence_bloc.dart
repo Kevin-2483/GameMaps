@@ -99,7 +99,7 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       final currentUser = UserPresence(
         clientId: event.currentClientId,
         userName: event.currentUserName,
-        displayName: displayName ?? event.currentUserName,
+        displayName: displayName,
         avatar: avatar,
         status: initialStatus,
         lastSeen: DateTime.now(),

@@ -36,15 +36,27 @@ export 'services/websocket/websocket_client_auth_service.dart';
 export 'services/websocket/websocket_client_database_service.dart';
 export 'services/map_sync_service.dart';
 export 'services/auto_presence_manager.dart';
+export 'services/collaboration_state_manager.dart';
+export 'services/collaboration_sync_service.dart';
 
 // Mixins
 export 'mixins/auto_presence_mixin.dart';
 
 // 数据模型
 export 'models/user_presence.dart';
+export 'models/collaboration_state.dart';
 
 // 状态管理
 export 'blocs/presence/presence.dart';
+export 'blocs/collaboration_state/collaboration_state_bloc.dart';
+export 'blocs/collaboration_state/collaboration_state_event.dart';
+export 'blocs/collaboration_state/collaboration_state_state.dart';
+
+// 协作组件
+export 'widgets/collaboration_overlay.dart';
+export 'widgets/user_cursor_widget.dart';
+export 'widgets/user_selection_widget.dart';
+export 'widgets/collaboration_conflict_widget.dart';
 
 // 集成示例
 // export 'examples/map_editor_integration_example.dart';

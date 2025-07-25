@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'services/websocket/websocket_client_manager.dart';
 import 'services/websocket/websocket_client_service.dart';
+import 'services/collaboration_state_manager.dart';
 import 'blocs/presence/presence_bloc.dart';
 
 /// 全局协作服务
@@ -17,7 +19,9 @@ class GlobalCollaborationService {
 
   late final WebSocketClientManager _webSocketManager;
   late final PresenceBloc _presenceBloc;
+  late final CollaborationStateManager _collaborationStateManager;
   bool _isInitialized = false;
+  bool _userInfoSet = false;
 
   /// 获取WebSocket管理器实例
   WebSocketClientManager get webSocketManager {
@@ -35,8 +39,47 @@ class GlobalCollaborationService {
     return _presenceBloc;
   }
 
+  /// 获取CollaborationStateManager实例
+  CollaborationStateManager get collaborationStateManager {
+    if (!_isInitialized) {
+      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+    }
+    return _collaborationStateManager;
+  }
+
   /// 检查是否已初始化
   bool get isInitialized => _isInitialized;
+
+  /// 设置用户信息并初始化CollaborationStateManager
+  void setUserInfo({
+    required String userId,
+    required String displayName,
+    Color? userColor,
+  }) {
+    if (!_isInitialized) {
+      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+    }
+
+    if (_userInfoSet) {
+      if (kDebugMode) {
+        debugPrint('用户信息已设置，跳过重复设置');
+      }
+      return;
+    }
+
+    // 初始化CollaborationStateManager
+    _collaborationStateManager.initialize(
+      userId: userId,
+      displayName: displayName,
+      userColor: userColor,
+    );
+
+    _userInfoSet = true;
+
+    if (kDebugMode) {
+      debugPrint('GlobalCollaborationService 用户信息已设置: userId=$userId, displayName=$displayName');
+    }
+  }
 
   /// 初始化全局协作服务
   /// 注意：此方法只初始化服务，不会自动连接WebSocket
@@ -56,6 +99,9 @@ class GlobalCollaborationService {
       // 初始化WebSocket管理器（不自动连接）
       _webSocketManager = WebSocketClientManager();
       await _webSocketManager.initialize();
+
+      // 初始化CollaborationStateManager
+      _collaborationStateManager = CollaborationStateManager();
 
       // 初始化PresenceBloc
       _presenceBloc = PresenceBloc(webSocketManager: _webSocketManager);

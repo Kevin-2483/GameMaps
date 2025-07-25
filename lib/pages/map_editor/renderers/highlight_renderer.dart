@@ -11,8 +11,9 @@ class HighlightRenderer {
   static void drawRainbowHighlight(
     Canvas canvas,
     MapDrawingElement element,
-    Size size,
-  ) {
+    Size size, {
+    Animation<double>? animation,
+  }) {
     // 首先获取元素的坐标
     if (element.points.isEmpty) return;
 
@@ -27,9 +28,8 @@ class HighlightRenderer {
       Colors.purple,
     ];
 
-    // 获取当前时间以创建动画效果
-    final now = DateTime.now().millisecondsSinceEpoch / 1000;
-    final animOffset = now % 1.0; // 0.0 - 1.0 之间循环变化
+    // 使用动画控制器创建动画效果
+    final animOffset = animation?.value ?? 0.0; // 0.0 - 1.0 之间循环变化
 
     // 根据元素类型绘制不同的内容
     switch (element.type) {

@@ -117,6 +117,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   @override
   String getCurrentUserName() {
+    // 优先使用用户偏好设置中的显示名称
+    try {
+      final userPreferencesProvider = Provider.of<UserPreferencesProvider>(context, listen: false);
+      final userPreferences = userPreferencesProvider.currentPreferences;
+      if (userPreferences != null && userPreferences.displayName.isNotEmpty) {
+        return userPreferences.displayName;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('获取用户偏好设置显示名称失败: $e');
+      }
+    }
+    
+    // 回退到WebSocket客户端配置中的显示名称
     return _cachedClientName ?? '未知客户端';
   }
 
@@ -4528,6 +4542,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
               versionAdapter?.legendSessionManager, // 传递图例会话管理器
           isPreviewMode: widget.isPreviewMode,
           onLayerUpdated: _updateLayer,
+          addDrawingElement: (layerId, element) {
+            addDrawingElementReactive(layerId, element);
+          },
+          getSelectedLayerId: () => _selectedLayer?.id,
+          getLayerMaxZIndex: _getLayerMaxZIndex,
           onLegendGroupUpdated: _updateLegendGroup,
           onLegendItemSelected: _selectLegendItem,
           onLegendItemDoubleClicked: _handleLegendItemDoubleClick,
@@ -5038,6 +5057,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
 
     return groups;
+  }
+
+  /// 获取指定图层的最大z值
+  int _getLayerMaxZIndex(String layerId) {
+    final mapData = reactiveIntegration.mapDataBloc.state;
+    if (mapData is! MapDataLoaded) return 0;
+    
+    final layer = mapData.layers.firstWhere(
+      (l) => l.id == layerId,
+      orElse: () => throw StateError('Layer not found'),
+    );
+    
+    if (layer.elements.isEmpty) return 0;
+    
+    return layer.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
   }
 
   /// 根据索引选择图层组

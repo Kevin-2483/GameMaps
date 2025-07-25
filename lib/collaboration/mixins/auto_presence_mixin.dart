@@ -52,6 +52,12 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
         await globalService.initialize();
       }
 
+      // 设置用户信息到全局服务
+      globalService.setUserInfo(
+        userId: getCurrentClientId(),
+        displayName: getCurrentUserName(),
+      );
+
       // 获取全局服务的实例
       _webSocketManager = globalService.webSocketManager;
       _presenceBloc = globalService.presenceBloc;

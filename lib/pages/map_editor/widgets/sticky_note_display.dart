@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import '../../../models/sticky_note.dart';
 import '../../../models/map_layer.dart';
 import '../renderers/eraser_renderer.dart';
+import '../tools/preview_queue_manager.dart';
+import '../renderers/preview_renderer.dart';
 
 /// 便签点击类型枚举
 enum StickyNoteHitType {
@@ -20,6 +21,7 @@ class StickyNoteDisplay extends StatefulWidget {
   final bool isSelected;
   final bool isPreviewMode;
   final Function(StickyNote)? onNoteUpdated;
+  final PreviewQueueManager? previewQueueManager;
 
   // 图片缓存相关参数
   final Map<String, ui.Image>? imageCache;
@@ -33,6 +35,7 @@ class StickyNoteDisplay extends StatefulWidget {
     required this.isSelected,
     required this.isPreviewMode,
     this.onNoteUpdated,
+    this.previewQueueManager,
     this.imageCache,
     this.imageBufferCachedImage,
     this.currentImageBufferData,
@@ -43,14 +46,29 @@ class StickyNoteDisplay extends StatefulWidget {
   State<StickyNoteDisplay> createState() => _StickyNoteDisplayState();
 }
 
-class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
+class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProviderStateMixin {
   // 用于存储便签中图片元素的本地缓存
   final Map<String, ui.Image> _localImageCache = {};
+  
+  // 动画控制器
+  AnimationController? _rotationController;
+  Animation<double>? _rotationAnimation;
 
   @override
   void initState() {
     super.initState();
     _preloadStickyNoteImages();
+    
+    // 初始化动画控制器
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+    
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_rotationController!);
   }
 
   @override
@@ -90,6 +108,9 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
 
   @override
   void dispose() {
+    // 释放动画控制器
+    _rotationController?.dispose();
+    
     // 释放本地图片缓存
     for (final image in _localImageCache.values) {
       image.dispose();
@@ -211,15 +232,19 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
             // 便签绘制元素层
             if (widget.note.elements.isNotEmpty) _buildDrawingElements(),
 
+            // 便签队列渲染层
+            if (widget.previewQueueManager != null) _buildQueueElements(),
+
             // 调整大小手柄
             if (widget.isSelected && !widget.isPreviewMode)
               _buildResizeHandles(),
 
-            // 绘制区域提示（当选中且无内容时显示）
+            // 绘制区域提示（当选中且无内容且无队列项目时显示）
             if (widget.isSelected &&
                 !widget.isPreviewMode &&
                 widget.note.elements.isEmpty &&
-                !widget.note.hasBackgroundImage)
+                !widget.note.hasBackgroundImage &&
+                _hasNoQueueItems())
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -375,6 +400,50 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
     );
   }
 
+  /// 构建便签队列元素
+  Widget _buildQueueElements() {
+    if (widget.previewQueueManager == null) {
+      return const SizedBox.shrink();
+    }
+
+    // 合并widget的imageCache和本地图片缓存
+    final Map<String, ui.Image> combinedImageCache = {
+      ...?widget.imageCache,
+      ..._localImageCache,
+    };
+
+    return Positioned.fill(
+      child: ValueListenableBuilder<List<StickyNotePreviewQueueItem>>(
+        valueListenable: widget.previewQueueManager!.stickyNoteQueueNotifier,
+        builder: (context, allQueueItems, child) {
+          // 过滤出当前便签的队列项目
+          final stickyNoteQueueItems = allQueueItems
+              .where((item) => item.stickyNote.id == widget.note.id)
+              .toList();
+
+          if (stickyNoteQueueItems.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          debugPrint(
+            '便签队列渲染: 便签ID=${widget.note.id}, 队列项目=${stickyNoteQueueItems.length}',
+          );
+
+          return CustomPaint(
+            painter: _StickyNoteQueuePainter(
+              queueItems: stickyNoteQueueItems,
+              imageCache: combinedImageCache,
+              imageBufferCachedImage: widget.imageBufferCachedImage,
+              currentImageBufferData: widget.currentImageBufferData,
+              imageBufferFit: widget.imageBufferFit,
+              rotationAnimation: _rotationAnimation,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   /// 构建调整大小手柄
   Widget _buildResizeHandles() {
     const double handleSize = 16.0;
@@ -406,6 +475,20 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> {
       updatedAt: DateTime.now(),
     );
     widget.onNoteUpdated?.call(updatedNote);
+  }
+
+  /// 检查当前便签是否没有队列项目
+  bool _hasNoQueueItems() {
+    if (widget.previewQueueManager == null) {
+      return true; // 没有队列管理器，认为没有队列项目
+    }
+
+    final allQueueItems = widget.previewQueueManager!.stickyNoteQueueNotifier.value;
+    final stickyNoteQueueItems = allQueueItems
+        .where((item) => item.stickyNote.id == widget.note.id)
+        .toList();
+    
+    return stickyNoteQueueItems.isEmpty;
   }
 }
 
@@ -790,6 +873,131 @@ class StickyNoteDragState {
     this.startNoteSize,
     required this.onNoteUpdated,
   });
+}
+
+/// 便签队列渲染画笔
+/// 用于在便签上渲染队列中的预览元素
+class _StickyNoteQueuePainter extends CustomPainter {
+  final List<StickyNotePreviewQueueItem> queueItems;
+  final Map<String, ui.Image>? imageCache;
+  final ui.Image? imageBufferCachedImage;
+  final Uint8List? currentImageBufferData;
+  final BoxFit imageBufferFit;
+  final Animation<double>? rotationAnimation;
+
+  _StickyNoteQueuePainter({
+    required this.queueItems,
+    this.imageCache,
+    this.imageBufferCachedImage,
+    this.currentImageBufferData,
+    this.imageBufferFit = BoxFit.contain,
+    this.rotationAnimation,
+  }) : super(repaint: rotationAnimation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (queueItems.isEmpty) return;
+
+    // 创建裁剪区域，确保绘制内容不超出便签内容区域
+    final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.save();
+    canvas.clipRect(clipRect);
+
+    // 按创建时间排序队列项目
+    final sortedItems = List<StickyNotePreviewQueueItem>.from(queueItems)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    // 渲染每个队列项目
+    for (final item in sortedItems) {
+      _renderQueueItem(canvas, size, item);
+    }
+
+    canvas.restore();
+  }
+
+  /// 渲染单个队列项目
+  void _renderQueueItem(Canvas canvas, Size size, StickyNotePreviewQueueItem item) {
+    final element = item.element;
+    
+    // 将归一化坐标转换为绝对坐标
+    final absolutePoints = element.points
+        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+        .toList();
+    
+    // 获取起始和结束点（绝对坐标）
+    final start = absolutePoints.isNotEmpty ? absolutePoints.first : Offset.zero;
+    final end = absolutePoints.length > 1 ? absolutePoints[1] : start;
+    
+    // 对于自由绘制，使用整个路径（绝对坐标）
+    final freeDrawingPath = element.type == DrawingElementType.freeDrawing 
+        ? absolutePoints 
+        : null;
+    
+    // 使用PreviewRenderer渲染元素
+    PreviewRenderer.drawCurrentDrawing(
+      canvas,
+      size,
+      start: start,
+      end: end,
+      elementType: element.type,
+      color: element.color,
+      strokeWidth: element.strokeWidth,
+      density: element.density,
+      curvature: element.curvature,
+      triangleCut: element.triangleCut,
+      freeDrawingPath: freeDrawingPath,
+    );
+
+    // 在元素起始位置绘制旋转的加载指示器（使用绝对坐标）
+    _drawQueueSpinner(canvas, start);
+  }
+
+  /// 绘制队列加载指示器
+  void _drawQueueSpinner(Canvas canvas, Offset center) {
+    const radius = 8.0;
+    
+    // 绘制半透明背景圆
+    final bgPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius, bgPaint);
+    
+    // 绘制旋转的加载指示器
+    final spinnerPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+    
+    // 使用动画控制器的值进行旋转
+    final rotation = rotationAnimation?.value ?? 0.0;
+    final rotationAngle = rotation * 2 * 3.14159; // 将0-1的值转换为0-2π的弧度
+    
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotationAngle);
+    
+    // 绘制部分圆弧作为加载指示器
+    const sweepAngle = 3.14159 * 1.5; // 270度
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset.zero, radius: radius - 2),
+      0,
+      sweepAngle,
+      false,
+      spinnerPaint,
+    );
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_StickyNoteQueuePainter oldDelegate) {
+    return oldDelegate.queueItems != queueItems ||
+        oldDelegate.imageCache != imageCache ||
+        oldDelegate.imageBufferCachedImage != imageBufferCachedImage ||
+        oldDelegate.currentImageBufferData != currentImageBufferData ||
+        oldDelegate.imageBufferFit != imageBufferFit;
+  }
 }
 
 /// 便签绘制元素画笔
