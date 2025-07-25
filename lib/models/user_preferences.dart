@@ -4,6 +4,16 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'user_preferences.g.dart';
 
+/// 窗口控件模式枚举
+enum WindowControlsMode {
+  /// 分离模式 - 窗口控件显示在导航栏中
+  separated,
+  /// 合并模式 - 窗口控件合并到悬浮托盘中
+  merged,
+  /// 合并展开模式 - 窗口控件合并到悬浮托盘中，默认展开
+  mergedExpanded,
+}
+
 /// Uint8List 转换器，用于 JSON 序列化
 class Uint8ListConverter implements JsonConverter<Uint8List?, String?> {
   const Uint8ListConverter();
@@ -464,8 +474,8 @@ class LayoutPreferences {
   /// 是否启用右侧垂直导航
   final bool enableRightSideVerticalNavigation;
 
-  /// 是否启用合并窗口控件
-  final bool enableMergedWindowControls;
+  /// 窗口控件模式
+  final WindowControlsMode windowControlsMode;
 
   const LayoutPreferences({
     required this.panelCollapsedStates,
@@ -486,7 +496,7 @@ class LayoutPreferences {
     this.rememberMaximizedState = true,
     this.isMaximized = false,
     this.enableRightSideVerticalNavigation = false,
-    this.enableMergedWindowControls = true,
+    this.windowControlsMode = WindowControlsMode.merged,
   });
   factory LayoutPreferences.createDefault() {
     return const LayoutPreferences(
@@ -521,7 +531,7 @@ class LayoutPreferences {
       rememberMaximizedState: true,
       isMaximized: false,
       enableRightSideVerticalNavigation: false,
-      enableMergedWindowControls: true,
+      windowControlsMode: WindowControlsMode.merged,
     );
   }
   LayoutPreferences copyWith({
@@ -543,7 +553,7 @@ class LayoutPreferences {
     bool? rememberMaximizedState,
     bool? isMaximized,
     bool? enableRightSideVerticalNavigation,
-    bool? enableMergedWindowControls,
+    WindowControlsMode? windowControlsMode,
   }) {
     return LayoutPreferences(
       panelCollapsedStates: panelCollapsedStates ?? this.panelCollapsedStates,
@@ -569,8 +579,8 @@ class LayoutPreferences {
       enableRightSideVerticalNavigation:
           enableRightSideVerticalNavigation ??
           this.enableRightSideVerticalNavigation,
-      enableMergedWindowControls:
-          enableMergedWindowControls ?? this.enableMergedWindowControls,
+      windowControlsMode:
+          windowControlsMode ?? this.windowControlsMode,
     );
   }
 

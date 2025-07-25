@@ -7,15 +7,15 @@ part of 'webdav_config.dart';
 // **************************************************************************
 
 WebDavConfig _$WebDavConfigFromJson(Map<String, dynamic> json) => WebDavConfig(
-  configId: json['configId'] as String,
-  displayName: json['displayName'] as String,
-  serverUrl: json['serverUrl'] as String,
-  storagePath: json['storagePath'] as String,
-  authAccountId: json['authAccountId'] as String,
-  isEnabled: json['isEnabled'] as bool,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
-);
+      configId: json['configId'] as String,
+      displayName: json['displayName'] as String,
+      serverUrl: json['serverUrl'] as String,
+      storagePath: json['storagePath'] as String,
+      authAccountId: json['authAccountId'] as String,
+      isEnabled: json['isEnabled'] as bool,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
 
 Map<String, dynamic> _$WebDavConfigToJson(WebDavConfig instance) =>
     <String, dynamic>{

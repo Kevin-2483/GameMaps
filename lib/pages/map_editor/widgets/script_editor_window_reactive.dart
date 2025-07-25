@@ -269,22 +269,33 @@ class _ReactiveScriptEditorWindowState
                 ],
               ),
               actions: [
-                // 窗口控制按钮
-                ..._buildWindowControls(),
-
+                // 主题切换按钮
                 IconButton(
                   onPressed: _toggleTheme,
                   icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
                   tooltip: _isDarkTheme ? '切换到亮色主题' : '切换到暗色主题',
                 ),
+                const SizedBox(width: 4),
 
-                // 保存按钮（最右边）
+                // 保存按钮
                 IconButton(
                   onPressed: _hasUnsavedChanges ? _saveScript : null,
                   icon: const Icon(Icons.save),
                   tooltip: '保存脚本',
                 ),
+
+                // 分隔符
+                Container(
+                  height: 24,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: Theme.of(context).dividerColor,
+                ),
+
+                // 窗口控制按钮（始终放在最后）
+                ..._buildWindowControls(),
               ],
+              exemptFromWindowControlsMode: true,
             ),
             // 工具栏
             Container(

@@ -1511,68 +1511,34 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
               ],
             ),
             actions: [
-              // 上传本地化文件按钮
-              // IconButton(
-              //   onPressed: _uploadLocalizationFile,
-              //   icon: const Icon(Icons.translate),
-              //   tooltip: '上传本地化文件',
-              // ),
-              // 功能菜单
-              PopupMenuButton<String>(
-                onSelected: (value) async {
+              // 添加地图按钮
+              IconButton(
+                onPressed: () async {
                   final isReadOnly = await ConfigManager.instance
                       .isFeatureEnabled('ReadOnlyMode');
                   if (isReadOnly) {
-                    // 只读模式显示提示
-                    String operationName;
-                    switch (value) {
-                      case 'add':
-                        operationName = '添加地图';
-                        break;
-                      case 'add_folder':
-                        operationName = '创建文件夹';
-                        break;
-                      default:
-                        operationName = '操作';
-                    }
-                    WebReadOnlyDialog.show(context, operationName);
+                    WebReadOnlyDialog.show(context, '添加地图');
                     return;
                   }
-                  switch (value) {
-                    case 'add':
-                      _addMap();
-                      break;
-                    case 'add_folder':
-                      _showCreateFolderDialog();
-                      break;
-                    case 'root':
-                      _loadDirectoryContents(null);
-                      break;
-                  }
+                  _addMap();
                 },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'add',
-                    child: ListTile(
-                      leading: const Icon(Icons.add),
-                      title: Text(l10n.addMap),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'add_folder',
-                    child: const ListTile(
-                      leading: Icon(Icons.create_new_folder),
-                      title: Text('创建文件夹'),
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'root',
-                    child: ListTile(
-                      leading: Icon(Icons.home),
-                      title: Text('回到根目录'),
-                    ),
-                  ),
-                ],
+                icon: const Icon(Icons.add),
+                tooltip: l10n.addMap,
+              ),
+              const SizedBox(width: 4),
+              // 创建文件夹按钮
+              IconButton(
+                onPressed: () async {
+                  final isReadOnly = await ConfigManager.instance
+                      .isFeatureEnabled('ReadOnlyMode');
+                  if (isReadOnly) {
+                    WebReadOnlyDialog.show(context, '创建文件夹');
+                    return;
+                  }
+                  _showCreateFolderDialog();
+                },
+                icon: const Icon(Icons.create_new_folder),
+                tooltip: '创建文件夹',
               ),
             ],
           ),

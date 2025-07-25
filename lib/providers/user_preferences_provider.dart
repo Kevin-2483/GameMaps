@@ -206,7 +206,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     bool? rememberMaximizedState,
     bool? isMaximized,
     bool? enableRightSideVerticalNavigation,
-    bool? enableMergedWindowControls,
+    WindowControlsMode? windowControlsMode,
   }) async {
     if (_currentPreferences == null) return;
 
@@ -230,7 +230,7 @@ class UserPreferencesProvider extends ChangeNotifier {
         rememberMaximizedState: rememberMaximizedState,
         isMaximized: isMaximized,
         enableRightSideVerticalNavigation: enableRightSideVerticalNavigation,
-        enableMergedWindowControls: enableMergedWindowControls,
+        windowControlsMode: windowControlsMode,
       );
 
       await _service.updateLayout(updatedLayout);

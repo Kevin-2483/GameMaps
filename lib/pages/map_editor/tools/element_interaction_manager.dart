@@ -557,6 +557,7 @@ class ElementInteractionManager {
         _originalElementBounds!,
         _activeResizeHandle!,
         delta,
+        elementType: element.type,
       );
 
       // 确保文本框保持正方形
@@ -568,6 +569,7 @@ class ElementInteractionManager {
         _originalElementBounds!,
         _activeResizeHandle!,
         delta,
+        elementType: element.type,
       );
     }
 
@@ -588,8 +590,9 @@ class ElementInteractionManager {
   Rect calculateNewBounds(
     Rect originalBounds,
     ResizeHandle handle,
-    Offset delta,
-  ) {
+    Offset delta, {
+    DrawingElementType? elementType,
+  }) {
     double left = originalBounds.left;
     double top = originalBounds.top;
     double right = originalBounds.right;
@@ -629,24 +632,60 @@ class ElementInteractionManager {
         break;
     }
 
-    // 确保最小尺寸
+    // 确保最小尺寸（只对选区类元素生效，线条和箭头类元素不限制）
     const minSize = 8.0; // 文本最小字体大小
-    if (right - left < minSize) {
-      if (handle == ResizeHandle.centerLeft ||
-          handle == ResizeHandle.topLeft ||
-          handle == ResizeHandle.bottomLeft) {
-        left = right - minSize;
-      } else {
-        right = left + minSize;
+    final shouldApplyMinSize = elementType == null || 
+        elementType == DrawingElementType.text ||
+        elementType == DrawingElementType.rectangle ||
+        elementType == DrawingElementType.hollowRectangle ||
+        elementType == DrawingElementType.imageArea;
+    
+    if (shouldApplyMinSize) {
+      if (right - left < minSize) {
+        if (handle == ResizeHandle.centerLeft ||
+            handle == ResizeHandle.topLeft ||
+            handle == ResizeHandle.bottomLeft) {
+          left = right - minSize;
+        } else {
+          right = left + minSize;
+        }
       }
-    }
-    if (bottom - top < minSize) {
-      if (handle == ResizeHandle.topCenter ||
-          handle == ResizeHandle.topLeft ||
-          handle == ResizeHandle.topRight) {
-        top = bottom - minSize;
-      } else {
-        bottom = top + minSize;
+      if (bottom - top < minSize) {
+        if (handle == ResizeHandle.topCenter ||
+            handle == ResizeHandle.topLeft ||
+            handle == ResizeHandle.topRight) {
+          top = bottom - minSize;
+        } else {
+          bottom = top + minSize;
+        }
+      }
+    } else {
+      // 对于线条类元素，确保不能为负（不能把一侧拖动到另一侧）
+      final isLineType = elementType == DrawingElementType.line ||
+          elementType == DrawingElementType.dashedLine ||
+          elementType == DrawingElementType.arrow;
+      
+      if (isLineType) {
+        // 限制拖动范围，防止left超过right（允许相等）
+        if (left > right) {
+          if (handle == ResizeHandle.centerLeft ||
+              handle == ResizeHandle.topLeft ||
+              handle == ResizeHandle.bottomLeft) {
+            left = right; // 允许相等但不能超过
+          } else {
+            right = left;
+          }
+        }
+        // 限制拖动范围，防止top超过bottom（允许相等）
+        if (top > bottom) {
+          if (handle == ResizeHandle.topCenter ||
+              handle == ResizeHandle.topLeft ||
+              handle == ResizeHandle.topRight) {
+            top = bottom; // 允许相等但不能超过
+          } else {
+            bottom = top;
+          }
+        }
       }
     }
 

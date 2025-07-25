@@ -8,11 +8,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
-import '../../models/user_preferences.dart';
 import 'widgets/shortcuts_dialog.dart';
+import 'utils/keyboard_shortcuts_manager.dart';
+import 'utils/keyboard_shortcut_actions.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
-import '../../services/clipboard_service.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../components/layout/main_layout.dart';
 // import '../../components/web/web_readonly_components.dart';
@@ -104,7 +105,8 @@ class _MapEditorContent extends StatefulWidget {
 }
 
 class _MapEditorContentState extends State<_MapEditorContent>
-    with MapEditorReactiveMixin, ReactiveVersionMixin, AutoPresenceMixin {
+    with MapEditorReactiveMixin, ReactiveVersionMixin, AutoPresenceMixin
+    implements KeyboardShortcutCallbacks {
   // 缓存的客户端信息
   String? _cachedClientId;
   String? _cachedClientName;
@@ -119,7 +121,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
   String getCurrentUserName() {
     // 优先使用用户偏好设置中的显示名称
     try {
-      final userPreferencesProvider = Provider.of<UserPreferencesProvider>(context, listen: false);
+      final userPreferencesProvider = Provider.of<UserPreferencesProvider>(
+        context,
+        listen: false,
+      );
       final userPreferences = userPreferencesProvider.currentPreferences;
       if (userPreferences != null && userPreferences.displayName.isNotEmpty) {
         return userPreferences.displayName;
@@ -129,7 +134,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
         debugPrint('获取用户偏好设置显示名称失败: $e');
       }
     }
-    
+
     // 回退到WebSocket客户端配置中的显示名称
     return _cachedClientName ?? '未知客户端';
   }
@@ -268,14 +273,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
   final Map<String, double> _previewStickyNoteOpacityValues = {}; // 便签透明度预览状态
 
   // 智能隐藏状态管理（从抽屉迁移到地图编辑器）
-  Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
+  final Map<String, bool> _legendGroupSmartHideStates = {}; // 图例组智能隐藏状态
 
   // 缩放因子状态管理（统一管理）
-  Map<String, double> _legendGroupZoomFactors = {}; // 图例组缩放因子状态
+  final Map<String, double> _legendGroupZoomFactors = {}; // 图例组缩放因子状态
 
   bool _isDragTemporaryHidden = false; // 标记抽屉是否因拖拽而临时隐藏
   LegendGroup? _hiddenLegendGroupForDrag; // 保存因拖拽而隐藏的图例组
   bool _wasDrawerOpenBeforeDrag = false; // 保存拖拽前抽屉的开启状态
+
+  // 快捷键动作实例
+  KeyboardShortcutActions? _keyboardShortcutActions;
 
   @override
   void dispose() {
@@ -695,6 +703,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       } // 8. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
       debugPrint('新脚本引擎重新初始化完成');
+
+      // 9. 初始化键盘快捷键操作实例
+      _initializeKeyboardShortcutActions();
+      debugPrint('键盘快捷键操作实例初始化完成');
     } catch (e) {
       _showErrorSnackBar('初始化地图失败: ${e.toString()}');
       debugPrint('地图和响应式系统初始化失败: $e');
@@ -747,6 +759,67 @@ class _MapEditorContentState extends State<_MapEditorContent>
       debugPrint('加载地图数据失败: $e');
       rethrow;
     }
+  }
+
+  /// 初始化键盘快捷键操作实例
+  void _initializeKeyboardShortcutActions() {
+    _keyboardShortcutActions = KeyboardShortcutActions(
+      context: context,
+      setState: () => setState(() {}),
+      getCurrentMap: () => _currentMap,
+      getSelectedLayer: () => _selectedLayer,
+      getSelectedLayerGroup: () => _selectedLayerGroup,
+      getCurrentLegendGroupForManagement: () =>
+          _currentLegendGroupForManagement,
+      getIsLegendGroupManagementDrawerOpen: () =>
+          _isLegendGroupManagementDrawerOpen,
+      getIsLayerLegendBindingDrawerOpen: () => _isLayerLegendBindingDrawerOpen,
+      getIsSidebarCollapsed: () => _isSidebarCollapsed,
+      getIsZIndexInspectorOpen: () => _isZIndexInspectorOpen,
+      getMapCanvasKey: () => _mapCanvasKey,
+      canUndoReactive: () => canUndoReactive,
+      canRedoReactive: () => canRedoReactive,
+      undoReactive: undoReactive,
+      redoReactive: redoReactive,
+      updateLayer: _updateLayer,
+      updateLegendGroup: _updateLegendGroup,
+      setSelectedLayer: (layer) => setState(() => _selectedLayer = layer),
+      setSelectedLayerGroup: (layerGroup) =>
+          setState(() => _selectedLayerGroup = layerGroup),
+      setIsSidebarCollapsed: (collapsed) =>
+          setState(() => _isSidebarCollapsed = collapsed),
+      setIsZIndexInspectorOpen: (open) =>
+          setState(() => _isZIndexInspectorOpen = open),
+      setIsLegendGroupManagementDrawerOpen: (open) =>
+          setState(() => _isLegendGroupManagementDrawerOpen = open),
+      setIsLayerLegendBindingDrawerOpen: (open) =>
+          setState(() => _isLayerLegendBindingDrawerOpen = open),
+      setCurrentLegendGroupForManagement: (group) =>
+          setState(() => _currentLegendGroupForManagement = group),
+      setCurrentLayerForBinding: (layer) =>
+          setState(() => _currentLayerForBinding = layer),
+      setAllLegendGroupsForBinding: (groups) =>
+          setState(() => _allLegendGroupsForBinding = groups),
+      setInitialSelectedLegendItemId: (id) =>
+          setState(() => _initialSelectedLegendItemId = id),
+      getAllVersionStates: () => allVersionStates,
+      getCurrentVersionId: () => currentVersionId,
+      switchVersion: (versionId) => switchVersion(versionId),
+      createVersion: (name) async {
+        final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
+        await createVersion(versionId, versionName: name);
+      },
+      prioritizeLayerAndGroupDisplay: _prioritizeLayerAndGroupDisplay,
+      clearCanvasSelection: () => _mapCanvasKey.currentState?.clearSelection(),
+      getLayerGroups: () =>
+          _currentMap?.layers.map((layer) => [layer]).toList() ?? [],
+      getBoundLegendGroups: () => _currentMap?.legendGroups ?? [],
+      showLegendGroupManagementDrawer: _showLegendGroupManagementDrawer,
+      closeLegendGroupManagementDrawer: _closeLegendGroupManagementDrawer,
+      saveWithReactiveVersions: _saveWithReactiveVersions,
+      vfsMapService: _vfsMapService,
+      folderPath: widget.folderPath ?? '',
+    );
   }
 
   /// 初始化响应式版本管理系统
@@ -1181,276 +1254,172 @@ class _MapEditorContentState extends State<_MapEditorContent>
   // }
 
   void _undo() {
-    if (_currentMap == null) return;
-
-    // 优先尝试使用响应式系统的撤销功能
-    try {
-      if (canUndoReactive) {
-        undoReactive();
-        debugPrint('使用响应式系统撤销');
-        return;
-      }
-    } catch (e) {
-      debugPrint('响应式系统撤销失败: $e');
-    }
-
-    // // 如果响应式系统无法撤销，回退到版本会话管理器
-    // if (_versionSessionManager != null && _versionManager != null) {
-    //   final currentVersionId = _versionManager!.currentVersionId;
-    //   final undoResult = _versionSessionManager!.undo(currentVersionId);
-
-    //   if (undoResult != null) {
-    //     setState(() {
-    //       // 将当前状态保存到重做历史
-    //       _redoHistory.add(_currentMap!.copyWith());
-
-    //       // 限制重做历史记录数量
-    //       if (_redoHistory.length > _maxUndoHistory) {
-    //         _redoHistory.removeAt(0);
-    //       }
-
-    //       // 使用会话管理器返回的撤销结果
-    //       _currentMap = undoResult;
-
-    //       // 同步本地撤销历史
-    //       if (_undoHistory.isNotEmpty) {
-    //         _undoHistory.removeLast();
-    //       }
-
-    //       // 撤销操作也算作修改，除非回到初始状态
-    //       _hasUnsavedChanges = _undoHistory.isNotEmpty;
-    //       _hasUnsavedVersionChanges = true;
-
-    //       // 更新选中图层，确保引用正确
-    //       if (_selectedLayer != null) {
-    //         final selectedLayerId = _selectedLayer!.id;
-    //         _selectedLayer = _currentMap!.layers
-    //             .where((layer) => layer.id == selectedLayerId)
-    //             .firstOrNull;
-
-    //         // 如果原选中图层不存在，选择第一个图层
-    //         if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-    //           _selectedLayer = _currentMap!.layers.first;
-    //         }
-    //       }
-
-    //       //：更新显示顺序以触发MapCanvas重建和缓存清理
-    //       _updateDisplayOrderAfterLayerChange();
-    //     });
-
-    //     //：强制触发图片缓存清理和重新预加载
-    //     WidgetsBinding.instance.addPostFrameCallback((_) {
-    //       if (mounted) {
-    //         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-    //         setState(() {});
-    //       }
-    //     });
-    //     return;
-    //   }
-    // }
-
-    // // 最后的备用方案：传统撤销逻辑
-    // if (_undoHistory.isEmpty) return;
-
-    // setState(() {
-    //   // 将当前状态保存到重做历史
-    //   _redoHistory.add(_currentMap!.copyWith());
-
-    //   // 限制重做历史记录数量
-    //   if (_redoHistory.length > _maxUndoHistory) {
-    //     _redoHistory.removeAt(0);
-    //   }
-
-    //   _currentMap = _undoHistory.removeLast();
-
-    //   // 撤销操作也算作修改，除非回到初始状态
-    //   _hasUnsavedChanges = _undoHistory.isNotEmpty;
-    //   _hasUnsavedVersionChanges = true;
-
-    //   // 更新选中图层，确保引用正确
-    //   if (_selectedLayer != null) {
-    //     final selectedLayerId = _selectedLayer!.id;
-    //     _selectedLayer = _currentMap!.layers
-    //         .where((layer) => layer.id == selectedLayerId)
-    //         .firstOrNull;
-
-    //     // 如果原选中图层不存在，选择第一个图层
-    //     if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-    //       _selectedLayer = _currentMap!.layers.first;
-    //     }
-    //   }
-
-    //   //：更新显示顺序以触发MapCanvas重建和缓存清理
-    //   _updateDisplayOrderAfterLayerChange();
-    // });
-
-    //：强制触发图片缓存清理和重新预加载
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) {
-    //     // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-    //     setState(() {});
-    //   }
-    // });
+    _keyboardShortcutActions?.undo();
   }
 
   void _redo() {
-    if (_currentMap == null) return;
-
-    // 优先尝试使用响应式系统的重做功能
-    try {
-      if (canRedoReactive) {
-        redoReactive();
-        debugPrint('使用响应式系统重做');
-        return;
-      }
-    } catch (e) {
-      debugPrint('响应式系统重做失败: $e');
-    }
-
-    // // 如果响应式系统无法重做，回退到版本会话管理器
-    // if (_versionSessionManager != null && _versionManager != null) {
-    //   final currentVersionId = _versionManager!.currentVersionId;
-    //   final redoResult = _versionSessionManager!.redo(currentVersionId);
-
-    //   if (redoResult != null) {
-    //     setState(() {
-    //       // 将当前状态保存到撤销历史
-    //       _undoHistory.add(_currentMap!.copyWith());
-
-    //       // 限制撤销历史记录数量
-    //       if (_undoHistory.length > _maxUndoHistory) {
-    //         _undoHistory.removeAt(0);
-    //       }
-
-    //       // 使用会话管理器返回的重做结果
-    //       _currentMap = redoResult;
-
-    //       // 同步本地重做历史
-    //       if (_redoHistory.isNotEmpty) {
-    //         _redoHistory.removeLast();
-    //       }
-
-    //       _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
-    //       _hasUnsavedVersionChanges = true;
-
-    //       // 更新选中图层，确保引用正确
-    //       if (_selectedLayer != null) {
-    //         final selectedLayerId = _selectedLayer!.id;
-    //         _selectedLayer = _currentMap!.layers
-    //             .where((layer) => layer.id == selectedLayerId)
-    //             .firstOrNull;
-
-    //         // 如果原选中图层不存在，选择第一个图层
-    //         if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-    //           _selectedLayer = _currentMap!.layers.first;
-    //         }
-    //       }
-
-    //       //：更新显示顺序以触发MapCanvas重建和缓存清理
-    //       _updateDisplayOrderAfterLayerChange();
-    //     });
-
-    //     //：强制触发图片缓存清理和重新预加载
-    //     WidgetsBinding.instance.addPostFrameCallback((_) {
-    //       if (mounted) {
-    //         // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-    //         setState(() {});
-    //       }
-    //     });
-    //     return;
-    //   }
-    // }
-
-    // // 最后的备用方案：传统重做逻辑
-    // if (_redoHistory.isEmpty) return;
-
-    // setState(() {
-    //   // 将当前状态保存到撤销历史
-    //   _undoHistory.add(_currentMap!.copyWith());
-
-    //   // 限制撤销历史记录数量
-    //   if (_undoHistory.length > _maxUndoHistory) {
-    //     _undoHistory.removeAt(0);
-    //   }
-
-    //   _currentMap = _redoHistory.removeLast();
-    //   _hasUnsavedChanges = true; // 重做操作标记为有未保存更改
-    //   _hasUnsavedVersionChanges = true;
-
-    //   // 更新选中图层，确保引用正确
-    //   if (_selectedLayer != null) {
-    //     final selectedLayerId = _selectedLayer!.id;
-    //     _selectedLayer = _currentMap!.layers
-    //         .where((layer) => layer.id == selectedLayerId)
-    //         .firstOrNull;
-
-    //     // 如果原选中图层不存在，选择第一个图层
-    //     if (_selectedLayer == null && _currentMap!.layers.isNotEmpty) {
-    //       _selectedLayer = _currentMap!.layers.first;
-    //     }
-    //   }
-
-    //   //：更新显示顺序以触发MapCanvas重建和缓存清理
-    //   _updateDisplayOrderAfterLayerChange();
-    // });
-
-    // //：强制触发图片缓存清理和重新预加载
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) {
-    //     // 通过触发一个微小的状态变化来确保MapCanvas收到didUpdateWidget回调
-    //     setState(() {});
-    //   }
-    // });
+    _keyboardShortcutActions?.redo();
   }
 
   bool get _canUndo {
-    // 优先检查响应式系统的撤销能力
-    try {
-      if (canUndoReactive) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      debugPrint('检查响应式系统撤销能力失败: $e');
-      return false;
-    }
-
-    // // 次优先：检查版本会话管理器的撤销历史
-    // if (_versionSessionManager != null && _versionManager != null) {
-    //   final currentVersionId = _versionManager!.currentVersionId;
-    //   final undoHistory = _versionSessionManager!.getUndoHistory(
-    //     currentVersionId,
-    //   );
-    //   return undoHistory.isNotEmpty;
-    // }
-    // // 最后备用：检查本地撤销历史
-    // return _undoHistory.isNotEmpty;
+    return _keyboardShortcutActions?.canUndo() ?? false;
   }
 
   bool get _canRedo {
-    // 优先检查响应式系统的重做能力
-    try {
-      if (canRedoReactive) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      debugPrint('检查响应式系统重做能力失败: $e');
-      return false;
-    }
+    return _keyboardShortcutActions?.canRedo() ?? false;
+  }
 
-    // // 次优先：检查版本会话管理器的重做历史
-    // if (_versionSessionManager != null && _versionManager != null) {
-    //   final currentVersionId = _versionManager!.currentVersionId;
-    //   final redoHistory = _versionSessionManager!.getRedoHistory(
-    //     currentVersionId,
-    //   );
-    //   return redoHistory.isNotEmpty;
-    // }
-    // // 最后备用：检查本地重做历史
-    // return _redoHistory.isNotEmpty;
+  // ==================== 实现 KeyboardShortcutCallbacks 接口 ====================
+
+  // 撤销/重做相关
+  @override
+  bool canUndo() {
+    return _keyboardShortcutActions?.canUndo() ?? false;
+  }
+
+  @override
+  bool canRedo() {
+    return _keyboardShortcutActions?.canRedo() ?? false;
+  }
+
+  @override
+  void undo() {
+    _keyboardShortcutActions?.undo();
+  }
+
+  @override
+  void redo() {
+    _keyboardShortcutActions?.redo();
+  }
+
+  @override
+  void handleCopySelection() {
+    _keyboardShortcutActions?.handleCopySelection();
+  }
+
+  // 图层相关
+  @override
+  void selectPreviousLayer() {
+    _keyboardShortcutActions?.selectPreviousLayer();
+  }
+
+  @override
+  void selectNextLayer() {
+    _keyboardShortcutActions?.selectNextLayer();
+  }
+
+  @override
+  void selectPreviousLayerGroup() {
+    _keyboardShortcutActions?.selectPreviousLayerGroup();
+  }
+
+  @override
+  void selectNextLayerGroup() {
+    _keyboardShortcutActions?.selectNextLayerGroup();
+  }
+
+  @override
+  void selectLayerGroupByIndex(int index) {
+    _keyboardShortcutActions?.selectLayerGroupByIndex(index);
+  }
+
+  @override
+  void selectLayerByIndex(int index) {
+    _keyboardShortcutActions?.selectLayerByIndex(index);
+  }
+
+  @override
+  void clearLayerSelection() {
+    _keyboardShortcutActions?.clearLayerSelection();
+  }
+
+  @override
+  void hideOtherLayers() {
+    _keyboardShortcutActions?.hideOtherLayers();
+  }
+
+  @override
+  void hideOtherLayerGroups() {
+    _keyboardShortcutActions?.hideOtherLayerGroups();
+  }
+
+  @override
+  void showCurrentLayer() {
+    _keyboardShortcutActions?.showCurrentLayer();
+  }
+
+  @override
+  void showCurrentLayerGroup() {
+    _keyboardShortcutActions?.showCurrentLayerGroup();
+  }
+
+  // 图例相关
+  @override
+  void openPreviousLegendGroup() {
+    _keyboardShortcutActions?.openPreviousLegendGroup();
+  }
+
+  @override
+  void openNextLegendGroup() {
+    _keyboardShortcutActions?.openNextLegendGroup();
+  }
+
+  @override
+  void toggleLegendGroupManagementDrawer() {
+    _keyboardShortcutActions?.toggleLegendGroupManagementDrawer();
+  }
+
+  @override
+  void toggleLegendGroupBindingDrawer() {
+    _keyboardShortcutActions?.toggleLegendGroupBindingDrawer();
+  }
+
+  @override
+  void hideOtherLegendGroups() {
+    _keyboardShortcutActions?.hideOtherLegendGroups();
+  }
+
+  @override
+  void showCurrentLegendGroup() {
+    _keyboardShortcutActions?.showCurrentLegendGroup();
+  }
+
+  // UI相关
+  @override
+  void toggleSidebar() {
+    _keyboardShortcutActions?.toggleSidebar();
+  }
+
+  @override
+  void openZInspector() {
+    _keyboardShortcutActions?.openZInspector();
+  }
+
+  // 地图相关
+  @override
+  void saveMap() async {
+    setState(() => _isLoading = true);
+    try {
+      await _keyboardShortcutActions?.saveMapAction();
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 版本相关
+  @override
+  void switchToPreviousVersion() {
+    _keyboardShortcutActions?.switchToPreviousVersion();
+  }
+
+  @override
+  void switchToNextVersion() {
+    _keyboardShortcutActions?.switchToNextVersion();
+  }
+
+  @override
+  void createNewVersionWithShortcut() {
+    _keyboardShortcutActions?.createNewVersionWithShortcut();
   }
 
   // 删除指定图层中的绘制元素（使用响应式系统重构）
@@ -2658,45 +2627,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
     });
   }
 
-  Future<void> _saveMap() async {
-    if (widget.isPreviewMode || _currentMap == null) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final updatedMap = _currentMap!.copyWith(updatedAt: DateTime.now());
-
-      // 添加详细的调试信息
-      debugPrint('开始保存地图：');
-      debugPrint('- 地图ID: ${updatedMap.id}');
-      debugPrint('- 地图标题: ${updatedMap.title}');
-      debugPrint('- 图层数量: ${updatedMap.layers.length}');
-      debugPrint('- 图例组数量: ${updatedMap.legendGroups.length}');
-      debugPrint('- 是否有图像数据: ${updatedMap.imageData != null}');
-
-      // 验证必要字段
-      if (updatedMap.title.isEmpty) {
-        throw Exception('地图标题为空，无法保存');
-      }
-
-      // 使用响应式版本管理系统保存所有版本
-      if (versionAdapter != null) {
-        await _saveWithReactiveVersions(updatedMap);
-      }
-      debugPrint('地图保存成功完成');
-      _showSuccessSnackBar('地图保存成功');
-
-      // 清除未保存更改标记
-      _hasUnsavedChanges = false;
-    } catch (e, stackTrace) {
-      debugPrint('保存失败详细错误:');
-      debugPrint('错误: $e');
-      debugPrint('堆栈: $stackTrace');
-      _showErrorSnackBar('保存失败: ${e.toString()}');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   /// 使用响应式版本管理系统保存所有版本
   Future<void> _saveWithReactiveVersions(MapItem baseMap) async {
     final adapter = versionAdapter!;
@@ -3160,7 +3090,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop(false); // 先关闭对话框
-              await _saveMap(); // 保存地图
+              saveMap(); // 保存地图
               if (mounted) {
                 await _savePanelStatesOnExit(); // 保存面板状态
                 if (!_hasUnsavedChanges && context.mounted) {
@@ -3415,10 +3345,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     return [
       // 计时器组件
       CompactTimerWidget(mapDataBloc: reactiveIntegration.mapDataBloc),
-      const SizedBox(width: 8),
-
-      // 窗口控制按钮
-      ..._buildWindowControls(),
+      const SizedBox(width: 4),
 
       // 地图信息按钮
       IconButton(
@@ -3428,7 +3355,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       ),
 
       // 保存按钮（仅在编辑模式下显示）
-      if (!widget.isPreviewMode)
+      if (!widget.isPreviewMode) ...[
+        const SizedBox(width: 4),
         IconButton(
           icon: _isLoading
               ? const SizedBox(
@@ -3440,9 +3368,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   ),
                 )
               : const Icon(Icons.save),
-          onPressed: _isLoading ? null : _saveMap,
+          onPressed: _isLoading ? null : saveMap,
           tooltip: _isLoading ? '保存中...' : '保存',
         ),
+      ],
+
+      // 分隔符
+      Container(
+        height: 24,
+        width: 1,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        color: Theme.of(context).dividerColor,
+      ),
+
+      // 窗口控制按钮（始终放在最后）
+      ..._buildWindowControls(),
     ];
   }
 
@@ -3648,6 +3588,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     ],
                   ),
                   actions: _buildTitleBarActions(),
+                  exemptFromWindowControlsMode: true,
                 ),
               ),
               body: Column(
@@ -3878,6 +3819,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     selectedLayer: _selectedLayer,
                                     legendSessionManager:
                                         versionAdapter?.legendSessionManager,
+                                    onLegendItemSelected: _selectLegendItem,
+                                    onToggleLegendGroupManagement: toggleLegendGroupManagementDrawer,
+                                    selectedElementId: _selectedElementId,
+                                    onLayerSelected: _onLayerSelected,
+                                    onLayerGroupSelected: _onLayerGroupSelected,
+                                    onSelectionCleared: () => _keyboardShortcutActions?.clearLayerSelection(),
                                   ),
                                 ),
                               ),
@@ -3935,9 +3882,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     onToolSelected: (tool) {
                       if (!_shouldDisableDrawingTools) {
                         setState(() => _selectedDrawingTool = tool);
-                        // 选择绘制工具时清除当前选择
+                        // 选择绘制工具时清除当前选择，但保留便签选择
                         if (tool != null) {
-                          _mapCanvasKey.currentState?.clearSelection();
+                          _mapCanvasKey.currentState?.clearSelection(
+                            clearStickyNote: false,
+                          );
                         }
                       }
                     },
@@ -4597,539 +4546,34 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 处理键盘事件
   KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
-    // 只处理按键按下事件
-    if (event is! RawKeyDownEvent) {
-      return KeyEventResult.ignored;
-    }
-
-    // 如果输入框正在被编辑，忽略快捷键
-    if (_isInputFieldFocused) {
-      debugPrint(
-        'DEBUG: Ignoring shortcut because _isInputFieldFocused is true',
-      );
-      return KeyEventResult.ignored;
-    }
-    debugPrint(
-      'DEBUG: Processing shortcut because _isInputFieldFocused is false',
-    );
-
     // 获取用户偏好设置
     final userPrefs = context.read<UserPreferencesProvider>();
     final mapEditorPrefs = userPrefs.mapEditor;
 
-    final copyShortcuts =
-        mapEditorPrefs.shortcuts['copy'] ?? ['Ctrl+C', 'Win+C'];
-    final undoShortcuts =
-        mapEditorPrefs.shortcuts['undo'] ?? ['Ctrl+Z', 'Win+Z'];
-    final redoShortcuts =
-        mapEditorPrefs.shortcuts['redo'] ?? ['Ctrl+Y', 'Win+Y'];
-
-    // 检查撤销快捷键
-    if (_isAnyShortcutPressed(event, undoShortcuts)) {
-      if (_canUndo) {
-        _undo();
-        return KeyEventResult.handled;
-      }
-    }
-
-    // 检查重做快捷键
-    if (_isAnyShortcutPressed(event, redoShortcuts)) {
-      if (_canRedo) {
-        _redo();
-        return KeyEventResult.handled;
-      }
-    }
-
-    // 检查复制快捷键
-    if (_isAnyShortcutPressed(event, copyShortcuts)) {
-      _handleCopySelection();
-      return KeyEventResult.handled;
-    }
-
-    // 检查地图编辑器快捷键
-    if (_handleMapEditorShortcuts(event, mapEditorPrefs)) {
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
-  }
-
-  /// 处理地图编辑器快捷键
-  bool _handleMapEditorShortcuts(
-    RawKeyEvent event,
-    MapEditorPreferences mapEditorPrefs,
-  ) {
-    // 检查选择上一个图层
-    final prevLayerShortcuts = mapEditorPrefs.shortcuts['prevLayer'] ?? ['P'];
-    if (_isAnyShortcutPressed(event, prevLayerShortcuts)) {
-      _selectPreviousLayer();
-      return true;
-    }
-
-    // 检查选择下一个图层
-    final nextLayerShortcuts = mapEditorPrefs.shortcuts['nextLayer'] ?? ['N'];
-    if (_isAnyShortcutPressed(event, nextLayerShortcuts)) {
-      _selectNextLayer();
-      return true;
-    }
-
-    // 检查选择上一个图层组
-    final prevLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['prevLayerGroup'] ?? ['Left'];
-    if (_isAnyShortcutPressed(event, prevLayerGroupShortcuts)) {
-      _selectPreviousLayerGroup();
-      return true;
-    }
-
-    // 检查选择下一个图层组
-    final nextLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['nextLayerGroup'] ?? ['Right'];
-    if (_isAnyShortcutPressed(event, nextLayerGroupShortcuts)) {
-      _selectNextLayerGroup();
-      return true;
-    }
-
-    // 检查打开上一个图例组
-    final prevLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['prevLegendGroup'] ?? ['Up'];
-    if (_isAnyShortcutPressed(event, prevLegendGroupShortcuts)) {
-      _openPreviousLegendGroup();
-      return true;
-    }
-
-    // 检查打开下一个图例组
-    final nextLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['nextLegendGroup'] ?? ['Down'];
-    if (_isAnyShortcutPressed(event, nextLegendGroupShortcuts)) {
-      _openNextLegendGroup();
-      return true;
-    }
-
-    // 检查打开图例管理抽屉
-    final openLegendDrawerShortcuts =
-        mapEditorPrefs.shortcuts['openLegendDrawer'] ?? ['L'];
-    if (_isAnyShortcutPressed(event, openLegendDrawerShortcuts)) {
-      _toggleLegendGroupManagementDrawer();
-      return true;
-    }
-
-    // 检查清除图层/图层组选择
-    final clearLayerSelectionShortcuts =
-        mapEditorPrefs.shortcuts['clearLayerSelection'] ?? ['Escape'];
-    if (_isAnyShortcutPressed(event, clearLayerSelectionShortcuts)) {
-      _clearLayerSelection();
-      return true;
-    }
-
-    // 保存地图
-    final saveShortcuts =
-        mapEditorPrefs.shortcuts['save'] ?? ['Ctrl+S', 'Win+S'];
-    if (_isAnyShortcutPressed(event, saveShortcuts)) {
-      _saveMap();
-      return true;
-    }
-
-    // 检查数字键1-0选择图层组
-    for (int i = 1; i <= 10; i++) {
-      final key = i == 10 ? '0' : i.toString();
-      final shortcutKey = 'selectLayerGroup$i';
-      final shortcuts = mapEditorPrefs.shortcuts[shortcutKey] ?? [key];
-      if (_isAnyShortcutPressed(event, shortcuts)) {
-        _selectLayerGroupByIndex(i - 1); // 索引从0开始
-        return true;
-      }
-    }
-
-    // 检查F1-F12选择图层
-    for (int i = 1; i <= 12; i++) {
-      final shortcutKey = 'selectLayer$i';
-      final shortcuts = mapEditorPrefs.shortcuts[shortcutKey] ?? ['F$i'];
-      if (_isAnyShortcutPressed(event, shortcuts)) {
-        _selectLayerByIndex(i - 1); // 索引从0开始
-        return true;
-      }
-    }
-
-    // 检查切换左侧边栏
-    final toggleSidebarShortcuts =
-        mapEditorPrefs.shortcuts['toggleSidebar'] ?? ['Ctrl+B', 'Win+B'];
-    if (_isAnyShortcutPressed(event, toggleSidebarShortcuts)) {
-      _toggleSidebar();
-      return true;
-    }
-
-    // 检查打开Z元素检视器
-    final openZInspectorShortcuts =
-        mapEditorPrefs.shortcuts['openZInspector'] ?? ['Z'];
-    if (_isAnyShortcutPressed(event, openZInspectorShortcuts)) {
-      _openZInspector();
-      return true;
-    }
-
-    // 检查切换图例组绑定抽屉
-    final toggleLegendGroupDrawerShortcuts =
-        mapEditorPrefs.shortcuts['toggleLegendGroupDrawer'] ?? ['G'];
-    if (_isAnyShortcutPressed(event, toggleLegendGroupDrawerShortcuts)) {
-      _toggleLegendGroupBindingDrawer();
-      return true;
-    }
-
-    // 检查隐藏其他图层
-    final hideOtherLayersShortcuts =
-        mapEditorPrefs.shortcuts['hideOtherLayers'] ?? ['H'];
-    if (_isAnyShortcutPressed(event, hideOtherLayersShortcuts)) {
-      _hideOtherLayers();
-      return true;
-    }
-
-    // 检查隐藏其他图层组
-    final hideOtherLayerGroupsShortcuts =
-        mapEditorPrefs.shortcuts['hideOtherLayerGroups'] ?? ['Alt+H'];
-    if (_isAnyShortcutPressed(event, hideOtherLayerGroupsShortcuts)) {
-      _hideOtherLayerGroups();
-      return true;
-    }
-
-    // 检查显示当前图层
-    final showCurrentLayerShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLayer'] ?? ['S'];
-    if (_isAnyShortcutPressed(event, showCurrentLayerShortcuts)) {
-      _showCurrentLayer();
-      return true;
-    }
-
-    // 检查显示当前图层组
-    final showCurrentLayerGroupShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLayerGroup'] ?? ['Alt+S'];
-    if (_isAnyShortcutPressed(event, showCurrentLayerGroupShortcuts)) {
-      _showCurrentLayerGroup();
-      return true;
-    }
-
-    // 检查隐藏其他图例组
-    final hideOtherLegendGroupsShortcuts =
-        mapEditorPrefs.shortcuts['hideOtherLegendGroups'] ?? ['Ctrl+Alt+H'];
-    if (_isAnyShortcutPressed(event, hideOtherLegendGroupsShortcuts)) {
-      _hideOtherLegendGroups();
-      return true;
-    }
-
-    // 检查显示当前图例组
-    final showCurrentLegendGroupShortcuts =
-        mapEditorPrefs.shortcuts['showCurrentLegendGroup'] ?? ['Ctrl+Alt+S'];
-    if (_isAnyShortcutPressed(event, showCurrentLegendGroupShortcuts)) {
-      _showCurrentLegendGroup();
-      return true;
-    }
-
-    // 检查切换到上一个版本
-    final prevVersionShortcuts =
-        mapEditorPrefs.shortcuts['prevVersion'] ?? ['Ctrl+Left', 'Win+Left'];
-    if (_isAnyShortcutPressed(event, prevVersionShortcuts)) {
-      _switchToPreviousVersion();
-      return true;
-    }
-
-    // 检查切换到下一个版本
-    final nextVersionShortcuts =
-        mapEditorPrefs.shortcuts['nextVersion'] ?? ['Ctrl+Right', 'Win+Right'];
-    if (_isAnyShortcutPressed(event, nextVersionShortcuts)) {
-      _switchToNextVersion();
-      return true;
-    }
-
-    // 检查新增版本
-    final createNewVersionShortcuts =
-        mapEditorPrefs.shortcuts['createNewVersion'] ?? ['Ctrl+N', 'Win+N'];
-    if (_isAnyShortcutPressed(event, createNewVersionShortcuts)) {
-      _createNewVersionWithShortcut();
-      return true;
-    }
-
-    // 检查显示快捷键列表
-    final showShortcutsShortcuts =
-        mapEditorPrefs.shortcuts['showShortcuts'] ?? ['/', '/'];
-    if (_isAnyShortcutPressed(event, showShortcutsShortcuts)) {
-      ShortcutsDialog.show(context);
-      return true;
-    }
-
-    return false;
-  }
-
-  /// 切换到上一个版本
-  void _switchToPreviousVersion() {
-    final versions = allVersionStates;
-    if (versions.isEmpty) return;
-
-    final currentId = currentVersionId;
-    if (currentId == null) return;
-
-    // 按创建时间排序版本
-    versions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    final currentIndex = versions.indexWhere((v) => v.versionId == currentId);
-    if (currentIndex > 0) {
-      final previousVersion = versions[currentIndex - 1];
-      switchVersion(previousVersion.versionId).catchError((error) {
-        if (mounted) context.showErrorSnackBar('切换版本失败: $error');
-      });
-    }
-  }
-
-  /// 切换到下一个版本
-  void _switchToNextVersion() {
-    final versions = allVersionStates;
-    if (versions.isEmpty) return;
-
-    final currentId = currentVersionId;
-    if (currentId == null) return;
-
-    // 按创建时间排序版本
-    versions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    final currentIndex = versions.indexWhere((v) => v.versionId == currentId);
-    if (currentIndex >= 0 && currentIndex < versions.length - 1) {
-      final nextVersion = versions[currentIndex + 1];
-      switchVersion(nextVersion.versionId).catchError((error) {
-        if (mounted) context.showErrorSnackBar('切换版本失败: $error');
-      });
-    }
-  }
-
-  /// 通过快捷键创建新版本
-  void _createNewVersionWithShortcut() {
-    final now = DateTime.now();
-    final timestamp =
-        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-    final versionName = '快捷键版本_$timestamp';
-
-    _createVersion(versionName);
-  }
-
-  /// 选择上一个图层
-  void _selectPreviousLayer() {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    final layers = _currentMap!.layers;
-    layers.sort((a, b) => a.order.compareTo(b.order));
-
-    if (_selectedLayer == null) {
-      // 如果没有选中图层，选择最后一个
-      final lastLayer = layers.last;
-      setState(() {
-        _selectedLayer = lastLayer;
-        _selectedLayerGroup = null;
-      });
-      _prioritizeLayerAndGroupDisplay();
-    } else {
-      // 找到当前选中图层的索引
-      final currentIndex = layers.indexWhere(
-        (layer) => layer.id == _selectedLayer!.id,
-      );
-      if (currentIndex > 0) {
-        final previousLayer = layers[currentIndex - 1];
-        setState(() {
-          _selectedLayer = previousLayer;
-          _selectedLayerGroup = null;
-        });
-        _prioritizeLayerAndGroupDisplay();
-      }
-    }
-  }
-
-  /// 选择下一个图层
-  void _selectNextLayer() {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    final layers = _currentMap!.layers;
-    layers.sort((a, b) => a.order.compareTo(b.order));
-
-    if (_selectedLayer == null) {
-      // 如果没有选中图层，选择第一个
-      final firstLayer = layers.first;
-      setState(() {
-        _selectedLayer = firstLayer;
-        _selectedLayerGroup = null;
-      });
-      _prioritizeLayerAndGroupDisplay();
-    } else {
-      // 找到当前选中图层的索引
-      final currentIndex = layers.indexWhere(
-        (layer) => layer.id == _selectedLayer!.id,
-      );
-      if (currentIndex < layers.length - 1) {
-        final nextLayer = layers[currentIndex + 1];
-        setState(() {
-          _selectedLayer = nextLayer;
-          _selectedLayerGroup = null;
-        });
-        _prioritizeLayerAndGroupDisplay();
-      }
-    }
-  }
-
-  /// 选择上一个图层组
-  void _selectPreviousLayerGroup() {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    // 获取所有图层组
-    final layerGroups = _getLayerGroups();
-    if (layerGroups.isEmpty) return;
-
-    if (_selectedLayerGroup == null || _selectedLayerGroup!.isEmpty) {
-      // 如果没有选中图层组，选择最后一个
-      final lastGroup = layerGroups.last;
-      setState(() {
-        _selectedLayerGroup = lastGroup;
-        _selectedLayer = null;
-      });
-      _prioritizeLayerAndGroupDisplay();
-    } else {
-      // 找到当前选中图层组的索引
-      final currentGroupFirstLayerId = _selectedLayerGroup!.first.id;
-      final currentIndex = layerGroups.indexWhere(
-        (group) => group.first.id == currentGroupFirstLayerId,
-      );
-      if (currentIndex > 0) {
-        final previousGroup = layerGroups[currentIndex - 1];
-        setState(() {
-          _selectedLayerGroup = previousGroup;
-          _selectedLayer = null;
-        });
-        _prioritizeLayerAndGroupDisplay();
-      }
-    }
-  }
-
-  /// 选择下一个图层组
-  void _selectNextLayerGroup() {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    // 获取所有图层组
-    final layerGroups = _getLayerGroups();
-    if (layerGroups.isEmpty) return;
-
-    if (_selectedLayerGroup == null || _selectedLayerGroup!.isEmpty) {
-      // 如果没有选中图层组，选择第一个
-      final firstGroup = layerGroups.first;
-      setState(() {
-        _selectedLayerGroup = firstGroup;
-        _selectedLayer = null;
-      });
-      _prioritizeLayerAndGroupDisplay();
-    } else {
-      // 找到当前选中图层组的索引
-      final currentGroupFirstLayerId = _selectedLayerGroup!.first.id;
-      final currentIndex = layerGroups.indexWhere(
-        (group) => group.first.id == currentGroupFirstLayerId,
-      );
-      if (currentIndex < layerGroups.length - 1) {
-        final nextGroup = layerGroups[currentIndex + 1];
-        setState(() {
-          _selectedLayerGroup = nextGroup;
-          _selectedLayer = null;
-        });
-        _prioritizeLayerAndGroupDisplay();
-      }
-    }
-  }
-
-  /// 获取所有图层组
-  List<List<MapLayer>> _getLayerGroups() {
-    if (_currentMap == null) return [];
-
-    // 使用与layer_panel.dart中相同的逻辑来分组图层
-    final groups = <List<MapLayer>>[];
-    List<MapLayer> currentGroup = [];
-
-    for (final layer in _currentMap!.layers) {
-      currentGroup.add(layer);
-
-      // 如果当前图层没有链接到下一个图层，或者是最后一个图层，结束当前组
-      if (!layer.isLinkedToNext || layer == _currentMap!.layers.last) {
-        if (currentGroup.length > 1) {
-          // 只有包含多个图层的才算作组
-          groups.add(List.from(currentGroup));
-        }
-        currentGroup = [];
-      }
-    }
-
-    return groups;
+    // 使用新的快捷键管理器处理键盘事件
+    return KeyboardShortcutsManager.handleKeyEvent(
+      node,
+      event,
+      context,
+      mapEditorPrefs,
+      _isInputFieldFocused,
+      this, // 传递当前实例作为回调接口
+    );
   }
 
   /// 获取指定图层的最大z值
   int _getLayerMaxZIndex(String layerId) {
     final mapData = reactiveIntegration.mapDataBloc.state;
     if (mapData is! MapDataLoaded) return 0;
-    
+
     final layer = mapData.layers.firstWhere(
       (l) => l.id == layerId,
       orElse: () => throw StateError('Layer not found'),
     );
-    
+
     if (layer.elements.isEmpty) return 0;
-    
+
     return layer.elements.map((e) => e.zIndex).reduce((a, b) => a > b ? a : b);
-  }
-
-  /// 根据索引选择图层组
-  void _selectLayerGroupByIndex(int index) {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    final layerGroups = _getLayerGroups();
-    if (index < 0 || index >= layerGroups.length) return;
-
-    final selectedGroup = layerGroups[index];
-    setState(() {
-      _selectedLayerGroup = selectedGroup;
-      _selectedLayer = null;
-    });
-    // 检查用户偏好设置，是否自动选择图层组的最后一层
-    final userPreferences = Provider.of<UserPreferencesProvider>(
-      context,
-      listen: false,
-    );
-
-    if (userPreferences.mapEditor.autoSelectLastLayerInGroup &&
-        selectedGroup.isNotEmpty) {
-      // 找到图层组中的最后一层
-      MapLayer? lastLayer;
-
-      for (final layer in selectedGroup) {
-        if (!layer.isLinkedToNext) {
-          lastLayer = layer;
-        }
-      }
-
-      // 如果找到了最后一层，自动选择它
-      if (lastLayer != null) {
-        _selectedLayer = lastLayer;
-      }
-    }
-
-    _prioritizeLayerAndGroupDisplay();
-
-    // 如果图例组抽屉已打开，自动切换到绑定的第一个图例组
-    _autoSwitchToFirstBoundLegendGroup();
-  }
-
-  /// 根据索引选择图层
-  void _selectLayerByIndex(int index) {
-    if (_currentMap == null || _currentMap!.layers.isEmpty) return;
-
-    final layers = _currentMap!.layers;
-    layers.sort((a, b) => a.order.compareTo(b.order));
-
-    if (index < 0 || index >= layers.length) return;
-
-    final selectedLayer = layers[index];
-    setState(() {
-      _selectedLayer = selectedLayer;
-      // _selectedLayerGroup = null;
-    });
-    _prioritizeLayerAndGroupDisplay();
   }
 
   /// 获取当前选中图层或图层组绑定的图例组列表
@@ -5173,675 +4617,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _showLegendGroupManagementDrawer(firstBoundGroup);
     } else {
       debugPrint('当前选中的图层或图层组没有绑定任何图例组');
-    }
-  }
-
-  /// 打开上一个图例组
-  void _openPreviousLegendGroup() {
-    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
-
-    // 根据是否有选中图层/图层组决定切换范围
-    final legendGroups =
-        (_selectedLayer != null ||
-            (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
-        ? _getBoundLegendGroups()
-        : _currentMap!.legendGroups;
-
-    if (legendGroups.isEmpty) {
-      if (mounted) context.showInfoSnackBar('没有可切换的图例组');
-      return;
-    }
-
-    if (_currentLegendGroupForManagement == null) {
-      // 如果没有打开图例组管理抽屉，打开最后一个图例组
-      final lastGroup = legendGroups.last;
-      _showLegendGroupManagementDrawer(lastGroup);
-    } else {
-      // 找到当前图例组的索引
-      final currentIndex = legendGroups.indexWhere(
-        (group) => group.id == _currentLegendGroupForManagement!.id,
-      );
-      if (currentIndex > 0) {
-        final previousGroup = legendGroups[currentIndex - 1];
-        _showLegendGroupManagementDrawer(previousGroup);
-      } else if (currentIndex == 0 && legendGroups.length > 1) {
-        // 如果是第一个，循环到最后一个
-        final lastGroup = legendGroups.last;
-        _showLegendGroupManagementDrawer(lastGroup);
-      }
-    }
-  }
-
-  /// 打开下一个图例组
-  void _openNextLegendGroup() {
-    if (_currentMap == null || _currentMap!.legendGroups.isEmpty) return;
-
-    // 根据是否有选中图层/图层组决定切换范围
-    final legendGroups =
-        (_selectedLayer != null ||
-            (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty))
-        ? _getBoundLegendGroups()
-        : _currentMap!.legendGroups;
-
-    if (legendGroups.isEmpty) {
-      if (mounted) context.showInfoSnackBar('没有可切换的图例组');
-      return;
-    }
-
-    if (_currentLegendGroupForManagement == null) {
-      // 如果没有打开图例组管理抽屉，打开第一个图例组
-      final firstGroup = legendGroups.first;
-      _showLegendGroupManagementDrawer(firstGroup);
-    } else {
-      // 找到当前图例组的索引
-      final currentIndex = legendGroups.indexWhere(
-        (group) => group.id == _currentLegendGroupForManagement!.id,
-      );
-      if (currentIndex < legendGroups.length - 1) {
-        final nextGroup = legendGroups[currentIndex + 1];
-        _showLegendGroupManagementDrawer(nextGroup);
-      } else if (currentIndex == legendGroups.length - 1 &&
-          legendGroups.length > 1) {
-        // 如果是最后一个，循环到第一个
-        final firstGroup = legendGroups.first;
-        _showLegendGroupManagementDrawer(firstGroup);
-      }
-    }
-  }
-
-  /// 切换图例组管理抽屉
-  void _toggleLegendGroupManagementDrawer() {
-    if (_isLegendGroupManagementDrawerOpen) {
-      _closeLegendGroupManagementDrawer();
-    } else {
-      // 优先级1：当前选中图层绑定的图例组
-      if (_selectedLayer != null) {
-        if (_selectedLayer!.legendGroupIds.isNotEmpty) {
-          final boundLegendGroupId = _selectedLayer!.legendGroupIds.first;
-          final boundLegendGroup = _currentMap?.legendGroups
-              .where((group) => group.id == boundLegendGroupId)
-              .firstOrNull;
-          if (boundLegendGroup != null) {
-            _showLegendGroupManagementDrawer(boundLegendGroup);
-            return;
-          }
-        } else {
-          // 选中图层但没有绑定图例组
-          if (mounted) context.showInfoSnackBar('当前选中图层没有绑定图例组');
-          return;
-        }
-      }
-
-      // 优先级2：当前选中图层组包含的图层绑定的图例组
-      if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
-        final allBoundGroupIds = <String>{};
-        for (final layer in _selectedLayerGroup!) {
-          allBoundGroupIds.addAll(layer.legendGroupIds);
-        }
-        if (allBoundGroupIds.isNotEmpty) {
-          final firstBoundGroupId = allBoundGroupIds.first;
-          final boundLegendGroup = _currentMap?.legendGroups
-              .where((group) => group.id == firstBoundGroupId)
-              .firstOrNull;
-          if (boundLegendGroup != null) {
-            _showLegendGroupManagementDrawer(boundLegendGroup);
-            return;
-          }
-        } else {
-          // 选中图层组但没有绑定图例组
-          if (mounted) context.showInfoSnackBar('当前选中图层组没有绑定图例组');
-          return;
-        }
-      }
-
-      // 优先级3：没有选择时，检查是否有图例组
-      if (_currentMap != null && _currentMap!.legendGroups.isNotEmpty) {
-        final firstGroup = _currentMap!.legendGroups.first;
-        _showLegendGroupManagementDrawer(firstGroup);
-      } else {
-        // 没有图例组时显示提示
-        if (mounted) context.showInfoSnackBar('当前地图没有图例组');
-      }
-    }
-  }
-
-  /// 清除图层/图层组选择
-  void _clearLayerSelection() {
-    setState(() {
-      _selectedLayer = null;
-      _selectedLayerGroup = null;
-    });
-    _prioritizeLayerAndGroupDisplay();
-    _clearCanvasSelection();
-  }
-
-  /// 切换左侧边栏
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarCollapsed = !_isSidebarCollapsed;
-    });
-  }
-
-  /// 打开Z元素检视器
-  void _openZInspector() {
-    // 需要有图层或便签选中，优先处理图层
-    if (_isZIndexInspectorOpen || _isZIndexInspectorOpen) {
-      if (_isZIndexInspectorOpen) {
-        setState(() {
-          _isZIndexInspectorOpen = false;
-        });
-      } else if (_isZIndexInspectorOpen) {
-        setState(() {
-          _isZIndexInspectorOpen = false;
-        });
-      }
-    } else {
-      if (_selectedLayer != null) {
-        setState(() {
-          _isZIndexInspectorOpen = true;
-        });
-      } else if (_selectedStickyNote != null) {
-        setState(() {
-          _isZIndexInspectorOpen = true;
-        });
-      } else {
-        // 没有选中任何对象时显示提示
-        if (mounted) context.showInfoSnackBar('请先选择一个图层或便签');
-      }
-    }
-  }
-
-  void _toggleLegendGroupBindingDrawer() {
-    setState(() {
-      if (_isLayerLegendBindingDrawerOpen) {
-        // 如果当前是打开状态，则关闭
-        _isLayerLegendBindingDrawerOpen = false;
-        _currentLayerForBinding = null;
-        _allLegendGroupsForBinding = null;
-      } else {
-        // 如果当前是关闭状态，则尝试打开
-        if (_selectedLayer == null) {
-          // 没有选中图层时，显示提示但不打开
-          if (mounted) context.showInfoSnackBar('请先选择一个图层');
-          return;
-        }
-
-        // 关闭其他抽屉
-        _isLegendGroupManagementDrawerOpen = false;
-        _isZIndexInspectorOpen = false;
-        _currentLegendGroupForManagement = null;
-        _initialSelectedLegendItemId = null;
-
-        // 有选中图层时，打开抽屉并绑定当前图层
-        _isLayerLegendBindingDrawerOpen = true;
-        _currentLayerForBinding = _selectedLayer;
-        _allLegendGroupsForBinding = widget.mapItem?.legendGroups ?? [];
-      }
-    });
-  }
-
-  /// 隐藏其他图层
-  void _hideOtherLayers() {
-    if (_currentMap == null) return;
-
-    if (_selectedLayer != null) {
-      // 有选择：隐藏除了选中图层的所有其他图层
-      for (final layer in _currentMap!.layers) {
-        if (layer.id != _selectedLayer!.id) {
-          final updatedLayer = layer.copyWith(
-            isVisible: false,
-            updatedAt: DateTime.now(),
-          );
-          _updateLayer(updatedLayer);
-        }
-      }
-    } else {
-      // 没有选择：隐藏全部图层
-      for (final layer in _currentMap!.layers) {
-        final updatedLayer = layer.copyWith(
-          isVisible: false,
-          updatedAt: DateTime.now(),
-        );
-        _updateLayer(updatedLayer);
-      }
-    }
-  }
-
-  /// 隐藏其他图层组
-  void _hideOtherLayerGroups() {
-    if (_currentMap == null) return;
-
-    if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
-      // 有选择：隐藏除了选中图层组的所有其他图层
-      final selectedGroupIds = _selectedLayerGroup!
-          .map((layer) => layer.id)
-          .toSet();
-      for (final layer in _currentMap!.layers) {
-        if (!selectedGroupIds.contains(layer.id)) {
-          final updatedLayer = layer.copyWith(
-            isVisible: false,
-            updatedAt: DateTime.now(),
-          );
-          _updateLayer(updatedLayer);
-        }
-      }
-    } else {
-      // 没有选择：隐藏全部图层
-      for (final layer in _currentMap!.layers) {
-        final updatedLayer = layer.copyWith(
-          isVisible: false,
-          updatedAt: DateTime.now(),
-        );
-        _updateLayer(updatedLayer);
-      }
-    }
-  }
-
-  /// 显示当前图层
-  void _showCurrentLayer() {
-    if (_currentMap == null) return;
-
-    if (_selectedLayer != null) {
-      // 有选择：显示当前选中的图层
-      final updatedLayer = _selectedLayer!.copyWith(
-        isVisible: true,
-        updatedAt: DateTime.now(),
-      );
-      _updateLayer(updatedLayer);
-    } else {
-      // 没有选择：显示所有图层
-      for (final layer in _currentMap!.layers) {
-        final updatedLayer = layer.copyWith(
-          isVisible: true,
-          updatedAt: DateTime.now(),
-        );
-        _updateLayer(updatedLayer);
-      }
-    }
-  }
-
-  /// 显示当前图层组
-  void _showCurrentLayerGroup() {
-    if (_currentMap == null) return;
-
-    if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
-      // 有选择：显示当前选中的图层组
-      for (final layer in _selectedLayerGroup!) {
-        final updatedLayer = layer.copyWith(
-          isVisible: true,
-          updatedAt: DateTime.now(),
-        );
-        _updateLayer(updatedLayer);
-      }
-    } else {
-      // 没有选择：显示所有图层
-      for (final layer in _currentMap!.layers) {
-        final updatedLayer = layer.copyWith(
-          isVisible: true,
-          updatedAt: DateTime.now(),
-        );
-        _updateLayer(updatedLayer);
-      }
-    }
-  }
-
-  /// 隐藏其他图例组
-  void _hideOtherLegendGroups() {
-    if (_currentMap == null) return;
-
-    // 获取当前选中图层或图层组绑定的图例组
-    Set<String> boundLegendGroupIds = {};
-
-    if (_selectedLayer != null) {
-      // 单个图层的绑定
-      for (final groupId in _selectedLayer!.legendGroupIds) {
-        boundLegendGroupIds.add(groupId);
-      }
-    } else if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
-      // 图层组中所有图层的绑定
-      for (final layer in _selectedLayerGroup!) {
-        for (final groupId in layer.legendGroupIds) {
-          boundLegendGroupIds.add(groupId);
-        }
-      }
-    }
-
-    if (boundLegendGroupIds.isNotEmpty) {
-      // 有绑定：隐藏除了绑定图例组的所有其他图例组
-      for (final legendGroup in _currentMap!.legendGroups) {
-        if (!boundLegendGroupIds.contains(legendGroup.id)) {
-          final updatedGroup = legendGroup.copyWith(
-            isVisible: false,
-            updatedAt: DateTime.now(),
-          );
-          _updateLegendGroup(updatedGroup);
-        }
-      }
-    } else {
-      // 没有绑定或没有选择：隐藏全部图例组
-      for (final legendGroup in _currentMap!.legendGroups) {
-        final updatedGroup = legendGroup.copyWith(
-          isVisible: false,
-          updatedAt: DateTime.now(),
-        );
-        _updateLegendGroup(updatedGroup);
-      }
-    }
-  }
-
-  /// 显示当前图例组
-  void _showCurrentLegendGroup() {
-    if (_currentMap == null) return;
-
-    // 获取当前选中图层或图层组绑定的图例组
-    Set<String> boundLegendGroupIds = {};
-
-    if (_selectedLayer != null) {
-      // 单个图层的绑定
-      for (final groupId in _selectedLayer!.legendGroupIds) {
-        boundLegendGroupIds.add(groupId);
-      }
-    } else if (_selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty) {
-      // 图层组中所有图层的绑定
-      for (final layer in _selectedLayerGroup!) {
-        for (final groupId in layer.legendGroupIds) {
-          boundLegendGroupIds.add(groupId);
-        }
-      }
-    }
-
-    if (boundLegendGroupIds.isNotEmpty) {
-      // 有绑定：显示绑定的图例组
-      for (final legendGroup in _currentMap!.legendGroups) {
-        if (boundLegendGroupIds.contains(legendGroup.id)) {
-          final updatedGroup = legendGroup.copyWith(
-            isVisible: true,
-            updatedAt: DateTime.now(),
-          );
-          _updateLegendGroup(updatedGroup);
-        }
-      }
-    } else {
-      // 没有绑定或没有选择：显示所有图例组
-      for (final legendGroup in _currentMap!.legendGroups) {
-        final updatedGroup = legendGroup.copyWith(
-          isVisible: true,
-          updatedAt: DateTime.now(),
-        );
-        _updateLegendGroup(updatedGroup);
-      }
-    }
-  }
-
-  /// 检查是否按下了指定的快捷键
-  bool _isShortcutPressed(RawKeyEvent event, String shortcut) {
-    final parts = shortcut.toLowerCase().split('+');
-    final key = parts.last;
-    final modifiers = parts.take(parts.length - 1).toList();
-
-    // 动态获取按键对应的LogicalKeyboardKey
-    LogicalKeyboardKey? targetKey = _getLogicalKeyFromString(key);
-    if (targetKey == null) {
-      debugPrint('不支持的按键: $key');
-      return false;
-    }
-
-    // 检查主键是否匹配
-    bool keyMatch = event.logicalKey == targetKey;
-    if (!keyMatch) {
-      return false;
-    }
-
-    // 检查修饰键（统一使用不分左右的名称，支持多种格式）
-    bool ctrlRequired =
-        modifiers.contains('control') || modifiers.contains('ctrl');
-    bool shiftRequired = modifiers.contains('shift');
-    bool altRequired = modifiers.contains('alt');
-    bool winRequired =
-        modifiers.contains('super') ||
-        modifiers.contains('win') ||
-        modifiers.contains('meta') ||
-        modifiers.contains('command');
-
-    bool ctrlPressed = event.isControlPressed;
-    bool shiftPressed = event.isShiftPressed;
-    bool altPressed = event.isAltPressed;
-    bool winPressed = event.isMetaPressed;
-
-    // 严格检查修饰键状态：所有修饰键都必须匹配
-    // 如果快捷键不要求修饰键，那么当前也不能有修饰键按下
-    // 如果快捷键要求修饰键，那么对应的修饰键必须按下，其他修饰键不能按下
-    bool result =
-        keyMatch &&
-        (ctrlRequired == ctrlPressed) &&
-        (shiftRequired == shiftPressed) &&
-        (altRequired == altPressed) &&
-        (winRequired == winPressed);
-
-    debugPrint(
-      '快捷键检查: $shortcut, 主键匹配: $keyMatch, 修饰键匹配: ${(ctrlRequired == ctrlPressed) && (shiftRequired == shiftPressed) && (altRequired == altPressed) && (winRequired == winPressed)}, 最终结果: $result',
-    );
-    return result;
-  }
-
-  /// 检查是否按下了任意一个指定的快捷键
-  bool _isAnyShortcutPressed(RawKeyEvent event, List<String> shortcuts) {
-    for (final shortcut in shortcuts) {
-      if (_isShortcutPressed(event, shortcut)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// 根据字符串获取对应的LogicalKeyboardKey
-  LogicalKeyboardKey? _getLogicalKeyFromString(String key) {
-    switch (key) {
-      // 字母键
-      case 'a':
-        return LogicalKeyboardKey.keyA;
-      case 'b':
-        return LogicalKeyboardKey.keyB;
-      case 'c':
-        return LogicalKeyboardKey.keyC;
-      case 'd':
-        return LogicalKeyboardKey.keyD;
-      case 'e':
-        return LogicalKeyboardKey.keyE;
-      case 'f':
-        return LogicalKeyboardKey.keyF;
-      case 'g':
-        return LogicalKeyboardKey.keyG;
-      case 'h':
-        return LogicalKeyboardKey.keyH;
-      case 'i':
-        return LogicalKeyboardKey.keyI;
-      case 'j':
-        return LogicalKeyboardKey.keyJ;
-      case 'k':
-        return LogicalKeyboardKey.keyK;
-      case 'l':
-        return LogicalKeyboardKey.keyL;
-      case 'm':
-        return LogicalKeyboardKey.keyM;
-      case 'n':
-        return LogicalKeyboardKey.keyN;
-      case 'o':
-        return LogicalKeyboardKey.keyO;
-      case 'p':
-        return LogicalKeyboardKey.keyP;
-      case 'q':
-        return LogicalKeyboardKey.keyQ;
-      case 'r':
-        return LogicalKeyboardKey.keyR;
-      case 's':
-        return LogicalKeyboardKey.keyS;
-      case 't':
-        return LogicalKeyboardKey.keyT;
-      case 'u':
-        return LogicalKeyboardKey.keyU;
-      case 'v':
-        return LogicalKeyboardKey.keyV;
-      case 'w':
-        return LogicalKeyboardKey.keyW;
-      case 'x':
-        return LogicalKeyboardKey.keyX;
-      case 'y':
-        return LogicalKeyboardKey.keyY;
-      case 'z':
-        return LogicalKeyboardKey.keyZ;
-
-      // 数字键
-      case '0':
-        return LogicalKeyboardKey.digit0;
-      case '1':
-        return LogicalKeyboardKey.digit1;
-      case '2':
-        return LogicalKeyboardKey.digit2;
-      case '3':
-        return LogicalKeyboardKey.digit3;
-      case '4':
-        return LogicalKeyboardKey.digit4;
-      case '5':
-        return LogicalKeyboardKey.digit5;
-      case '6':
-        return LogicalKeyboardKey.digit6;
-      case '7':
-        return LogicalKeyboardKey.digit7;
-      case '8':
-        return LogicalKeyboardKey.digit8;
-      case '9':
-        return LogicalKeyboardKey.digit9;
-
-      // 方向键
-      case 'up':
-        return LogicalKeyboardKey.arrowUp;
-      case 'down':
-        return LogicalKeyboardKey.arrowDown;
-      case 'left':
-        return LogicalKeyboardKey.arrowLeft;
-      case 'right':
-        return LogicalKeyboardKey.arrowRight;
-
-      // 功能键
-      case 'f1':
-        return LogicalKeyboardKey.f1;
-      case 'f2':
-        return LogicalKeyboardKey.f2;
-      case 'f3':
-        return LogicalKeyboardKey.f3;
-      case 'f4':
-        return LogicalKeyboardKey.f4;
-      case 'f5':
-        return LogicalKeyboardKey.f5;
-      case 'f6':
-        return LogicalKeyboardKey.f6;
-      case 'f7':
-        return LogicalKeyboardKey.f7;
-      case 'f8':
-        return LogicalKeyboardKey.f8;
-      case 'f9':
-        return LogicalKeyboardKey.f9;
-      case 'f10':
-        return LogicalKeyboardKey.f10;
-      case 'f11':
-        return LogicalKeyboardKey.f11;
-      case 'f12':
-        return LogicalKeyboardKey.f12;
-
-      // 特殊键
-      case 'escape':
-        return LogicalKeyboardKey.escape;
-      case 'tab':
-        return LogicalKeyboardKey.tab;
-      case 'space':
-        return LogicalKeyboardKey.space;
-      case 'enter':
-        return LogicalKeyboardKey.enter;
-      case 'backspace':
-        return LogicalKeyboardKey.backspace;
-      case 'delete':
-        return LogicalKeyboardKey.delete;
-      case 'home':
-        return LogicalKeyboardKey.home;
-      case 'end':
-        return LogicalKeyboardKey.end;
-      case 'pageup':
-        return LogicalKeyboardKey.pageUp;
-      case 'pagedown':
-        return LogicalKeyboardKey.pageDown;
-      case 'insert':
-        return LogicalKeyboardKey.insert;
-
-      // 符号键
-      case '-':
-        return LogicalKeyboardKey.minus;
-      case '=':
-        return LogicalKeyboardKey.equal;
-      case '[':
-        return LogicalKeyboardKey.bracketLeft;
-      case ']':
-        return LogicalKeyboardKey.bracketRight;
-      case '\\':
-        return LogicalKeyboardKey.backslash;
-      case ';':
-        return LogicalKeyboardKey.semicolon;
-      case '\'':
-        return LogicalKeyboardKey.quote;
-      case '`':
-        return LogicalKeyboardKey.backquote;
-      case ',':
-        return LogicalKeyboardKey.comma;
-      case '.':
-        return LogicalKeyboardKey.period;
-      case '/':
-        return LogicalKeyboardKey.slash;
-
-      default:
-        return null;
-    }
-  }
-
-  /// 处理复制选区的逻辑
-  Future<void> _handleCopySelection() async {
-    // 检查是否有选区
-    final mapCanvas = _mapCanvasKey.currentState;
-    if (mapCanvas == null) {
-      return;
-    }
-
-    final selectionRect = mapCanvas.currentSelectionRect;
-    if (selectionRect == null) {
-      // 没有选区时显示提示
-      if (mounted) context.showInfoSnackBar('请先选择一个区域再复制');
-
-      return;
-    }
-    try {
-      // 从画布捕获选区图像
-      final imageData = await mapCanvas.captureCanvasAreaToRgbaUint8List(
-        selectionRect,
-      );
-      if (imageData == null) {
-        throw Exception('无法捕获画布区域');
-      } // 复制到剪贴板
-      final success = await ClipboardService.copyCanvasSelectionToClipboard(
-        rgbaData: imageData,
-        width: selectionRect.width.round(),
-        height: selectionRect.height.round(),
-      );
-
-      if (mounted) {
-        if (success) {
-          context.showSuccessSnackBar('选区已复制到剪贴板');
-        } else {
-          context.showErrorSnackBar('复制到剪贴板失败');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        context.showErrorSnackBar('复制到剪贴板失败: $e');
-      }
     }
   }
 

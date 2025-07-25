@@ -275,7 +275,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   // 添加清除选区的方法
-  void clearSelection() {
+  void clearSelection({bool clearStickyNote = true}) {
     if (_selectionRect != null) {
       setState(() {
         _selectionRect = null;
@@ -289,8 +289,8 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     // 清除元素选择
     widget.onElementSelected(null);
 
-    // 清除便签选择（只有在使用绘制工具时才清除，选取工具时不清除）
-    if (widget.selectedStickyNote != null && _effectiveDrawingTool == null) {
+    // 清除便签选择（根据参数决定是否清除）
+    if (clearStickyNote && widget.selectedStickyNote != null) {
       widget.onStickyNoteSelected?.call(null);
     }
   }
@@ -2970,48 +2970,50 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   /// 利用按图层隔离的队列结构提高渲染效率
   List<Widget> _buildQueueRenderLayers() {
     final queueLayers = <Widget>[];
-    
+
     // 获取所有有队列的图层ID列表
-    final layersWithQueue = _drawingToolManager.previewQueueManager.getLayersWithQueue();
-    
+    final layersWithQueue = _drawingToolManager.previewQueueManager
+        .getLayersWithQueue();
+
     if (layersWithQueue.isEmpty) {
       return queueLayers;
     }
-    
+
     // 获取图层渲染顺序
     final layersToRender = widget.displayOrderLayers ?? widget.mapItem.layers;
     final sortedLayers = List<MapLayer>.from(layersToRender);
-    
+
     if (widget.displayOrderLayers == null) {
       sortedLayers.sort((a, b) => a.order.compareTo(b.order));
     }
-    
+
     for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
       final layer = sortedLayers[layerIndex];
-      
+
       // 跳过没有队列项的图层
       if (!layersWithQueue.contains(layer.id)) {
         continue;
       }
-      
+
       // 只为可见图层创建队列渲染层
       if (!layer.isVisible) {
         continue;
       }
-      
+
       // 创建该图层的队列渲染层
       queueLayers.add(
         ValueListenableBuilder<List<PreviewQueueItem>>(
-          valueListenable: _drawingToolManager.previewQueueManager.queueNotifier,
+          valueListenable:
+              _drawingToolManager.previewQueueManager.queueNotifier,
           builder: (context, allQueueItems, child) {
             // 直接从PreviewQueueManager获取该图层的队列项
             final layerQueueItems = _drawingToolManager.previewQueueManager
                 .getLayerQueue(layer.id);
-            
+
             if (layerQueueItems.isEmpty) {
               return const SizedBox.shrink();
             }
-            
+
             return AnimatedBuilder(
               animation: _queueSpinnerAnimation,
               builder: (context, child) {
@@ -3031,11 +3033,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         ),
       );
     }
-    
+
     return queueLayers;
   }
-
-
 
   // 绘画元素选择和操作相关方法
   /// 检测点击位置是否命中某个绘画元素
@@ -3617,7 +3617,12 @@ class _LayerPainter extends CustomPainter {
           .where((e) => e.id == selectedElementId)
           .firstOrNull;
       if (selectedElement != null) {
-        HighlightRenderer.drawRainbowHighlight(canvas, selectedElement, size, animation: animation);
+        HighlightRenderer.drawRainbowHighlight(
+          canvas,
+          selectedElement,
+          size,
+          animation: animation,
+        );
         HighlightRenderer.drawResizeHandles(
           canvas,
           selectedElement,
@@ -3921,7 +3926,7 @@ class _QueueRenderPainter extends CustomPainter {
   /// 渲染单个队列项
   void _renderQueueItem(Canvas canvas, Size size, PreviewQueueItem item) {
     final previewData = item.previewData;
-    
+
     // 将归一化坐标转换为画布坐标
     final canvasStart = Offset(
       previewData.start.dx * size.width,
@@ -3931,16 +3936,15 @@ class _QueueRenderPainter extends CustomPainter {
       previewData.end.dx * size.width,
       previewData.end.dy * size.height,
     );
-    
+
     // 转换自由绘制路径坐标
     List<Offset>? canvasFreeDrawingPath;
     if (previewData.freeDrawingPath != null) {
-      canvasFreeDrawingPath = previewData.freeDrawingPath!.map((point) => Offset(
-        point.dx * size.width,
-        point.dy * size.height,
-      )).toList();
+      canvasFreeDrawingPath = previewData.freeDrawingPath!
+          .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+          .toList();
     }
-    
+
     // 使用PreviewRenderer来渲染队列中的元素，保持原始样式
     PreviewRenderer.drawCurrentDrawing(
       canvas,
@@ -3955,7 +3959,7 @@ class _QueueRenderPainter extends CustomPainter {
       triangleCut: previewData.triangleCut,
       freeDrawingPath: canvasFreeDrawingPath,
     );
-    
+
     // 在队列元素的起始位置绘制旋转小圆圈表示未提交状态
     _drawQueueSpinner(canvas, canvasStart, item.createdAt);
   }
@@ -3965,29 +3969,29 @@ class _QueueRenderPainter extends CustomPainter {
   void _drawQueueSpinner(Canvas canvas, Offset position, DateTime createdAt) {
     // 使用动画值计算旋转角度
     final rotationAngle = (animation?.value ?? 0.0) * 2 * math.pi;
-    
+
     // 外圆背景
     final backgroundPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
-    
+
     // 旋转指示器
     final spinnerPaint = Paint()
       ..color = Colors.blue.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
-    
+
     const radius = 4.0;
-    
+
     // 绘制白色背景圆
     canvas.drawCircle(position, radius + 1, backgroundPaint);
-    
+
     // 绘制旋转的弧形指示器
     canvas.save();
     canvas.translate(position.dx, position.dy);
     canvas.rotate(rotationAngle);
-    
+
     // 绘制3/4圆弧作为旋转指示器
     final rect = Rect.fromCircle(center: Offset.zero, radius: radius);
     canvas.drawArc(
@@ -3997,7 +4001,7 @@ class _QueueRenderPainter extends CustomPainter {
       false,
       spinnerPaint,
     );
-    
+
     canvas.restore();
   }
 

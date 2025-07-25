@@ -102,11 +102,11 @@ class UserPreferencesDatabaseService {
     }
 
     if (oldVersion < 3) {
-      // 为现有用户的 layout_data 添加 enableMergedWindowControls 字段
+      // 为现有用户的 layout_data 添加 windowControlsMode 字段（从 enableMergedWindowControls 迁移）
       await _migrateLayoutDataForMergedWindowControls(db);
 
       if (kDebugMode) {
-        debugPrint('数据库升级：为 layout_data 添加 enableMergedWindowControls 字段');
+        debugPrint('数据库升级：为 layout_data 添加 windowControlsMode 字段');
       }
     }
 
@@ -343,7 +343,7 @@ class UserPreferencesDatabaseService {
     );
   }
 
-  /// 为现有用户的 layout_data 添加 enableMergedWindowControls 字段
+  /// 为现有用户的 layout_data 添加 windowControlsMode 字段（从 enableMergedWindowControls 迁移）
   Future<void> _migrateLayoutDataForMergedWindowControls(Database db) async {
     try {
       // 获取所有用户的 layout_data
@@ -358,12 +358,40 @@ class UserPreferencesDatabaseService {
 
         try {
           final layoutData = jsonDecode(layoutDataStr) as Map<String, dynamic>;
+          bool needsUpdate = false;
 
-          // 检查是否已经包含 enableMergedWindowControls 字段
-          if (!layoutData.containsKey('enableMergedWindowControls')) {
-            // 添加默认值 false
-            layoutData['enableMergedWindowControls'] = false;
+          // 检查是否需要从 enableMergedWindowControls 迁移到 windowControlsMode
+          if (layoutData.containsKey('enableMergedWindowControls') && 
+              !layoutData.containsKey('windowControlsMode')) {
+            final enableMergedWindowControls = layoutData['enableMergedWindowControls'] as bool? ?? false;
+            
+            // 根据旧的布尔值设置新的枚举值
+            if (enableMergedWindowControls) {
+              layoutData['windowControlsMode'] = 'merged';
+            } else {
+              layoutData['windowControlsMode'] = 'separated';
+            }
+            
+            // 移除旧字段
+            layoutData.remove('enableMergedWindowControls');
+            needsUpdate = true;
+            
+            if (kDebugMode) {
+              debugPrint('已为用户 $userId 迁移 enableMergedWindowControls 到 windowControlsMode');
+            }
+          }
+          // 检查是否缺少 windowControlsMode 字段
+          else if (!layoutData.containsKey('windowControlsMode')) {
+            // 添加默认值 'merged'
+            layoutData['windowControlsMode'] = 'merged';
+            needsUpdate = true;
+            
+            if (kDebugMode) {
+              debugPrint('已为用户 $userId 添加 windowControlsMode 字段');
+            }
+          }
 
+          if (needsUpdate) {
             // 更新数据库
             await db.update(
               _preferencesTable,
@@ -371,10 +399,6 @@ class UserPreferencesDatabaseService {
               where: 'user_id = ?',
               whereArgs: [userId],
             );
-
-            if (kDebugMode) {
-              debugPrint('已为用户 $userId 添加 enableMergedWindowControls 字段');
-            }
           }
         } catch (e) {
           if (kDebugMode) {

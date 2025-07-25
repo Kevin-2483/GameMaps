@@ -31,7 +31,7 @@ class DrawingToolManager {
   BuildContext? context;
   
   // 获取当前选中图层的函数
-  String? Function()? _getSelectedLayerId;
+  final String? Function()? _getSelectedLayerId;
   
   // 获取图层最大z值的函数
   int Function(String layerId)? getLayerMaxZIndex;

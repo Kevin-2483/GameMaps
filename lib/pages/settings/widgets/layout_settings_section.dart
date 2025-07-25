@@ -138,12 +138,31 @@ class LayoutSettingsSection extends StatelessWidget {
             const SizedBox(height: 8),
 
             // 合并窗口控件
-            SwitchListTile(
-              title: Text('合并窗口控件'),
-              subtitle: Text('将窗口控制按钮合并到悬浮托盘中，鼠标悬停时展开'),
-              value: layout.enableMergedWindowControls,
-              onChanged: (value) =>
-                  provider.updateLayout(enableMergedWindowControls: value),
+            ListTile(
+              title: Text('窗口控件模式'),
+              subtitle: Text('选择窗口控制按钮的显示方式'),
+              trailing: DropdownButton<WindowControlsMode>(
+                value: layout.windowControlsMode,
+                onChanged: (value) {
+                  if (value != null) {
+                    provider.updateLayout(windowControlsMode: value);
+                  }
+                },
+                items: const [
+                  DropdownMenuItem(
+                    value: WindowControlsMode.separated,
+                    child: Text('分离'),
+                  ),
+                  DropdownMenuItem(
+                    value: WindowControlsMode.merged,
+                    child: Text('合并'),
+                  ),
+                  DropdownMenuItem(
+                    value: WindowControlsMode.mergedExpanded,
+                    child: Text('合并展开'),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 8),

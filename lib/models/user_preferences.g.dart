@@ -11,19 +11,15 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String?,
       displayName: json['displayName'] as String,
       avatarPath: json['avatarPath'] as String?,
-      avatarData: const Uint8ListConverter().fromJson(
-        json['avatarData'] as String?,
-      ),
+      avatarData:
+          const Uint8ListConverter().fromJson(json['avatarData'] as String?),
       theme: ThemePreferences.fromJson(json['theme'] as Map<String, dynamic>),
       homePage: HomePagePreferences.fromJson(
-        json['homePage'] as Map<String, dynamic>,
-      ),
+          json['homePage'] as Map<String, dynamic>),
       mapEditor: MapEditorPreferences.fromJson(
-        json['mapEditor'] as Map<String, dynamic>,
-      ),
-      layout: LayoutPreferences.fromJson(
-        json['layout'] as Map<String, dynamic>,
-      ),
+          json['mapEditor'] as Map<String, dynamic>),
+      layout:
+          LayoutPreferences.fromJson(json['layout'] as Map<String, dynamic>),
       tools: ToolPreferences.fromJson(json['tools'] as Map<String, dynamic>),
       extensionSettings:
           json['extensionSettings'] as Map<String, dynamic>? ?? const {},
@@ -74,62 +70,59 @@ Map<String, dynamic> _$ThemePreferencesToJson(ThemePreferences instance) =>
     };
 
 MapEditorPreferences _$MapEditorPreferencesFromJson(
-  Map<String, dynamic> json,
-) => MapEditorPreferences(
-  undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
-  zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
-  backgroundPattern:
-      $enumDecodeNullable(
-        _$BackgroundPatternEnumMap,
-        json['backgroundPattern'],
-      ) ??
-      BackgroundPattern.checkerboard,
-  canvasBoundaryMargin:
-      (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
-  radialMenuButton: (json['radialMenuButton'] as num?)?.toInt() ?? 2,
-  radialMenuRadius: (json['radialMenuRadius'] as num?)?.toDouble() ?? 120.0,
-  radialMenuCenterRadius:
-      (json['radialMenuCenterRadius'] as num?)?.toDouble() ?? 30.0,
-  radialMenuBackgroundOpacity:
-      (json['radialMenuBackgroundOpacity'] as num?)?.toDouble() ?? 0.8,
-  radialMenuObjectOpacity:
-      (json['radialMenuObjectOpacity'] as num?)?.toDouble() ?? 0.9,
-  radialMenuReturnDelay:
-      (json['radialMenuReturnDelay'] as num?)?.toInt() ?? 100,
-  radialMenuAnimationDuration:
-      (json['radialMenuAnimationDuration'] as num?)?.toInt() ?? 300,
-  radialMenuSubMenuDelay:
-      (json['radialMenuSubMenuDelay'] as num?)?.toInt() ?? 50,
-  shortcuts:
-      (json['shortcuts'] as Map<String, dynamic>?)?.map(
-        (k, e) =>
-            MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
-      ) ??
-      const <String, List<String>>{},
-  autoSelectLastLayerInGroup:
-      json['autoSelectLastLayerInGroup'] as bool? ?? false,
-  defaultLegendSize: (json['defaultLegendSize'] as num?)?.toDouble() ?? 0.0,
-);
+        Map<String, dynamic> json) =>
+    MapEditorPreferences(
+      undoHistoryLimit: (json['undoHistoryLimit'] as num?)?.toInt() ?? 20,
+      zoomSensitivity: (json['zoomSensitivity'] as num?)?.toDouble() ?? 1.0,
+      backgroundPattern: $enumDecodeNullable(
+              _$BackgroundPatternEnumMap, json['backgroundPattern']) ??
+          BackgroundPattern.checkerboard,
+      canvasBoundaryMargin:
+          (json['canvasBoundaryMargin'] as num?)?.toDouble() ?? 200.0,
+      radialMenuButton: (json['radialMenuButton'] as num?)?.toInt() ?? 2,
+      radialMenuRadius: (json['radialMenuRadius'] as num?)?.toDouble() ?? 120.0,
+      radialMenuCenterRadius:
+          (json['radialMenuCenterRadius'] as num?)?.toDouble() ?? 30.0,
+      radialMenuBackgroundOpacity:
+          (json['radialMenuBackgroundOpacity'] as num?)?.toDouble() ?? 0.8,
+      radialMenuObjectOpacity:
+          (json['radialMenuObjectOpacity'] as num?)?.toDouble() ?? 0.9,
+      radialMenuReturnDelay:
+          (json['radialMenuReturnDelay'] as num?)?.toInt() ?? 100,
+      radialMenuAnimationDuration:
+          (json['radialMenuAnimationDuration'] as num?)?.toInt() ?? 300,
+      radialMenuSubMenuDelay:
+          (json['radialMenuSubMenuDelay'] as num?)?.toInt() ?? 50,
+      shortcuts: (json['shortcuts'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+                k, (e as List<dynamic>).map((e) => e as String).toList()),
+          ) ??
+          const <String, List<String>>{},
+      autoSelectLastLayerInGroup:
+          json['autoSelectLastLayerInGroup'] as bool? ?? false,
+      defaultLegendSize: (json['defaultLegendSize'] as num?)?.toDouble() ?? 0.0,
+    );
 
 Map<String, dynamic> _$MapEditorPreferencesToJson(
-  MapEditorPreferences instance,
-) => <String, dynamic>{
-  'undoHistoryLimit': instance.undoHistoryLimit,
-  'zoomSensitivity': instance.zoomSensitivity,
-  'backgroundPattern': _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
-  'canvasBoundaryMargin': instance.canvasBoundaryMargin,
-  'radialMenuButton': instance.radialMenuButton,
-  'radialMenuRadius': instance.radialMenuRadius,
-  'radialMenuCenterRadius': instance.radialMenuCenterRadius,
-  'radialMenuBackgroundOpacity': instance.radialMenuBackgroundOpacity,
-  'radialMenuObjectOpacity': instance.radialMenuObjectOpacity,
-  'radialMenuReturnDelay': instance.radialMenuReturnDelay,
-  'radialMenuAnimationDuration': instance.radialMenuAnimationDuration,
-  'radialMenuSubMenuDelay': instance.radialMenuSubMenuDelay,
-  'shortcuts': instance.shortcuts,
-  'autoSelectLastLayerInGroup': instance.autoSelectLastLayerInGroup,
-  'defaultLegendSize': instance.defaultLegendSize,
-};
+        MapEditorPreferences instance) =>
+    <String, dynamic>{
+      'undoHistoryLimit': instance.undoHistoryLimit,
+      'zoomSensitivity': instance.zoomSensitivity,
+      'backgroundPattern':
+          _$BackgroundPatternEnumMap[instance.backgroundPattern]!,
+      'canvasBoundaryMargin': instance.canvasBoundaryMargin,
+      'radialMenuButton': instance.radialMenuButton,
+      'radialMenuRadius': instance.radialMenuRadius,
+      'radialMenuCenterRadius': instance.radialMenuCenterRadius,
+      'radialMenuBackgroundOpacity': instance.radialMenuBackgroundOpacity,
+      'radialMenuObjectOpacity': instance.radialMenuObjectOpacity,
+      'radialMenuReturnDelay': instance.radialMenuReturnDelay,
+      'radialMenuAnimationDuration': instance.radialMenuAnimationDuration,
+      'radialMenuSubMenuDelay': instance.radialMenuSubMenuDelay,
+      'shortcuts': instance.shortcuts,
+      'autoSelectLastLayerInGroup': instance.autoSelectLastLayerInGroup,
+      'defaultLegendSize': instance.defaultLegendSize,
+    };
 
 const _$BackgroundPatternEnumMap = {
   BackgroundPattern.blank: 'blank',
@@ -139,12 +132,10 @@ const _$BackgroundPatternEnumMap = {
 
 LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
     LayoutPreferences(
-      panelCollapsedStates: Map<String, bool>.from(
-        json['panelCollapsedStates'] as Map,
-      ),
-      panelAutoCloseStates: Map<String, bool>.from(
-        json['panelAutoCloseStates'] as Map,
-      ),
+      panelCollapsedStates:
+          Map<String, bool>.from(json['panelCollapsedStates'] as Map),
+      panelAutoCloseStates:
+          Map<String, bool>.from(json['panelAutoCloseStates'] as Map),
       sidebarWidth: (json['sidebarWidth'] as num?)?.toDouble() ?? 300.0,
       compactMode: json['compactMode'] as bool? ?? false,
       showTooltips: json['showTooltips'] as bool? ?? true,
@@ -162,8 +153,9 @@ LayoutPreferences _$LayoutPreferencesFromJson(Map<String, dynamic> json) =>
       isMaximized: json['isMaximized'] as bool? ?? false,
       enableRightSideVerticalNavigation:
           json['enableRightSideVerticalNavigation'] as bool? ?? false,
-      enableMergedWindowControls:
-          json['enableMergedWindowControls'] as bool? ?? true,
+      windowControlsMode: $enumDecodeNullable(
+              _$WindowControlsModeEnumMap, json['windowControlsMode']) ??
+          WindowControlsMode.merged,
     );
 
 Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
@@ -187,47 +179,56 @@ Map<String, dynamic> _$LayoutPreferencesToJson(LayoutPreferences instance) =>
       'isMaximized': instance.isMaximized,
       'enableRightSideVerticalNavigation':
           instance.enableRightSideVerticalNavigation,
-      'enableMergedWindowControls': instance.enableMergedWindowControls,
+      'windowControlsMode':
+          _$WindowControlsModeEnumMap[instance.windowControlsMode]!,
     };
 
-HomePagePreferences _$HomePagePreferencesFromJson(
-  Map<String, dynamic> json,
-) => HomePagePreferences(
-  displayAreaMultiplier:
-      (json['displayAreaMultiplier'] as num?)?.toDouble() ?? 1.5,
-  baseBufferMultiplier:
-      (json['baseBufferMultiplier'] as num?)?.toDouble() ?? 1.5,
-  perspectiveBufferFactor:
-      (json['perspectiveBufferFactor'] as num?)?.toDouble() ?? 1.0,
-  windowScalingFactor: (json['windowScalingFactor'] as num?)?.toDouble() ?? 0.5,
-  baseNodeSpacing: (json['baseNodeSpacing'] as num?)?.toDouble() ?? 300.0,
-  baseSvgRenderSize: (json['baseSvgRenderSize'] as num?)?.toDouble() ?? 200.0,
-  enableThemeColorFilter: json['enableThemeColorFilter'] as bool? ?? true,
-  titleText: json['titleText'] as String? ?? 'R6BOX',
-  titleFontSizeMultiplier:
-      (json['titleFontSizeMultiplier'] as num?)?.toDouble() ?? 0.12,
-  recentSvgHistorySize: (json['recentSvgHistorySize'] as num?)?.toInt() ?? 20,
-  cameraSpeed: (json['cameraSpeed'] as num?)?.toDouble() ?? 50.0,
-  iconEnlargementFactor:
-      (json['iconEnlargementFactor'] as num?)?.toDouble() ?? 1.0,
-);
+const _$WindowControlsModeEnumMap = {
+  WindowControlsMode.separated: 'separated',
+  WindowControlsMode.merged: 'merged',
+  WindowControlsMode.mergedExpanded: 'mergedExpanded',
+};
+
+HomePagePreferences _$HomePagePreferencesFromJson(Map<String, dynamic> json) =>
+    HomePagePreferences(
+      displayAreaMultiplier:
+          (json['displayAreaMultiplier'] as num?)?.toDouble() ?? 1.5,
+      baseBufferMultiplier:
+          (json['baseBufferMultiplier'] as num?)?.toDouble() ?? 1.5,
+      perspectiveBufferFactor:
+          (json['perspectiveBufferFactor'] as num?)?.toDouble() ?? 1.0,
+      windowScalingFactor:
+          (json['windowScalingFactor'] as num?)?.toDouble() ?? 0.5,
+      baseNodeSpacing: (json['baseNodeSpacing'] as num?)?.toDouble() ?? 300.0,
+      baseSvgRenderSize:
+          (json['baseSvgRenderSize'] as num?)?.toDouble() ?? 200.0,
+      enableThemeColorFilter: json['enableThemeColorFilter'] as bool? ?? true,
+      titleText: json['titleText'] as String? ?? 'R6BOX',
+      titleFontSizeMultiplier:
+          (json['titleFontSizeMultiplier'] as num?)?.toDouble() ?? 0.12,
+      recentSvgHistorySize:
+          (json['recentSvgHistorySize'] as num?)?.toInt() ?? 20,
+      cameraSpeed: (json['cameraSpeed'] as num?)?.toDouble() ?? 50.0,
+      iconEnlargementFactor:
+          (json['iconEnlargementFactor'] as num?)?.toDouble() ?? 1.0,
+    );
 
 Map<String, dynamic> _$HomePagePreferencesToJson(
-  HomePagePreferences instance,
-) => <String, dynamic>{
-  'displayAreaMultiplier': instance.displayAreaMultiplier,
-  'baseBufferMultiplier': instance.baseBufferMultiplier,
-  'perspectiveBufferFactor': instance.perspectiveBufferFactor,
-  'windowScalingFactor': instance.windowScalingFactor,
-  'baseNodeSpacing': instance.baseNodeSpacing,
-  'baseSvgRenderSize': instance.baseSvgRenderSize,
-  'enableThemeColorFilter': instance.enableThemeColorFilter,
-  'titleText': instance.titleText,
-  'titleFontSizeMultiplier': instance.titleFontSizeMultiplier,
-  'recentSvgHistorySize': instance.recentSvgHistorySize,
-  'cameraSpeed': instance.cameraSpeed,
-  'iconEnlargementFactor': instance.iconEnlargementFactor,
-};
+        HomePagePreferences instance) =>
+    <String, dynamic>{
+      'displayAreaMultiplier': instance.displayAreaMultiplier,
+      'baseBufferMultiplier': instance.baseBufferMultiplier,
+      'perspectiveBufferFactor': instance.perspectiveBufferFactor,
+      'windowScalingFactor': instance.windowScalingFactor,
+      'baseNodeSpacing': instance.baseNodeSpacing,
+      'baseSvgRenderSize': instance.baseSvgRenderSize,
+      'enableThemeColorFilter': instance.enableThemeColorFilter,
+      'titleText': instance.titleText,
+      'titleFontSizeMultiplier': instance.titleFontSizeMultiplier,
+      'recentSvgHistorySize': instance.recentSvgHistorySize,
+      'cameraSpeed': instance.cameraSpeed,
+      'iconEnlargementFactor': instance.iconEnlargementFactor,
+    };
 
 ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
     ToolPreferences(
@@ -245,13 +246,11 @@ ToolPreferences _$ToolPreferencesFromJson(Map<String, dynamic> json) =>
           .toList(),
       showAdvancedTools: json['showAdvancedTools'] as bool? ?? false,
       handleSize: (json['handleSize'] as num?)?.toDouble() ?? 16.0,
-      customTags:
-          (json['customTags'] as List<dynamic>?)
+      customTags: (json['customTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      recentTags:
-          (json['recentTags'] as List<dynamic>?)
+      recentTags: (json['recentTags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

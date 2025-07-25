@@ -9,6 +9,7 @@ import '../../services/window_manager_service.dart';
 import '../../services/cleanup_service.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
+import '../../models/user_preferences.dart';
 
 /// 合并窗口控件 - 悬浮托盘形式的窗口控制按钮
 class MergedWindowControls extends StatefulWidget {
@@ -67,6 +68,11 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     } else {
       _animationController.reverse();
     }
+  }
+
+  /// 检查是否应该默认展开（mergedExpanded模式）
+  bool _shouldBeExpanded(WindowControlsMode mode) {
+    return mode == WindowControlsMode.mergedExpanded || _isExpanded;
   }
 
   /// 如果启用了自动保存窗口大小，则保存当前窗口大小（仅在非最大化状态下）
@@ -139,7 +145,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         if (!userPrefsProvider.isInitialized ||
-            !userPrefsProvider.layout.enableMergedWindowControls) {
+            userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) {
           return const SizedBox.shrink();
         }
 
@@ -193,7 +199,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                   ? (enableRightSideVertical
                                         ? [
                                             // 右侧垂直导航时：展开按钮在左，关闭按钮在右（固定位置）
-                                            if (_expandAnimation.value > 0)
+                                            if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
                                               ..._buildExpandedButtons(context),
                                             _buildWindowButton(
                                               context,
@@ -214,12 +220,12 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                               tooltip: '关闭',
                                               isCloseButton: true,
                                             ),
-                                            if (_expandAnimation.value > 0)
+                                            if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
                                               ..._buildExpandedButtons(context),
                                           ])
                                   : [
                                       // 水平导航时：关闭按钮在右（固定位置），展开按钮在左
-                                      if (_expandAnimation.value > 0)
+                                      if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
                                         ..._buildExpandedButtons(context),
                                       _buildWindowButton(
                                         context,
@@ -246,14 +252,25 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
   }
 
   List<Widget> _buildExpandedButtons(BuildContext context) {
+    final layout = Provider.of<UserPreferencesProvider>(context).layout;
+    final isAlwaysExpanded = layout.windowControlsMode == WindowControlsMode.mergedExpanded;
     List<Widget> buttons = [];
+
+    Widget wrapWithAnimation(Widget child) {
+      if (isAlwaysExpanded) {
+        return child;
+      }
+      return SizeTransition(
+        sizeFactor: _expandAnimation,
+        axis: Axis.horizontal,
+        child: child,
+      );
+    }
 
     // 最小化按钮
     buttons.add(
-      SizeTransition(
-        sizeFactor: _expandAnimation,
-        axis: Axis.horizontal,
-        child: _buildWindowButton(
+      wrapWithAnimation(
+        _buildWindowButton(
           context,
           icon: Icons.minimize,
           onPressed: () {
@@ -267,10 +284,8 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
 
     // 最大化按钮
     buttons.add(
-      SizeTransition(
-        sizeFactor: _expandAnimation,
-        axis: Axis.horizontal,
-        child: _buildWindowButton(
+      wrapWithAnimation(
+        _buildWindowButton(
           context,
           icon: Icons.crop_square,
           onPressed: () {
@@ -285,10 +300,8 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     // 全屏按钮（macOS显示）
     if (Platform.isMacOS) {
       buttons.add(
-        SizeTransition(
-          sizeFactor: _expandAnimation,
-          axis: Axis.horizontal,
-          child: _buildWindowButton(
+        wrapWithAnimation(
+          _buildWindowButton(
             context,
             icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
             onPressed: () async {

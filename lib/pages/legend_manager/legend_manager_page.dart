@@ -685,8 +685,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   int _calculateCrossAxisCount(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const cardWidth = 150.0; // 每个卡片的最小宽度（缩小到四分之一）
-    return (screenWidth / cardWidth).floor().clamp(2, 8);
+    const cardWidth = 150.0; // 每个卡片的最小宽度
+    // 移除最大列数限制，允许窗口变大时增加更多列
+    return (screenWidth / cardWidth).floor().clamp(2, double.infinity).toInt();
   }
 
   @override
@@ -710,44 +711,18 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               ],
             ),
             actions: [
-              // 功能菜单
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'add':
-                      _addLegend();
-                      break;
-                    case 'add_folder':
-                      _createFolder();
-                      break;
-                    case 'root':
-                      _navigateToRoot();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'add',
-                    child: ListTile(
-                      leading: Icon(Icons.add),
-                      title: Text('添加图例'),
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'add_folder',
-                    child: ListTile(
-                      leading: Icon(Icons.create_new_folder),
-                      title: Text('创建文件夹'),
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'root',
-                    child: ListTile(
-                      leading: Icon(Icons.home),
-                      title: Text('回到根目录'),
-                    ),
-                  ),
-                ],
+              // 添加图例按钮
+              IconButton(
+                onPressed: _addLegend,
+                icon: const Icon(Icons.add),
+                tooltip: '添加图例',
+              ),
+              const SizedBox(width: 4),
+              // 创建文件夹按钮
+              IconButton(
+                onPressed: _createFolder,
+                icon: const Icon(Icons.create_new_folder),
+                tooltip: '创建文件夹',
               ),
             ],
           ),
@@ -801,7 +776,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                   crossAxisCount: _calculateCrossAxisCount(context),
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 24,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.87,
                 ),
                 itemCount: sortedFolders.length,
                 itemBuilder: (context, index) {
@@ -831,7 +806,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                   crossAxisCount: _calculateCrossAxisCount(context),
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 24,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.87,
                 ),
                 itemCount: sortedLegends.length,
                 itemBuilder: (context, index) {

@@ -12,6 +12,7 @@ import '../../services/cleanup_service.dart';
 import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
+import '../../models/user_preferences.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
@@ -198,7 +199,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                 children: [
                   // 顶部：关闭按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      !userPrefsProvider.layout.enableMergedWindowControls) ...[
+                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) ...[
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
@@ -220,7 +221,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                   ),
                   // 底部：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      !userPrefsProvider.layout.enableMergedWindowControls) ...[
+                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) ...[
                     const SizedBox(height: 8),
                     _buildWindowButton(
                       context,
@@ -262,7 +263,7 @@ class _TrayNavigationState extends State<TrayNavigation>
                   const Expanded(child: SizedBox()),
                   // 右侧：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      !userPrefsProvider.layout.enableMergedWindowControls)
+                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated)
                     _buildWindowControls(context),
                 ],
               ),
