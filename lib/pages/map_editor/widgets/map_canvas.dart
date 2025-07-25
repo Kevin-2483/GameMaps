@@ -2530,17 +2530,22 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       }
     }
 
-    // 如果没有在便签内容区域绘制，但有选中的图层，则可以在画布上绘制
-    if (!isDrawingOnStickyNote && widget.selectedLayer != null) {
-      _drawingToolManager.onDrawingStart(
-        details,
-        _effectiveDrawingTool,
-        _effectiveColor,
-        _effectiveStrokeWidth,
-        _effectiveDensity,
-        _effectiveCurvature,
-        _effectiveTriangleCut,
-      );
+    // 如果没有在便签内容区域绘制，检查是否有可用的绘制图层
+    if (!isDrawingOnStickyNote) {
+      // 优先使用选中的图层，如果没有则通过回调获取默认绘制图层
+      final targetLayerId = widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
+      
+      if (targetLayerId != null) {
+        _drawingToolManager.onDrawingStart(
+          details,
+          _effectiveDrawingTool,
+          _effectiveColor,
+          _effectiveStrokeWidth,
+          _effectiveDensity,
+          _effectiveCurvature,
+          _effectiveTriangleCut,
+        );
+      }
     }
   }
 
@@ -2751,19 +2756,26 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         imageBufferFit: widget.imageBufferFit, // 传递图片适应方式
       );
     } else {
-      // Normal layer drawing
-      _drawingToolManager.onDrawingEnd(
-        details,
-        _effectiveDrawingTool,
-        _effectiveColor,
-        _effectiveStrokeWidth,
-        _effectiveDensity,
-        _effectiveCurvature,
-        _effectiveTriangleCut,
-        widget.selectedLayer,
-        widget.imageBufferData,
-        widget.imageBufferFit,
-      );
+      // Normal layer drawing - use the same logic as _onDrawingStart
+      final targetLayerId = widget.getSelectedLayerId?.call();
+      if (targetLayerId != null) {
+        final targetLayer = widget.mapItem.layers
+            .where((layer) => layer.id == targetLayerId)
+            .firstOrNull;
+        
+        _drawingToolManager.onDrawingEnd(
+          details,
+          _effectiveDrawingTool,
+          _effectiveColor,
+          _effectiveStrokeWidth,
+          _effectiveDensity,
+          _effectiveCurvature,
+          _effectiveTriangleCut,
+          targetLayer,
+          widget.imageBufferData,
+          widget.imageBufferFit,
+        );
+      }
     }
   }
 

@@ -298,6 +298,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         ].contains(_effectiveTool);
   }
 
+  // 判断是否应该显示线条粗细控制（文本、橡皮擦、图片选区工具不需要）
+  bool _shouldShowStrokeWidthControl() {
+    return _effectiveTool != null &&
+        ![
+          DrawingElementType.text,
+          DrawingElementType.eraser,
+          DrawingElementType.imageArea,
+        ].contains(_effectiveTool);
+  }
+
   // 获取三角形切割类型的标签
   String _getTriangleCutLabel(TriangleCutType triangleCut) {
     switch (triangleCut) {
@@ -580,75 +590,78 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ),
             const SizedBox(height: 16),
 
-            // Favorite stroke widths section
-            Consumer<UserPreferencesProvider>(
-              builder: (context, userPrefs, child) {
-                final favoriteStrokeWidths =
-                    userPrefs.tools.favoriteStrokeWidths;
-                if (favoriteStrokeWidths.isNotEmpty) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '常用线条宽度',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+            // Stroke width (only show for tools that need it)
+            if (_shouldShowStrokeWidthControl()) ...[
+              // Favorite stroke widths section
+              Consumer<UserPreferencesProvider>(
+                builder: (context, userPrefs, child) {
+                  final favoriteStrokeWidths =
+                      userPrefs.tools.favoriteStrokeWidths;
+                  if (favoriteStrokeWidths.isNotEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '常用线条宽度',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: favoriteStrokeWidths.map((width) {
-                          return _buildStrokeWidthButton(width);
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ), // Stroke width
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  '线条粗细',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-                IconButton(
-                  onPressed: () => _showStrokeWidthManager(context),
-                  icon: const Icon(Icons.settings, size: 18),
-                  tooltip: '管理常用线条宽度',
-                  constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: favoriteStrokeWidths.map((width) {
+                            return _buildStrokeWidthButton(width);
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '线条粗细',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
-                  padding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Slider(
-                    value: _effectiveStrokeWidth,
-                    min: 1.0,
-                    max: 50.0,
-                    divisions: 49,
-                    label: _effectiveStrokeWidth.round().toString(),
-                    onChanged: (value) {
-                      _handleStrokeWidthChange(value);
-                    },
+                  IconButton(
+                    onPressed: () => _showStrokeWidthManager(context),
+                    icon: const Icon(Icons.settings, size: 18),
+                    tooltip: '管理常用线条宽度',
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
+                    padding: EdgeInsets.zero,
                   ),
-                ),
-                Text('${_effectiveStrokeWidth.round()}px'),
-              ],
-            ),
-            const SizedBox(height: 8),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Slider(
+                      value: _effectiveStrokeWidth,
+                      min: 1.0,
+                      max: 50.0,
+                      divisions: 49,
+                      label: _effectiveStrokeWidth.round().toString(),
+                      onChanged: (value) {
+                        _handleStrokeWidthChange(value);
+                      },
+                    ),
+                  ),
+                  Text('${_effectiveStrokeWidth.round()}px'),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // Pattern density (only show for pattern tools)
             if (_shouldShowDensityControl()) ...[
@@ -741,6 +754,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             if (_effectiveTool == DrawingElementType.imageArea) ...[
               const SizedBox(height: 16),
               _buildImageAreaControls(),
+              const SizedBox(height: 12),
             ],
 
             // Clear selection button

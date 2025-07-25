@@ -32,6 +32,7 @@ import 'widgets/sticky_note_panel.dart';
 import 'widgets/radial_menu_integration.dart';
 import 'widgets/editor_status_bar.dart';
 import 'widgets/legend_dock_bar.dart';
+import 'widgets/drawing_tools_dock_bar.dart';
 // import '../../components/common/radial_gesture_menu.dart';
 import '../../models/sticky_note.dart';
 // import '../../services/version_session_manager.dart';
@@ -1962,16 +1963,41 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_selectedLayer != null) {
       return false;
     }
-    // 如果只选择了图层组（没有选择具体图层），绘制工具应该禁用
-    // 如果既没有选中图层也没有选中便签，绘制工具应该禁用
+    // 如果没有选中图层，检查是否有可用的默认图层
+    final defaultLayer = _getTopVisibleLayer();
+    if (defaultLayer != null) {
+      return false; // 有可用的默认图层，启用绘制工具
+    }
+    // 只有在没有任何可见图层时才禁用绘制工具
     return true;
   }
 
-  /// 检查是否没有任何图层选择
-  bool get _hasNoLayerSelected {
-    return _selectedLayer == null &&
-        _selectedLayerGroup == null &&
-        _selectedStickyNote == null;
+  /// 获取最上层的可见图层（考虑图层选择和图例组选择的影响）
+  MapLayer? _getTopVisibleLayer() {
+    if (_currentMap == null) return null;
+
+    // 使用显示顺序图层，如果没有则使用默认排序
+    final layersToCheck = _displayOrderLayers.isNotEmpty 
+        ? _displayOrderLayers 
+        : (_currentMap!.layers..sort((a, b) => a.order.compareTo(b.order)));
+
+    // 从后往前查找（后面的图层在上层）
+    for (int i = layersToCheck.length - 1; i >= 0; i--) {
+      final layer = layersToCheck[i];
+      if (layer.isVisible) {
+        return layer;
+      }
+    }
+
+    return null;
+  }
+
+  /// 获取当前绘制的目标图层（选中的图层或默认的最上层图层）
+  MapLayer? _getCurrentDrawingTargetLayer() {
+    if (_selectedLayer != null) {
+      return _selectedLayer;
+    }
+    return _getTopVisibleLayer();
   }
 
   List<MapLayer> get _layersForDisplay {
@@ -3857,12 +3883,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
         showTooltips: layout.showTooltips,
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations, // 修改禁用状态提示逻辑
-        collapsedSubtitle: _hasNoLayerSelected && _selectedStickyNote == null
-            ? '需要选择图层或便签才能使用绘制工具'
+        collapsedSubtitle: _shouldDisableDrawingTools
+            ? '无可见图层，绘制工具已禁用'
             : _selectedStickyNote != null
             ? '绘制到便签: ${_selectedStickyNote!.title}'
             : _selectedLayer != null
             ? '绘制到: ${_selectedLayer!.name}'
+            : _getCurrentDrawingTargetLayer() != null
+            ? '绘制到: ${_getCurrentDrawingTargetLayer()!.name} (默认最上层)'
             : _selectedLayerGroup != null
             ? '选中图层组 (${_selectedLayerGroup!.length} 个图层)'
             : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
@@ -3952,7 +3980,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.layers_outlined,
+                                Icons.layers_clear_outlined,
                                 size: 48,
                                 color: Colors.white,
                               ),
@@ -3962,7 +3990,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                   horizontal: 24,
                                 ),
                                 child: Text(
-                                  '请先选择一个图层或便签\n才能使用绘制工具',
+                                  '暂无可用图层\n请先创建或显示图层',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -4297,84 +4325,35 @@ class _MapEditorContentState extends State<_MapEditorContent>
     return Row(
       children: [
         // 侧边栏区域
-        AnimatedContainer(
-          duration: Duration(
-            milliseconds: layout.enableAnimations
-                ? layout.animationDuration
-                : 0,
-          ),
-          curve: Curves.easeInOut,
-          width: _isSidebarCollapsed ? 40 : sidebarWidth + 40,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                right: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
+        if (!_isSidebarCollapsed)
+          AnimatedContainer(
+            duration: Duration(
+              milliseconds: layout.enableAnimations
+                  ? layout.animationDuration
+                  : 0,
+            ),
+            curve: Curves.easeInOut,
+            width: sidebarWidth,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  right: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+                child: Column(
+                  children: _buildToolPanels(userPrefsProvider),
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                // 侧边栏面板内容
-                if (!_isSidebarCollapsed)
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                      child: Column(
-                        children: _buildToolPanels(userPrefsProvider),
-                      ),
-                    ),
-                  ),
-
-                // 折叠按钮区域
-                Container(
-                  width: 40,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surface.withValues(alpha: 0.9),
-                    border: _isSidebarCollapsed
-                        ? null
-                        : Border(
-                            left: BorderSide(
-                              color: Theme.of(context).dividerColor,
-                              width: 1,
-                            ),
-                          ),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _isSidebarCollapsed = !_isSidebarCollapsed;
-                        });
-
-                        // 标记面板状态有变化，但不立即保存
-                        _panelStatesChanged = true;
-                      },
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: Icon(
-                          _isSidebarCollapsed
-                              ? Icons.keyboard_arrow_right
-                              : Icons.keyboard_arrow_left,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
-        ),
 
         // 主要内容区域
         Expanded(child: _buildMapCanvasArea()),
@@ -4383,72 +4362,158 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   Widget _buildMapCanvasArea() {
-    return Listener(
-      onPointerDown: (event) {
-        final userPrefs = context.read<UserPreferencesProvider>();
-        if (event.buttons == userPrefs.mapEditor.radialMenuButton) {
-          setState(() {
-            _isMenuButtonDown = true;
-          });
-        }
-      },
-      onPointerUp: (event) {
-        setState(() {
-          _isMenuButtonDown = false;
-        });
-      },
-      child: MapEditorRadialMenu(
-        currentMap: _currentMap!,
-        selectedDrawingTool: _selectedDrawingTool,
-        selectedLayer: _selectedLayer,
-        selectedLayerGroup: _selectedLayerGroup,
-        selectedStickyNote: _selectedStickyNote,
-        onDrawingToolSelected: (tool) {
-          setState(() {
-            _selectedDrawingTool = tool;
-            _previewDrawingTool = null; // 清除预览状态，确保与工具栏行为一致
-          });
-          // 选择绘制工具时清除当前选择
-          if (tool != null) {
-            _mapCanvasKey.currentState?.clearSelection();
-          }
-        },
-        onLayerSelected: (layer) {
-          setState(() {
-            _selectedLayer = layer;
-          });
-        },
-        onLayerGroupSelected: (layerGroup) {
-          if (layerGroup != null) {
-            _onLayerGroupSelected(layerGroup);
-          } else {
+    return Consumer<UserPreferencesProvider>(
+      builder: (context, userPrefsProvider, child) {
+        return Listener(
+          onPointerDown: (event) {
+            final userPrefs = context.read<UserPreferencesProvider>();
+            if (event.buttons == userPrefs.mapEditor.radialMenuButton) {
+              setState(() {
+                _isMenuButtonDown = true;
+              });
+            }
+          },
+          onPointerUp: (event) {
             setState(() {
-              _selectedLayerGroup = null;
+              _isMenuButtonDown = false;
             });
-            _restoreNormalLayerOrder();
-          }
-        },
-        onStickyNoteSelected: (note) {
-          setState(() {
-            _selectedStickyNote = note;
-          });
-        },
-        onColorSelected: (color) {
-          setState(() {
-            _selectedColor = color;
-          });
-          // 更新最近使用的颜色
-          final userPrefs = context.read<UserPreferencesProvider>();
-          userPrefs.addRecentColor(color.value).catchError((e) {
-            debugPrint('更新最近使用颜色失败: $e');
-          });
-        },
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: _buildMapCanvas(),
-        ),
-      ),
+          },
+          child: Stack(
+            children: [
+              // 主画布区域 - 包装在轮盘菜单中
+              MapEditorRadialMenu(
+                currentMap: _currentMap!,
+                selectedDrawingTool: _selectedDrawingTool,
+                selectedLayer: _selectedLayer,
+                selectedLayerGroup: _selectedLayerGroup,
+                selectedStickyNote: _selectedStickyNote,
+                onDrawingToolSelected: (tool) {
+                  setState(() {
+                    _selectedDrawingTool = tool;
+                    _previewDrawingTool = null; // 清除预览状态，确保与工具栏行为一致
+                  });
+                  // 选择绘制工具时清除当前选择
+                  if (tool != null) {
+                    _mapCanvasKey.currentState?.clearSelection();
+                  }
+                },
+                onLayerSelected: (layer) {
+                  setState(() {
+                    _selectedLayer = layer;
+                  });
+                },
+                onLayerGroupSelected: (layerGroup) {
+                  if (layerGroup != null) {
+                    _onLayerGroupSelected(layerGroup);
+                  } else {
+                    setState(() {
+                      _selectedLayerGroup = null;
+                    });
+                    _restoreNormalLayerOrder();
+                  }
+                },
+                onStickyNoteSelected: (note) {
+                  setState(() {
+                    _selectedStickyNote = note;
+                  });
+                },
+                onColorSelected: (color) {
+                  setState(() {
+                    _selectedColor = color;
+                  });
+                  // 更新最近使用的颜色
+                  final userPrefs = context.read<UserPreferencesProvider>();
+                  userPrefs.addRecentColor(color.value).catchError((e) {
+                    debugPrint('更新最近使用颜色失败: $e');
+                  });
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: _buildMapCanvas(),
+                ),
+              ),
+              
+              // 绘制工具竖直dock栏 - 不包装在轮盘菜单中
+              Positioned(
+                left: 16,
+                top: 0,
+                bottom: 0,
+                child: DrawingToolsDockBar(
+                  selectedTool: _selectedDrawingTool,
+                  isVisible: !widget.isPreviewMode,
+                  onToolSelected: (tool) {
+                    if (!_shouldDisableDrawingTools) {
+                      setState(() => _selectedDrawingTool = tool);
+                      // 选择绘制工具时清除当前选择
+                      if (tool != null) {
+                        _mapCanvasKey.currentState?.clearSelection();
+                      }
+                    }
+                  },
+                  isEditMode: !widget.isPreviewMode,
+                  onToggleSidebar: () {
+                    _keyboardShortcutActions?.toggleSidebar();
+                  },
+                  selectedColor: _selectedColor,
+                  selectedStrokeWidth: _selectedStrokeWidth,
+                  selectedDensity: _selectedDensity,
+                  selectedCurvature: _selectedCurvature,
+                  selectedTriangleCut: _selectedTriangleCut,
+                  onColorChanged: (color) {
+                    setState(() {
+                      _selectedColor = color;
+                    });
+                    // 更新最近使用的颜色
+                    final userPrefs = context.read<UserPreferencesProvider>();
+                    userPrefs.addRecentColor(color.toARGB32()).catchError((e) {
+                      debugPrint('更新最近使用颜色失败: $e');
+                    });
+                  },
+                  onStrokeWidthChanged: (width) {
+                    setState(() {
+                      _selectedStrokeWidth = width;
+                    });
+                  },
+                  onDensityChanged: (density) {
+                    setState(() {
+                      _selectedDensity = density;
+                    });
+                  },
+                  onCurvatureChanged: (curvature) {
+                    setState(() {
+                      _selectedCurvature = curvature;
+                    });
+                  },
+                  onTriangleCutChanged: (triangleCut) {
+                    setState(() {
+                      _selectedTriangleCut = triangleCut;
+                    });
+                  },
+                  // 图片缓冲区相关参数
+                  imageBufferData: _imageBufferData,
+                  imageBufferFit: _imageBufferFit,
+                  onImageBufferUpdated: (imageData) {
+                    setState(() {
+                      _imageBufferData = imageData;
+                    });
+                  },
+                  onImageBufferFitChanged: (fit) {
+                    setState(() {
+                      _imageBufferFit = fit;
+                    });
+                  },
+                  onImageBufferCleared: () {
+                    setState(() {
+                      _imageBufferData = null;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -4494,7 +4559,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           addDrawingElement: (layerId, element) {
             addDrawingElementReactive(layerId, element);
           },
-          getSelectedLayerId: () => _selectedLayer?.id,
+          getSelectedLayerId: () => _getCurrentDrawingTargetLayer()?.id,
           getLayerMaxZIndex: _getLayerMaxZIndex,
           onLegendGroupUpdated: _updateLegendGroup,
           onLegendItemSelected: _selectLegendItem,
