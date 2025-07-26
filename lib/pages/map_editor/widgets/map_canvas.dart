@@ -227,6 +227,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   String? _exportingLayerId;
   bool _exportIncludeBackground = true;
   final GlobalKey _exportBoundaryKey = GlobalKey();
+  List<dynamic>? _currentExportItems; // 当前导出的项目组
 
   final ValueNotifier<Offset?> _crosshairNotifier = ValueNotifier(null);
 
@@ -349,6 +350,175 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       return exportLayer(layerIds.first, includeBackground: includeBackground);
     }
     return null;
+  }
+
+  /// 导出分组图层列表
+  /// [exportItems] 包含图层、分割线和背景项的列表
+  /// 返回按分割线分组的图片列表
+  Future<List<ui.Image?>> exportLayerGroups(List<dynamic> exportItems) async {
+    final List<ui.Image?> results = [];
+    List<dynamic> currentGroup = [];
+    
+    // 按分割线分组
+    for (final item in exportItems) {
+      if (item.runtimeType.toString().contains('DividerExportItem')) {
+        // 遇到分割线，导出当前组
+        if (currentGroup.isNotEmpty) {
+          final groupImage = await _exportItemGroup(currentGroup);
+          results.add(groupImage);
+          currentGroup.clear();
+        }
+      } else {
+        currentGroup.add(item);
+      }
+    }
+    
+    // 导出最后一组（如果有）
+    if (currentGroup.isNotEmpty) {
+      final groupImage = await _exportItemGroup(currentGroup);
+      results.add(groupImage);
+    }
+    
+    return results;
+  }
+  
+  /// 导出单个项目组（堆叠渲染）
+  Future<ui.Image?> _exportItemGroup(List<dynamic> items) async {
+    if (items.isEmpty) return null;
+    
+    // 设置导出状态和当前导出项目
+    setState(() {
+      _exportingLayerId = 'group_export';
+      _currentExportItems = items;
+    });
+    
+    // 等待UI更新
+    await Future.delayed(const Duration(milliseconds: 50));
+    
+    try {
+      final boundary = _exportBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        debugPrint('导出边界未找到');
+        return null;
+      }
+      
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      return image;
+    } catch (e) {
+      debugPrint('导出组失败: $e');
+      return null;
+    } finally {
+      // 清理导出状态
+      if (mounted) {
+        setState(() {
+          _exportingLayerId = null;
+          _currentExportItems = null;
+        });
+      }
+    }
+  }
+  
+  /// 构建导出组元素（支持堆叠渲染）
+  List<Widget> _buildExportGroupElements(List<dynamic> items) {
+    final List<Widget> widgets = [];
+    
+    // 按顺序处理每个项目，实现堆叠效果
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      
+      if (item.runtimeType.toString().contains('LayerExportItem')) {
+        // 获取图层对象
+        final layer = (item as dynamic).layer as MapLayer;
+        
+        // 添加图层图片（如果有）- 图片在绘制元素之下
+        if (layer.imageData != null) {
+          widgets.add(
+            Positioned.fill(
+              child: _buildLayerImageWidget(layer),
+            ),
+          );
+        }
+        
+        // 添加图层绘制元素 - 绘制元素在图片之上
+        widgets.add(
+          Positioned.fill(
+            child: _buildLayerWidget(layer),
+          ),
+        );
+        
+      } else if (item.runtimeType.toString().contains('LegendGroupExportItem')) {
+        // 获取图例组对象
+        final legendGroup = (item as dynamic).legendGroup as LegendGroup;
+        
+        // 添加图例组渲染
+        widgets.add(
+          Positioned.fill(
+            child: _buildLegendWidget(legendGroup),
+          ),
+        );
+        
+      } else if (item.runtimeType.toString().contains('BackgroundExportItem')) {
+        // 添加背景图案 - 背景在对应位置渲染
+        widgets.add(
+          Positioned.fill(
+            child: Container(
+              color: Colors.white, // 白色背景
+              child: CustomPaint(
+                painter: _BackgroundPatternPainter(
+                  widget.backgroundPattern,
+                  context: context,
+                ),
+                size: Size.infinite,
+              ),
+            ),
+          ),
+        );
+      } else if (item.runtimeType.toString().contains('StickyNoteExportItem')) {
+        // 获取便签对象
+        final stickyNote = (item as dynamic).stickyNote as StickyNote;
+        
+        // 只渲染可见的便签
+        if (stickyNote.isVisible) {
+          // 转换相对坐标到画布坐标
+          final position = Offset(
+            stickyNote.position.dx * kCanvasWidth,
+            stickyNote.position.dy * kCanvasHeight,
+          );
+          final size = Size(
+            stickyNote.size.width * kCanvasWidth,
+            stickyNote.size.height * kCanvasHeight,
+          );
+          
+          // 计算有效高度（考虑折叠状态）
+          const double titleBarHeight = 36.0;
+          final effectiveHeight = stickyNote.isCollapsed ? titleBarHeight : size.height;
+          
+          // 使用与画布相同的StickyNoteDisplay组件
+          widgets.add(
+            Positioned(
+              left: position.dx,
+              top: position.dy,
+              width: size.width,
+              height: effectiveHeight,
+              child: Opacity(
+                opacity: stickyNote.opacity,
+                child: StickyNoteDisplay(
+                  note: stickyNote,
+                  isSelected: false, // 导出时不显示选中状态
+                  isPreviewMode: true, // 导出时使用预览模式
+                  imageCache: _imageCache,
+                  imageBufferCachedImage: _imageBufferCachedImage,
+                  currentImageBufferData: widget.imageBufferData,
+                  imageBufferFit: widget.imageBufferFit,
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    }
+    
+    return widgets;
   }
 
   @override
@@ -577,35 +747,40 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                   ),
 
                                   // 导出时的临时RepaintBoundary
-                                  if (_exportingLayerId != null)
-                                    Positioned.fill(
-                                      child: RepaintBoundary(
-                                        key: _exportBoundaryKey,
-                                        child: Container(
-                                          width: kCanvasWidth,
-                                          height: kCanvasHeight,
-                                          decoration: BoxDecoration(
-                                            color: _exportIncludeBackground ? Colors.white : Colors.transparent,
-                                          ),
-                                          child: Stack(
-                                            children: [
-                                              // 背景图案（仅在包含背景时显示）
-                                              if (_exportIncludeBackground)
-                                                Positioned.fill(
-                                                  child: CustomPaint(
-                                                    painter: _BackgroundPatternPainter(
-                                                      widget.backgroundPattern,
-                                                      context: context,
-                                                    ),
-                                                  ),
-                                                ),
-                                              // 只渲染指定的图层
-                                              ..._buildExportLayerElements(_exportingLayerId!),
-                                            ],
-                                          ),
+                                if (_exportingLayerId != null)
+                                  Positioned.fill(
+                                    child: RepaintBoundary(
+                                      key: _exportBoundaryKey,
+                                      child: Container(
+                                        width: kCanvasWidth,
+                                        height: kCanvasHeight,
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent, // 始终使用透明背景以支持透明PNG
                                         ),
+                                        child: Stack(
+                                           children: [
+                                             // 渲染导出内容（支持分组堆叠）
+                                             if (_exportingLayerId == 'group_export')
+                                               ..._buildExportGroupElements(_currentExportItems ?? [])
+                                             else ...[  
+                                               // 背景图案（仅在包含背景时显示）
+                                               if (_exportIncludeBackground)
+                                                 Positioned.fill(
+                                                   child: CustomPaint(
+                                                     painter: _BackgroundPatternPainter(
+                                                       widget.backgroundPattern,
+                                                       context: context,
+                                                     ),
+                                                   ),
+                                                 ),
+                                               // 只渲染指定的图层
+                                               ..._buildExportLayerElements(_exportingLayerId!),
+                                             ],
+                                           ],
+                                         ),
                                       ),
                                     ),
+                                  ),
 
                                   // Touch handler for drawing - 覆盖整个画布区域
                                   if (_effectiveDrawingTool != null)

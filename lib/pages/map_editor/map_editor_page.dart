@@ -3580,6 +3580,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       builder: (context) {
         return LayerExportDialog(
           layers: _currentMap?.layers ?? [],
+          legendGroups: _currentMap?.legendGroups,
+          stickyNotes: _currentMap?.stickyNotes,
           mapCanvasState: _mapCanvasKey.currentState,
           onExport: (layerId) {
             // TODO: 实现导出功能
