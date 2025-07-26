@@ -65,6 +65,8 @@ class ShortcutsDialog extends StatelessWidget {
                 {
                   'prevLayer': '上一个图层',
                   'nextLayer': '下一个图层',
+                  'prevLayerGroup': '上一个图层组',
+                  'nextLayerGroup': '下一个图层组',
                   'hideOtherLayers': '隐藏其他图层',
                   'hideOtherLayerGroups': '隐藏其他图层组',
                   'showCurrentLayer': '显示当前图层',

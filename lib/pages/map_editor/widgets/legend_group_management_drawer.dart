@@ -51,6 +51,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
   defaultExpandedPanel; // 默认展开的面板：'settings', 'legendList', 'vfsTree', 'cacheDisplay'
   final String? absoluteMapPath; // 地图的绝对路径，用于图例路径占位符处理
   final MapDataBloc? mapDataBloc; // MapDataBloc实例，用于管理手动关闭状态
+  final Function(LegendGroup)? onShowLayerBinding; // 显示图层绑定抽屉的回调
 
   const LegendGroupManagementDrawer({
     super.key,
@@ -80,6 +81,7 @@ class LegendGroupManagementDrawer extends StatefulWidget {
     this.defaultExpandedPanel, // 默认展开的面板
     this.absoluteMapPath, // 地图的绝对路径
     this.mapDataBloc, // MapDataBloc实例
+    this.onShowLayerBinding, // 显示图层绑定抽屉的回调
   });
 
   @override
@@ -673,6 +675,18 @@ class _LegendGroupManagementDrawerState
                         ),
                       ),
                     ),
+                    ElevatedButton.icon(
+                      onPressed: _showLayerBindingDialog,
+                      icon: const Icon(Icons.layers, size: 16),
+                      label: const Text('绑定图层'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     // if (!widget.isPreviewMode)
                     IconButton(
                       icon: const Icon(Icons.edit, size: 18),
@@ -2967,4 +2981,19 @@ class _LegendGroupManagementDrawerState
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
   }
+
+  /// 显示图层绑定抽屉
+  void _showLayerBindingDialog() {
+    if (widget.allLayers == null || widget.allLayers!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('暂无可用图层')),
+      );
+      return;
+    }
+
+    // 调用父组件的回调来显示图层绑定抽屉
+    widget.onShowLayerBinding?.call(widget.legendGroup);
+  }
+
+
 }

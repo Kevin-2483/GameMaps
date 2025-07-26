@@ -10,6 +10,7 @@ class LegendPanel extends StatelessWidget {
   final Function(LegendGroup) onLegendGroupDeleted;
   final Function() onLegendGroupAdded;
   final Function(LegendGroup)? onLegendGroupTapped; // 点击图例组时的回调
+  final Function(LegendGroup)? onLayerBinding; // 图层绑定回调
 
   const LegendPanel({
     super.key,
@@ -20,6 +21,7 @@ class LegendPanel extends StatelessWidget {
     required this.onLegendGroupDeleted,
     required this.onLegendGroupAdded,
     this.onLegendGroupTapped,
+    this.onLayerBinding,
   });
   @override
   Widget build(BuildContext context) {
@@ -77,6 +79,12 @@ class LegendPanel extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onLayerBinding != null)
+              IconButton(
+                icon: const Icon(Icons.layers, size: 18),
+                tooltip: '图层绑定',
+                onPressed: () => onLayerBinding!(legendGroup),
+              ),
             // if (!isPreviewMode)
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, size: 18),

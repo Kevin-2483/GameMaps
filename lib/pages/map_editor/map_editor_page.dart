@@ -25,6 +25,7 @@ import 'widgets/layer_panel.dart';
 import 'widgets/legend_panel.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/layer_legend_binding_drawer.dart';
+import 'widgets/layer_binding_drawer.dart';
 import 'widgets/legend_group_management_drawer.dart';
 import 'widgets/z_index_inspector.dart';
 import 'widgets/reactive_version_tab_bar.dart';
@@ -248,9 +249,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
   // 覆盖层状态
   bool _isLayerLegendBindingDrawerOpen = false;
   bool _isLegendGroupManagementDrawerOpen = false;
+  bool _isLayerBindingDrawerOpen = false; // 新增：图层绑定抽屉状态
   bool _isZIndexInspectorOpen = false;
   MapLayer? _currentLayerForBinding;
   List<LegendGroup>? _allLegendGroupsForBinding;
+  LegendGroup? _currentLegendGroupForBinding; // 新增：当前用于图层绑定的图例组
   LegendGroup? _currentLegendGroupForManagement;
   String? _initialSelectedLegendItemId; // 初始选中的图例项ID
   String? _defaultExpandedPanel; // 默认展开的面板  // 撤销/重做历史记录管理（已迁移到响应式系统）
@@ -812,8 +815,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       },
       prioritizeLayerAndGroupDisplay: _prioritizeLayerAndGroupDisplay,
       clearCanvasSelection: () => _mapCanvasKey.currentState?.clearSelection(),
-      getLayerGroups: () =>
-          _currentMap?.layers.map((layer) => [layer]).toList() ?? [],
+      getLayerGroups: () => _groupLinkedLayers(),
       getBoundLegendGroups: () => _currentMap?.legendGroups ?? [],
       showLegendGroupManagementDrawer: _showLegendGroupManagementDrawer,
       closeLegendGroupManagementDrawer: _closeLegendGroupManagementDrawer,
@@ -1806,6 +1808,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
     _clearCanvasSelection();
   }
 
+  void _onLayerGroupSelectionCleared() {
+    setState(() {
+      _selectedLayerGroup = null;
+      // 保留 _selectedLayer，不清除
+    });
+    // 更新显示顺序
+    _prioritizeLayerAndGroupDisplay();
+    _clearCanvasSelection();
+  }
+
   // 修改：新的优先显示逻辑，支持图层和图层组的组合显示
   void _prioritizeLayerAndGroupDisplay() {
     debugPrint('优先显示图层和图层组的组合');
@@ -2256,6 +2268,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
   }
 
+  /// 图层绑定更新回调 - 用于LayerBindingDrawer
+  void _updateLayersBinding(List<MapLayer> updatedLayers) {
+    _updateLayersBatch(updatedLayers);
+  }
+
   /// 传统的批量图层更新方式（作为备用）
   // void _updateLayersBatchTraditional(List<MapLayer> updatedLayers) {
   //   setState(() {
@@ -2463,8 +2480,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
     setState(() {
       // 关闭其他抽屉
       _isLegendGroupManagementDrawerOpen = false;
+      _isLayerBindingDrawerOpen = false;
       _isZIndexInspectorOpen = false;
       _currentLegendGroupForManagement = null;
+      _currentLegendGroupForBinding = null;
       _initialSelectedLegendItemId = null;
 
       // 打开图层图例绑定抽屉
@@ -2482,9 +2501,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
     setState(() {
       // 关闭其他抽屉
       _isLayerLegendBindingDrawerOpen = false;
+      _isLayerBindingDrawerOpen = false;
       _isZIndexInspectorOpen = false;
       _currentLayerForBinding = null;
       _allLegendGroupsForBinding = null;
+      _currentLegendGroupForBinding = null;
 
       // 打开图例组管理抽屉
       _currentLegendGroupForManagement = legendGroup;
@@ -2542,6 +2563,24 @@ class _MapEditorContentState extends State<_MapEditorContent>
     }
   }
 
+  // 显示图层绑定抽屉
+  void _showLayerBindingDrawer(LegendGroup legendGroup) {
+    setState(() {
+      // 关闭其他抽屉
+      _isLayerLegendBindingDrawerOpen = false;
+      _isLegendGroupManagementDrawerOpen = false;
+      _isZIndexInspectorOpen = false;
+      _currentLayerForBinding = null;
+      _allLegendGroupsForBinding = null;
+      _currentLegendGroupForManagement = null;
+      _initialSelectedLegendItemId = null;
+
+      // 打开图层绑定抽屉
+      _isLayerBindingDrawerOpen = true;
+      _currentLegendGroupForBinding = legendGroup;
+    });
+  }
+
   // 关闭图层图例绑定抽屉
   void _closeLayerLegendBindingDrawer() {
     setState(() {
@@ -2550,6 +2589,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _allLegendGroupsForBinding = null;
     });
   }
+
+  // 关闭图层绑定抽屉
+  void _closeLayerBindingDrawer() {
+    setState(() {
+      _isLayerBindingDrawerOpen = false;
+      _currentLegendGroupForBinding = null;
+    });
+  }
+
+  // 更新图层绑定状态
+
 
   // 关闭图例组管理抽屉
   void _closeLegendGroupManagementDrawer() {
@@ -2570,9 +2620,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 关闭其他抽屉
       _isLayerLegendBindingDrawerOpen = false;
       _isLegendGroupManagementDrawerOpen = false;
+      _isLayerBindingDrawerOpen = false;
       _currentLayerForBinding = null;
       _allLegendGroupsForBinding = null;
       _currentLegendGroupForManagement = null;
+      _currentLegendGroupForBinding = null;
       _initialSelectedLegendItemId = null;
 
       // 打开Z层级检视器
@@ -3718,6 +3770,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                               _defaultExpandedPanel, // 传递默认展开的面板
                                           absoluteMapPath: widget
                                               .absoluteMapPath, // 传递地图的绝对路径
+                                          onShowLayerBinding: (legendGroup) {
+                                            _showLayerBindingDrawer(legendGroup);
+                                          }, // 显示图层绑定抽屉的回调
                                         );
                                       },
                                     ),
@@ -3833,6 +3888,26 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                   ),
                                 ),
 
+                              // 图层绑定抽屉覆盖层
+                              if (_isLayerBindingDrawerOpen &&
+                                  _currentLegendGroupForBinding != null &&
+                                  !_isDragTemporaryHidden) // 添加拖拽临时隐藏条件
+                                Positioned(
+                                  top: 16,
+                                  bottom: 16,
+                                  right: 16,
+                                  child: Material(
+                                    elevation: 8,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: LayerBindingDrawer(
+                      legendGroup: _currentLegendGroupForBinding!,
+                      allLayers: _currentMap?.layers ?? [],
+                      onLayersUpdated: _updateLayersBinding,
+                      onClose: _closeLayerBindingDrawer,
+                    ),
+                                  ),
+                                ),
+
                               // 图例浮动dock栏
                               Positioned(
                                 bottom: 20,
@@ -3847,10 +3922,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                         versionAdapter?.legendSessionManager,
                                     onLegendItemSelected: _selectLegendItem,
                                     onToggleLegendGroupManagement: toggleLegendGroupManagementDrawer,
+                                    onLegendGroupSelected: _showLegendGroupManagementDrawer,
+                                    currentLegendGroupForManagement: _currentLegendGroupForManagement,
                                     selectedElementId: _selectedElementId,
                                     onLayerSelected: _onLayerSelected,
                                     onLayerGroupSelected: _onLayerGroupSelected,
                                     onSelectionCleared: () => _keyboardShortcutActions?.clearLayerSelection(),
+                                    onLayerSelectionCleared: _onLayerSelectionCleared,
+                                    onLayerGroupSelectionCleared: _onLayerGroupSelectionCleared,
                                   ),
                                 ),
                               ),
@@ -4095,6 +4174,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 onLegendGroupDeleted: _deleteLegendGroup,
                 onLegendGroupAdded: _addLegendGroup,
                 onLegendGroupTapped: _showLegendGroupManagementDrawer,
+                onLayerBinding: _showLayerBindingDrawer,
               ),
       ),
     );
@@ -4452,6 +4532,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     }
                   },
                   isEditMode: !widget.isPreviewMode,
+                  shouldDisableDrawingTools: _shouldDisableDrawingTools,
                   onToggleSidebar: () {
                     _keyboardShortcutActions?.toggleSidebar();
                   },
@@ -4809,6 +4890,27 @@ class _MapEditorContentState extends State<_MapEditorContent>
       builder: (context) =>
           _ReactiveScriptCreateDialog(scriptManager: newReactiveScriptManager),
     );
+  }
+
+  /// 将图层分组为链接组
+  List<List<MapLayer>> _groupLinkedLayers() {
+    if (_currentMap == null) return [];
+    
+    final groups = <List<MapLayer>>[];
+    List<MapLayer> currentGroup = [];
+
+    for (int i = 0; i < _currentMap!.layers.length; i++) {
+      final layer = _currentMap!.layers[i];
+      currentGroup.add(layer);
+
+      // 如果当前图层不链接到下一个，或者是最后一个图层，结束当前组
+      if (!layer.isLinkedToNext || i == _currentMap!.layers.length - 1) {
+        groups.add(List.from(currentGroup));
+        currentGroup.clear();
+      }
+    }
+
+    return groups;
   }
 }
 

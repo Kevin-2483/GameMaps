@@ -18,6 +18,7 @@ class DrawingToolsDockBar extends StatefulWidget {
   final bool isVisible; // 是否显示dock栏
   final Function(DrawingElementType?)? onToolSelected; // 工具选中回调
   final bool isEditMode; // 是否为编辑模式
+  final bool shouldDisableDrawingTools; // 是否应该禁用绘制工具
   final VoidCallback? onToggleSidebar; // 切换侧边栏回调
   final Color selectedColor;
   final double selectedStrokeWidth;
@@ -43,6 +44,7 @@ class DrawingToolsDockBar extends StatefulWidget {
     this.isVisible = true,
     this.onToolSelected,
     this.isEditMode = true,
+    this.shouldDisableDrawingTools = false,
     this.onToggleSidebar,
     this.selectedColor = Colors.black,
     this.selectedStrokeWidth = 2.0,
@@ -1325,29 +1327,33 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         children: [
           // 固定的标题图标 - 可点击切换侧边栏
           _buildHeaderIcon(),
-          const SizedBox(height: 8),
-
-          // 可滚动的工具按钮列表
-          Flexible(
-            child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(
-                context,
-              ).copyWith(scrollbars: false),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _drawingTools.map((toolConfig) {
-                    return _buildToolItem(toolConfig);
-                  }).toList(),
+          
+          // 只有在绘制工具未被禁用时才显示其他工具
+          if (!widget.shouldDisableDrawingTools) ...[
+            const SizedBox(height: 8),
+            
+            // 可滚动的工具按钮列表
+            Flexible(
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(
+                  context,
+                ).copyWith(scrollbars: false),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _drawingTools.map((toolConfig) {
+                      return _buildToolItem(toolConfig);
+                    }).toList(),
+                  ),
                 ),
               ),
             ),
-          ),
-          
-          // 固定的调色盘按钮
-          const SizedBox(height: 8),
-          _buildColorPaletteButton(),
+            
+            // 固定的调色盘按钮
+            const SizedBox(height: 8),
+            _buildColorPaletteButton(),
+          ],
         ],
       ),
     );

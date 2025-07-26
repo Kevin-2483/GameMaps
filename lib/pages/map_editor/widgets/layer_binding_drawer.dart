@@ -3,62 +3,65 @@ import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
 
-/// 图层图例组绑定抽屉
-class LayerLegendBindingDrawer extends StatefulWidget {
-  final MapLayer layer;
-  final List<LegendGroup> allLegendGroups;
-  final Function(MapLayer) onLayerUpdated;
-  final Function(LegendGroup) onLegendGroupTapped; // 点击图例组时的回调
+
+/// 图层绑定抽屉 - 从图例组角度选择要绑定的图层
+class LayerBindingDrawer extends StatefulWidget {
+  final LegendGroup legendGroup;
+  final List<MapLayer> allLayers;
+  final Function(List<MapLayer>) onLayersUpdated; // 图层更新回调
   final VoidCallback onClose; // 关闭回调
 
-  const LayerLegendBindingDrawer({
+  const LayerBindingDrawer({
     super.key,
-    required this.layer,
-    required this.allLegendGroups,
-    required this.onLayerUpdated,
-    required this.onLegendGroupTapped,
+    required this.legendGroup,
+    required this.allLayers,
+    required this.onLayersUpdated,
     required this.onClose,
   });
 
   @override
-  State<LayerLegendBindingDrawer> createState() =>
-      _LayerLegendBindingDrawerState();
+  State<LayerBindingDrawer> createState() => _LayerBindingDrawerState();
 }
 
-class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
-  late Set<String> _selectedLegendGroupIds;
+class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
+  late Set<String> _selectedLayerIds;
 
   @override
   void initState() {
     super.initState();
-    _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
+    // 初始化时，找出所有已经绑定了当前图例组的图层
+    _selectedLayerIds = widget.allLayers
+        .where((layer) => layer.legendGroupIds.contains(widget.legendGroup.id))
+        .map((layer) => layer.id)
+        .toSet();
   }
 
   @override
-  void didUpdateWidget(LayerLegendBindingDrawer oldWidget) {
+  void didUpdateWidget(LayerBindingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // 如果图层发生变化，更新选中的图例组ID
-    if (oldWidget.layer.id != widget.layer.id) {
+    // 如果图例组发生变化，更新选中的图层ID
+    if (oldWidget.legendGroup.id != widget.legendGroup.id) {
       setState(() {
-        _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
-      });
-    }
-    // 如果是同一个图层但图例组绑定发生了变化，也需要更新
-    else if (oldWidget.layer.legendGroupIds != widget.layer.legendGroupIds) {
-      setState(() {
-        _selectedLegendGroupIds = Set.from(widget.layer.legendGroupIds);
+        _selectedLayerIds = widget.allLayers
+            .where((layer) => layer.legendGroupIds.contains(widget.legendGroup.id))
+            .map((layer) => layer.id)
+            .toSet();
       });
     }
 
-    // 如果图例组列表发生变化，触发UI重新构建
-    if (oldWidget.allLegendGroups != widget.allLegendGroups) {
+    // 如果图层列表发生变化，触发UI重新构建
+    if (oldWidget.allLayers != widget.allLayers) {
       setState(() {
-        // 检查当前选中的图例组ID是否仍然有效
-        final validGroupIds = widget.allLegendGroups.map((g) => g.id).toSet();
-        _selectedLegendGroupIds = _selectedLegendGroupIds.intersection(
-          validGroupIds,
-        );
+        // 检查当前选中的图层ID是否仍然有效
+        final validLayerIds = widget.allLayers.map((l) => l.id).toSet();
+        _selectedLayerIds = _selectedLayerIds.intersection(validLayerIds);
+        
+        // 重新计算绑定状态
+        _selectedLayerIds = widget.allLayers
+            .where((layer) => layer.legendGroupIds.contains(widget.legendGroup.id))
+            .map((layer) => layer.id)
+            .toSet();
       });
     }
   }
@@ -68,12 +71,12 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
     final userPrefs = context.watch<UserPreferencesProvider>();
     final drawerWidth = userPrefs.layout.drawerWidth;
 
-    // 分离已绑定和未绑定的图例组
-    final boundGroups = widget.allLegendGroups
-        .where((group) => _selectedLegendGroupIds.contains(group.id))
+    // 分离已绑定和未绑定的图层
+    final boundLayers = widget.allLayers
+        .where((layer) => _selectedLayerIds.contains(layer.id))
         .toList();
-    final unboundGroups = widget.allLegendGroups
-        .where((group) => !_selectedLegendGroupIds.contains(group.id))
+    final unboundLayers = widget.allLayers
+        .where((layer) => !_selectedLayerIds.contains(layer.id))
         .toList();
 
     return Container(
@@ -101,14 +104,14 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 Row(
                   children: [
                     Icon(
-                      Icons.layers,
+                      Icons.legend_toggle,
                       size: 20,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '图层: ${widget.layer.name}',
+                        '图例组: ${widget.legendGroup.name}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -129,7 +132,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '选择要绑定到此图层的图例组',
+                  '选择要绑定到此图例组的图层',
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -149,38 +152,38 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // 已绑定的图例组
-                if (boundGroups.isNotEmpty) ...[
+                // 已绑定的图层
+                if (boundLayers.isNotEmpty) ...[
                   Text(
-                    '已绑定的图例组 (${boundGroups.length})',
+                    '已绑定的图层 (${boundLayers.length})',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ...boundGroups.map(
-                    (group) => _buildLegendGroupTile(group, true),
+                  ...boundLayers.map(
+                    (layer) => _buildLayerTile(layer, true),
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
                 ],
 
-                // 未绑定的图例组
+                // 未绑定的图层
                 Text(
-                  '可用的图例组 (${unboundGroups.length})',
+                  '可用的图层 (${unboundLayers.length})',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (unboundGroups.isEmpty)
+                if (unboundLayers.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(16),
                     child: Text(
-                      '暂无可用的图例组',
+                      '暂无可用的图层',
                       style: TextStyle(
                         color: Colors.grey,
                         fontStyle: FontStyle.italic,
@@ -189,20 +192,18 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     ),
                   )
                 else
-                  ...unboundGroups.map(
-                    (group) => _buildLegendGroupTile(group, false),
+                  ...unboundLayers.map(
+                    (layer) => _buildLayerTile(layer, false),
                   ),
               ],
             ),
           ),
-
-
         ],
       ),
     );
   }
 
-  Widget _buildLegendGroupTile(LegendGroup group, bool isBound) {
+  Widget _buildLayerTile(MapLayer layer, bool isBound) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -223,11 +224,11 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
       child: ListTile(
         dense: true,
         leading: Checkbox(
-          value: _selectedLegendGroupIds.contains(group.id),
-          onChanged: (value) => _toggleLegendGroup(group.id, value ?? false),
+          value: _selectedLayerIds.contains(layer.id),
+          onChanged: (value) => _toggleLayer(layer.id, value ?? false),
         ),
         title: Text(
-          group.name,
+          layer.name,
           style: TextStyle(
             fontWeight: isBound ? FontWeight.w500 : null,
             color: isBound ? Theme.of(context).colorScheme.primary : null,
@@ -236,53 +237,69 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
         subtitle: Row(
           children: [
             Icon(
-              group.isVisible ? Icons.visibility : Icons.visibility_off,
+              layer.isVisible ? Icons.visibility : Icons.visibility_off,
               size: 12,
               color: Colors.grey,
             ),
             const SizedBox(width: 4),
             Text(
-              '${group.legendItems.length} 个图例',
+              '${layer.elements.length} 个元素',
               style: const TextStyle(fontSize: 11),
             ),
             const SizedBox(width: 8),
             Text(
-              '${(group.opacity * 100).round()}%',
+              '${(layer.opacity * 100).round()}%',
               style: const TextStyle(fontSize: 11),
             ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.settings, size: 16),
-          onPressed: () => widget.onLegendGroupTapped(group),
-          tooltip: '管理图例组',
-        ),
-        onTap: () => _toggleLegendGroup(
-          group.id,
-          !_selectedLegendGroupIds.contains(group.id),
+        onTap: () => _toggleLayer(
+          layer.id,
+          !_selectedLayerIds.contains(layer.id),
         ),
       ),
     );
   }
 
-  void _toggleLegendGroup(String groupId, bool selected) {
+  void _toggleLayer(String layerId, bool selected) {
     setState(() {
       if (selected) {
-        _selectedLegendGroupIds.add(groupId);
+        _selectedLayerIds.add(layerId);
       } else {
-        _selectedLegendGroupIds.remove(groupId);
+        _selectedLayerIds.remove(layerId);
       }
     });
     
-    // 直接应用更改
-    _applyChanges();
+    // 实时应用更改，但不关闭抽屉
+    _applyChangesWithoutClosing();
   }
 
-  void _applyChanges() {
-    final updatedLayer = widget.layer.copyWith(
-      legendGroupIds: _selectedLegendGroupIds.toList(),
-      updatedAt: DateTime.now(),
-    );
-    widget.onLayerUpdated(updatedLayer);
+  void _applyChangesWithoutClosing() {
+    // 更新图层的绑定状态
+    final updatedLayers = widget.allLayers.map((layer) {
+      if (_selectedLayerIds.contains(layer.id)) {
+        // 绑定到图例组
+        final updatedGroupIds = List<String>.from(layer.legendGroupIds);
+        if (!updatedGroupIds.contains(widget.legendGroup.id)) {
+          updatedGroupIds.add(widget.legendGroup.id);
+        }
+        return layer.copyWith(
+          legendGroupIds: updatedGroupIds,
+          updatedAt: DateTime.now(),
+        );
+      } else if (layer.legendGroupIds.contains(widget.legendGroup.id)) {
+        // 取消绑定
+        final updatedGroupIds = List<String>.from(layer.legendGroupIds)
+          ..remove(widget.legendGroup.id);
+        return layer.copyWith(
+          legendGroupIds: updatedGroupIds,
+          updatedAt: DateTime.now(),
+        );
+      }
+      return layer;
+    }).toList();
+    
+    // 通过回调函数更新图层
+    widget.onLayersUpdated(updatedLayers);
   }
 }

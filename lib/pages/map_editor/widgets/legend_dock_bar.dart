@@ -17,10 +17,14 @@ class LegendDockBar extends StatefulWidget {
   final LegendSessionManager? legendSessionManager; // 图例会话管理器
   final Function(String legendItemId)? onLegendItemSelected; // 图例项选中回调
   final VoidCallback? onToggleLegendGroupManagement; // 图例组管理抽屉开关回调
+  final Function(LegendGroup legendGroup)? onLegendGroupSelected; // 图例组选择回调
+  final LegendGroup? currentLegendGroupForManagement; // 当前打开的图例组管理抽屉
   final String? selectedElementId; // 当前选中的元素ID（用于同步画布选择状态）
   final Function(MapLayer layer)? onLayerSelected; // 图层选中回调
   final Function(List<MapLayer> layerGroup)? onLayerGroupSelected; // 图层组选中回调
   final VoidCallback? onSelectionCleared; // 清除选择回调
+  final VoidCallback? onLayerSelectionCleared; // 清除图层选择回调
+  final VoidCallback? onLayerGroupSelectionCleared; // 清除图层组选择回调
 
   const LegendDockBar({
     super.key,
@@ -31,10 +35,14 @@ class LegendDockBar extends StatefulWidget {
     this.legendSessionManager,
     this.onLegendItemSelected,
     this.onToggleLegendGroupManagement,
+    this.onLegendGroupSelected,
+    this.currentLegendGroupForManagement,
     this.selectedElementId,
     this.onLayerSelected,
     this.onLayerGroupSelected,
     this.onSelectionCleared,
+    this.onLayerSelectionCleared,
+    this.onLayerGroupSelectionCleared,
   });
 
   @override
@@ -647,33 +655,53 @@ class _LegendDockBarState extends State<LegendDockBar> {
                     isSelected: isGroupSelected,
                     onTap: () {
                        Navigator.of(dialogContext).pop();
-                       widget.onLayerGroupSelected?.call(group);
+                       if (isGroupSelected) {
+                         // 如果已经选中，则清除图层组选择
+                         widget.onLayerGroupSelectionCleared?.call();
+                       } else {
+                         // 如果未选中，则选择该图层组
+                         widget.onLayerGroupSelected?.call(group);
+                       }
                      },
                   ));
                   
                   // 添加组内的图层（缩进显示）
                   for (final layer in group) {
+                    final isLayerSelected = widget.selectedLayer?.id == layer.id;
                     widgets.add(_buildPopupMenuItem(
                       icon: Icons.layers_outlined,
                       title: layer.name,
-                      isSelected: widget.selectedLayer?.id == layer.id,
+                      isSelected: isLayerSelected,
                       isIndented: true,
                       onTap: () {
                          Navigator.of(dialogContext).pop();
-                         widget.onLayerSelected?.call(layer);
+                         if (isLayerSelected) {
+                           // 如果已经选中，则清除图层选择
+                           widget.onLayerSelectionCleared?.call();
+                         } else {
+                           // 如果未选中，则选择该图层
+                           widget.onLayerSelected?.call(layer);
+                         }
                        },
                     ));
                   }
                 } else {
                   // 单图层
                   final layer = group.first;
+                  final isLayerSelected = widget.selectedLayer?.id == layer.id;
                   widgets.add(_buildPopupMenuItem(
-                    icon: Icons.layers,
+                    icon: Icons.layers_outlined,
                     title: layer.name,
-                    isSelected: widget.selectedLayer?.id == layer.id,
+                    isSelected: isLayerSelected,
                     onTap: () {
                        Navigator.of(dialogContext).pop();
-                       widget.onLayerSelected?.call(layer);
+                       if (isLayerSelected) {
+                         // 如果已经选中，则清除图层选择
+                         widget.onLayerSelectionCleared?.call();
+                       } else {
+                         // 如果未选中，则选择该图层
+                         widget.onLayerSelected?.call(layer);
+                       }
                      },
                   ));
                 }
@@ -692,7 +720,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
               // 清除选择按钮
               _buildPopupMenuItem(
                 icon: Icons.clear,
-                title: '清除选择 (ESC)',
+                title: '清除选择',
                 isSelected: false,
                 onTap: () {
                    Navigator.of(dialogContext).pop();
@@ -1008,13 +1036,226 @@ class _LegendDockBarState extends State<LegendDockBar> {
     );
   }
 
+  /// 显示图例组选择菜单
+  void _showLegendGroupMenu(BuildContext context, Offset position) {
+    // 获取当前查看范围内的图例组列表（与左键逻辑保持一致）
+    final targetLegendGroups = _getTargetLegendGroups();
+    
+    if (targetLegendGroups.isEmpty) {
+      // 没有可用的图例组
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (BuildContext dialogContext) {
+        return Stack(
+          children: [
+            // 透明背景，点击关闭菜单
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+            // 菜单内容
+            _buildPositionedLegendGroupMenu(dialogContext, position, targetLegendGroups),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 构建定位的图例组菜单
+  Widget _buildPositionedLegendGroupMenu(BuildContext dialogContext, Offset position, List<LegendGroup> targetLegendGroups) {
+    // 计算气泡菜单的位置，确保在屏幕可见范围内
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final popupWidth = 170.0; // 图例组菜单宽度
+    
+    // 动态计算菜单高度
+    final itemHeight = 44.0; // 每个菜单项的高度
+    final padding = 48.0; // 容器内边距
+    final popupHeight = (targetLegendGroups.length * itemHeight) + padding;
+    
+    // 计算top位置，优先显示在点击位置上方
+    double top;
+    final spaceAbove = position.dy;
+    final spaceBelow = screenHeight - position.dy;
+    
+    if (spaceAbove >= popupHeight + 20) {
+      // 上方有足够空间，显示在上方
+      top = position.dy - popupHeight - 10;
+    } else if (spaceBelow >= popupHeight + 20) {
+      // 下方有足够空间，显示在下方
+      top = position.dy + 10;
+    } else {
+      // 两边空间都不够，选择空间较大的一边
+      if (spaceAbove > spaceBelow) {
+        top = 10;
+      } else {
+        top = screenHeight - popupHeight - 10;
+      }
+    }
+    
+    // 计算left位置，以点击位置为中心，向左偏移半个菜单宽度
+    double left = position.dx - (popupWidth / 2);
+    
+    // 确保不超出屏幕边界
+    if (left + popupWidth > screenWidth) {
+      left = screenWidth - popupWidth - 10;
+    }
+    if (left < 10) {
+      left = 10;
+    }
+    
+    return Positioned(
+      top: top,
+      left: left,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: BoxConstraints(maxWidth: popupWidth),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: targetLegendGroups.map((legendGroup) {
+              return _buildLegendGroupMenuItem(
+                 legendGroup: legendGroup,
+                 onTap: () {
+                   Navigator.of(dialogContext).pop();
+                   // 检查是否为当前打开的图例组
+                   final isCurrentlyOpen = widget.currentLegendGroupForManagement?.id == legendGroup.id;
+                   if (isCurrentlyOpen) {
+                     // 如果是当前打开的图例组，则关闭抽屉
+                     widget.onToggleLegendGroupManagement?.call();
+                   } else {
+                     // 如果不是当前打开的图例组，则打开该图例组
+                     widget.onLegendGroupSelected?.call(legendGroup);
+                   }
+                 },
+               );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建图例组菜单项
+  Widget _buildLegendGroupMenuItem({
+    required LegendGroup legendGroup,
+    required VoidCallback onTap,
+  }) {
+    // 检查是否为当前打开的图例组
+    final isCurrentlyOpen = widget.currentLegendGroupForManagement?.id == legendGroup.id;
+    
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isCurrentlyOpen 
+                      ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: isCurrentlyOpen 
+                      ? Border.all(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                          width: 1,
+                        )
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Icon(
+                      legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+                      size: 16,
+                      color: legendGroup.isVisible 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        legendGroup.name.isNotEmpty ? legendGroup.name : '未命名图例组',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isCurrentlyOpen 
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                          fontWeight: isCurrentlyOpen ? FontWeight.w600 : FontWeight.normal,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                       decoration: BoxDecoration(
+                         color: isCurrentlyOpen 
+                             ? Theme.of(context).colorScheme.primary
+                             : Theme.of(context).colorScheme.primaryContainer,
+                         borderRadius: BorderRadius.circular(10),
+                       ),
+                       child: Text(
+                         '${legendGroup.legendItems.length}',
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                           color: isCurrentlyOpen 
+                               ? Theme.of(context).colorScheme.onPrimary
+                               : Theme.of(context).colorScheme.onPrimaryContainer,
+                           fontSize: 11,
+                           fontWeight: FontWeight.w500,
+                         ),
+                       ),
+                     ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 构建图例组管理按钮
   Widget _buildLegendGroupManagementButton() {
     return Tooltip(
-      message: '打开图例组管理',
+      message: '左键：打开图例组管理\n右键：选择图例组',
       waitDuration: const Duration(milliseconds: 500),
       child: GestureDetector(
         onTap: widget.onToggleLegendGroupManagement,
+        onSecondaryTapDown: (details) {
+          _showLegendGroupMenu(context, details.globalPosition);
+        },
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
