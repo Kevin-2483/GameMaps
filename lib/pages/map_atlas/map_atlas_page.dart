@@ -217,7 +217,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '在线用户 (${onlineUsers.length})',
+              '用户 (${onlineUsers.length})',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,

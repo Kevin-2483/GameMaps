@@ -65,7 +65,7 @@ class BackgroundRenderer {
 
   /// 绘制网格背景
   static void _drawGrid(Canvas canvas, Size size, {BuildContext? context}) {
-    const double gridSize = 20.0;
+    const double gridSize = 25.0;
 
     // 根据主题适配调整网格颜色
     Color gridColor = Colors.grey.shade300;
@@ -110,7 +110,7 @@ class BackgroundRenderer {
     Size size, {
     BuildContext? context,
   }) {
-    const double squareSize = 20.0;
+    const double squareSize = 25.0;
 
     // 根据主题适配调整棋盘格颜色
     Color lightColor = Colors.grey.shade100;

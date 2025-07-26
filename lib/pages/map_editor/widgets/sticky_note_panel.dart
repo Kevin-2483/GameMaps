@@ -267,14 +267,13 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                         ),
 
                       // 删除按钮
-                      if (widget.stickyNotes.length > 1)
-                        IconButton(
-                          icon: const Icon(Icons.delete, size: 16),
-                          onPressed: () => _showDeleteDialog(context, note),
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                          tooltip: '',
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 16),
+                        onPressed: () => _showDeleteDialog(context, note),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        tooltip: '删除便签',
+                      ),
                     ],
                   ],
                 ),

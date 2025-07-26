@@ -17,6 +17,8 @@ class DrawingToolsDockBar extends StatefulWidget {
   final DrawingElementType? selectedTool;
   final bool isVisible; // 是否显示dock栏
   final Function(DrawingElementType?)? onToolSelected; // 工具选中回调
+  final Function(DrawingElementType?)? onToolPreview; // 工具预览回调
+  final Function(Color)? onColorPreview;
   final bool isEditMode; // 是否为编辑模式
   final bool shouldDisableDrawingTools; // 是否应该禁用绘制工具
   final VoidCallback? onToggleSidebar; // 切换侧边栏回调
@@ -43,6 +45,8 @@ class DrawingToolsDockBar extends StatefulWidget {
     this.selectedTool,
     this.isVisible = true,
     this.onToolSelected,
+    this.onToolPreview,
+    this.onColorPreview,
     this.isEditMode = true,
     this.shouldDisableDrawingTools = false,
     this.onToggleSidebar,
@@ -184,15 +188,14 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   }
 
   /// 处理工具选择
-  void _handleToolSelection(DrawingElementType tool) {
+  void _handleToolSelection(DrawingElementType? tool) {
     if (!widget.isEditMode) return;
 
-    // 如果点击的是当前选中的工具，则取消选择
-    if (widget.selectedTool == tool) {
-      widget.onToolSelected?.call(null);
-    } else {
-      widget.onToolSelected?.call(tool);
-    }
+    // 立即通知预览（如果提供了回调）
+    widget.onToolPreview?.call(tool);
+
+    // 立即提交工具选择更改
+    widget.onToolSelected?.call(tool);
   }
 
   /// 获取工具属性弹窗高度
@@ -1403,7 +1406,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           color: Colors.transparent,
           child: GestureDetector(
             onTap: isEnabled
-                ? () => _handleToolSelection(toolConfig.type)
+                ? () => _handleToolSelection(isSelected ? null : toolConfig.type)
                 : null,
             onSecondaryTap: isEnabled
                 ? () => _showToolProperties(toolConfig.type, buttonKey)
@@ -1693,6 +1696,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     
     // 调用颜色变化回调
     widget.onColorChanged?.call(color);
+    widget.onColorPreview?.call(color);
     
     // 更新最近使用的颜色到用户偏好
     final userPrefs = context.read<UserPreferencesProvider>();

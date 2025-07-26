@@ -16,6 +16,7 @@ class EditorStatusBar extends StatelessWidget {
   final double? selectedCurvature;
   final TriangleCutType? selectedTriangleCut;
   final bool isCompact;
+  final MapLayer? Function()? getCurrentDrawingTargetLayer; // 获取当前绘制目标图层回调
 
   const EditorStatusBar({
     super.key,
@@ -30,6 +31,7 @@ class EditorStatusBar extends StatelessWidget {
     this.selectedCurvature,
     this.selectedTriangleCut,
     this.isCompact = false,
+    this.getCurrentDrawingTargetLayer,
   });
 
   @override
@@ -187,6 +189,19 @@ class EditorStatusBar extends StatelessWidget {
           color: Colors.green,
         ),
       );
+    } else if (getCurrentDrawingTargetLayer != null) {
+      // 如果没有选中图层，但有默认绘制目标图层，则显示默认图层
+      final defaultLayer = getCurrentDrawingTargetLayer!();
+      if (defaultLayer != null) {
+        mediumPriorityItems.add(
+          StatusItem(
+            icon: Icons.layers_outlined,
+            label: '绘制图层',
+            value: '${defaultLayer.name} (默认)',
+            color: Colors.orange,
+          ),
+        );
+      }
     }
 
     // 中优先级：当前选中的图层组

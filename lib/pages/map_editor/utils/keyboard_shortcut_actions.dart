@@ -16,6 +16,7 @@ class KeyboardShortcutActions {
   final MapItem? Function() getCurrentMap;
   final MapLayer? Function() getSelectedLayer;
   final List<MapLayer>? Function() getSelectedLayerGroup;
+  final MapLayer? Function() getCurrentDrawingTargetLayer;
   final LegendGroup? Function() getCurrentLegendGroupForManagement;
   final bool Function() getIsLegendGroupManagementDrawerOpen;
   final bool Function() getIsLayerLegendBindingDrawerOpen;
@@ -66,6 +67,7 @@ class KeyboardShortcutActions {
     required this.getCurrentMap,
     required this.getSelectedLayer,
     required this.getSelectedLayerGroup,
+    required this.getCurrentDrawingTargetLayer,
     required this.getCurrentLegendGroupForManagement,
     required this.getIsLegendGroupManagementDrawerOpen,
     required this.getIsLayerLegendBindingDrawerOpen,
@@ -754,20 +756,28 @@ class KeyboardShortcutActions {
 
   void openZInspector() {
     final isOpen = getIsZIndexInspectorOpen();
-    final selectedLayer = getSelectedLayer();
     
     if (isOpen) {
       setState?.call();
       setIsZIndexInspectorOpen(false);
     } else {
-      if (selectedLayer != null) {
-        setState?.call();
-        setIsZIndexInspectorOpen(true);
-      } else {
-        if (context.mounted) {
-          NotificationService.instance.showInfo('请先选择一个图层或便签');
+      // 优先使用选中的图层，如果没有则尝试获取默认绘制目标图层
+      MapLayer? targetLayer = getSelectedLayer();
+      if (targetLayer == null) {
+        targetLayer = getCurrentDrawingTargetLayer();
+        if (targetLayer == null) {
+          if (context.mounted) {
+            NotificationService.instance.showInfo('没有可用的图层');
+          }
+          return;
         }
+        
+        // 自动选择默认图层
+        setSelectedLayer(targetLayer);
       }
+      
+      setState?.call();
+      setIsZIndexInspectorOpen(true);
     }
   }
 

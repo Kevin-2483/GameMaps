@@ -9,6 +9,7 @@ import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../providers/user_preferences_provider.dart';
 import 'widgets/shortcuts_dialog.dart';
+import 'widgets/layer_export_dialog.dart';
 import 'utils/keyboard_shortcuts_manager.dart';
 import 'utils/keyboard_shortcut_actions.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
@@ -288,6 +289,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 快捷键动作实例
   KeyboardShortcutActions? _keyboardShortcutActions;
+
+  // 十字线功能状态
+  bool _isCrosshairEnabled = false;
 
   @override
   void dispose() {
@@ -773,6 +777,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       getCurrentMap: () => _currentMap,
       getSelectedLayer: () => _selectedLayer,
       getSelectedLayerGroup: () => _selectedLayerGroup,
+      getCurrentDrawingTargetLayer: () => _getCurrentDrawingTargetLayer(),
       getCurrentLegendGroupForManagement: () =>
           _currentLegendGroupForManagement,
       getIsLegendGroupManagementDrawerOpen: () =>
@@ -1989,8 +1994,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null) return null;
 
     // 使用显示顺序图层，如果没有则使用默认排序
-    final layersToCheck = _displayOrderLayers.isNotEmpty 
-        ? _displayOrderLayers 
+    final layersToCheck = _displayOrderLayers.isNotEmpty
+        ? _displayOrderLayers
         : (_currentMap!.layers..sort((a, b) => a.order.compareTo(b.order)));
 
     // 从后往前查找（后面的图层在上层）
@@ -2600,7 +2605,6 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 更新图层绑定状态
 
-
   // 关闭图例组管理抽屉
   void _closeLegendGroupManagementDrawer() {
     setState(() {
@@ -2613,8 +2617,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 显示Z层级检视器
   void _showZIndexInspector() {
-    // 检查是否有选中的图层或便签
-    if (_selectedLayer == null && _selectedStickyNote == null) return;
+    // 如果没有选中图层或便签，尝试获取默认绘制目标图层
+    MapLayer? targetLayer = _selectedLayer;
+    if (targetLayer == null && _selectedStickyNote == null) {
+      targetLayer = _getCurrentDrawingTargetLayer();
+      if (targetLayer == null) return; // 如果仍然没有可用图层，则返回
+      
+      // 自动选择默认图层
+      _onLayerSelected(targetLayer);
+    }
 
     setState(() {
       // 关闭其他抽屉
@@ -3413,6 +3424,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             selectedCurvature: _selectedCurvature,
             selectedTriangleCut: _selectedTriangleCut,
             isCompact: true,
+            getCurrentDrawingTargetLayer: () => _getCurrentDrawingTargetLayer(),
           ),
       ],
     );
@@ -3430,6 +3442,31 @@ class _MapEditorContentState extends State<_MapEditorContent>
         icon: const Icon(Icons.info_outline),
         onPressed: _showMapInfo,
         tooltip: '地图信息',
+      ),
+
+      // 十字线按钮
+      const SizedBox(width: 4),
+      IconButton(
+        icon: Icon(
+          Icons.square_foot,
+          color: _isCrosshairEnabled
+              ? Theme.of(context).colorScheme.primary
+              : null,
+        ),
+        onPressed: () {
+          setState(() {
+            _isCrosshairEnabled = !_isCrosshairEnabled;
+          });
+        },
+        tooltip: _isCrosshairEnabled ? '关闭十字线' : '开启十字线',
+      ),
+
+      // 导出按钮
+      const SizedBox(width: 4),
+      IconButton(
+        icon: const Icon(Icons.download),
+        onPressed: _showExportDialog,
+        tooltip: '导出图层',
       ),
 
       // 保存按钮（仅在编辑模式下显示）
@@ -3531,6 +3568,32 @@ class _MapEditorContentState extends State<_MapEditorContent>
               child: Text(l10n.close),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// 显示导出对话框
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return LayerExportDialog(
+          layers: _currentMap?.layers ?? [],
+          mapCanvasState: _mapCanvasKey.currentState,
+          onExport: (layerId) {
+            // TODO: 实现导出功能
+            final layer = _currentMap?.layers.firstWhere(
+              (l) => l.id == layerId,
+              orElse: () => throw Exception('Layer not found: $layerId'),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('导出图层: ${layer?.name ?? layerId}'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
         );
       },
     );
@@ -3771,7 +3834,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                           absoluteMapPath: widget
                                               .absoluteMapPath, // 传递地图的绝对路径
                                           onShowLayerBinding: (legendGroup) {
-                                            _showLayerBindingDrawer(legendGroup);
+                                            _showLayerBindingDrawer(
+                                              legendGroup,
+                                            );
                                           }, // 显示图层绑定抽屉的回调
                                         );
                                       },
@@ -3900,11 +3965,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     elevation: 8,
                                     borderRadius: BorderRadius.circular(12),
                                     child: LayerBindingDrawer(
-                      legendGroup: _currentLegendGroupForBinding!,
-                      allLayers: _currentMap?.layers ?? [],
-                      onLayersUpdated: _updateLayersBinding,
-                      onClose: _closeLayerBindingDrawer,
-                    ),
+                                      legendGroup:
+                                          _currentLegendGroupForBinding!,
+                                      allLayers: _currentMap?.layers ?? [],
+                                      onLayersUpdated: _updateLayersBinding,
+                                      onClose: _closeLayerBindingDrawer,
+                                    ),
                                   ),
                                 ),
 
@@ -3921,15 +3987,22 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                     legendSessionManager:
                                         versionAdapter?.legendSessionManager,
                                     onLegendItemSelected: _selectLegendItem,
-                                    onToggleLegendGroupManagement: toggleLegendGroupManagementDrawer,
-                                    onLegendGroupSelected: _showLegendGroupManagementDrawer,
-                                    currentLegendGroupForManagement: _currentLegendGroupForManagement,
+                                    onToggleLegendGroupManagement:
+                                        toggleLegendGroupManagementDrawer,
+                                    onLegendGroupSelected:
+                                        _showLegendGroupManagementDrawer,
+                                    currentLegendGroupForManagement:
+                                        _currentLegendGroupForManagement,
                                     selectedElementId: _selectedElementId,
                                     onLayerSelected: _onLayerSelected,
                                     onLayerGroupSelected: _onLayerGroupSelected,
-                                    onSelectionCleared: () => _keyboardShortcutActions?.clearLayerSelection(),
-                                    onLayerSelectionCleared: _onLayerSelectionCleared,
-                                    onLayerGroupSelectionCleared: _onLayerGroupSelectionCleared,
+                                    onSelectionCleared: () =>
+                                        _keyboardShortcutActions
+                                            ?.clearLayerSelection(),
+                                    onLayerSelectionCleared:
+                                        _onLayerSelectionCleared,
+                                    onLayerGroupSelectionCleared:
+                                        _onLayerGroupSelectionCleared,
                                   ),
                                 ),
                               ),
@@ -4036,6 +4109,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     selectedStickyNote: _selectedStickyNote,
                     onElementDeleted: _deleteElement,
                     selectedElementId: _selectedElementId,
+                    getCurrentDrawingTargetLayer: () => _getCurrentDrawingTargetLayer(),
                     onElementSelected: (elementId) {
                       setState(() => _selectedElementId = elementId);
                     },
@@ -4428,9 +4502,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                 ),
-                child: Column(
-                  children: _buildToolPanels(userPrefsProvider),
-                ),
+                child: Column(children: _buildToolPanels(userPrefsProvider)),
               ),
             ),
           ),
@@ -4500,6 +4572,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 onColorSelected: (color) {
                   setState(() {
                     _selectedColor = color;
+                    _handleColorPreview(color);
                   });
                   // 更新最近使用的颜色
                   final userPrefs = context.read<UserPreferencesProvider>();
@@ -4513,7 +4586,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   child: _buildMapCanvas(),
                 ),
               ),
-              
+
               // 绘制工具竖直dock栏 - 不包装在轮盘菜单中
               Positioned(
                 left: 16,
@@ -4531,6 +4604,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                       }
                     }
                   },
+                  onToolPreview: _handleDrawingToolPreview,
+                  onColorPreview: _handleColorPreview,
                   isEditMode: !widget.isPreviewMode,
                   shouldDisableDrawingTools: _shouldDisableDrawingTools,
                   onToggleSidebar: () {
@@ -4685,6 +4760,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           scriptManager: newReactiveScriptManager,
           onLegendDragToCanvas: _handleLegendDragToCanvas, // 新增：拖拽图例到画布的回调
           isMenuButtonDown: _isMenuButtonDown, // 传递中键状态
+          isCrosshairEnabled: _isCrosshairEnabled, // 传递十字线状态
         );
       },
     );
@@ -4895,7 +4971,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   /// 将图层分组为链接组
   List<List<MapLayer>> _groupLinkedLayers() {
     if (_currentMap == null) return [];
-    
+
     final groups = <List<MapLayer>>[];
     List<MapLayer> currentGroup = [];
 

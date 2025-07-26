@@ -32,6 +32,7 @@ import '../tools/preview_queue_manager.dart';
 import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚本管理器
 import '../../../components/color_filter_dialog.dart'; // 导入色彩滤镜组件
 import '../../../services/notification/notification_service.dart';
+import 'canvas_ruler.dart'; // 导入刻度尺组件
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -134,6 +135,7 @@ class MapCanvas extends StatefulWidget {
   final Function(String, Offset)? onLegendDragToCanvas; // 新增：拖拽图例到画布的回调
   final bool isMenuButtonDown; // 中键按下状态
   final PreviewQueueManager? previewQueueManager; // 预览队列管理器
+  final bool isCrosshairEnabled; // 十字线功能是否启用
 
   const MapCanvas({
     super.key,
@@ -182,6 +184,7 @@ class MapCanvas extends StatefulWidget {
     this.onLegendDragToCanvas, // 新增：拖拽图例到画布的回调
     this.isMenuButtonDown = false, // 中键按下状态
     this.previewQueueManager, // 预览队列管理器
+    this.isCrosshairEnabled = false, // 十字线功能是否启用
   });
 
   @override
@@ -219,6 +222,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
   // Add this GlobalKey
   final GlobalKey _canvasGlobalKey = GlobalKey();
+
+  // 导出相关状态
+  String? _exportingLayerId;
+  bool _exportIncludeBackground = true;
+  final GlobalKey _exportBoundaryKey = GlobalKey();
+
+  final ValueNotifier<Offset?> _crosshairNotifier = ValueNotifier(null);
 
   DrawingElementType? get _effectiveDrawingTool {
     if (widget.shouldDisableDrawingTools) {
@@ -295,6 +305,52 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     }
   }
 
+  /// 导出指定图层为图像
+  /// [layerId] 要导出的图层ID
+  /// [includeBackground] 是否包含背景图案，默认为true
+  Future<ui.Image?> exportLayer(String layerId, {bool includeBackground = true}) async {
+    try {
+      // 设置导出状态
+      setState(() {
+        _exportingLayerId = layerId;
+        _exportIncludeBackground = includeBackground;
+      });
+
+      // 等待一帧以确保UI更新
+      await Future.delayed(const Duration(milliseconds: 16));
+
+      // 捕获图像
+      final RenderRepaintBoundary? boundary = _exportBoundaryKey.currentContext
+          ?.findRenderObject() as RenderRepaintBoundary?;
+      
+      if (boundary != null) {
+        final image = await boundary.toImage(pixelRatio: 1.0);
+        return image;
+      }
+    } catch (e) {
+      debugPrint('导出图层失败: $e');
+    } finally {
+      // 清除导出状态
+      setState(() {
+        _exportingLayerId = null;
+        _exportIncludeBackground = true;
+      });
+    }
+    return null;
+  }
+
+  /// 导出多个图层为图像（占位符方法）
+  /// [layerIds] 要导出的图层ID列表
+  /// [includeBackground] 是否包含背景图案，默认为true
+  Future<ui.Image?> exportLayers(List<String> layerIds, {bool includeBackground = true}) async {
+    // TODO: 实现多图层导出功能
+    // 目前作为占位符，返回第一个图层的导出结果
+    if (layerIds.isNotEmpty) {
+      return exportLayer(layerIds.first, includeBackground: includeBackground);
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     // 清理绘制工具管理器
@@ -333,6 +389,16 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     );
     final canvasBoundaryMargin = userPreferences.mapEditor.canvasBoundaryMargin;
 
+    return _buildCanvasWithRulers(context, canvasBoundaryMargin);
+  }
+
+  /// 构建带有刻度尺的画布布局
+  Widget _buildCanvasWithRulers(
+    BuildContext context,
+    double canvasBoundaryMargin,
+  ) {
+    const rulerSize = 24.0;
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -340,279 +406,496 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: InteractiveViewer(
-          transformationController: _transformationController,
-          boundaryMargin: EdgeInsets.all(canvasBoundaryMargin),
-          minScale: 0.1,
-          maxScale: 5.0,
-          scaleFactor: 200.0 / widget.zoomSensitivity,
-          panEnabled: !widget.isMenuButtonDown,
-          scaleEnabled: true,
-          constrained: false,
-          child: RepaintBoundary(
-            // Wrap with RepaintBoundary
-            key: _canvasGlobalKey, // Assign the key
-            child: SizedBox(
-              width: kCanvasWidth,
-              height: kCanvasHeight,
-              child: Stack(
+        child: Column(
+          children: [
+            // 顶部刻度尺行
+            Row(
+              children: [
+                // 顶部水平刻度尺 - 从左边缘开始
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: _transformationController,
+                    builder: (context, child) {
+                      final matrix = _transformationController.value;
+                      final scale = matrix.getMaxScaleOnAxis();
+                      final offset = matrix.getTranslation().x;
+
+                      return CanvasRuler(
+                        size: rulerSize,
+                        isHorizontal: true,
+                        canvasSize: kCanvasWidth,
+                        scale: scale,
+                        offset: offset,
+                        padding: canvasBoundaryMargin,
+                      );
+                    },
+                  ),
+                ),
+                // 右上角空白区域
+                Container(
+                  width: rulerSize,
+                  height: rulerSize,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // 主要内容行
+            Expanded(
+              child: Row(
                 children: [
-                  // 画布容器
-                  Container(
-                    width: kCanvasWidth,
-                    height: kCanvasHeight,
-                    decoration: const BoxDecoration(color: Colors.white),
+                  // 画布区域
+                  Expanded(
                     child: Stack(
                       children: [
-                        // 背景图案（根据用户偏好设置）
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _BackgroundPatternPainter(
-                              widget.backgroundPattern,
-                              context: context,
+                        // InteractiveViewer 画布
+                        InteractiveViewer(
+                          transformationController: _transformationController,
+                          boundaryMargin: EdgeInsets.all(canvasBoundaryMargin),
+                          minScale: 0.1,
+                          maxScale: 5.0,
+                          scaleFactor: 200.0 / widget.zoomSensitivity,
+                          panEnabled: !widget.isMenuButtonDown,
+                          scaleEnabled: true,
+                          constrained: false,
+                          child: RepaintBoundary(
+                            // Wrap with RepaintBoundary
+                            key: _canvasGlobalKey, // Assign the key
+                            child: SizedBox(
+                              width: kCanvasWidth,
+                              height: kCanvasHeight,
+                              child: Stack(
+                                children: [
+                                  // 画布容器
+                                  Container(
+                                    width: kCanvasWidth,
+                                    height: kCanvasHeight,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        // 背景图案（根据用户偏好设置）
+                                        Positioned.fill(
+                                          child: CustomPaint(
+                                            painter: _BackgroundPatternPainter(
+                                              widget.backgroundPattern,
+                                              context: context,
+                                            ),
+                                          ),
+                                        ),
+                                        // 按层级顺序渲染所有元素
+                                        ..._buildLayeredElements(),
+                                        // 队列渲染层 - 在图层之上，预览之下
+                                        ..._buildQueueRenderLayers(),
+                                        ValueListenableBuilder<
+                                          DrawingPreviewData?
+                                        >(
+                                          valueListenable: _drawingToolManager
+                                              .drawingPreviewNotifier,
+                                          builder: (context, previewData, child) {
+                                            if (previewData == null) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            return CustomPaint(
+                                              size: const Size(
+                                                kCanvasWidth,
+                                                kCanvasHeight,
+                                              ),
+                                              painter: _CurrentDrawingPainter(
+                                                start: previewData.start,
+                                                end: previewData.end,
+                                                elementType:
+                                                    previewData.elementType,
+                                                color: previewData.color,
+                                                strokeWidth:
+                                                    previewData.strokeWidth,
+                                                density: previewData.density,
+                                                curvature:
+                                                    previewData.curvature,
+                                                triangleCut:
+                                                    previewData.triangleCut,
+                                                freeDrawingPath:
+                                                    previewData.freeDrawingPath,
+                                                selectedElementId:
+                                                    widget.selectedElementId,
+                                                targetStickyNote: previewData
+                                                    .targetStickyNote,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        // 选区层
+                                        ValueListenableBuilder<Rect?>(
+                                          valueListenable: _selectionNotifier,
+                                          builder:
+                                              (context, selectionRect, child) {
+                                                if (selectionRect == null) {
+                                                  return const SizedBox.shrink();
+                                                }
+                                                return CustomPaint(
+                                                  painter: _SelectionPainter(
+                                                    selectionRect,
+                                                    isTextTool:
+                                                        _effectiveDrawingTool ==
+                                                        DrawingElementType.text,
+                                                  ),
+                                                  size: const Size(
+                                                    kCanvasWidth,
+                                                    kCanvasHeight,
+                                                  ),
+                                                );
+                                              },
+                                        ),
+                                        // 十字线层
+                                        ValueListenableBuilder<Offset?>(
+                                          valueListenable: _crosshairNotifier,
+                                          builder:
+                                              (context, crosshairPos, child) {
+                                                if (crosshairPos == null) {
+                                                  return const SizedBox.shrink();
+                                                }
+                                                return CustomPaint(
+                                                  painter: _CrosshairPainter(
+                                                    crosshairPos,
+                                                    _transformationController,
+                                                  ),
+                                                  size: const Size(
+                                                    kCanvasWidth,
+                                                    kCanvasHeight,
+                                                  ),
+                                                );
+                                              },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // 导出时的临时RepaintBoundary
+                                  if (_exportingLayerId != null)
+                                    Positioned.fill(
+                                      child: RepaintBoundary(
+                                        key: _exportBoundaryKey,
+                                        child: Container(
+                                          width: kCanvasWidth,
+                                          height: kCanvasHeight,
+                                          decoration: BoxDecoration(
+                                            color: _exportIncludeBackground ? Colors.white : Colors.transparent,
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // 背景图案（仅在包含背景时显示）
+                                              if (_exportIncludeBackground)
+                                                Positioned.fill(
+                                                  child: CustomPaint(
+                                                    painter: _BackgroundPatternPainter(
+                                                      widget.backgroundPattern,
+                                                      context: context,
+                                                    ),
+                                                  ),
+                                                ),
+                                              // 只渲染指定的图层
+                                              ..._buildExportLayerElements(_exportingLayerId!),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                  // Touch handler for drawing - 覆盖整个画布区域
+                                  if (_effectiveDrawingTool != null)
+                                    Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      width: kCanvasWidth,
+                                      height: kCanvasHeight,
+                                      child: Listener(
+                                        // 监听触摸板的两指拖动事件
+                                        onPointerPanZoomStart:
+                                            _onTrackpadPanZoomStart,
+                                        onPointerPanZoomUpdate:
+                                            _onTrackpadPanZoomUpdate,
+                                        onPointerPanZoomEnd:
+                                            _onTrackpadPanZoomEnd,
+                                        child: GestureDetector(
+                                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                                          supportedDevices: {
+                                            PointerDeviceKind.touch,
+                                            PointerDeviceKind.mouse,
+                                            PointerDeviceKind.stylus,
+                                            PointerDeviceKind.invertedStylus,
+                                            // 不包含 PointerDeviceKind.trackpad
+                                          },
+                                          // 绘制工具使用拖拽手势和点击手势
+                                          onTapDown: (details) {
+                                            final position =
+                                                _transformLocalToCanvasPosition(
+                                                  details.localPosition,
+                                                );
+                                            _handleDrawingToolTap(position);
+                                          },
+                                          onPanStart: _onDrawingStart,
+                                          onPanUpdate: _onDrawingUpdate,
+                                          onPanEnd: _onDrawingEnd,
+                                          behavior: HitTestBehavior.translucent,
+                                        ),
+                                      ),
+                                    ), // Touch handler for element interaction - 当没有绘制工具选中时
+                                  if (_effectiveDrawingTool == null)
+                                    Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      width: kCanvasWidth,
+                                      height: kCanvasHeight,
+                                      child: Listener(
+                                        // 监听触摸板的两指拖动事件
+                                        onPointerPanZoomStart:
+                                            _onTrackpadPanZoomStart,
+                                        onPointerPanZoomUpdate:
+                                            _onTrackpadPanZoomUpdate,
+                                        onPointerPanZoomEnd:
+                                            _onTrackpadPanZoomEnd,
+                                        child: GestureDetector(
+                                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
+                                          supportedDevices: {
+                                            PointerDeviceKind.touch,
+                                            PointerDeviceKind.mouse,
+                                            PointerDeviceKind.stylus,
+                                            PointerDeviceKind.invertedStylus,
+                                            // 不包含 PointerDeviceKind.trackpad
+                                          },
+                                          onTapDown:
+                                              _onElementInteractionTapDown,
+                                          onPanStart:
+                                              _onElementInteractionPanStart,
+                                          onPanUpdate:
+                                              _onElementInteractionPanUpdate,
+                                          onPanEnd: _onElementInteractionPanEnd,
+                                          behavior: HitTestBehavior.translucent,
+                                        ),
+                                      ),
+                                    ),
+
+                                  // DragTarget for receiving legend drags from cache
+                                  if (!widget.isPreviewMode)
+                                    Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      width: kCanvasWidth,
+                                      height: kCanvasHeight,
+                                      child: DragTarget<String>(
+                                        onWillAccept: (data) =>
+                                            data != null && data.isNotEmpty,
+                                        onAccept: (legendPath) {
+                                          // 这个方法主要用于兼容性，实际处理在onAcceptWithDetails中
+                                          debugPrint(
+                                            '接收到拖拽的图例(onAccept): $legendPath',
+                                          );
+                                        },
+                                        onAcceptWithDetails: (details) {
+                                          // 获取拖拽释放的位置并转换为画布坐标
+                                          final globalPosition = details.offset;
+                                          // 将全局坐标转换为画布坐标
+                                          final RenderBox? renderBox =
+                                              context.findRenderObject()
+                                                  as RenderBox?;
+                                          if (renderBox != null) {
+                                            final localPosition = renderBox
+                                                .globalToLocal(globalPosition);
+                                            debugPrint(
+                                              '拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition',
+                                            );
+
+                                            // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
+                                            final canvasPosition =
+                                                _transformLocalToCanvasPosition(
+                                                  localPosition,
+                                                );
+                                            debugPrint(
+                                              '转换后的画布坐标: $canvasPosition',
+                                            );
+
+                                            _handleLegendDragAccept(
+                                              details.data,
+                                              canvasPosition,
+                                            );
+                                          } else {
+                                            debugPrint(
+                                              '警告：无法获取RenderBox，使用默认位置处理拖拽',
+                                            );
+                                            // 使用默认位置(画布中心)
+                                            final defaultPosition =
+                                                const Offset(
+                                                  kCanvasWidth / 2,
+                                                  kCanvasHeight / 2,
+                                                );
+                                            _handleLegendDragAccept(
+                                              details.data,
+                                              defaultPosition,
+                                            );
+                                          }
+                                        },
+                                        builder: (context, candidateData, rejectedData) {
+                                          final isHovering =
+                                              candidateData.isNotEmpty;
+                                          return IgnorePointer(
+                                            ignoring:
+                                                !isHovering, // 只有在悬停时才接收指针事件
+                                            child: Container(
+                                              color: isHovering
+                                                  ? Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withValues(alpha: 0.1)
+                                                  : Colors.transparent,
+                                              child: isHovering
+                                                  ? Center(
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 20,
+                                                              vertical: 12,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .primaryContainer,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                12,
+                                                              ),
+                                                          border: Border.all(
+                                                            color:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .primary,
+                                                            width: 2,
+                                                          ),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .primary
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.3,
+                                                                      ),
+                                                              blurRadius: 8,
+                                                              offset:
+                                                                  const Offset(
+                                                                    0,
+                                                                    2,
+                                                                  ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .add_circle_outline,
+                                                              color: Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onPrimaryContainer,
+                                                              size: 20,
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 8,
+                                                            ),
+                                                            Text(
+                                                              '释放以添加图例到此位置',
+                                                              style: TextStyle(
+                                                                color: Theme.of(context)
+                                                                    .colorScheme
+                                                                    .onPrimaryContainer,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 14,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+
+                                  // 十字线鼠标跟踪层 - 在画布区域内
+                                  if (widget.isCrosshairEnabled)
+                                    Positioned.fill(
+                                      child: MouseRegion(
+                                        opaque: false, // 让事件可以“穿透”下去
+                                        onHover: (event) {
+                                          final canvasPosition = Offset(
+                                            event.localPosition.dx.clamp(
+                                              0.0,
+                                              kCanvasWidth,
+                                            ),
+                                            event.localPosition.dy.clamp(
+                                              0.0,
+                                              kCanvasHeight,
+                                            ),
+                                          );
+                                          _crosshairNotifier.value =
+                                              canvasPosition;
+                                        },
+                                        onExit: (event) {
+                                          _crosshairNotifier.value = null;
+                                        },
+                                        child:
+                                            const SizedBox.expand(), // 无需 IgnorePointer，SizedBox 不会吃事件
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        // 按层级顺序渲染所有元素
-                        ..._buildLayeredElements(),
-                        // 队列渲染层 - 在图层之上，预览之下
-                        ..._buildQueueRenderLayers(),
-                        ValueListenableBuilder<DrawingPreviewData?>(
-                          valueListenable:
-                              _drawingToolManager.drawingPreviewNotifier,
-                          builder: (context, previewData, child) {
-                            if (previewData == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return CustomPaint(
-                              size: const Size(kCanvasWidth, kCanvasHeight),
-                              painter: _CurrentDrawingPainter(
-                                start: previewData.start,
-                                end: previewData.end,
-                                elementType: previewData.elementType,
-                                color: previewData.color,
-                                strokeWidth: previewData.strokeWidth,
-                                density: previewData.density,
-                                curvature: previewData.curvature,
-                                triangleCut: previewData.triangleCut,
-                                freeDrawingPath: previewData.freeDrawingPath,
-                                selectedElementId: widget.selectedElementId,
-                                targetStickyNote: previewData.targetStickyNote,
-                              ),
-                            );
-                          },
-                        ),
-                        // 选区层
-                        ValueListenableBuilder<Rect?>(
-                          valueListenable: _selectionNotifier,
-                          builder: (context, selectionRect, child) {
-                            if (selectionRect == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return CustomPaint(
-                              painter: _SelectionPainter(
-                                selectionRect,
-                                isTextTool:
-                                    _effectiveDrawingTool ==
-                                    DrawingElementType.text,
-                              ),
-                              size: const Size(kCanvasWidth, kCanvasHeight),
-                            );
-                          },
                         ),
                       ],
                     ),
                   ),
+                  // 右侧垂直刻度尺
+                  SizedBox(
+                    width: rulerSize,
+                    child: ListenableBuilder(
+                      listenable: _transformationController,
+                      builder: (context, child) {
+                        final matrix = _transformationController.value;
+                        final scale = matrix.getMaxScaleOnAxis();
+                        final offset = matrix.getTranslation().y;
 
-                  // Touch handler for drawing - 覆盖整个画布区域
-                  if (_effectiveDrawingTool != null)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      width: kCanvasWidth,
-                      height: kCanvasHeight,
-                      child: Listener(
-                        // 监听触摸板的两指拖动事件
-                        onPointerPanZoomStart: _onTrackpadPanZoomStart,
-                        onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
-                        onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
-                        child: GestureDetector(
-                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
-                          supportedDevices: {
-                            PointerDeviceKind.touch,
-                            PointerDeviceKind.mouse,
-                            PointerDeviceKind.stylus,
-                            PointerDeviceKind.invertedStylus,
-                            // 不包含 PointerDeviceKind.trackpad
-                          },
-                          // 绘制工具使用拖拽手势和点击手势
-                          onTapDown: (details) {
-                            final position = _getCanvasPosition(
-                              details.localPosition,
-                            );
-                            _handleDrawingToolTap(position);
-                          },
-                          onPanStart: _onDrawingStart,
-                          onPanUpdate: _onDrawingUpdate,
-                          onPanEnd: _onDrawingEnd,
-                          behavior: HitTestBehavior.translucent,
-                        ),
-                      ),
-                    ), // Touch handler for element interaction - 当没有绘制工具选中时
-                  if (_effectiveDrawingTool == null)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      width: kCanvasWidth,
-                      height: kCanvasHeight,
-                      child: Listener(
-                        // 监听触摸板的两指拖动事件
-                        onPointerPanZoomStart: _onTrackpadPanZoomStart,
-                        onPointerPanZoomUpdate: _onTrackpadPanZoomUpdate,
-                        onPointerPanZoomEnd: _onTrackpadPanZoomEnd,
-                        child: GestureDetector(
-                          // 排除触摸板设备，避免与PointerPanZoom事件冲突
-                          supportedDevices: {
-                            PointerDeviceKind.touch,
-                            PointerDeviceKind.mouse,
-                            PointerDeviceKind.stylus,
-                            PointerDeviceKind.invertedStylus,
-                            // 不包含 PointerDeviceKind.trackpad
-                          },
-                          onTapDown: _onElementInteractionTapDown,
-                          onPanStart: _onElementInteractionPanStart,
-                          onPanUpdate: _onElementInteractionPanUpdate,
-                          onPanEnd: _onElementInteractionPanEnd,
-                          behavior: HitTestBehavior.translucent,
-                        ),
-                      ),
+                        return CanvasRuler(
+                          size: rulerSize,
+                          isHorizontal: false,
+                          canvasSize: kCanvasHeight,
+                          scale: scale,
+                          offset: offset,
+                          padding: canvasBoundaryMargin,
+                        );
+                      },
                     ),
-
-                  // DragTarget for receiving legend drags from cache
-                  if (!widget.isPreviewMode)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      width: kCanvasWidth,
-                      height: kCanvasHeight,
-                      child: DragTarget<String>(
-                        onWillAccept: (data) => data != null && data.isNotEmpty,
-                        onAccept: (legendPath) {
-                          // 这个方法主要用于兼容性，实际处理在onAcceptWithDetails中
-                          debugPrint('接收到拖拽的图例(onAccept): $legendPath');
-                        },
-                        onAcceptWithDetails: (details) {
-                          // 获取拖拽释放的位置并转换为画布坐标
-                          final globalPosition = details.offset;
-                          // 将全局坐标转换为画布坐标
-                          final RenderBox? renderBox =
-                              context.findRenderObject() as RenderBox?;
-                          if (renderBox != null) {
-                            final localPosition = renderBox.globalToLocal(
-                              globalPosition,
-                            );
-                            debugPrint(
-                              '拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition',
-                            );
-
-                            // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
-                            final canvasPosition =
-                                _transformLocalToCanvasPosition(localPosition);
-                            debugPrint('转换后的画布坐标: $canvasPosition');
-
-                            _handleLegendDragAccept(
-                              details.data,
-                              canvasPosition,
-                            );
-                          } else {
-                            debugPrint('警告：无法获取RenderBox，使用默认位置处理拖拽');
-                            // 使用默认位置(画布中心)
-                            final defaultPosition = const Offset(
-                              kCanvasWidth / 2,
-                              kCanvasHeight / 2,
-                            );
-                            _handleLegendDragAccept(
-                              details.data,
-                              defaultPosition,
-                            );
-                          }
-                        },
-                        builder: (context, candidateData, rejectedData) {
-                          final isHovering = candidateData.isNotEmpty;
-                          return IgnorePointer(
-                            ignoring: !isHovering, // 只有在悬停时才接收指针事件
-                            child: Container(
-                              color: isHovering
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primary.withValues(alpha: 0.1)
-                                  : Colors.transparent,
-                              child: isHovering
-                                  ? Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                            width: 2,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withValues(alpha: 0.3),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.add_circle_outline,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onPrimaryContainer,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              '释放以添加图例到此位置',
-                                              style: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimaryContainer,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                  ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -642,40 +925,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     }
   }
 
-  /// 将本地坐标转换为画布坐标，考虑 InteractiveViewer 的变换矩阵
+  /// 将本地坐标转换为画布坐标，直接限制在画布边界内
   Offset _transformLocalToCanvasPosition(Offset localPosition) {
-    try {
-      // 获取当前的变换矩阵
-      final Matrix4 transform = _transformationController.value;
-
-      // 提取缩放和平移信息
-      final double scaleX = transform.entry(0, 0); // X轴缩放
-      final double scaleY = transform.entry(1, 1); // Y轴缩放
-      final double translateX = transform.entry(0, 3); // X轴平移
-      final double translateY = transform.entry(1, 3); // Y轴平移
-
-      // 逆向变换：从视口坐标转换为画布坐标
-      final double canvasX = (localPosition.dx - translateX) / scaleX;
-      final double canvasY = (localPosition.dy - translateY) / scaleY;
-
-      // 限制在画布边界内
-      final clampedPosition = Offset(
-        canvasX.clamp(0.0, kCanvasWidth),
-        canvasY.clamp(0.0, kCanvasHeight),
-      );
-
-      debugPrint('坐标转换: 本地($localPosition) -> 画布($clampedPosition)');
-      debugPrint('变换信息: 缩放($scaleX, $scaleY), 平移($translateX, $translateY)');
-
-      return clampedPosition;
-    } catch (e) {
-      debugPrint('坐标转换失败: $e，使用原始坐标');
-      // 如果转换失败，返回限制在画布范围内的原始坐标
-      return Offset(
-        localPosition.dx.clamp(0.0, kCanvasWidth),
-        localPosition.dy.clamp(0.0, kCanvasHeight),
-      );
-    }
+    final canvasPosition = Offset(
+      localPosition.dx.clamp(0.0, kCanvasWidth),
+      localPosition.dy.clamp(0.0, kCanvasHeight),
+    );
+    return canvasPosition;
   }
 
   Widget _buildLayerImageWidget(MapLayer layer) {
@@ -1130,7 +1386,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
   /// 处理图例旋转更新
   void _onLegendRotationUpdate(LegendItem item, DragUpdateDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     // 计算图例中心点
     final legendCenter = Offset(
@@ -1157,7 +1415,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
   // 元素交互手势处理方法  /// 处理元素交互的点击事件
   void _onElementInteractionTapDown(TapDownDetails details) {
-    final canvasPosition = _getCanvasPosition(
+    final canvasPosition = _transformLocalToCanvasPosition(
       details.localPosition,
     ); // 优先检测便签点击
     final hitStickyNote = _getHitStickyNote(canvasPosition);
@@ -1572,7 +1830,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   StickyNoteDragState? _stickyNoteDragState;
 
   void _onElementInteractionPanStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     // ---：优先检测便签交互 ---
     final hitStickyNote = _getHitStickyNote(canvasPosition);
@@ -1589,7 +1849,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           hitStickyNote,
           stickyNoteHitResult,
           details,
-          _getCanvasPosition,
+          _transformLocalToCanvasPosition,
           widget.onStickyNoteUpdated!,
         );
 
@@ -1678,7 +1938,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             resizeHandle,
             details,
             widget.selectedLayer!,
-            _getCanvasPosition,
+            _transformLocalToCanvasPosition,
           );
           return; // 开始调整大小，操作结束
         }
@@ -1693,7 +1953,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             widget.selectedElementId!,
             details,
             widget.selectedLayer!,
-            _getCanvasPosition,
+            _transformLocalToCanvasPosition,
           );
           return; // 开始拖动选中的元素，操作结束
         }
@@ -1728,7 +1988,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           widget.selectedElementId!,
           details,
           widget.selectedLayer!,
-          _getCanvasPosition,
+          _transformLocalToCanvasPosition,
         );
         return;
       }
@@ -1746,12 +2006,21 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
   /// 处理元素交互的拖拽更新事件
   void _onElementInteractionPanUpdate(DragUpdateDetails details) {
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
+
+    // 如果开启了十字线显示功能，手动同步十字线位置
+    if (widget.isCrosshairEnabled) {
+      _crosshairNotifier.value = canvasPosition;
+    }
+
     if (_stickyNoteDragState != null) {
       // 正在拖拽便签
       StickyNoteGestureHelper.handleStickyNotePanUpdate(
         _stickyNoteDragState!,
         details,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
         const Size(kCanvasWidth, kCanvasHeight),
       );
     } else if (_draggingLegendItem != null) {
@@ -1766,7 +2035,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         _elementInteractionManager.resizingElementId!,
         details,
         widget.selectedLayer!,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
       );
     } else if (_elementInteractionManager.isDragging) {
       // 正在拖拽元素
@@ -1774,7 +2043,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         _elementInteractionManager.draggingElementId!,
         details,
         widget.selectedLayer!,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
       );
     } else {
       // 更新选区
@@ -1789,7 +2058,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       StickyNoteGestureHelper.handleStickyNotePanEnd(
         _stickyNoteDragState!,
         details,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
         const Size(kCanvasWidth, kCanvasHeight),
         widget.mapItem.stickyNotes,
         (reorderedNotes) {
@@ -1888,7 +2157,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   void _updateSelectionDrag(DragUpdateDetails details) {
     if (!_isCreatingSelection || _selectionStartPosition == null) return;
 
-    final currentPosition = _getCanvasPosition(details.localPosition);
+    final currentPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     setState(() {
       _selectionRect = Rect.fromPoints(
@@ -1927,7 +2198,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       return;
     }
 
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     // 检查是否点击了旋转拖动柄
     if (widget.selectedElementId == item.id) {
@@ -1973,7 +2246,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   void _onLegendDragUpdate(LegendItem item, DragUpdateDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     // 处理旋转拖动
     if (_rotatingLegendItem?.id == item.id) {
@@ -2368,7 +2643,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   final Map<String, double> _originalOpacityBeforeDrawing = {};
 
   void _onDrawingStart(DragStartDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
 
     // 检测拖拽相关的交互（便签拖拽、元素拖拽等）
     final hitStickyNote = _getHitStickyNote(canvasPosition);
@@ -2385,7 +2662,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           hitStickyNote,
           stickyNoteHitResult,
           details,
-          _getCanvasPosition,
+          _transformLocalToCanvasPosition,
           widget.onStickyNoteUpdated!,
         );
         return;
@@ -2456,7 +2733,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             resizeHandle,
             details,
             widget.selectedLayer!,
-            _getCanvasPosition,
+            _transformLocalToCanvasPosition,
           );
           return;
         }
@@ -2470,7 +2747,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             widget.selectedElementId!,
             details,
             widget.selectedLayer!,
-            _getCanvasPosition,
+            _transformLocalToCanvasPosition,
           );
           return;
         }
@@ -2483,8 +2760,8 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       return;
     }
 
-    // 开始绘制时清除选区
-    clearSelection();
+    // 开始绘制时清除选区，但不清除便签选中状态
+    clearSelection(clearStickyNote: false);
 
     // 检查是否点击在便签内容区域
     bool isDrawingOnStickyNote = false;
@@ -2533,8 +2810,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     // 如果没有在便签内容区域绘制，检查是否有可用的绘制图层
     if (!isDrawingOnStickyNote) {
       // 优先使用选中的图层，如果没有则通过回调获取默认绘制图层
-      final targetLayerId = widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
-      
+      final targetLayerId =
+          widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
+
       if (targetLayerId != null) {
         _drawingToolManager.onDrawingStart(
           details,
@@ -2550,14 +2828,21 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   void _onDrawingUpdate(DragUpdateDetails details) {
-    final canvasPosition = _getCanvasPosition(details.localPosition);
+    final canvasPosition = _transformLocalToCanvasPosition(
+      details.localPosition,
+    );
+
+    // 如果开启了十字线显示功能，手动同步十字线位置
+    if (widget.isCrosshairEnabled) {
+      _crosshairNotifier.value = canvasPosition;
+    }
 
     // 处理便签拖拽更新
     if (_stickyNoteDragState != null) {
       StickyNoteGestureHelper.handleStickyNotePanUpdate(
         _stickyNoteDragState!,
         details,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
         const Size(kCanvasWidth, kCanvasHeight),
       );
       return;
@@ -2581,7 +2866,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         _elementInteractionManager.draggingElementId!,
         details,
         widget.selectedLayer!,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
       );
       return;
     }
@@ -2590,7 +2875,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         _elementInteractionManager.resizingElementId!,
         details,
         widget.selectedLayer!,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
       );
       return;
     }
@@ -2677,12 +2962,6 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   // 获取相对于画布的正确坐标
-  Offset _getCanvasPosition(Offset localPosition) {
-    // localPosition 已经是相对于画布容器的坐标
-    // 对于绘制操作，需要限制在画布范围内
-    // 对于拖拽操作，不应该限制以避免偏移量计算错误
-    return localPosition;
-  }
 
   void _onDrawingEnd(DragEndDetails details) {
     // 处理便签拖拽结束
@@ -2690,7 +2969,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       StickyNoteGestureHelper.handleStickyNotePanEnd(
         _stickyNoteDragState!,
         details,
-        _getCanvasPosition,
+        _transformLocalToCanvasPosition,
         const Size(kCanvasWidth, kCanvasHeight),
         widget.mapItem.stickyNotes,
         widget.onStickyNotesReordered ?? (notes) {},
@@ -2762,7 +3041,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         final targetLayer = widget.mapItem.layers
             .where((layer) => layer.id == targetLayerId)
             .firstOrNull;
-        
+
         _drawingToolManager.onDrawingEnd(
           details,
           _effectiveDrawingTool,
@@ -3047,6 +3326,26 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     }
 
     return queueLayers;
+  }
+
+  /// 构建导出时的单个图层元素
+  List<Widget> _buildExportLayerElements(String layerId) {
+    final layer = widget.mapItem.layers.firstWhere(
+      (l) => l.id == layerId,
+      orElse: () => throw Exception('Layer not found: $layerId'),
+    );
+
+    final widgets = <Widget>[];
+
+    // 添加图层图片（如果有）
+    if (layer.imageData != null) {
+      widgets.add(_buildLayerImageWidget(layer));
+    }
+
+    // 添加图层绘制元素
+    widgets.add(_buildLayerWidget(layer));
+
+    return widgets;
   }
 
   // 绘画元素选择和操作相关方法
@@ -3440,11 +3739,19 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       }
     }
 
-    // 如果不在便签内容区域，且有选中的图层，则在图层上创建文本
-    if (widget.selectedLayer != null) {
+    // 如果不在便签内容区域，获取目标图层（优先选中图层，否则通过回调获取默认图层）
+    final targetLayerId = widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
+    
+    if (targetLayerId != null) {
+      // 查找目标图层
+      final targetLayer = widget.mapItem.layers.firstWhere(
+        (layer) => layer.id == targetLayerId,
+        orElse: () => widget.mapItem.layers.first, // 如果找不到，使用第一个图层作为后备
+      );
+      
       _drawingToolManager.showTextInputDialogWithSize(
         textPosition,
-        widget.selectedLayer!,
+        targetLayer,
         fontSize,
         _effectiveColor,
         _effectiveStrokeWidth,
@@ -4033,5 +4340,111 @@ class _QueueRenderPainter extends CustomPainter {
       }
     }
     return true;
+  }
+}
+
+/// 十字线绘制器
+/// 在鼠标位置绘制垂直和水平线，并显示精确的坐标测量值
+class _CrosshairPainter extends CustomPainter {
+  final Offset position;
+  final TransformationController transformationController;
+
+  _CrosshairPainter(this.position, this.transformationController);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 直接使用画布坐标，不需要变换
+    final displayX = position.dx;
+    final displayY = position.dy;
+
+    // 十字线画笔
+    final crosshairPaint = Paint()
+      ..color = Colors.red.withValues(alpha: 0.8)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    // 绘制垂直线（从顶部到底部）
+    canvas.drawLine(
+      Offset(displayX, 0),
+      Offset(displayX, size.height),
+      crosshairPaint,
+    );
+
+    // 绘制水平线（从左侧到右侧）
+    canvas.drawLine(
+      Offset(0, displayY),
+      Offset(size.width, displayY),
+      crosshairPaint,
+    );
+
+    // 绘制坐标标签
+    _drawCoordinateLabels(canvas, size, displayX, displayY);
+  }
+
+  /// 绘制坐标标签
+  void _drawCoordinateLabels(
+    Canvas canvas,
+    Size size,
+    double displayX,
+    double displayY,
+  ) {
+    // 文本样式
+    const textStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+    );
+
+    // 背景画笔
+    final backgroundPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.7)
+      ..style = PaintingStyle.fill;
+
+    // 显示画布坐标（与刻度尺一致的像素坐标）
+    final xText = 'X: ${position.dx.toStringAsFixed(0)}';
+    final yText = 'Y: ${position.dy.toStringAsFixed(0)}';
+
+    // 创建组合坐标标签
+    final coordinateText = '$xText, $yText';
+    final textPainter = TextPainter(
+      text: TextSpan(text: coordinateText, style: textStyle),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+
+    // 标签位置（在十字线交点附近，优先显示在右下方）
+    double labelX = displayX + 8;
+    double labelY = displayY + 8;
+
+    // 如果右下方超出边界，调整到其他位置
+    if (labelX + textPainter.width + 8 > size.width) {
+      labelX = displayX - textPainter.width - 8; // 移到左侧
+    }
+    if (labelY + textPainter.height + 4 > size.height) {
+      labelY = displayY - textPainter.height - 8; // 移到上方
+    }
+
+    // 确保不超出左边界和上边界
+    labelX = labelX.clamp(4.0, size.width - textPainter.width - 8);
+    labelY = labelY.clamp(4.0, size.height - textPainter.height - 4);
+
+    final labelRect = Rect.fromLTWH(
+      labelX - 4,
+      labelY - 2,
+      textPainter.width + 8,
+      textPainter.height + 4,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(labelRect, const Radius.circular(4)),
+      backgroundPaint,
+    );
+    textPainter.paint(canvas, Offset(labelX, labelY));
+  }
+
+  @override
+  bool shouldRepaint(_CrosshairPainter oldDelegate) {
+    return oldDelegate.position != position ||
+        oldDelegate.transformationController != transformationController;
   }
 }

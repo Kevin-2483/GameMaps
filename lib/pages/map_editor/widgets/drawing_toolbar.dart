@@ -45,6 +45,7 @@ class DrawingToolbarOptimized extends StatefulWidget {
   final String? selectedElementId; // 当前选中的元素ID
   final Function(String? elementId)? onElementSelected; // 元素选中回调
   final VoidCallback? onZIndexInspectorRequested; // Z层级检视器显示回调
+  final MapLayer? Function()? getCurrentDrawingTargetLayer; // 获取当前绘制目标图层回调
 
   // 图片缓冲区相关回调
   final Uint8List? imageBufferData; // 当前缓冲区中的图片数据
@@ -83,6 +84,7 @@ class DrawingToolbarOptimized extends StatefulWidget {
     this.selectedElementId,
     this.onElementSelected,
     this.onZIndexInspectorRequested,
+    this.getCurrentDrawingTargetLayer,
     // 图片缓冲区相关参数
     this.imageBufferData,
     this.imageBufferFit = BoxFit.contain,
@@ -768,9 +770,6 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
 
             const SizedBox(height: 16), // Z层级检视器按钮
-            if ((widget.selectedLayer != null ||
-                    widget.selectedStickyNote != null) &&
-                widget.onZIndexInspectorRequested != null)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -779,7 +778,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   label: Text(
                     widget.selectedStickyNote != null
                         ? '便签元素检视器 (${widget.selectedStickyNote!.elements.length})'
-                        : 'Z层级检视器 (${widget.selectedLayer!.elements.length})',
+                        : widget.selectedLayer != null
+                        ? 'Z层级检视器 (${widget.selectedLayer!.elements.length})'
+                        : 'Z层级检视器 (${widget.getCurrentDrawingTargetLayer?.call()?.elements.length ?? 0})',
                   ),
                 ),
               ),
