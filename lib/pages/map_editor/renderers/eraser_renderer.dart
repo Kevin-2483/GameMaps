@@ -30,12 +30,7 @@ class EraserRenderer {
         .toList();
     if (affectingErasers.isEmpty) {
       // 没有橡皮擦影响，直接绘制
-      // 调试信息：检查图片选区元素
-      if (element.type == DrawingElementType.imageArea) {
-        debugPrint(
-          'EraserRenderer: 绘制便签图片选区元素, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
-        );
-      }
+
 
       ElementRenderer.drawElement(
         canvas,

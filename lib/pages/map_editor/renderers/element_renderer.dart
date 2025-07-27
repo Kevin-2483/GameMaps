@@ -172,19 +172,6 @@ class ElementRenderer {
   }) {
     if (element.points.length < 2) return;
 
-    // 调试信息：检查图片选区渲染
-    debugPrint('ElementRenderer._drawImageArea: 开始渲染图片选区');
-    debugPrint(
-      '  element.imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
-    );
-    debugPrint('  imageCache=${imageCache?.length ?? 0} items');
-    debugPrint(
-      '  imageBufferCachedImage=${imageBufferCachedImage != null ? 'available' : 'null'}',
-    );
-    debugPrint(
-      '  currentImageBufferData=${currentImageBufferData != null ? '${currentImageBufferData.length} bytes' : 'null'}',
-    );
-
     final start = Offset(
       element.points[0].dx * size.width,
       element.points[0].dy * size.height,
@@ -219,10 +206,10 @@ class ElementRenderer {
     } // 绘制图片内容
     if (element.imageData != null) {
       // 1. 优先使用元素自己的图片数据
-      debugPrint('  使用元素自己的图片数据，检查缓存: element.id=${element.id}');
+      // debugPrint('  使用元素自己的图片数据: element.id=${element.id}, 数据大小=${element.imageData!.length} bytes');
       final cachedImage = imageCache?[element.id];
       if (cachedImage != null) {
-        debugPrint('  找到缓存图片，开始绘制');
+        // debugPrint('  找到缓存图片，直接绘制');
         drawCachedImage(
           canvas,
           cachedImage,
@@ -230,21 +217,22 @@ class ElementRenderer {
           element.imageFit ?? BoxFit.contain,
         );
       } else {
-        debugPrint('  没有找到缓存图片，显示加载占位符');
-        // 如果没有缓存，显示蓝色加载占位符
+        // debugPrint('  元素有图片数据但未缓存，触发异步解码');
+        // 元素有图片数据但未缓存，显示加载占位符并触发异步解码
+        // 注意：实际的解码应该在MapCanvas中处理，这里只显示占位符
         drawImageBufferLoadingPlaceholder(canvas, rect);
       }
     } else if (imageBufferCachedImage != null) {
       // 2. 使用图片缓冲区的缓存图片
-      debugPrint('  使用图片缓冲区的缓存图片');
+      // debugPrint('  使用图片缓冲区的缓存图片');
       drawCachedImage(canvas, imageBufferCachedImage, rect, imageBufferFit);
     } else if (currentImageBufferData != null) {
       // 3. 显示图片缓冲区加载占位符
-      debugPrint('  显示图片缓冲区加载占位符');
+      // debugPrint('  显示图片缓冲区加载占位符');
       drawImageBufferLoadingPlaceholder(canvas, rect);
     } else {
       // 4. 显示空图片占位符
-      debugPrint('  显示空图片占位符');
+      // debugPrint('  显示空图片占位符');
       drawImageEmptyPlaceholder(canvas, rect, imageBufferFit);
     }
 

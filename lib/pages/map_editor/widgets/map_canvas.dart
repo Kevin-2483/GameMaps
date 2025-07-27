@@ -53,6 +53,8 @@ class DrawingPreviewData {
   final StickyNote? targetStickyNote; // 目标便签（如果在便签上绘制）
   final String? text; // 文本内容（用于文本框）
   final double? fontSize; // 字体大小（用于文本框）
+  final Uint8List? imageData; // 图片数据（用于图片选区）
+  final BoxFit? imageFit; // 图片适应方式（用于图片选区）
 
   const DrawingPreviewData({
     required this.start,
@@ -67,6 +69,8 @@ class DrawingPreviewData {
     this.targetStickyNote,
     this.text,
     this.fontSize,
+    this.imageData,
+    this.imageFit,
   });
 }
 
@@ -3658,17 +3662,45 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       _preloadLayerImages();
     }
 
-    //：检查是否是新地图或图层数据发生了变化，如果是则预加载所有图片
-    // if (oldWidget.mapItem != widget.mapItem) {
-    //   // 清理所有图片缓存，因为地图数据已经完全改变
-    //   _clearAllImageCache();
-    //   _preloadAllLayerImages();
-    // } else {
-    //   // 检查图层元素是否发生变化（撤销/重做等操作）
-    //   _checkAndCleanOrphanedImageCache();
-    // }
+    // 检查是否有新的图片元素需要预加载
+    _checkAndPreloadNewImageElements(oldWidget);
+
     // 检查图层元素是否发生变化（撤销/重做等操作）
     _checkAndCleanOrphanedImageCache();
+  }
+
+  /// 检查并预加载新的图片元素
+  void _checkAndPreloadNewImageElements(MapCanvas oldWidget) {
+    // 收集旧的图片元素ID
+    final Set<String> oldImageElementIds = {};
+    for (final layer in oldWidget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null) {
+          oldImageElementIds.add(element.id);
+        }
+      }
+    }
+
+    // 检查当前的图片元素，找出新添加的
+    final List<MapDrawingElement> newImageElements = [];
+    for (final layer in widget.mapItem.layers) {
+      for (final element in layer.elements) {
+        if (element.type == DrawingElementType.imageArea &&
+            element.imageData != null &&
+            !oldImageElementIds.contains(element.id)) {
+          newImageElements.add(element);
+        }
+      }
+    }
+
+    // 立即预加载新的图片元素
+    if (newImageElements.isNotEmpty) {
+      debugPrint('检测到 ${newImageElements.length} 个新的图片元素，开始预加载');
+      for (final element in newImageElements) {
+        _getOrDecodeElementImage(element);
+      }
+    }
   }
 
   /// 清理所有图片缓存

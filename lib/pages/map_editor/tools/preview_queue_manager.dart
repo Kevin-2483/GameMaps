@@ -269,6 +269,9 @@ class PreviewQueueManager {
       zIndex: zIndex,
       text: previewData.text,
       fontSize: previewData.fontSize,
+      // 添加图片数据字段
+      imageData: previewData.imageData,
+      imageFit: previewData.imageFit,
       createdAt: item.createdAt,
     );
   }

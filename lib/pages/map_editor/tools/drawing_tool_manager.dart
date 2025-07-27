@@ -110,6 +110,8 @@ class DrawingToolManager {
       freeDrawingPath: effectiveDrawingTool == DrawingElementType.freeDrawing
           ? _freeDrawingPath
           : null,
+      imageData: null,
+      imageFit: null,
     );
   }
 
@@ -143,6 +145,8 @@ class DrawingToolManager {
         curvature: effectiveCurvature,
         triangleCut: effectiveTriangleCut,
         freeDrawingPath: _freeDrawingPath,
+        imageData: null,
+        imageFit: null,
       );
       return;
     }
@@ -158,6 +162,8 @@ class DrawingToolManager {
       curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
       freeDrawingPath: null,
+      imageData: null,
+      imageFit: null,
     );
   }
 
@@ -247,6 +253,8 @@ class DrawingToolManager {
       density: 1.0,
       curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
+      imageData: null,
+      imageFit: null,
     );
 
     // 通过预览队列管理器处理橡皮擦元素添加
@@ -285,6 +293,8 @@ class DrawingToolManager {
       curvature: effectiveCurvature,
       triangleCut: TriangleCutType.none,
       freeDrawingPath: normalizedPoints,
+      imageData: null,
+      imageFit: null,
     );
 
     // 通过预览队列管理器处理自由绘制元素添加
@@ -326,6 +336,8 @@ class DrawingToolManager {
       triangleCut: TriangleCutType.none,
       text: text,
       fontSize: fontSize,
+      imageData: null,
+      imageFit: null,
     );
 
     // 通过预览队列管理器处理文本元素添加
@@ -678,6 +690,7 @@ class DrawingToolManager {
     Uint8List? imageBufferData,
     BoxFit imageBufferFit,
   ) {
+
     // 创建预览数据
     final previewData = DrawingPreviewData(
       start: normalizedStart,
@@ -688,6 +701,13 @@ class DrawingToolManager {
       density: effectiveDensity,
       curvature: effectiveCurvature,
       triangleCut: effectiveTriangleCut,
+      // 对于图片选区工具，将缓冲区数据复制到预览数据中
+      imageData: elementType == DrawingElementType.imageArea
+          ? imageBufferData
+          : null,
+      imageFit: elementType == DrawingElementType.imageArea
+          ? imageBufferFit
+          : null,
     );
 
     // 通过预览队列管理器处理元素添加
@@ -787,6 +807,8 @@ class DrawingToolManager {
           ? List.from(_freeDrawingPath)
           : null,
       targetStickyNote: targetStickyNote,
+      imageData: null,
+      imageFit: null,
     );
   }
 
@@ -828,6 +850,8 @@ class DrawingToolManager {
         triangleCut: effectiveTriangleCut,
         freeDrawingPath: List.from(_freeDrawingPath),
         targetStickyNote: _currentDrawingStickyNote,
+        imageData: null,
+        imageFit: null,
       );
       return;
     }
@@ -843,6 +867,8 @@ class DrawingToolManager {
       triangleCut: effectiveTriangleCut,
       freeDrawingPath: null,
       targetStickyNote: _currentDrawingStickyNote,
+      imageData: null,
+      imageFit: null,
     );
   }
 
