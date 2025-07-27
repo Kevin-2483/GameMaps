@@ -12,6 +12,7 @@ enum StickyNoteHitType {
   titleBar, // 标题栏（用于拖拽便签）
   resizeHandle, // 调整大小手柄
   collapseButton, // 折叠/展开按钮
+  editButton, // 编辑按钮
 }
 
 /// 便签显示组件
@@ -178,7 +179,22 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          ), // 折叠/展开按钮
+          ),
+          // 编辑按钮
+          if (!widget.isPreviewMode)
+            GestureDetector(
+              onTap: _editNote,
+              behavior: HitTestBehavior.opaque, // 确保按钮区域可以接收点击
+              child: Container(
+                padding: const EdgeInsets.all(4), // 增加点击区域
+                child: Icon(
+                  Icons.edit,
+                  size: 16,
+                  color: widget.note.textColor,
+                ),
+              ),
+            ),
+          // 折叠/展开按钮
           if (!widget.isPreviewMode)
             GestureDetector(
               onTap: _toggleCollapse,
@@ -228,6 +244,9 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
           children: [
             // 背景图片（如果有）
             if (widget.note.hasBackgroundImage) _buildBackgroundImage(),
+
+            // 便签文本内容层（在背景上层，绘制下层）
+            if (widget.note.content.isNotEmpty) _buildTextContent(),
 
             // 便签绘制元素层
             if (widget.note.elements.isNotEmpty) _buildDrawingElements(),
@@ -374,6 +393,26 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
     );
   }
 
+  /// 构建便签文本内容
+  Widget _buildTextContent() {
+    return Positioned.fill(
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        child: SingleChildScrollView(
+          child: Text(
+            widget.note.content,
+            style: TextStyle(
+              color: widget.note.textColor,
+              fontSize: 16,
+              height: 1.3,
+            ),
+            textAlign: TextAlign.left,
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 构建便签绘制元素
   Widget _buildDrawingElements() {
     // 合并widget的imageCache和本地图片缓存
@@ -477,6 +516,14 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
     widget.onNoteUpdated?.call(updatedNote);
   }
 
+  /// 编辑便签
+  void _editNote() {
+    // 这里只是一个占位符方法
+    // 实际的编辑逻辑将在地图画布中处理
+    // 通过onNoteUpdated回调通知上层组件
+    debugPrint('编辑便签: ${widget.note.id}');
+  }
+
   /// 检查当前便签是否没有队列项目
   bool _hasNoQueueItems() {
     if (widget.previewQueueManager == null) {
@@ -560,16 +607,29 @@ class StickyNoteGestureHelper {
     final titleBarRect = Rect.fromLTWH(0, 0, noteSize.width, titleBarHeight);
 
     if (titleBarRect.contains(localPosition)) {
-      // 在标题栏内，进一步检查是否点击了折叠按钮
-      const double collapseButtonSize = 24.0; // 折叠按钮区域大小（包括padding）
+      // 在标题栏内，进一步检查是否点击了按钮
+      const double buttonSize = 24.0; // 按钮区域大小（包括padding）
+      
+      // 检查折叠按钮（最右边）
       final collapseButtonRect = Rect.fromLTWH(
-        noteSize.width - collapseButtonSize, // 右对齐
+        noteSize.width - buttonSize, // 右对齐
         0,
-        collapseButtonSize,
+        buttonSize,
         titleBarHeight,
       );
       if (collapseButtonRect.contains(localPosition)) {
         return StickyNoteHitType.collapseButton;
+      }
+      
+      // 检查编辑按钮（折叠按钮左边）
+      final editButtonRect = Rect.fromLTWH(
+        noteSize.width - buttonSize * 2, // 在折叠按钮左边
+        0,
+        buttonSize,
+        titleBarHeight,
+      );
+      if (editButtonRect.contains(localPosition)) {
+        return StickyNoteHitType.editButton;
       }
 
       return StickyNoteHitType.titleBar;
@@ -616,6 +676,11 @@ class StickyNoteGestureHelper {
       case StickyNoteHitType.collapseButton:
         // 对于折叠按钮，我们不启动拖拽
         // 折叠操作应该在 TapDown 事件中处理
+        return null; // 不返回拖拽状态
+        
+      case StickyNoteHitType.editButton:
+        // 对于编辑按钮，我们不启动拖拽
+        // 编辑操作应该在 TapDown 事件中处理
         return null; // 不返回拖拽状态
     }
   }

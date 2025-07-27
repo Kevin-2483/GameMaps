@@ -280,21 +280,21 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     IconData icon,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
           Text(
             '$title ($count)',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
           Expanded(
-            child: Divider(indent: 8, color: color.withValues(alpha: 0.3)),
+            child: Divider(indent: 6, color: color.withValues(alpha: 0.3)),
           ),
         ],
       ),
@@ -307,31 +307,47 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     List<String> legends, [
     Color? backgroundColor,
   ]) {
+    // 只显示路径的最后一节
+    final displayName = directory == '根目录' ? '根目录' : directory.split('/').last;
+    
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: 1),
       color: backgroundColor?.withValues(
         alpha: Theme.of(context).brightness == Brightness.dark ? 0.1 : 1.0,
       ),
       child: ExpansionTile(
-        title: Text(
-          directory,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        subtitle: Text(
-          '${legends.length} 个图例',
-          style: TextStyle(
-            fontSize: 11,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        leading: Icon(
-          Icons.folder,
-          size: 20,
-          color: Theme.of(context).colorScheme.primary,
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        childrenPadding: EdgeInsets.zero,
+        title: Row(
+          children: [
+            Icon(
+              Icons.folder,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                displayName,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${legends.length}',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
         ),
         children: [
           Padding(

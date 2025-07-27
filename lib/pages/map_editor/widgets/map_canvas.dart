@@ -309,7 +309,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   /// 导出指定图层为图像
   /// [layerId] 要导出的图层ID
   /// [includeBackground] 是否包含背景图案，默认为true
-  Future<ui.Image?> exportLayer(String layerId, {bool includeBackground = true}) async {
+  Future<ui.Image?> exportLayer(
+    String layerId, {
+    bool includeBackground = true,
+  }) async {
     try {
       // 设置导出状态
       setState(() {
@@ -321,9 +324,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       await Future.delayed(const Duration(milliseconds: 16));
 
       // 捕获图像
-      final RenderRepaintBoundary? boundary = _exportBoundaryKey.currentContext
-          ?.findRenderObject() as RenderRepaintBoundary?;
-      
+      final RenderRepaintBoundary? boundary =
+          _exportBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+
       if (boundary != null) {
         final image = await boundary.toImage(pixelRatio: 1.0);
         return image;
@@ -343,7 +347,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   /// 导出多个图层为图像（占位符方法）
   /// [layerIds] 要导出的图层ID列表
   /// [includeBackground] 是否包含背景图案，默认为true
-  Future<ui.Image?> exportLayers(List<String> layerIds, {bool includeBackground = true}) async {
+  Future<ui.Image?> exportLayers(
+    List<String> layerIds, {
+    bool includeBackground = true,
+  }) async {
     // TODO: 实现多图层导出功能
     // 目前作为占位符，返回第一个图层的导出结果
     if (layerIds.isNotEmpty) {
@@ -358,7 +365,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   Future<List<ui.Image?>> exportLayerGroups(List<dynamic> exportItems) async {
     final List<ui.Image?> results = [];
     List<dynamic> currentGroup = [];
-    
+
     // 按分割线分组
     for (final item in exportItems) {
       if (item.runtimeType.toString().contains('DividerExportItem')) {
@@ -372,36 +379,38 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         currentGroup.add(item);
       }
     }
-    
+
     // 导出最后一组（如果有）
     if (currentGroup.isNotEmpty) {
       final groupImage = await _exportItemGroup(currentGroup);
       results.add(groupImage);
     }
-    
+
     return results;
   }
-  
+
   /// 导出单个项目组（堆叠渲染）
   Future<ui.Image?> _exportItemGroup(List<dynamic> items) async {
     if (items.isEmpty) return null;
-    
+
     // 设置导出状态和当前导出项目
     setState(() {
       _exportingLayerId = 'group_export';
       _currentExportItems = items;
     });
-    
+
     // 等待UI更新
     await Future.delayed(const Duration(milliseconds: 50));
-    
+
     try {
-      final boundary = _exportBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _exportBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         debugPrint('导出边界未找到');
         return null;
       }
-      
+
       final image = await boundary.toImage(pixelRatio: 2.0);
       return image;
     } catch (e) {
@@ -417,46 +426,34 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       }
     }
   }
-  
+
   /// 构建导出组元素（支持堆叠渲染）
   List<Widget> _buildExportGroupElements(List<dynamic> items) {
     final List<Widget> widgets = [];
-    
+
     // 按顺序处理每个项目，实现堆叠效果
     for (int i = 0; i < items.length; i++) {
       final item = items[i];
-      
+
       if (item.runtimeType.toString().contains('LayerExportItem')) {
         // 获取图层对象
         final layer = (item as dynamic).layer as MapLayer;
-        
+
         // 添加图层图片（如果有）- 图片在绘制元素之下
         if (layer.imageData != null) {
-          widgets.add(
-            Positioned.fill(
-              child: _buildLayerImageWidget(layer),
-            ),
-          );
+          widgets.add(Positioned.fill(child: _buildLayerImageWidget(layer)));
         }
-        
+
         // 添加图层绘制元素 - 绘制元素在图片之上
-        widgets.add(
-          Positioned.fill(
-            child: _buildLayerWidget(layer),
-          ),
-        );
-        
-      } else if (item.runtimeType.toString().contains('LegendGroupExportItem')) {
+        widgets.add(Positioned.fill(child: _buildLayerWidget(layer)));
+      } else if (item.runtimeType.toString().contains(
+        'LegendGroupExportItem',
+      )) {
         // 获取图例组对象
         final legendGroup = (item as dynamic).legendGroup as LegendGroup;
-        
+
         // 添加图例组渲染
-        widgets.add(
-          Positioned.fill(
-            child: _buildLegendWidget(legendGroup),
-          ),
-        );
-        
+        widgets.add(Positioned.fill(child: _buildLegendWidget(legendGroup)));
       } else if (item.runtimeType.toString().contains('BackgroundExportItem')) {
         // 添加背景图案 - 背景在对应位置渲染
         widgets.add(
@@ -476,7 +473,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       } else if (item.runtimeType.toString().contains('StickyNoteExportItem')) {
         // 获取便签对象
         final stickyNote = (item as dynamic).stickyNote as StickyNote;
-        
+
         // 只渲染可见的便签
         if (stickyNote.isVisible) {
           // 转换相对坐标到画布坐标
@@ -488,11 +485,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             stickyNote.size.width * kCanvasWidth,
             stickyNote.size.height * kCanvasHeight,
           );
-          
+
           // 计算有效高度（考虑折叠状态）
           const double titleBarHeight = 36.0;
-          final effectiveHeight = stickyNote.isCollapsed ? titleBarHeight : size.height;
-          
+          final effectiveHeight = stickyNote.isCollapsed
+              ? titleBarHeight
+              : size.height;
+
           // 使用与画布相同的StickyNoteDisplay组件
           widgets.add(
             Positioned(
@@ -517,7 +516,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         }
       }
     }
-    
+
     return widgets;
   }
 
@@ -747,40 +746,48 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                   ),
 
                                   // 导出时的临时RepaintBoundary
-                                if (_exportingLayerId != null)
-                                  Positioned.fill(
-                                    child: RepaintBoundary(
-                                      key: _exportBoundaryKey,
-                                      child: Container(
-                                        width: kCanvasWidth,
-                                        height: kCanvasHeight,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent, // 始终使用透明背景以支持透明PNG
+                                  if (_exportingLayerId != null)
+                                    Positioned.fill(
+                                      child: RepaintBoundary(
+                                        key: _exportBoundaryKey,
+                                        child: Container(
+                                          width: kCanvasWidth,
+                                          height: kCanvasHeight,
+                                          decoration: BoxDecoration(
+                                            color: Colors
+                                                .transparent, // 始终使用透明背景以支持透明PNG
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // 渲染导出内容（支持分组堆叠）
+                                              if (_exportingLayerId ==
+                                                  'group_export')
+                                                ..._buildExportGroupElements(
+                                                  _currentExportItems ?? [],
+                                                )
+                                              else ...[
+                                                // 背景图案（仅在包含背景时显示）
+                                                if (_exportIncludeBackground)
+                                                  Positioned.fill(
+                                                    child: CustomPaint(
+                                                      painter:
+                                                          _BackgroundPatternPainter(
+                                                            widget
+                                                                .backgroundPattern,
+                                                            context: context,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                // 只渲染指定的图层
+                                                ..._buildExportLayerElements(
+                                                  _exportingLayerId!,
+                                                ),
+                                              ],
+                                            ],
+                                          ),
                                         ),
-                                        child: Stack(
-                                           children: [
-                                             // 渲染导出内容（支持分组堆叠）
-                                             if (_exportingLayerId == 'group_export')
-                                               ..._buildExportGroupElements(_currentExportItems ?? [])
-                                             else ...[  
-                                               // 背景图案（仅在包含背景时显示）
-                                               if (_exportIncludeBackground)
-                                                 Positioned.fill(
-                                                   child: CustomPaint(
-                                                     painter: _BackgroundPatternPainter(
-                                                       widget.backgroundPattern,
-                                                       context: context,
-                                                     ),
-                                                   ),
-                                                 ),
-                                               // 只渲染指定的图层
-                                               ..._buildExportLayerElements(_exportingLayerId!),
-                                             ],
-                                           ],
-                                         ),
                                       ),
                                     ),
-                                  ),
 
                                   // Touch handler for drawing - 覆盖整个画布区域
                                   if (_effectiveDrawingTool != null)
@@ -888,7 +895,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
                                             // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
                                             final canvasPosition =
-                                                _transformLocalToCanvasPosition(
+                                                _getCanvasPosition(
                                                   localPosition,
                                                 );
                                             debugPrint(
@@ -1107,6 +1114,41 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       localPosition.dy.clamp(0.0, kCanvasHeight),
     );
     return canvasPosition;
+  }
+
+  Offset _getCanvasPosition(Offset localPosition) {
+    try {
+      // 获取当前的变换矩阵
+      final Matrix4 transform = _transformationController.value;
+
+      // 提取缩放和平移信息
+      final double scaleX = transform.entry(0, 0); // X轴缩放
+      final double scaleY = transform.entry(1, 1); // Y轴缩放
+      final double translateX = transform.entry(0, 3); // X轴平移
+      final double translateY = transform.entry(1, 3); // Y轴平移
+
+      // 逆向变换：从视口坐标转换为画布坐标
+      final double canvasX = (localPosition.dx - translateX) / scaleX;
+      final double canvasY = (localPosition.dy - translateY) / scaleY;
+
+      // 限制在画布边界内
+      final clampedPosition = Offset(
+        canvasX.clamp(0.0, kCanvasWidth),
+        canvasY.clamp(0.0, kCanvasHeight),
+      );
+
+      debugPrint('坐标转换: 本地($localPosition) -> 画布($clampedPosition)');
+      debugPrint('变换信息: 缩放($scaleX, $scaleY), 平移($translateX, $translateY)');
+
+      return clampedPosition;
+    } catch (e) {
+      debugPrint('坐标转换失败: $e，使用原始坐标');
+      // 如果转换失败，返回限制在画布范围内的原始坐标
+      return Offset(
+        localPosition.dx.clamp(0.0, kCanvasWidth),
+        localPosition.dy.clamp(0.0, kCanvasHeight),
+      );
+    }
   }
 
   Widget _buildLayerImageWidget(MapLayer layer) {
@@ -1608,6 +1650,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           updatedAt: DateTime.now(),
         );
         widget.onStickyNoteUpdated!(updatedNote);
+        return;
+      }
+      
+      // 如果点击了编辑按钮，处理编辑操作
+      if (stickyNoteHitResult == StickyNoteHitType.editButton &&
+          widget.onStickyNoteUpdated != null) {
+        _showStickyNoteEditDialog(hitStickyNote);
         return;
       }
 
@@ -2814,6 +2863,71 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     widget.onStickyNoteOpacityChanged?.call(noteId, opacity);
   }
 
+  /// 显示便签编辑对话框
+  void _showStickyNoteEditDialog(StickyNote note) {
+    final titleController = TextEditingController(text: note.title);
+    final contentController = TextEditingController(text: note.content);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('编辑便签'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: '标题',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 1,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: contentController,
+                  decoration: const InputDecoration(
+                    labelText: '内容',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 5,
+                  minLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final updatedNote = note.copyWith(
+                  title: titleController.text.trim().isEmpty 
+                      ? '无标题便签' 
+                      : titleController.text.trim(),
+                  content: contentController.text,
+                  updatedAt: DateTime.now(),
+                );
+                widget.onStickyNoteUpdated!(updatedNote);
+                Navigator.of(context).pop();
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      // 清理控制器
+      titleController.dispose();
+      contentController.dispose();
+    });
+  }
+
   // 用于存储绘制时降低透明度的便签原始透明度
   final Map<String, double> _originalOpacityBeforeDrawing = {};
 
@@ -3839,6 +3953,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         widget.onStickyNoteUpdated!(updatedNote);
         return;
       }
+      
+      // 如果点击了编辑按钮，处理编辑操作
+      if (stickyNoteHitResult == StickyNoteHitType.editButton &&
+          widget.onStickyNoteUpdated != null) {
+        _showStickyNoteEditDialog(hitStickyNote);
+        return;
+      }
     }
 
     // 如果命中了空白，清除选择并开始绘制
@@ -3915,15 +4036,16 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     }
 
     // 如果不在便签内容区域，获取目标图层（优先选中图层，否则通过回调获取默认图层）
-    final targetLayerId = widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
-    
+    final targetLayerId =
+        widget.selectedLayer?.id ?? widget.getSelectedLayerId?.call();
+
     if (targetLayerId != null) {
       // 查找目标图层
       final targetLayer = widget.mapItem.layers.firstWhere(
         (layer) => layer.id == targetLayerId,
         orElse: () => widget.mapItem.layers.first, // 如果找不到，使用第一个图层作为后备
       );
-      
+
       _drawingToolManager.showTextInputDialogWithSize(
         textPosition,
         targetLayer,

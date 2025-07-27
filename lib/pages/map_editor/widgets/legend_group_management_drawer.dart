@@ -726,21 +726,21 @@ class _LegendGroupManagementDrawerState
                 // 设置选项 (可折叠)
                 if (!_isSettingsExpanded)
                   Container(
-                    height: 48.0,
+                    height: 40.0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: InkWell(
                       onTap: () => _togglePanel('settings'),
                       child: Row(
                         children: [
-                          const Icon(Icons.settings, size: 20),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.settings, size: 18),
+                          const SizedBox(width: 6),
                           const Expanded(
                             child: Text(
                               '设置选项',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                           ),
-                          const Icon(Icons.expand_more, size: 20),
+                          const Icon(Icons.expand_more, size: 18),
                         ],
                       ),
                     ),
@@ -754,7 +754,7 @@ class _LegendGroupManagementDrawerState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            height: 48.0,
+                            height: 40.0,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               color: Theme.of(context)
@@ -769,19 +769,19 @@ class _LegendGroupManagementDrawerState
                               onTap: () => _togglePanel('settings'),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.settings, size: 20),
-                                  SizedBox(width: 8),
+                                  Icon(Icons.settings, size: 18),
+                                  SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       '设置选项',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.expand_less, size: 20),
+                                  SizedBox(width: 6),
+                                  Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
@@ -795,21 +795,21 @@ class _LegendGroupManagementDrawerState
                 // VFS目录树 (可折叠)
                 if (!_isVfsTreeExpanded)
                   Container(
-                    height: 48.0,
+                    height: 40.0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: InkWell(
                       onTap: () => _togglePanel('vfsTree'),
                       child: Row(
                         children: [
-                          const Icon(Icons.folder_outlined, size: 20),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.folder_outlined, size: 18),
+                          const SizedBox(width: 6),
                           const Expanded(
                             child: Text(
                               'VFS图例目录',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                           ),
-                          const Icon(Icons.expand_more, size: 20),
+                          const Icon(Icons.expand_more, size: 18),
                         ],
                       ),
                     ),
@@ -823,7 +823,7 @@ class _LegendGroupManagementDrawerState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            height: 48.0,
+                            height: 40.0,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               color: Theme.of(context)
@@ -838,19 +838,19 @@ class _LegendGroupManagementDrawerState
                               onTap: () => _togglePanel('vfsTree'),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.folder_outlined, size: 20),
-                                  SizedBox(width: 8),
+                                  Icon(Icons.folder_outlined, size: 18),
+                                  SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       'VFS图例目录',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.expand_less, size: 20),
+                                  SizedBox(width: 6),
+                                  Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
@@ -873,21 +873,21 @@ class _LegendGroupManagementDrawerState
                 // 缓存图例 (可折叠)
                 if (!_isCacheDisplayExpanded)
                   Container(
-                    height: 48.0,
+                    height: 40.0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: InkWell(
                       onTap: () => _togglePanel('cacheDisplay'),
                       child: Row(
                         children: [
-                          const Icon(Icons.storage, size: 20),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.storage, size: 18),
+                          const SizedBox(width: 6),
                           const Expanded(
                             child: Text(
                               '缓存图例',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                           ),
-                          const Icon(Icons.expand_more, size: 20),
+                          const Icon(Icons.expand_more, size: 18),
                         ],
                       ),
                     ),
@@ -901,7 +901,7 @@ class _LegendGroupManagementDrawerState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            height: 48.0,
+                            height: 40.0,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               color: Theme.of(context)
@@ -916,19 +916,19 @@ class _LegendGroupManagementDrawerState
                               onTap: () => _togglePanel('cacheDisplay'),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.storage, size: 20),
-                                  SizedBox(width: 8),
+                                  Icon(Icons.storage, size: 18),
+                                  SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       '缓存图例',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.expand_less, size: 20),
+                                  SizedBox(width: 6),
+                                  Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
@@ -953,23 +953,24 @@ class _LegendGroupManagementDrawerState
                 // 图例列表 (可折叠)
                 if (!_isLegendListExpanded)
                   Container(
-                    height: 48.0,
+                    height: 40.0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: InkWell(
                       onTap: () => _togglePanel('legendList'),
                       child: Row(
                         children: [
-                          const Icon(Icons.legend_toggle, size: 20),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.legend_toggle, size: 18),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               '图例列表 (${widget.legendGroup.legendItems.length})',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
                             ),
                           ),
-                          const Icon(Icons.expand_more, size: 20),
+                          const Icon(Icons.expand_more, size: 18),
                         ],
                       ),
                     ),
@@ -983,7 +984,7 @@ class _LegendGroupManagementDrawerState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            height: 48.0,
+                            height: 40.0,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               color: Theme.of(context)
@@ -998,30 +999,30 @@ class _LegendGroupManagementDrawerState
                               onTap: () => _togglePanel('legendList'),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.legend_toggle, size: 20),
-                                  const SizedBox(width: 8),
+                                  const Icon(Icons.legend_toggle, size: 18),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       '图例列表 (${widget.legendGroup.legendItems.length})',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
                                   ElevatedButton.icon(
                                     onPressed: _showAddLegendDialog,
-                                    icon: const Icon(Icons.add, size: 16),
-                                    label: const Text('添加图例'),
+                                    icon: const Icon(Icons.add, size: 14),
+                                    label: const Text('添加图例', style: TextStyle(fontSize: 12)),
                                     style: ElevatedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
+                                        horizontal: 10,
+                                        vertical: 6,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.expand_less, size: 20),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
