@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:r6box/services/notification/notification_service.dart';
 
 import '../../components/common/draggable_title_bar.dart';
 import '../../components/layout/main_layout.dart';
@@ -321,16 +322,12 @@ class _WebSocketConnectionManagerPageState
                 final webApiKey = webApiKeyController.text.trim();
 
                 if (displayName.isEmpty) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('请输入显示名称')));
+                  context.showErrorSnackBar('请输入显示名称');
                   return;
                 }
 
                 if (webApiKey.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请输入 Web API Key')),
-                  );
+                  context.showErrorSnackBar('请输入 Web API Key');
                   return;
                 }
 

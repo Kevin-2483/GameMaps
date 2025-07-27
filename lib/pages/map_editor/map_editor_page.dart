@@ -2622,7 +2622,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (targetLayer == null && _selectedStickyNote == null) {
       targetLayer = _getCurrentDrawingTargetLayer();
       if (targetLayer == null) return; // 如果仍然没有可用图层，则返回
-      
+
       // 自动选择默认图层
       _onLayerSelected(targetLayer);
     }
@@ -3589,12 +3589,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
               (l) => l.id == layerId,
               orElse: () => throw Exception('Layer not found: $layerId'),
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('导出图层: ${layer?.name ?? layerId}'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            if (mounted) {
+              context.showSuccessSnackBar('导出图层: ${layer?.name ?? layerId}');
+            }
           },
         );
       },
@@ -4111,7 +4108,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     selectedStickyNote: _selectedStickyNote,
                     onElementDeleted: _deleteElement,
                     selectedElementId: _selectedElementId,
-                    getCurrentDrawingTargetLayer: () => _getCurrentDrawingTargetLayer(),
+                    getCurrentDrawingTargetLayer: () =>
+                        _getCurrentDrawingTargetLayer(),
                     onElementSelected: (elementId) {
                       setState(() => _selectedElementId = elementId);
                     },

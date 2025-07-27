@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:r6box/services/notification/notification_service.dart';
 import 'package:uuid/uuid.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../components/layout/main_layout.dart';
@@ -522,14 +523,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     try {
       await _dbService.toggleConfigEnabled(config.configId);
       await _loadData();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(config.isEnabled ? '配置已禁用' : '配置已启用')),
-      );
+      context.showSuccessSnackBar(config.isEnabled ? '配置已禁用' : '配置已启用');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('操作失败: $e'), backgroundColor: Colors.red),
-      );
+      context.showErrorSnackBar('操作失败: $e');
     }
   }
 
@@ -558,14 +554,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       try {
         await _dbService.deleteConfig(config.configId);
         await _loadData();
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('配置已删除')));
+        context.showSuccessSnackBar('配置已删除');
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败: $e'), backgroundColor: Colors.red),
-        );
+        context.showErrorSnackBar('操作失败: $e');
       }
     }
   }
@@ -597,13 +588,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
         await _secureStorage.deletePassword(account.authAccountId);
         await _loadData();
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('认证账户已删除')));
+        context.showSuccessSnackBar('认证账户已删除');
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败: $e'), backgroundColor: Colors.red),
-        );
+        context.showErrorSnackBar('操作失败: $e');
       }
     }
   }
@@ -927,14 +914,9 @@ class _ConfigDialogState extends State<_ConfigDialog> {
 
       widget.onSaved();
       Navigator.of(context).pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.config != null ? '配置已更新' : '配置已添加')),
-      );
+      context.showSuccessSnackBar(widget.config != null ? '配置已更新' : '配置已添加');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
-      );
+      context.showErrorSnackBar('操作失败: $e');
     } finally {
       setState(() {
         _isSaving = false;
@@ -1110,13 +1092,9 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
       widget.onSaved();
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.account != null ? '账户已更新' : '账户已添加')),
-      );
+      context.showSuccessSnackBar(widget.account != null ? '账户已更新' : '账户已添加');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
-      );
+      context.showErrorSnackBar('操作失败: $e');
     } finally {
       setState(() {
         _isSaving = false;

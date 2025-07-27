@@ -4,6 +4,8 @@ import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../../../utils/image_export_utils.dart';
 import 'map_canvas.dart';
+import '../../../services/notification/notification_service.dart';
+import '../../../services/notification/notification_models.dart';
 
 /// 图层导出对话框
 class LayerExportDialog extends StatefulWidget {
@@ -34,9 +36,9 @@ abstract class ExportItem {
 // 图层导出项
 class LayerExportItem extends ExportItem {
   final MapLayer layer;
-  
+
   LayerExportItem(this.layer);
-  
+
   @override
   String get id => layer.id;
 }
@@ -45,9 +47,10 @@ class LayerExportItem extends ExportItem {
 class DividerExportItem extends ExportItem {
   final String _id;
   static int _counter = 0;
-  
-  DividerExportItem() : _id = 'divider_${DateTime.now().millisecondsSinceEpoch}_${++_counter}';
-  
+
+  DividerExportItem()
+    : _id = 'divider_${DateTime.now().millisecondsSinceEpoch}_${++_counter}';
+
   @override
   String get id => _id;
 }
@@ -56,9 +59,10 @@ class DividerExportItem extends ExportItem {
 class BackgroundExportItem extends ExportItem {
   final String _id;
   static int _counter = 0;
-  
-  BackgroundExportItem() : _id = 'background_${DateTime.now().millisecondsSinceEpoch}_${++_counter}';
-  
+
+  BackgroundExportItem()
+    : _id = 'background_${DateTime.now().millisecondsSinceEpoch}_${++_counter}';
+
   @override
   String get id => _id;
 }
@@ -66,9 +70,9 @@ class BackgroundExportItem extends ExportItem {
 // 图例组导出项
 class LegendGroupExportItem extends ExportItem {
   final LegendGroup legendGroup;
-  
+
   LegendGroupExportItem(this.legendGroup);
-  
+
   @override
   String get id => legendGroup.id;
 }
@@ -76,9 +80,9 @@ class LegendGroupExportItem extends ExportItem {
 // 便签导出项
 class StickyNoteExportItem extends ExportItem {
   final StickyNote stickyNote;
-  
+
   StickyNoteExportItem(this.stickyNote);
-  
+
   @override
   String get id => stickyNote.id;
 }
@@ -120,7 +124,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
 
     try {
       // 使用新的分组导出功能
-      final images = await widget.mapCanvasState!.exportLayerGroups(_selectedItems);
+      final images = await widget.mapCanvasState!.exportLayerGroups(
+        _selectedItems,
+      );
       if (mounted) {
         setState(() {
           _previewImages = List.from(images);
@@ -172,7 +178,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
       // 按order排序，order大的在下
       final sortedGroup = List<MapLayer>.from(group)
         ..sort((a, b) => a.order.compareTo(b.order));
-      
+
       for (final layer in sortedGroup) {
         _selectedItems.add(LayerExportItem(layer));
       }
@@ -238,8 +244,6 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
     super.dispose();
   }
 
-
-
   /// 获取未绑定的图例组
   List<LegendGroup> _getUnboundLegendGroups(List<List<MapLayer>> groups) {
     if (widget.legendGroups == null) return [];
@@ -301,13 +305,16 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
   }
 
   /// 计算总项目数（包括组头和子项）
-  int _calculateTotalItems(List<List<MapLayer>> layerGroups, List<LegendGroup> legendGroups) {
+  int _calculateTotalItems(
+    List<List<MapLayer>> layerGroups,
+    List<LegendGroup> legendGroups,
+  ) {
     int total = 0;
-    
+
     // 添加未绑定图例组数量
     final unboundLegendGroups = _getUnboundLegendGroups(layerGroups);
     total += unboundLegendGroups.length;
-    
+
     for (int groupIndex = 0; groupIndex < layerGroups.length; groupIndex++) {
       final group = layerGroups[groupIndex];
       if (group.length > 1) {
@@ -316,16 +323,20 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
       } else {
         total += 1; // 单个图层
       }
-      
+
       // 添加绑定到此组的图例组数量
-      final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(group, groupIndex, layerGroups);
+      final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(
+        group,
+        groupIndex,
+        layerGroups,
+      );
       total += boundLegendGroups.length;
     }
-    
+
     // 添加便签数量
     final stickyNotes = widget.stickyNotes ?? [];
     total += stickyNotes.length;
-    
+
     return total;
   }
 
@@ -388,7 +399,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                 ),
                 borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceVariant.withOpacity(0.3),
               ),
               child: image != null
                   ? ClipRRect(
@@ -406,14 +419,18 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           Icon(
                             Icons.broken_image,
                             size: 32,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             '图片生成失败',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -425,7 +442,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -519,7 +538,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ] else if (item is BackgroundExportItem) ...[
@@ -549,7 +570,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -590,7 +613,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -605,7 +630,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       '背景元素',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Theme.of(context).colorScheme.onSecondaryContainer,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
                       ),
                     ),
                   ],
@@ -619,66 +646,66 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
   }
 
   Widget _buildSelectedItem(ExportItem item, int index) {
-     if (item is LayerExportItem) {
-       final layer = item.layer;
-       return Container(
-         key: ValueKey('layer_${index}_${item.id}'),
-         margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(
-           border: Border.all(color: Theme.of(context).dividerColor),
-           borderRadius: BorderRadius.circular(4),
-           color: Theme.of(context).colorScheme.surface,
-         ),
+    if (item is LayerExportItem) {
+      final layer = item.layer;
+      return Container(
+        key: ValueKey('layer_${index}_${item.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(4),
+          color: Theme.of(context).colorScheme.surface,
+        ),
         child: Row(
-           children: [
-             // 删除按钮
-             GestureDetector(
-               onTap: () => _removeItem(index),
-               child: Container(
-                 padding: const EdgeInsets.all(2),
-                 child: const Icon(Icons.close, size: 14, color: Colors.red),
-               ),
-             ),
-             const SizedBox(width: 6),
-             // 可见性图标
-             Icon(
-               layer.isVisible ? Icons.visibility : Icons.visibility_off,
-               size: 14,
-               color: layer.isVisible ? Colors.green : Colors.grey,
-             ),
-             const SizedBox(width: 6),
-             // 图层名称和order
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   Text(
-                     layer.name,
-                     style: const TextStyle(fontSize: 11),
-                     overflow: TextOverflow.ellipsis,
-                   ),
-                   Text(
-                     'Order: ${layer.order}',
-                     style: const TextStyle(fontSize: 9, color: Colors.grey),
-                   ),
-                 ],
-               ),
-             ),
-           ],
-         ),
+          children: [
+            // 删除按钮
+            GestureDetector(
+              onTap: () => _removeItem(index),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                child: const Icon(Icons.close, size: 14, color: Colors.red),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 可见性图标
+            Icon(
+              layer.isVisible ? Icons.visibility : Icons.visibility_off,
+              size: 14,
+              color: layer.isVisible ? Colors.green : Colors.grey,
+            ),
+            const SizedBox(width: 6),
+            // 图层名称和order
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    layer.name,
+                    style: const TextStyle(fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Order: ${layer.order}',
+                    style: const TextStyle(fontSize: 9, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
     } else if (item is DividerExportItem) {
-       return Container(
-         key: ValueKey('divider_${index}_${item.id}'),
-         margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(
-           border: Border.all(color: Theme.of(context).dividerColor),
-           borderRadius: BorderRadius.circular(4),
-           color: Theme.of(context).colorScheme.surfaceVariant,
-         ),
+      return Container(
+        key: ValueKey('divider_${index}_${item.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(4),
+          color: Theme.of(context).colorScheme.surfaceVariant,
+        ),
         child: Row(
           children: [
             // 删除按钮
@@ -691,198 +718,214 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
             ),
             const SizedBox(width: 6),
             // 分割线图标
-             Icon(
-               Icons.horizontal_rule,
-               size: 14,
-               color: Theme.of(context).colorScheme.onSurfaceVariant,
-             ),
-             const SizedBox(width: 6),
-             // 分割线文本
-             Expanded(
-               child: Text(
-                 '分割线',
-                 style: TextStyle(
-                   fontSize: 11, 
-                   fontStyle: FontStyle.italic,
-                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                 ),
-                 overflow: TextOverflow.ellipsis,
-               ),
-             ),
+            Icon(
+              Icons.horizontal_rule,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            // 分割线文本
+            Expanded(
+              child: Text(
+                '分割线',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
-         ),
-       );
-     } else if (item is BackgroundExportItem) {
-       return Container(
-         key: ValueKey('background_${index}_${item.id}'),
-         margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(
-           border: Border.all(color: Theme.of(context).dividerColor),
-           borderRadius: BorderRadius.circular(4),
-           color: Theme.of(context).colorScheme.secondaryContainer,
-         ),
-         child: Row(
-           children: [
-             // 删除按钮
-             GestureDetector(
-               onTap: () => _removeItem(index),
-               child: Container(
-                 padding: const EdgeInsets.all(2),
-                 child: const Icon(Icons.close, size: 14, color: Colors.red),
-               ),
-             ),
-             const SizedBox(width: 6),
-             // 背景图标
-             Icon(
-               Icons.image,
-               size: 14,
-               color: Theme.of(context).colorScheme.onSecondaryContainer,
-             ),
-             const SizedBox(width: 6),
-             // 背景文本
-             Expanded(
-               child: Text(
-                 '背景',
-                 style: TextStyle(
-                   fontSize: 11,
-                   fontWeight: FontWeight.w500,
-                   color: Theme.of(context).colorScheme.onSecondaryContainer,
-                 ),
-                 overflow: TextOverflow.ellipsis,
-               ),
-             ),
-           ],
-         ),
-       );
-     } else if (item is LegendGroupExportItem) {
-       final legendGroup = item.legendGroup;
-       return Container(
-         key: ValueKey('legend_${index}_${item.id}'),
-         margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(
-           border: Border.all(color: Theme.of(context).dividerColor),
-           borderRadius: BorderRadius.circular(4),
-           color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-         ),
-         child: Row(
-           children: [
-             // 删除按钮
-             GestureDetector(
-               onTap: () => _removeItem(index),
-               child: Container(
-                 padding: const EdgeInsets.all(2),
-                 child: const Icon(Icons.close, size: 14, color: Colors.red),
-               ),
-             ),
-             const SizedBox(width: 6),
-             // 可见性图标
-             Icon(
-               legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
-               size: 14,
-               color: legendGroup.isVisible ? Colors.green : Colors.grey,
-             ),
-             const SizedBox(width: 6),
-             // 图例组图标
-             Icon(
-               Icons.legend_toggle,
-               size: 14,
-               color: Theme.of(context).colorScheme.primary,
-             ),
-             const SizedBox(width: 6),
-             // 图例组名称和信息
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   Text(
-                     legendGroup.name,
-                     style: const TextStyle(fontSize: 11),
-                     overflow: TextOverflow.ellipsis,
-                   ),
-                   Text(
-                     '图例组: ${legendGroup.legendItems.length} 项',
-                     style: const TextStyle(fontSize: 9, color: Colors.grey),
-                   ),
-                 ],
-               ),
-             ),
-           ],
-         ),
-       );
-     } else if (item is StickyNoteExportItem) {
-       return Container(
-         key: ValueKey('sticky_note_${index}_${item.stickyNote.id}'),
-         margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-         decoration: BoxDecoration(
-           border: Border.all(color: Theme.of(context).dividerColor),
-           borderRadius: BorderRadius.circular(4),
-           color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
-         ),
-         child: Row(
-           children: [
-             // 删除按钮
-             GestureDetector(
-               onTap: () => _removeItem(index),
-               child: Container(
-                 padding: const EdgeInsets.all(2),
-                 child: const Icon(Icons.close, size: 14, color: Colors.red),
-               ),
-             ),
-             const SizedBox(width: 6),
-             // 便签图标
-             Icon(
-               Icons.sticky_note_2,
-               size: 14,
-               color: Theme.of(context).colorScheme.tertiary,
-             ),
-             const SizedBox(width: 6),
-             // 可见性图标
-             Icon(
-               item.stickyNote.isVisible ? Icons.visibility : Icons.visibility_off,
-               size: 12,
-               color: item.stickyNote.isVisible
-                   ? Theme.of(context).colorScheme.primary
-                   : Theme.of(context).disabledColor,
-             ),
-             const SizedBox(width: 6),
-             // 便签内容
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   Text(
-                     item.stickyNote.title.isEmpty ? '无标题便签' : item.stickyNote.title,
-                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                     overflow: TextOverflow.ellipsis,
-                     maxLines: 1,
-                   ),
-                   if (item.stickyNote.content.isNotEmpty)
-                     Text(
-                       item.stickyNote.content,
-                       style: TextStyle(
-                         fontSize: 10,
-                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                       ),
-                       overflow: TextOverflow.ellipsis,
-                       maxLines: 1,
-                     ),
-                 ],
-               ),
-             ),
-           ],
-         ),
-       );
-     }
-     return const SizedBox.shrink();
-   }
+        ),
+      );
+    } else if (item is BackgroundExportItem) {
+      return Container(
+        key: ValueKey('background_${index}_${item.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(4),
+          color: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+        child: Row(
+          children: [
+            // 删除按钮
+            GestureDetector(
+              onTap: () => _removeItem(index),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                child: const Icon(Icons.close, size: 14, color: Colors.red),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 背景图标
+            Icon(
+              Icons.image,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+            const SizedBox(width: 6),
+            // 背景文本
+            Expanded(
+              child: Text(
+                '背景',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (item is LegendGroupExportItem) {
+      final legendGroup = item.legendGroup;
+      return Container(
+        key: ValueKey('legend_${index}_${item.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(4),
+          color: Theme.of(
+            context,
+          ).colorScheme.primaryContainer.withOpacity(0.3),
+        ),
+        child: Row(
+          children: [
+            // 删除按钮
+            GestureDetector(
+              onTap: () => _removeItem(index),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                child: const Icon(Icons.close, size: 14, color: Colors.red),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 可见性图标
+            Icon(
+              legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+              size: 14,
+              color: legendGroup.isVisible ? Colors.green : Colors.grey,
+            ),
+            const SizedBox(width: 6),
+            // 图例组图标
+            Icon(
+              Icons.legend_toggle,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            // 图例组名称和信息
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    legendGroup.name,
+                    style: const TextStyle(fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '图例组: ${legendGroup.legendItems.length} 项',
+                    style: const TextStyle(fontSize: 9, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (item is StickyNoteExportItem) {
+      return Container(
+        key: ValueKey('sticky_note_${index}_${item.stickyNote.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(4),
+          color: Theme.of(
+            context,
+          ).colorScheme.tertiaryContainer.withOpacity(0.3),
+        ),
+        child: Row(
+          children: [
+            // 删除按钮
+            GestureDetector(
+              onTap: () => _removeItem(index),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                child: const Icon(Icons.close, size: 14, color: Colors.red),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 便签图标
+            Icon(
+              Icons.sticky_note_2,
+              size: 14,
+              color: Theme.of(context).colorScheme.tertiary,
+            ),
+            const SizedBox(width: 6),
+            // 可见性图标
+            Icon(
+              item.stickyNote.isVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off,
+              size: 12,
+              color: item.stickyNote.isVisible
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).disabledColor,
+            ),
+            const SizedBox(width: 6),
+            // 便签内容
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.stickyNote.title.isEmpty
+                        ? '无标题便签'
+                        : item.stickyNote.title,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  if (item.stickyNote.content.isNotEmpty)
+                    Text(
+                      item.stickyNote.content,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
 
-  Widget _buildAvailableLayerGroupItem(List<List<MapLayer>> layerGroups, int index) {
+  Widget _buildAvailableLayerGroupItem(
+    List<List<MapLayer>> layerGroups,
+    int index,
+  ) {
     int currentIndex = 0;
-    
+
     // 首先处理未绑定的图例组
     final unboundLegendGroups = _getUnboundLegendGroups(layerGroups);
     if (index < unboundLegendGroups.length) {
@@ -890,11 +933,11 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
       return _buildAvailableLegendGroupMenuItem(legendGroup);
     }
     currentIndex += unboundLegendGroups.length;
-    
+
     // 然后处理图层组
     for (int groupIndex = 0; groupIndex < layerGroups.length; groupIndex++) {
       final group = layerGroups[groupIndex];
-      
+
       // 如果是多图层组，先显示组标题
       if (group.length > 1) {
         if (index == currentIndex) {
@@ -902,7 +945,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         }
         currentIndex++;
       }
-      
+
       // 显示组内的所有图层
       for (int i = 0; i < group.length; i++) {
         if (index == currentIndex) {
@@ -915,9 +958,13 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         }
         currentIndex++;
       }
-      
+
       // 显示绑定到此组的图例组
-      final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(group, groupIndex, layerGroups);
+      final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(
+        group,
+        groupIndex,
+        layerGroups,
+      );
       for (final legendGroup in boundLegendGroups) {
         if (index == currentIndex) {
           return _buildAvailableLegendGroupMenuItem(legendGroup);
@@ -925,7 +972,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         currentIndex++;
       }
     }
-    
+
     // 最后添加便签
     final stickyNotes = widget.stickyNotes ?? [];
     if (index < currentIndex + stickyNotes.length) {
@@ -933,7 +980,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
       final stickyNote = stickyNotes[stickyNoteIndex];
       return _buildAvailableStickyNoteMenuItem(stickyNote);
     }
-    
+
     return const SizedBox.shrink();
   }
 
@@ -950,15 +997,15 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.add,
-              size: 16,
-            ),
+            const Icon(Icons.add, size: 16),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 '图层组 ${groupIndex + 1} (${group.length} 个图层)',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -973,7 +1020,6 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
     bool isIndented = false,
     required VoidCallback onTap,
   }) {
-    
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -997,7 +1043,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 4),
-              
+
               // 可见性图标
               Icon(
                 layer.isVisible ? Icons.visibility : Icons.visibility_off,
@@ -1007,7 +1053,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     : Theme.of(context).disabledColor,
               ),
               const SizedBox(width: 4),
-              
+
               // 图层信息
               Expanded(
                 child: Column(
@@ -1018,9 +1064,13 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       isGroup ? '${layer.name} (组)' : layer.name,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: isIndented
-                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8)
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.8)
                             : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: isGroup ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isGroup
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                         fontSize: isIndented ? 13 : 14,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -1030,30 +1080,38 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       children: [
                         Text(
                           '透明度: ${(layer.opacity * 100).toInt()}%',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            fontSize: isIndented ? 11 : 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontSize: isIndented ? 11 : 12,
+                              ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '元素: ${layer.elements.length}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            fontSize: isIndented ? 11 : 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontSize: isIndented ? 11 : 12,
+                              ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // 图层图标
               Icon(
                 isGroup ? Icons.layers : Icons.layers_outlined,
                 size: isIndented ? 16 : 18,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -1108,7 +1166,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       Text(
                         stickyNote.content,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                         maxLines: 1,
@@ -1122,7 +1182,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 Icon(
                   Icons.visibility_off,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
             ],
           ),
@@ -1140,7 +1202,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
@@ -1156,7 +1220,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 4),
-              
+
               // 可见性图标
               Icon(
                 legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
@@ -1166,7 +1230,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     : Theme.of(context).disabledColor,
               ),
               const SizedBox(width: 4),
-              
+
               // 图例组图标
               Icon(
                 Icons.legend_toggle,
@@ -1174,7 +1238,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 4),
-              
+
               // 图例组信息
               Expanded(
                 child: Column(
@@ -1195,18 +1259,24 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       children: [
                         Text(
                           '透明度: ${(legendGroup.opacity * 100).toInt()}%',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                            fontSize: 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.7),
+                                fontSize: 12,
+                              ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '图例: ${legendGroup.legendItems.length}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                            fontSize: 12,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.7),
+                                fontSize: 12,
+                              ),
                         ),
                       ],
                     ),
@@ -1220,10 +1290,6 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
     );
   }
 
-
-
-
-
   @override
   Widget build(BuildContext context) {
     final layerGroups = _groupLinkedLayers();
@@ -1231,10 +1297,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.download,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          Icon(Icons.download, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           const Text('导出图层为PNG'),
         ],
@@ -1277,95 +1340,143 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       children: [
                         Expanded(
                           child: ListView.builder(
-                            itemCount: _calculateTotalItems(layerGroups, widget.legendGroups ?? []),
+                            itemCount: _calculateTotalItems(
+                              layerGroups,
+                              widget.legendGroups ?? [],
+                            ),
                             itemBuilder: (context, index) {
-                              return _buildAvailableLayerGroupItem(layerGroups, index);
+                              return _buildAvailableLayerGroupItem(
+                                layerGroups,
+                                index,
+                              );
                             },
                           ),
                         ),
                         // 分割线
                         Container(
                           height: 1,
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           color: Theme.of(context).dividerColor,
                         ),
                         // 常驻按钮区域
-                         Container(
-                           padding: const EdgeInsets.all(8),
-                           child: Column(
-                             children: [
-                               // 添加全部图层按钮
-                               SizedBox(
-                                 width: double.infinity,
-                                 child: ElevatedButton.icon(
-                                   onPressed: () {
-                                     setState(() {
-                                       // 首先添加未绑定的图例组
-                                       final unboundLegendGroups = _getUnboundLegendGroups(layerGroups);
-                                       for (final legendGroup in unboundLegendGroups) {
-                                         _selectedItems.add(LegendGroupExportItem(legendGroup));
-                                       }
-                                       
-                                       // 然后按顺序添加图层组和绑定的图例组
-                                       for (int groupIndex = 0; groupIndex < layerGroups.length; groupIndex++) {
-                                         final group = layerGroups[groupIndex];
-                                         
-                                         // 按order排序，order大的在下
-                                         final sortedGroup = List<MapLayer>.from(group)
-                                           ..sort((a, b) => a.order.compareTo(b.order));
-                                         
-                                         for (final layer in sortedGroup) {
-                                           _selectedItems.add(LayerExportItem(layer));
-                                         }
-                                         
-                                         // 添加绑定到此组的图例组
-                                         final boundLegendGroups = _getBoundLegendGroupsForLayerGroup(group, groupIndex, layerGroups);
-                                         for (final legendGroup in boundLegendGroups) {
-                                           _selectedItems.add(LegendGroupExportItem(legendGroup));
-                                         }
-                                         
-                                         // 在组的结束处添加分割线
-                                         _selectedItems.add(DividerExportItem());
-                                       }
-                                     });
-                                     _generatePreview();
-                                   },
-                                   icon: const Icon(Icons.add_box, size: 16),
-                                   label: const Text('添加全部图层', style: TextStyle(fontSize: 12)),
-                                   style: ElevatedButton.styleFrom(
-                                     padding: const EdgeInsets.symmetric(vertical: 8),
-                                   ),
-                                 ),
-                               ),
-                               const SizedBox(height: 4),
-                               // 添加分割线按钮
-                               SizedBox(
-                                 width: double.infinity,
-                                 child: OutlinedButton.icon(
-                                   onPressed: _addDivider,
-                                   icon: const Icon(Icons.horizontal_rule, size: 16),
-                                   label: const Text('添加分割线', style: TextStyle(fontSize: 12)),
-                                   style: OutlinedButton.styleFrom(
-                                     padding: const EdgeInsets.symmetric(vertical: 8),
-                                   ),
-                                 ),
-                               ),
-                               const SizedBox(height: 4),
-                               // 添加背景按钮
-                               SizedBox(
-                                 width: double.infinity,
-                                 child: OutlinedButton.icon(
-                                   onPressed: _addBackground,
-                                   icon: const Icon(Icons.image, size: 16),
-                                   label: const Text('添加背景', style: TextStyle(fontSize: 12)),
-                                   style: OutlinedButton.styleFrom(
-                                     padding: const EdgeInsets.symmetric(vertical: 8),
-                                   ),
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            children: [
+                              // 添加全部图层按钮
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      // 首先添加未绑定的图例组
+                                      final unboundLegendGroups =
+                                          _getUnboundLegendGroups(layerGroups);
+                                      for (final legendGroup
+                                          in unboundLegendGroups) {
+                                        _selectedItems.add(
+                                          LegendGroupExportItem(legendGroup),
+                                        );
+                                      }
+
+                                      // 然后按顺序添加图层组和绑定的图例组
+                                      for (
+                                        int groupIndex = 0;
+                                        groupIndex < layerGroups.length;
+                                        groupIndex++
+                                      ) {
+                                        final group = layerGroups[groupIndex];
+
+                                        // 按order排序，order大的在下
+                                        final sortedGroup =
+                                            List<MapLayer>.from(group)..sort(
+                                              (a, b) =>
+                                                  a.order.compareTo(b.order),
+                                            );
+
+                                        for (final layer in sortedGroup) {
+                                          _selectedItems.add(
+                                            LayerExportItem(layer),
+                                          );
+                                        }
+
+                                        // 添加绑定到此组的图例组
+                                        final boundLegendGroups =
+                                            _getBoundLegendGroupsForLayerGroup(
+                                              group,
+                                              groupIndex,
+                                              layerGroups,
+                                            );
+                                        for (final legendGroup
+                                            in boundLegendGroups) {
+                                          _selectedItems.add(
+                                            LegendGroupExportItem(legendGroup),
+                                          );
+                                        }
+
+                                        // 在组的结束处添加分割线
+                                        _selectedItems.add(DividerExportItem());
+                                      }
+                                    });
+                                    _generatePreview();
+                                  },
+                                  icon: const Icon(Icons.add_box, size: 16),
+                                  label: const Text(
+                                    '添加全部图层',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // 添加分割线按钮
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _addDivider,
+                                  icon: const Icon(
+                                    Icons.horizontal_rule,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    '添加分割线',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // 添加背景按钮
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _addBackground,
+                                  icon: const Icon(Icons.image, size: 16),
+                                  label: const Text(
+                                    '添加背景',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1405,7 +1516,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1462,7 +1575,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           '${_previewImages.length} 张图片',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -1478,14 +1593,18 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                 Icon(
                                   Icons.preview_outlined,
                                   size: 48,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.3),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
                                   '暂无导出项目',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.5),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -1493,30 +1612,35 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                   '从左侧添加图层或项目',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.4),
                                   ),
                                 ),
                               ],
                             ),
                           )
                         : _isGeneratingPreview
-                            ? const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircularProgressIndicator(),
-                                    SizedBox(height: 16),
-                                    Text('正在生成预览图片...'),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: const EdgeInsets.all(8),
-                                itemCount: _previewImages.length,
-                                itemBuilder: (context, index) {
-                                  return _buildPreviewImageCard(_previewImages[index], index);
-                                },
-                              ),
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(height: 16),
+                                Text('正在生成预览图片...'),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(8),
+                            itemCount: _previewImages.length,
+                            itemBuilder: (context, index) {
+                              return _buildPreviewImageCard(
+                                _previewImages[index],
+                                index,
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -1530,90 +1654,77 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
           child: const Text('取消'),
         ),
         ElevatedButton(
-           onPressed: _selectedItems.isNotEmpty
-               ? () async {
-                   // 执行分组导出
-                   if (widget.mapCanvasState != null) {
-                     try {
-                       // 显示导出进度
-                       if (mounted) {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(
-                             content: Row(
-                               children: [
-                                 SizedBox(
-                                   width: 16,
-                                   height: 16,
-                                   child: CircularProgressIndicator(strokeWidth: 2),
-                                 ),
-                                 SizedBox(width: 12),
-                                 Text('正在导出图片...'),
-                               ],
-                             ),
-                             duration: Duration(seconds: 30),
-                           ),
-                         );
-                       }
-                       
-                       final images = await widget.mapCanvasState!.exportLayerGroups(_selectedItems);
-                       
-                       // 过滤掉空图片
-                       final validImages = images.where((img) => img != null).cast<ui.Image>().toList();
-                       
-                       if (validImages.isNotEmpty) {
-                         // 使用新的图片导出工具
-                         final success = await ImageExportUtils.exportImages(
-                           validImages,
-                           baseName: 'map_export',
-                           format: 'png',
-                         );
-                         
-                         if (mounted) {
-                           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                           
-                           if (success) {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(
-                                 content: Text('成功导出 ${validImages.length} 张图片'),
-                                 backgroundColor: Colors.green,
-                               ),
-                             );
-                             Navigator.of(context).pop();
-                           } else {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(
-                                 content: Text('导出失败，请重试'),
-                                 backgroundColor: Colors.red,
-                               ),
-                             );
-                           }
-                         }
-                       } else {
-                         if (mounted) {
-                           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             const SnackBar(
-                               content: Text('没有有效的图片可导出'),
-                               backgroundColor: Colors.orange,
-                             ),
-                           );
-                         }
-                       }
-                     } catch (e) {
-                       debugPrint('导出失败: $e');
-                       if (mounted) {
-                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           SnackBar(
-                             content: Text('导出失败: $e'),
-                             backgroundColor: Colors.red,
-                           ),
-                         );
-                       }
-                     }
-                   }
-                 }
-               : null,
+          onPressed: _selectedItems.isNotEmpty
+              ? () async {
+                  // 执行分组导出
+                  if (widget.mapCanvasState != null) {
+                    const String notificationId = 'image-export-notification';
+                    try {
+                      // 显示导出进度
+                      if (mounted) {
+                        NotificationService.instance.show(
+                          id: notificationId,
+                          message: '正在导出图片...',
+                          type: NotificationType.info,
+                          isPersistent: true,
+                          borderEffect: NotificationBorderEffect.loading,
+                        );
+                      }
+
+                      final images = await widget.mapCanvasState!
+                          .exportLayerGroups(_selectedItems);
+
+                      // 过滤掉空图片
+                      final validImages = images
+                          .where((img) => img != null)
+                          .cast<ui.Image>()
+                          .toList();
+
+                      if (validImages.isNotEmpty) {
+                        // 使用新的图片导出工具
+                        final success = await ImageExportUtils.exportImages(
+                          validImages,
+                          baseName: 'map_export',
+                          format: 'png',
+                        );
+
+                        // 更新通知为成功状态
+                        if (mounted) {
+                          if (success) {
+                            NotificationService.instance.updateNotification(
+                              notificationId: notificationId,
+                              message: '成功导出 ${validImages.length} 张图片',
+                              type: NotificationType.success,
+                              isPersistent: false,
+                              duration: const Duration(seconds: 3),
+                              borderEffect: NotificationBorderEffect.none,
+                            );
+                            Navigator.of(context).pop();
+                          } else {
+                            NotificationService.instance.updateNotification(
+                              notificationId: notificationId,
+                              message: '导出失败，请重试',
+                              type: NotificationType.success,
+                              isPersistent: false,
+                              duration: const Duration(seconds: 3),
+                              borderEffect: NotificationBorderEffect.none,
+                            );
+                          }
+                        }
+                      } else {
+                        if (mounted) {
+                          context.showErrorSnackBar('没有有效的图片可导出');
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint('导出失败: $e');
+                      if (mounted) {
+                        context.showErrorSnackBar('导出失败: $e');
+                      }
+                    }
+                  }
+                }
+              : null,
           child: const Text('导出'),
         ),
       ],

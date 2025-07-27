@@ -2986,9 +2986,7 @@ class _LegendGroupManagementDrawerState
   /// 显示图层绑定抽屉
   void _showLayerBindingDialog() {
     if (widget.allLayers == null || widget.allLayers!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('暂无可用图层')),
-      );
+      context.showErrorSnackBar('暂无可用图层');
       return;
     }
 
