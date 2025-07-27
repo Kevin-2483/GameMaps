@@ -3464,7 +3464,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 导出按钮
       const SizedBox(width: 4),
       IconButton(
-        icon: const Icon(Icons.download),
+        icon: const Icon(Icons.arrow_outward),
         onPressed: _showExportDialog,
         tooltip: '导出图层',
       ),

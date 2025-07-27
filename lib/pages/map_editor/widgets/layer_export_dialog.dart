@@ -6,6 +6,7 @@ import '../../../utils/image_export_utils.dart';
 import 'map_canvas.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../services/notification/notification_models.dart';
+import 'pdf_export_dialog.dart';
 
 /// 图层导出对话框
 class LayerExportDialog extends StatefulWidget {
@@ -1725,7 +1726,61 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                   }
                 }
               : null,
-          child: const Text('导出'),
+          child: const Text('导出图片'),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _selectedItems.isNotEmpty
+              ? () async {
+                  // 执行PDF导出
+                  if (widget.mapCanvasState != null) {
+                    try {
+                      final images = await widget.mapCanvasState!
+                          .exportLayerGroups(_selectedItems);
+
+                      // 过滤掉空图片
+                      final validImages = images
+                          .where((img) => img != null)
+                          .cast<ui.Image>()
+                          .toList();
+
+                      if (validImages.isNotEmpty) {
+                        // 显示PDF导出配置对话框
+                        final result = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => PdfExportDialog(
+                            images: validImages,
+                            defaultFileName: 'map_export',
+                          ),
+                        );
+                        
+                        if (result == true && mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('没有有效的图片可导出')),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint('获取图片失败: $e');
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('获取图片失败: $e')),
+                        );
+                      }
+                    }
+                  }
+                }
+              : null,
+          icon: const Icon(Icons.picture_as_pdf),
+          label: const Text('导出PDF'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            foregroundColor: Theme.of(context).colorScheme.onSecondary,
+          ),
         ),
       ],
     );

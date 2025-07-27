@@ -118,6 +118,12 @@ dependencies:
 
     # SVG rendering
   jovial_svg: ^1.1.27
+  
+  # PDF generation
+  pdf: ^3.11.3
+  
+  # PDF printing and Google fonts
+  printing: ^5.13.4
 
   isolate_manager:
     path: E:/code/isolate_manager
@@ -171,6 +177,10 @@ flutter:
     - assets/scripts/
     - LICENSE
     - assets/images/r6operators_flat/
+    # fast_rsa Web platform assets
+    - packages/fast_rsa/web/assets/worker.js
+    - packages/fast_rsa/web/assets/wasm_exec.js
+    - packages/fast_rsa/web/assets/rsa.wasm
 
   # To add assets to your application, add an assets section, like this:
   # assets:
