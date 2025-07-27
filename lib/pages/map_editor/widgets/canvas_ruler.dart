@@ -60,8 +60,6 @@ class _RulerPainter extends CustomPainter {
   final double padding;
   final TextStyle textStyle;
   final Color lineColor;
-  
-  static DateTime? _lastDebugTime;
 
   const _RulerPainter({
     required this.isHorizontal,
@@ -85,9 +83,6 @@ class _RulerPainter extends CustomPainter {
     
     // 确定合适的刻度间隔（基于缩放级别和视口大小）
     double tickInterval = _getTickInterval(scale, viewportSize);
-    
-    // 调试信息 - 每2秒打印一次
-    _debugPrint();
     
     // InteractiveViewer的boundaryMargin创建了视觉边距，但不影响画布坐标系
     // 画布坐标0应该对应到刻度尺中的offset位置（忽略padding）
@@ -123,20 +118,6 @@ class _RulerPainter extends CustomPainter {
       }
       
       majorTickValue += tickInterval;
-    }
-  }
-  
-  void _debugPrint() {
-    final now = DateTime.now();
-    if (_lastDebugTime == null || now.difference(_lastDebugTime!).inSeconds >= 2) {
-      _lastDebugTime = now;
-      print('=== Ruler Debug Info (${isHorizontal ? "Horizontal" : "Vertical"}) ===');
-      print('Scale: $scale');
-      print('Offset: $offset');
-      print('Padding (canvasBoundaryMargin): $padding');
-      print('Canvas Size: $canvasSize');
-      print('Canvas 0 Position in Ruler: $offset');
-      print('=======================================');
     }
   }
 

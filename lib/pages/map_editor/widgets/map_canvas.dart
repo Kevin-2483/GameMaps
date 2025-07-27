@@ -1,3 +1,4 @@
+import 'package:r6box/pages/map_editor/widgets/layer_export_dialog.dart';
 import '../../../services/legend_session_manager.dart';
 import '../../../services/legend_cache_manager.dart';
 import 'package:flutter/material.dart';
@@ -321,7 +322,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       });
 
       // 等待一帧以确保UI更新
-      await Future.delayed(const Duration(milliseconds: 16));
+      await Future.delayed(const Duration(milliseconds: 100));
 
       // 捕获图像
       final RenderRepaintBoundary? boundary =
@@ -351,7 +352,6 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     List<String> layerIds, {
     bool includeBackground = true,
   }) async {
-    // TODO: 实现多图层导出功能
     // 目前作为占位符，返回第一个图层的导出结果
     if (layerIds.isNotEmpty) {
       return exportLayer(layerIds.first, includeBackground: includeBackground);
@@ -368,7 +368,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
     // 按分割线分组
     for (final item in exportItems) {
-      if (item.runtimeType.toString().contains('DividerExportItem')) {
+      if (item  is DividerExportItem) {
         // 遇到分割线，导出当前组
         if (currentGroup.isNotEmpty) {
           final groupImage = await _exportItemGroup(currentGroup);
@@ -435,9 +435,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     for (int i = 0; i < items.length; i++) {
       final item = items[i];
 
-      if (item.runtimeType.toString().contains('LayerExportItem')) {
+      if (item is LayerExportItem) {
         // 获取图层对象
-        final layer = (item as dynamic).layer as MapLayer;
+        final layer = item.layer;
 
         // 添加图层图片（如果有）- 图片在绘制元素之下
         if (layer.imageData != null) {
@@ -446,15 +446,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
         // 添加图层绘制元素 - 绘制元素在图片之上
         widgets.add(Positioned.fill(child: _buildLayerWidget(layer)));
-      } else if (item.runtimeType.toString().contains(
-        'LegendGroupExportItem',
-      )) {
+      } else if (item is LegendGroupExportItem) {
         // 获取图例组对象
-        final legendGroup = (item as dynamic).legendGroup as LegendGroup;
+        final legendGroup = item.legendGroup;
 
         // 添加图例组渲染
         widgets.add(Positioned.fill(child: _buildLegendWidget(legendGroup)));
-      } else if (item.runtimeType.toString().contains('BackgroundExportItem')) {
+      } else if (item is BackgroundExportItem) {
         // 添加背景图案 - 背景在对应位置渲染
         widgets.add(
           Positioned.fill(
@@ -470,9 +468,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             ),
           ),
         );
-      } else if (item.runtimeType.toString().contains('StickyNoteExportItem')) {
+      } else if (item is StickyNoteExportItem) {
         // 获取便签对象
-        final stickyNote = (item as dynamic).stickyNote as StickyNote;
+        final stickyNote = item.stickyNote;
 
         // 只渲染可见的便签
         if (stickyNote.isVisible) {
