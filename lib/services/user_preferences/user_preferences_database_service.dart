@@ -361,23 +361,26 @@ class UserPreferencesDatabaseService {
           bool needsUpdate = false;
 
           // 检查是否需要从 enableMergedWindowControls 迁移到 windowControlsMode
-          if (layoutData.containsKey('enableMergedWindowControls') && 
+          if (layoutData.containsKey('enableMergedWindowControls') &&
               !layoutData.containsKey('windowControlsMode')) {
-            final enableMergedWindowControls = layoutData['enableMergedWindowControls'] as bool? ?? false;
-            
+            final enableMergedWindowControls =
+                layoutData['enableMergedWindowControls'] as bool? ?? false;
+
             // 根据旧的布尔值设置新的枚举值
             if (enableMergedWindowControls) {
               layoutData['windowControlsMode'] = 'merged';
             } else {
               layoutData['windowControlsMode'] = 'separated';
             }
-            
+
             // 移除旧字段
             layoutData.remove('enableMergedWindowControls');
             needsUpdate = true;
-            
+
             if (kDebugMode) {
-              debugPrint('已为用户 $userId 迁移 enableMergedWindowControls 到 windowControlsMode');
+              debugPrint(
+                '已为用户 $userId 迁移 enableMergedWindowControls 到 windowControlsMode',
+              );
             }
           }
           // 检查是否缺少 windowControlsMode 字段
@@ -385,7 +388,7 @@ class UserPreferencesDatabaseService {
             // 添加默认值 'merged'
             layoutData['windowControlsMode'] = 'merged';
             needsUpdate = true;
-            
+
             if (kDebugMode) {
               debugPrint('已为用户 $userId 添加 windowControlsMode 字段');
             }

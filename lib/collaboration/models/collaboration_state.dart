@@ -5,22 +5,22 @@ import 'package:equatable/equatable.dart';
 class ElementLockState extends Equatable {
   /// 元素ID
   final String elementId;
-  
+
   /// 元素类型 (layer, legend, drawing_element, sticky_note)
   final String elementType;
-  
+
   /// 锁定该元素的用户ID
   final String lockedByUserId;
-  
+
   /// 锁定时间
   final DateTime lockedAt;
-  
+
   /// 锁定超时时间（秒）
   final int timeoutSeconds;
-  
+
   /// 是否为强制锁定（不可被其他用户抢占）
   final bool isHardLock;
-  
+
   // 添加userId getter以保持兼容性
   String get userId => lockedByUserId;
 
@@ -101,16 +101,16 @@ class ElementLockState extends Equatable {
 class UserSelectionState extends Equatable {
   /// 用户ID
   final String userId;
-  
+
   /// 选中的元素ID列表
   final List<String> selectedElementIds;
-  
+
   /// 选择的元素类型
   final String selectionType;
-  
+
   /// 最后更新时间
   final DateTime lastUpdated;
-  
+
   // 添加兼容性getter
   String get userDisplayName => userId;
   Color get userColor => const Color(0xFF2196F3);
@@ -175,22 +175,22 @@ class UserSelectionState extends Equatable {
 class UserCursorState extends Equatable {
   /// 用户ID
   final String userId;
-  
+
   /// 指针位置（相对于地图的归一化坐标 0.0-1.0）
   final Offset position;
-  
+
   /// 是否可见
   final bool isVisible;
-  
+
   /// 最后更新时间
   final DateTime lastUpdated;
-  
+
   /// 用户显示名称（用于显示标签）
   final String displayName;
-  
+
   /// 用户颜色（用于区分不同用户）
   final Color userColor;
-  
+
   // 添加兼容性getter
   String get userDisplayName => displayName;
   Color get color => userColor;
@@ -265,34 +265,34 @@ class UserCursorState extends Equatable {
 class CollaborationConflict extends Equatable {
   /// 冲突ID
   final String conflictId;
-  
+
   /// 冲突的元素ID
   final String elementId;
-  
+
   /// 冲突类型
   final ConflictType conflictType;
-  
+
   /// 涉及的用户ID列表
   final List<String> involvedUserIds;
-  
+
   /// 冲突发生时间
   final DateTime occurredAt;
-  
+
   /// 冲突描述
   final String description;
-  
+
   /// 是否已解决
   final bool isResolved;
-  
+
   /// 元素类型
   final String elementType;
-  
+
   /// 解决方法
   final String? resolutionMethod;
-  
+
   /// 元数据
   final Map<String, dynamic> metadata;
-  
+
   // 添加兼容性getter
   String get id => conflictId;
   ConflictType get type => conflictType;
@@ -364,31 +364,31 @@ class CollaborationConflict extends Equatable {
 enum ConflictType {
   /// 编辑冲突（多用户同时编辑同一元素）
   editConflict,
-  
+
   /// 锁定冲突（尝试锁定已被锁定的元素）
   lockConflict,
-  
+
   /// 删除冲突（尝试删除被其他用户使用的元素）
   deleteConflict,
-  
+
   /// 权限冲突（权限不足）
   permissionConflict,
-  
+
   /// 元素锁定冲突
   elementLockConflict,
-  
+
   /// 同时编辑
   simultaneousEdit,
-  
+
   /// 版本不匹配
   versionMismatch,
-  
+
   /// 权限被拒绝
   permissionDenied,
-  
+
   /// 网络错误
   networkError,
-  
+
   /// 其他
   other,
 }

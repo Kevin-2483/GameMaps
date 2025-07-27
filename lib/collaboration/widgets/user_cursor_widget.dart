@@ -27,28 +27,21 @@ class _UserCursorWidgetState extends State<UserCursorWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _animationController = AnimationController(
       duration: widget.style.animationDuration,
       vsync: this,
     );
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.style.opacity,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
-    
+
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: widget.style.opacity)
+        .animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
+
     if (widget.cursor.isVisible) {
       _animationController.forward();
     }
@@ -57,7 +50,7 @@ class _UserCursorWidgetState extends State<UserCursorWidget>
   @override
   void didUpdateWidget(UserCursorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.cursor.isVisible != oldWidget.cursor.isVisible) {
       if (widget.cursor.isVisible) {
         _animationController.forward();
@@ -100,10 +93,9 @@ class _UserCursorWidgetState extends State<UserCursorWidget>
       children: [
         // 指针图标
         _buildCursorIcon(),
-        
+
         // 用户标签
-        if (widget.style.showUserLabel)
-          _buildUserLabel(),
+        if (widget.style.showUserLabel) _buildUserLabel(),
       ],
     );
   }
@@ -150,17 +142,14 @@ class CursorPainter extends CustomPainter {
   final Color color;
   final double size;
 
-  CursorPainter({
-    required this.color,
-    required this.size,
-  });
+  CursorPainter({required this.color, required this.size});
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     final strokePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -168,7 +157,7 @@ class CursorPainter extends CustomPainter {
 
     // 绘制指针形状（类似鼠标指针）
     final path = Path();
-    
+
     // 指针主体
     path.moveTo(0, 0);
     path.lineTo(0, size * 0.8);
@@ -184,18 +173,18 @@ class CursorPainter extends CustomPainter {
     // 绘制指针
     canvas.drawPath(path, paint);
     canvas.drawPath(path, strokePaint);
-    
+
     // 绘制指针尖端高亮
     final highlightPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
-    
+
     final highlightPath = Path();
     highlightPath.moveTo(0, 0);
     highlightPath.lineTo(size * 0.15, size * 0.4);
     highlightPath.lineTo(size * 0.4, size * 0.15);
     highlightPath.close();
-    
+
     canvas.drawPath(highlightPath, highlightPaint);
   }
 
@@ -267,24 +256,17 @@ class UserCursorsList extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          
+
           // 用户名
           Text(
             cursor.userDisplayName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 11),
           ),
-          
+
           // 可见状态指示器
           if (cursor.isVisible) ...[
             const SizedBox(width: 4),
-            Icon(
-              Icons.visibility,
-              size: 12,
-              color: Colors.green.shade300,
-            ),
+            Icon(Icons.visibility, size: 12, color: Colors.green.shade300),
           ],
         ],
       ),

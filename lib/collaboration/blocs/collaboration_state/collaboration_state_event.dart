@@ -41,16 +41,19 @@ class TryLockElement extends CollaborationStateEvent {
   });
 
   @override
-  List<Object?> get props => [elementId, elementType, isHardLock, timeoutSeconds];
+  List<Object?> get props => [
+    elementId,
+    elementType,
+    isHardLock,
+    timeoutSeconds,
+  ];
 }
 
 /// 释放元素锁定
 class UnlockElement extends CollaborationStateEvent {
   final String elementId;
 
-  const UnlockElement({
-    required this.elementId,
-  });
+  const UnlockElement({required this.elementId});
 
   @override
   List<Object?> get props => [elementId];
@@ -80,10 +83,7 @@ class UpdateUserCursor extends CollaborationStateEvent {
   final Offset position;
   final bool isVisible;
 
-  const UpdateUserCursor({
-    required this.position,
-    this.isVisible = true,
-  });
+  const UpdateUserCursor({required this.position, this.isVisible = true});
 
   @override
   List<Object?> get props => [position, isVisible];
@@ -98,9 +98,7 @@ class HideUserCursor extends CollaborationStateEvent {
 class ResolveConflict extends CollaborationStateEvent {
   final String conflictId;
 
-  const ResolveConflict({
-    required this.conflictId,
-  });
+  const ResolveConflict({required this.conflictId});
 
   @override
   List<Object?> get props => [conflictId];
@@ -110,9 +108,7 @@ class ResolveConflict extends CollaborationStateEvent {
 class ReceiveRemoteLockState extends CollaborationStateEvent {
   final ElementLockState lockState;
 
-  const ReceiveRemoteLockState({
-    required this.lockState,
-  });
+  const ReceiveRemoteLockState({required this.lockState});
 
   @override
   List<Object?> get props => [lockState];
@@ -122,9 +118,7 @@ class ReceiveRemoteLockState extends CollaborationStateEvent {
 class ReceiveRemoteSelectionState extends CollaborationStateEvent {
   final UserSelectionState selectionState;
 
-  const ReceiveRemoteSelectionState({
-    required this.selectionState,
-  });
+  const ReceiveRemoteSelectionState({required this.selectionState});
 
   @override
   List<Object?> get props => [selectionState];
@@ -134,9 +128,7 @@ class ReceiveRemoteSelectionState extends CollaborationStateEvent {
 class ReceiveRemoteCursorState extends CollaborationStateEvent {
   final UserCursorState cursorState;
 
-  const ReceiveRemoteCursorState({
-    required this.cursorState,
-  });
+  const ReceiveRemoteCursorState({required this.cursorState});
 
   @override
   List<Object?> get props => [cursorState];
@@ -146,9 +138,7 @@ class ReceiveRemoteCursorState extends CollaborationStateEvent {
 class RemoveUserStates extends CollaborationStateEvent {
   final String userId;
 
-  const RemoveUserStates({
-    required this.userId,
-  });
+  const RemoveUserStates({required this.userId});
 
   @override
   List<Object?> get props => [userId];

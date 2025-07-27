@@ -77,7 +77,9 @@ class GlobalCollaborationService {
     _userInfoSet = true;
 
     if (kDebugMode) {
-      debugPrint('GlobalCollaborationService 用户信息已设置: userId=$userId, displayName=$displayName');
+      debugPrint(
+        'GlobalCollaborationService 用户信息已设置: userId=$userId, displayName=$displayName',
+      );
     }
   }
 

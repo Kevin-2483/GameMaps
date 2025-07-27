@@ -195,8 +195,6 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
               ],
             ),
           ),
-
-
         ],
       ),
     );
@@ -273,7 +271,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
         _selectedLegendGroupIds.remove(groupId);
       }
     });
-    
+
     // 直接应用更改
     _applyChanges();
   }

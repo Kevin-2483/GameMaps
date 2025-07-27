@@ -12,25 +12,20 @@ import 'package:file_picker/file_picker.dart';
 
 /// PDF导出布局类型
 enum PdfLayoutType {
-  onePerPage,    // 一页一张
-  twoPerPage,    // 一页两张
-  fourPerPage,   // 一页四张
-  sixPerPage,    // 一页六张
-  ninePerPage,   // 一页九张
+  onePerPage, // 一页一张
+  twoPerPage, // 一页两张
+  fourPerPage, // 一页四张
+  sixPerPage, // 一页六张
+  ninePerPage, // 一页九张
 }
 
 /// PDF纸张大小
-enum PdfPaperSize {
-  a4,
-  a3,
-  letter,
-  legal,
-}
+enum PdfPaperSize { a4, a3, letter, legal }
 
 /// PDF方向
 enum PdfOrientation {
-  portrait,   // 竖向
-  landscape,  // 横向
+  portrait, // 竖向
+  landscape, // 横向
 }
 
 /// PDF导出配置
@@ -56,13 +51,13 @@ class PdfExportConfig {
 class PdfExportUtils {
   // 缓存中文字体
   static pw.Font? _chineseFont;
-  
+
   /// 获取中文字体
   static Future<pw.Font> _getChineseFont() async {
     if (_chineseFont != null) {
       return _chineseFont!;
     }
-    
+
     try {
       // 尝试使用Google字体中的中文字体
       _chineseFont = await PdfGoogleFonts.notoSansSCRegular();
@@ -73,7 +68,7 @@ class PdfExportUtils {
       return pw.Font.helvetica();
     }
   }
-  
+
   /// 创建支持中文的文本样式
   static Future<pw.TextStyle> _createTextStyle({
     required double fontSize,
@@ -86,6 +81,7 @@ class PdfExportUtils {
       fontWeight: fontWeight,
     );
   }
+
   /// 将图片列表导出为PDF
   static Future<bool> exportImagesToPdf(
     List<PdfImageInfo> imageInfos,
@@ -94,7 +90,7 @@ class PdfExportUtils {
     try {
       final pdf = await _generatePdfDocument(imageInfos, config);
       if (pdf == null) return false;
-      
+
       // 保存PDF
       return await _savePdf(pdf, config.fileName);
     } catch (e) {
@@ -111,7 +107,7 @@ class PdfExportUtils {
     try {
       final pdf = await _generatePdfDocument(imageInfos, config);
       if (pdf == null) return null;
-      
+
       return await pdf.save();
     } catch (e) {
       debugPrint('PDF预览生成失败: $e');
@@ -124,8 +120,7 @@ class PdfExportUtils {
     pw.MemoryImage image,
     PdfImageInfo imageInfo,
     PdfExportConfig config,
-    bool isLandscape,
-    {
+    bool isLandscape, {
     bool isFullPage = false,
     bool showContentText = true,
   }) async {
@@ -134,7 +129,7 @@ class PdfExportUtils {
       fontSize: isFullPage ? 18 : 14,
       fontWeight: pw.FontWeight.bold,
     );
-    
+
     final imageWithTitle = pw.Column(
       mainAxisSize: pw.MainAxisSize.min,
       children: [
@@ -154,10 +149,7 @@ class PdfExportUtils {
               minHeight: 50, // 最小高度
               maxHeight: double.infinity,
             ),
-            child: pw.Image(
-              image,
-              fit: pw.BoxFit.contain,
-            ),
+            child: pw.Image(image, fit: pw.BoxFit.contain),
           ),
         ),
       ],
@@ -169,65 +161,57 @@ class PdfExportUtils {
     }
 
     // 创建内容文本样式
-    final contentStyle = await _createTextStyle(
-      fontSize: isFullPage ? 12 : 10,
-    );
-    
+    final contentStyle = await _createTextStyle(fontSize: isFullPage ? 12 : 10);
+
     // 一页两张布局的相反逻辑：
     // 横向时文本在下方，纵向时文本在右侧
     if (isLandscape) {
       // 横向：文本在下方（与其他布局相反）
-       return pw.Container(
-         height: isFullPage ? null : 300, // 一页两张布局使用更宽松的高度
+      return pw.Container(
+        height: isFullPage ? null : 300, // 一页两张布局使用更宽松的高度
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
-            pw.Expanded(
-              flex: 3,
-              child: imageWithTitle,
-            ),
+            pw.Expanded(flex: 3, child: imageWithTitle),
             pw.SizedBox(height: config.spacing),
             pw.Expanded(
-               flex: 1,
-               child: pw.Container(
-                 padding: const pw.EdgeInsets.all(4),
-                 child: pw.Text(
-                   imageInfo.content,
-                   style: contentStyle,
-                   textAlign: pw.TextAlign.left,
-                   softWrap: true, // 启用自动换行
-                   maxLines: null, // 允许多行
-                 ),
-               ),
-             ),
+              flex: 1,
+              child: pw.Container(
+                padding: const pw.EdgeInsets.all(4),
+                child: pw.Text(
+                  imageInfo.content,
+                  style: contentStyle,
+                  textAlign: pw.TextAlign.left,
+                  softWrap: true, // 启用自动换行
+                  maxLines: null, // 允许多行
+                ),
+              ),
+            ),
           ],
         ),
       );
     } else {
       // 纵向：文本在右侧（与其他布局相反）
-       return pw.Container(
-         height: isFullPage ? null : 300, // 一页两张布局使用更宽松的高度
+      return pw.Container(
+        height: isFullPage ? null : 300, // 一页两张布局使用更宽松的高度
         child: pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Expanded(
-              flex: 3,
-              child: imageWithTitle,
-            ),
+            pw.Expanded(flex: 3, child: imageWithTitle),
             pw.SizedBox(width: config.spacing),
             pw.Expanded(
-               flex: 2,
-               child: pw.Container(
-                 padding: const pw.EdgeInsets.all(4),
-                 child: pw.Text(
-                   imageInfo.content,
-                   style: contentStyle,
-                   textAlign: pw.TextAlign.left,
-                   softWrap: true, // 启用自动换行
-                   maxLines: null, // 允许多行
-                 ),
-               ),
-             ),
+              flex: 2,
+              child: pw.Container(
+                padding: const pw.EdgeInsets.all(4),
+                child: pw.Text(
+                  imageInfo.content,
+                  style: contentStyle,
+                  textAlign: pw.TextAlign.left,
+                  softWrap: true, // 启用自动换行
+                  maxLines: null, // 允许多行
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -239,8 +223,7 @@ class PdfExportUtils {
     pw.MemoryImage image,
     PdfImageInfo imageInfo,
     PdfExportConfig config,
-    bool isLandscape,
-    {
+    bool isLandscape, {
     bool isFullPage = false,
     bool showContentText = true,
   }) async {
@@ -249,7 +232,7 @@ class PdfExportUtils {
       fontSize: isFullPage ? 18 : 14,
       fontWeight: pw.FontWeight.bold,
     );
-    
+
     final imageWithTitle = pw.Column(
       mainAxisSize: pw.MainAxisSize.min,
       children: [
@@ -269,10 +252,7 @@ class PdfExportUtils {
               minHeight: 50, // 最小高度
               maxHeight: double.infinity,
             ),
-            child: pw.Image(
-              image,
-              fit: pw.BoxFit.contain,
-            ),
+            child: pw.Image(image, fit: pw.BoxFit.contain),
           ),
         ),
       ],
@@ -284,10 +264,8 @@ class PdfExportUtils {
     }
 
     // 创建内容文本样式
-    final contentStyle = await _createTextStyle(
-      fontSize: isFullPage ? 12 : 10,
-    );
-    
+    final contentStyle = await _createTextStyle(fontSize: isFullPage ? 12 : 10);
+
     // 根据纸张方向排列复合体和文本
     if (isLandscape) {
       // 横向：文本在右侧，高度对齐
@@ -296,10 +274,7 @@ class PdfExportUtils {
         child: pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Expanded(
-              flex: 3,
-              child: imageWithTitle,
-            ),
+            pw.Expanded(flex: 3, child: imageWithTitle),
             pw.SizedBox(width: config.spacing),
             pw.Expanded(
               flex: 2,
@@ -324,24 +299,21 @@ class PdfExportUtils {
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
-            pw.Expanded(
-              flex: 3,
-              child: imageWithTitle,
-            ),
+            pw.Expanded(flex: 3, child: imageWithTitle),
             pw.SizedBox(height: config.spacing),
             pw.Expanded(
-               flex: 1,
-               child: pw.Container(
-                 padding: const pw.EdgeInsets.all(4),
-                 child: pw.Text(
-                   imageInfo.content,
-                   style: contentStyle,
-                   textAlign: pw.TextAlign.left,
-                   softWrap: true, // 启用自动换行
-                   maxLines: null, // 允许多行
-                 ),
-               ),
-             ),
+              flex: 1,
+              child: pw.Container(
+                padding: const pw.EdgeInsets.all(4),
+                child: pw.Text(
+                  imageInfo.content,
+                  style: contentStyle,
+                  textAlign: pw.TextAlign.left,
+                  softWrap: true, // 启用自动换行
+                  maxLines: null, // 允许多行
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -355,53 +327,88 @@ class PdfExportUtils {
   ) async {
     try {
       final pdf = pw.Document();
-      
+
       // 获取页面格式
       final pageFormat = _getPageFormat(config.paperSize, config.orientation);
-      
+
       // 转换图片为PDF图片格式
       final List<pw.MemoryImage> pdfImages = [];
       for (final imageInfo in imageInfos) {
-        final byteData = await imageInfo.image.toByteData(format: ui.ImageByteFormat.png);
+        final byteData = await imageInfo.image.toByteData(
+          format: ui.ImageByteFormat.png,
+        );
         if (byteData != null) {
           pdfImages.add(pw.MemoryImage(byteData.buffer.asUint8List()));
         }
       }
-      
+
       if (pdfImages.isEmpty) {
         return null;
       }
-      
+
       // 根据布局类型生成页面
       switch (config.layoutType) {
         case PdfLayoutType.onePerPage:
-          await _addOnePerPageLayout(pdf, imageInfos, pdfImages, pageFormat, config);
+          await _addOnePerPageLayout(
+            pdf,
+            imageInfos,
+            pdfImages,
+            pageFormat,
+            config,
+          );
           break;
         case PdfLayoutType.twoPerPage:
-          await _addTwoPerPageLayout(pdf, imageInfos, pdfImages, pageFormat, config);
+          await _addTwoPerPageLayout(
+            pdf,
+            imageInfos,
+            pdfImages,
+            pageFormat,
+            config,
+          );
           break;
         case PdfLayoutType.fourPerPage:
-          await _addFourPerPageLayout(pdf, imageInfos, pdfImages, pageFormat, config);
+          await _addFourPerPageLayout(
+            pdf,
+            imageInfos,
+            pdfImages,
+            pageFormat,
+            config,
+          );
           break;
         case PdfLayoutType.sixPerPage:
-          await _addSixPerPageLayout(pdf, imageInfos, pdfImages, pageFormat, config);
+          await _addSixPerPageLayout(
+            pdf,
+            imageInfos,
+            pdfImages,
+            pageFormat,
+            config,
+          );
           break;
         case PdfLayoutType.ninePerPage:
-          await _addNinePerPageLayout(pdf, imageInfos, pdfImages, pageFormat, config);
+          await _addNinePerPageLayout(
+            pdf,
+            imageInfos,
+            pdfImages,
+            pageFormat,
+            config,
+          );
           break;
       }
-      
+
       return pdf;
     } catch (e) {
       debugPrint('PDF文档生成失败: $e');
       return null;
     }
   }
-  
+
   /// 获取页面格式
-  static PdfPageFormat _getPageFormat(PdfPaperSize paperSize, PdfOrientation orientation) {
+  static PdfPageFormat _getPageFormat(
+    PdfPaperSize paperSize,
+    PdfOrientation orientation,
+  ) {
     PdfPageFormat format;
-    
+
     switch (paperSize) {
       case PdfPaperSize.a4:
         format = PdfPageFormat.a4;
@@ -416,14 +423,14 @@ class PdfExportUtils {
         format = PdfPageFormat.legal;
         break;
     }
-    
+
     if (orientation == PdfOrientation.landscape) {
       format = format.landscape;
     }
-    
+
     return format;
   }
-  
+
   /// 一页一张布局
   static Future<void> _addOnePerPageLayout(
     pw.Document pdf,
@@ -435,7 +442,7 @@ class PdfExportUtils {
     for (int i = 0; i < images.length; i++) {
       final image = images[i];
       final imageInfo = imageInfos[i];
-      
+
       final widget = await _buildImageTextBlock(
         image,
         imageInfo,
@@ -443,7 +450,7 @@ class PdfExportUtils {
         config.orientation == PdfOrientation.landscape,
         isFullPage: true,
       );
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
@@ -455,7 +462,7 @@ class PdfExportUtils {
       );
     }
   }
-  
+
   /// 一页两张布局
   static Future<void> _addTwoPerPageLayout(
     pw.Document pdf,
@@ -468,7 +475,7 @@ class PdfExportUtils {
       final pageImages = images.skip(i).take(2).toList();
       final pageImageInfos = imageInfos.skip(i).take(2).toList();
       final isLandscape = config.orientation == PdfOrientation.landscape;
-      
+
       pw.Widget widget;
       if (pageImages.length == 1) {
         widget = await _buildImageTextBlock(
@@ -491,7 +498,7 @@ class PdfExportUtils {
           config,
           isLandscape,
         );
-        
+
         // 根据纸张方向决定布局方式
         if (config.orientation == PdfOrientation.portrait) {
           // 纵向：上下排列
@@ -513,7 +520,7 @@ class PdfExportUtils {
           );
         }
       }
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
@@ -525,7 +532,7 @@ class PdfExportUtils {
       );
     }
   }
-  
+
   /// 一页四张布局
   static Future<void> _addFourPerPageLayout(
     pw.Document pdf,
@@ -538,7 +545,7 @@ class PdfExportUtils {
       final pageImages = images.skip(i).take(4).toList();
       final pageImageInfos = imageInfos.skip(i).take(4).toList();
       final isLandscape = config.orientation == PdfOrientation.landscape;
-      
+
       // 预先构建所有widget
       final widget1 = pageImages.isNotEmpty
           ? await _buildImageTextBlock(
@@ -548,7 +555,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget2 = pageImages.length > 1
           ? await _buildImageTextBlock(
               pageImages[1],
@@ -557,7 +564,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget3 = pageImages.length > 2
           ? await _buildImageTextBlock(
               pageImages[2],
@@ -566,7 +573,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget4 = pageImages.length > 3
           ? await _buildImageTextBlock(
               pageImages[3],
@@ -575,7 +582,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
@@ -609,7 +616,7 @@ class PdfExportUtils {
       );
     }
   }
-  
+
   /// 一页六张布局
   static Future<void> _addSixPerPageLayout(
     pw.Document pdf,
@@ -622,7 +629,7 @@ class PdfExportUtils {
       final pageImages = images.skip(i).take(6).toList();
       final pageImageInfos = imageInfos.skip(i).take(6).toList();
       final isLandscape = config.orientation == PdfOrientation.landscape;
-      
+
       // 预先构建所有widget
       final widget1 = pageImages.isNotEmpty
           ? await _buildImageTextBlock(
@@ -632,7 +639,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget2 = pageImages.length > 1
           ? await _buildImageTextBlock(
               pageImages[1],
@@ -641,7 +648,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget3 = pageImages.length > 2
           ? await _buildImageTextBlock(
               pageImages[2],
@@ -650,7 +657,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget4 = pageImages.length > 3
           ? await _buildImageTextBlock(
               pageImages[3],
@@ -659,7 +666,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget5 = pageImages.length > 4
           ? await _buildImageTextBlock(
               pageImages[4],
@@ -668,7 +675,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       final widget6 = pageImages.length > 5
           ? await _buildImageTextBlock(
               pageImages[5],
@@ -677,7 +684,7 @@ class PdfExportUtils {
               isLandscape,
             )
           : pw.Container();
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
@@ -754,7 +761,7 @@ class PdfExportUtils {
       );
     }
   }
-  
+
   /// 一页九张布局
   static Future<void> _addNinePerPageLayout(
     pw.Document pdf,
@@ -767,53 +774,66 @@ class PdfExportUtils {
       final pageImages = images.skip(i).take(9).toList();
       final pageImageInfos = imageInfos.skip(i).take(9).toList();
       final isLandscape = config.orientation == PdfOrientation.landscape;
-      
+
       // 预先构建所有widget
       final List<pw.Widget> widgets = [];
       for (int j = 0; j < 9; j++) {
         if (pageImages.length > j) {
-          widgets.add(await _buildImageTextBlock(
-            pageImages[j],
-            pageImageInfos[j],
-            config,
-            isLandscape,
-            showContentText: false, // 3x3布局不显示内容文本
-          ));
+          widgets.add(
+            await _buildImageTextBlock(
+              pageImages[j],
+              pageImageInfos[j],
+              config,
+              isLandscape,
+              showContentText: false, // 3x3布局不显示内容文本
+            ),
+          );
         } else {
           widgets.add(pw.Container());
         }
       }
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
           margin: pw.EdgeInsets.all(config.margin),
           build: (pw.Context context) {
             return pw.Column(
-              children: List.generate(3, (rowIndex) {
-                return pw.Expanded(
-                  child: pw.Row(
-                    children: [
-                      for (int colIndex = 0; colIndex < 3; colIndex++) ...[
-                        pw.Expanded(
-                          child: widgets[rowIndex * 3 + colIndex],
-                        ),
-                        if (colIndex < 2) pw.SizedBox(width: config.spacing),
-                      ],
-                    ],
-                  ),
-                );
-              }).expand((widget) => [
-                widget,
-                pw.SizedBox(height: config.spacing),
-              ]).take(5).toList()
+              children:
+                  List.generate(3, (rowIndex) {
+                        return pw.Expanded(
+                          child: pw.Row(
+                            children: [
+                              for (
+                                int colIndex = 0;
+                                colIndex < 3;
+                                colIndex++
+                              ) ...[
+                                pw.Expanded(
+                                  child: widgets[rowIndex * 3 + colIndex],
+                                ),
+                                if (colIndex < 2)
+                                  pw.SizedBox(width: config.spacing),
+                              ],
+                            ],
+                          ),
+                        );
+                      })
+                      .expand(
+                        (widget) => [
+                          widget,
+                          pw.SizedBox(height: config.spacing),
+                        ],
+                      )
+                      .take(5)
+                      .toList(),
             );
           },
         ),
       );
     }
   }
-  
+
   /// 打印PDF文件
   static Future<bool> printPdf(
     List<PdfImageInfo> imageInfos,
@@ -822,9 +842,9 @@ class PdfExportUtils {
     try {
       final pdf = await _generatePdfDocument(imageInfos, config);
       if (pdf == null) return false;
-      
+
       final pdfBytes = await pdf.save();
-      
+
       // 使用printing包的打印功能
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdfBytes,
@@ -842,7 +862,7 @@ class PdfExportUtils {
   static Future<bool> _savePdf(pw.Document pdf, String fileName) async {
     try {
       final pdfBytes = await pdf.save();
-      
+
       if (kIsWeb) {
         // Web平台：使用printing包的打印功能
         await Printing.layoutPdf(
@@ -859,7 +879,7 @@ class PdfExportUtils {
           type: FileType.custom,
           allowedExtensions: ['pdf'],
         );
-        
+
         if (outputFile != null) {
           final file = File(outputFile);
           await file.writeAsBytes(pdfBytes);
@@ -875,7 +895,7 @@ class PdfExportUtils {
       return false;
     }
   }
-  
+
   /// 获取布局类型的显示名称
   static String getLayoutTypeName(PdfLayoutType type) {
     switch (type) {
@@ -891,7 +911,7 @@ class PdfExportUtils {
         return '一页九张';
     }
   }
-  
+
   /// 获取纸张大小的显示名称
   static String getPaperSizeName(PdfPaperSize size) {
     switch (size) {
@@ -905,7 +925,7 @@ class PdfExportUtils {
         return 'Legal';
     }
   }
-  
+
   /// 获取方向的显示名称
   static String getOrientationName(PdfOrientation orientation) {
     switch (orientation) {

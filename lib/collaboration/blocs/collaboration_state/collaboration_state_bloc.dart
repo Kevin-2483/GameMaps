@@ -8,20 +8,19 @@ import 'collaboration_state_state.dart';
 
 /// 协作状态Bloc
 /// 管理协作相关的UI状态和用户交互
-class CollaborationStateBloc extends Bloc<CollaborationStateEvent, CollaborationStateBlocState> {
+class CollaborationStateBloc
+    extends Bloc<CollaborationStateEvent, CollaborationStateBlocState> {
   final CollaborationStateManager _stateManager;
-  
+
   // 订阅管理
   StreamSubscription? _lockStateSubscription;
   StreamSubscription? _selectionStateSubscription;
   StreamSubscription? _cursorStateSubscription;
   StreamSubscription? _conflictSubscription;
 
-  CollaborationStateBloc({
-    CollaborationStateManager? stateManager,
-  }) : _stateManager = stateManager ?? CollaborationStateManager(),
-       super(const CollaborationStateInitial()) {
-    
+  CollaborationStateBloc({CollaborationStateManager? stateManager})
+    : _stateManager = stateManager ?? CollaborationStateManager(),
+      super(const CollaborationStateInitial()) {
     // 注册事件处理器
     on<InitializeCollaborationState>(_onInitializeCollaborationState);
     on<TryLockElement>(_onTryLockElement);
@@ -36,7 +35,7 @@ class CollaborationStateBloc extends Bloc<CollaborationStateEvent, Collaboration
     on<ReceiveRemoteCursorState>(_onReceiveRemoteCursorState);
     on<RemoveUserStates>(_onRemoveUserStates);
     on<_InternalStateUpdate>(_onInternalStateUpdate);
-    
+
     // 订阅状态管理器的变更
     _subscribeToStateManager();
   }
@@ -55,15 +54,19 @@ class CollaborationStateBloc extends Bloc<CollaborationStateEvent, Collaboration
     _lockStateSubscription = _stateManager.lockStateStream.listen((locks) {
       add(_InternalStateUpdate());
     });
-    
-    _selectionStateSubscription = _stateManager.selectionStateStream.listen((selections) {
+
+    _selectionStateSubscription = _stateManager.selectionStateStream.listen((
+      selections,
+    ) {
       add(_InternalStateUpdate());
     });
-    
-    _cursorStateSubscription = _stateManager.cursorStateStream.listen((cursors) {
+
+    _cursorStateSubscription = _stateManager.cursorStateStream.listen((
+      cursors,
+    ) {
       add(_InternalStateUpdate());
     });
-    
+
     _conflictSubscription = _stateManager.conflictStream.listen((conflicts) {
       add(_InternalStateUpdate());
     });
@@ -76,30 +79,35 @@ class CollaborationStateBloc extends Bloc<CollaborationStateEvent, Collaboration
   ) async {
     try {
       emit(const CollaborationStateLoading());
-      
+
       _stateManager.initialize(
         userId: event.userId,
         displayName: event.displayName,
         userColor: event.userColor,
       );
-      
-      emit(CollaborationStateLoaded(
-        elementLocks: _stateManager.elementLocks,
-        userSelections: _stateManager.userSelections,
-        userCursors: _stateManager.userCursors,
-        conflicts: _stateManager.conflicts.values.toList(),
-        currentUserId: _stateManager.currentUserId ?? 'unknown',
-        currentUserDisplayName: _stateManager.currentUserDisplayName ?? 'Unknown User',
-        currentUserColor: _stateManager.currentUserColor ?? Colors.grey,
-      ));
-      
+
+      emit(
+        CollaborationStateLoaded(
+          elementLocks: _stateManager.elementLocks,
+          userSelections: _stateManager.userSelections,
+          userCursors: _stateManager.userCursors,
+          conflicts: _stateManager.conflicts.values.toList(),
+          currentUserId: _stateManager.currentUserId ?? 'unknown',
+          currentUserDisplayName:
+              _stateManager.currentUserDisplayName ?? 'Unknown User',
+          currentUserColor: _stateManager.currentUserColor ?? Colors.grey,
+        ),
+      );
+
       debugPrint('[CollaborationStateBloc] 协作状态初始化完成');
     } catch (e, stackTrace) {
-      emit(CollaborationStateError(
-        message: '初始化协作状态失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      emit(
+        CollaborationStateError(
+          message: '初始化协作状态失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 
@@ -114,7 +122,7 @@ class CollaborationStateBloc extends Bloc<CollaborationStateEvent, Collaboration
       isHardLock: event.isHardLock,
       timeoutSeconds: event.timeoutSeconds ?? 30,
     );
-    
+
     if (!success) {
       debugPrint('[CollaborationStateBloc] 元素锁定失败: ${event.elementId}');
       // 状态会通过内部更新事件自动更新
@@ -214,12 +222,14 @@ class CollaborationStateBloc extends Bloc<CollaborationStateEvent, Collaboration
   ) async {
     final currentState = state;
     if (currentState is CollaborationStateLoaded) {
-      emit(currentState.copyWith(
-        elementLocks: _stateManager.elementLocks,
-        userSelections: _stateManager.userSelections,
-        userCursors: _stateManager.userCursors,
-        conflicts: _stateManager.conflicts.values.toList(),
-      ));
+      emit(
+        currentState.copyWith(
+          elementLocks: _stateManager.elementLocks,
+          userSelections: _stateManager.userSelections,
+          userCursors: _stateManager.userCursors,
+          conflicts: _stateManager.conflicts.values.toList(),
+        ),
+      );
     }
   }
 

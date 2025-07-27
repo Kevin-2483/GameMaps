@@ -199,7 +199,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                 children: [
                   // 顶部：关闭按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) ...[
+                      userPrefsProvider.layout.windowControlsMode ==
+                          WindowControlsMode.separated) ...[
                     _buildWindowButton(
                       context,
                       icon: Icons.power_settings_new,
@@ -221,7 +222,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                   ),
                   // 底部：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) ...[
+                      userPrefsProvider.layout.windowControlsMode ==
+                          WindowControlsMode.separated) ...[
                     const SizedBox(height: 8),
                     _buildWindowButton(
                       context,
@@ -263,7 +265,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                   const Expanded(child: SizedBox()),
                   // 右侧：窗口控制按钮（仅在桌面平台且未启用合并控件时显示）
                   if (isDraggable &&
-                      userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated)
+                      userPrefsProvider.layout.windowControlsMode ==
+                          WindowControlsMode.separated)
                     _buildWindowControls(context),
                 ],
               ),

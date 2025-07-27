@@ -23,42 +23,36 @@ class CollaborationConflictWidget extends StatefulWidget {
   });
 
   @override
-  State<CollaborationConflictWidget> createState() => _CollaborationConflictWidgetState();
+  State<CollaborationConflictWidget> createState() =>
+      _CollaborationConflictWidgetState();
 }
 
-class _CollaborationConflictWidgetState extends State<CollaborationConflictWidget>
+class _CollaborationConflictWidgetState
+    extends State<CollaborationConflictWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _opacityAnimation;
-  
+
   bool _isVisible = true;
 
   @override
   void initState() {
     super.initState();
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
-    _slideAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _opacityAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _slideAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
     // 自动隐藏定时器
     if (widget.autoHideDuration.inMilliseconds > 0) {
       Future.delayed(widget.autoHideDuration, () {
@@ -77,11 +71,11 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
 
   void _hideConflict() {
     if (!_isVisible) return;
-    
+
     setState(() {
       _isVisible = false;
     });
-    
+
     _animationController.forward().then((_) {
       widget.onDismiss?.call();
     });
@@ -114,10 +108,7 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
       decoration: BoxDecoration(
         color: widget.style.backgroundColor,
         borderRadius: BorderRadius.circular(widget.style.borderRadius),
-        border: Border.all(
-          color: widget.style.borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: widget.style.borderColor, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -132,7 +123,7 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
         children: [
           // 冲突标题
           _buildConflictHeader(),
-          
+
           // 冲突内容
           Padding(
             padding: widget.style.padding,
@@ -140,7 +131,7 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildConflictDescription(),
-                
+
                 if (widget.showActions) ...[
                   const SizedBox(height: 12),
                   _buildConflictActions(),
@@ -165,11 +156,7 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
       ),
       child: Row(
         children: [
-          Icon(
-            _getConflictIcon(),
-            color: widget.style.textColor,
-            size: 16,
-          ),
+          Icon(_getConflictIcon(), color: widget.style.textColor, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -182,17 +169,10 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.close,
-              color: widget.style.textColor,
-              size: 16,
-            ),
+            icon: Icon(Icons.close, color: widget.style.textColor, size: 16),
             onPressed: _hideConflict,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 24,
-              minHeight: 24,
-            ),
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
           ),
         ],
       ),
@@ -210,12 +190,12 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
             fontSize: widget.style.fontSize - 1,
           ),
         ),
-        
+
         if (widget.conflict.involvedUserIds.isNotEmpty) ...[
           const SizedBox(height: 8),
           _buildInvolvedUsers(),
         ],
-        
+
         const SizedBox(height: 4),
         Text(
           '发生时间: ${_formatTimestamp(widget.conflict.timestamp)}',
@@ -330,7 +310,7 @@ class _CollaborationConflictWidgetState extends State<CollaborationConflictWidge
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inMinutes < 1) {
       return '刚刚';
     } else if (difference.inHours < 1) {
@@ -366,7 +346,7 @@ class ConflictListWidget extends StatelessWidget {
     final filteredConflicts = showResolvedConflicts
         ? conflicts
         : conflicts.where((c) => !c.isResolved).toList();
-    
+
     if (filteredConflicts.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -399,16 +379,12 @@ class ConflictStatsWidget extends StatelessWidget {
   final List<CollaborationConflict> conflicts;
   final VoidCallback? onTap;
 
-  const ConflictStatsWidget({
-    super.key,
-    required this.conflicts,
-    this.onTap,
-  });
+  const ConflictStatsWidget({super.key, required this.conflicts, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final unresolvedConflicts = conflicts.where((c) => !c.isResolved).toList();
-    
+
     if (unresolvedConflicts.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -425,11 +401,7 @@ class ConflictStatsWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.warning,
-              color: Colors.red.shade700,
-              size: 16,
-            ),
+            Icon(Icons.warning, color: Colors.red.shade700, size: 16),
             const SizedBox(width: 4),
             Text(
               '${unresolvedConflicts.length}个冲突',

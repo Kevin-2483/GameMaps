@@ -145,7 +145,8 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         if (!userPrefsProvider.isInitialized ||
-            userPrefsProvider.layout.windowControlsMode == WindowControlsMode.separated) {
+            userPrefsProvider.layout.windowControlsMode ==
+                WindowControlsMode.separated) {
           return const SizedBox.shrink();
         }
 
@@ -199,7 +200,11 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                   ? (enableRightSideVertical
                                         ? [
                                             // 右侧垂直导航时：展开按钮在左，关闭按钮在右（固定位置）
-                                            if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
+                                            if (_shouldBeExpanded(
+                                              userPrefsProvider
+                                                  .layout
+                                                  .windowControlsMode,
+                                            ))
                                               ..._buildExpandedButtons(context),
                                             _buildWindowButton(
                                               context,
@@ -220,12 +225,20 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                               tooltip: '关闭',
                                               isCloseButton: true,
                                             ),
-                                            if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
+                                            if (_shouldBeExpanded(
+                                              userPrefsProvider
+                                                  .layout
+                                                  .windowControlsMode,
+                                            ))
                                               ..._buildExpandedButtons(context),
                                           ])
                                   : [
                                       // 水平导航时：关闭按钮在右（固定位置），展开按钮在左
-                                      if (_shouldBeExpanded(userPrefsProvider.layout.windowControlsMode))
+                                      if (_shouldBeExpanded(
+                                        userPrefsProvider
+                                            .layout
+                                            .windowControlsMode,
+                                      ))
                                         ..._buildExpandedButtons(context),
                                       _buildWindowButton(
                                         context,
@@ -253,7 +266,8 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
 
   List<Widget> _buildExpandedButtons(BuildContext context) {
     final layout = Provider.of<UserPreferencesProvider>(context).layout;
-    final isAlwaysExpanded = layout.windowControlsMode == WindowControlsMode.mergedExpanded;
+    final isAlwaysExpanded =
+        layout.windowControlsMode == WindowControlsMode.mergedExpanded;
     List<Widget> buttons = [];
 
     Widget wrapWithAnimation(Widget child) {

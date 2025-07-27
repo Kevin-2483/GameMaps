@@ -309,7 +309,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   ]) {
     // 只显示路径的最后一节
     final displayName = directory == '根目录' ? '根目录' : directory.split('/').last;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 1),
       color: backgroundColor?.withValues(

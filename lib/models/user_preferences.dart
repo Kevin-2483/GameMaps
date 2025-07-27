@@ -8,8 +8,10 @@ part 'user_preferences.g.dart';
 enum WindowControlsMode {
   /// 分离模式 - 窗口控件显示在导航栏中
   separated,
+
   /// 合并模式 - 窗口控件合并到悬浮托盘中
   merged,
+
   /// 合并展开模式 - 窗口控件合并到悬浮托盘中，默认展开
   mergedExpanded,
 }
@@ -579,8 +581,7 @@ class LayoutPreferences {
       enableRightSideVerticalNavigation:
           enableRightSideVerticalNavigation ??
           this.enableRightSideVerticalNavigation,
-      windowControlsMode:
-          windowControlsMode ?? this.windowControlsMode,
+      windowControlsMode: windowControlsMode ?? this.windowControlsMode,
     );
   }
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// 提供可复用的弹窗样式和定位逻辑
 class PopupMenuUtils {
   /// 显示定位弹窗
-  /// 
+  ///
   /// [context] - 上下文
   /// [anchorKey] - 锚点组件的GlobalKey
   /// [contentBuilder] - 弹窗内容构建器
@@ -24,12 +24,13 @@ class PopupMenuUtils {
     PopupSide preferredSide = PopupSide.right,
   }) async {
     // 获取锚点位置
-    final RenderBox? renderBox = anchorKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? renderBox =
+        anchorKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
-    
+
     final Offset anchorPosition = renderBox.localToGlobal(Offset.zero);
     final Size anchorSize = renderBox.size;
-    
+
     return showDialog(
       context: context,
       barrierColor: Colors.transparent,
@@ -77,7 +78,7 @@ class PopupMenuUtils {
   }) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // 计算弹窗位置
     final position = _calculateFixedPopupPosition(
       screenSize: Size(screenWidth, screenHeight),
@@ -89,7 +90,7 @@ class PopupMenuUtils {
       offsetY: offsetY,
       preferredSide: preferredSide,
     );
-    
+
     return Positioned(
       top: position.dy,
       left: position.dx,
@@ -114,7 +115,7 @@ class PopupMenuUtils {
     required PopupSide preferredSide,
   }) {
     double left, top;
-    
+
     // 根据首选位置计算初始位置
     switch (preferredSide) {
       case PopupSide.right:
@@ -126,15 +127,31 @@ class PopupMenuUtils {
         top = anchorPosition.dy + offsetY - (popupHeight / 2); // 向上移动弹窗高度的一半
         break;
       case PopupSide.top:
-        left = anchorPosition.dx + (anchorSize.width / 2) - (popupWidth / 2) + 16; // 向右移动16px
-        top = anchorPosition.dy - popupHeight - offsetY - (popupHeight / 2); // 显示在上方并向上移动弹窗高度的一半
+        left =
+            anchorPosition.dx +
+            (anchorSize.width / 2) -
+            (popupWidth / 2) +
+            16; // 向右移动16px
+        top =
+            anchorPosition.dy -
+            popupHeight -
+            offsetY -
+            (popupHeight / 2); // 显示在上方并向上移动弹窗高度的一半
         break;
       case PopupSide.bottom:
-        left = anchorPosition.dx + (anchorSize.width / 2) - (popupWidth / 2) + 16; // 向右移动16px
-        top = anchorPosition.dy + anchorSize.height + offsetY - (popupHeight / 2); // 显示在下方并向上移动弹窗高度的一半
+        left =
+            anchorPosition.dx +
+            (anchorSize.width / 2) -
+            (popupWidth / 2) +
+            16; // 向右移动16px
+        top =
+            anchorPosition.dy +
+            anchorSize.height +
+            offsetY -
+            (popupHeight / 2); // 显示在下方并向上移动弹窗高度的一半
         break;
     }
-    
+
     // 边界检查和调整
     if (left + popupWidth > screenSize.width) {
       if (preferredSide == PopupSide.right) {
@@ -145,11 +162,11 @@ class PopupMenuUtils {
         left = screenSize.width - popupWidth - 10;
       }
     }
-    
+
     if (left < 10) {
       left = 10;
     }
-    
+
     // 垂直位置边界检查
     if (top + popupHeight > screenSize.height) {
       if (preferredSide == PopupSide.bottom) {
@@ -160,11 +177,11 @@ class PopupMenuUtils {
         top = screenSize.height - popupHeight - 10;
       }
     }
-    
+
     if (top < 10) {
       top = 10;
     }
-    
+
     return Offset(left, top);
   }
 
@@ -197,9 +214,7 @@ class PopupMenuUtils {
           ],
         ),
         // 内容在弹窗中上下居中，宽度自适应
-        child: Center(
-          child: child,
-        ),
+        child: Center(child: child),
       ),
     );
   }
@@ -230,7 +245,7 @@ class PopupMenuUtils {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSelected 
+                  color: isSelected
                       ? Theme.of(context).colorScheme.primaryContainer
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(4),
@@ -244,7 +259,9 @@ class PopupMenuUtils {
                       color: isSelected
                           ? Theme.of(context).colorScheme.onPrimaryContainer
                           : isIndented
-                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7)
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                     const SizedBox(width: 8),
@@ -255,9 +272,13 @@ class PopupMenuUtils {
                           color: isSelected
                               ? Theme.of(context).colorScheme.onPrimaryContainer
                               : isIndented
-                              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8)
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.8)
                               : Theme.of(context).colorScheme.onSurface,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                           fontSize: isIndented ? fontSize - 1 : fontSize,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -284,9 +305,4 @@ class PopupMenuUtils {
 }
 
 /// 弹窗显示位置枚举
-enum PopupSide {
-  left,
-  right,
-  top,
-  bottom,
-}
+enum PopupSide { left, right, top, bottom }

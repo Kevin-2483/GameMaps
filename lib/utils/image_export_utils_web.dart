@@ -12,18 +12,18 @@ Future<bool> exportImagesImpl(
   try {
     // 在Web平台，逐个下载每张图片
     for (int i = 0; i < imageBytes.length; i++) {
-      final fileName = imageBytes.length == 1 
+      final fileName = imageBytes.length == 1
           ? '$baseName.$format'
           : '${baseName}_${i + 1}.$format';
-      
+
       await _downloadImage(imageBytes[i], fileName);
-      
+
       // 添加小延迟，避免浏览器阻止多个下载
       if (i < imageBytes.length - 1) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
     }
-    
+
     return true;
   } catch (e) {
     print('Web平台导出图片失败: $e');
@@ -49,20 +49,20 @@ Future<bool> exportSingleImageImpl(
 Future<void> _downloadImage(Uint8List imageBytes, String fileName) async {
   // 创建Blob对象
   final blob = html.Blob([imageBytes], 'image/png');
-  
+
   // 创建下载链接
   final url = html.Url.createObjectUrlFromBlob(blob);
-  
+
   // 创建隐藏的下载链接并触发下载
   final anchor = html.AnchorElement(href: url)
     ..setAttribute('download', fileName)
     ..style.display = 'none';
-  
+
   // 添加到DOM，触发下载，然后移除
   html.document.body?.children.add(anchor);
   anchor.click();
   html.document.body?.children.remove(anchor);
-  
+
   // 释放URL对象
   html.Url.revokeObjectUrl(url);
 }

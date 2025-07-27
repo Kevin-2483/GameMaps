@@ -47,10 +47,11 @@ class StickyNoteDisplay extends StatefulWidget {
   State<StickyNoteDisplay> createState() => _StickyNoteDisplayState();
 }
 
-class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProviderStateMixin {
+class _StickyNoteDisplayState extends State<StickyNoteDisplay>
+    with TickerProviderStateMixin {
   // 用于存储便签中图片元素的本地缓存
   final Map<String, ui.Image> _localImageCache = {};
-  
+
   // 动画控制器
   AnimationController? _rotationController;
   Animation<double>? _rotationAnimation;
@@ -59,13 +60,13 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
   void initState() {
     super.initState();
     _preloadStickyNoteImages();
-    
+
     // 初始化动画控制器
     _rotationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
-    
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -111,7 +112,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
   void dispose() {
     // 释放动画控制器
     _rotationController?.dispose();
-    
+
     // 释放本地图片缓存
     for (final image in _localImageCache.values) {
       image.dispose();
@@ -187,11 +188,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
               behavior: HitTestBehavior.opaque, // 确保按钮区域可以接收点击
               child: Container(
                 padding: const EdgeInsets.all(4), // 增加点击区域
-                child: Icon(
-                  Icons.edit,
-                  size: 16,
-                  color: widget.note.textColor,
-                ),
+                child: Icon(Icons.edit, size: 16, color: widget.note.textColor),
               ),
             ),
           // 折叠/展开按钮
@@ -530,11 +527,12 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay> with TickerProvid
       return true; // 没有队列管理器，认为没有队列项目
     }
 
-    final allQueueItems = widget.previewQueueManager!.stickyNoteQueueNotifier.value;
+    final allQueueItems =
+        widget.previewQueueManager!.stickyNoteQueueNotifier.value;
     final stickyNoteQueueItems = allQueueItems
         .where((item) => item.stickyNote.id == widget.note.id)
         .toList();
-    
+
     return stickyNoteQueueItems.isEmpty;
   }
 }
@@ -609,7 +607,7 @@ class StickyNoteGestureHelper {
     if (titleBarRect.contains(localPosition)) {
       // 在标题栏内，进一步检查是否点击了按钮
       const double buttonSize = 24.0; // 按钮区域大小（包括padding）
-      
+
       // 检查折叠按钮（最右边）
       final collapseButtonRect = Rect.fromLTWH(
         noteSize.width - buttonSize, // 右对齐
@@ -620,7 +618,7 @@ class StickyNoteGestureHelper {
       if (collapseButtonRect.contains(localPosition)) {
         return StickyNoteHitType.collapseButton;
       }
-      
+
       // 检查编辑按钮（折叠按钮左边）
       final editButtonRect = Rect.fromLTWH(
         noteSize.width - buttonSize * 2, // 在折叠按钮左边
@@ -677,7 +675,7 @@ class StickyNoteGestureHelper {
         // 对于折叠按钮，我们不启动拖拽
         // 折叠操作应该在 TapDown 事件中处理
         return null; // 不返回拖拽状态
-        
+
       case StickyNoteHitType.editButton:
         // 对于编辑按钮，我们不启动拖拽
         // 编辑操作应该在 TapDown 事件中处理
@@ -981,23 +979,29 @@ class _StickyNoteQueuePainter extends CustomPainter {
   }
 
   /// 渲染单个队列项目
-  void _renderQueueItem(Canvas canvas, Size size, StickyNotePreviewQueueItem item) {
+  void _renderQueueItem(
+    Canvas canvas,
+    Size size,
+    StickyNotePreviewQueueItem item,
+  ) {
     final element = item.element;
-    
+
     // 将归一化坐标转换为绝对坐标
     final absolutePoints = element.points
         .map((point) => Offset(point.dx * size.width, point.dy * size.height))
         .toList();
-    
+
     // 获取起始和结束点（绝对坐标）
-    final start = absolutePoints.isNotEmpty ? absolutePoints.first : Offset.zero;
+    final start = absolutePoints.isNotEmpty
+        ? absolutePoints.first
+        : Offset.zero;
     final end = absolutePoints.length > 1 ? absolutePoints[1] : start;
-    
+
     // 对于自由绘制，使用整个路径（绝对坐标）
-    final freeDrawingPath = element.type == DrawingElementType.freeDrawing 
-        ? absolutePoints 
+    final freeDrawingPath = element.type == DrawingElementType.freeDrawing
+        ? absolutePoints
         : null;
-    
+
     // 使用PreviewRenderer渲染元素
     PreviewRenderer.drawCurrentDrawing(
       canvas,
@@ -1020,28 +1024,28 @@ class _StickyNoteQueuePainter extends CustomPainter {
   /// 绘制队列加载指示器
   void _drawQueueSpinner(Canvas canvas, Offset center) {
     const radius = 8.0;
-    
+
     // 绘制半透明背景圆
     final bgPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, bgPaint);
-    
+
     // 绘制旋转的加载指示器
     final spinnerPaint = Paint()
       ..color = Colors.blue
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
-    
+
     // 使用动画控制器的值进行旋转
     final rotation = rotationAnimation?.value ?? 0.0;
     final rotationAngle = rotation * 2 * 3.14159; // 将0-1的值转换为0-2π的弧度
-    
+
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotationAngle);
-    
+
     // 绘制部分圆弧作为加载指示器
     const sweepAngle = 3.14159 * 1.5; // 270度
     canvas.drawArc(
@@ -1051,7 +1055,7 @@ class _StickyNoteQueuePainter extends CustomPainter {
       false,
       spinnerPaint,
     );
-    
+
     canvas.restore();
   }
 

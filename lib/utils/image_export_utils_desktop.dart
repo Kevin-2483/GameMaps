@@ -16,22 +16,22 @@ Future<bool> exportImagesImpl(
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
       dialogTitle: '选择导出目录',
     );
-    
+
     if (selectedDirectory == null) {
       return false; // 用户取消了选择
     }
-    
+
     // 保存每张图片
     for (int i = 0; i < imageBytes.length; i++) {
-      final fileName = imageBytes.length == 1 
+      final fileName = imageBytes.length == 1
           ? '$baseName.$format'
           : '${baseName}_${i + 1}.$format';
       final filePath = path.join(selectedDirectory, fileName);
-      
+
       final file = File(filePath);
       await file.writeAsBytes(imageBytes[i]);
     }
-    
+
     return true;
   } catch (e) {
     print('桌面平台导出图片失败: $e');
@@ -52,14 +52,14 @@ Future<bool> exportSingleImageImpl(
       type: FileType.custom,
       allowedExtensions: ['png', 'jpg', 'jpeg'],
     );
-    
+
     if (outputFile == null) {
       return false; // 用户取消了保存
     }
-    
+
     final file = File(outputFile);
     await file.writeAsBytes(imageBytes);
-    
+
     return true;
   } catch (e) {
     print('桌面平台导出单张图片失败: $e');

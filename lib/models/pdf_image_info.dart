@@ -6,18 +6,10 @@ class PdfImageInfo {
   String title;
   String content;
 
-  PdfImageInfo({
-    required this.image,
-    this.title = '',
-    this.content = '',
-  });
+  PdfImageInfo({required this.image, this.title = '', this.content = ''});
 
   /// 复制并修改
-  PdfImageInfo copyWith({
-    ui.Image? image,
-    String? title,
-    String? content,
-  }) {
+  PdfImageInfo copyWith({ui.Image? image, String? title, String? content}) {
     return PdfImageInfo(
       image: image ?? this.image,
       title: title ?? this.title,

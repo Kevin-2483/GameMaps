@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
 
-
 /// 图层绑定抽屉 - 从图例组角度选择要绑定的图层
 class LayerBindingDrawer extends StatefulWidget {
   final LegendGroup legendGroup;
@@ -44,7 +43,9 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
     if (oldWidget.legendGroup.id != widget.legendGroup.id) {
       setState(() {
         _selectedLayerIds = widget.allLayers
-            .where((layer) => layer.legendGroupIds.contains(widget.legendGroup.id))
+            .where(
+              (layer) => layer.legendGroupIds.contains(widget.legendGroup.id),
+            )
             .map((layer) => layer.id)
             .toSet();
       });
@@ -56,10 +57,12 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
         // 检查当前选中的图层ID是否仍然有效
         final validLayerIds = widget.allLayers.map((l) => l.id).toSet();
         _selectedLayerIds = _selectedLayerIds.intersection(validLayerIds);
-        
+
         // 重新计算绑定状态
         _selectedLayerIds = widget.allLayers
-            .where((layer) => layer.legendGroupIds.contains(widget.legendGroup.id))
+            .where(
+              (layer) => layer.legendGroupIds.contains(widget.legendGroup.id),
+            )
             .map((layer) => layer.id)
             .toSet();
       });
@@ -162,9 +165,7 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ...boundLayers.map(
-                    (layer) => _buildLayerTile(layer, true),
-                  ),
+                  ...boundLayers.map((layer) => _buildLayerTile(layer, true)),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
@@ -253,10 +254,8 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
             ),
           ],
         ),
-        onTap: () => _toggleLayer(
-          layer.id,
-          !_selectedLayerIds.contains(layer.id),
-        ),
+        onTap: () =>
+            _toggleLayer(layer.id, !_selectedLayerIds.contains(layer.id)),
       ),
     );
   }
@@ -269,7 +268,7 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
         _selectedLayerIds.remove(layerId);
       }
     });
-    
+
     // 实时应用更改，但不关闭抽屉
     _applyChangesWithoutClosing();
   }
@@ -298,7 +297,7 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
       }
       return layer;
     }).toList();
-    
+
     // 通过回调函数更新图层
     widget.onLayersUpdated(updatedLayers);
   }

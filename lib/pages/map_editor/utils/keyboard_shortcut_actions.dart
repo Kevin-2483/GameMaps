@@ -11,7 +11,7 @@ import '../../../services/notification/notification_service.dart';
 class KeyboardShortcutActions {
   final BuildContext context;
   final VoidCallback? setState;
-  
+
   // 地图相关状态
   final MapItem? Function() getCurrentMap;
   final MapLayer? Function() getSelectedLayer;
@@ -23,13 +23,13 @@ class KeyboardShortcutActions {
   final bool Function() getIsSidebarCollapsed;
   final bool Function() getIsZIndexInspectorOpen;
   final GlobalKey Function() getMapCanvasKey;
-  
+
   // 响应式系统方法
   final bool Function() canUndoReactive;
   final bool Function() canRedoReactive;
   final VoidCallback undoReactive;
   final VoidCallback redoReactive;
-  
+
   // 状态更新方法
   final void Function(MapLayer) updateLayer;
   final void Function(LegendGroup) updateLegendGroup;
@@ -43,13 +43,13 @@ class KeyboardShortcutActions {
   final void Function(MapLayer?) setCurrentLayerForBinding;
   final void Function(List<LegendGroup>?) setAllLegendGroupsForBinding;
   final void Function(String?) setInitialSelectedLegendItemId;
-  
+
   // 版本管理方法
   final List<dynamic> Function() getAllVersionStates;
   final String? Function() getCurrentVersionId;
   final Future<void> Function(String) switchVersion;
   final Future<void> Function(String) createVersion;
-  
+
   // 其他方法
   final VoidCallback prioritizeLayerAndGroupDisplay;
   final VoidCallback clearCanvasSelection;
@@ -60,7 +60,7 @@ class KeyboardShortcutActions {
   final Future<void> Function(MapItem) saveWithReactiveVersions;
   final dynamic vfsMapService;
   final String folderPath;
-  
+
   KeyboardShortcutActions({
     required this.context,
     required this.setState,
@@ -171,9 +171,8 @@ class KeyboardShortcutActions {
         return;
       }
 
-      final imageData = await (mapCanvas as dynamic).captureCanvasAreaToRgbaUint8List(
-        selectionRect,
-      );
+      final imageData = await (mapCanvas as dynamic)
+          .captureCanvasAreaToRgbaUint8List(selectionRect);
       if (imageData == null) {
         throw Exception('无法捕获画布区域');
       }
@@ -479,7 +478,8 @@ class KeyboardShortcutActions {
 
     final selectedLayer = getSelectedLayer();
     final selectedLayerGroup = getSelectedLayerGroup();
-    final legendGroups = (selectedLayer != null ||
+    final legendGroups =
+        (selectedLayer != null ||
             (selectedLayerGroup != null && selectedLayerGroup.isNotEmpty))
         ? getBoundLegendGroups()
         : currentMap.legendGroups;
@@ -515,7 +515,8 @@ class KeyboardShortcutActions {
 
     final selectedLayer = getSelectedLayer();
     final selectedLayerGroup = getSelectedLayerGroup();
-    final legendGroups = (selectedLayer != null ||
+    final legendGroups =
+        (selectedLayer != null ||
             (selectedLayerGroup != null && selectedLayerGroup.isNotEmpty))
         ? getBoundLegendGroups()
         : currentMap.legendGroups;
@@ -554,7 +555,7 @@ class KeyboardShortcutActions {
       final currentMap = getCurrentMap();
       final selectedLayer = getSelectedLayer();
       final selectedLayerGroup = getSelectedLayerGroup();
-      
+
       // 优先级1：当前选中图层绑定的图例组
       if (selectedLayer != null) {
         if (selectedLayer.legendGroupIds.isNotEmpty) {
@@ -568,8 +569,8 @@ class KeyboardShortcutActions {
           }
         } else {
           if (context.mounted) {
-        NotificationService.instance.showInfo('当前选中图层没有绑定图例组');
-      }
+            NotificationService.instance.showInfo('当前选中图层没有绑定图例组');
+          }
           return;
         }
       }
@@ -591,8 +592,8 @@ class KeyboardShortcutActions {
           }
         } else {
           if (context.mounted) {
-        NotificationService.instance.showInfo('当前选中图层组没有绑定图例组');
-      }
+            NotificationService.instance.showInfo('当前选中图层组没有绑定图例组');
+          }
           return;
         }
       }
@@ -601,17 +602,17 @@ class KeyboardShortcutActions {
       if (currentMap != null && currentMap.legendGroups.isNotEmpty) {
         // 获取所有图层组
         final layerGroups = getLayerGroups();
-        
+
         if (layerGroups.isNotEmpty) {
           // 获取最后一个图层组
           final lastLayerGroup = layerGroups.last;
-          
+
           // 收集最后一个图层组中所有图层绑定的图例组ID
           final allBoundGroupIds = <String>{};
           for (final layer in lastLayerGroup) {
             allBoundGroupIds.addAll(layer.legendGroupIds);
           }
-          
+
           if (allBoundGroupIds.isNotEmpty) {
             // 找到第一个绑定的图例组
             final firstBoundGroupId = allBoundGroupIds.first;
@@ -624,14 +625,14 @@ class KeyboardShortcutActions {
             }
           }
         }
-        
+
         // 如果最后一个图层组没有绑定图例组，则使用第一个可用的图例组
         final firstGroup = currentMap.legendGroups.first;
         showLegendGroupManagementDrawer(firstGroup);
       } else {
         if (context.mounted) {
-        NotificationService.instance.showInfo('当前地图没有图例组');
-      }
+          NotificationService.instance.showInfo('当前地图没有图例组');
+        }
       }
     }
   }
@@ -756,7 +757,7 @@ class KeyboardShortcutActions {
 
   void openZInspector() {
     final isOpen = getIsZIndexInspectorOpen();
-    
+
     if (isOpen) {
       setState?.call();
       setIsZIndexInspectorOpen(false);
@@ -771,11 +772,11 @@ class KeyboardShortcutActions {
           }
           return;
         }
-        
+
         // 自动选择默认图层
         setSelectedLayer(targetLayer);
       }
-      
+
       setState?.call();
       setIsZIndexInspectorOpen(true);
     }
@@ -795,10 +796,10 @@ class KeyboardShortcutActions {
       if (context.mounted) {
         NotificationService.instance.showInfo('正在保存地图...');
       }
-      
+
       // 直接调用响应式版本保存逻辑，避免循环调用
       await saveWithReactiveVersions(currentMap);
-      
+
       if (context.mounted) {
         NotificationService.instance.showSuccess('地图保存成功');
       }
@@ -818,9 +819,13 @@ class KeyboardShortcutActions {
     if (currentId == null) return;
 
     // 按创建时间排序版本
-    versions.sort((a, b) => (a as dynamic).createdAt.compareTo((b as dynamic).createdAt));
+    versions.sort(
+      (a, b) => (a as dynamic).createdAt.compareTo((b as dynamic).createdAt),
+    );
 
-    final currentIndex = versions.indexWhere((v) => (v as dynamic).versionId == currentId);
+    final currentIndex = versions.indexWhere(
+      (v) => (v as dynamic).versionId == currentId,
+    );
     if (currentIndex > 0) {
       final previousVersion = versions[currentIndex - 1];
       switchVersion((previousVersion as dynamic).versionId).catchError((error) {
@@ -839,9 +844,13 @@ class KeyboardShortcutActions {
     if (currentId == null) return;
 
     // 按创建时间排序版本
-    versions.sort((a, b) => (a as dynamic).createdAt.compareTo((b as dynamic).createdAt));
+    versions.sort(
+      (a, b) => (a as dynamic).createdAt.compareTo((b as dynamic).createdAt),
+    );
 
-    final currentIndex = versions.indexWhere((v) => (v as dynamic).versionId == currentId);
+    final currentIndex = versions.indexWhere(
+      (v) => (v as dynamic).versionId == currentId,
+    );
     if (currentIndex >= 0 && currentIndex < versions.length - 1) {
       final nextVersion = versions[currentIndex + 1];
       switchVersion((nextVersion as dynamic).versionId).catchError((error) {

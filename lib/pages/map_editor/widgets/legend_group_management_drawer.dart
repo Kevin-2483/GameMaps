@@ -737,7 +737,10 @@ class _LegendGroupManagementDrawerState
                           const Expanded(
                             child: Text(
                               '设置选项',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                           const Icon(Icons.expand_more, size: 18),
@@ -806,7 +809,10 @@ class _LegendGroupManagementDrawerState
                           const Expanded(
                             child: Text(
                               'VFS图例目录',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                           const Icon(Icons.expand_more, size: 18),
@@ -884,7 +890,10 @@ class _LegendGroupManagementDrawerState
                           const Expanded(
                             child: Text(
                               '缓存图例',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                           const Icon(Icons.expand_more, size: 18),
@@ -1013,7 +1022,10 @@ class _LegendGroupManagementDrawerState
                                   ElevatedButton.icon(
                                     onPressed: _showAddLegendDialog,
                                     icon: const Icon(Icons.add, size: 14),
-                                    label: const Text('添加图例', style: TextStyle(fontSize: 12)),
+                                    label: const Text(
+                                      '添加图例',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -2993,6 +3005,4 @@ class _LegendGroupManagementDrawerState
     // 调用父组件的回调来显示图层绑定抽屉
     widget.onShowLayerBinding?.call(widget.legendGroup);
   }
-
-
 }

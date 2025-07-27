@@ -27,10 +27,7 @@ class CanvasRuler extends StatelessWidget {
       height: isHorizontal ? size : null,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 0.5,
-        ),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
       ),
       child: CustomPaint(
         size: isHorizontal ? Size.infinite : Size(size, double.infinity),
@@ -80,43 +77,54 @@ class _RulerPainter extends CustomPainter {
     // 计算可见区域
     final viewportSize = isHorizontal ? size.width : size.height;
     final rulerSize = isHorizontal ? size.height : size.width;
-    
+
     // 确定合适的刻度间隔（基于缩放级别和视口大小）
     double tickInterval = _getTickInterval(scale, viewportSize);
-    
+
     // InteractiveViewer的boundaryMargin创建了视觉边距，但不影响画布坐标系
     // 画布坐标0应该对应到刻度尺中的offset位置（忽略padding）
     // 根据用户反馈，当padding=0时位置最接近正确
     final canvas0PositionInRuler = offset;
-    
+
     // 计算整个刻度尺区域对应的画布坐标范围 - 让刻度填满整个刻度尺区域
     final rulerStartCanvasValue = -canvas0PositionInRuler / scale;
     final rulerEndCanvasValue = (viewportSize - canvas0PositionInRuler) / scale;
-    
+
     // 计算第一个刻度值（向下取整到刻度间隔）
-    final firstTickValue = (rulerStartCanvasValue / tickInterval).floor() * tickInterval;
-    
+    final firstTickValue =
+        (rulerStartCanvasValue / tickInterval).floor() * tickInterval;
+
     // 绘制刻度 - 填充整个刻度尺区域
     // 大刻度间隔
     double majorTickValue = firstTickValue;
-    
+
     while (majorTickValue <= rulerEndCanvasValue + tickInterval) {
       // 计算大刻度在刻度尺中的位置
-      final majorTickPosition = canvas0PositionInRuler + (majorTickValue * scale);
-      
+      final majorTickPosition =
+          canvas0PositionInRuler + (majorTickValue * scale);
+
       // 绘制大刻度
       if (majorTickPosition >= 0 && majorTickPosition <= viewportSize) {
-        _drawMajorTick(canvas, majorTickPosition, majorTickValue, rulerSize, tickInterval);
+        _drawMajorTick(
+          canvas,
+          majorTickPosition,
+          majorTickValue,
+          rulerSize,
+          tickInterval,
+        );
       }
-      
+
       // 绘制小刻度（在大刻度中间）
       final minorTickValue = majorTickValue + (tickInterval / 2);
-      final minorTickPosition = canvas0PositionInRuler + (minorTickValue * scale);
-      
-      if (minorTickPosition >= 0 && minorTickPosition <= viewportSize && minorTickValue <= rulerEndCanvasValue) {
+      final minorTickPosition =
+          canvas0PositionInRuler + (minorTickValue * scale);
+
+      if (minorTickPosition >= 0 &&
+          minorTickPosition <= viewportSize &&
+          minorTickValue <= rulerEndCanvasValue) {
         _drawMinorTick(canvas, minorTickPosition, rulerSize);
       }
-      
+
       majorTickValue += tickInterval;
     }
   }
@@ -126,7 +134,7 @@ class _RulerPainter extends CustomPainter {
   double _getTickInterval(double scale, double viewportSize) {
     // 计算需要的间隔以显示至少16个大刻度
     final minInterval = (viewportSize / scale) / 16;
-    
+
     // 选择合适的间隔值（100的倍数）
     if (minInterval <= 50) return 50.0;
     if (minInterval <= 100) return 100.0;
@@ -137,7 +145,13 @@ class _RulerPainter extends CustomPainter {
   }
 
   /// 绘制大刻度
-  void _drawMajorTick(Canvas canvas, double position, double value, double rulerSize, double tickInterval) {
+  void _drawMajorTick(
+    Canvas canvas,
+    double position,
+    double value,
+    double rulerSize,
+    double tickInterval,
+  ) {
     final paint = Paint()
       ..color = lineColor
       ..strokeWidth = 1.0;
@@ -170,30 +184,21 @@ class _RulerPainter extends CustomPainter {
     } else {
       labelInterval = 800.0; // 很低缩放时每800px显示数字
     }
-    
+
     final shouldShowLabel = (value % labelInterval) == 0;
     if (shouldShowLabel) {
       final valueText = value.toInt().toString();
       final textPainter = TextPainter(
-        text: TextSpan(
-          text: valueText,
-          style: textStyle,
-        ),
+        text: TextSpan(text: valueText, style: textStyle),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
 
       Offset textOffset;
       if (isHorizontal) {
-        textOffset = Offset(
-          position - textPainter.width / 2,
-          2,
-        );
+        textOffset = Offset(position - textPainter.width / 2, 2);
       } else {
-        textOffset = Offset(
-          2,
-          position - textPainter.height / 2,
-        );
+        textOffset = Offset(2, position - textPainter.height / 2);
       }
 
       textPainter.paint(canvas, textOffset);

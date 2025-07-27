@@ -83,7 +83,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
         oldWidget.mapItem != widget.mapItem) {
       _updateLegendData();
     }
-    
+
     // 当画布选中的元素发生变化时，同步dock栏的选择状态
     if (oldWidget.selectedElementId != widget.selectedElementId) {
       _syncCanvasSelection();
@@ -108,8 +108,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
       // 检查是否有可用的图例组
       if (targetLegendGroups.isEmpty) {
         // 当统计范围是整个地图且没有图层绑定图例组时的特殊处理
-        if (widget.selectedLayer == null && 
-            (widget.selectedLayerGroup == null || widget.selectedLayerGroup!.isEmpty)) {
+        if (widget.selectedLayer == null &&
+            (widget.selectedLayerGroup == null ||
+                widget.selectedLayerGroup!.isEmpty)) {
           // 整个地图范围但没有可用的图例组，可能需要提示用户
         }
       }
@@ -178,7 +179,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     final selectionTargetGroups = _getTargetLegendGroups(forSelection: true);
     int selectableCount = 0;
     bool canSelect = false;
-    
+
     // 计算可选择的图例数量并检查当前图例是否可选
     for (final legendGroup in selectionTargetGroups) {
       if (!legendGroup.isVisible) continue;
@@ -190,11 +191,12 @@ class _LegendDockBarState extends State<LegendDockBar> {
         }
       }
     }
-    
+
     if (!canSelect) {
       // 图例被遮挡，显示提示
-      if (widget.selectedLayer == null && 
-          (widget.selectedLayerGroup == null || widget.selectedLayerGroup!.isEmpty)) {
+      if (widget.selectedLayer == null &&
+          (widget.selectedLayerGroup == null ||
+              widget.selectedLayerGroup!.isEmpty)) {
         // 整个地图范围
         _showLegendBlockedMessage('图例被遮挡');
       } else {
@@ -205,7 +207,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     }
 
     final currentIndex = _selectedIndices[legendPath];
-    
+
     if (currentIndex == null) {
       // 未选中状态，清除其他选中项并选中第一个
       setState(() {
@@ -217,8 +219,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
       // 当前是可选择范围内的最后一个，检查是否还有其他被遮挡的图例
       if (selectableCount < totalCount) {
         // 还有被遮挡的图例，显示提示并取消选中
-        if (widget.selectedLayer == null && 
-            (widget.selectedLayerGroup == null || widget.selectedLayerGroup!.isEmpty)) {
+        if (widget.selectedLayer == null &&
+            (widget.selectedLayerGroup == null ||
+                widget.selectedLayerGroup!.isEmpty)) {
           _showLegendBlockedMessage('剩余图例被遮挡');
         } else {
           _showLegendBlockedMessage('剩余图例被遮挡');
@@ -239,36 +242,35 @@ class _LegendDockBarState extends State<LegendDockBar> {
       _selectLegendItemByIndex(legendPath, nextIndex);
     }
   }
-  
+
   /// 显示图例被遮挡的提示消息
   void _showLegendBlockedMessage(String message) {
     // 使用通知服务显示警告信息
-    context.showNotificationSnackBar(
-      message,
-      type: NotificationType.warning,
-    );
+    context.showNotificationSnackBar(message, type: NotificationType.warning);
   }
 
   /// 获取目标图例组（根据统计范围）
   /// [forSelection] 为true时用于循环选择，为false时用于统计显示
   List<LegendGroup> _getTargetLegendGroups({bool forSelection = false}) {
     // 当统计范围是图层或图层组时
-    if (widget.selectedLayer != null || 
-        (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty)) {
+    if (widget.selectedLayer != null ||
+        (widget.selectedLayerGroup != null &&
+            widget.selectedLayerGroup!.isNotEmpty)) {
       final boundLegendGroupIds = <String>{};
-      
+
       // 收集选中图层绑定的图例组ID
       if (widget.selectedLayer != null) {
         boundLegendGroupIds.addAll(widget.selectedLayer!.legendGroupIds);
       }
-      
+
       // 收集选中图层组中所有图层绑定的图例组ID
-      if (widget.selectedLayerGroup != null && widget.selectedLayerGroup!.isNotEmpty) {
+      if (widget.selectedLayerGroup != null &&
+          widget.selectedLayerGroup!.isNotEmpty) {
         for (final layer in widget.selectedLayerGroup!) {
           boundLegendGroupIds.addAll(layer.legendGroupIds);
         }
       }
-      
+
       return widget.mapItem.legendGroups
           .where((group) => boundLegendGroupIds.contains(group.id))
           .toList();
@@ -278,11 +280,11 @@ class _LegendDockBarState extends State<LegendDockBar> {
         // 用于循环选择：只显示绑定在最上方图层的图例组
         final layers = widget.mapItem.layers;
         if (layers.isEmpty) return [];
-        
+
         // 按order排序，找到最上方的图层
         final sortedLayers = List<MapLayer>.from(layers)
           ..sort((a, b) => b.order.compareTo(a.order));
-        
+
         // 找到最上方的可见图层
         MapLayer? topmostLayer;
         for (final layer in sortedLayers) {
@@ -291,11 +293,11 @@ class _LegendDockBarState extends State<LegendDockBar> {
             break;
           }
         }
-        
+
         if (topmostLayer == null) {
           return [];
         }
-        
+
         // 返回绑定在最上方图层的图例组
         return widget.mapItem.legendGroups
             .where((group) => topmostLayer!.legendGroupIds.contains(group.id))
@@ -308,9 +310,11 @@ class _LegendDockBarState extends State<LegendDockBar> {
   }
 
   /// 根据索引选中图例项
-   void _selectLegendItemByIndex(String legendPath, int index) {
-     // 获取用于选择的图例组（应用范围限制）
-     List<LegendGroup> targetLegendGroups = _getTargetLegendGroups(forSelection: true);
+  void _selectLegendItemByIndex(String legendPath, int index) {
+    // 获取用于选择的图例组（应用范围限制）
+    List<LegendGroup> targetLegendGroups = _getTargetLegendGroups(
+      forSelection: true,
+    );
 
     // 查找匹配的图例项
     int currentIndex = 0;
@@ -319,7 +323,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
 
       for (final legendItem in legendGroup.legendItems) {
         if (!legendItem.isVisible) continue;
-        
+
         if (legendItem.legendPath == legendPath) {
           if (currentIndex == index) {
             // 找到目标图例项，通知父组件
@@ -330,7 +334,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
         }
       }
     }
-   }
+  }
 
   /// 同步画布选择状态到dock栏
   void _syncCanvasSelection() {
@@ -344,36 +348,36 @@ class _LegendDockBarState extends State<LegendDockBar> {
 
     // 查找选中的图例项对应的legendPath和索引
     final targetLegendGroups = _getTargetLegendGroups(forSelection: true);
-    
+
     for (final legendGroup in targetLegendGroups) {
       if (!legendGroup.isVisible) continue;
-      
+
       for (final legendItem in legendGroup.legendItems) {
         if (!legendItem.isVisible) continue;
-        
+
         if (legendItem.id == widget.selectedElementId) {
           // 找到匹配的图例项，计算它在同legendPath中的索引
           final legendPath = legendItem.legendPath;
           int index = 0;
-          
+
           // 重新遍历计算索引
           for (final group in targetLegendGroups) {
             if (!group.isVisible) continue;
-            
+
             for (final item in group.legendItems) {
               if (!item.isVisible) continue;
-              
+
               if (item.legendPath == legendPath) {
                 if (item.id == widget.selectedElementId) {
-                   // 找到目标项，更新选择状态
-                   setState(() {
-                     _selectedIndices.clear(); // 清除其他选中项
-                     _selectedIndices[legendPath] = index;
-                   });
-                   // 滚动到选中的图例项
-                   _scrollToSelectedLegendItem(legendPath);
-                   return;
-                 }
+                  // 找到目标项，更新选择状态
+                  setState(() {
+                    _selectedIndices.clear(); // 清除其他选中项
+                    _selectedIndices[legendPath] = index;
+                  });
+                  // 滚动到选中的图例项
+                  _scrollToSelectedLegendItem(legendPath);
+                  return;
+                }
                 index++;
               }
             }
@@ -381,12 +385,12 @@ class _LegendDockBarState extends State<LegendDockBar> {
         }
       }
     }
-    
+
     // 如果没有找到匹配的图例项，清除选择状态
-     setState(() {
-       _selectedIndices.clear();
-     });
-   }
+    setState(() {
+      _selectedIndices.clear();
+    });
+  }
 
   /// 滚动到选中的图例项
   void _scrollToSelectedLegendItem(String selectedLegendPath) {
@@ -397,7 +401,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     // 获取所有可见的图例路径列表
     final visibleLegendPaths = _legendCounts.keys.toList();
     final selectedIndex = visibleLegendPaths.indexOf(selectedLegendPath);
-    
+
     if (selectedIndex == -1) {
       return; // 没有找到选中的图例项
     }
@@ -406,17 +410,18 @@ class _LegendDockBarState extends State<LegendDockBar> {
     const itemWidth = 80.0; // 估算的图例项宽度（包括间距）
     const itemSpacing = 8.0; // 图例项之间的间距
     final itemPosition = selectedIndex * (itemWidth + itemSpacing);
-    
+
     // 获取滚动视图的宽度
     final scrollViewWidth = _scrollController.position.viewportDimension;
-    
+
     // 计算目标滚动位置（将选中项居中）
-    final targetScrollOffset = itemPosition - (scrollViewWidth / 2) + (itemWidth / 2);
-    
+    final targetScrollOffset =
+        itemPosition - (scrollViewWidth / 2) + (itemWidth / 2);
+
     // 确保滚动位置在有效范围内
     final maxScrollExtent = _scrollController.position.maxScrollExtent;
     final clampedOffset = targetScrollOffset.clamp(0.0, maxScrollExtent);
-    
+
     // 平滑滚动到目标位置
     _scrollController.animateTo(
       clampedOffset,
@@ -458,8 +463,8 @@ class _LegendDockBarState extends State<LegendDockBar> {
               ),
             )
           : _legendCounts.isEmpty
-              ? _buildNoLegendIndicator()
-              : _buildLegendList(),
+          ? _buildNoLegendIndicator()
+          : _buildLegendList(),
     );
   }
 
@@ -481,50 +486,51 @@ class _LegendDockBarState extends State<LegendDockBar> {
   }
 
   /// 显示图层选择菜单
-   void _showLayerMenu() {
-     // 获取图标的位置
-     final RenderBox? renderBox = _layerIconKey.currentContext?.findRenderObject() as RenderBox?;
-     if (renderBox == null) {
-       if (mounted) {
-         setState(() {
-           _showLayerPopup = false;
-         });
-       }
-       return;
-     }
-     
-     final Offset iconPosition = renderBox.localToGlobal(Offset.zero);
-     final Size iconSize = renderBox.size;
-     
-     showDialog(
-       context: context,
-       barrierColor: Colors.transparent,
-       builder: (BuildContext dialogContext) {
-         return Stack(
-           children: [
-             // 透明背景，点击关闭菜单
-             Positioned.fill(
-               child: GestureDetector(
-                 onTap: () {
-                   Navigator.of(dialogContext).pop();
-                 },
-                 child: Container(color: Colors.transparent),
-               ),
-             ),
-             // 菜单内容
-             _buildPositionedLayerMenu(dialogContext, iconPosition, iconSize),
-           ],
-         );
-       },
-     ).then((_) {
-       // 对话框关闭时重置状态
-       if (mounted) {
-         setState(() {
-           _showLayerPopup = false;
-         });
-       }
-     });
-   }
+  void _showLayerMenu() {
+    // 获取图标的位置
+    final RenderBox? renderBox =
+        _layerIconKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      if (mounted) {
+        setState(() {
+          _showLayerPopup = false;
+        });
+      }
+      return;
+    }
+
+    final Offset iconPosition = renderBox.localToGlobal(Offset.zero);
+    final Size iconSize = renderBox.size;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (BuildContext dialogContext) {
+        return Stack(
+          children: [
+            // 透明背景，点击关闭菜单
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+            // 菜单内容
+            _buildPositionedLayerMenu(dialogContext, iconPosition, iconSize),
+          ],
+        );
+      },
+    ).then((_) {
+      // 对话框关闭时重置状态
+      if (mounted) {
+        setState(() {
+          _showLayerPopup = false;
+        });
+      }
+    });
+  }
 
   /// 将图层分组为链接组
   List<List<MapLayer>> _groupLinkedLayers() {
@@ -546,40 +552,47 @@ class _LegendDockBarState extends State<LegendDockBar> {
   }
 
   /// 构建定位的图层菜单
-   Widget _buildPositionedLayerMenu(BuildContext dialogContext, Offset iconPosition, Size iconSize) {
+  Widget _buildPositionedLayerMenu(
+    BuildContext dialogContext,
+    Offset iconPosition,
+    Size iconSize,
+  ) {
     // 计算气泡菜单的位置，确保在屏幕可见范围内
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final popupWidth = 200.0; // 气泡菜单宽度
-    
+
     // 获取图层组
     final layerGroups = _groupLinkedLayers();
-    
+
     // 动态计算菜单高度
-     final itemHeight = 44.0; // 每个菜单项的高度
-     final separatorHeight = 16.0; // 分隔线高度（包括margin）
-     final padding = 24.0; // 容器内边距
-     
-     // 计算总菜单项数量（包括图层组标题和子图层）
-     int totalMenuItems = 1; // 清除选择按钮
-     for (final group in layerGroups) {
-       if (group.length > 1) {
-         // 多图层组：组标题 + 组内图层数量
-         totalMenuItems += 1 + group.length;
-       } else {
-         // 单图层：只有一个项目
-         totalMenuItems += 1;
-       }
-     }
-     
-     final separatorCount = layerGroups.isNotEmpty ? 1 : 0; // 分隔线数量
-     final popupHeight = (totalMenuItems * itemHeight) + (separatorCount * separatorHeight) + padding;
-    
+    final itemHeight = 44.0; // 每个菜单项的高度
+    final separatorHeight = 16.0; // 分隔线高度（包括margin）
+    final padding = 24.0; // 容器内边距
+
+    // 计算总菜单项数量（包括图层组标题和子图层）
+    int totalMenuItems = 1; // 清除选择按钮
+    for (final group in layerGroups) {
+      if (group.length > 1) {
+        // 多图层组：组标题 + 组内图层数量
+        totalMenuItems += 1 + group.length;
+      } else {
+        // 单图层：只有一个项目
+        totalMenuItems += 1;
+      }
+    }
+
+    final separatorCount = layerGroups.isNotEmpty ? 1 : 0; // 分隔线数量
+    final popupHeight =
+        (totalMenuItems * itemHeight) +
+        (separatorCount * separatorHeight) +
+        padding;
+
     // 计算top位置，优先显示在图标上方
     double top;
     final spaceAbove = iconPosition.dy;
     final spaceBelow = screenHeight - (iconPosition.dy + iconSize.height);
-    
+
     if (spaceAbove >= popupHeight + 20) {
       // 图标上方有足够空间，显示在上方
       top = iconPosition.dy - popupHeight - 10;
@@ -596,10 +609,10 @@ class _LegendDockBarState extends State<LegendDockBar> {
         top = screenHeight - popupHeight - 10;
       }
     }
-    
+
     // 计算left位置，以图标为中心，向左偏移半个菜单宽度
     double left = iconPosition.dx + (iconSize.width / 2) - (popupWidth / 2);
-    
+
     // 确保不超出屏幕边界
     if (left + popupWidth > screenWidth) {
       left = screenWidth - popupWidth - 10;
@@ -607,7 +620,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     if (left < 10) {
       left = 10;
     }
-    
+
     return Positioned(
       top: top,
       left: left,
@@ -621,7 +634,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
             ),
             boxShadow: [
               BoxShadow(
@@ -640,93 +655,106 @@ class _LegendDockBarState extends State<LegendDockBar> {
                 final groupIndex = entry.key;
                 final group = entry.value;
                 final widgets = <Widget>[];
-                
+
                 if (group.length > 1) {
                   // 多图层组
-                  final isGroupSelected = widget.selectedLayerGroup != null &&
+                  final isGroupSelected =
+                      widget.selectedLayerGroup != null &&
                       widget.selectedLayerGroup!.length == group.length &&
-                      widget.selectedLayerGroup!.every((selectedLayer) => 
-                          group.any((groupLayer) => groupLayer.id == selectedLayer.id));
-                  
+                      widget.selectedLayerGroup!.every(
+                        (selectedLayer) => group.any(
+                          (groupLayer) => groupLayer.id == selectedLayer.id,
+                        ),
+                      );
+
                   // 添加图层组标题
-                  widgets.add(_buildPopupMenuItem(
-                    icon: Icons.layers,
-                    title: '图层组 ${groupIndex + 1} (${group.length}层)',
-                    isSelected: isGroupSelected,
-                    onTap: () {
-                       Navigator.of(dialogContext).pop();
-                       if (isGroupSelected) {
-                         // 如果已经选中，则清除图层组选择
-                         widget.onLayerGroupSelectionCleared?.call();
-                       } else {
-                         // 如果未选中，则选择该图层组
-                         widget.onLayerGroupSelected?.call(group);
-                       }
-                     },
-                  ));
-                  
+                  widgets.add(
+                    _buildPopupMenuItem(
+                      icon: Icons.layers,
+                      title: '图层组 ${groupIndex + 1} (${group.length}层)',
+                      isSelected: isGroupSelected,
+                      onTap: () {
+                        Navigator.of(dialogContext).pop();
+                        if (isGroupSelected) {
+                          // 如果已经选中，则清除图层组选择
+                          widget.onLayerGroupSelectionCleared?.call();
+                        } else {
+                          // 如果未选中，则选择该图层组
+                          widget.onLayerGroupSelected?.call(group);
+                        }
+                      },
+                    ),
+                  );
+
                   // 添加组内的图层（缩进显示）
                   for (final layer in group) {
-                    final isLayerSelected = widget.selectedLayer?.id == layer.id;
-                    widgets.add(_buildPopupMenuItem(
-                      icon: Icons.layers_outlined,
-                      title: layer.name,
-                      isSelected: isLayerSelected,
-                      isIndented: true,
-                      onTap: () {
-                         Navigator.of(dialogContext).pop();
-                         if (isLayerSelected) {
-                           // 如果已经选中，则清除图层选择
-                           widget.onLayerSelectionCleared?.call();
-                         } else {
-                           // 如果未选中，则选择该图层
-                           widget.onLayerSelected?.call(layer);
-                         }
-                       },
-                    ));
+                    final isLayerSelected =
+                        widget.selectedLayer?.id == layer.id;
+                    widgets.add(
+                      _buildPopupMenuItem(
+                        icon: Icons.layers_outlined,
+                        title: layer.name,
+                        isSelected: isLayerSelected,
+                        isIndented: true,
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          if (isLayerSelected) {
+                            // 如果已经选中，则清除图层选择
+                            widget.onLayerSelectionCleared?.call();
+                          } else {
+                            // 如果未选中，则选择该图层
+                            widget.onLayerSelected?.call(layer);
+                          }
+                        },
+                      ),
+                    );
                   }
                 } else {
                   // 单图层
                   final layer = group.first;
                   final isLayerSelected = widget.selectedLayer?.id == layer.id;
-                  widgets.add(_buildPopupMenuItem(
-                    icon: Icons.layers_outlined,
-                    title: layer.name,
-                    isSelected: isLayerSelected,
-                    onTap: () {
-                       Navigator.of(dialogContext).pop();
-                       if (isLayerSelected) {
-                         // 如果已经选中，则清除图层选择
-                         widget.onLayerSelectionCleared?.call();
-                       } else {
-                         // 如果未选中，则选择该图层
-                         widget.onLayerSelected?.call(layer);
-                       }
-                     },
-                  ));
+                  widgets.add(
+                    _buildPopupMenuItem(
+                      icon: Icons.layers_outlined,
+                      title: layer.name,
+                      isSelected: isLayerSelected,
+                      onTap: () {
+                        Navigator.of(dialogContext).pop();
+                        if (isLayerSelected) {
+                          // 如果已经选中，则清除图层选择
+                          widget.onLayerSelectionCleared?.call();
+                        } else {
+                          // 如果未选中，则选择该图层
+                          widget.onLayerSelected?.call(layer);
+                        }
+                      },
+                    ),
+                  );
                 }
-                
+
                 return widgets;
               }),
-              
+
               // 分隔线
-              if (layerGroups.isNotEmpty) 
+              if (layerGroups.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   height: 1,
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
-              
+
               // 清除选择按钮
               _buildPopupMenuItem(
                 icon: Icons.clear,
                 title: '清除选择',
                 isSelected: false,
                 onTap: () {
-                   Navigator.of(dialogContext).pop();
-                   // 调用清除选择回调
-                   widget.onSelectionCleared?.call();
-                 },
+                  Navigator.of(dialogContext).pop();
+                  // 调用清除选择回调
+                  widget.onSelectionCleared?.call();
+                },
               ),
             ],
           ),
@@ -734,8 +762,6 @@ class _LegendDockBarState extends State<LegendDockBar> {
       ),
     );
   }
-
-
 
   /// 构建气泡菜单项
   Widget _buildPopupMenuItem({
@@ -760,7 +786,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSelected 
+                  color: isSelected
                       ? Theme.of(context).colorScheme.primaryContainer
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(4),
@@ -774,7 +800,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
                       color: isSelected
                           ? Theme.of(context).colorScheme.onPrimaryContainer
                           : isIndented
-                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7)
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                     const SizedBox(width: 8),
@@ -785,9 +813,13 @@ class _LegendDockBarState extends State<LegendDockBar> {
                           color: isSelected
                               ? Theme.of(context).colorScheme.onPrimaryContainer
                               : isIndented
-                              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8)
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.8)
                               : Theme.of(context).colorScheme.onSurface,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                           fontSize: isIndented ? 13 : 14,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -808,12 +840,15 @@ class _LegendDockBarState extends State<LegendDockBar> {
     // 根据当前状态确定提示消息
     String message;
     IconData iconData;
-    
+
     final displayTargetGroups = _getTargetLegendGroups(); // 用于显示的图例组
-    final selectionTargetGroups = _getTargetLegendGroups(forSelection: true); // 用于选择的图例组
-    
-    if (widget.selectedLayer == null && 
-        (widget.selectedLayerGroup == null || widget.selectedLayerGroup!.isEmpty)) {
+    final selectionTargetGroups = _getTargetLegendGroups(
+      forSelection: true,
+    ); // 用于选择的图例组
+
+    if (widget.selectedLayer == null &&
+        (widget.selectedLayerGroup == null ||
+            widget.selectedLayerGroup!.isEmpty)) {
       // 整个地图范围
       if (displayTargetGroups.isEmpty) {
         message = '暂无图例';
@@ -835,7 +870,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
         iconData = Icons.info_outline;
       }
     }
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -877,7 +912,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        
+
         // 图例组管理按钮（常驻显示）
         if (widget.onToggleLegendGroupManagement != null) ...[
           const SizedBox(width: 8),
@@ -931,7 +966,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
             ),
           ),
         ),
-        
+
         // 图例组管理按钮（常驻显示，不滚动）
         if (widget.onToggleLegendGroupManagement != null) ...[
           const SizedBox(width: 8),
@@ -956,7 +991,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     }
 
     return Tooltip(
-      message: isSelected 
+      message: isSelected
           ? '$legendPath\n当前选中: ${currentIndex + 1}/$count'
           : '$legendPath\n点击选择图例项',
       waitDuration: const Duration(milliseconds: 500),
@@ -966,7 +1001,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
           margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: isSelected 
+            color: isSelected
                 ? Theme.of(context).colorScheme.primaryContainer
                 : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
@@ -1040,7 +1075,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
   void _showLegendGroupMenu(BuildContext context, Offset position) {
     // 获取当前查看范围内的图例组列表（与左键逻辑保持一致）
     final targetLegendGroups = _getTargetLegendGroups();
-    
+
     if (targetLegendGroups.isEmpty) {
       // 没有可用的图例组
       return;
@@ -1062,7 +1097,11 @@ class _LegendDockBarState extends State<LegendDockBar> {
               ),
             ),
             // 菜单内容
-            _buildPositionedLegendGroupMenu(dialogContext, position, targetLegendGroups),
+            _buildPositionedLegendGroupMenu(
+              dialogContext,
+              position,
+              targetLegendGroups,
+            ),
           ],
         );
       },
@@ -1070,22 +1109,26 @@ class _LegendDockBarState extends State<LegendDockBar> {
   }
 
   /// 构建定位的图例组菜单
-  Widget _buildPositionedLegendGroupMenu(BuildContext dialogContext, Offset position, List<LegendGroup> targetLegendGroups) {
+  Widget _buildPositionedLegendGroupMenu(
+    BuildContext dialogContext,
+    Offset position,
+    List<LegendGroup> targetLegendGroups,
+  ) {
     // 计算气泡菜单的位置，确保在屏幕可见范围内
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final popupWidth = 170.0; // 图例组菜单宽度
-    
+
     // 动态计算菜单高度
     final itemHeight = 44.0; // 每个菜单项的高度
     final padding = 48.0; // 容器内边距
     final popupHeight = (targetLegendGroups.length * itemHeight) + padding;
-    
+
     // 计算top位置，优先显示在点击位置上方
     double top;
     final spaceAbove = position.dy;
     final spaceBelow = screenHeight - position.dy;
-    
+
     if (spaceAbove >= popupHeight + 20) {
       // 上方有足够空间，显示在上方
       top = position.dy - popupHeight - 10;
@@ -1100,10 +1143,10 @@ class _LegendDockBarState extends State<LegendDockBar> {
         top = screenHeight - popupHeight - 10;
       }
     }
-    
+
     // 计算left位置，以点击位置为中心，向左偏移半个菜单宽度
     double left = position.dx - (popupWidth / 2);
-    
+
     // 确保不超出屏幕边界
     if (left + popupWidth > screenWidth) {
       left = screenWidth - popupWidth - 10;
@@ -1111,7 +1154,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
     if (left < 10) {
       left = 10;
     }
-    
+
     return Positioned(
       top: top,
       left: left,
@@ -1125,7 +1168,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
             ),
             boxShadow: [
               BoxShadow(
@@ -1140,20 +1185,22 @@ class _LegendDockBarState extends State<LegendDockBar> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: targetLegendGroups.map((legendGroup) {
               return _buildLegendGroupMenuItem(
-                 legendGroup: legendGroup,
-                 onTap: () {
-                   Navigator.of(dialogContext).pop();
-                   // 检查是否为当前打开的图例组
-                   final isCurrentlyOpen = widget.currentLegendGroupForManagement?.id == legendGroup.id;
-                   if (isCurrentlyOpen) {
-                     // 如果是当前打开的图例组，则关闭抽屉
-                     widget.onToggleLegendGroupManagement?.call();
-                   } else {
-                     // 如果不是当前打开的图例组，则打开该图例组
-                     widget.onLegendGroupSelected?.call(legendGroup);
-                   }
-                 },
-               );
+                legendGroup: legendGroup,
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                  // 检查是否为当前打开的图例组
+                  final isCurrentlyOpen =
+                      widget.currentLegendGroupForManagement?.id ==
+                      legendGroup.id;
+                  if (isCurrentlyOpen) {
+                    // 如果是当前打开的图例组，则关闭抽屉
+                    widget.onToggleLegendGroupManagement?.call();
+                  } else {
+                    // 如果不是当前打开的图例组，则打开该图例组
+                    widget.onLegendGroupSelected?.call(legendGroup);
+                  }
+                },
+              );
             }).toList(),
           ),
         ),
@@ -1167,8 +1214,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
     required VoidCallback onTap,
   }) {
     // 检查是否为当前打开的图例组
-    final isCurrentlyOpen = widget.currentLegendGroupForManagement?.id == legendGroup.id;
-    
+    final isCurrentlyOpen =
+        widget.currentLegendGroupForManagement?.id == legendGroup.id;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
@@ -1181,13 +1229,17 @@ class _LegendDockBarState extends State<LegendDockBar> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isCurrentlyOpen 
-                      ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                  color: isCurrentlyOpen
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(4),
-                  border: isCurrentlyOpen 
+                  border: isCurrentlyOpen
                       ? Border.all(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.5),
                           width: 1,
                         )
                       : null,
@@ -1196,21 +1248,27 @@ class _LegendDockBarState extends State<LegendDockBar> {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Icon(
-                      legendGroup.isVisible ? Icons.visibility : Icons.visibility_off,
+                      legendGroup.isVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                       size: 16,
-                      color: legendGroup.isVisible 
+                      color: legendGroup.isVisible
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.outline,
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        legendGroup.name.isNotEmpty ? legendGroup.name : '未命名图例组',
+                        legendGroup.name.isNotEmpty
+                            ? legendGroup.name
+                            : '未命名图例组',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isCurrentlyOpen 
+                          color: isCurrentlyOpen
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context).colorScheme.onSurface,
-                          fontWeight: isCurrentlyOpen ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isCurrentlyOpen
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                           fontSize: 14,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -1218,24 +1276,29 @@ class _LegendDockBarState extends State<LegendDockBar> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                       decoration: BoxDecoration(
-                         color: isCurrentlyOpen 
-                             ? Theme.of(context).colorScheme.primary
-                             : Theme.of(context).colorScheme.primaryContainer,
-                         borderRadius: BorderRadius.circular(10),
-                       ),
-                       child: Text(
-                         '${legendGroup.legendItems.length}',
-                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                           color: isCurrentlyOpen 
-                               ? Theme.of(context).colorScheme.onPrimary
-                               : Theme.of(context).colorScheme.onPrimaryContainer,
-                           fontSize: 11,
-                           fontWeight: FontWeight.w500,
-                         ),
-                       ),
-                     ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isCurrentlyOpen
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${legendGroup.legendItems.length}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: isCurrentlyOpen
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1262,7 +1325,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
             color: Theme.of(context).colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.2),
               width: 1,
             ),
           ),

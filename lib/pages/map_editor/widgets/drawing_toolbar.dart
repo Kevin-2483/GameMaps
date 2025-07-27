@@ -770,20 +770,20 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
 
             const SizedBox(height: 16), // Z层级检视器按钮
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: widget.onZIndexInspectorRequested,
-                  icon: const Icon(Icons.layers),
-                  label: Text(
-                    widget.selectedStickyNote != null
-                        ? '便签元素检视器 (${widget.selectedStickyNote!.elements.length})'
-                        : widget.selectedLayer != null
-                        ? 'Z层级检视器 (${widget.selectedLayer!.elements.length})'
-                        : 'Z层级检视器 (${widget.getCurrentDrawingTargetLayer?.call()?.elements.length ?? 0})',
-                  ),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: widget.onZIndexInspectorRequested,
+                icon: const Icon(Icons.layers),
+                label: Text(
+                  widget.selectedStickyNote != null
+                      ? '便签元素检视器 (${widget.selectedStickyNote!.elements.length})'
+                      : widget.selectedLayer != null
+                      ? 'Z层级检视器 (${widget.selectedLayer!.elements.length})'
+                      : 'Z层级检视器 (${widget.getCurrentDrawingTargetLayer?.call()?.elements.length ?? 0})',
                 ),
               ),
+            ),
           ],
         ),
       ),

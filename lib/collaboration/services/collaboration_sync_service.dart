@@ -9,32 +9,33 @@ import 'collaboration_state_manager.dart';
 /// 独立于WebSocket的在线状态管理
 class CollaborationSyncService {
   static CollaborationSyncService? _instance;
-  static CollaborationSyncService get instance => _instance ??= CollaborationSyncService._();
-  
+  static CollaborationSyncService get instance =>
+      _instance ??= CollaborationSyncService._();
+
   CollaborationSyncService._();
 
   final CollaborationStateManager _stateManager = CollaborationStateManager();
-  
+
   // 同步状态
   bool _isInitialized = false;
   bool _isSyncEnabled = false;
-  
+
   // 同步配置
   Duration _syncInterval = const Duration(milliseconds: 500);
   Duration _batchDelay = const Duration(milliseconds: 100);
-  
+
   // 定时器和批处理
   Timer? _syncTimer;
   Timer? _batchTimer;
   final List<_PendingSyncData> _pendingSyncQueue = [];
-  
+
   // 回调函数
   Function(Map<String, dynamic>)? _onSendToRemote;
   Function(String, String)? _onUserJoined;
   Function(String)? _onUserLeft;
-  
+
   // 流控制器
-  final StreamController<CollaborationSyncEvent> _eventController = 
+  final StreamController<CollaborationSyncEvent> _eventController =
       StreamController<CollaborationSyncEvent>.broadcast();
 
   /// 同步事件流
@@ -74,7 +75,7 @@ class CollaborationSyncService {
       _onSendToRemote = onSendToRemote;
       _onUserJoined = onUserJoined;
       _onUserLeft = onUserLeft;
-      
+
       // 设置同步配置
       if (syncInterval != null) _syncInterval = syncInterval;
       if (batchDelay != null) _batchDelay = batchDelay;
@@ -84,14 +85,16 @@ class CollaborationSyncService {
 
       _isInitialized = true;
       _eventController.add(const CollaborationSyncInitialized());
-      
+
       debugPrint('[CollaborationSyncService] 同步服务初始化完成');
     } catch (e, stackTrace) {
-      _eventController.add(CollaborationSyncError(
-        message: '初始化同步服务失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      _eventController.add(
+        CollaborationSyncError(
+          message: '初始化同步服务失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
       rethrow;
     }
   }
@@ -101,24 +104,24 @@ class CollaborationSyncService {
     if (!_isInitialized) {
       throw StateError('同步服务未初始化');
     }
-    
+
     if (_isSyncEnabled) return;
-    
+
     _isSyncEnabled = true;
     _startSyncTimer();
     _eventController.add(const CollaborationSyncEnabled());
-    
+
     debugPrint('[CollaborationSyncService] 同步已启用');
   }
 
   /// 禁用同步
   void disableSync() {
     if (!_isSyncEnabled) return;
-    
+
     _isSyncEnabled = false;
     _stopSyncTimer();
     _eventController.add(const CollaborationSyncDisabled());
-    
+
     debugPrint('[CollaborationSyncService] 同步已禁用');
   }
 
@@ -132,7 +135,7 @@ class CollaborationSyncService {
     try {
       final type = data['type'] as String?;
       final payload = data['payload'] as Map<String, dynamic>?;
-      
+
       if (type == null || payload == null) {
         debugPrint('[CollaborationSyncService] 无效的远程数据格式');
         return;
@@ -161,18 +164,20 @@ class CollaborationSyncService {
           debugPrint('[CollaborationSyncService] 未知的远程数据类型: $type');
       }
     } catch (e, stackTrace) {
-      _eventController.add(CollaborationSyncError(
-        message: '处理远程数据失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      _eventController.add(
+        CollaborationSyncError(
+          message: '处理远程数据失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 
   /// 手动触发同步
   Future<void> triggerSync() async {
     if (!_isInitialized || !_isSyncEnabled) return;
-    
+
     await _processPendingSync();
   }
 
@@ -181,12 +186,12 @@ class CollaborationSyncService {
     _stopSyncTimer();
     _stopBatchTimer();
     _pendingSyncQueue.clear();
-    
+
     await _eventController.close();
-    
+
     _isInitialized = false;
     _isSyncEnabled = false;
-    
+
     debugPrint('[CollaborationSyncService] 同步服务已清理');
   }
 
@@ -196,20 +201,24 @@ class CollaborationSyncService {
   void _subscribeToStateChanges() {
     // 订阅锁定状态变更
     _stateManager.lockStateStream.listen((locks) {
-      _queueSyncData(_PendingSyncData(
-        type: 'element_lock_batch',
-        data: {'locks': locks.map((k, v) => MapEntry(k, v.toJson()))},
-      ));
+      _queueSyncData(
+        _PendingSyncData(
+          type: 'element_lock_batch',
+          data: {'locks': locks.map((k, v) => MapEntry(k, v.toJson()))},
+        ),
+      );
     });
 
     // 订阅选择状态变更
     _stateManager.selectionStateStream.listen((selections) {
       final currentUserSelection = selections[_stateManager.currentUserId];
       if (currentUserSelection != null) {
-        _queueSyncData(_PendingSyncData(
-          type: 'user_selection',
-          data: currentUserSelection.toJson(),
-        ));
+        _queueSyncData(
+          _PendingSyncData(
+            type: 'user_selection',
+            data: currentUserSelection.toJson(),
+          ),
+        );
       }
     });
 
@@ -217,10 +226,12 @@ class CollaborationSyncService {
     _stateManager.cursorStateStream.listen((cursors) {
       final currentUserCursor = cursors[_stateManager.currentUserId];
       if (currentUserCursor != null) {
-        _queueSyncData(_PendingSyncData(
-          type: 'user_cursor',
-          data: currentUserCursor.toJson(),
-        ));
+        _queueSyncData(
+          _PendingSyncData(
+            type: 'user_cursor',
+            data: currentUserCursor.toJson(),
+          ),
+        );
       }
     });
 
@@ -228,10 +239,9 @@ class CollaborationSyncService {
     _stateManager.conflictStream.listen((conflicts) {
       for (final conflict in conflicts.values) {
         if (!conflict.isResolved) {
-          _queueSyncData(_PendingSyncData(
-            type: 'conflict',
-            data: conflict.toJson(),
-          ));
+          _queueSyncData(
+            _PendingSyncData(type: 'conflict', data: conflict.toJson()),
+          );
         }
       }
     });
@@ -240,7 +250,7 @@ class CollaborationSyncService {
   /// 将数据加入同步队列
   void _queueSyncData(_PendingSyncData syncData) {
     if (!_isSyncEnabled) return;
-    
+
     _pendingSyncQueue.add(syncData);
     _startBatchTimer();
   }
@@ -283,24 +293,24 @@ class CollaborationSyncService {
         'type': 'collaboration_batch',
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'userId': _stateManager.currentUserId,
-        'items': syncData.map((item) => {
-          'type': item.type,
-          'data': item.data,
-        }).toList(),
+        'items': syncData
+            .map((item) => {'type': item.type, 'data': item.data})
+            .toList(),
       };
 
       _onSendToRemote!(batchData);
-      
-      _eventController.add(CollaborationSyncDataSent(
-        itemCount: syncData.length,
-      ));
-      
+
+      _eventController.add(
+        CollaborationSyncDataSent(itemCount: syncData.length),
+      );
     } catch (e, stackTrace) {
-      _eventController.add(CollaborationSyncError(
-        message: '发送同步数据失败: ${e.toString()}',
-        error: e,
-        stackTrace: stackTrace,
-      ));
+      _eventController.add(
+        CollaborationSyncError(
+          message: '发送同步数据失败: ${e.toString()}',
+          error: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 
@@ -339,13 +349,12 @@ class CollaborationSyncService {
     try {
       final userId = data['userId'] as String;
       final displayName = data['displayName'] as String;
-      
+
       _onUserJoined?.call(userId, displayName);
-      
-      _eventController.add(CollaborationUserJoined(
-        userId: userId,
-        displayName: displayName,
-      ));
+
+      _eventController.add(
+        CollaborationUserJoined(userId: userId, displayName: displayName),
+      );
     } catch (e) {
       debugPrint('[CollaborationSyncService] 处理远程用户加入失败: $e');
     }
@@ -355,13 +364,11 @@ class CollaborationSyncService {
   Future<void> _handleRemoteUserLeft(Map<String, dynamic> data) async {
     try {
       final userId = data['userId'] as String;
-      
+
       _stateManager.removeUserStates(userId);
       _onUserLeft?.call(userId);
-      
-      _eventController.add(CollaborationUserLeft(
-        userId: userId,
-      ));
+
+      _eventController.add(CollaborationUserLeft(userId: userId));
     } catch (e) {
       debugPrint('[CollaborationSyncService] 处理远程用户离开失败: $e');
     }
@@ -372,9 +379,7 @@ class CollaborationSyncService {
     try {
       final conflict = CollaborationConflict.fromJson(data);
       // 冲突处理逻辑可以在这里实现
-      _eventController.add(CollaborationConflictDetected(
-        conflict: conflict,
-      ));
+      _eventController.add(CollaborationConflictDetected(conflict: conflict));
     } catch (e) {
       debugPrint('[CollaborationSyncService] 处理远程冲突失败: $e');
     }
@@ -392,10 +397,8 @@ class _PendingSyncData {
   final Map<String, dynamic> data;
   final DateTime timestamp;
 
-  _PendingSyncData({
-    required this.type,
-    required this.data,
-  }) : timestamp = DateTime.now();
+  _PendingSyncData({required this.type, required this.data})
+    : timestamp = DateTime.now();
 }
 
 // ==================== 同步事件定义 ====================
@@ -423,17 +426,15 @@ class CollaborationSyncDisabled extends CollaborationSyncEvent {
 /// 同步数据已发送
 class CollaborationSyncDataSent extends CollaborationSyncEvent {
   final int itemCount;
-  
-  const CollaborationSyncDataSent({
-    required this.itemCount,
-  });
+
+  const CollaborationSyncDataSent({required this.itemCount});
 }
 
 /// 用户加入协作
 class CollaborationUserJoined extends CollaborationSyncEvent {
   final String userId;
   final String displayName;
-  
+
   const CollaborationUserJoined({
     required this.userId,
     required this.displayName,
@@ -443,19 +444,15 @@ class CollaborationUserJoined extends CollaborationSyncEvent {
 /// 用户离开协作
 class CollaborationUserLeft extends CollaborationSyncEvent {
   final String userId;
-  
-  const CollaborationUserLeft({
-    required this.userId,
-  });
+
+  const CollaborationUserLeft({required this.userId});
 }
 
 /// 检测到协作冲突
 class CollaborationConflictDetected extends CollaborationSyncEvent {
   final CollaborationConflict conflict;
-  
-  const CollaborationConflictDetected({
-    required this.conflict,
-  });
+
+  const CollaborationConflictDetected({required this.conflict});
 }
 
 /// 同步错误
@@ -463,7 +460,7 @@ class CollaborationSyncError extends CollaborationSyncEvent {
   final String message;
   final Object? error;
   final StackTrace? stackTrace;
-  
+
   const CollaborationSyncError({
     required this.message,
     this.error,

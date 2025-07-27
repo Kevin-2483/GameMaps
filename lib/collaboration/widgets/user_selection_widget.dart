@@ -43,36 +43,28 @@ class _UserSelectionWidgetState extends State<UserSelectionWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _animationController = AnimationController(
       duration: widget.animationDuration,
       vsync: this,
     );
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.opacity,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
-    
-    _strokeAnimation = Tween<double>(
-      begin: widget.strokeWidth * 2,
-      end: widget.strokeWidth,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
-    
+
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: widget.opacity).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _strokeAnimation =
+        Tween<double>(
+          begin: widget.strokeWidth * 2,
+          end: widget.strokeWidth,
+        ).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
+
     _animationController.forward();
   }
 
@@ -139,7 +131,7 @@ class UserSelectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     _paintSelectionBorder(canvas);
-    
+
     if (showUserLabel) {
       _paintUserLabel(canvas);
     }
@@ -156,16 +148,16 @@ class UserSelectionPainter extends CustomPainter {
       elementBounds.inflate(padding),
       Radius.circular(borderRadius),
     );
-    
+
     canvas.drawRRect(rect, paint);
-    
+
     // 绘制内部高亮
     final highlightPaint = Paint()
       ..color = selection.userColor.withValues(alpha: opacity * 0.1)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRRect(rect, highlightPaint);
-    
+
     // 绘制角落装饰
     _paintCornerDecorations(canvas, rect);
   }
@@ -174,9 +166,9 @@ class UserSelectionPainter extends CustomPainter {
     final cornerPaint = Paint()
       ..color = selection.userColor
       ..style = PaintingStyle.fill;
-    
+
     final cornerSize = strokeWidth * 2;
-    
+
     // 左上角
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -190,7 +182,7 @@ class UserSelectionPainter extends CustomPainter {
       ),
       cornerPaint,
     );
-    
+
     // 右下角
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -218,39 +210,39 @@ class UserSelectionPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
-    
+
     final labelRect = Rect.fromLTWH(
       elementBounds.left,
       elementBounds.top - textPainter.height - 8,
       textPainter.width + 12,
       textPainter.height + 6,
     );
-    
+
     // 绘制标签背景
     final labelPaint = Paint()
       ..color = selection.userColor.withValues(alpha: 0.95);
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(labelRect, const Radius.circular(4)),
       labelPaint,
     );
-    
+
     // 绘制标签边框
     final labelBorderPaint = Paint()
       ..color = selection.userColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(labelRect, const Radius.circular(4)),
       labelBorderPaint,
     );
-    
+
     // 绘制标签文字
     textPainter.paint(canvas, Offset(labelRect.left + 6, labelRect.top + 3));
-    
+
     // 绘制指向箭头
     _paintLabelArrow(canvas, labelRect, elementBounds);
   }
@@ -259,27 +251,24 @@ class UserSelectionPainter extends CustomPainter {
     final arrowPaint = Paint()
       ..color = selection.userColor
       ..style = PaintingStyle.fill;
-    
+
     final arrowPath = Path();
-    final arrowTip = Offset(
-      labelRect.center.dx,
-      elementBounds.top - padding,
-    );
-    
+    final arrowTip = Offset(labelRect.center.dx, elementBounds.top - padding);
+
     arrowPath.moveTo(labelRect.center.dx - 4, labelRect.bottom);
     arrowPath.lineTo(arrowTip.dx, arrowTip.dy);
     arrowPath.lineTo(labelRect.center.dx + 4, labelRect.bottom);
     arrowPath.close();
-    
+
     canvas.drawPath(arrowPath, arrowPaint);
   }
 
   @override
   bool shouldRepaint(UserSelectionPainter oldDelegate) {
     return selection != oldDelegate.selection ||
-           elementBounds != oldDelegate.elementBounds ||
-           strokeWidth != oldDelegate.strokeWidth ||
-           opacity != oldDelegate.opacity;
+        elementBounds != oldDelegate.elementBounds ||
+        strokeWidth != oldDelegate.strokeWidth ||
+        opacity != oldDelegate.opacity;
   }
 }
 
@@ -365,17 +354,21 @@ class MultiUserSelectionPainter extends CustomPainter {
     for (int i = 0; i < selections.length; i++) {
       final selection = selections[i];
       final offset = i * 2.0;
-      
+
       _paintSelectionBorder(canvas, selection, offset);
     }
-    
+
     // 绘制用户标签
     if (showUserLabels) {
       _paintUserLabels(canvas);
     }
   }
 
-  void _paintSelectionBorder(Canvas canvas, UserSelectionState selection, double offset) {
+  void _paintSelectionBorder(
+    Canvas canvas,
+    UserSelectionState selection,
+    double offset,
+  ) {
     final paint = Paint()
       ..color = selection.userColor.withValues(alpha: opacity)
       ..style = PaintingStyle.stroke
@@ -385,18 +378,18 @@ class MultiUserSelectionPainter extends CustomPainter {
       elementBounds.inflate(padding + offset),
       Radius.circular(borderRadius),
     );
-    
+
     canvas.drawRRect(rect, paint);
   }
 
   void _paintUserLabels(Canvas canvas) {
     final labelHeight = labelFontSize + 6;
     final totalHeight = selections.length * labelHeight;
-    
+
     for (int i = 0; i < selections.length; i++) {
       final selection = selections[i];
       final yOffset = i * labelHeight;
-      
+
       final textPainter = TextPainter(
         text: TextSpan(
           text: selection.userDisplayName,
@@ -408,25 +401,25 @@ class MultiUserSelectionPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       );
-      
+
       textPainter.layout();
-      
+
       final labelRect = Rect.fromLTWH(
         elementBounds.left,
         elementBounds.top - totalHeight - 8 + yOffset,
         textPainter.width + 12,
         labelHeight,
       );
-      
+
       // 绘制标签背景
       final labelPaint = Paint()
         ..color = selection.userColor.withValues(alpha: 0.9);
-      
+
       canvas.drawRRect(
         RRect.fromRectAndRadius(labelRect, const Radius.circular(4)),
         labelPaint,
       );
-      
+
       // 绘制标签文字
       textPainter.paint(canvas, Offset(labelRect.left + 6, labelRect.top + 3));
     }
@@ -435,6 +428,6 @@ class MultiUserSelectionPainter extends CustomPainter {
   @override
   bool shouldRepaint(MultiUserSelectionPainter oldDelegate) {
     return selections != oldDelegate.selections ||
-           elementBounds != oldDelegate.elementBounds;
+        elementBounds != oldDelegate.elementBounds;
   }
 }

@@ -19,7 +19,7 @@ class DrawingToolManager {
   // 绘制预览通知器
   final ValueNotifier<DrawingPreviewData?> _drawingPreviewNotifier =
       ValueNotifier(null);
-  
+
   // 预览队列管理器
   late final PreviewQueueManager _previewQueueManager;
   // 画布尺寸常量 - 与 map_canvas.dart 中的常量保持一致
@@ -29,13 +29,13 @@ class DrawingToolManager {
   Function(MapLayer)? onLayerUpdated;
   Function(String layerId, MapDrawingElement element)? addDrawingElement;
   BuildContext? context;
-  
+
   // 获取当前选中图层的函数
   final String? Function()? _getSelectedLayerId;
-  
+
   // 获取图层最大z值的函数
   int Function(String layerId)? getLayerMaxZIndex;
-  
+
   // 获取便签最大z值的函数
   int Function(String stickyNoteId)? getStickyNoteMaxZIndex;
 
@@ -43,7 +43,7 @@ class DrawingToolManager {
   StickyNote? _currentDrawingStickyNote;
 
   DrawingToolManager({
-    this.onLayerUpdated, 
+    this.onLayerUpdated,
     this.addDrawingElement,
     this.context,
     String? Function()? getSelectedLayerId,
@@ -57,13 +57,14 @@ class DrawingToolManager {
         // 队列变化时的处理逻辑
       },
       onGetLayerMaxZIndex: getLayerMaxZIndex ?? _getLayerMaxZIndex,
-      onGetStickyNoteMaxZIndex: getStickyNoteMaxZIndex ?? _getStickyNoteMaxZIndex,
+      onGetStickyNoteMaxZIndex:
+          getStickyNoteMaxZIndex ?? _getStickyNoteMaxZIndex,
     );
   }
   // Getters
   ValueNotifier<DrawingPreviewData?> get drawingPreviewNotifier =>
       _drawingPreviewNotifier;
-  
+
   PreviewQueueManager get previewQueueManager => _previewQueueManager;
 
   bool get isDrawing => _isDrawing;
@@ -1061,7 +1062,7 @@ class DrawingToolManager {
       imageBufferData,
       imageBufferFit,
     );
-    
+
     // 使用预览队列管理器处理便签绘制
     _previewQueueManager.addStickyNotePreviewToQueue(
       stickyNote,
@@ -1086,7 +1087,7 @@ class DrawingToolManager {
       density,
       curvature,
     );
-    
+
     // 使用预览队列管理器处理便签绘制
     _previewQueueManager.addStickyNotePreviewToQueue(
       stickyNote,
@@ -1098,7 +1099,7 @@ class DrawingToolManager {
   /// 处理从预览队列中取出的元素
   void _handleElementFromQueue(MapDrawingElement element, String layerId) {
     debugPrint('处理队列元素: ${element.id} 添加到图层: $layerId');
-    
+
     // 获取当前选中的图层ID，如果没有提供layerId的话
     String targetLayerId = layerId;
     if (layerId.isEmpty && _getSelectedLayerId != null) {
@@ -1107,7 +1108,7 @@ class DrawingToolManager {
         targetLayerId = selectedLayerId;
       }
     }
-    
+
     // 通过addDrawingElement回调来添加绘图元素
     // 这个回调应该连接到响应式系统的addDrawingElementReactive方法
     if (addDrawingElement != null && targetLayerId.isNotEmpty) {
@@ -1116,15 +1117,15 @@ class DrawingToolManager {
       debugPrint('DrawingToolManager: addDrawingElement回调未设置或目标图层ID为空，无法添加元素');
     }
   }
-  
+
   /// 处理队列中等待的预览项
   void processWaitingPreviews() {
     _previewQueueManager.processWaitingPreviews();
   }
-  
+
   /// 获取预览队列中的项目数量
   int get queuedPreviewsCount => _previewQueueManager.totalQueueCount;
-  
+
   /// 获取指定图层的最大z值（默认实现）
   /// 用于预览队列管理器计算新元素的z值
   int _getLayerMaxZIndex(String layerId) {
@@ -1132,11 +1133,11 @@ class DrawingToolManager {
     if (getLayerMaxZIndex != null) {
       return getLayerMaxZIndex!(layerId);
     }
-    
+
     // 默认返回0，表示没有现有元素
     return 0;
   }
-  
+
   /// 获取指定便签的最大z值（默认实现）
   /// 用于预览队列管理器计算新便签元素的z值
   int _getStickyNoteMaxZIndex(String stickyNoteId) {
@@ -1144,7 +1145,7 @@ class DrawingToolManager {
     if (getStickyNoteMaxZIndex != null) {
       return getStickyNoteMaxZIndex!(stickyNoteId);
     }
-    
+
     // 默认返回0，表示没有现有元素
     return 0;
   }

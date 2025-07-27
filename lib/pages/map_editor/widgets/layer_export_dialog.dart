@@ -1753,7 +1753,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                             defaultFileName: 'map_export',
                           ),
                         );
-                        
+
                         if (result == true && mounted) {
                           Navigator.of(context).pop();
                         }
@@ -1767,9 +1767,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     } catch (e) {
                       debugPrint('获取图片失败: $e');
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('获取图片失败: $e')),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('获取图片失败: $e')));
                       }
                     }
                   }

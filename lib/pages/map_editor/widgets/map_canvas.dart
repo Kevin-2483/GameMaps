@@ -368,7 +368,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
     // 按分割线分组
     for (final item in exportItems) {
-      if (item  is DividerExportItem) {
+      if (item is DividerExportItem) {
         // 遇到分割线，导出当前组
         if (currentGroup.isNotEmpty) {
           final groupImage = await _exportItemGroup(currentGroup);
@@ -1650,7 +1650,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         widget.onStickyNoteUpdated!(updatedNote);
         return;
       }
-      
+
       // 如果点击了编辑按钮，处理编辑操作
       if (stickyNoteHitResult == StickyNoteHitType.editButton &&
           widget.onStickyNoteUpdated != null) {
@@ -2905,8 +2905,8 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
             ElevatedButton(
               onPressed: () {
                 final updatedNote = note.copyWith(
-                  title: titleController.text.trim().isEmpty 
-                      ? '无标题便签' 
+                  title: titleController.text.trim().isEmpty
+                      ? '无标题便签'
                       : titleController.text.trim(),
                   content: contentController.text,
                   updatedAt: DateTime.now(),
@@ -3951,7 +3951,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         widget.onStickyNoteUpdated!(updatedNote);
         return;
       }
-      
+
       // 如果点击了编辑按钮，处理编辑操作
       if (stickyNoteHitResult == StickyNoteHitType.editButton &&
           widget.onStickyNoteUpdated != null) {

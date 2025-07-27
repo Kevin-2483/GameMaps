@@ -10,7 +10,6 @@ import '../../../services/clipboard_service.dart';
 import '../utils/drawing_utils.dart';
 import 'popup_menu_utils.dart';
 
-
 /// 绘制工具竖直dock栏组件
 /// 显示绘制工具图标，放置在画布左侧边缘
 class DrawingToolsDockBar extends StatefulWidget {
@@ -32,7 +31,7 @@ class DrawingToolsDockBar extends StatefulWidget {
   final Function(double)? onDensityChanged;
   final Function(double)? onCurvatureChanged;
   final Function(TriangleCutType)? onTriangleCutChanged;
-  
+
   // 图片缓冲区相关属性
   final Uint8List? imageBufferData;
   final BoxFit imageBufferFit;
@@ -74,13 +73,14 @@ class DrawingToolsDockBar extends StatefulWidget {
 
 class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   final ScrollController _scrollController = ScrollController();
-  
+
   // 颜色相关状态
   Color _selectedColor = Colors.red; // 当前选中的颜色
 
   final GlobalKey _colorButtonKey = GlobalKey(); // 用于定位弹窗位置
-  final Map<DrawingElementType, GlobalKey> _toolButtonKeys = {}; // 工具按钮的GlobalKey映射
-  
+  final Map<DrawingElementType, GlobalKey> _toolButtonKeys =
+      {}; // 工具按钮的GlobalKey映射
+
   // 弹窗状态管理
   bool _isAnyPopupOpen = false; // 是否有弹窗打开
   DrawingElementType? _currentPopupTool; // 当前打开弹窗的工具
@@ -169,7 +169,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     // 使用传入的颜色值
     _selectedColor = widget.selectedColor;
   }
-  
+
   @override
   void didUpdateWidget(DrawingToolsDockBar oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -202,15 +202,20 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   double _getToolPopupHeight(DrawingElementType tool) {
     // 基础高度：标题
     double baseHeight = 50;
-    
+
     // 检查是否有任何属性需要显示
     final hasStrokeWidth = _shouldShowStrokeWidth(tool);
     final hasDensity = _shouldShowDensity(tool);
     final hasCurvature = _shouldShowCurvature(tool);
     final hasTriangleCut = _shouldShowTriangleCut(tool);
     final hasImageAreaControls = _shouldShowImageAreaControls(tool);
-    final hasAnyProperty = hasStrokeWidth || hasDensity || hasCurvature || hasTriangleCut || hasImageAreaControls;
-    
+    final hasAnyProperty =
+        hasStrokeWidth ||
+        hasDensity ||
+        hasCurvature ||
+        hasTriangleCut ||
+        hasImageAreaControls;
+
     if (!hasAnyProperty) {
       // 如果没有任何属性，显示说明信息的高度
       baseHeight += 80; // 说明信息区域
@@ -219,19 +224,19 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       if (hasStrokeWidth) {
         baseHeight += 100; // 线条粗细控制区域
       }
-      
+
       if (hasDensity) {
         baseHeight += 100; // 密度控制区域
       }
-      
+
       if (hasCurvature) {
         baseHeight += 100; // 弧度控制区域
       }
-      
+
       if (hasTriangleCut) {
         baseHeight += 80; // 三角形切割控制区域（下拉框需要更多空间）
       }
-      
+
       if (hasImageAreaControls) {
         baseHeight += 400; // 图片选区控件基础空间
         // 如果有图片数据，需要额外空间显示图片适应方式选择器
@@ -240,20 +245,20 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         }
       }
     }
-    
+
     return baseHeight;
   }
-  
+
   /// 显示工具属性设置窗口
   void _showToolProperties(DrawingElementType tool, GlobalKey buttonKey) {
     if (!widget.isEditMode) return;
-    
+
     // 如果当前工具的弹窗已经打开，则关闭它
     if (_currentPopupTool == tool && _isAnyPopupOpen) {
       _closeCurrentPopup();
       return;
     }
-    
+
     // 如果有其他弹窗打开，先关闭
     if (_isAnyPopupOpen) {
       _closeCurrentPopup();
@@ -265,19 +270,22 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       _showToolPropertiesInternal(tool, buttonKey);
     }
   }
-  
+
   /// 内部方法：实际显示工具属性弹窗
-  void _showToolPropertiesInternal(DrawingElementType tool, GlobalKey buttonKey) {
+  void _showToolPropertiesInternal(
+    DrawingElementType tool,
+    GlobalKey buttonKey,
+  ) {
     setState(() {
       _isAnyPopupOpen = true;
       _currentPopupTool = tool;
       _isColorPopupOpen = false;
     });
-    
+
     // 创建一个可以动态更新高度的弹窗
     _showDynamicHeightPopup(tool, buttonKey);
   }
-  
+
   /// 显示可动态调整高度的弹窗
   void _showDynamicHeightPopup(DrawingElementType tool, GlobalKey buttonKey) {
     showDialog(
@@ -287,24 +295,25 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         return StatefulBuilder(
           builder: (context, setPopupState) {
             // 获取锚点位置
-            final RenderBox? renderBox = buttonKey.currentContext?.findRenderObject() as RenderBox?;
+            final RenderBox? renderBox =
+                buttonKey.currentContext?.findRenderObject() as RenderBox?;
             if (renderBox == null) {
               return const SizedBox.shrink();
             }
-            
+
             final Offset anchorPosition = renderBox.localToGlobal(Offset.zero);
             final Size anchorSize = renderBox.size;
             final screenHeight = MediaQuery.of(context).size.height;
             final screenWidth = MediaQuery.of(context).size.width;
-            
+
             // 动态计算弹窗高度
             final popupHeight = _getToolPopupHeight(tool);
             final popupWidth = 280.0;
-            
+
             // 计算弹窗位置
             double left = anchorPosition.dx + anchorSize.width + 10 + 16;
             double top = anchorPosition.dy - (popupHeight / 2);
-            
+
             // 边界检查
             if (left + popupWidth > screenWidth) {
               left = anchorPosition.dx - popupWidth - 10 + 16;
@@ -314,7 +323,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               top = screenHeight - popupHeight - 10;
             }
             if (top < 10) top = 10;
-            
+
             return Stack(
               children: [
                 // 透明背景，点击关闭菜单
@@ -339,7 +348,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -350,7 +361,11 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                         ],
                       ),
                       child: Center(
-                        child: _buildToolPropertiesContent(tool, dialogContext, setPopupState),
+                        child: _buildToolPropertiesContent(
+                          tool,
+                          dialogContext,
+                          setPopupState,
+                        ),
                       ),
                     ),
                   ),
@@ -370,58 +385,64 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       }
     });
   }
-  
+
   /// 构建工具属性内容
-  Widget _buildToolPropertiesContent(DrawingElementType tool, BuildContext dialogContext, [StateSetter? setPopupState]) {
+  Widget _buildToolPropertiesContent(
+    DrawingElementType tool,
+    BuildContext dialogContext, [
+    StateSetter? setPopupState,
+  ]) {
     // 使用更敏感的key来强制重建StatefulBuilder，包含数据哈希值
     final imageDataHash = widget.imageBufferData?.hashCode ?? 0;
-    final builderKey = ValueKey('${tool.name}_${imageDataHash}_${widget.imageBufferFit.name}_${DateTime.now().millisecondsSinceEpoch}');
-    
+    final builderKey = ValueKey(
+      '${tool.name}_${imageDataHash}_${widget.imageBufferFit.name}_${DateTime.now().millisecondsSinceEpoch}',
+    );
+
     return StatefulBuilder(
-          key: builderKey,
-          builder: (context, setDialogState) {
-            // 强制监听widget属性变化
-            final currentImageData = widget.imageBufferData;
-            final currentImageFit = widget.imageBufferFit;
-            
-            // 创建组合的状态更新函数
-            void updateBothStates() {
-              if (!mounted) return;
-              
-              // 立即更新 - 分别处理每个 setState 调用
-              try {
-                setDialogState(() {});
-              } catch (e) {
-                debugPrint('updateBothStates setDialogState immediate error: $e');
-              }
-              
-              try {
-                if (setPopupState != null) {
-                  setPopupState(() {});
-                }
-              } catch (e) {
-                debugPrint('updateBothStates setPopupState immediate error: $e');
-              }
-              
-              // 强制在下一帧再次更新，确保状态同步
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                
-                try {
-                  setDialogState(() {});
-                } catch (e) {
-                  debugPrint('updateBothStates setDialogState postFrame error: $e');
-                }
-                
-                try {
-                  if (setPopupState != null) {
-                    setPopupState(() {});
-                  }
-                } catch (e) {
-                  debugPrint('updateBothStates setPopupState postFrame error: $e');
-                }
-              });
+      key: builderKey,
+      builder: (context, setDialogState) {
+        // 强制监听widget属性变化
+        final currentImageData = widget.imageBufferData;
+        final currentImageFit = widget.imageBufferFit;
+
+        // 创建组合的状态更新函数
+        void updateBothStates() {
+          if (!mounted) return;
+
+          // 立即更新 - 分别处理每个 setState 调用
+          try {
+            setDialogState(() {});
+          } catch (e) {
+            debugPrint('updateBothStates setDialogState immediate error: $e');
+          }
+
+          try {
+            if (setPopupState != null) {
+              setPopupState(() {});
             }
+          } catch (e) {
+            debugPrint('updateBothStates setPopupState immediate error: $e');
+          }
+
+          // 强制在下一帧再次更新，确保状态同步
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+
+            try {
+              setDialogState(() {});
+            } catch (e) {
+              debugPrint('updateBothStates setDialogState postFrame error: $e');
+            }
+
+            try {
+              if (setPopupState != null) {
+                setPopupState(() {});
+              }
+            } catch (e) {
+              debugPrint('updateBothStates setPopupState postFrame error: $e');
+            }
+          });
+        }
 
         // 检查是否有任何属性需要显示
         final hasStrokeWidth = _shouldShowStrokeWidth(tool);
@@ -429,8 +450,13 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         final hasCurvature = _shouldShowCurvature(tool);
         final hasTriangleCut = _shouldShowTriangleCut(tool);
         final hasImageAreaControls = _shouldShowImageAreaControls(tool);
-        final hasAnyProperty = hasStrokeWidth || hasDensity || hasCurvature || hasTriangleCut || hasImageAreaControls;
-        
+        final hasAnyProperty =
+            hasStrokeWidth ||
+            hasDensity ||
+            hasCurvature ||
+            hasTriangleCut ||
+            hasImageAreaControls;
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,22 +464,22 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
             // 标题
             Text(
               '${_getToolDisplayName(tool)} 属性',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
-            
+
             // 如果没有任何属性，显示说明
             if (!hasAnyProperty) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Row(
                   children: [
@@ -477,39 +503,38 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               ),
             ] else ...[
               // 笔触宽度（只对需要的工具显示）
-              if (hasStrokeWidth)
-                _buildStrokeWidthSection(setDialogState),
-              
+              if (hasStrokeWidth) _buildStrokeWidthSection(setDialogState),
+
               // 根据工具类型显示特定属性
               if (hasDensity) ...[
                 const SizedBox(height: 16),
                 _buildDensitySection(setDialogState),
               ],
-              
+
               // 弧度控制（适用于箭头等工具）
               if (hasCurvature) ...[
                 const SizedBox(height: 16),
                 _buildCurvatureSection(setDialogState),
               ],
-              
+
               // 三角形切割控制（适用于三角形工具）
-               if (hasTriangleCut) ...[
-                 const SizedBox(height: 16),
-                 _buildTriangleCutSection(setDialogState),
-               ],
-               
-               // 图片选区专用控件
-               if (hasImageAreaControls) ...[
-                 const SizedBox(height: 16),
-                 _buildImageAreaControlsSection(updateBothStates),
-               ],
+              if (hasTriangleCut) ...[
+                const SizedBox(height: 16),
+                _buildTriangleCutSection(setDialogState),
+              ],
+
+              // 图片选区专用控件
+              if (hasImageAreaControls) ...[
+                const SizedBox(height: 16),
+                _buildImageAreaControlsSection(updateBothStates),
+              ],
             ],
           ],
         );
       },
     );
   }
-  
+
   /// 获取工具显示名称
   String _getToolDisplayName(DrawingElementType tool) {
     final toolConfig = _drawingTools.firstWhere(
@@ -523,9 +548,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     );
     return toolConfig.label;
   }
-  
 
-  
   /// 构建弧度控制区域
   Widget _buildCurvatureSection(StateSetter setDialogState) {
     return Column(
@@ -533,9 +556,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       children: [
         Text(
           '弧度: ${(widget.selectedCurvature * 100).round()}%',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         Slider(
@@ -545,10 +568,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           divisions: 20,
           onChanged: (value) {
             widget.onCurvatureChanged?.call(value);
-            
+
             // 立即更新弹窗显示
             setDialogState(() {});
-            
+
             // 等待父组件状态更新完成后再次更新弹窗
             Future.delayed(const Duration(milliseconds: 10), () {
               if (mounted) {
@@ -560,7 +583,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       ],
     );
   }
-  
+
   /// 构建三角形切割控制区域
   Widget _buildTriangleCutSection(StateSetter setDialogState) {
     return Column(
@@ -568,9 +591,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       children: [
         Text(
           '切割类型',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         DropdownButton<TriangleCutType>(
@@ -585,10 +608,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           onChanged: (value) {
             if (value != null) {
               widget.onTriangleCutChanged?.call(value);
-              
+
               // 立即更新弹窗显示
               setDialogState(() {});
-              
+
               // 等待父组件状态更新完成后再次更新弹窗
               Future.delayed(const Duration(milliseconds: 10), () {
                 if (mounted) {
@@ -601,7 +624,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       ],
     );
   }
-  
+
   /// 获取三角形切割类型的显示名称
   String _getTriangleCutDisplayName(TriangleCutType type) {
     switch (type) {
@@ -617,7 +640,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         return '右下切割';
     }
   }
-  
+
   /// 构建笔触宽度区域
   Widget _buildStrokeWidthSection(StateSetter setDialogState) {
     return Column(
@@ -625,9 +648,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       children: [
         Text(
           '笔触宽度: ${widget.selectedStrokeWidth.round()}px',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         Slider(
@@ -637,10 +660,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           divisions: 49,
           onChanged: (value) {
             widget.onStrokeWidthChanged?.call(value);
-            
+
             // 立即更新弹窗显示
             setDialogState(() {});
-            
+
             // 等待父组件状态更新完成后再次更新弹窗
             Future.delayed(const Duration(milliseconds: 10), () {
               if (mounted) {
@@ -652,7 +675,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       ],
     );
   }
-  
+
   /// 构建密度区域
   Widget _buildDensitySection(StateSetter setDialogState) {
     return Column(
@@ -660,9 +683,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       children: [
         Text(
           '密度: ${widget.selectedDensity.toStringAsFixed(1)}x',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         Slider(
@@ -672,10 +695,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           divisions: 14,
           onChanged: (value) {
             widget.onDensityChanged?.call(value);
-            
+
             // 立即更新弹窗显示
             setDialogState(() {});
-            
+
             // 等待父组件状态更新完成后再次更新弹窗
             Future.delayed(const Duration(milliseconds: 10), () {
               if (mounted) {
@@ -687,40 +710,40 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       ],
     );
   }
-  
+
   /// 判断是否显示密度控制
   bool _shouldShowDensity(DrawingElementType tool) {
-    return tool == DrawingElementType.dashedLine || 
-           tool == DrawingElementType.dotGrid ||
-           tool == DrawingElementType.diagonalLines ||
-           tool == DrawingElementType.crossLines;
+    return tool == DrawingElementType.dashedLine ||
+        tool == DrawingElementType.dotGrid ||
+        tool == DrawingElementType.diagonalLines ||
+        tool == DrawingElementType.crossLines;
   }
-  
+
   /// 是否显示弧度控制
   bool _shouldShowCurvature(DrawingElementType tool) {
     return tool == DrawingElementType.rectangle ||
-           tool == DrawingElementType.hollowRectangle ||
-           tool == DrawingElementType.diagonalLines ||
-           tool == DrawingElementType.crossLines ||
-           tool == DrawingElementType.dotGrid ||
-           tool == DrawingElementType.eraser;
+        tool == DrawingElementType.hollowRectangle ||
+        tool == DrawingElementType.diagonalLines ||
+        tool == DrawingElementType.crossLines ||
+        tool == DrawingElementType.dotGrid ||
+        tool == DrawingElementType.eraser;
   }
-  
+
   /// 是否显示三角形切割控制
   bool _shouldShowTriangleCut(DrawingElementType tool) {
-        return tool == DrawingElementType.rectangle ||
-           tool == DrawingElementType.hollowRectangle ||
-           tool == DrawingElementType.diagonalLines ||
-           tool == DrawingElementType.crossLines ||
-           tool == DrawingElementType.dotGrid ||
-           tool == DrawingElementType.eraser;
+    return tool == DrawingElementType.rectangle ||
+        tool == DrawingElementType.hollowRectangle ||
+        tool == DrawingElementType.diagonalLines ||
+        tool == DrawingElementType.crossLines ||
+        tool == DrawingElementType.dotGrid ||
+        tool == DrawingElementType.eraser;
   }
 
   /// 是否显示线条粗细控制（文本、橡皮擦、图片选区工具不需要）
   bool _shouldShowStrokeWidth(DrawingElementType tool) {
     return tool != DrawingElementType.text &&
-           tool != DrawingElementType.eraser &&
-           tool != DrawingElementType.imageArea;
+        tool != DrawingElementType.eraser &&
+        tool != DrawingElementType.imageArea;
   }
 
   /// 是否显示图片选区专用控件
@@ -822,7 +845,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                         try {
                           updateBothStates();
                         } catch (e) {
-                          debugPrint('Delayed clear updateBothStates error: $e');
+                          debugPrint(
+                            'Delayed clear updateBothStates error: $e',
+                          );
                         }
                       }
                     });
@@ -909,7 +934,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                         try {
                           updateBothStates();
                         } catch (e) {
-                          debugPrint('Delayed upload updateBothStates error: $e');
+                          debugPrint(
+                            'Delayed upload updateBothStates error: $e',
+                          );
                         }
                       }
                     });
@@ -945,7 +972,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                         try {
                           updateBothStates();
                         } catch (e) {
-                          debugPrint('Delayed clipboard updateBothStates error: $e');
+                          debugPrint(
+                            'Delayed clipboard updateBothStates error: $e',
+                          );
                         }
                       }
                     });
@@ -1038,7 +1067,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   /// 处理图片适应方式改变
   void _handleImageFitChange(BoxFit fit, [void Function()? updateBothStates]) {
     widget.onImageBufferFitChanged?.call(fit);
-    
+
     // 触发弹窗状态更新
     if (updateBothStates != null) {
       // 等待父组件状态更新完成后再更新弹窗
@@ -1051,20 +1080,23 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   }
 
   /// 处理图片上传
-  Future<void> _handleImageUpload([StateSetter? setDialogState, StateSetter? setPopupState]) async {
+  Future<void> _handleImageUpload([
+    StateSetter? setDialogState,
+    StateSetter? setPopupState,
+  ]) async {
     try {
       final imageData = await ImageUtils.pickAndEncodeImage();
       if (imageData != null) {
         if (!ImageUtils.isValidImageData(imageData)) {
           throw Exception('无效的图片文件，请选择有效的图片');
         }
-        
+
         // 先更新父组件状态
         widget.onImageBufferUpdated?.call(imageData);
-        
+
         // 等待父组件状态更新完成
         await Future.delayed(const Duration(milliseconds: 10));
-        
+
         // 更新弹窗显示 - 多次强制重建确保状态同步
         if (setDialogState != null && mounted) {
           // 立即更新
@@ -1076,7 +1108,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           } catch (e) {
             debugPrint('_handleImageUpload immediate setState error: $e');
           }
-          
+
           // 在下一帧更新
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -1090,7 +1122,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               }
             }
           });
-          
+
           // 额外延迟确保状态更新
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {
@@ -1113,7 +1145,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   }
 
   /// 处理剪贴板粘贴
-  Future<void> _handleClipboardPaste([StateSetter? setDialogState, StateSetter? setPopupState]) async {
+  Future<void> _handleClipboardPaste([
+    StateSetter? setDialogState,
+    StateSetter? setPopupState,
+  ]) async {
     try {
       // 使用ClipboardService读取剪贴板图片
       final imageData = await ClipboardService.readImageFromClipboard();
@@ -1121,13 +1156,13 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         if (!ImageUtils.isValidImageData(imageData)) {
           throw Exception('剪贴板中的数据不是有效的图片文件');
         }
-        
+
         // 先更新父组件状态
         widget.onImageBufferUpdated?.call(imageData);
-        
+
         // 等待父组件状态更新完成
         await Future.delayed(const Duration(milliseconds: 10));
-        
+
         // 更新弹窗显示 - 多次强制重建确保状态同步
         if (setDialogState != null && mounted) {
           // 立即更新
@@ -1139,7 +1174,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           } catch (e) {
             debugPrint('_handleClipboardPaste immediate setState error: $e');
           }
-          
+
           // 在下一帧更新
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -1149,11 +1184,13 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   setPopupState(() {});
                 }
               } catch (e) {
-                debugPrint('_handleClipboardPaste postFrame setState error: $e');
+                debugPrint(
+                  '_handleClipboardPaste postFrame setState error: $e',
+                );
               }
             }
           });
-          
+
           // 额外延迟确保状态更新
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {
@@ -1288,7 +1325,6 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (!widget.isVisible) {
@@ -1330,11 +1366,11 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         children: [
           // 固定的标题图标 - 可点击切换侧边栏
           _buildHeaderIcon(),
-          
+
           // 只有在绘制工具未被禁用时才显示其他工具
           if (!widget.shouldDisableDrawingTools) ...[
             const SizedBox(height: 8),
-            
+
             // 可滚动的工具按钮列表
             Flexible(
               child: ScrollConfiguration(
@@ -1352,7 +1388,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                 ),
               ),
             ),
-            
+
             // 固定的调色盘按钮
             const SizedBox(height: 8),
             _buildColorPaletteButton(),
@@ -1390,8 +1426,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   Widget _buildToolItem(_DrawingToolConfig toolConfig) {
     final isSelected = widget.selectedTool == toolConfig.type;
     final isEnabled = widget.isEditMode;
-    final hasPopupOpen = _currentPopupTool == toolConfig.type && _isAnyPopupOpen;
-    
+    final hasPopupOpen =
+        _currentPopupTool == toolConfig.type && _isAnyPopupOpen;
+
     // 为每个工具创建唯一的 GlobalKey
     _toolButtonKeys[toolConfig.type] ??= GlobalKey();
     final buttonKey = _toolButtonKeys[toolConfig.type]!;
@@ -1406,7 +1443,8 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           color: Colors.transparent,
           child: GestureDetector(
             onTap: isEnabled
-                ? () => _handleToolSelection(isSelected ? null : toolConfig.type)
+                ? () =>
+                      _handleToolSelection(isSelected ? null : toolConfig.type)
                 : null,
             onSecondaryTap: isEnabled
                 ? () => _showToolProperties(toolConfig.type, buttonKey)
@@ -1430,13 +1468,17 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                       : Colors.transparent,
                   width: hasPopupOpen ? 3 : 2,
                 ),
-                boxShadow: hasPopupOpen ? [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ] : null,
+                boxShadow: hasPopupOpen
+                    ? [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
               child: Icon(
                 toolConfig.icon,
@@ -1460,7 +1502,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   Widget _buildColorPaletteButton() {
     final isEnabled = widget.isEditMode;
     final hasColorPopupOpen = _isColorPopupOpen && _isAnyPopupOpen;
-    
+
     // 计算图标颜色（与背景色相反）
     final backgroundColor = _selectedColor;
     final iconColor = _getContrastColor(backgroundColor);
@@ -1478,21 +1520,29 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isEnabled ? backgroundColor : backgroundColor.withValues(alpha: 0.5),
+              color: isEnabled
+                  ? backgroundColor
+                  : backgroundColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: hasColorPopupOpen
                     ? Theme.of(context).colorScheme.secondary
-                    : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    : Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                 width: hasColorPopupOpen ? 3 : 1,
               ),
-              boxShadow: hasColorPopupOpen ? [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ] : null,
+              boxShadow: hasColorPopupOpen
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Icon(
               Icons.palette,
@@ -1520,7 +1570,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       _closeCurrentPopup();
       return;
     }
-    
+
     // 如果有其他弹窗打开，先关闭
     if (_isAnyPopupOpen) {
       _closeCurrentPopup();
@@ -1532,7 +1582,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       _showColorMenuInternal();
     }
   }
-  
+
   /// 内部方法：实际显示颜色选择弹窗
   void _showColorMenuInternal() {
     setState(() {
@@ -1540,7 +1590,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       _isColorPopupOpen = true;
       _currentPopupTool = null;
     });
-    
+
     PopupMenuUtils.showPositionedPopup(
       context: context,
       anchorKey: _colorButtonKey,
@@ -1558,11 +1608,13 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       }
     });
   }
-  
+
   /// 关闭当前打开的弹窗
   void _closeCurrentPopup() {
     if (_isAnyPopupOpen && mounted) {
-      Navigator.of(context).popUntil((route) => route.isFirst || !route.willHandlePopInternally);
+      Navigator.of(
+        context,
+      ).popUntil((route) => route.isFirst || !route.willHandlePopInternally);
       setState(() {
         _isAnyPopupOpen = false;
         _currentPopupTool = null;
@@ -1576,17 +1628,21 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefs, child) {
         final recentColorValues = userPrefs.tools.recentColors;
-        final recentColors = recentColorValues.map((colorValue) => Color(colorValue)).toList();
-        
+        final recentColors = recentColorValues
+            .map((colorValue) => Color(colorValue))
+            .toList();
+
         // 如果没有最近使用的颜色，显示默认颜色
-        final colorsToShow = recentColors.isEmpty ? [
-          Colors.red,
-          Colors.blue,
-          Colors.green,
-          Colors.orange,
-          Colors.purple,
-        ] : recentColors;
-        
+        final colorsToShow = recentColors.isEmpty
+            ? [
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.orange,
+                Colors.purple,
+              ]
+            : recentColors;
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1594,12 +1650,12 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
             // 标题
             Text(
               '最近使用的颜色',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             // 颜色网格
             Wrap(
               spacing: 8,
@@ -1621,7 +1677,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   /// 构建单个颜色项
   Widget _buildColorItem(BuildContext dialogContext, Color color) {
     final isSelected = _selectedColor == color;
-    
+
     return InkWell(
       onTap: () {
         Navigator.of(dialogContext).pop();
@@ -1635,18 +1691,14 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           color: color,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
         child: isSelected
-            ? Icon(
-                Icons.check,
-                size: 16,
-                color: _getContrastColor(color),
-              )
+            ? Icon(Icons.check, size: 16, color: _getContrastColor(color))
             : null,
       ),
     );
@@ -1693,11 +1745,11 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     setState(() {
       _selectedColor = color;
     });
-    
+
     // 调用颜色变化回调
     widget.onColorChanged?.call(color);
     widget.onColorPreview?.call(color);
-    
+
     // 更新最近使用的颜色到用户偏好
     final userPrefs = context.read<UserPreferencesProvider>();
     userPrefs.addRecentColor(color.toARGB32()).catchError((e) {

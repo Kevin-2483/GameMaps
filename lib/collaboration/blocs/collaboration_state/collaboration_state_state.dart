@@ -24,16 +24,16 @@ class CollaborationStateLoading extends CollaborationStateBlocState {
 class CollaborationStateLoaded extends CollaborationStateBlocState {
   /// 元素锁定状态映射 (elementId -> ElementLockState)
   final Map<String, ElementLockState> elementLocks;
-  
+
   /// 用户选择状态映射 (userId -> UserSelectionState)
   final Map<String, UserSelectionState> userSelections;
-  
+
   /// 用户指针状态映射 (userId -> UserCursorState)
   final Map<String, UserCursorState> userCursors;
-  
+
   /// 协作冲突列表
   final List<CollaborationConflict> conflicts;
-  
+
   /// 当前用户信息
   final String currentUserId;
   final String currentUserDisplayName;
@@ -76,7 +76,8 @@ class CollaborationStateLoaded extends CollaborationStateBlocState {
       userCursors: userCursors ?? this.userCursors,
       conflicts: conflicts ?? this.conflicts,
       currentUserId: currentUserId ?? this.currentUserId,
-      currentUserDisplayName: currentUserDisplayName ?? this.currentUserDisplayName,
+      currentUserDisplayName:
+          currentUserDisplayName ?? this.currentUserDisplayName,
       currentUserColor: currentUserColor ?? this.currentUserColor,
     );
   }
@@ -92,17 +93,17 @@ class CollaborationStateLoaded extends CollaborationStateBlocState {
   /// 检查元素是否被当前用户锁定
   bool isElementLockedByCurrentUser(String elementId) {
     final lockState = elementLocks[elementId];
-    return lockState != null && 
-           lockState.userId == currentUserId && 
-           !lockState.isExpired;
+    return lockState != null &&
+        lockState.userId == currentUserId &&
+        !lockState.isExpired;
   }
 
   /// 检查元素是否被其他用户锁定
   bool isElementLockedByOtherUser(String elementId) {
     final lockState = elementLocks[elementId];
-    return lockState != null && 
-           lockState.userId != currentUserId && 
-           !lockState.isExpired;
+    return lockState != null &&
+        lockState.userId != currentUserId &&
+        !lockState.isExpired;
   }
 
   /// 获取元素的锁定状态
@@ -114,7 +115,10 @@ class CollaborationStateLoaded extends CollaborationStateBlocState {
   /// 获取当前用户锁定的元素列表
   List<String> getCurrentUserLockedElements() {
     return elementLocks.entries
-        .where((entry) => entry.value.userId == currentUserId && !entry.value.isExpired)
+        .where(
+          (entry) =>
+              entry.value.userId == currentUserId && !entry.value.isExpired,
+        )
         .map((entry) => entry.key)
         .toList();
   }
@@ -122,7 +126,10 @@ class CollaborationStateLoaded extends CollaborationStateBlocState {
   /// 获取其他用户锁定的元素列表
   List<String> getOtherUsersLockedElements() {
     return elementLocks.entries
-        .where((entry) => entry.value.userId != currentUserId && !entry.value.isExpired)
+        .where(
+          (entry) =>
+              entry.value.userId != currentUserId && !entry.value.isExpired,
+        )
         .map((entry) => entry.key)
         .toList();
   }
@@ -183,45 +190,56 @@ class CollaborationStateLoaded extends CollaborationStateBlocState {
 
   /// 获取涉及指定元素的冲突
   List<CollaborationConflict> getConflictsForElement(String elementId) {
-    return conflicts.where((conflict) => conflict.elementId == elementId).toList();
+    return conflicts
+        .where((conflict) => conflict.elementId == elementId)
+        .toList();
   }
 
   /// 检查是否有未解决的冲突
-  bool get hasUnresolvedConflicts => conflicts.any((conflict) => !conflict.isResolved);
+  bool get hasUnresolvedConflicts =>
+      conflicts.any((conflict) => !conflict.isResolved);
 
   /// 获取在线用户数量（有活动状态的用户）
   int get activeUsersCount {
     final activeUserIds = <String>{};
-    
+
     // 从选择状态中获取活跃用户
     activeUserIds.addAll(userSelections.keys);
-    
+
     // 从指针状态中获取活跃用户
-    activeUserIds.addAll(userCursors.keys.where((userId) => userCursors[userId]!.isVisible));
-    
+    activeUserIds.addAll(
+      userCursors.keys.where((userId) => userCursors[userId]!.isVisible),
+    );
+
     // 从锁定状态中获取活跃用户
-    activeUserIds.addAll(elementLocks.values
-        .where((lock) => !lock.isExpired)
-        .map((lock) => lock.userId));
-    
+    activeUserIds.addAll(
+      elementLocks.values
+          .where((lock) => !lock.isExpired)
+          .map((lock) => lock.userId),
+    );
+
     return activeUserIds.length;
   }
 
   /// 获取活跃用户ID列表
   List<String> get activeUserIds {
     final activeUserIds = <String>{};
-    
+
     // 从选择状态中获取活跃用户
     activeUserIds.addAll(userSelections.keys);
-    
+
     // 从指针状态中获取活跃用户
-    activeUserIds.addAll(userCursors.keys.where((userId) => userCursors[userId]!.isVisible));
-    
+    activeUserIds.addAll(
+      userCursors.keys.where((userId) => userCursors[userId]!.isVisible),
+    );
+
     // 从锁定状态中获取活跃用户
-    activeUserIds.addAll(elementLocks.values
-        .where((lock) => !lock.isExpired)
-        .map((lock) => lock.userId));
-    
+    activeUserIds.addAll(
+      elementLocks.values
+          .where((lock) => !lock.isExpired)
+          .map((lock) => lock.userId),
+    );
+
     return activeUserIds.toList();
   }
 }

@@ -13,28 +13,28 @@ import 'user_cursor_widget.dart';
 class CollaborationOverlay extends StatelessWidget {
   /// 子组件（通常是地图或画布）
   final Widget child;
-  
+
   /// 是否显示用户指针
   final bool showUserCursors;
-  
+
   /// 是否显示用户选择
   final bool showUserSelections;
-  
+
   /// 是否显示冲突信息
   final bool showConflicts;
-  
+
   /// 指针样式配置
   final UserCursorStyle? cursorStyle;
-  
+
   /// 选择样式配置
   final UserSelectionStyle? selectionStyle;
-  
+
   /// 冲突样式配置
   final ConflictStyle? conflictStyle;
-  
+
   /// 坐标转换函数（将逻辑坐标转换为屏幕坐标）
   final Offset Function(Offset logicalPosition)? coordinateTransform;
-  
+
   /// 元素位置获取函数（根据元素ID获取其在屏幕上的位置和大小）
   final Rect? Function(String elementId)? getElementBounds;
 
@@ -63,18 +63,15 @@ class CollaborationOverlay extends StatelessWidget {
           children: [
             // 主要内容
             child,
-            
+
             // 用户选择覆盖层
-            if (showUserSelections)
-              _buildUserSelectionsOverlay(context, state),
-            
+            if (showUserSelections) _buildUserSelectionsOverlay(context, state),
+
             // 用户指针覆盖层
-            if (showUserCursors)
-              _buildUserCursorsOverlay(context, state),
-            
+            if (showUserCursors) _buildUserCursorsOverlay(context, state),
+
             // 冲突信息覆盖层
-            if (showConflicts)
-              _buildConflictsOverlay(context, state),
+            if (showConflicts) _buildConflictsOverlay(context, state),
           ],
         );
       },
@@ -87,7 +84,7 @@ class CollaborationOverlay extends StatelessWidget {
     CollaborationStateLoaded state,
   ) {
     final otherUsersSelections = state.getOtherUsersSelections();
-    
+
     if (otherUsersSelections.isEmpty || getElementBounds == null) {
       return const SizedBox.shrink();
     }
@@ -111,7 +108,7 @@ class CollaborationOverlay extends StatelessWidget {
     CollaborationStateLoaded state,
   ) {
     final otherUsersCursors = state.getOtherUsersCursors();
-    
+
     if (otherUsersCursors.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -120,8 +117,9 @@ class CollaborationOverlay extends StatelessWidget {
       child: IgnorePointer(
         child: Stack(
           children: otherUsersCursors.map((cursor) {
-            final screenPosition = coordinateTransform?.call(cursor.position) ?? cursor.position;
-            
+            final screenPosition =
+                coordinateTransform?.call(cursor.position) ?? cursor.position;
+
             return Positioned(
               left: screenPosition.dx,
               top: screenPosition.dy,
@@ -142,7 +140,7 @@ class CollaborationOverlay extends StatelessWidget {
     CollaborationStateLoaded state,
   ) {
     final unresolvedConflicts = state.getUnresolvedConflicts();
-    
+
     if (unresolvedConflicts.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -159,10 +157,10 @@ class CollaborationOverlay extends StatelessWidget {
               conflict: conflict,
               style: conflictStyle ?? const ConflictStyle(),
               onResolve: () {
-                        context.read<CollaborationStateBloc>().add(
-                          ResolveConflict(conflictId: conflict.id),
-                        );
-                      },
+                context.read<CollaborationStateBloc>().add(
+                  ResolveConflict(conflictId: conflict.id),
+                );
+              },
             ),
           );
         }).toList(),
@@ -205,7 +203,7 @@ class UserSelectionsPainter extends CustomPainter {
           Radius.circular(style.borderRadius),
         );
         canvas.drawRRect(rect, paint);
-        
+
         // 绘制用户标签
         if (style.showUserLabel) {
           _paintUserLabel(canvas, bounds, selection);
@@ -214,7 +212,11 @@ class UserSelectionsPainter extends CustomPainter {
     }
   }
 
-  void _paintUserLabel(Canvas canvas, Rect bounds, UserSelectionState selection) {
+  void _paintUserLabel(
+    Canvas canvas,
+    Rect bounds,
+    UserSelectionState selection,
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(
         text: selection.userDisplayName,
@@ -226,33 +228,32 @@ class UserSelectionsPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
-    
+
     final labelRect = Rect.fromLTWH(
       bounds.left,
       bounds.top - textPainter.height - 4,
       textPainter.width + 8,
       textPainter.height + 4,
     );
-    
+
     // 绘制标签背景
     final labelPaint = Paint()
       ..color = selection.userColor.withValues(alpha: 0.9);
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(labelRect, const Radius.circular(4)),
       labelPaint,
     );
-    
+
     // 绘制标签文字
     textPainter.paint(canvas, Offset(labelRect.left + 4, labelRect.top + 2));
   }
 
   @override
   bool shouldRepaint(UserSelectionsPainter oldDelegate) {
-    return selections != oldDelegate.selections ||
-           style != oldDelegate.style;
+    return selections != oldDelegate.selections || style != oldDelegate.style;
   }
 }
 
@@ -280,13 +281,13 @@ class UserSelectionStyle {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is UserSelectionStyle &&
-           other.strokeWidth == strokeWidth &&
-           other.opacity == opacity &&
-           other.padding == padding &&
-           other.borderRadius == borderRadius &&
-           other.showUserLabel == showUserLabel &&
-           other.labelTextColor == labelTextColor &&
-           other.labelFontSize == labelFontSize;
+        other.strokeWidth == strokeWidth &&
+        other.opacity == opacity &&
+        other.padding == padding &&
+        other.borderRadius == borderRadius &&
+        other.showUserLabel == showUserLabel &&
+        other.labelTextColor == labelTextColor &&
+        other.labelFontSize == labelFontSize;
   }
 
   @override
@@ -325,12 +326,12 @@ class UserCursorStyle {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is UserCursorStyle &&
-           other.size == size &&
-           other.opacity == opacity &&
-           other.showUserLabel == showUserLabel &&
-           other.labelTextColor == labelTextColor &&
-           other.labelFontSize == labelFontSize &&
-           other.animationDuration == animationDuration;
+        other.size == size &&
+        other.opacity == opacity &&
+        other.showUserLabel == showUserLabel &&
+        other.labelTextColor == labelTextColor &&
+        other.labelFontSize == labelFontSize &&
+        other.animationDuration == animationDuration;
   }
 
   @override
@@ -368,12 +369,12 @@ class ConflictStyle {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is ConflictStyle &&
-           other.backgroundColor == backgroundColor &&
-           other.textColor == textColor &&
-           other.borderColor == borderColor &&
-           other.borderRadius == borderRadius &&
-           other.padding == padding &&
-           other.fontSize == fontSize;
+        other.backgroundColor == backgroundColor &&
+        other.textColor == textColor &&
+        other.borderColor == borderColor &&
+        other.borderRadius == borderRadius &&
+        other.padding == padding &&
+        other.fontSize == fontSize;
   }
 
   @override

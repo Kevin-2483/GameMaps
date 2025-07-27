@@ -3,7 +3,8 @@ import 'dart:ui' as ui;
 
 // 条件导入：桌面平台
 import 'image_export_utils_desktop.dart'
-    if (dart.library.html) 'image_export_utils_web.dart' as platform;
+    if (dart.library.html) 'image_export_utils_web.dart'
+    as platform;
 
 /// 图片导出工具类
 /// 提供跨平台的图片导出功能
@@ -20,7 +21,7 @@ class ImageExportUtils {
     try {
       // 将图片转换为字节数据
       final List<Uint8List> imageBytes = [];
-      
+
       for (int i = 0; i < images.length; i++) {
         final image = images[i];
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -28,11 +29,11 @@ class ImageExportUtils {
           imageBytes.add(byteData.buffer.asUint8List());
         }
       }
-      
+
       if (imageBytes.isEmpty) {
         return false;
       }
-      
+
       // 调用平台特定的导出实现
       return await platform.exportImagesImpl(
         imageBytes,
@@ -44,7 +45,7 @@ class ImageExportUtils {
       return false;
     }
   }
-  
+
   /// 导出单张图片
   /// [image] 要导出的图片
   /// [fileName] 文件名，默认为'export.png'
@@ -57,9 +58,9 @@ class ImageExportUtils {
       if (byteData == null) {
         return false;
       }
-      
+
       final imageBytes = byteData.buffer.asUint8List();
-      
+
       // 调用平台特定的导出实现
       return await platform.exportSingleImageImpl(
         imageBytes,

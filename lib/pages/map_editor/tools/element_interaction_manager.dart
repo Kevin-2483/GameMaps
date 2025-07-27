@@ -634,12 +634,13 @@ class ElementInteractionManager {
 
     // 确保最小尺寸（只对选区类元素生效，线条和箭头类元素不限制）
     const minSize = 8.0; // 文本最小字体大小
-    final shouldApplyMinSize = elementType == null || 
+    final shouldApplyMinSize =
+        elementType == null ||
         elementType == DrawingElementType.text ||
         elementType == DrawingElementType.rectangle ||
         elementType == DrawingElementType.hollowRectangle ||
         elementType == DrawingElementType.imageArea;
-    
+
     if (shouldApplyMinSize) {
       if (right - left < minSize) {
         if (handle == ResizeHandle.centerLeft ||
@@ -661,10 +662,11 @@ class ElementInteractionManager {
       }
     } else {
       // 对于线条类元素，确保不能为负（不能把一侧拖动到另一侧）
-      final isLineType = elementType == DrawingElementType.line ||
+      final isLineType =
+          elementType == DrawingElementType.line ||
           elementType == DrawingElementType.dashedLine ||
           elementType == DrawingElementType.arrow;
-      
+
       if (isLineType) {
         // 限制拖动范围，防止left超过right（允许相等）
         if (left > right) {

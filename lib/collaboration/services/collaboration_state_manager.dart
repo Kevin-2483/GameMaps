@@ -7,7 +7,8 @@ import '../models/collaboration_state.dart';
 /// 协作状态管理器
 /// 独立于WebSocket的协作状态管理，为WebRTC做准备
 class CollaborationStateManager {
-  static final CollaborationStateManager _instance = CollaborationStateManager._internal();
+  static final CollaborationStateManager _instance =
+      CollaborationStateManager._internal();
   factory CollaborationStateManager() => _instance;
   CollaborationStateManager._internal();
 
@@ -25,11 +26,13 @@ class CollaborationStateManager {
   // 流控制器
   final StreamController<Map<String, ElementLockState>> _lockStateController =
       StreamController<Map<String, ElementLockState>>.broadcast();
-  final StreamController<Map<String, UserSelectionState>> _selectionStateController =
+  final StreamController<Map<String, UserSelectionState>>
+  _selectionStateController =
       StreamController<Map<String, UserSelectionState>>.broadcast();
   final StreamController<Map<String, UserCursorState>> _cursorStateController =
       StreamController<Map<String, UserCursorState>>.broadcast();
-  final StreamController<Map<String, CollaborationConflict>> _conflictController =
+  final StreamController<Map<String, CollaborationConflict>>
+  _conflictController =
       StreamController<Map<String, CollaborationConflict>>.broadcast();
 
   // 定时器
@@ -44,17 +47,25 @@ class CollaborationStateManager {
   String? get currentUserId => _currentUserId;
   String? get currentUserDisplayName => _currentUserDisplayName;
   Color? get currentUserColor => _currentUserColor;
-  
-  Map<String, ElementLockState> get elementLocks => Map.unmodifiable(_elementLocks);
-  Map<String, UserSelectionState> get userSelections => Map.unmodifiable(_userSelections);
-  Map<String, UserCursorState> get userCursors => Map.unmodifiable(_userCursors);
-  Map<String, CollaborationConflict> get conflicts => Map.unmodifiable(_conflicts);
+
+  Map<String, ElementLockState> get elementLocks =>
+      Map.unmodifiable(_elementLocks);
+  Map<String, UserSelectionState> get userSelections =>
+      Map.unmodifiable(_userSelections);
+  Map<String, UserCursorState> get userCursors =>
+      Map.unmodifiable(_userCursors);
+  Map<String, CollaborationConflict> get conflicts =>
+      Map.unmodifiable(_conflicts);
 
   // 流
-  Stream<Map<String, ElementLockState>> get lockStateStream => _lockStateController.stream;
-  Stream<Map<String, UserSelectionState>> get selectionStateStream => _selectionStateController.stream;
-  Stream<Map<String, UserCursorState>> get cursorStateStream => _cursorStateController.stream;
-  Stream<Map<String, CollaborationConflict>> get conflictStream => _conflictController.stream;
+  Stream<Map<String, ElementLockState>> get lockStateStream =>
+      _lockStateController.stream;
+  Stream<Map<String, UserSelectionState>> get selectionStateStream =>
+      _selectionStateController.stream;
+  Stream<Map<String, UserCursorState>> get cursorStateStream =>
+      _cursorStateController.stream;
+  Stream<Map<String, CollaborationConflict>> get conflictStream =>
+      _conflictController.stream;
 
   /// 初始化协作状态管理器
   void initialize({
@@ -70,7 +81,9 @@ class CollaborationStateManager {
     _startCleanupTimer();
     _startLockTimeoutTimer();
 
-    debugPrint('[CollaborationStateManager] 初始化完成: userId=$userId, displayName=$displayName');
+    debugPrint(
+      '[CollaborationStateManager] 初始化完成: userId=$userId, displayName=$displayName',
+    );
   }
 
   /// 销毁管理器
@@ -125,7 +138,9 @@ class CollaborationStateManager {
     _elementLocks[elementId] = lockState;
     _notifyLockStateChanged();
 
-    debugPrint('[CollaborationStateManager] 元素锁定成功: $elementId by $_currentUserId');
+    debugPrint(
+      '[CollaborationStateManager] 元素锁定成功: $elementId by $_currentUserId',
+    );
     return true;
   }
 
@@ -158,9 +173,9 @@ class CollaborationStateManager {
   /// 检查元素是否被当前用户锁定
   bool isElementLockedByCurrentUser(String elementId) {
     final lock = _elementLocks[elementId];
-    return lock != null && 
-           lock.lockedByUserId == _currentUserId && 
-           !lock.isExpired;
+    return lock != null &&
+        lock.lockedByUserId == _currentUserId &&
+        !lock.isExpired;
   }
 
   /// 获取元素的锁定状态
@@ -188,15 +203,14 @@ class CollaborationStateManager {
     _userSelections[_currentUserId!] = selectionState;
     _notifySelectionStateChanged();
 
-    debugPrint('[CollaborationStateManager] 用户选择已更新: ${selectedElementIds.length} 个元素');
+    debugPrint(
+      '[CollaborationStateManager] 用户选择已更新: ${selectedElementIds.length} 个元素',
+    );
   }
 
   /// 清除当前用户的选择
   void clearCurrentUserSelection() {
-    updateCurrentUserSelection(
-      selectedElementIds: [],
-      selectionType: 'none',
-    );
+    updateCurrentUserSelection(selectedElementIds: [], selectionType: 'none');
   }
 
   /// 获取用户的选择状态
@@ -248,10 +262,12 @@ class CollaborationStateManager {
   /// 获取其他用户的可见指针
   List<UserCursorState> getOtherUsersCursors() {
     return _userCursors.values
-        .where((cursor) => 
-            cursor.userId != _currentUserId && 
-            cursor.isVisible && 
-            !cursor.isExpired(_cursorTimeout))
+        .where(
+          (cursor) =>
+              cursor.userId != _currentUserId &&
+              cursor.isVisible &&
+              !cursor.isExpired(_cursorTimeout),
+        )
         .toList();
   }
 
@@ -311,13 +327,15 @@ class CollaborationStateManager {
 
   /// 模拟方法：检查用户是否离线
   /// 为WebRTC协议准备，当前始终返回离线状态
-  /// 
+  ///
   /// [userId] 要检查的用户ID，如果为null则检查当前用户
   /// 返回true表示用户离线，false表示在线
   bool isUserOffline([String? userId]) {
     // TODO: 将来集成WebRTC协议时，这里将实现真实的在线状态检测
     // 当前为模拟实现，始终返回离线状态
-    debugPrint('[CollaborationStateManager] 模拟检查用户离线状态: ${userId ?? _currentUserId} - 离线');
+    debugPrint(
+      '[CollaborationStateManager] 模拟检查用户离线状态: ${userId ?? _currentUserId} - 离线',
+    );
     return true;
   }
 
@@ -351,10 +369,10 @@ class CollaborationStateManager {
   void removeUserStates(String userId) {
     // 移除用户的锁定
     _elementLocks.removeWhere((_, lock) => lock.lockedByUserId == userId);
-    
+
     // 移除用户的选择
     _userSelections.remove(userId);
-    
+
     // 移除用户的指针
     _userCursors.remove(userId);
 
@@ -407,21 +425,19 @@ class CollaborationStateManager {
     final expiredCursors = _userCursors.keys
         .where((userId) => _userCursors[userId]!.isExpired(_cursorTimeout))
         .toList();
-    
+
     for (final userId in expiredCursors) {
       _userCursors.remove(userId);
       hasChanges = true;
     }
 
     // 清理已解决的旧冲突
-    final oldConflicts = _conflicts.keys
-        .where((conflictId) {
-          final conflict = _conflicts[conflictId]!;
-          return conflict.isResolved && 
-                 DateTime.now().difference(conflict.occurredAt).inMinutes > 5;
-        })
-        .toList();
-    
+    final oldConflicts = _conflicts.keys.where((conflictId) {
+      final conflict = _conflicts[conflictId]!;
+      return conflict.isResolved &&
+          DateTime.now().difference(conflict.occurredAt).inMinutes > 5;
+    }).toList();
+
     for (final conflictId in oldConflicts) {
       _conflicts.remove(conflictId);
       hasChanges = true;
@@ -438,13 +454,15 @@ class CollaborationStateManager {
     final expiredLocks = _elementLocks.keys
         .where((elementId) => _elementLocks[elementId]!.isExpired)
         .toList();
-    
+
     if (expiredLocks.isNotEmpty) {
       for (final elementId in expiredLocks) {
         _elementLocks.remove(elementId);
       }
       _notifyLockStateChanged();
-      debugPrint('[CollaborationStateManager] 已清理 ${expiredLocks.length} 个过期锁定');
+      debugPrint(
+        '[CollaborationStateManager] 已清理 ${expiredLocks.length} 个过期锁定',
+      );
     }
   }
 

@@ -47,13 +47,16 @@ class DraggableTitleBar extends StatelessWidget {
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 检查是否需要添加空白区域（合并展开模式且不是豁免页面）
-        final shouldAddSpacing = isDraggable &&
+        final shouldAddSpacing =
+            isDraggable &&
             userPrefsProvider.isInitialized &&
-            userPrefsProvider.layout.windowControlsMode == WindowControlsMode.mergedExpanded &&
+            userPrefsProvider.layout.windowControlsMode ==
+                WindowControlsMode.mergedExpanded &&
             !exemptFromWindowControlsMode;
 
         // 检查导航栏位置
-        final isRightSideNavigation = userPrefsProvider.isInitialized &&
+        final isRightSideNavigation =
+            userPrefsProvider.isInitialized &&
             userPrefsProvider.layout.enableRightSideVerticalNavigation;
 
         final titleBar = Container(
@@ -61,7 +64,8 @@ class DraggableTitleBar extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             color:
-                backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor ??
+                Theme.of(context).colorScheme.primaryContainer,
             border: Border(
               bottom: BorderSide(
                 color: Theme.of(
@@ -84,7 +88,8 @@ class DraggableTitleBar extends StatelessWidget {
               ] else if (icon != null) ...[
                 Icon(
                   icon,
-                  color: foregroundColor ?? Theme.of(context).colorScheme.primary,
+                  color:
+                      foregroundColor ?? Theme.of(context).colorScheme.primary,
                   size: 28,
                 ),
                 const SizedBox(width: 12),
@@ -178,19 +183,23 @@ class DraggableTitleBarWithContent extends StatelessWidget {
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 检查是否需要添加空白区域（合并展开模式且不是豁免页面）
-        final shouldAddSpacing = isDraggable &&
+        final shouldAddSpacing =
+            isDraggable &&
             userPrefsProvider.isInitialized &&
-            userPrefsProvider.layout.windowControlsMode == WindowControlsMode.mergedExpanded &&
+            userPrefsProvider.layout.windowControlsMode ==
+                WindowControlsMode.mergedExpanded &&
             !exemptFromWindowControlsMode;
 
         // 检查导航栏位置
-        final isRightSideNavigation = userPrefsProvider.isInitialized &&
+        final isRightSideNavigation =
+            userPrefsProvider.isInitialized &&
             userPrefsProvider.layout.enableRightSideVerticalNavigation;
 
         return Container(
           decoration: BoxDecoration(
             color:
-                backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor ??
+                Theme.of(context).colorScheme.primaryContainer,
             border: Border(
               bottom: BorderSide(
                 color: Theme.of(
