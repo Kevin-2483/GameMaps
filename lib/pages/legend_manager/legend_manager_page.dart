@@ -59,8 +59,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showErrorSnackBar(l10n.loadLegendsFailed(e.toString()));
+        _showErrorSnackBar('加载图例失败: $e');
       }
     }
   }
@@ -172,9 +171,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               _currentPath.isEmpty ? null : _currentPath,
             );
             await _loadLegends();
-            _showSuccessSnackBar(l10n.legendAddedSuccessfully);
+            _showSuccessSnackBar('添加图例成功');
           } catch (e) {
-            _showErrorSnackBar(l10n.addLegendFailed(e.toString()));
+            _showErrorSnackBar('添加图例失败: $e');
           }
         }
       }

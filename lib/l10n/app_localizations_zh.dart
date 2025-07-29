@@ -9,9 +9,6 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'R6盒子';
-
-  @override
   String get home => '首页';
 
   @override
@@ -33,9 +30,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get systemMode => '跟随系统';
 
   @override
-  String get systemLanguage => '跟随系统';
-
-  @override
   String get about => '关于';
 
   @override
@@ -50,22 +44,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get goHome => '回到首页';
 
   @override
-  String get comprehensiveFramework => '全面的 Flutter 跨平台框架';
-
-  @override
-  String get platformIntegration => '平台集成';
-
-  @override
   String get features => '功能特性';
-
-  @override
-  String get noFeaturesEnabled => '暂无启用的功能';
-
-  @override
-  String get enableFeaturesInSettings => '在设置中启用功能以在此处查看';
-
-  @override
-  String get aboutDialogContent => 'Flutter 跨平台框架\n支持多个平台的现代架构';
 
   @override
   String get windowsPlatform => 'Windows 平台';
@@ -119,15 +98,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get androidSpecificFeatures => '可以在此处实现 Android 特定功能。';
 
   @override
-  String get nativeAndroidUI => '原生 Android UI';
-
-  @override
-  String get androidNotifications => 'Android 通知';
-
-  @override
-  String get androidPermissions => 'Android 权限';
-
-  @override
   String get materialDesign => 'Material Design';
 
   @override
@@ -147,15 +117,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get iOSSpecificFeatures => '可以在此处实现 iOS 特定功能。';
-
-  @override
-  String get nativeIOSUI => '原生 iOS UI';
-
-  @override
-  String get iOSNotifications => 'iOS 通知';
-
-  @override
-  String get appStoreIntegration => 'App Store 集成';
 
   @override
   String get cupertinoDesign => 'Cupertino 设计';
@@ -277,29 +238,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceManagement => '资源管理';
 
   @override
-  String exportSuccessful(String path) {
-    return '数据库导出成功：$path';
-  }
-
-  @override
-  String get importSuccessful => '数据库导入成功';
-
-  @override
-  String get updateSuccessful => '外部资源更新成功';
-
-  @override
-  String exportFailed(String error) {
-    return '导出失败：$error';
-  }
-
-  @override
   String importFailed(String error) {
     return '导入失败：$error';
-  }
-
-  @override
-  String updateFailed(String error) {
-    return '更新失败：$error';
   }
 
   @override
@@ -353,14 +293,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get legendAddedSuccessfully => '图例添加成功';
-
-  @override
-  String addLegendFailed(String error) {
-    return '添加图例失败：$error';
-  }
-
-  @override
   String get legendDeletedSuccessfully => '图例删除成功';
 
   @override
@@ -369,66 +301,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get exportLegendDatabase => '导出图例数据库';
-
-  @override
-  String get importLegendDatabase => '导入图例数据库';
-
-  @override
-  String legendDatabaseExportedSuccessfully(String path) {
-    return '图例数据库导出成功：$path';
-  }
-
-  @override
-  String get legendDatabaseImportedSuccessfully => '图例数据库导入成功';
-
-  @override
-  String loadLegendsFailed(String error) {
-    return '加载图例失败：$error';
-  }
-
-  @override
-  String get updateLegendExternalResources => '更新图例外部资源';
-
-  @override
-  String get updateLegendExternalResourcesDescription => '从外部文件更新图例数据库';
-
-  @override
-  String get legendUpdateSuccessful => '图例外部资源更新成功';
-
-  @override
-  String legendUpdateFailed(String error) {
-    return '图例更新失败：$error';
-  }
-
-  @override
   String get uploadLocalizationFile => '上传本地化文件';
-
-  @override
-  String get localizationFileUploaded => '本地化文件上传成功';
-
-  @override
-  String localizationFileUploadFailed(String error) {
-    return '上传本地化文件失败：$error';
-  }
-
-  @override
-  String get localizationFileVersionLow => '本地化文件版本过低或取消上传';
 
   @override
   String get mapEditor => '地图编辑器';
 
   @override
   String get mapPreview => '地图预览';
-
-  @override
-  String get editModeEnabled => '调试模式：可以编辑地图';
-
-  @override
-  String get previewModeOnly => '预览模式：只能查看地图';
-
-  @override
-  String get mapEditorInDevelopment => '地图编辑器功能正在开发中...';
 
   @override
   String get close => '关闭';
@@ -446,18 +325,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteLayer => '删除图层';
 
   @override
-  String confirmDeleteLayer(String name) {
-    return '确定要删除图层 \"$name\" 吗？此操作不可撤销。';
-  }
-
-  @override
   String get opacity => '不透明度';
 
   @override
   String get elements => '个元素';
-
-  @override
-  String get noLayers => '暂无图层';
 
   @override
   String get drawingTools => '绘制工具';
@@ -499,35 +370,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteLegendGroup => '删除图例组';
 
   @override
-  String confirmDeleteLegendGroup(String name) {
-    return '确定要删除图例组 \"$name\" 吗？';
-  }
-
-  @override
-  String get noLegendGroups => '暂无图例组';
-
-  @override
-  String get mapInformation => '地图信息';
-
-  @override
   String get saveMap => '保存地图';
 
   @override
-  String get mapSaved => '地图保存成功';
-
-  @override
-  String mapSaveFailed(String error) {
-    return '保存地图失败：$error';
-  }
-
-  @override
   String get mode => '模式';
-
-  @override
-  String get editMode => '编辑模式';
-
-  @override
-  String get previewMode => '预览模式';
 
   @override
   String get cancel => '取消';
@@ -539,15 +385,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get userPreferences => '用户偏好设置';
 
   @override
-  String get generalSettings => '常规设置';
-
-  @override
-  String get themeSettings => '主题设置';
-
-  @override
-  String get mapEditorSettings => '地图编辑器设置';
-
-  @override
   String get layerSelectionSettings => '图层选择设置';
 
   @override
@@ -557,43 +394,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoSelectLastLayerInGroupDescription => '选择图层组时自动选择该组的最后一层';
 
   @override
-  String get layoutSettings => '界面布局设置';
-
-  @override
-  String get toolSettings => '工具设置';
-
-  @override
-  String get userManagement => '用户管理';
-
-  @override
   String get primaryColor => '主色调';
 
   @override
   String get accentColor => '强调色';
 
   @override
-  String get defaultDrawingTool => '默认绘图工具';
-
-  @override
-  String get defaultColor => '默认颜色';
-
-  @override
-  String get defaultStrokeWidth => '默认线条宽度';
-
-  @override
   String get autoSave => '自动保存';
 
   @override
-  String get autoSaveInterval => '自动保存间隔（分钟）';
-
-  @override
-  String get showGrid => '显示网格';
-
-  @override
   String get gridSize => '网格大小';
-
-  @override
-  String get snapToGrid => '吸附到网格';
 
   @override
   String get compactMode => '紧凑模式';
@@ -623,21 +433,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get userProfiles => '用户配置文件';
 
   @override
-  String get createProfile => '创建配置文件';
-
-  @override
-  String get editProfile => '编辑配置文件';
-
-  @override
-  String get deleteProfile => '删除配置文件';
-
-  @override
-  String get profileName => '配置文件名称';
-
-  @override
-  String get switchProfile => '切换配置文件';
-
-  @override
   String get exportSettings => '导出设置';
 
   @override
@@ -657,19 +452,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsReset => '设置已重置为默认值';
-
-  @override
-  String profileCreated(String name) {
-    return '配置文件已创建：$name';
-  }
-
-  @override
-  String profileDeleted(String name) {
-    return '配置文件已删除：$name';
-  }
-
-  @override
-  String confirmDeleteProfile(String name) {
-    return '确定要删除配置文件 \'$name\' 吗？此操作不可撤销。';
-  }
 }

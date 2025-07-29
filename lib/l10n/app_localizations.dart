@@ -98,12 +98,6 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
-  /// The title of the application
-  ///
-  /// In en, this message translates to:
-  /// **'R6Box'**
-  String get appTitle;
-
   /// Home page title
   ///
   /// In en, this message translates to:
@@ -146,12 +140,6 @@ abstract class AppLocalizations {
   /// **'System Mode'**
   String get systemMode;
 
-  /// System language option
-  ///
-  /// In en, this message translates to:
-  /// **'System'**
-  String get systemLanguage;
-
   /// About button text
   ///
   /// In en, this message translates to:
@@ -176,41 +164,11 @@ abstract class AppLocalizations {
   /// **'Go Home'**
   String get goHome;
 
-  /// App subtitle description
-  ///
-  /// In en, this message translates to:
-  /// **'Comprehensive Flutter Cross-Platform Framework'**
-  String get comprehensiveFramework;
-
-  /// Platform integration section title
-  ///
-  /// In en, this message translates to:
-  /// **'Platform Integration'**
-  String get platformIntegration;
-
   /// Features section title
   ///
   /// In en, this message translates to:
   /// **'Features'**
   String get features;
-
-  /// Message when no features are enabled
-  ///
-  /// In en, this message translates to:
-  /// **'No features enabled'**
-  String get noFeaturesEnabled;
-
-  /// Instructions to enable features
-  ///
-  /// In en, this message translates to:
-  /// **'Enable features in settings to see them here'**
-  String get enableFeaturesInSettings;
-
-  /// About dialog content
-  ///
-  /// In en, this message translates to:
-  /// **'Flutter Cross-Platform Framework\nSupporting multiple platforms with modern architecture'**
-  String get aboutDialogContent;
 
   /// Windows platform title
   ///
@@ -314,24 +272,6 @@ abstract class AppLocalizations {
   /// **'Android specific features can be implemented here.'**
   String get androidSpecificFeatures;
 
-  /// Android feature
-  ///
-  /// In en, this message translates to:
-  /// **'Native Android UI'**
-  String get nativeAndroidUI;
-
-  /// Android notifications feature
-  ///
-  /// In en, this message translates to:
-  /// **'Android Notifications'**
-  String get androidNotifications;
-
-  /// Android permissions feature
-  ///
-  /// In en, this message translates to:
-  /// **'Android Permissions'**
-  String get androidPermissions;
-
   /// Material design feature
   ///
   /// In en, this message translates to:
@@ -373,24 +313,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'iOS specific features can be implemented here.'**
   String get iOSSpecificFeatures;
-
-  /// iOS feature
-  ///
-  /// In en, this message translates to:
-  /// **'Native iOS UI'**
-  String get nativeIOSUI;
-
-  /// iOS notifications feature
-  ///
-  /// In en, this message translates to:
-  /// **'iOS Notifications'**
-  String get iOSNotifications;
-
-  /// App Store feature
-  ///
-  /// In en, this message translates to:
-  /// **'App Store Integration'**
-  String get appStoreIntegration;
 
   /// Cupertino design feature
   ///
@@ -614,41 +536,11 @@ abstract class AppLocalizations {
   /// **'Resource Management'**
   String get resourceManagement;
 
-  /// Export success message
-  ///
-  /// In en, this message translates to:
-  /// **'Database exported successfully: {path}'**
-  String exportSuccessful(String path);
-
-  /// Import success message
-  ///
-  /// In en, this message translates to:
-  /// **'Database imported successfully'**
-  String get importSuccessful;
-
-  /// Update success message
-  ///
-  /// In en, this message translates to:
-  /// **'External resources updated successfully'**
-  String get updateSuccessful;
-
-  /// Export error message
-  ///
-  /// In en, this message translates to:
-  /// **'Export failed: {error}'**
-  String exportFailed(String error);
-
   /// Import failed error message
   ///
   /// In en, this message translates to:
   /// **'Import failed: {error}'**
   String importFailed(String error);
-
-  /// Update error message
-  ///
-  /// In en, this message translates to:
-  /// **'Update failed: {error}'**
-  String updateFailed(String error);
 
   /// Map add success message
   ///
@@ -734,18 +626,6 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete legend \"{title}\"?'**
   String confirmDeleteLegend(String title);
 
-  /// Legend added success message
-  ///
-  /// In en, this message translates to:
-  /// **'Legend added successfully'**
-  String get legendAddedSuccessfully;
-
-  /// Add legend error message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to add legend: {error}'**
-  String addLegendFailed(String error);
-
   /// Legend deleted success message
   ///
   /// In en, this message translates to:
@@ -758,83 +638,11 @@ abstract class AppLocalizations {
   /// **'Failed to delete legend: {error}'**
   String deleteLegendFailed(String error);
 
-  /// Export legend database button
-  ///
-  /// In en, this message translates to:
-  /// **'Export Legend Database'**
-  String get exportLegendDatabase;
-
-  /// Import legend database button
-  ///
-  /// In en, this message translates to:
-  /// **'Import Legend Database'**
-  String get importLegendDatabase;
-
-  /// Legend database export success message
-  ///
-  /// In en, this message translates to:
-  /// **'Legend database exported successfully: {path}'**
-  String legendDatabaseExportedSuccessfully(String path);
-
-  /// Legend database import success message
-  ///
-  /// In en, this message translates to:
-  /// **'Legend database imported successfully'**
-  String get legendDatabaseImportedSuccessfully;
-
-  /// Load legends error message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load legends: {error}'**
-  String loadLegendsFailed(String error);
-
-  /// Update legend external resources button
-  ///
-  /// In en, this message translates to:
-  /// **'Update Legend External Resources'**
-  String get updateLegendExternalResources;
-
-  /// Update legend external resources description
-  ///
-  /// In en, this message translates to:
-  /// **'Update legend database from external file'**
-  String get updateLegendExternalResourcesDescription;
-
-  /// Legend update success message
-  ///
-  /// In en, this message translates to:
-  /// **'Legend external resources updated successfully'**
-  String get legendUpdateSuccessful;
-
-  /// Legend update error message
-  ///
-  /// In en, this message translates to:
-  /// **'Legend update failed: {error}'**
-  String legendUpdateFailed(String error);
-
   /// Upload localization file button
   ///
   /// In en, this message translates to:
   /// **'Upload Localization File'**
   String get uploadLocalizationFile;
-
-  /// Localization file upload success message
-  ///
-  /// In en, this message translates to:
-  /// **'Localization file uploaded successfully'**
-  String get localizationFileUploaded;
-
-  /// Localization file upload error message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to upload localization file: {error}'**
-  String localizationFileUploadFailed(String error);
-
-  /// Localization file version low message
-  ///
-  /// In en, this message translates to:
-  /// **'Localization file version too low or upload cancelled'**
-  String get localizationFileVersionLow;
 
   /// Map editor page title
   ///
@@ -847,24 +655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map Preview'**
   String get mapPreview;
-
-  /// Edit mode enabled message
-  ///
-  /// In en, this message translates to:
-  /// **'Debug mode: Can edit map'**
-  String get editModeEnabled;
-
-  /// Preview mode only message
-  ///
-  /// In en, this message translates to:
-  /// **'Preview mode: View only'**
-  String get previewModeOnly;
-
-  /// Map editor development message
-  ///
-  /// In en, this message translates to:
-  /// **'Map editor functionality is under development...'**
-  String get mapEditorInDevelopment;
 
   /// Close button
   ///
@@ -896,12 +686,6 @@ abstract class AppLocalizations {
   /// **'Delete Layer'**
   String get deleteLayer;
 
-  /// Delete layer confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete layer \"{name}\"? This action cannot be undone.'**
-  String confirmDeleteLayer(String name);
-
   /// Opacity label
   ///
   /// In en, this message translates to:
@@ -913,12 +697,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'elements'**
   String get elements;
-
-  /// Empty layers message
-  ///
-  /// In en, this message translates to:
-  /// **'No layers'**
-  String get noLayers;
 
   /// Drawing tools section title
   ///
@@ -998,59 +776,17 @@ abstract class AppLocalizations {
   /// **'Delete Legend Group'**
   String get deleteLegendGroup;
 
-  /// Delete legend group confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete legend group \"{name}\"?'**
-  String confirmDeleteLegendGroup(String name);
-
-  /// Empty legend groups message
-  ///
-  /// In en, this message translates to:
-  /// **'No legend groups'**
-  String get noLegendGroups;
-
-  /// Map information dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Map Information'**
-  String get mapInformation;
-
   /// Save map button
   ///
   /// In en, this message translates to:
   /// **'Save Map'**
   String get saveMap;
 
-  /// Map saved success message
-  ///
-  /// In en, this message translates to:
-  /// **'Map saved successfully'**
-  String get mapSaved;
-
-  /// Map save error message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to save map: {error}'**
-  String mapSaveFailed(String error);
-
   /// Mode label
   ///
   /// In en, this message translates to:
   /// **'Mode'**
   String get mode;
-
-  /// Edit mode label
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Mode'**
-  String get editMode;
-
-  /// Preview mode label
-  ///
-  /// In en, this message translates to:
-  /// **'Preview Mode'**
-  String get previewMode;
 
   /// Cancel button
   ///
@@ -1070,24 +806,6 @@ abstract class AppLocalizations {
   /// **'User Preferences'**
   String get userPreferences;
 
-  /// General settings section
-  ///
-  /// In en, this message translates to:
-  /// **'General Settings'**
-  String get generalSettings;
-
-  /// Theme settings section
-  ///
-  /// In en, this message translates to:
-  /// **'Theme Settings'**
-  String get themeSettings;
-
-  /// Map editor settings section
-  ///
-  /// In en, this message translates to:
-  /// **'Map Editor Settings'**
-  String get mapEditorSettings;
-
   /// Layer selection settings section
   ///
   /// In en, this message translates to:
@@ -1106,24 +824,6 @@ abstract class AppLocalizations {
   /// **'Automatically select the last layer when a layer group is selected'**
   String get autoSelectLastLayerInGroupDescription;
 
-  /// Layout settings section
-  ///
-  /// In en, this message translates to:
-  /// **'Layout Settings'**
-  String get layoutSettings;
-
-  /// Tool settings section
-  ///
-  /// In en, this message translates to:
-  /// **'Tool Settings'**
-  String get toolSettings;
-
-  /// User management section
-  ///
-  /// In en, this message translates to:
-  /// **'User Management'**
-  String get userManagement;
-
   /// Primary color setting
   ///
   /// In en, this message translates to:
@@ -1136,53 +836,17 @@ abstract class AppLocalizations {
   /// **'Accent Color'**
   String get accentColor;
 
-  /// Default drawing tool setting
-  ///
-  /// In en, this message translates to:
-  /// **'Default Drawing Tool'**
-  String get defaultDrawingTool;
-
-  /// Default color setting
-  ///
-  /// In en, this message translates to:
-  /// **'Default Color'**
-  String get defaultColor;
-
-  /// Default stroke width setting
-  ///
-  /// In en, this message translates to:
-  /// **'Default Stroke Width'**
-  String get defaultStrokeWidth;
-
   /// Auto save setting
   ///
   /// In en, this message translates to:
   /// **'Auto Save'**
   String get autoSave;
 
-  /// Auto save interval setting
-  ///
-  /// In en, this message translates to:
-  /// **'Auto Save Interval (minutes)'**
-  String get autoSaveInterval;
-
-  /// Show grid setting
-  ///
-  /// In en, this message translates to:
-  /// **'Show Grid'**
-  String get showGrid;
-
   /// Grid size setting
   ///
   /// In en, this message translates to:
   /// **'Grid Size'**
   String get gridSize;
-
-  /// Snap to grid setting
-  ///
-  /// In en, this message translates to:
-  /// **'Snap to Grid'**
-  String get snapToGrid;
 
   /// Compact mode setting
   ///
@@ -1238,36 +902,6 @@ abstract class AppLocalizations {
   /// **'User Profiles'**
   String get userProfiles;
 
-  /// Create profile button
-  ///
-  /// In en, this message translates to:
-  /// **'Create Profile'**
-  String get createProfile;
-
-  /// Edit profile button
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Profile'**
-  String get editProfile;
-
-  /// Delete profile button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Profile'**
-  String get deleteProfile;
-
-  /// Profile name field
-  ///
-  /// In en, this message translates to:
-  /// **'Profile Name'**
-  String get profileName;
-
-  /// Switch profile button
-  ///
-  /// In en, this message translates to:
-  /// **'Switch Profile'**
-  String get switchProfile;
-
   /// Export settings button
   ///
   /// In en, this message translates to:
@@ -1309,24 +943,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings reset to defaults'**
   String get settingsReset;
-
-  /// Profile created success message
-  ///
-  /// In en, this message translates to:
-  /// **'Profile created: {name}'**
-  String profileCreated(String name);
-
-  /// Profile deleted success message
-  ///
-  /// In en, this message translates to:
-  /// **'Profile deleted: {name}'**
-  String profileDeleted(String name);
-
-  /// Confirm delete profile dialog
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete profile \'{name}\'? This cannot be undone.'**
-  String confirmDeleteProfile(String name);
 }
 
 class _AppLocalizationsDelegate

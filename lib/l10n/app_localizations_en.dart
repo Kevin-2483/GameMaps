@@ -9,9 +9,6 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'R6Box';
-
-  @override
   String get home => 'Home';
 
   @override
@@ -33,9 +30,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get systemMode => 'System Mode';
 
   @override
-  String get systemLanguage => 'System';
-
-  @override
   String get about => 'About';
 
   @override
@@ -50,25 +44,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goHome => 'Go Home';
 
   @override
-  String get comprehensiveFramework =>
-      'Comprehensive Flutter Cross-Platform Framework';
-
-  @override
-  String get platformIntegration => 'Platform Integration';
-
-  @override
   String get features => 'Features';
-
-  @override
-  String get noFeaturesEnabled => 'No features enabled';
-
-  @override
-  String get enableFeaturesInSettings =>
-      'Enable features in settings to see them here';
-
-  @override
-  String get aboutDialogContent =>
-      'Flutter Cross-Platform Framework\nSupporting multiple platforms with modern architecture';
 
   @override
   String get windowsPlatform => 'Windows Platform';
@@ -125,15 +101,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Android specific features can be implemented here.';
 
   @override
-  String get nativeAndroidUI => 'Native Android UI';
-
-  @override
-  String get androidNotifications => 'Android Notifications';
-
-  @override
-  String get androidPermissions => 'Android Permissions';
-
-  @override
   String get materialDesign => 'Material Design';
 
   @override
@@ -154,15 +121,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get iOSSpecificFeatures =>
       'iOS specific features can be implemented here.';
-
-  @override
-  String get nativeIOSUI => 'Native iOS UI';
-
-  @override
-  String get iOSNotifications => 'iOS Notifications';
-
-  @override
-  String get appStoreIntegration => 'App Store Integration';
 
   @override
   String get cupertinoDesign => 'Cupertino Design';
@@ -286,29 +244,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceManagement => 'Resource Management';
 
   @override
-  String exportSuccessful(String path) {
-    return 'Database exported successfully: $path';
-  }
-
-  @override
-  String get importSuccessful => 'Database imported successfully';
-
-  @override
-  String get updateSuccessful => 'External resources updated successfully';
-
-  @override
-  String exportFailed(String error) {
-    return 'Export failed: $error';
-  }
-
-  @override
   String importFailed(String error) {
     return 'Import failed: $error';
-  }
-
-  @override
-  String updateFailed(String error) {
-    return 'Update failed: $error';
   }
 
   @override
@@ -362,14 +299,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get legendAddedSuccessfully => 'Legend added successfully';
-
-  @override
-  String addLegendFailed(String error) {
-    return 'Failed to add legend: $error';
-  }
-
-  @override
   String get legendDeletedSuccessfully => 'Legend deleted successfully';
 
   @override
@@ -378,73 +307,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get exportLegendDatabase => 'Export Legend Database';
-
-  @override
-  String get importLegendDatabase => 'Import Legend Database';
-
-  @override
-  String legendDatabaseExportedSuccessfully(String path) {
-    return 'Legend database exported successfully: $path';
-  }
-
-  @override
-  String get legendDatabaseImportedSuccessfully =>
-      'Legend database imported successfully';
-
-  @override
-  String loadLegendsFailed(String error) {
-    return 'Failed to load legends: $error';
-  }
-
-  @override
-  String get updateLegendExternalResources =>
-      'Update Legend External Resources';
-
-  @override
-  String get updateLegendExternalResourcesDescription =>
-      'Update legend database from external file';
-
-  @override
-  String get legendUpdateSuccessful =>
-      'Legend external resources updated successfully';
-
-  @override
-  String legendUpdateFailed(String error) {
-    return 'Legend update failed: $error';
-  }
-
-  @override
   String get uploadLocalizationFile => 'Upload Localization File';
-
-  @override
-  String get localizationFileUploaded =>
-      'Localization file uploaded successfully';
-
-  @override
-  String localizationFileUploadFailed(String error) {
-    return 'Failed to upload localization file: $error';
-  }
-
-  @override
-  String get localizationFileVersionLow =>
-      'Localization file version too low or upload cancelled';
 
   @override
   String get mapEditor => 'Map Editor';
 
   @override
   String get mapPreview => 'Map Preview';
-
-  @override
-  String get editModeEnabled => 'Debug mode: Can edit map';
-
-  @override
-  String get previewModeOnly => 'Preview mode: View only';
-
-  @override
-  String get mapEditorInDevelopment =>
-      'Map editor functionality is under development...';
 
   @override
   String get close => 'Close';
@@ -462,18 +331,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteLayer => 'Delete Layer';
 
   @override
-  String confirmDeleteLayer(String name) {
-    return 'Are you sure you want to delete layer \"$name\"? This action cannot be undone.';
-  }
-
-  @override
   String get opacity => 'Opacity';
 
   @override
   String get elements => 'elements';
-
-  @override
-  String get noLayers => 'No layers';
 
   @override
   String get drawingTools => 'Drawing Tools';
@@ -515,35 +376,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteLegendGroup => 'Delete Legend Group';
 
   @override
-  String confirmDeleteLegendGroup(String name) {
-    return 'Are you sure you want to delete legend group \"$name\"?';
-  }
-
-  @override
-  String get noLegendGroups => 'No legend groups';
-
-  @override
-  String get mapInformation => 'Map Information';
-
-  @override
   String get saveMap => 'Save Map';
 
   @override
-  String get mapSaved => 'Map saved successfully';
-
-  @override
-  String mapSaveFailed(String error) {
-    return 'Failed to save map: $error';
-  }
-
-  @override
   String get mode => 'Mode';
-
-  @override
-  String get editMode => 'Edit Mode';
-
-  @override
-  String get previewMode => 'Preview Mode';
 
   @override
   String get cancel => 'Cancel';
@@ -553,15 +389,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userPreferences => 'User Preferences';
-
-  @override
-  String get generalSettings => 'General Settings';
-
-  @override
-  String get themeSettings => 'Theme Settings';
-
-  @override
-  String get mapEditorSettings => 'Map Editor Settings';
 
   @override
   String get layerSelectionSettings => 'Layer Selection Settings';
@@ -574,43 +401,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatically select the last layer when a layer group is selected';
 
   @override
-  String get layoutSettings => 'Layout Settings';
-
-  @override
-  String get toolSettings => 'Tool Settings';
-
-  @override
-  String get userManagement => 'User Management';
-
-  @override
   String get primaryColor => 'Primary Color';
 
   @override
   String get accentColor => 'Accent Color';
 
   @override
-  String get defaultDrawingTool => 'Default Drawing Tool';
-
-  @override
-  String get defaultColor => 'Default Color';
-
-  @override
-  String get defaultStrokeWidth => 'Default Stroke Width';
-
-  @override
   String get autoSave => 'Auto Save';
 
   @override
-  String get autoSaveInterval => 'Auto Save Interval (minutes)';
-
-  @override
-  String get showGrid => 'Show Grid';
-
-  @override
   String get gridSize => 'Grid Size';
-
-  @override
-  String get snapToGrid => 'Snap to Grid';
 
   @override
   String get compactMode => 'Compact Mode';
@@ -640,21 +440,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userProfiles => 'User Profiles';
 
   @override
-  String get createProfile => 'Create Profile';
-
-  @override
-  String get editProfile => 'Edit Profile';
-
-  @override
-  String get deleteProfile => 'Delete Profile';
-
-  @override
-  String get profileName => 'Profile Name';
-
-  @override
-  String get switchProfile => 'Switch Profile';
-
-  @override
   String get exportSettings => 'Export Settings';
 
   @override
@@ -675,19 +460,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsReset => 'Settings reset to defaults';
-
-  @override
-  String profileCreated(String name) {
-    return 'Profile created: $name';
-  }
-
-  @override
-  String profileDeleted(String name) {
-    return 'Profile deleted: $name';
-  }
-
-  @override
-  String confirmDeleteProfile(String name) {
-    return 'Are you sure you want to delete profile \'$name\'? This cannot be undone.';
-  }
 }

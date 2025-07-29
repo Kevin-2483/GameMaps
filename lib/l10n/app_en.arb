@@ -1,9 +1,5 @@
 {
   "@@locale": "en",
-  "appTitle": "R6Box",
-  "@appTitle": {
-    "description": "The title of the application"
-  },
   "home": "Home",
   "@home": {
     "description": "Home page title"
@@ -32,10 +28,6 @@
   "@systemMode": {
     "description": "System mode setting"
   },
-  "systemLanguage": "System",
-  "@systemLanguage": {
-    "description": "System language option"
-  },
   "about": "About",
   "@about": {
     "description": "About button text"
@@ -58,29 +50,9 @@
   "@goHome": {
     "description": "Go home button text"
   },
-  "comprehensiveFramework": "Comprehensive Flutter Cross-Platform Framework",
-  "@comprehensiveFramework": {
-    "description": "App subtitle description"
-  },
-  "platformIntegration": "Platform Integration",
-  "@platformIntegration": {
-    "description": "Platform integration section title"
-  },
   "features": "Features",
   "@features": {
     "description": "Features section title"
-  },
-  "noFeaturesEnabled": "No features enabled",
-  "@noFeaturesEnabled": {
-    "description": "Message when no features are enabled"
-  },
-  "enableFeaturesInSettings": "Enable features in settings to see them here",
-  "@enableFeaturesInSettings": {
-    "description": "Instructions to enable features"
-  },
-  "aboutDialogContent": "Flutter Cross-Platform Framework\nSupporting multiple platforms with modern architecture",
-  "@aboutDialogContent": {
-    "description": "About dialog content"
   },
   "windowsPlatform": "Windows Platform",
   "@windowsPlatform": {
@@ -113,7 +85,8 @@
   "macOSPlatform": "macOS Platform",
   "@macOSPlatform": {
     "description": "macOS platform title"
-  },  "macOSFeatures": "macOS Features:",
+  },
+  "macOSFeatures": "macOS Features:",
   "@macOSFeatures": {
     "description": "macOS features section title"
   },
@@ -136,7 +109,8 @@
   "macOSNotifications": "macOS Notifications",
   "@macOSNotifications": {
     "description": "macOS notifications feature"
-  },  "androidPlatform": "Android Platform",
+  },
+  "androidPlatform": "Android Platform",
   "@androidPlatform": {
     "description": "Android platform title"
   },
@@ -148,18 +122,7 @@
   "@androidSpecificFeatures": {
     "description": "Android platform description"
   },
-  "nativeAndroidUI": "Native Android UI",
-  "@nativeAndroidUI": {
-    "description": "Android feature"
-  },
-  "androidNotifications": "Android Notifications",
-  "@androidNotifications": {
-    "description": "Android notifications feature"
-  },
-  "androidPermissions": "Android Permissions",
-  "@androidPermissions": {
-    "description": "Android permissions feature"
-  },  "materialDesign": "Material Design",
+  "materialDesign": "Material Design",
   "@materialDesign": {
     "description": "Material design feature"
   },
@@ -174,7 +137,8 @@
   "backgroundServices": "Background Services",
   "@backgroundServices": {
     "description": "Background services feature"
-  },"iOSPlatform": "iOS Platform",
+  },
+  "iOSPlatform": "iOS Platform",
   "@iOSPlatform": {
     "description": "iOS platform title"
   },
@@ -186,18 +150,7 @@
   "@iOSSpecificFeatures": {
     "description": "iOS platform description"
   },
-  "nativeIOSUI": "Native iOS UI",
-  "@nativeIOSUI": {
-    "description": "iOS feature"
-  },
-  "iOSNotifications": "iOS Notifications",
-  "@iOSNotifications": {
-    "description": "iOS notifications feature"
-  },
-  "appStoreIntegration": "App Store Integration",
-  "@appStoreIntegration": {
-    "description": "App Store feature"
-  },  "cupertinoDesign": "Cupertino Design",
+  "cupertinoDesign": "Cupertino Design",
   "@cupertinoDesign": {
     "description": "Cupertino design feature"
   },
@@ -212,10 +165,12 @@
   "linuxPlatform": "Linux Platform",
   "@linuxPlatform": {
     "description": "Linux platform title"
-  },  "linuxFeatures": "Linux Features:",
+  },
+  "linuxFeatures": "Linux Features:",
   "@linuxFeatures": {
     "description": "Linux features section title"
-  },  "linuxSpecificFeatures": "Linux specific features can be implemented here.",
+  },
+  "linuxSpecificFeatures": "Linux specific features can be implemented here.",
   "@linuxSpecificFeatures": {
     "description": "Linux platform description"
   },
@@ -238,10 +193,12 @@
   "webPlatform": "Web Platform",
   "@webPlatform": {
     "description": "Web platform title"
-  },  "webFeatures": "Web Features:",
+  },
+  "webFeatures": "Web Features:",
   "@webFeatures": {
     "description": "Web features section title"
-  },  "webSpecificFeatures": "Web specific features can be implemented here.",
+  },
+  "webSpecificFeatures": "Web specific features can be implemented here.",
   "@webSpecificFeatures": {
     "description": "Web platform description"
   },
@@ -288,7 +245,8 @@
         "description": "The list of available pages"
       }
     }
-  },  "availableFeatures": "Available Features: {features}",
+  },
+  "availableFeatures": "Available Features: {features}",
   "@availableFeatures": {
     "description": "Available features list",
     "placeholders": {
@@ -313,7 +271,8 @@
   "printConfigInfo": "Print config information",
   "@printConfigInfo": {
     "description": "Print config tooltip"
-  },  "saveConfig": "Save config",
+  },
+  "saveConfig": "Save config",
   "@saveConfig": {
     "description": "Save config tooltip"
   },
@@ -357,56 +316,18 @@
   },
   "importDatabase": "Import Database",
   "@importDatabase": {
-    "description": "Import database button"  },
+    "description": "Import database button"
+  },
   "resourceManagement": "Resource Management",
   "@resourceManagement": {
     "description": "Resource management section title"
   },
-  "exportSuccessful": "Database exported successfully: {path}",
-  "@exportSuccessful": {
-    "description": "Export success message",
-    "placeholders": {
-      "path": {
-        "type": "String",
-        "description": "The export file path"
-      }
-    }
-  },
-  "importSuccessful": "Database imported successfully",
-  "@importSuccessful": {
-    "description": "Import success message"
-  },
-  "updateSuccessful": "External resources updated successfully",
-  "@updateSuccessful": {
-    "description": "Update success message"
-  },
-  "exportFailed": "Export failed: {error}",
-  "@exportFailed": {
-    "description": "Export error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
   "importFailed": "Import failed: {error}",
   "@importFailed": {
-    "description": "Import error message",
+    "description": "Import failed error message",
     "placeholders": {
       "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
-  "updateFailed": "Update failed: {error}",
-  "@updateFailed": {
-    "description": "Update error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
+        "type": "String"
       }
     }
   },
@@ -437,7 +358,8 @@
         "description": "The error message"
       }
     }
-  },  "loadMapsFailed": "Failed to load maps: {error}",
+  },
+  "loadMapsFailed": "Failed to load maps: {error}",
   "@loadMapsFailed": {
     "description": "Load maps error message",
     "placeholders": {
@@ -489,20 +411,6 @@
       }
     }
   },
-  "legendAddedSuccessfully": "Legend added successfully",
-  "@legendAddedSuccessfully": {
-    "description": "Legend added success message"
-  },
-  "addLegendFailed": "Failed to add legend: {error}",
-  "@addLegendFailed": {
-    "description": "Add legend error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
   "legendDeletedSuccessfully": "Legend deleted successfully",
   "@legendDeletedSuccessfully": {
     "description": "Legend deleted success message"
@@ -517,79 +425,9 @@
       }
     }
   },
-  "exportLegendDatabase": "Export Legend Database",
-  "@exportLegendDatabase": {
-    "description": "Export legend database button"
-  },
-  "importLegendDatabase": "Import Legend Database",
-  "@importLegendDatabase": {
-    "description": "Import legend database button"
-  },
-  "legendDatabaseExportedSuccessfully": "Legend database exported successfully: {path}",
-  "@legendDatabaseExportedSuccessfully": {
-    "description": "Legend database export success message",
-    "placeholders": {
-      "path": {
-        "type": "String",
-        "description": "The export file path"
-      }
-    }
-  },
-  "legendDatabaseImportedSuccessfully": "Legend database imported successfully",
-  "@legendDatabaseImportedSuccessfully": {
-    "description": "Legend database import success message"
-  },  "loadLegendsFailed": "Failed to load legends: {error}",
-  "@loadLegendsFailed": {
-    "description": "Load legends error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
-  "updateLegendExternalResources": "Update Legend External Resources",
-  "@updateLegendExternalResources": {
-    "description": "Update legend external resources button"
-  },
-  "updateLegendExternalResourcesDescription": "Update legend database from external file",
-  "@updateLegendExternalResourcesDescription": {
-    "description": "Update legend external resources description"
-  },
-  "legendUpdateSuccessful": "Legend external resources updated successfully",
-  "@legendUpdateSuccessful": {
-    "description": "Legend update success message"  },
-  "legendUpdateFailed": "Legend update failed: {error}",
-  "@legendUpdateFailed": {
-    "description": "Legend update error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
   "uploadLocalizationFile": "Upload Localization File",
   "@uploadLocalizationFile": {
     "description": "Upload localization file button"
-  },
-  "localizationFileUploaded": "Localization file uploaded successfully",
-  "@localizationFileUploaded": {
-    "description": "Localization file upload success message"
-  },
-  "localizationFileUploadFailed": "Failed to upload localization file: {error}",
-  "@localizationFileUploadFailed": {
-    "description": "Localization file upload error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
-  },
-  "localizationFileVersionLow": "Localization file version too low or upload cancelled",
-  "@localizationFileVersionLow": {
-    "description": "Localization file version low message"
   },
   "mapEditor": "Map Editor",
   "@mapEditor": {
@@ -599,18 +437,7 @@
   "@mapPreview": {
     "description": "Map preview page title"
   },
-  "editModeEnabled": "Debug mode: Can edit map",
-  "@editModeEnabled": {
-    "description": "Edit mode enabled message"
-  },
-  "previewModeOnly": "Preview mode: View only",
-  "@previewModeOnly": {
-    "description": "Preview mode only message"
-  },
-  "mapEditorInDevelopment": "Map editor functionality is under development...",
-  "@mapEditorInDevelopment": {
-    "description": "Map editor development message"
-  },  "close": "Close",
+  "close": "Close",
   "@close": {
     "description": "Close button"
   },
@@ -630,16 +457,6 @@
   "@deleteLayer": {
     "description": "Delete layer confirmation title"
   },
-  "confirmDeleteLayer": "Are you sure you want to delete layer \"{name}\"? This action cannot be undone.",
-  "@confirmDeleteLayer": {
-    "description": "Delete layer confirmation message",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "description": "The layer name"
-      }
-    }
-  },
   "opacity": "Opacity",
   "@opacity": {
     "description": "Opacity label"
@@ -647,10 +464,6 @@
   "elements": "elements",
   "@elements": {
     "description": "Elements count label"
-  },
-  "noLayers": "No layers",
-  "@noLayers": {
-    "description": "Empty layers message"
   },
   "drawingTools": "Drawing Tools",
   "@drawingTools": {
@@ -704,76 +517,25 @@
   "@deleteLegendGroup": {
     "description": "Delete legend group confirmation title"
   },
-  "confirmDeleteLegendGroup": "Are you sure you want to delete legend group \"{name}\"?",
-  "@confirmDeleteLegendGroup": {
-    "description": "Delete legend group confirmation message",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "description": "The legend group name"
-      }
-    }
-  },
-  "noLegendGroups": "No legend groups",
-  "@noLegendGroups": {
-    "description": "Empty legend groups message"
-  },
-  "mapInformation": "Map Information",
-  "@mapInformation": {
-    "description": "Map information dialog title"
-  },
   "saveMap": "Save Map",
   "@saveMap": {
     "description": "Save map button"
-  },
-  "mapSaved": "Map saved successfully",
-  "@mapSaved": {
-    "description": "Map saved success message"
-  },
-  "mapSaveFailed": "Failed to save map: {error}",
-  "@mapSaveFailed": {
-    "description": "Map save error message",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The error message"
-      }
-    }
   },
   "mode": "Mode",
   "@mode": {
     "description": "Mode label"
   },
-  "editMode": "Edit Mode",
-  "@editMode": {
-    "description": "Edit mode label"
-  },
-  "previewMode": "Preview Mode",
-  "@previewMode": {
-    "description": "Preview mode label"
-  },
   "cancel": "Cancel",
   "@cancel": {
     "description": "Cancel button"
-  },  "delete": "Delete",
+  },
+  "delete": "Delete",
   "@delete": {
     "description": "Delete button"
   },
   "userPreferences": "User Preferences",
   "@userPreferences": {
     "description": "User preferences page title"
-  },
-  "generalSettings": "General Settings",
-  "@generalSettings": {
-    "description": "General settings section"
-  },
-  "themeSettings": "Theme Settings",
-  "@themeSettings": {
-    "description": "Theme settings section"
-  },
-  "mapEditorSettings": "Map Editor Settings",
-  "@mapEditorSettings": {
-    "description": "Map editor settings section"
   },
   "layerSelectionSettings": "Layer Selection Settings",
   "@layerSelectionSettings": {
@@ -787,18 +549,6 @@
   "@autoSelectLastLayerInGroupDescription": {
     "description": "Description for auto-select last layer in group setting"
   },
-  "layoutSettings": "Layout Settings",
-  "@layoutSettings": {
-    "description": "Layout settings section"
-  },
-  "toolSettings": "Tool Settings",
-  "@toolSettings": {
-    "description": "Tool settings section"
-  },
-  "userManagement": "User Management",
-  "@userManagement": {
-    "description": "User management section"
-  },
   "primaryColor": "Primary Color",
   "@primaryColor": {
     "description": "Primary color setting"
@@ -807,37 +557,13 @@
   "@accentColor": {
     "description": "Accent color setting"
   },
-  "defaultDrawingTool": "Default Drawing Tool",
-  "@defaultDrawingTool": {
-    "description": "Default drawing tool setting"
-  },
-  "defaultColor": "Default Color",
-  "@defaultColor": {
-    "description": "Default color setting"
-  },
-  "defaultStrokeWidth": "Default Stroke Width",
-  "@defaultStrokeWidth": {
-    "description": "Default stroke width setting"
-  },
   "autoSave": "Auto Save",
   "@autoSave": {
     "description": "Auto save setting"
   },
-  "autoSaveInterval": "Auto Save Interval (minutes)",
-  "@autoSaveInterval": {
-    "description": "Auto save interval setting"
-  },
-  "showGrid": "Show Grid",
-  "@showGrid": {
-    "description": "Show grid setting"
-  },
   "gridSize": "Grid Size",
   "@gridSize": {
     "description": "Grid size setting"
-  },
-  "snapToGrid": "Snap to Grid",
-  "@snapToGrid": {
-    "description": "Snap to grid setting"
   },
   "compactMode": "Compact Mode",
   "@compactMode": {
@@ -875,26 +601,6 @@
   "@userProfiles": {
     "description": "User profiles setting"
   },
-  "createProfile": "Create Profile",
-  "@createProfile": {
-    "description": "Create profile button"
-  },
-  "editProfile": "Edit Profile",
-  "@editProfile": {
-    "description": "Edit profile button"
-  },
-  "deleteProfile": "Delete Profile",
-  "@deleteProfile": {
-    "description": "Delete profile button"
-  },
-  "profileName": "Profile Name",
-  "@profileName": {
-    "description": "Profile name field"
-  },
-  "switchProfile": "Switch Profile",
-  "@switchProfile": {
-    "description": "Switch profile button"
-  },
   "exportSettings": "Export Settings",
   "@exportSettings": {
     "description": "Export settings button"
@@ -922,41 +628,5 @@
   "settingsReset": "Settings reset to defaults",
   "@settingsReset": {
     "description": "Settings reset success message"
-  },
-  "importFailed": "Import failed: {error}",
-  "@importFailed": {
-    "description": "Import failed error message",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "profileCreated": "Profile created: {name}",
-  "@profileCreated": {
-    "description": "Profile created success message",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "profileDeleted": "Profile deleted: {name}",
-  "@profileDeleted": {
-    "description": "Profile deleted success message",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "confirmDeleteProfile": "Are you sure you want to delete profile '{name}'? This cannot be undone.",
-  "@confirmDeleteProfile": {
-    "description": "Confirm delete profile dialog",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
   }
 }

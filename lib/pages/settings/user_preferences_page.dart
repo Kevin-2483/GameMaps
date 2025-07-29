@@ -189,7 +189,7 @@ class _UserPreferencesPageContentState
                         const Icon(Icons.restore, color: Colors.red),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.resetSettings,
+                          '重置所有设置',
                           style: const TextStyle(color: Colors.red),
                         ),
                       ],
