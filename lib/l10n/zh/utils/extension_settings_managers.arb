@@ -1,0 +1,14 @@
+{
+  "legendGroupZoomFactorSaved": "图例组缩放因子已保存: {mapId}/{legendGroupId} = {zoomFactor}",
+  "clearedMapLegendGroups_7421": "已清除地图 {mapId} 的所有图例组缩放因子设置",
+  "invalidImportDataFormat_7281": "无效的导入数据格式",
+  "importedMapLegendSettings": "已导入地图 {mapId} 的图例组智能隐藏设置: {length} 项",
+  "legendGroupSmartHideStatus_7421": "图例组 {legendGroupId} 智能隐藏状态: {isEnabled}",
+  "legendGroupHiddenStatusSaved": "图例组智能隐藏状态已保存: {mapId}/{legendGroupId} = {enabled}",
+  "smartHideStatusSaved": "智能隐藏状态已保存: {enabled}",
+  "zoomLevelRecorded": "缩放级别已记录: {zoomLevel}",
+  "toolbarPositionSaved": "工具栏 {toolbarId} 位置已保存: ({x}, {y})",
+  "extensionManagerNotInitialized_7281": "扩展设置管理器未初始化",
+  "clearedMapLegendSettings": "已清除地图 {mapId} 的所有图例组智能隐藏设置",
+  "invalidImportDataFormat_4271": "无效的导入数据格式"
+}

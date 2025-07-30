@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:r6box/services/notification/notification_service.dart';
@@ -8,6 +9,8 @@ import '../../models/webdav_config.dart';
 import '../../services/webdav/webdav_database_service.dart';
 import '../../services/webdav/webdav_secure_storage_service.dart';
 import '../../services/webdav/webdav_client_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// WebDAV管理页面
 class WebDavManagerPage extends BasePage {
@@ -71,7 +74,8 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       await _loadData();
     } catch (e) {
       setState(() {
-        _errorMessage = '初始化失败: $e';
+        _errorMessage = LocalizationService.instance.current
+            .initializationFailed(e);
       });
     } finally {
       setState(() {
@@ -92,7 +96,7 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '加载数据失败: $e';
+        _errorMessage = LocalizationService.instance.current.dataLoadFailed(e);
       });
     }
   }
@@ -102,7 +106,10 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(title: 'WebDAV 管理', icon: Icons.cloud_sync),
+          DraggableTitleBar(
+            title: LocalizationService.instance.current.webDavManagement_7421,
+            icon: Icons.cloud_sync,
+          ),
           if (_errorMessage != null)
             Container(
               width: double.infinity,
@@ -117,9 +124,15 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             ),
           TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: 'WebDAV 配置', icon: Icon(Icons.settings)),
-              Tab(text: '认证账户', icon: Icon(Icons.account_circle)),
+            tabs: [
+              Tab(
+                text: LocalizationService.instance.current.webDavConfig_7281,
+                icon: Icon(Icons.settings),
+              ),
+              Tab(
+                text: LocalizationService.instance.current.verifiedAccount_7281,
+                icon: Icon(Icons.account_circle),
+              ),
             ],
           ),
           Expanded(
@@ -147,26 +160,37 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
               ElevatedButton.icon(
                 onPressed: _showAddConfigDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('添加配置'),
+                label: Text(
+                  LocalizationService.instance.current.addConfiguration_7421,
+                ),
               ),
               const Spacer(),
-              Text('共 ${_configs.length} 个配置'),
+              Text(
+                LocalizationService.instance.current.totalConfigsCount(
+                  _configs.length,
+                ),
+              ),
             ],
           ),
         ),
         // 配置列表
         Expanded(
           child: _configs.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cloud_off, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('暂无 WebDAV 配置'),
-                      SizedBox(height: 8),
+                      const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
                       Text(
-                        '点击"添加配置"开始使用',
+                        LocalizationService
+                            .instance
+                            .current
+                            .noWebDAVConfig_7281,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        LocalizationService.instance.current.clickToAddConfig,
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -197,30 +221,44 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
               ElevatedButton.icon(
                 onPressed: _showAddAuthAccountDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('添加账户'),
+                label: Text(
+                  LocalizationService.instance.current.addAccount_7421,
+                ),
               ),
               const Spacer(),
-              Text('共 ${_authAccounts.length} 个账户'),
+              Text(
+                LocalizationService.instance.current.totalAccountsCount(
+                  _authAccounts.length,
+                ),
+              ),
             ],
           ),
         ),
         // 账户列表
         Expanded(
           child: _authAccounts.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.account_circle_outlined,
                         size: 64,
                         color: Colors.grey,
                       ),
-                      SizedBox(height: 16),
-                      Text('暂无认证账户'),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 16),
                       Text(
-                        '点击"添加账户"开始使用',
+                        LocalizationService
+                            .instance
+                            .current
+                            .noAuthenticatedAccount_7421,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .clickToAddAccount_7281,
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -245,8 +283,8 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       (account) => account.authAccountId == config.authAccountId,
       orElse: () => WebDavAuthAccount(
         authAccountId: config.authAccountId,
-        displayName: '未知账户',
-        username: '未知',
+        displayName: LocalizationService.instance.current.unknownAccount_4821,
+        username: LocalizationService.instance.current.unknown_4822,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -287,10 +325,16 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             ),
             const SizedBox(height: 8),
             // 配置信息
-            _buildInfoRow('服务器', config.serverUrl),
-            _buildInfoRow('存储路径', config.storagePath),
             _buildInfoRow(
-              '认证账户',
+              LocalizationService.instance.current.serverLabel_4821,
+              config.serverUrl,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.storagePath_7281,
+              config.storagePath,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.verifiedAccountTitle_4821,
               '${authAccount.displayName} (${authAccount.username})',
             ),
             if (testResult != null) ...[
@@ -312,19 +356,35 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.wifi_protected_setup),
-                  label: Text(isTestingThis ? '测试中...' : '测试连接'),
+                  label: Text(
+                    isTestingThis
+                        ? LocalizationService
+                              .instance
+                              .current
+                              .testingInProgress_4821
+                        : LocalizationService
+                              .instance
+                              .current
+                              .testConnection_4821,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () => _showEditConfigDialog(config),
                   icon: const Icon(Icons.edit),
-                  label: const Text('编辑'),
+                  label: Text(
+                    LocalizationService.instance.current.editLabel_4271,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () => _toggleConfigEnabled(config),
                   icon: Icon(config.isEnabled ? Icons.pause : Icons.play_arrow),
-                  label: Text(config.isEnabled ? '禁用' : '启用'),
+                  label: Text(
+                    config.isEnabled
+                        ? LocalizationService.instance.current.disable_4821
+                        : LocalizationService.instance.current.enable_7532,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
@@ -367,7 +427,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                 ),
                 if (configCount > 0)
                   Chip(
-                    label: Text('$configCount 个配置'),
+                    label: Text(
+                      '$configCount ${LocalizationService.instance.current.configurationsCount_7421}',
+                    ),
                     backgroundColor: Theme.of(
                       context,
                     ).colorScheme.primaryContainer,
@@ -376,8 +438,14 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
             ),
             const SizedBox(height: 8),
             // 账户信息
-            _buildInfoRow('用户名', account.username),
-            _buildInfoRow('创建时间', _formatDateTime(account.createdAt)),
+            _buildInfoRow(
+              LocalizationService.instance.current.usernameLabel_5421,
+              account.username,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.creationTime_4821,
+              _formatDateTime(account.createdAt),
+            ),
             const SizedBox(height: 16),
             // 操作按钮
             Row(
@@ -385,7 +453,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                 TextButton.icon(
                   onPressed: () => _showEditAuthAccountDialog(account),
                   icon: const Icon(Icons.edit),
-                  label: const Text('编辑'),
+                  label: Text(
+                    LocalizationService.instance.current.editLabel_4271,
+                  ),
                 ),
                 const Spacer(),
                 if (configCount == 0)
@@ -396,7 +466,8 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
                   )
                 else
                   Tooltip(
-                    message: '此账户正在被 $configCount 个配置使用，无法删除',
+                    message: LocalizationService.instance.current
+                        .accountInUseMessage_4821(configCount),
                     child: IconButton(
                       onPressed: null,
                       icon: const Icon(Icons.delete),
@@ -458,7 +529,15 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
               ),
               const SizedBox(width: 4),
               Text(
-                result.success ? '连接成功' : '连接失败',
+                result.success
+                    ? LocalizationService
+                          .instance
+                          .current
+                          .connectionSuccess_4821
+                    : LocalizationService
+                          .instance
+                          .current
+                          .connectionFailed_4821,
                 style: TextStyle(
                   color: result.success ? Colors.green : Colors.red,
                   fontWeight: FontWeight.w500,
@@ -483,7 +562,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
           if (result.serverInfo != null) ...[
             const SizedBox(height: 4),
             Text(
-              '服务器: ${result.serverInfo}',
+              LocalizationService.instance.current.serverInfoLabel_7281(
+                result.serverInfo.toString(),
+              ),
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -508,7 +589,9 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       setState(() {
         _testResults[configId] = WebDavTestResult(
           success: false,
-          errorMessage: '测试失败: $e',
+          errorMessage: LocalizationService.instance.current.testFailedMessage(
+            e,
+          ),
         );
       });
     } finally {
@@ -523,9 +606,15 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     try {
       await _dbService.toggleConfigEnabled(config.configId);
       await _loadData();
-      context.showSuccessSnackBar(config.isEnabled ? '配置已禁用' : '配置已启用');
+      context.showSuccessSnackBar(
+        config.isEnabled
+            ? LocalizationService.instance.current.configDisabled_4821
+            : LocalizationService.instance.current.configEnabled_4822,
+      );
     } catch (e) {
-      context.showErrorSnackBar('操作失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.operationFailedWithError(e),
+      );
     }
   }
 
@@ -534,16 +623,20 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除配置"${config.displayName}"吗？此操作无法撤销。'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteConfig(
+            config.displayName,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
           ),
         ],
@@ -554,9 +647,13 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
       try {
         await _dbService.deleteConfig(config.configId);
         await _loadData();
-        context.showSuccessSnackBar('配置已删除');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.configurationDeleted_4821,
+        );
       } catch (e) {
-        context.showErrorSnackBar('操作失败: $e');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.operationFailedWithError(e),
+        );
       }
     }
   }
@@ -566,16 +663,20 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除认证账户"${account.displayName}"吗？此操作无法撤销。'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteAccount_7421(
+            account.displayName,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_7281),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
           ),
         ],
@@ -588,9 +689,13 @@ class _WebDavManagerPageState extends State<_WebDavManagerPageContent>
         await _secureStorage.deletePassword(account.authAccountId);
         await _loadData();
 
-        context.showSuccessSnackBar('认证账户已删除');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.accountDeletedSuccess_4821,
+        );
       } catch (e) {
-        context.showErrorSnackBar('操作失败: $e');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.operationFailedWithError(e),
+        );
       }
     }
   }
@@ -703,7 +808,11 @@ class _ConfigDialogState extends State<_ConfigDialog> {
     final isEditing = widget.config != null;
 
     return AlertDialog(
-      title: Text(isEditing ? '编辑 WebDAV 配置' : '添加 WebDAV 配置'),
+      title: Text(
+        isEditing
+            ? LocalizationService.instance.current.editWebDavConfig
+            : LocalizationService.instance.current.addWebDavConfig,
+      ),
       content: SizedBox(
         width: 400,
         child: Form(
@@ -713,13 +822,18 @@ class _ConfigDialogState extends State<_ConfigDialog> {
             children: [
               TextFormField(
                 controller: _displayNameController,
-                decoration: const InputDecoration(
-                  labelText: '显示名称',
-                  hintText: '例如：我的云盘',
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.displayName_4821,
+                  hintText:
+                      LocalizationService.instance.current.exampleMyCloud_4822,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '请输入显示名称';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .inputDisplayName_4821;
                   }
                   return null;
                 },
@@ -727,9 +841,11 @@ class _ConfigDialogState extends State<_ConfigDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _serverUrlController,
-                decoration: const InputDecoration(
-                  labelText: '服务器 URL',
-                  hintText: 'https://example.com/webdav',
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.serverUrlLabel_4821,
+                  hintText:
+                      LocalizationService.instance.current.serverUrlHint_4821,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

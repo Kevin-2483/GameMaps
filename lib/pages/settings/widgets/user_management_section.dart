@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,8 @@ import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../services/user_preferences/user_preferences_config_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class UserManagementSection extends StatefulWidget {
   final UserPreferences preferences;
@@ -69,7 +72,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '用户管理',
+              LocalizationService.instance.current.userManagement_4521,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -127,7 +130,10 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                         ],
                         const SizedBox(height: 4),
                         Text(
-                          '创建时间: ${_formatDate(widget.preferences.createdAt)}',
+                          LocalizationService.instance.current
+                              .creationTimeText_7421(
+                                _formatDate(widget.preferences.createdAt),
+                              ),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -138,7 +144,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                         if (widget.preferences.lastLoginAt != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            '最后登录: ${_formatDate(widget.preferences.lastLoginAt!)}',
+                            LocalizationService.instance.current.lastLoginTime(
+                              _formatDate(widget.preferences.lastLoginAt!),
+                            ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -158,7 +166,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
             // 配置管理
             Text(
-              '配置管理',
+              LocalizationService.instance.current.configurationManagement_7421,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -168,8 +176,12 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             // 保存当前配置
             ListTile(
               leading: Icon(Icons.save, color: Colors.green),
-              title: Text('保存当前配置'),
-              subtitle: Text('将当前设置保存为新配置'),
+              title: Text(
+                LocalizationService.instance.current.saveCurrentConfig_4271,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.saveAsNewConfig_7281,
+              ),
               onTap: () => _showSaveConfigDialog(context, provider),
             ),
 
@@ -186,9 +198,17 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                   children: [
                     Icon(Icons.error, color: Colors.red),
                     const SizedBox(height: 8),
-                    Text('加载配置失败: $_configError'),
+                    Text(
+                      LocalizationService.instance.current
+                          .loadConfigFailed_4821(_configError!),
+                    ),
                     const SizedBox(height: 8),
-                    ElevatedButton(onPressed: _loadConfigs, child: Text('重试')),
+                    ElevatedButton(
+                      onPressed: _loadConfigs,
+                      child: Text(
+                        LocalizationService.instance.current.retryButton_7281,
+                      ),
+                    ),
                   ],
                 ),
               )
@@ -199,7 +219,10 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                   children: [
                     Icon(Icons.inbox, color: Colors.grey),
                     const SizedBox(height: 8),
-                    Text('暂无保存的配置', style: TextStyle(color: Colors.grey)),
+                    Text(
+                      LocalizationService.instance.current.noSavedConfigs_7281,
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ],
                 ),
               )
@@ -211,11 +234,20 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                     child: Row(
                       children: [
                         Text(
-                          '已保存的配置 (${_configs.length})',
+                          LocalizationService.instance.current
+                              .savedConfigsCount(_configs.length),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const Spacer(),
-                        TextButton(onPressed: _loadConfigs, child: Text('刷新')),
+                        TextButton(
+                          onPressed: _loadConfigs,
+                          child: Text(
+                            LocalizationService
+                                .instance
+                                .current
+                                .refreshButton_7421,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -228,8 +260,12 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             // 导入配置
             ListTile(
               leading: Icon(Icons.upload, color: Colors.blue),
-              title: Text('导入配置'),
-              subtitle: Text('从JSON数据导入配置'),
+              title: Text(
+                LocalizationService.instance.current.importConfig_7421,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.importConfigFromJson_4821,
+              ),
               onTap: () => _showImportConfigDialog(context, provider),
             ),
 
@@ -237,7 +273,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
             // 账户设置
             Text(
-              '账户设置',
+              LocalizationService.instance.current.accountSettings_7421,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -247,14 +283,18 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             // 更改显示名称
             ListTile(
               leading: Icon(Icons.badge),
-              title: Text('显示名称'),
+              title: Text(
+                LocalizationService.instance.current.displayName_1234,
+              ),
               subtitle: Text(widget.preferences.displayName),
               trailing: Icon(Icons.edit),
               onTap: () => _changeDisplayName(context, provider),
             ), // 更改头像
             ListTile(
               leading: Icon(Icons.photo),
-              title: Text('头像'),
+              title: Text(
+                LocalizationService.instance.current.avatarTitle_4821,
+              ),
               subtitle: Text(_getAvatarDisplayText()),
               trailing: Icon(Icons.edit),
               onTap: () => _changeAvatar(context, provider),
@@ -263,7 +303,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             // 语言设置
             ListTile(
               leading: Icon(Icons.language),
-              title: Text('语言'),
+              title: Text(LocalizationService.instance.current.language_4821),
               subtitle: Text(
                 _getLanguageDisplayName(widget.preferences.locale),
               ),
@@ -284,7 +324,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
   String _getLanguageDisplayName(String locale) {
     switch (locale) {
       case 'zh_CN':
-        return '简体中文';
+        return LocalizationService.instance.current.simplifiedChinese_4821;
       case 'en_US':
         return 'English';
       default:
@@ -308,7 +348,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
   String _getAvatarDisplayText() {
     if (widget.preferences.avatarData != null &&
         widget.preferences.avatarData!.isNotEmpty) {
-      return '本地图片 (${(widget.preferences.avatarData!.length / 1024).toStringAsFixed(1)} KB)';
+      return LocalizationService.instance.current.localImageSize_7421(
+        (widget.preferences.avatarData!.length / 1024).toStringAsFixed(1),
+      );
     } else if (widget.preferences.avatarPath != null &&
         widget.preferences.avatarPath!.isNotEmpty) {
       return widget.preferences.avatarPath!;
@@ -333,13 +375,15 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('更改头像'),
+        title: Text(LocalizationService.instance.current.changeAvatar_7421),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: Icon(Icons.link),
-              title: Text('使用网络图片URL'),
+              title: Text(
+                LocalizationService.instance.current.useNetworkImageUrl_4821,
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 _showUrlInputDialog(context, provider);
@@ -347,7 +391,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
             ),
             ListTile(
               leading: Icon(Icons.upload_file),
-              title: Text('上传本地图片'),
+              title: Text(
+                LocalizationService.instance.current.uploadLocalImage_4271,
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 _uploadLocalImage(context, provider);
@@ -357,7 +403,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                 widget.preferences.avatarData != null)
               ListTile(
                 leading: Icon(Icons.clear, color: Colors.red),
-                title: Text('移除头像'),
+                title: Text(
+                  LocalizationService.instance.current.removeAvatar_4271,
+                ),
                 onTap: () {
                   Navigator.of(context).pop();
                   _removeAvatar(context, provider);
@@ -398,7 +446,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
         // 检查文件大小（限制为5MB）
         if (imageData.length > 5 * 1024 * 1024) {
-          context.showErrorSnackBar('图片文件过大，请选择小于5MB的图片');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.imageTooLargeError_4821,
+          );
           return;
         }
 
@@ -407,10 +457,16 @@ class _UserManagementSectionState extends State<UserManagementSection> {
           avatarPath: null, // 清除URL路径
         );
 
-        context.showSuccessSnackBar('头像已上传');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.avatarUploaded_7421,
+        );
       }
     } catch (e) {
-      context.showErrorSnackBar('上传失败: ${e.toString()}');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.uploadFailedWithError(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -421,12 +477,14 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('移除头像'),
-        content: Text('确定要移除当前头像吗？'),
+        title: Text(LocalizationService.instance.current.removeAvatar_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmRemoveAvatar_7421,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -434,7 +492,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('移除'),
+            child: Text(LocalizationService.instance.current.remove_4821),
           ),
         ],
       ),
@@ -443,9 +501,15 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     if (confirmed == true) {
       try {
         await provider.updateUserInfo(avatarPath: null, avatarData: null);
-        context.showSuccessSnackBar('头像已移除');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.avatarRemoved_4281,
+        );
       } catch (e) {
-        context.showErrorSnackBar('移除失败: ${e.toString()}');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.removeFailedMessage_7421(
+            e.toString(),
+          ),
+        );
       }
     }
   }
@@ -461,24 +525,36 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('保存当前配置'),
+        title: Text(
+          LocalizationService.instance.current.saveCurrentConfig_4271,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: '配置名称',
-                hintText: '请输入配置名称',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.configurationName_4821,
+                hintText: LocalizationService
+                    .instance
+                    .current
+                    .enterConfigurationName_5732,
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: '配置描述',
-                hintText: '请输入配置描述（可选）',
+              decoration: InputDecoration(
+                labelText: LocalizationService
+                    .instance
+                    .current
+                    .configurationDescription_4521,
+                hintText: LocalizationService
+                    .instance
+                    .current
+                    .enterConfigurationDescriptionHint_4522,
               ),
               maxLines: 3,
             ),
@@ -487,17 +563,19 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
-                context.showErrorSnackBar('请输入配置名称');
+                context.showErrorSnackBar(
+                  LocalizationService.instance.current.inputConfigName_4821,
+                );
                 return;
               }
               Navigator.of(context).pop(true);
             },
-            child: const Text('保存'),
+            child: Text(LocalizationService.instance.current.saveButton_7421),
           ),
         ],
       ),
@@ -511,12 +589,19 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         );
 
         if (configId != null && mounted) {
-          context.showSuccessSnackBar('配置保存成功');
+          context.showSuccessSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .configurationSavedSuccessfully_4821,
+          );
           _loadConfigs();
         }
       } catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('保存配置失败: ${e.toString()}');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.saveConfigFailed(e.toString()),
+          );
         }
       }
     }
@@ -535,7 +620,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         children: [
           if (config.description.isNotEmpty) Text(config.description),
           Text(
-            '创建时间: ${_formatDateTime(config.createdAt)}',
+            LocalizationService.instance.current.creationTime_7281(
+              _formatDateTime(config.createdAt),
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -555,30 +642,42 @@ class _UserManagementSectionState extends State<UserManagementSection> {
           }
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'load',
             child: Row(
               children: [
                 Icon(Icons.download),
                 SizedBox(width: 8),
-                Text('加载配置'),
+                Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .loadingConfiguration_7281,
+                ),
               ],
             ),
           ),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'export',
             child: Row(
-              children: [Icon(Icons.share), SizedBox(width: 8), Text('导出配置')],
+              children: [
+                Icon(Icons.share),
+                SizedBox(width: 8),
+                Text(LocalizationService.instance.current.exportConfig_7281),
+              ],
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'delete',
             child: Row(
               children: [
                 Icon(Icons.delete, color: Colors.red),
                 SizedBox(width: 8),
-                Text('删除配置', style: TextStyle(color: Colors.red)),
+                Text(
+                  LocalizationService.instance.current.deleteConfiguration_7281,
+                  style: TextStyle(color: Colors.red),
+                ),
               ],
             ),
           ),
@@ -595,16 +694,24 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('加载配置'),
-        content: Text('确定要加载配置 "${config.name}" 吗？\n\n这将覆盖当前的所有设置（用户信息除外）。'),
+        title: Text(
+          LocalizationService.instance.current.loadingConfiguration_7421,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmLoadConfig_7421(
+            config.name,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -615,11 +722,18 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         final success = await provider.loadAndApplyConfig(config.id);
 
         if (success && mounted) {
-          context.showSuccessSnackBar('配置加载成功');
+          context.showSuccessSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .configurationLoadedSuccessfully_4821,
+          );
         }
       } catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('加载配置失败: ${e.toString()}');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.loadConfigFailed(e.toString()),
+          );
         }
       }
     }
@@ -633,12 +747,16 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除配置'),
-        content: Text('确定要删除配置 "${config.name}" 吗？\n\n此操作无法撤销。'),
+        title: Text(
+          LocalizationService.instance.current.deleteConfiguration_4271,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteConfig(config.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -646,7 +764,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
@@ -657,12 +775,21 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         final success = await provider.deleteConfig(config.id);
 
         if (success && mounted) {
-          context.showSuccessSnackBar('配置删除成功');
+          context.showSuccessSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .configurationDeletedSuccessfully_7281,
+          );
           _loadConfigs();
         }
       } catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('删除配置失败: ${e.toString()}');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.deleteConfigFailed_7281(
+              e.toString(),
+            ),
+          );
         }
       }
     }
@@ -678,10 +805,19 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
       if (jsonData != null) {
         await Clipboard.setData(ClipboardData(text: jsonData));
-        context.showSuccessSnackBar('配置已复制到剪贴板');
+        context.showSuccessSnackBar(
+          LocalizationService
+              .instance
+              .current
+              .configurationCopiedToClipboard_4821,
+        );
       }
     } catch (e) {
-      context.showErrorSnackBar('导出配置失败: ${e.toString()}');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.exportConfigFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -694,17 +830,19 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('导入配置'),
+        title: Text(LocalizationService.instance.current.importConfig_4271),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('请粘贴配置JSON数据：'),
+            Text(LocalizationService.instance.current.pasteJsonConfig_7281),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'JSON数据',
-                hintText: '粘贴配置JSON数据...',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.jsonDataLabel_4521,
+                hintText:
+                    LocalizationService.instance.current.jsonDataHint_4522,
                 border: OutlineInputBorder(),
               ),
               maxLines: 8,
@@ -715,17 +853,19 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7281),
           ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.trim().isEmpty) {
-                context.showErrorSnackBar('请输入JSON数据');
+                context.showErrorSnackBar(
+                  LocalizationService.instance.current.inputJsonData_4821,
+                );
                 return;
               }
               Navigator.of(context).pop(true);
             },
-            child: const Text('导入'),
+            child: Text(LocalizationService.instance.current.import_4521),
           ),
         ],
       ),
@@ -738,12 +878,21 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         );
 
         if (configId != null && mounted) {
-          context.showSuccessSnackBar('配置导入成功');
+          context.showSuccessSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .configurationImportSuccess_7281,
+          );
           _loadConfigs();
         }
       } catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('导入配置失败: ${e.toString()}');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.importConfigFailed_7421(
+              e.toString(),
+            ),
+          );
         }
       }
     }
@@ -756,14 +905,17 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   void _changeLanguage(BuildContext context, UserPreferencesProvider provider) {
     final List<Map<String, String>> languages = [
-      {'code': 'zh_CN', 'name': '简体中文'},
+      {
+        'code': 'zh_CN',
+        'name': LocalizationService.instance.current.simplifiedChinese_7281,
+      },
       {'code': 'en_US', 'name': 'English'},
     ];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('选择语言'),
+        title: Text(LocalizationService.instance.current.selectLanguage_4821),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: languages.map((language) {
@@ -776,9 +928,16 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                   try {
                     await provider.updateUserInfo(locale: value);
                     Navigator.of(context).pop();
-                    context.showSuccessSnackBar('语言已更新为 ${language['name']}');
+                    context.showSuccessSnackBar(
+                      LocalizationService.instance.current.languageUpdated(
+                        language['name']!,
+                      ),
+                    );
                   } catch (e) {
-                    context.showErrorSnackBar('更新失败: ${e.toString()}');
+                    context.showErrorSnackBar(
+                      LocalizationService.instance.current
+                          .updateFailedWithError(e.toString()),
+                    );
                   }
                 } else {
                   Navigator.of(context).pop();
@@ -790,7 +949,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
         ],
       ),
@@ -837,14 +996,14 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('编辑用户信息'),
+      title: Text(LocalizationService.instance.current.editUserInfo_4821),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
             decoration: InputDecoration(
-              labelText: '显示名称',
+              labelText: LocalizationService.instance.current.displayName_4521,
               border: OutlineInputBorder(),
             ),
           ),
@@ -852,7 +1011,8 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
           TextField(
             controller: _avatarController,
             decoration: InputDecoration(
-              labelText: '头像URL（可选）',
+              labelText:
+                  LocalizationService.instance.current.avatarUrlOptional_4821,
               border: OutlineInputBorder(),
             ),
           ),
@@ -861,7 +1021,7 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -872,9 +1032,11 @@ class _UserInfoEditDialogState extends State<_UserInfoEditDialog> {
                   : _avatarController.text.trim(),
             );
             Navigator.of(context).pop();
-            context.showSuccessSnackBar('用户信息已更新');
+            context.showSuccessSnackBar(
+              LocalizationService.instance.current.userInfoUpdated_7421,
+            );
           },
-          child: Text('保存'),
+          child: Text(LocalizationService.instance.current.saveButton_7421),
         ),
       ],
     );
@@ -903,11 +1065,11 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('创建新配置文件'),
+      title: Text(LocalizationService.instance.current.createNewProfile_4271),
       content: TextField(
         controller: _nameController,
         decoration: InputDecoration(
-          labelText: '配置文件名称',
+          labelText: LocalizationService.instance.current.profileNameLabel_4821,
           border: OutlineInputBorder(),
         ),
         autofocus: true,
@@ -915,7 +1077,7 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -923,10 +1085,12 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
             if (name.isNotEmpty) {
               // 实现创建新配置文件的逻辑
               Navigator.of(context).pop();
-              context.showSuccessSnackBar('配置文件"$name"已创建');
+              context.showSuccessSnackBar(
+                LocalizationService.instance.current.configFileCreated(name),
+              );
             }
           },
-          child: Text('创建'),
+          child: Text(LocalizationService.instance.current.createButton_7421),
         ),
       ],
     );
@@ -962,13 +1126,13 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
 
   String? _validateName(String name) {
     if (name.trim().isEmpty) {
-      return '显示名称不能为空';
+      return LocalizationService.instance.current.displayNameCannotBeEmpty_4821;
     }
     if (name.trim().length < 2) {
-      return '显示名称至少需要2个字符';
+      return LocalizationService.instance.current.displayNameMinLength_4821;
     }
     if (name.trim().length > 50) {
-      return '显示名称不能超过50个字符';
+      return LocalizationService.instance.current.displayNameTooLong_42;
     }
     return null;
   }
@@ -976,13 +1140,13 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('修改显示名称'),
+      title: Text(LocalizationService.instance.current.changeDisplayName_4821),
       content: TextField(
         controller: _nameController,
         decoration: InputDecoration(
-          labelText: '显示名称',
+          labelText: LocalizationService.instance.current.displayNameLabel_4821,
           border: OutlineInputBorder(),
-          hintText: '请输入您的显示名称',
+          hintText: LocalizationService.instance.current.displayNameHint_7532,
           errorText: _errorText,
         ),
         autofocus: true,
@@ -995,7 +1159,7 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         ElevatedButton(
           onPressed: _errorText == null
@@ -1007,16 +1171,23 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
                         displayName: newName,
                       );
                       Navigator.of(context).pop();
-                      context.showSuccessSnackBar('显示名称已更新为 "$newName"');
+                      context.showSuccessSnackBar(
+                        LocalizationService.instance.current.nameUpdatedTo_7421(
+                          newName,
+                        ),
+                      );
                     } catch (e) {
-                      context.showErrorSnackBar('更新失败: ${e.toString()}');
+                      context.showErrorSnackBar(
+                        LocalizationService.instance.current
+                            .updateFailedWithError(e.toString()),
+                      );
                     }
                   } else {
                     Navigator.of(context).pop();
                   }
                 }
               : null,
-          child: Text('保存'),
+          child: Text(LocalizationService.instance.current.saveButton_7281),
         ),
       ],
     );
@@ -1057,7 +1228,7 @@ class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
 
     final uri = Uri.tryParse(url.trim());
     if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
-      return '请输入有效的URL';
+      return LocalizationService.instance.current.enterValidUrl_4821;
     }
 
     final validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
@@ -1066,7 +1237,7 @@ class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
     );
 
     if (!hasValidExtension) {
-      return '请输入图片URL（支持 jpg, png, gif 等格式）';
+      return LocalizationService.instance.current.invalidImageUrlError_4821;
     }
 
     return null;
@@ -1075,15 +1246,16 @@ class _AvatarUrlDialogState extends State<_AvatarUrlDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('输入头像URL'),
+      title: Text(LocalizationService.instance.current.inputAvatarUrl_7281),
       content: TextField(
         controller: _urlController,
         decoration: InputDecoration(
-          labelText: '图片URL',
+          labelText: LocalizationService.instance.current.imageUrlLabel_4821,
           border: OutlineInputBorder(),
           hintText: 'https://example.com/avatar.jpg',
           errorText: _errorText,
-          helperText: '支持 jpg, png, gif 等格式的图片',
+          helperText:
+              LocalizationService.instance.current.supportedImageFormats_5732,
         ),
         autofocus: true,
         onChanged: (value) {

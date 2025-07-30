@@ -1,0 +1,15 @@
+{
+  "unnamedLegendGroup_4821": "未命名图例组",
+  "svgThumbnailLoadFailed_4821": "SVG图例缩略图加载失败: {e}",
+  "legendDataLoadFailed": "加载图例数据失败: {legendPath}, 错误: {e}",
+  "updateLegendDataFailed_7284": "更新图例数据失败: {e}",
+  "legendGroupTooltip_7281": "左键：打开图例组管理\n右键：选择图例组",
+  "legendBlockedMessage_4821": "图例被遮挡",
+  "remainingLegendBlocked_4821": "剩余图例被遮挡",
+  "layerGroupTitle": "图层组 {groupNumber} ({layerCount}层)",
+  "noLegendAvailable_4821": "暂无图例",
+  "clearSelection_4821": "清除选择",
+  "noLegendAvailable_4251": "暂无图例",
+  "noBoundLegend_4821": "无绑定图例",
+  "noAvailableLegend_4821": "无可用图例"
+}

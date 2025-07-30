@@ -1,0 +1,19 @@
+{
+  "ignore_4821": "忽略",
+  "occurrenceTime_4821": "发生时间: {timestamp}",
+  "solve_7421": "解决",
+  "justNow_4821": "刚刚",
+  "minutesAgo_7421": "{minutes}分钟前",
+  "hoursAgo_4827": "小时前",
+  "conflictCount": "{count}个冲突",
+  "elementLockConflict_4821": "元素锁定冲突",
+  "simultaneousEditConflict_4822": "同时编辑冲突",
+  "versionMismatch_4823": "版本不匹配",
+  "permissionDenied_4824": "权限被拒绝",
+  "networkError_4825": "网络错误",
+  "collaborationConflict_4826": "协作冲突",
+  "editConflict_4827": "编辑冲突",
+  "lockConflict_4828": "锁定冲突",
+  "deleteConflict_4829": "删除冲突",
+  "permissionConflict_4830": "权限冲突"
+}

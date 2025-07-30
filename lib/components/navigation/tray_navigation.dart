@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -13,6 +14,8 @@ import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 import '../../models/user_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏
 class TrayNavigation extends StatefulWidget {
@@ -60,14 +63,18 @@ class _TrayNavigationState extends State<TrayNavigation>
           !appWindow.isMaximized) {
         WindowManagerService().saveCurrentWindowSize();
         if (kDebugMode) {
-          debugPrint('窗口大小保存请求已发送（非最大化状态）');
+          debugPrint(
+            LocalizationService.instance.current.windowSizeSaveRequestSent_7281,
+          );
         }
       } else if (kDebugMode && appWindow.isMaximized) {
-        debugPrint('跳过保存：当前处于最大化状态');
+        debugPrint(LocalizationService.instance.current.skipSaveMaximizedState);
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('保存窗口大小失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.saveWindowSizeFailed_7284(e),
+        );
       }
     }
   }
@@ -205,7 +212,8 @@ class _TrayNavigationState extends State<TrayNavigation>
                       context,
                       icon: Icons.power_settings_new,
                       onPressed: () => _handleAppClose(context),
-                      tooltip: '关闭',
+                      tooltip:
+                          LocalizationService.instance.current.closeButton_4821,
                       isCloseButton: true,
                       useNavigationStyle: true,
                     ),
@@ -232,7 +240,10 @@ class _TrayNavigationState extends State<TrayNavigation>
                         _saveWindowSizeIfEnabled(context);
                         appWindow.minimize();
                       },
-                      tooltip: '最小化',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .minimizeTooltip_7281,
                       useNavigationStyle: true,
                     ),
                     const SizedBox(height: 8),
@@ -243,7 +254,10 @@ class _TrayNavigationState extends State<TrayNavigation>
                         _saveWindowSizeIfEnabled(context);
                         appWindow.maximizeOrRestore();
                       },
-                      tooltip: '最大化/还原',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .maximizeOrRestore_7281,
                       useNavigationStyle: true,
                     ),
                     // 在Windows平台上不显示全屏按钮
@@ -548,7 +562,7 @@ class _TrayNavigationState extends State<TrayNavigation>
             _saveWindowSizeIfEnabled(context);
             appWindow.minimize();
           },
-          tooltip: '最小化',
+          tooltip: LocalizationService.instance.current.minimizeTooltip_7281,
           useNavigationStyle: true,
         ),
         const SizedBox(width: 8),
@@ -559,7 +573,7 @@ class _TrayNavigationState extends State<TrayNavigation>
             _saveWindowSizeIfEnabled(context);
             appWindow.maximizeOrRestore();
           },
-          tooltip: '最大化/还原',
+          tooltip: LocalizationService.instance.current.maximizeRestore_7281,
           useNavigationStyle: true,
         ),
         // 在Windows平台上不显示全屏按钮
@@ -572,7 +586,7 @@ class _TrayNavigationState extends State<TrayNavigation>
           context,
           icon: Icons.power_settings_new,
           onPressed: () => _handleAppClose(context),
-          tooltip: '关闭',
+          tooltip: LocalizationService.instance.current.closeButton_7421,
           isCloseButton: true,
           useNavigationStyle: true,
         ),
@@ -683,7 +697,9 @@ class _TrayNavigationState extends State<TrayNavigation>
         // 切换全屏状态
         FullScreen.setFullScreen(!_isFullScreen);
       },
-      tooltip: _isFullScreen ? '退出全屏' : '全屏',
+      tooltip: _isFullScreen
+          ? LocalizationService.instance.current.exitFullscreen_4721
+          : LocalizationService.instance.current.enterFullscreen_5832,
       useNavigationStyle: true,
     );
   }

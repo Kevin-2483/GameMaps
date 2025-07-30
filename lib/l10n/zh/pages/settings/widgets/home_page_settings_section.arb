@@ -1,0 +1,21 @@
+{
+  "displayLocaleSetting_4821": "显示区域设置",
+  "displayAreaMultiplierText": "显示区域倍数: {value}x",
+  "windowScalingFactorLabel": "窗口大小随动系数: {value}",
+  "performanceSettings_7281": "性能设置",
+  "baseGridSpacing_4827": "基础网格间距: {value}px",
+  "baseIconSizeText": "基础图标大小: {size}px",
+  "cameraSpeedLabel": "摄像机移动速度: {speed}px/s",
+  "enableThemeColorFilter_7281": "启用主题颜色滤镜",
+  "visualEffectsSettings_4821": "视觉效果设置",
+  "homePageSettings_4821": "主页设置",
+  "adaptiveIconTheme_7421": "让图标颜色适应当前主题",
+  "baseBufferMultiplierText": "基础缓冲区倍数: {value}x",
+  "perspectiveBufferFactorLabel": "透视缓冲调节系数: {factor}x",
+  "iconEnlargementFactorLabel": "图标放大系数: {factor}x",
+  "svgDistributionRecordCount": "SVG分布记录数量: {recentSvgHistorySize}",
+  "titleSetting_1234": "标题设置",
+  "titleLabel_4821": "标题文字",
+  "titleHint_4821": "输入主页标题文字",
+  "titleFontSizeMultiplierText": "标题字体大小倍数: {value}%"
+}

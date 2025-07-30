@@ -1,0 +1,14 @@
+{
+  "renameFileOrFolder_7421": "{isDirectory, select, true{重命名 文件夹} false{重命名 文件} other{重命名}}",
+  "currentNameLabel_4821": "当前名称:",
+  "newLabel_4821": "新名称:",
+  "inputNewNameHint_4821": "输入新名称",
+  "fileExtensionNotice": "注意: 文件扩展名 \"{extension}\" 将保持不变",
+  "rename_4821": "重命名",
+  "cancel_4821": "取消",
+  "nameCannotBeEmpty_4821": "名称不能为空",
+  "invalidNameDotError_4821": "名称不能以点号开头或结尾",
+  "invalidCharactersError_4821": "名称包含无效字符: < > : \" / \\ | ? *",
+  "nameLengthExceedLimit_4829": "名称长度不能超过255个字符",
+  "reservedNameError_4821": "不能使用系统保留名称"
+}

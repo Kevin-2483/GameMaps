@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../common/floating_window.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 浮动窗口使用示例
 class FloatingWindowExamples extends StatelessWidget {
@@ -9,7 +12,11 @@ class FloatingWindowExamples extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('浮动窗口示例')),
+      appBar: AppBar(
+        title: Text(
+          LocalizationService.instance.current.floatingWindowExample_4271,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -18,8 +25,14 @@ class FloatingWindowExamples extends StatelessWidget {
             // 基础浮动窗口示例
             _buildExampleCard(
               context,
-              title: '基础浮动窗口',
-              description: '最简单的浮动窗口，包含标题和内容',
+              title: LocalizationService
+                  .instance
+                  .current
+                  .basicFloatingWindowTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .basicFloatingWindowDescription_4821,
               onPressed: () => _showBasicFloatingWindow(context),
             ),
 
@@ -28,8 +41,14 @@ class FloatingWindowExamples extends StatelessWidget {
             // 带图标和副标题的浮动窗口
             _buildExampleCard(
               context,
-              title: '带图标和副标题',
-              description: '包含图标、主标题和副标题的浮动窗口',
+              title: LocalizationService
+                  .instance
+                  .current
+                  .cardWithIconAndSubtitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .floatingWindowWithIconAndTitle_4821,
               onPressed: () => _showFloatingWindowWithIcon(context),
             ),
 
@@ -38,8 +57,11 @@ class FloatingWindowExamples extends StatelessWidget {
             // 自定义尺寸的浮动窗口
             _buildExampleCard(
               context,
-              title: '自定义尺寸',
-              description: '指定具体宽高比例的浮动窗口',
+              title: LocalizationService.instance.current.customSizeTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .customSizeDescription_4821,
               onPressed: () => _showCustomSizeFloatingWindow(context),
             ),
 
@@ -48,8 +70,14 @@ class FloatingWindowExamples extends StatelessWidget {
             // 带操作按钮的浮动窗口
             _buildExampleCard(
               context,
-              title: '带操作按钮',
-              description: '头部包含自定义操作按钮的浮动窗口',
+              title: LocalizationService
+                  .instance
+                  .current
+                  .cardWithActionsTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .floatingWindowWithActionsDesc_4821,
               onPressed: () => _showFloatingWindowWithActions(context),
             ),
 
@@ -58,8 +86,14 @@ class FloatingWindowExamples extends StatelessWidget {
             // 可拖拽的浮动窗口
             _buildExampleCard(
               context,
-              title: '可拖拽窗口',
-              description: '支持拖拽移动的浮动窗口',
+              title: LocalizationService
+                  .instance
+                  .current
+                  .draggableWindowTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .draggableWindowDescription_4821,
               onPressed: () => _showDraggableFloatingWindow(context),
             ),
 
@@ -68,8 +102,12 @@ class FloatingWindowExamples extends StatelessWidget {
             // 使用构建器模式
             _buildExampleCard(
               context,
-              title: '构建器模式',
-              description: '使用构建器模式创建复杂配置的浮动窗口',
+              title:
+                  LocalizationService.instance.current.builderPatternTitle_3821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .builderPatternDescription_3821,
               onPressed: () => _showFloatingWindowWithBuilder(context),
             ),
 
@@ -78,8 +116,14 @@ class FloatingWindowExamples extends StatelessWidget {
             // 使用扩展方法
             _buildExampleCard(
               context,
-              title: '扩展方法',
-              description: '使用BuildContext扩展方法快速创建浮动窗口',
+              title: LocalizationService
+                  .instance
+                  .current
+                  .extensionMethodsTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .extensionMethodsDescription_4821,
               onPressed: () => _showFloatingWindowWithExtension(context),
             ),
           ],
@@ -118,7 +162,7 @@ class FloatingWindowExamples extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: onPressed,
-                child: const Text('演示'),
+                child: Text(LocalizationService.instance.current.demoText_4271),
               ),
             ),
           ],
@@ -132,24 +176,34 @@ class FloatingWindowExamples extends StatelessWidget {
     FloatingWindow.show(
       context,
       title: '基础浮动窗口',
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '这是一个基础的浮动窗口示例',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              LocalizationService
+                  .instance
+                  .current
+                  .basicFloatingWindowExample_4821,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 16),
             Text(
-              '窗口内容可以是任何Widget，包括文本、按钮、表单等。'
-              '窗口会自动适应屏幕大小，默认占用90%的屏幕宽度和高度。',
+              LocalizationService
+                      .instance
+                      .current
+                      .windowContentDescription_4821 +
+                  LocalizationService
+                      .instance
+                      .current
+                      .windowSizeDescription_5739,
             ),
             SizedBox(height: 24),
             TextField(
               decoration: InputDecoration(
-                labelText: '示例输入框',
+                labelText:
+                    LocalizationService.instance.current.exampleInputField_4521,
                 border: OutlineInputBorder(),
               ),
             ),
@@ -157,9 +211,19 @@ class FloatingWindowExamples extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: null, child: Text('取消')),
+                TextButton(
+                  onPressed: null,
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_7284,
+                  ),
+                ),
                 SizedBox(width: 8),
-                ElevatedButton(onPressed: null, child: Text('确定')),
+                ElevatedButton(
+                  onPressed: null,
+                  child: Text(
+                    LocalizationService.instance.current.confirmButton_4821,
+                  ),
+                ),
               ],
             ),
           ],
@@ -179,22 +243,42 @@ class FloatingWindowExamples extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildSettingItem('通知', Icons.notifications, true),
-            _buildSettingItem('深色模式', Icons.dark_mode, false),
-            _buildSettingItem('自动保存', Icons.save, true),
-            _buildSettingItem('数据同步', Icons.sync, false),
+            _buildSettingItem(
+              LocalizationService.instance.current.notifications_4821,
+              Icons.notifications,
+              true,
+            ),
+            _buildSettingItem(
+              LocalizationService.instance.current.darkMode_7285,
+              Icons.dark_mode,
+              false,
+            ),
+            _buildSettingItem(
+              LocalizationService.instance.current.autoSave_7421,
+              Icons.save,
+              true,
+            ),
+            _buildSettingItem(
+              LocalizationService.instance.current.dataSync_7284,
+              Icons.sync,
+              false,
+            ),
             const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_7281,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('保存'),
+                  child: Text(
+                    LocalizationService.instance.current.saveButton_7421,
+                  ),
                 ),
               ],
             ),
@@ -226,19 +310,25 @@ class FloatingWindowExamples extends StatelessWidget {
       widthRatio: 0.6, // 60%宽度
       heightRatio: 0.4, // 40%高度
       minSize: const Size(400, 300), // 最小尺寸
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 16),
             Text(
-              '操作成功',
+              LocalizationService.instance.current.operationSuccess_4821,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text('您的操作已成功完成', style: TextStyle(color: Colors.grey)),
+            Text(
+              LocalizationService
+                  .instance
+                  .current
+                  .operationCompletedSuccessfully_7281,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -255,18 +345,26 @@ class FloatingWindowExamples extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('刷新操作')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  LocalizationService.instance.current.refreshOperation_7284,
+                ),
+              ),
+            );
           },
           tooltip: '刷新',
         ),
         IconButton(
           icon: const Icon(Icons.settings),
           onPressed: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('设置操作')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  LocalizationService.instance.current.settingsOperation_4251,
+                ),
+              ),
+            );
           },
           tooltip: '设置',
         ),
@@ -281,7 +379,9 @@ class FloatingWindowExamples extends StatelessWidget {
                 itemBuilder: (context, index) {
                   return ListTile(
                     leading: const Icon(Icons.insert_drive_file),
-                    title: Text('文件 ${index + 1}.txt'),
+                    title: Text(
+                      '${LocalizationService.instance.current.fileNameWithIndex(index + 1)}',
+                    ),
                     subtitle: Text('${(index + 1) * 1024} bytes'),
                     trailing: IconButton(
                       icon: const Icon(Icons.more_vert),
@@ -294,9 +394,19 @@ class FloatingWindowExamples extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                OutlinedButton(onPressed: () {}, child: const Text('新建文件')),
+                OutlinedButton(
+                  onPressed: () {},
+                  child: Text(
+                    LocalizationService.instance.current.createNewFile_7281,
+                  ),
+                ),
                 const SizedBox(width: 8),
-                ElevatedButton(onPressed: () {}, child: const Text('上传')),
+                ElevatedButton(
+                  onPressed: () {},
+                  child: Text(
+                    LocalizationService.instance.current.uploadButton_7284,
+                  ),
+                ),
               ],
             ),
           ],
@@ -315,19 +425,19 @@ class FloatingWindowExamples extends StatelessWidget {
       draggable: true,
       widthRatio: 0.7,
       heightRatio: 0.6,
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '拖拽功能',
+              LocalizationService.instance.current.dragFeature_4521,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
             Text(
-              '这个窗口支持拖拽移动。您可以点击并拖拽标题栏来移动窗口位置。'
-              '窗口会自动限制在屏幕边界内，但允许部分内容移出屏幕边缘。',
+              LocalizationService.instance.current.windowDragHint_4821 +
+                  LocalizationService.instance.current.windowBoundaryHint_4821,
             ),
             SizedBox(height: 24),
             Card(
@@ -337,13 +447,28 @@ class FloatingWindowExamples extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '使用提示：',
+                      LocalizationService.instance.current.usageHint_4521,
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SizedBox(height: 8),
-                    Text('• 点击标题栏并拖拽移动窗口'),
-                    Text('• 窗口会保持在屏幕可见区域内'),
-                    Text('• 释放鼠标完成移动操作'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .clickAndDragWindowTitle_4821,
+                    ),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .windowStayVisibleArea_4821,
+                    ),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .releaseMouseToCompleteMove_7281,
+                    ),
                   ],
                 ),
               ),
@@ -357,9 +482,11 @@ class FloatingWindowExamples extends StatelessWidget {
   /// 使用构建器模式的浮动窗口
   void _showFloatingWindowWithBuilder(BuildContext context) {
     FloatingWindowBuilder()
-        .title('构建器模式窗口')
+        .title(LocalizationService.instance.current.builderPatternWindow_4821)
         .icon(Icons.build)
-        .subtitle('使用链式调用配置窗口属性')
+        .subtitle(
+          LocalizationService.instance.current.windowConfigChainCall_7284,
+        )
         .size(widthRatio: 0.8, heightRatio: 0.7)
         .constraints(minSize: const Size(600, 400))
         .draggable()
@@ -367,9 +494,11 @@ class FloatingWindowExamples extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help),
             onPressed: () {
-              context.showInfoSnackBar('帮助信息');
+              context.showInfoSnackBar(
+                LocalizationService.instance.current.helpInfo_4821,
+              );
             },
-            tooltip: '帮助',
+            tooltip: LocalizationService.instance.current.help_5732,
           ),
         ])
         .borderRadius(20)
@@ -379,14 +508,16 @@ class FloatingWindowExamples extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '构建器模式',
+                Text(
+                  LocalizationService.instance.current.builderPattern_4821,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'FloatingWindowBuilder提供了一种优雅的方式来配置浮动窗口的各种属性。'
-                  '您可以使用链式调用来设置窗口的标题、图标、尺寸、拖拽支持等功能。',
+                Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .floatingWindowBuilderDescription_4821,
                 ),
                 const SizedBox(height: 24),
                 Expanded(
@@ -398,17 +529,17 @@ class FloatingWindowExamples extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '代码示例：',
+                          LocalizationService.instance.current.codeExample_7281,
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'FloatingWindowBuilder()\n'
-                          '  .title("窗口标题")\n'
+                          '  .title("${LocalizationService.instance.current.windowTitle_7421}")\n'
                           '  .icon(Icons.build)\n'
                           '  .draggable()\n'
                           '  .size(widthRatio: 0.8)\n'
@@ -435,27 +566,30 @@ class FloatingWindowExamples extends StatelessWidget {
     context.showFloatingWindow(
       title: '扩展方法窗口',
       icon: Icons.extension,
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.flash_on, color: Colors.orange, size: 64),
             SizedBox(height: 16),
             Text(
-              '快速创建',
+              LocalizationService.instance.current.quickCreate_7421,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
-              '使用BuildContext扩展方法可以更快速地创建简单的浮动窗口',
+              LocalizationService
+                  .instance
+                  .current
+                  .buildContextExtensionTip_7281,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
             SizedBox(height: 24),
             Text(
               'context.showFloatingWindow(\n'
-              '  title: "窗口标题",\n'
+              '  title: LocalizationService.instance.current.windowTitle_7281,\n'
               '  child: content,\n'
               ');',
               style: TextStyle(

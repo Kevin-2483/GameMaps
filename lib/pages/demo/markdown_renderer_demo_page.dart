@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+// This file has been processed by AI for internationalization
+import 'package:flutter/material.dart';
+import '../../services/localization_service.dart';
 import '../../pages/vfs/vfs_markdown_viewer_page.dart';
 import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_markdown_renderer.dart';
@@ -12,7 +14,9 @@ class MarkdownRendererDemoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Markdown 渲染器演示'),
+        title: Text(
+          LocalizationService.instance.current.markdownRendererDemo_7421,
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
@@ -21,13 +25,16 @@ class MarkdownRendererDemoPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Markdown 渲染器组件演示',
+              LocalizationService.instance.current.markdownRendererDemo_4821,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
 
             Text(
-              '现在支持三种不同的使用模式：',
+              LocalizationService
+                  .instance
+                  .current
+                  .supportedModesDescription_4821,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
@@ -35,8 +42,11 @@ class MarkdownRendererDemoPage extends StatelessWidget {
             // 窗口模式演示
             _buildDemoCard(
               context,
-              title: '1. 窗口模式',
-              description: '在浮动窗口中显示 Markdown，适合快速预览',
+              title: LocalizationService.instance.current.windowModeTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .windowModeDescription_4821,
               icon: Icons.open_in_new,
               onTap: () => _showWindowDemo(context),
             ),
@@ -46,8 +56,9 @@ class MarkdownRendererDemoPage extends StatelessWidget {
             // 页面模式演示
             _buildDemoCard(
               context,
-              title: '2. 页面模式',
-              description: '全屏页面显示 Markdown，适合深度阅读',
+              title: LocalizationService.instance.current.pageModeTitle_4821,
+              description:
+                  LocalizationService.instance.current.pageModeDescription_4821,
               icon: Icons.fullscreen,
               onTap: () => _showPageDemo(context),
             ),
@@ -57,8 +68,12 @@ class MarkdownRendererDemoPage extends StatelessWidget {
             // 嵌入模式演示
             _buildDemoCard(
               context,
-              title: '3. 嵌入模式',
-              description: '纯渲染组件，可嵌入任何布局',
+              title:
+                  LocalizationService.instance.current.embeddedModeTitle_4821,
+              description: LocalizationService
+                  .instance
+                  .current
+                  .embeddedModeDescription_4821,
               icon: Icons.code,
               onTap: () => _showEmbeddedDemo(context),
             ),
@@ -80,7 +95,10 @@ class MarkdownRendererDemoPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '使用说明',
+                          LocalizationService
+                              .instance
+                              .current
+                              .usageInstructions_4521,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -171,7 +189,7 @@ class _EmbeddedModeDemo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('嵌入模式演示'),
+        title: Text(LocalizationService.instance.current.demoModeTitle_7281),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Row(
@@ -187,31 +205,46 @@ class _EmbeddedModeDemo extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    '自定义布局示例',
+                    LocalizationService
+                        .instance
+                        .current
+                        .customLayoutExample_4821,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.description),
-                  title: const Text('文档导航'),
+                  title: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .documentNavigation_7281,
+                  ),
                   dense: true,
                 ),
                 ListTile(
                   leading: const Icon(Icons.bookmark),
-                  title: const Text('书签'),
+                  title: Text(
+                    LocalizationService.instance.current.bookmark_7281,
+                  ),
                   dense: true,
                 ),
                 ListTile(
                   leading: const Icon(Icons.history),
-                  title: const Text('历史记录'),
+                  title: Text(
+                    LocalizationService.instance.current.historyRecord_4271,
+                  ),
                   dense: true,
                 ),
                 const Spacer(),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    '这是一个自定义布局，\nMarkdown 渲染器被嵌入\n到右侧面板中。',
+                    LocalizationService
+                        .instance
+                        .current
+                        .customLayoutDescription_4521,
                     style: Theme.of(context).textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),

@@ -1,0 +1,18 @@
+{
+  "demoModeTitle_7281": "嵌入模式演示",
+  "customLayoutExample_4821": "自定义布局示例",
+  "markdownRendererDemo_7421": "Markdown 渲染器演示",
+  "documentNavigation_7281": "文档导航",
+  "historyRecord_4271": "历史记录",
+  "bookmark_7281": "书签",
+  "customLayoutDescription_4521": "这是一个自定义布局，\nMarkdown 渲染器被嵌入\n到右侧面板中。",
+  "supportedModesDescription_4821": "现在支持三种不同的使用模式：",
+  "markdownRendererDemo_4821": "Markdown 渲染器组件演示",
+  "windowModeTitle_4821": "1. 窗口模式",
+  "windowModeDescription_4821": "在浮动窗口中显示 Markdown，适合快速预览",
+  "usageInstructions_4521": "使用说明",
+  "embeddedModeTitle_4821": "3. 嵌入模式",
+  "embeddedModeDescription_4821": "纯渲染组件，可嵌入任何布局",
+  "pageModeTitle_4821": "2. 页面模式",
+  "pageModeDescription_4821": "全屏页面显示 Markdown，适合深度阅读"
+}

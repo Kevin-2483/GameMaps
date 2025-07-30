@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -5,6 +6,8 @@ import 'package:fast_rsa/fast_rsa.dart';
 import '../../../models/websocket_client_config.dart';
 import 'websocket_client_database_service.dart';
 import 'websocket_secure_storage_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// WebSocket 客户端初始化服务
 /// 处理 Web API Key 初始化和配置创建
@@ -26,27 +29,41 @@ class WebSocketClientInitService {
   ) async {
     try {
       if (kDebugMode) {
-        debugPrint('开始使用 Web API Key 初始化客户端: $webApiKey');
+        debugPrint(
+          LocalizationService.instance.current.initializingClientWithKey(
+            webApiKey,
+          ),
+        );
       }
 
       // 1. 生成服务器兼容的 RSA 密钥对（PUBLIC KEY 格式）
       if (kDebugMode) {
-        debugPrint('步骤1: 开始生成RSA密钥对...');
+        debugPrint(
+          LocalizationService.instance.current.rsaKeyGenerationStep1_4821,
+        );
       }
       final keyPair = await _secureStorage.generateServerCompatibleKeyPair();
       if (kDebugMode) {
-        debugPrint('步骤1: RSA密钥对生成完成');
+        debugPrint(
+          LocalizationService.instance.current.rsaKeyPairGenerated_4821,
+        );
       }
       final publicKeyPem = keyPair.publicKey;
       final privateKeyPem = keyPair.privateKey;
 
       // 2. 存储私钥到安全存储
       if (kDebugMode) {
-        debugPrint('步骤2: 开始存储私钥到安全存储...');
+        debugPrint(
+          LocalizationService.instance.current.step2StorePrivateKey_7281,
+        );
       }
       final privateKeyId = await _secureStorage.storePrivateKey(privateKeyPem);
       if (kDebugMode) {
-        debugPrint('步骤2: 私钥存储完成，ID: $privateKeyId');
+        debugPrint(
+          LocalizationService.instance.current.step2PrivateKeyStored(
+            privateKeyId,
+          ),
+        );
       }
 
       // 3. 解析 Web API Key URL
@@ -59,7 +76,11 @@ class WebSocketClientInitService {
       final requestUri = uri.replace(queryParameters: queryParams);
 
       if (kDebugMode) {
-        debugPrint('请求 URL: ${requestUri.toString()}');
+        debugPrint(
+          LocalizationService.instance.current.requestUrl_4821(
+            requestUri.toString(),
+          ),
+        );
       }
 
       // 5. 发送 HTTP 请求获取配置
@@ -67,25 +88,42 @@ class WebSocketClientInitService {
 
       if (response.statusCode != 200) {
         throw Exception(
-          '服务器返回错误状态码: ${response.statusCode} 响应内容: ${response.body}',
+          LocalizationService.instance.current.serverErrorWithDetails_7421(
+            response.statusCode,
+            response.body,
+          ),
         );
       }
 
       // 6. 检查响应内容类型
       final contentType = response.headers['content-type'];
       if (contentType == null || !contentType.contains('application/json')) {
-        throw Exception('意外的内容类型: $contentType 响应内容: ${response.body}');
+        throw Exception(
+          LocalizationService.instance.current
+              .unexpectedContentTypeWithResponse(
+                contentType ?? 'null',
+                response.body,
+              ),
+        );
       }
 
       if (kDebugMode) {
-        debugPrint('原始响应内容: ${response.body}');
+        debugPrint(
+          LocalizationService.instance.current.rawResponseContent(
+            response.body,
+          ),
+        );
       }
 
       // 7. 解析响应
       final responseData = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (responseData['status'] != 'success') {
-        throw Exception('API 响应状态错误: ${responseData['status']}');
+        throw Exception(
+          LocalizationService.instance.current.apiResponseStatusError_7284(
+            responseData['status'],
+          ),
+        );
       }
 
       final data = responseData['data'] as Map<String, dynamic>;
@@ -124,13 +162,21 @@ class WebSocketClientInitService {
       await _dbService.saveClientConfig(config);
 
       if (kDebugMode) {
-        debugPrint('客户端初始化成功: ${config.displayName}');
+        debugPrint(
+          LocalizationService.instance.current.clientInitializationSuccess_7421(
+            config.displayName,
+          ),
+        );
       }
 
       return config;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('客户端初始化失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientInitializationFailed_7281(
+            e,
+          ),
+        );
       }
       rethrow;
     }
@@ -147,7 +193,11 @@ class WebSocketClientInitService {
   }) async {
     try {
       if (kDebugMode) {
-        debugPrint('创建默认客户端配置: $displayName');
+        debugPrint(
+          LocalizationService.instance.current.defaultClientConfigCreated(
+            displayName,
+          ),
+        );
       }
 
       // 1. 生成服务器兼容的 RSA 密钥对（PUBLIC KEY 格式）
@@ -185,13 +235,19 @@ class WebSocketClientInitService {
       await _dbService.saveClientConfig(config);
 
       if (kDebugMode) {
-        debugPrint('默认客户端配置创建成功: ${config.displayName}');
+        debugPrint(
+          LocalizationService.instance.current.defaultClientConfigCreated(
+            config.displayName,
+          ),
+        );
       }
 
       return config;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('创建默认客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientConfigFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -215,13 +271,19 @@ class WebSocketClientInitService {
       await _dbService.saveClientConfig(updatedConfig);
 
       if (kDebugMode) {
-        debugPrint('客户端配置已更新: ${updatedConfig.displayName}');
+        debugPrint(
+          LocalizationService.instance.current.clientConfigUpdated_7281(
+            updatedConfig.displayName,
+          ),
+        );
       }
 
       return updatedConfig;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('更新客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.updateClientConfigFailed_7421(e),
+        );
       }
       rethrow;
     }
@@ -241,11 +303,15 @@ class WebSocketClientInitService {
       await _dbService.deleteClientConfig(clientId);
 
       if (kDebugMode) {
-        debugPrint('客户端配置已删除: $clientId');
+        debugPrint(
+          LocalizationService.instance.current.clientConfigDeleted(clientId),
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('删除客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.deleteClientConfigFailed(e),
+        );
       }
       rethrow;
     }
@@ -261,7 +327,12 @@ class WebSocketClientInitService {
 
       if (!hasPrivateKey) {
         if (kDebugMode) {
-          debugPrint('配置验证失败: 私钥不存在 ${config.keys.privateKeyId}');
+          debugPrint(
+            LocalizationService.instance.current
+                .configValidationFailedPrivateKeyMissing(
+                  config.keys.privateKeyId,
+                ),
+          );
         }
         return false;
       }
@@ -271,7 +342,10 @@ class WebSocketClientInitService {
         await RSA.convertPublicKeyToPKCS1(config.keys.publicKey);
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('配置验证失败: 公钥格式错误 $e');
+          debugPrint(
+            LocalizationService.instance.current
+                .configValidationFailedWithError('$e'),
+          );
         }
         return false;
       }
@@ -279,7 +353,11 @@ class WebSocketClientInitService {
       // 3. 验证服务器配置
       if (config.server.host.isEmpty || config.server.port <= 0) {
         if (kDebugMode) {
-          debugPrint('配置验证失败: 服务器配置无效');
+          debugPrint(
+            LocalizationService.instance.current.configValidationFailed_7281(
+              'Server configuration invalid',
+            ),
+          );
         }
         return false;
       }
@@ -287,7 +365,11 @@ class WebSocketClientInitService {
       // 4. 验证 WebSocket 配置
       if (config.webSocket.path.isEmpty) {
         if (kDebugMode) {
-          debugPrint('配置验证失败: WebSocket 路径为空');
+          debugPrint(
+            LocalizationService.instance.current.configValidationFailed_7281(
+              'WebSocket path empty',
+            ),
+          );
         }
         return false;
       }
@@ -295,7 +377,9 @@ class WebSocketClientInitService {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('配置验证失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.configValidationFailed_7281(e),
+        );
       }
       return false;
     }

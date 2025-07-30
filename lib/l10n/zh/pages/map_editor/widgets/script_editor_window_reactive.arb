@@ -1,0 +1,19 @@
+{
+  "scriptExecutionFailed_7281": "脚本执行失败: {error}",
+  "unsavedChanges_4821": "未保存的更改",
+  "unsavedChangesWarning_4821": "您有未保存的更改，确定要关闭吗？",
+  "cancelButton_4271": "取消",
+  "discardChanges_7421": "放弃更改",
+  "saveAndClose_7281": "保存并关闭",
+  "unsavedText_7421": "未保存",
+  "closeEditor_7421": "关闭编辑器",
+  "switchToLightTheme_7421": "切换到亮色主题",
+  "switchToDarkTheme_8532": "切换到暗色主题",
+  "saveScript_4821": "保存脚本",
+  "scrollToTop_4821": "跳转到顶部",
+  "scrollToBottom_4821": "跳转到底部",
+  "runText_4821": "运行",
+  "inProgress_7421": "执行中",
+  "scriptSaved_4821": "脚本已保存",
+  "saveFailedMessage": "保存失败: {e}"
+}

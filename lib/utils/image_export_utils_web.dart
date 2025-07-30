@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'dart:html' as html;
 import 'dart:typed_data';
+
+import '../services/localization_service.dart';
 
 /// Web平台的图片导出实现
 
@@ -26,7 +29,7 @@ Future<bool> exportImagesImpl(
 
     return true;
   } catch (e) {
-    print('Web平台导出图片失败: $e');
+    print(LocalizationService.instance.current.webExportImageFailed(e));
     return false;
   }
 }
@@ -40,7 +43,7 @@ Future<bool> exportSingleImageImpl(
     await _downloadImage(imageBytes, fileName);
     return true;
   } catch (e) {
-    print('Web平台导出单张图片失败: $e');
+    print(LocalizationService.instance.current.webExportSingleImageFailed(e));
     return false;
   }
 }

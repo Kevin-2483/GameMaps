@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../utils/image_utils.dart';
@@ -5,6 +6,8 @@ import '../../../components/background_image_settings_dialog.dart';
 import '../../../components/color_filter_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import 'dart:async';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class LayerPanel extends StatefulWidget {
   final List<MapLayer> layers;
@@ -422,7 +425,7 @@ class _LayerPanelState extends State<LayerPanel> {
     return widget.layers.isEmpty
         ? Center(
             child: Text(
-              '暂无图层',
+              LocalizationService.instance.current.noLayersAvailable_4271,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
@@ -439,7 +442,7 @@ class _LayerPanelState extends State<LayerPanel> {
     if (groups.isEmpty) {
       return Center(
         child: Text(
-          '暂无图层',
+          LocalizationService.instance.current.noLayersAvailable_7281,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 14,
@@ -475,7 +478,12 @@ class _LayerPanelState extends State<LayerPanel> {
         SliverReorderableList(
           itemCount: groups.length,
           onReorder: (oldIndex, newIndex) {
-            debugPrint('图层组重排序：oldIndex=$oldIndex, newIndex=$newIndex');
+            debugPrint(
+              LocalizationService.instance.current.layerGroupReorderLog(
+                oldIndex,
+                newIndex,
+              ),
+            );
             _handleGroupReorder(oldIndex, newIndex);
           },
           itemBuilder: (context, index) {
@@ -716,9 +724,10 @@ class _LayerPanelState extends State<LayerPanel> {
       // 检查是否还有单图层选择
       final hasLayerSelected = widget.selectedLayer != null;
       if (hasLayerSelected) {
-        return '$baseText - 已选中 (同时选择)';
+        return '$baseText - ' +
+            LocalizationService.instance.current.selectedWithMultiple_4827;
       } else {
-        return '$baseText - 已选中';
+        return '$baseText - ${LocalizationService.instance.current.selectedText_7421}';
       }
     } else {
       return baseText;
@@ -727,13 +736,19 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 处理图层组选择
   void _handleGroupSelection(List<MapLayer> group) {
-    debugPrint('选择图层组: ${group.map((l) => l.name).toList()}');
+    debugPrint(
+      LocalizationService.instance.current.selectedLayerGroup(
+        group.map((l) => l.name).toList(),
+      ),
+    );
 
     // 修改：检查是否已经选中，支持同时选择
     if (_isGroupSelected(group)) {
       // 如果当前组已经被选中，则取消组选择（但保留单图层选择）
       widget.onLayerGroupSelected([]); // 传递空列表表示取消组选择
-      widget.onSuccess?.call('已取消图层组选择');
+      widget.onSuccess?.call(
+        LocalizationService.instance.current.layerGroupSelectionCancelled_4821,
+      );
     } else {
       // 选择新的图层组（不影响单图层选择）
       widget.onLayerGroupSelected(group);
@@ -741,9 +756,15 @@ class _LayerPanelState extends State<LayerPanel> {
       // 根据是否有单图层选择给出不同的提示
       final hasLayerSelected = widget.selectedLayer != null;
       if (hasLayerSelected) {
-        widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)，可同时操作图层和图层组');
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.selectedLayerGroupWithCount_4821(
+            group.length,
+          ),
+        );
       } else {
-        widget.onSuccess?.call('已选中图层组 (${group.length} 个图层)');
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.selectedLayerGroup(group.length),
+        );
       }
     }
   }
@@ -815,7 +836,11 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    widget.onSuccess?.call(newVisibility ? '已显示组内所有图层' : '已隐藏组内所有图层');
+    widget.onSuccess?.call(
+      newVisibility
+          ? LocalizationService.instance.current.showAllLayersInGroup_7281
+          : LocalizationService.instance.current.hideAllLayersInGroup_7282,
+    );
   }
 
   /// 构建单独图层瓦片（带拖动手柄）
@@ -846,7 +871,12 @@ class _LayerPanelState extends State<LayerPanel> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: group.length,
         onReorder: (oldIndex, newIndex) {
-          debugPrint('组内重排序触发：oldIndex=$oldIndex, newIndex=$newIndex');
+          debugPrint(
+            LocalizationService.instance.current.groupReorderTriggered(
+              oldIndex,
+              newIndex,
+            ),
+          );
           _handleInGroupReorder(group, oldIndex, newIndex);
         },
         buildDefaultDragHandles: false,
@@ -1058,7 +1088,11 @@ class _LayerPanelState extends State<LayerPanel> {
                   layer.imageData != null ? Icons.edit : Icons.upload,
                   size: 20,
                 ),
-                title: Text(layer.imageData != null ? '更换图片' : '上传图片'),
+                title: Text(
+                  layer.imageData != null
+                      ? LocalizationService.instance.current.changeImage_4821
+                      : LocalizationService.instance.current.uploadImage_5739,
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _handleImageUpload(layer);
@@ -1067,7 +1101,9 @@ class _LayerPanelState extends State<LayerPanel> {
               // 色彩滤镜对所有图层都可用
               ListTile(
                 leading: const Icon(Icons.palette, size: 20),
-                title: const Text('色彩滤镜'),
+                title: Text(
+                  LocalizationService.instance.current.colorFilter_4821,
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _showColorFilterDialog(context, layer);
@@ -1076,7 +1112,12 @@ class _LayerPanelState extends State<LayerPanel> {
               if (layer.imageData != null) ...[
                 ListTile(
                   leading: const Icon(Icons.settings, size: 20),
-                  title: const Text('背景图片设置'),
+                  title: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .backgroundImageSetting_4821,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _showBackgroundImageSettingsForLayer(context, layer);
@@ -1084,7 +1125,9 @@ class _LayerPanelState extends State<LayerPanel> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline, size: 20),
-                  title: const Text('移除图片'),
+                  title: Text(
+                    LocalizationService.instance.current.removeImage_7421,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _removeLayerImage(layer);
@@ -1132,10 +1175,16 @@ class _LayerPanelState extends State<LayerPanel> {
       );
 
       widget.onLayerUpdated(updatedLayer); // 调用父组件的回调来更新图层
-      widget.onSuccess?.call('图层 "${layer.name}" 的背景图片设置已更新'); // 调用成功回调
+      widget.onSuccess?.call(
+        LocalizationService.instance.current.layerBackgroundUpdated_7281(
+          layer.name,
+        ),
+      ); // 调用成功回调
     } else {
       // 用户可能取消了对话框 (例如 BackgroundImageSettingsDialog 调用了 Navigator.pop(context) 而没有结果)
-      debugPrint('背景图片设置对话框已关闭，没有应用更改。');
+      debugPrint(
+        LocalizationService.instance.current.backgroundDialogClosed_7281,
+      );
     }
   }
 
@@ -1154,7 +1203,8 @@ class _LayerPanelState extends State<LayerPanel> {
       builder: (BuildContext dialogContext) {
         return ColorFilterDialog(
           initialSettings: currentSettings,
-          title: '"${layer.name}" 色彩滤镜设置',
+          title:
+              '"${layer.name}" ${LocalizationService.instance.current.colorFilterSettings_7421}',
           layerId: layer.id,
         );
       },
@@ -1168,7 +1218,12 @@ class _LayerPanelState extends State<LayerPanel> {
       final filterName = result.type == ColorFilterType.none
           ? '已移除'
           : _getFilterTypeName(result.type);
-      widget.onSuccess?.call('图层 "${layer.name}" 的色彩滤镜已设置为：$filterName');
+      widget.onSuccess?.call(
+        LocalizationService.instance.current.layerFilterSetMessage(
+          layer.name,
+          filterName,
+        ),
+      );
     }
 
     // 无论是否有返回结果，都触发界面更新以确保主题滤镜的变化能够显示
@@ -1179,21 +1234,21 @@ class _LayerPanelState extends State<LayerPanel> {
   String _getFilterTypeName(ColorFilterType type) {
     switch (type) {
       case ColorFilterType.none:
-        return '无滤镜';
+        return LocalizationService.instance.current.noFilter_1234;
       case ColorFilterType.grayscale:
-        return '灰度';
+        return LocalizationService.instance.current.grayscale_5678;
       case ColorFilterType.sepia:
-        return '棕褐色';
+        return LocalizationService.instance.current.sepia_9012;
       case ColorFilterType.invert:
-        return '反色';
+        return LocalizationService.instance.current.invert_3456;
       case ColorFilterType.brightness:
-        return '亮度';
+        return LocalizationService.instance.current.brightness_7890;
       case ColorFilterType.contrast:
-        return '对比度';
+        return LocalizationService.instance.current.contrast_1235;
       case ColorFilterType.saturation:
-        return '饱和度';
+        return LocalizationService.instance.current.saturation_6789;
       case ColorFilterType.hue:
-        return '色相';
+        return LocalizationService.instance.current.hue_0123;
     }
   }
 
@@ -1202,19 +1257,23 @@ class _LayerPanelState extends State<LayerPanel> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除图层'),
-        content: Text('确定要删除图层 "${layer.name}" 吗？此操作不可撤销。'),
+        title: Text(LocalizationService.instance.current.deleteLayer_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteLayer_7421(
+            layer.name,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               widget.onLayerDeleted(layer);
             },
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
@@ -1273,7 +1332,10 @@ class _LayerPanelState extends State<LayerPanel> {
           // 透明度滑块
           Row(
             children: [
-              const Text('不透明度:', style: TextStyle(fontSize: 11)),
+              Text(
+                LocalizationService.instance.current.opacityLabel_7281,
+                style: TextStyle(fontSize: 11),
+              ),
               const SizedBox(width: 3),
               Flexible(
                 child: Slider(
@@ -1359,18 +1421,24 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 处理组内重排序（修正版）
   void _handleInGroupReorder(List<MapLayer> group, int oldIndex, int newIndex) {
-    debugPrint('=== 组内重排序 ===');
-    debugPrint('组内oldIndex: $oldIndex, newIndex: $newIndex');
-    debugPrint('组大小: ${group.length}');
-    debugPrint('组内图层: ${group.map((l) => l.name).toList()}');
+    debugPrint(LocalizationService.instance.current.groupReordering_7281);
+    debugPrint(
+      LocalizationService.instance.current.groupIndexDebug(oldIndex, newIndex),
+    );
+    debugPrint(LocalizationService.instance.current.groupSize(group.length));
+    debugPrint(
+      LocalizationService.instance.current.groupLayersDebug_4821(
+        group.map((l) => l.name).toList(),
+      ),
+    );
 
     if (oldIndex == newIndex) {
-      debugPrint('索引相同，跳过');
+      debugPrint(LocalizationService.instance.current.skipSameIndex_7281);
       return;
     }
 
     if (oldIndex >= group.length || oldIndex < 0) {
-      debugPrint('oldIndex 超出范围，跳过');
+      debugPrint(LocalizationService.instance.current.indexOutOfRange_7281);
       return;
     }
 
@@ -1380,31 +1448,44 @@ class _LayerPanelState extends State<LayerPanel> {
     // 重要修正：调整 newIndex 的边界
     if (newIndex > group.length) {
       newIndex = group.length;
-      debugPrint('调整 newIndex 到: $newIndex');
+      debugPrint(
+        LocalizationService.instance.current.adjustNewIndexTo(newIndex),
+      );
     }
     if (newIndex < 0) {
       newIndex = 0;
-      debugPrint('调整 newIndex 到: $newIndex');
+      debugPrint(
+        LocalizationService.instance.current.adjustNewIndexTo(newIndex),
+      );
     }
 
     // 重新检查调整后的索引
     if (oldIndex == newIndex) {
-      debugPrint('调整后索引相同，跳过');
+      debugPrint(
+        LocalizationService.instance.current.skipSameIndexAdjustment_7281,
+      );
       return;
     }
 
     // 安全地获取图层
     final oldLayer = group.elementAtOrNull(oldIndex);
     if (oldLayer == null) {
-      debugPrint('图层为空，跳过');
+      debugPrint(LocalizationService.instance.current.emptyLayerSkipped_7281);
       return;
     }
 
     // 检查移动的图层是否是组内最后一个（连接状态为否）
     final isMovingLastElement = !(oldLayer.isLinkedToNext);
 
-    debugPrint('移动的图层: ${oldLayer.name}, 是否为组内最后元素: $isMovingLastElement');
-    debugPrint('调整后的 newIndex: $newIndex');
+    debugPrint(
+      LocalizationService.instance.current.movingLayerDebug_7281(
+        oldLayer.name,
+        isMovingLastElement,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.adjustedNewIndex_7421(newIndex),
+    );
 
     // 计算当前图层的全局索引
     final oldGlobalIndex = widget.layers.indexOf(oldLayer);
@@ -1419,11 +1500,19 @@ class _LayerPanelState extends State<LayerPanel> {
     // 如果原始 newIndex 大于等于组长度，说明要移动到最后
     if (originalNewIndex >= group.length) {
       adjustedNewIndex = group.length - 1; // 移动到最后位置
-      debugPrint('目标位置调整为组内最后位置: $adjustedNewIndex');
+      debugPrint(
+        LocalizationService.instance.current.targetPositionAdjustedToGroupEnd(
+          adjustedNewIndex,
+        ),
+      );
     } else {
       // 正常情况的调整
       adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-      debugPrint('正常位置调整: $adjustedNewIndex');
+      debugPrint(
+        LocalizationService.instance.current.normalPositionAdjustment(
+          adjustedNewIndex,
+        ),
+      );
     }
 
     reorderedGroup.insert(adjustedNewIndex, movedLayer);
@@ -1432,9 +1521,21 @@ class _LayerPanelState extends State<LayerPanel> {
     final groupStartIndex = widget.layers.indexOf(group.first);
     final newGlobalIndex = groupStartIndex + adjustedNewIndex;
 
-    debugPrint('组在全局的起始位置: $groupStartIndex');
-    debugPrint('目标位置在组内: $adjustedNewIndex');
-    debugPrint('计算出的新全局索引: $newGlobalIndex');
+    debugPrint(
+      LocalizationService.instance.current.groupGlobalStartPosition(
+        groupStartIndex,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.targetPositionInGroup_7281(
+        adjustedNewIndex,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.calculatedNewGlobalIndex(
+        newGlobalIndex,
+      ),
+    );
 
     // 需要更新的图层列表
     List<MapLayer> layersToUpdate = [];
@@ -1450,7 +1551,11 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    debugPrint('原组是否为完整连接组: $wasCompleteGroup');
+    debugPrint(
+      LocalizationService.instance.current.debugCompleteGroupCheck(
+        wasCompleteGroup,
+      ),
+    );
 
     // 如果原来是一个完整的组，重排序后也应该保持完整
     if (wasCompleteGroup) {
@@ -1464,7 +1569,10 @@ class _LayerPanelState extends State<LayerPanel> {
             updatedAt: DateTime.now(),
           );
           layersToUpdate.add(updatedLayer);
-          debugPrint('开启图层链接以保持组完整性: ${layer.name}');
+          debugPrint(
+            LocalizationService.instance.current
+                .enableLayerLinkingToMaintainGroupIntegrity(layer.name),
+          );
         }
       }
 
@@ -1477,7 +1585,11 @@ class _LayerPanelState extends State<LayerPanel> {
           updatedAt: DateTime.now(),
         );
         layersToUpdate.add(updatedLastLayer);
-        debugPrint('关闭组内最后元素的链接: ${lastLayer.name}');
+        debugPrint(
+          LocalizationService.instance.current.closeLastElementLink(
+            lastLayer.name,
+          ),
+        );
       }
     } else {
       // 如果不是完整组，使用原来的逻辑处理
@@ -1490,7 +1602,10 @@ class _LayerPanelState extends State<LayerPanel> {
           oldLayer,
         );
 
-        debugPrint('检测结果 - 应该开启链接: $shouldEnableLink');
+        debugPrint(
+          LocalizationService.instance.current
+              .detectionResultShouldEnableLink_7421(shouldEnableLink),
+        );
 
         // 如果需要开启当前移动图层的链接（不是移动到组内最后一个位置）
         if (shouldEnableLink && adjustedNewIndex < group.length - 1) {
@@ -1499,7 +1614,11 @@ class _LayerPanelState extends State<LayerPanel> {
             updatedAt: DateTime.now(),
           );
           layersToUpdate.add(updatedMovedLayer);
-          debugPrint('开启移动图层的链接: ${oldLayer.name}');
+          debugPrint(
+            LocalizationService.instance.current.enableMobileLayerLink_7421(
+              oldLayer.name,
+            ),
+          );
         }
 
         // 重要：当组内最后一个元素移动到其他位置时，
@@ -1517,7 +1636,10 @@ class _LayerPanelState extends State<LayerPanel> {
                 updatedAt: DateTime.now(),
               );
               layersToUpdate.add(updatedNewLastLayer);
-              debugPrint('关闭新的组内最后元素的链接: ${newLastLayer.name}');
+              debugPrint(
+                LocalizationService.instance.current
+                    .closeNewGroupLastElementLink(newLastLayer.name),
+              );
             }
           }
         }
@@ -1535,43 +1657,60 @@ class _LayerPanelState extends State<LayerPanel> {
               updatedAt: DateTime.now(),
             );
             layersToUpdate.add(updatedMovedLayer);
-            debugPrint('关闭移动到最后位置的图层链接: ${oldLayer.name}');
+            debugPrint(
+              LocalizationService.instance.current.closeLayerLinkToLastPosition(
+                oldLayer.name,
+              ),
+            );
           }
         }
       }
     }
 
     debugPrint(
-      '全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
+      LocalizationService.instance.current.globalIndexDebug_7281(
+        oldGlobalIndex,
+        newGlobalIndex,
+      ),
     );
 
     if (oldGlobalIndex == -1 ||
         newGlobalIndex == -1 ||
         newGlobalIndex >= widget.layers.length) {
-      debugPrint('找不到图层的全局索引或索引超出范围');
+      debugPrint(
+        LocalizationService.instance.current.layerIndexOutOfRange_4821,
+      );
       return;
     }
 
     // 使用新的组内重排序功能，同时处理链接状态和顺序
-    debugPrint('=== 执行组内重排序（同时处理链接状态和顺序）===');
+    debugPrint(LocalizationService.instance.current.groupReorderingLog_7281);
     debugPrint(
-      '调用 onLayersInGroupReordered($oldGlobalIndex, $newGlobalIndex, ${layersToUpdate.length} 个图层更新)',
+      LocalizationService.instance.current.layersReorderedLog(
+        oldGlobalIndex,
+        newGlobalIndex,
+        layersToUpdate.length,
+      ),
     );
     widget.onLayersInGroupReordered?.call(
       oldGlobalIndex,
       newGlobalIndex,
       layersToUpdate,
     );
-    debugPrint('=== 组内重排序完成 ===');
+    debugPrint(
+      LocalizationService.instance.current.groupReorderingComplete_7281,
+    );
   }
 
   /// 处理组重排序
   void _handleGroupReorder(int oldIndex, int newIndex) {
-    debugPrint('=== 组重排序 ===');
-    debugPrint('组oldIndex: $oldIndex, newIndex: $newIndex');
+    debugPrint(LocalizationService.instance.current.groupReordering_7281);
+    debugPrint(
+      LocalizationService.instance.current.debugIndexChange(oldIndex, newIndex),
+    );
 
     if (oldIndex == newIndex) {
-      debugPrint('索引相同，跳过');
+      debugPrint(LocalizationService.instance.current.skipSameIndex_7421);
       return;
     }
 
@@ -1581,14 +1720,16 @@ class _LayerPanelState extends State<LayerPanel> {
         newIndex > groups.length ||
         oldIndex < 0 ||
         newIndex < 0) {
-      debugPrint('组索引超出范围');
+      debugPrint(
+        LocalizationService.instance.current.groupIndexOutOfRange_7281,
+      );
       return;
     }
 
     // 安全地获取组
     final oldGroup = groups.elementAtOrNull(oldIndex);
     if (oldGroup == null || oldGroup.isEmpty) {
-      debugPrint('源组为空');
+      debugPrint(LocalizationService.instance.current.sourceGroupEmpty_7281);
       return;
     }
 
@@ -1613,10 +1754,19 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    debugPrint('移动组大小: ${oldGroup.length}');
-    debugPrint('移动组图层: ${oldGroup.map((l) => l.name).toList()}');
     debugPrint(
-      '组全局索引: oldGlobalIndex=$oldGlobalIndex, newGlobalIndex=$newGlobalIndex',
+      LocalizationService.instance.current.mobileGroupSize(oldGroup.length),
+    );
+    debugPrint(
+      LocalizationService.instance.current.mobileGroupLayerDebug(
+        oldGroup.map((l) => l.name).toList(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.groupGlobalIndexDebug(
+        oldGlobalIndex,
+        newGlobalIndex,
+      ),
     );
 
     // 对于组移动，需要特殊处理：移动整个组而不是单个图层
@@ -1637,7 +1787,7 @@ class _LayerPanelState extends State<LayerPanel> {
     int oldGroupIndex,
     int newGroupIndex,
   ) {
-    debugPrint('=== 移动组 ===');
+    debugPrint(LocalizationService.instance.current.mobileGroupTitle_7281);
     debugPrint(
       'oldStartIndex: $oldStartIndex, groupSize: $groupSize, newStartIndex: $newStartIndex',
     );
@@ -1667,15 +1817,21 @@ class _LayerPanelState extends State<LayerPanel> {
     // 在新位置插入组
     currentLayers.insertAll(adjustedNewIndex, movedGroup);
 
-    debugPrint('移动后图层名称: ${currentLayers.map((l) => l.name).toList()}');
+    debugPrint(
+      LocalizationService.instance.current.movedLayersName_4821(
+        currentLayers.map((l) => l.name).toList(),
+      ),
+    );
 
     // 通知父组件更新图层顺序
     if (widget.onLayersBatchUpdated != null) {
       widget.onLayersBatchUpdated!(currentLayers);
     } else {
       // 如果没有批量更新回调，使用传统方式
-      debugPrint('使用传统重排序方式');
-      debugPrint('警告：没有批量更新接口，无法正确移动组');
+      debugPrint(
+        LocalizationService.instance.current.useLegacyReorderMethod_4821,
+      );
+      debugPrint(LocalizationService.instance.current.batchUpdateWarning_7281);
     }
   }
 
@@ -1759,7 +1915,15 @@ class _LayerPanelState extends State<LayerPanel> {
               Text(
                 boundGroupsCount > 0
                     ? '已绑定 $boundGroupsCount 个图例组'
-                    : (hasAllLegendGroups ? '点击绑定图例组' : '图例组不可用'),
+                    : (hasAllLegendGroups
+                          ? LocalizationService
+                                .instance
+                                .current
+                                .bindLegendGroup_5421
+                          : LocalizationService
+                                .instance
+                                .current
+                                .legendGroupUnavailable_5421),
                 style: TextStyle(
                   fontSize: 10,
                   color: boundGroupsCount > 0
@@ -1816,7 +1980,9 @@ class _LayerPanelState extends State<LayerPanel> {
               ),
               const SizedBox(width: 4),
               Text(
-                hasAllTags ? '${tags.length} 个标签' : '添加标签',
+                hasAllTags
+                    ? LocalizationService.instance.current.tagCount(tags.length)
+                    : LocalizationService.instance.current.addTag_7421,
                 style: TextStyle(
                   fontSize: 10,
                   color: hasAllTags
@@ -1839,8 +2005,11 @@ class _LayerPanelState extends State<LayerPanel> {
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理图层标签 - ${layer.name}',
-      maxTags: 10, // 限制最多10个标签
+      title: LocalizationService.instance.current.manageLayerTagsTitle(
+        layer.name,
+      ),
+      maxTags:
+          10, // ${LocalizationService.instance.current.maxTagsLimitComment}
       suggestedTags: _getLayerSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
       enableCustomTagsManagement: true,
@@ -1854,9 +2023,15 @@ class _LayerPanelState extends State<LayerPanel> {
       widget.onLayerUpdated(updatedLayer);
 
       if (result.isEmpty) {
-        widget.onSuccess?.call('已清空图层标签');
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.layerCleared_4821,
+        );
       } else {
-        widget.onSuccess?.call('已更新图层标签：${result.join(', ')}');
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.updatedLayerLabels_7281(
+            result.join(', '),
+          ),
+        );
       }
     }
   }
@@ -1875,7 +2050,14 @@ class _LayerPanelState extends State<LayerPanel> {
     final uniqueTags = allUsedTags.toSet().toList()..sort();
 
     // 添加一些图层相关的默认建议标签
-    const layerSpecificTags = ['背景图层', '前景图层', '标注图层', '参考图层', '基础图层', '装饰图层'];
+    final layerSpecificTags = [
+      LocalizationService.instance.current.backgroundLayer_1234,
+      LocalizationService.instance.current.foregroundLayer_1234,
+      LocalizationService.instance.current.annotationLayer_1234,
+      LocalizationService.instance.current.referenceLayer_1234,
+      LocalizationService.instance.current.baseLayer_1234,
+      LocalizationService.instance.current.decorationLayer_1234,
+    ];
 
     // 合并建议标签，优先显示已使用的标签
     final suggestedTags = <String>[];
@@ -1915,11 +2097,11 @@ class _LayerPanelState extends State<LayerPanel> {
           style: const TextStyle(fontSize: 14),
           textAlign: TextAlign.left,
           textAlignVertical: TextAlignVertical.center,
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
             border: InputBorder.none,
-            hintText: '输入图层名称',
-            hintStyle: TextStyle(fontSize: 14),
+            hintText: LocalizationService.instance.current.layerNameHint_7281,
+            hintStyle: const TextStyle(fontSize: 14),
             isDense: true,
           ),
           enabled: true, //!widget.isPreviewMode,
@@ -1963,12 +2145,14 @@ class _LayerPanelState extends State<LayerPanel> {
           updatedAt: DateTime.now(),
         );
         widget.onLayerUpdated(updatedLayer);
-        widget.onSuccess?.call('图片上传成功');
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.imageUploadSuccess_4821,
+        );
       }
     } catch (e) {
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       widget.onError?.call(errorMessage);
-      debugPrint('上传图片失败: $e');
+      debugPrint(LocalizationService.instance.current.imageUploadFailed(e));
     }
   }
 
@@ -1979,7 +2163,9 @@ class _LayerPanelState extends State<LayerPanel> {
       updatedAt: DateTime.now(),
     );
     widget.onLayerUpdated(updatedLayer);
-    widget.onSuccess?.call('图片已移除');
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.imageRemoved_4821,
+    );
   }
 
   /// 显示图层右键菜单
@@ -2000,20 +2186,20 @@ class _LayerPanelState extends State<LayerPanel> {
         PopupMenuItem<String>(
           value: 'hide_others',
           child: Row(
-            children: const [
-              Icon(Icons.visibility_off_outlined, size: 16),
-              SizedBox(width: 8),
-              Text('隐藏其他图层'),
+            children: [
+              const Icon(Icons.visibility_off_outlined, size: 16),
+              const SizedBox(width: 8),
+              Text(LocalizationService.instance.current.hideOtherLayers_4271),
             ],
           ),
         ),
         PopupMenuItem<String>(
           value: 'show_all',
           child: Row(
-            children: const [
-              Icon(Icons.visibility_outlined, size: 16),
-              SizedBox(width: 8),
-              Text('显示所有图层'),
+            children: [
+              const Icon(Icons.visibility_outlined, size: 16),
+              const SizedBox(width: 8),
+              Text(LocalizationService.instance.current.showAllLayers_7281),
             ],
           ),
         ),
@@ -2059,7 +2245,11 @@ class _LayerPanelState extends State<LayerPanel> {
       }
     }
 
-    widget.onSuccess?.call('已隐藏其他图层，只显示 "${targetLayer.name}"');
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.hideOtherLayersMessage(
+        targetLayer.name,
+      ),
+    );
   }
 
   /// 显示所有图层
@@ -2077,7 +2267,9 @@ class _LayerPanelState extends State<LayerPanel> {
         widget.onLayerUpdated(updatedLayer);
       }
     }
-    widget.onSuccess?.call('已显示所有图层');
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.allLayersShown_7281,
+    );
   }
 }
 

@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../services/audio/audio_player_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// 嵌入式音频播放器配置
 class EmbeddedAudioConfig {
@@ -133,7 +136,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         _playWithTempQueue(position: _tempProgress);
       }
     } catch (e) {
-      widget.onError?.call('初始化音频播放器失败: $e');
+      widget.onError?.call(
+        LocalizationService.instance.current.audioPlayerInitFailed(e),
+      );
     }
   }
 
@@ -168,8 +173,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         await _playWithTempQueue(position: _tempProgress);
       }
     } catch (e) {
-      debugPrint('播放/暂停操作失败: $e');
-      widget.onError?.call('播放操作失败: $e');
+      debugPrint(LocalizationService.instance.current.playPauseFailed_7285(e));
+      widget.onError?.call(
+        LocalizationService.instance.current.playbackFailed_7285(e),
+      );
     }
   }
 
@@ -186,7 +193,9 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             setState(() {});
           })
           .catchError((e) {
-            debugPrint('进度条拖拽跳转失败: $e');
+            debugPrint(
+              LocalizationService.instance.current.progressBarDragFail_4821(e),
+            );
           });
     }
   }
@@ -217,7 +226,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
@@ -257,7 +266,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
@@ -272,7 +281,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 12),
-          Text('正在加载音频...', style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            LocalizationService.instance.current.loadingAudio_7281,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
@@ -501,10 +513,12 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                   setState(() {});
                 })
                 .catchError((e) {
-                  debugPrint('快退操作失败: $e');
+                  debugPrint(
+                    LocalizationService.instance.current.rewindFailed_4821(e),
+                  );
                 });
           },
-          tooltip: '快退10秒',
+          tooltip: LocalizationService.instance.current.rewind10Seconds_7539,
         ),
 
         // 播放速度
@@ -516,7 +530,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
               context,
             ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
-          tooltip: '播放速度',
+          tooltip: LocalizationService.instance.current.playbackSpeed_4821,
           onSelected: (speed) => _audioService.setPlaybackRate(speed),
           itemBuilder: (context) => [
             const PopupMenuItem(value: 0.5, child: Text('0.5x')),
@@ -545,7 +559,10 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                     setState(() {});
                   })
                   .catchError((e) {
-                    debugPrint('快进操作失败: $e');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .fastForwardFailed_4821(e),
+                    );
                   });
             }
           },
@@ -596,7 +613,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
             width: 200,
             child: Column(
               children: [
-                const Text('音量'),
+                Text(LocalizationService.instance.current.volumeLabel_8472),
                 Row(
                   children: [
                     const Icon(Icons.volume_down, size: 16),

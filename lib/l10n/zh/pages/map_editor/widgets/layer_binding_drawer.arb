@@ -1,0 +1,8 @@
+{
+  "legendGroupName_7421": "图例组: {name}",
+  "selectLayersForLegendGroup_4821": "选择要绑定到此图例组的图层",
+  "boundLayersTitle": "已绑定的图层 ({count})",
+  "availableLayersCount": "可用的图层 ({count})",
+  "elementCount": "{count} 个元素",
+  "noAvailableLayers_7281": "暂无可用的图层"
+}

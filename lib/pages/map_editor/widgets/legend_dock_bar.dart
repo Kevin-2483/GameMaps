@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../../models/map_layer.dart';
@@ -6,6 +7,8 @@ import '../../../models/legend_item.dart' as legend_db;
 import '../../../services/legend_session_manager.dart';
 import '../../../services/notification/notification_models.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 浮动图例dock栏组件
 /// 显示当前选中图层组或整个地图使用的图例以及数量
@@ -146,7 +149,12 @@ class _LegendDockBarState extends State<LegendDockBar> {
                 legendItems[legendPath] = null;
               }
             } catch (e) {
-              debugPrint('加载图例数据失败: $legendPath, 错误: $e');
+              debugPrint(
+                LocalizationService.instance.current.legendDataLoadFailed(
+                  legendPath,
+                  e,
+                ),
+              );
               legendItems[legendPath] = null;
             }
           }
@@ -161,7 +169,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
         });
       }
     } catch (e) {
-      debugPrint('更新图例数据失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.updateLegendDataFailed_7284(e),
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -198,10 +208,14 @@ class _LegendDockBarState extends State<LegendDockBar> {
           (widget.selectedLayerGroup == null ||
               widget.selectedLayerGroup!.isEmpty)) {
         // 整个地图范围
-        _showLegendBlockedMessage('图例被遮挡');
+        _showLegendBlockedMessage(
+          LocalizationService.instance.current.legendBlockedMessage_4821,
+        );
       } else {
         // 图层或图层组范围
-        _showLegendBlockedMessage('图例被遮挡');
+        _showLegendBlockedMessage(
+          LocalizationService.instance.current.legendBlockedMessage_4821,
+        );
       }
       return;
     }
@@ -222,9 +236,13 @@ class _LegendDockBarState extends State<LegendDockBar> {
         if (widget.selectedLayer == null &&
             (widget.selectedLayerGroup == null ||
                 widget.selectedLayerGroup!.isEmpty)) {
-          _showLegendBlockedMessage('剩余图例被遮挡');
+          _showLegendBlockedMessage(
+            LocalizationService.instance.current.remainingLegendBlocked_4821,
+          );
         } else {
-          _showLegendBlockedMessage('剩余图例被遮挡');
+          _showLegendBlockedMessage(
+            LocalizationService.instance.current.remainingLegendBlocked_4821,
+          );
         }
       }
       // 取消选中
@@ -671,7 +689,8 @@ class _LegendDockBarState extends State<LegendDockBar> {
                   widgets.add(
                     _buildPopupMenuItem(
                       icon: Icons.layers,
-                      title: '图层组 ${groupIndex + 1} (${group.length}层)',
+                      title: LocalizationService.instance.current
+                          .layerGroupTitle(groupIndex + 1, group.length),
                       isSelected: isGroupSelected,
                       onTap: () {
                         Navigator.of(dialogContext).pop();
@@ -748,7 +767,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
               // 清除选择按钮
               _buildPopupMenuItem(
                 icon: Icons.clear,
-                title: '清除选择',
+                title: LocalizationService.instance.current.clearSelection_4821,
                 isSelected: false,
                 onTap: () {
                   Navigator.of(dialogContext).pop();
@@ -851,22 +870,22 @@ class _LegendDockBarState extends State<LegendDockBar> {
             widget.selectedLayerGroup!.isEmpty)) {
       // 整个地图范围
       if (displayTargetGroups.isEmpty) {
-        message = '暂无图例';
+        message = LocalizationService.instance.current.noLegendAvailable_4821;
         iconData = Icons.info_outline;
       } else if (selectionTargetGroups.isEmpty) {
-        message = '无可用图例';
+        message = LocalizationService.instance.current.noAvailableLegend_4821;
         iconData = Icons.warning_outlined;
       } else {
-        message = '暂无图例';
+        message = LocalizationService.instance.current.noLegendAvailable_4251;
         iconData = Icons.info_outline;
       }
     } else {
       // 图层或图层组范围
       if (displayTargetGroups.isEmpty) {
-        message = '无绑定图例';
+        message = LocalizationService.instance.current.noBoundLegend_4821;
         iconData = Icons.info_outline;
       } else {
-        message = '暂无图例';
+        message = LocalizationService.instance.current.noLegendAvailable_4821;
         iconData = Icons.info_outline;
       }
     }
@@ -1261,7 +1280,10 @@ class _LegendDockBarState extends State<LegendDockBar> {
                       child: Text(
                         legendGroup.name.isNotEmpty
                             ? legendGroup.name
-                            : '未命名图例组',
+                            : LocalizationService
+                                  .instance
+                                  .current
+                                  .unnamedLegendGroup_4821,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: isCurrentlyOpen
                               ? Theme.of(context).colorScheme.primary
@@ -1312,7 +1334,7 @@ class _LegendDockBarState extends State<LegendDockBar> {
   /// 构建图例组管理按钮
   Widget _buildLegendGroupManagementButton() {
     return Tooltip(
-      message: '左键：打开图例组管理\n右键：选择图例组',
+      message: LocalizationService.instance.current.legendGroupTooltip_7281,
       waitDuration: const Duration(milliseconds: 500),
       child: GestureDetector(
         onTap: widget.onToggleLegendGroupManagement,
@@ -1365,7 +1387,9 @@ class _LegendDockBarState extends State<LegendDockBar> {
           fit: BoxFit.cover,
         );
       } catch (e) {
-        debugPrint('SVG图例缩略图加载失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.svgThumbnailLoadFailed_4821(e),
+        );
         return Icon(
           Icons.image_not_supported,
           size: width * 0.6,

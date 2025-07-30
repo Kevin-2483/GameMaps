@@ -1,0 +1,12 @@
+{
+  "showMenuAtPosition": "显示菜单于位置: {position}",
+  "hiddenMenu_7281": "隐藏菜单",
+  "delayReturnToMenu_7281": "延迟返回主菜单",
+  "mouseStopAndEnterSubmenu": "鼠标停止移动，延迟进入子菜单: {label}",
+  "enterSubMenuNow_7421": "立即进入子菜单: {label}",
+  "hoverItem_7421": "悬停项目: {label}",
+  "submenuDelayTimer": "设置子菜单延迟计时器: {label}",
+  "selectedItemLabel": "选择项目: {label}",
+  "subMenuInitialHoverItem": "子菜单初始悬停项目: {label}",
+  "middleKeyPressedShowRadialMenu": "中键按下，显示径向菜单于位置: {localPosition}"
+}

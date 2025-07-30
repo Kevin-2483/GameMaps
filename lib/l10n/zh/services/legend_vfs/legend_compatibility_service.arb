@@ -1,0 +1,12 @@
+{
+  "vfsVersionNotImplemented_7281": "VFS版本管理暂未实现",
+  "exportLegendFailed_7285": "导出图例数据库失败: {e}",
+  "importLegendDatabaseFailed": "导入图例数据库失败: {e}",
+  "exportLegendDatabase_4821": "导出图例数据库",
+  "legendTitleEmpty_7281": "图例标题为空",
+  "invalidLegendCenterPoint": "图例 \"{title}\" 中心点坐标无效",
+  "invalidLegendVersion_7421": "图例 \"{title}\" 版本号无效",
+  "legendReloadFailed_7421": "图例 \"{title}\" 无法重新加载",
+  "legendLoadError_7285": "图例 \"{title}\" 加载错误: {error}",
+  "vfsServiceNoNeedToClose_7281": "VFS服务不需要显式关闭"
+}

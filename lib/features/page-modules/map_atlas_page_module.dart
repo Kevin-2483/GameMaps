@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/map_atlas/map_atlas_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 地图册页面模块
 class MapAtlasPageModule extends PageModule {
@@ -16,7 +19,7 @@ class MapAtlasPageModule extends PageModule {
   String get path => '/map-atlas';
 
   @override
-  String get displayName => '地图册';
+  String get displayName => LocalizationService.instance.current.mapAtlas_4821;
 
   @override
   IconData get icon => Icons.map;

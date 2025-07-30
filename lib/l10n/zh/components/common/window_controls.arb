@@ -1,0 +1,10 @@
+{
+  "minimizeButton_7281": "最小化",
+  "maximizeOrRestore_7281": "最大化/还原",
+  "fullscreenToggleFailed": "切换全屏模式失败: {e}",
+  "closeButton_4821": "关闭",
+  "fullScreenStatusError": "获取全屏状态失败: {error}",
+  "skipSaveMaximizedState": "跳过保存：当前处于最大化状态",
+  "windowSizeSaveRequestSent_7281": "窗口大小保存请求已发送（非最大化状态）",
+  "saveWindowSizeFailed_7285": "保存窗口大小失败: {e}"
+}

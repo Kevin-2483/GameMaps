@@ -1,0 +1,13 @@
+{
+  "vfsCleanupComplete_7281": "VFS数据清理完成",
+  "vfsCleanupFailed_7281": "VFS数据清理失败: {e}",
+  "migrationDisabledNote_7281": "迁移功能已禁用，直接使用VFS存储",
+  "startMigrationMap_7421": "开始迁移地图: {title}",
+  "mapMigrationComplete": "地图迁移完成: {title} -> {mapId}",
+  "mapMigrationFailed": "地图迁移失败: {title} - {error}",
+  "skipFailedMigrationMap": "跳过迁移失败的地图: {title}",
+  "migrationValidationFailed": "迁移验证失败: 地图数量不匹配 (原始: {originalCount}, VFS: {vfsCount})",
+  "mapNotFoundError": "找不到地图: {title}",
+  "migrationValidationSuccess_7281": "迁移验证成功: 所有地图数据完整",
+  "migrationError_7425": "迁移验证出错: {e}"
+}

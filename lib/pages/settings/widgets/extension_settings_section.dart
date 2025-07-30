@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class ExtensionSettingsSection extends StatefulWidget {
   final UserPreferences preferences;
@@ -62,8 +65,12 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
 
   Future<void> _clearSettings() async {
     final confirmed = await _showConfirmDialog(
-      title: '清空扩展设置',
-      content: '确定要清空所有扩展设置吗？此操作不可撤销。',
+      title:
+          LocalizationService.instance.current.clearExtensionSettingsTitle_4821,
+      content: LocalizationService
+          .instance
+          .current
+          .clearExtensionSettingsWarning_4821,
     );
 
     if (confirmed) {
@@ -72,7 +79,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
       _updateJsonController();
 
       if (mounted) {
-        context.showSuccessSnackBar('扩展设置已清空');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.extensionSettingsCleared_4821,
+        );
       }
     }
   }
@@ -87,11 +96,17 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
       });
 
       if (mounted) {
-        context.showSuccessSnackBar('扩展设置已保存');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.extensionSettingsSaved_4821,
+        );
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('保存失败: ${e.toString()}');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.saveFailedError_7281(
+            e.toString(),
+          ),
+        );
       }
     }
   }
@@ -105,7 +120,9 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
 
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _jsonController.text));
-    context.showInfoSnackBar('已复制到剪贴板');
+    context.showInfoSnackBar(
+      LocalizationService.instance.current.copiedToClipboard_4821,
+    );
   }
 
   Future<bool> _showConfirmDialog({
@@ -120,11 +137,13 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7281),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -150,7 +169,10 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
               children: [
                 Expanded(
                   child: Text(
-                    '扩展设置存储',
+                    LocalizationService
+                        .instance
+                        .current
+                        .extendedSettingsStorage_4821,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -167,7 +189,10 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
 
             // 说明文字
             Text(
-              '用于存储临时的地图相关偏好设置，如图例组智能隐藏状态等。这些设置不会影响地图数据本身。',
+              LocalizationService
+                  .instance
+                  .current
+                  .mapPreferencesDescription_4821,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -193,8 +218,10 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '存储大小: ${(settingsSize / 1024).toStringAsFixed(2)} KB | '
-                        '键值对数量: ${provider.extensionSettings.length}',
+                        LocalizationService.instance.current.storageStats_7281(
+                          (settingsSize / 1024).toStringAsFixed(2),
+                          provider.extensionSettings.length,
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -217,17 +244,23 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                         });
                       },
                       icon: const Icon(Icons.edit, size: 16),
-                      label: const Text('编辑JSON'),
+                      label: Text(
+                        LocalizationService.instance.current.editJson_7281,
+                      ),
                     ),
                     OutlinedButton.icon(
                       onPressed: _copyToClipboard,
                       icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('复制'),
+                      label: Text(
+                        LocalizationService.instance.current.copyText_4821,
+                      ),
                     ),
                     OutlinedButton.icon(
                       onPressed: _clearSettings,
                       icon: const Icon(Icons.clear_all, size: 16),
-                      label: const Text('清空'),
+                      label: Text(
+                        LocalizationService.instance.current.clearText_4821,
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.orange,
                       ),
@@ -237,17 +270,24 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                     ElevatedButton.icon(
                       onPressed: _saveJsonSettings,
                       icon: const Icon(Icons.save, size: 16),
-                      label: const Text('保存'),
+                      label: Text(
+                        LocalizationService.instance.current.saveButton_7281,
+                      ),
                     ),
                     OutlinedButton.icon(
                       onPressed: _cancelEditing,
                       icon: const Icon(Icons.cancel, size: 16),
-                      label: const Text('取消'),
+                      label: Text(
+                        LocalizationService.instance.current.cancelButton_4271,
+                      ),
                     ),
                   ],
                   if (!hasSettings && !_isEditing)
                     Text(
-                      '当前没有扩展设置数据',
+                      LocalizationService
+                          .instance
+                          .current
+                          .noExtensionSettingsData_7421,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -260,7 +300,7 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
               // JSON编辑器
               if (hasSettings || _isEditing) ...[
                 Text(
-                  'JSON数据',
+                  LocalizationService.instance.current.jsonData_4821,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -298,7 +338,10 @@ class _ExtensionSettingsSectionState extends State<ExtensionSettingsSection> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '扩展设置存储已禁用',
+                  LocalizationService
+                      .instance
+                      .current
+                      .extensionStorageDisabled_4821,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,

@@ -1,0 +1,23 @@
+{
+  "ttsPlaybackCancelled_7421": "TTS播放取消",
+  "ttsRequestFailed_7421": "处理TTS请求失败: {e}",
+  "ttsDisabledSkipPlayRequest_4821": "TTS已禁用，跳过播放请求",
+  "availableLanguages_7421": "可用语言: {availableLanguages}",
+  "ttsPlaybackStart": "TTS开始播放文本: {text} (来源: {sourceId})",
+  "unknownSource_3632": "未知",
+  "availableVoicesMessage": "可用语音: {availableVoices}",
+  "ttsLoadFailed_7285": "加载TTS选项失败: {e}",
+  "ttsNotInitialized_7281": "TTS未初始化，无法播放",
+  "ttsEmptySkipPlay_4821": "TTS文本为空，跳过播放",
+  "ttsStoppedQueueCleared_4821": "TTS已停止，队列已清空",
+  "ttsRequestQueued": "TTS请求已加入队列: \"{text}\" (来源: {source}, 队列长度: {length})",
+  "unknown": "未知",
+  "stoppedTtsRequests": "已停止来源为 {sourceId} 的 {count} 个TTS请求",
+  "languageCheckFailed_4821": "检查语言可用性失败: {e}",
+  "failedToGetVoiceSpeedRange": "获取语音速度范围失败: {e}",
+  "ttsInitializationComplete_7281": "TTS服务初始化完成",
+  "ttsStartPlaying_7281": "TTS开始播放",
+  "ttsInitializationFailed": "TTS服务初始化失败: {e}",
+  "ttsPlaybackComplete_7281": "TTS播放完成",
+  "ttsError_7285": "TTS错误: {msg}"
+}

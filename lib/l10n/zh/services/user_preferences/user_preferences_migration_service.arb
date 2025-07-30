@@ -1,0 +1,16 @@
+{
+  "migrateUserConfig": "迁移用户配置: {displayName}",
+  "migrateLegacyPreferences": "迁移传统用户偏好设置: {displayName}",
+  "migrationFailed_7285": "迁移传统用户偏好设置失败: {e}",
+  "setCurrentUser_7421": "设置当前用户: {currentUserId}",
+  "userPreferencesMigrationComplete": "用户偏好设置迁移完成，迁移了 {migratedUsersCount} 个用户",
+  "dataMigrationFailed_7281": "数据迁移失败: {e}",
+  "cleanupFailed_7285": "清理旧数据失败: {e}",
+  "oldDataCleanedUp_7281": "旧数据清理完成",
+  "migrationStatusReset_7281": "迁移状态已重置",
+  "resetMigrationFailed_4821": "重置迁移状态失败: {e}",
+  "migrationStatsFailed_5421": "获取迁移统计信息失败: {e}",
+  "detectOldDataMigration_7281": "检测到需要迁移的旧数据",
+  "dataMigrationSkipped_7281": "数据已经迁移过，跳过迁移",
+  "migrationCheckFailed_4821": "检查迁移状态失败: {e}"
+}

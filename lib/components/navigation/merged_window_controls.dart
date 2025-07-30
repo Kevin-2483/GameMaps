@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
@@ -10,6 +11,8 @@ import '../../services/cleanup_service.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 import '../../models/user_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 合并窗口控件 - 悬浮托盘形式的窗口控制按钮
 class MergedWindowControls extends StatefulWidget {
@@ -84,14 +87,20 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
           !appWindow.isMaximized) {
         WindowManagerService().saveCurrentWindowSize();
         if (kDebugMode) {
-          debugPrint('窗口大小保存请求已发送（非最大化状态）');
+          debugPrint(
+            LocalizationService.instance.current.windowSizeSaveRequestSent_7281,
+          );
         }
       } else if (kDebugMode && appWindow.isMaximized) {
-        debugPrint('跳过保存：当前处于最大化状态');
+        debugPrint(
+          LocalizationService.instance.current.skipSaveMaximizedState_4821,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('保存窗口大小失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.saveWindowSizeFailed_7285(e),
+        );
       }
     }
   }
@@ -211,7 +220,10 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                               icon: Icons.power_settings_new,
                                               onPressed: () =>
                                                   _handleAppClose(context),
-                                              tooltip: '关闭',
+                                              tooltip: LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .closeButton_5421,
                                               isCloseButton: true,
                                             ),
                                           ]
@@ -222,7 +234,10 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                               icon: Icons.power_settings_new,
                                               onPressed: () =>
                                                   _handleAppClose(context),
-                                              tooltip: '关闭',
+                                              tooltip: LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .closeButton_7281,
                                               isCloseButton: true,
                                             ),
                                             if (_shouldBeExpanded(
@@ -245,7 +260,10 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
                                         icon: Icons.power_settings_new,
                                         onPressed: () =>
                                             _handleAppClose(context),
-                                        tooltip: '关闭',
+                                        tooltip: LocalizationService
+                                            .instance
+                                            .current
+                                            .closeButton_5421,
                                         isCloseButton: true,
                                       ),
                                     ],
@@ -291,7 +309,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
             _saveWindowSizeIfEnabled(context);
             appWindow.minimize();
           },
-          tooltip: '最小化',
+          tooltip: LocalizationService.instance.current.minimizeButton_4821,
         ),
       ),
     );
@@ -306,7 +324,7 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
             _saveWindowSizeIfEnabled(context);
             appWindow.maximizeOrRestore();
           },
-          tooltip: '最大化/还原',
+          tooltip: LocalizationService.instance.current.maximizeOrRestore_7281,
         ),
       ),
     );
@@ -324,7 +342,9 @@ class _MergedWindowControlsState extends State<MergedWindowControls>
               }
               FullScreen.setFullScreen(!_isFullScreen);
             },
-            tooltip: _isFullScreen ? '退出全屏' : '全屏',
+            tooltip: _isFullScreen
+                ? LocalizationService.instance.current.exitFullscreen_4821
+                : LocalizationService.instance.current.enterFullscreen_4822,
           ),
         ),
       );

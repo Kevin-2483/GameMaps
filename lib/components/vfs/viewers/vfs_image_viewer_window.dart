@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../components/common/floating_window.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
+
+import '../../../services/localization_service.dart';
 
 /// VFS图片查看器窗口
 class VfsImageViewerWindow extends StatefulWidget {
@@ -67,7 +70,7 @@ class VfsImageViewerWindow extends StatefulWidget {
   /// 从路径获取副标题
   static String _getSubtitleFromPath(String vfsPath, VfsFileInfo? fileInfo) {
     if (fileInfo != null) {
-      return '大小: ${_formatFileSize(fileInfo.size)} • 修改时间: ${_formatDateTime(fileInfo.modifiedAt)}';
+      return '${LocalizationService.instance.current.fileSizeLabel_5421}: ${_formatFileSize(fileInfo.size)} • ${LocalizationService.instance.current.modifiedTimeLabel_5421}: ${_formatDateTime(fileInfo.modifiedAt)}';
     }
     return vfsPath;
   }
@@ -75,8 +78,9 @@ class VfsImageViewerWindow extends StatefulWidget {
   static String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
+    if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
@@ -123,13 +127,14 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
         });
       } else {
         setState(() {
-          _errorMessage = '无法读取图片文件';
+          _errorMessage =
+              LocalizationService.instance.current.failedToReadImageFile_4821;
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = '加载图片失败: $e';
+        _errorMessage = LocalizationService.instance.current.imageLoadFailed(e);
         _isLoading = false;
       });
     }
@@ -162,7 +167,7 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           IconButton(
             onPressed: _canZoomOut() ? _zoomOut : null,
             icon: const Icon(Icons.zoom_out),
-            tooltip: '缩小',
+            tooltip: LocalizationService.instance.current.zoomOutTooltip_7281,
           ),
           Text(
             '${(_getCurrentScale() * 100).toInt()}%',
@@ -171,7 +176,7 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           IconButton(
             onPressed: _canZoomIn() ? _zoomIn : null,
             icon: const Icon(Icons.zoom_in),
-            tooltip: '放大',
+            tooltip: LocalizationService.instance.current.zoomInTooltip_4821,
           ),
 
           const SizedBox(width: 16),
@@ -180,14 +185,14 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           IconButton(
             onPressed: _fitToWindow,
             icon: const Icon(Icons.fit_screen),
-            tooltip: '适应窗口',
+            tooltip: LocalizationService.instance.current.fitWindowTooltip_4521,
           ),
 
           // 实际大小
           IconButton(
             onPressed: _actualSize,
             icon: const Icon(Icons.fullscreen),
-            tooltip: '实际大小',
+            tooltip: LocalizationService.instance.current.actualSize_7421,
           ),
 
           const Spacer(),
@@ -195,7 +200,7 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           // 文件信息
           if (_fileInfo != null) ...[
             Text(
-              '${_fileInfo!.name}',
+              _fileInfo!.name,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -207,7 +212,7 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
           IconButton(
             onPressed: _loadImage,
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: LocalizationService.instance.current.refreshButton_7421,
           ),
         ],
       ),
@@ -217,13 +222,13 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
   /// 构建图片查看器
   Widget _buildImageViewer() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('加载图片中...'),
+            Text(LocalizationService.instance.current.loadingImage_7281),
           ],
         ),
       );
@@ -242,20 +247,25 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
               style: const TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadImage, child: const Text('重试')),
+            ElevatedButton(
+              onPressed: _loadImage,
+              child: Text(
+                LocalizationService.instance.current.retryButton_7281,
+              ),
+            ),
           ],
         ),
       );
     }
 
     if (_imageData == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('无法显示图片'),
+            Text(LocalizationService.instance.current.imageNotAvailable_7281),
           ],
         ),
       );
@@ -295,12 +305,17 @@ class _VfsImageViewerWindowState extends State<VfsImageViewerWindow> {
               _imageData!,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
-                return const Column(
+                return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.broken_image, size: 64, color: Colors.red),
                     SizedBox(height: 16),
-                    Text('图片格式不支持或已损坏'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .unsupportedOrCorruptedImage_7281,
+                    ),
                   ],
                 );
               },

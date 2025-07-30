@@ -1,10 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/config/all.dart';
-import 'package:markdown_widget/widget/span_node.dart';
-import 'package:markdown_widget/widget/widget_visitor.dart';
 import 'package:markdown_widget/widget/all.dart';
 import 'package:markdown/markdown.dart' as m;
 import 'embedded_audio_player.dart';
+import '../../../services/localization_service.dart';
 
 /// 音频处理器 - 用于在Markdown中渲染音频内容
 /// 支持HTML audio标签和自定义Markdown音频语法
@@ -33,20 +33,28 @@ class AudioProcessor {
       ),
     );
     debugPrint(
-      '🎵 AudioProcessor.containsAudio: text长度=${text.length}, 包含音频=$result',
+      LocalizationService.instance.current.audioProcessorDebugInfo(
+        text.length,
+        result,
+      ),
     );
     return result;
   }
 
   /// 创建音频节点生成器
   static SpanNodeGeneratorWithTag createGenerator(audioUuidMap) {
-    debugPrint('🎵 AudioProcessor: 创建音频生成器');
+    debugPrint(LocalizationService.instance.current.audioProcessorCreated_4821);
     return SpanNodeGeneratorWithTag(
       tag: audioTag,
       generator: (e, config, visitor) {
         final playerId = audioUuidMap[e.attributes['src']];
         debugPrint(
-          '🎵 AudioProcessor: 生成AudioNode - tag: \\${e.tag}, attributes: \\${e.attributes}, textContent: \\${e.textContent}, uuid: $playerId',
+          LocalizationService.instance.current.audioNodeGenerationLog(
+            e.tag,
+            e.attributes,
+            e.textContent,
+            playerId,
+          ),
         );
         return AudioNode(e.attributes, e.textContent, playerId);
       },
@@ -110,7 +118,9 @@ class AudioProcessor {
 
   /// 转换Markdown图片语法为音频（如果是音频文件）
   static String convertMarkdownAudios(String content) {
-    debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 开始转换');
+    debugPrint(
+      LocalizationService.instance.current.audioProcessorConvertStart_7281,
+    );
     // 将Markdown图片语法中的音频文件转换为audio标签
     final pattern = RegExp(
       r'!\[(.*?)\]\(([^)]*\.(mp3|wav|ogg|aac|m4a|flac|wma|opus))\)',
@@ -120,7 +130,9 @@ class AudioProcessor {
     final result = content.replaceAllMapped(pattern, (match) {
       final alt = match.group(1) ?? '';
       final src = match.group(2) ?? '';
-      debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 转换 $src');
+      debugPrint(
+        '🎵 ${LocalizationService.instance.current.audioProcessorConvertMarkdownAudios_7428(src)}',
+      );
 
       // 从alt文本中解析参数
       final controls = 'controls';
@@ -139,11 +151,15 @@ class AudioProcessor {
       // 构建audio标签
       final audioTag =
           '<audio src="$src" $controls $autoplay $loop title="$title" artist="$artist" album="$album"></audio>';
-      debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 生成标签 $audioTag');
+      debugPrint(
+        '🎵 ${LocalizationService.instance.current.audioProcessorConvertMarkdownAudios(audioTag)}',
+      );
       return audioTag;
     });
 
-    debugPrint('🎵 AudioProcessor.convertMarkdownAudios: 转换完成');
+    debugPrint(
+      LocalizationService.instance.current.audioConversionComplete_7284,
+    );
     return result;
   }
 
@@ -214,7 +230,11 @@ class AudioNode extends SpanNode {
     debugPrint(
       '🎵 AudioNode.build: src=[200m${attributes['src']}[0m, playerId=$playerId',
     );
-    debugPrint('🎵 AudioNode.build: 开始构建 - src: \\${attributes['src']}');
+    debugPrint(
+      LocalizationService.instance.current.audioNodeBuildStart_7421(
+        attributes['src'] ?? '',
+      ),
+    );
     final src = attributes['src'] ?? '';
     final title = attributes['title'] ?? AudioProcessor._extractFileName(src);
     final artist = attributes['artist'];
@@ -234,7 +254,9 @@ class AudioNode extends SpanNode {
           autoPlay: autoplay,
           playerId: playerId, // 传递uuid
           onError: (error) {
-            debugPrint('🎵 AudioNode: 播放器错误 - $error');
+            debugPrint(
+              '🎵 ${LocalizationService.instance.current.audioPlayerError_4821(error)}',
+            );
           },
         ),
       ),
@@ -278,7 +300,9 @@ class AudioSyntax extends m.InlineSyntax {
     if (audioHtml.contains('loop')) attributes['loop'] = 'loop';
     if (audioHtml.contains('controls')) attributes['controls'] = 'controls';
 
-    debugPrint('🎵 AudioSyntax.onMatch: 解析属性 - $attributes');
+    debugPrint(
+      '🎵 AudioSyntax.onMatch: ${LocalizationService.instance.current.parseAttributesLog_7281(attributes)}',
+    );
 
     // 创建audio元素
     final element = m.Element.text(AudioProcessor.audioTag, '');

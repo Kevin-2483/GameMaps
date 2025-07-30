@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,8 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../../../models/websocket_client_config.dart';
 import 'websocket_client_auth_service.dart';
 import 'websocket_client_database_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// WebSocket 连接状态
 enum WebSocketConnectionState {
@@ -109,7 +112,9 @@ class WebSocketClientService {
       if (_connectionState == WebSocketConnectionState.connecting ||
           _connectionState == WebSocketConnectionState.authenticating) {
         if (kDebugMode) {
-          debugPrint('连接正在进行中，忽略重复连接请求');
+          debugPrint(
+            LocalizationService.instance.current.connectionInProgress_4821,
+          );
         }
         return false;
       }
@@ -123,7 +128,9 @@ class WebSocketClientService {
       }
 
       if (config == null) {
-        _handleError('未找到客户端配置');
+        _handleError(
+          LocalizationService.instance.current.clientConfigNotFound_7281,
+        );
         return false;
       }
 
@@ -132,7 +139,10 @@ class WebSocketClientService {
 
       if (kDebugMode) {
         debugPrint(
-          '开始连接到 WebSocket 服务器: ${config.server.host}:${config.server.port}',
+          LocalizationService.instance.current.connectingToWebSocketServer(
+            config.server.host,
+            config.server.port,
+          ),
         );
       }
 

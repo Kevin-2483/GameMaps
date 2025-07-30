@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 // preview_queue_manager.dart - 绘制预览队列管理器
 // 用于管理图层锁定状态下的绘制预览队列
 
@@ -7,6 +8,7 @@ import '../../../models/sticky_note.dart';
 import '../../../collaboration/collaboration.dart';
 import '../widgets/map_canvas.dart';
 import '../../../collaboration/global_collaboration_service.dart';
+import '../../../services/localization_service.dart';
 
 /// 预览队列项
 class PreviewQueueItem {
@@ -123,7 +125,11 @@ class PreviewQueueManager {
       return GlobalCollaborationService.instance.collaborationStateManager;
     } catch (e) {
       // 如果全局服务未初始化，返回一个新的实例
-      print('[PreviewQueueManager] 全局协作服务未初始化，使用本地实例: $e');
+      print(
+        '[PreviewQueueManager] ' +
+            LocalizationService.instance.current
+                .globalServiceNotInitialized_7285(e),
+      );
       return CollaborationStateManager();
     }
   }
@@ -187,7 +193,12 @@ class PreviewQueueManager {
         isWaitingForLayer: false,
       );
       _processPreviewItem(queueItem);
-      print('[PreviewQueueManager] 用户离线，预览已直接处理并添加到图层 $targetLayerId');
+      print(
+        '[PreviewQueueManager] ' +
+            LocalizationService.instance.current.userOfflinePreviewAddedToLayer(
+              targetLayerId,
+            ),
+      );
       return;
     }
 
@@ -205,17 +216,28 @@ class PreviewQueueManager {
     if (isLocked) {
       // 图层被锁定，加入对应图层的队列等待
       _layerQueues.putIfAbsent(targetLayerId, () => []).add(queueItem);
-      print('[PreviewQueueManager] 图层 $targetLayerId 被锁定，预览已加入队列');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.layerLockedPreviewQueued(targetLayerId)}',
+      );
     } else {
       // 图层未锁定，尝试锁定并立即处理
       if (tryLockLayer(targetLayerId)) {
         _processPreviewItem(queueItem);
         unlockLayer(targetLayerId);
-        print('[PreviewQueueManager] 预览已立即处理并添加到图层 $targetLayerId');
+        print(
+          '[PreviewQueueManager] ' +
+              LocalizationService.instance.current
+                  .previewImmediatelyProcessedAndAddedToLayer(targetLayerId),
+        );
       } else {
         // 锁定失败，加入对应图层的队列
         _layerQueues.putIfAbsent(targetLayerId, () => []).add(queueItem);
-        print('[PreviewQueueManager] 无法锁定图层 $targetLayerId，预览已加入队列');
+        print(
+          '[PreviewQueueManager] ' +
+              LocalizationService.instance.current.layerLockFailedPreviewQueued(
+                targetLayerId,
+              ),
+        );
       }
     }
 
@@ -309,7 +331,11 @@ class PreviewQueueManager {
           onElementReadyToAdd?.call(element, item.targetLayerId);
 
           print(
-            '[PreviewQueueManager] 队列中的预览已处理: ${item.id}, z值: $zIndex (基于实时图层状态)',
+            LocalizationService.instance.current.previewQueueProcessed(
+              layerId,
+              item.id,
+              zIndex,
+            ),
           );
         }
 
@@ -350,7 +376,11 @@ class PreviewQueueManager {
         onElementReadyToAdd?.call(element, item.targetLayerId);
 
         print(
-          '[PreviewQueueManager] 图层 $layerId 队列中的预览已处理: ${item.id}, z值: $zIndex',
+          LocalizationService.instance.current.previewQueueProcessed(
+            layerId,
+            item.id,
+            zIndex,
+          ),
         );
       }
 
@@ -420,7 +450,10 @@ class PreviewQueueManager {
     }
 
     _updateQueueNotifier();
-    print('[PreviewQueueManager] 预览已提交: $itemId');
+    print(
+      '[PreviewQueueManager] ' +
+          LocalizationService.instance.current.previewSubmitted_7285(itemId),
+    );
   }
 
   /// 强制提交预览项（忽略锁定状态）
@@ -436,7 +469,9 @@ class PreviewQueueManager {
       }
 
       _updateQueueNotifier();
-      print('[PreviewQueueManager] 强制提交预览: ${item.id}');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.forcePreviewSubmission_7421(item.id)}',
+      );
     }
   }
 
@@ -464,7 +499,9 @@ class PreviewQueueManager {
 
     if (removed) {
       _updateQueueNotifier();
-      print('[PreviewQueueManager] 预览已移除: $itemId');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.previewRemoved_7425}: $itemId',
+      );
     }
   }
 
@@ -472,7 +509,10 @@ class PreviewQueueManager {
   void clearQueue() {
     _layerQueues.clear();
     _updateQueueNotifier();
-    print('[PreviewQueueManager] 预览队列已清空');
+    print(
+      '[PreviewQueueManager] ' +
+          LocalizationService.instance.current.previewQueueCleared_7281,
+    );
   }
 
   /// 清空指定图层的队列
@@ -480,7 +520,9 @@ class PreviewQueueManager {
     final removed = _layerQueues.remove(layerId);
     if (removed != null && removed.isNotEmpty) {
       _updateQueueNotifier();
-      print('[PreviewQueueManager] 图层 $layerId 的预览队列已清空');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.layerPreviewQueueCleared_4821(layerId)}',
+      );
     }
   }
 
@@ -604,7 +646,11 @@ class PreviewQueueManager {
         isWaitingForStickyNote: false,
       );
       _processStickyNotePreviewItem(queueItem);
-      print('[PreviewQueueManager] 用户离线，便签预览已直接处理并添加到便签 $stickyNoteId');
+      print(
+        '[PreviewQueueManager] ' +
+            LocalizationService.instance.current
+                .offlineStickyNotePreviewHandled_7421(stickyNoteId),
+      );
       return;
     }
 
@@ -625,20 +671,28 @@ class PreviewQueueManager {
       _stickyNoteQueues.putIfAbsent(stickyNoteId, () => []).add(queueItem);
       final queueLength = _stickyNoteQueues[stickyNoteId]!.length;
       print(
-        '[PreviewQueueManager] 便签 $stickyNoteId 被锁定，预览已加入队列，当前队列长度: $queueLength',
+        LocalizationService.instance.current.stickyNoteLockedPreviewQueued_7281(
+          stickyNoteId,
+          queueLength,
+        ),
       );
     } else {
       // 便签未锁定，尝试锁定并立即处理
       if (tryLockStickyNote(stickyNoteId)) {
         _processStickyNotePreviewItem(queueItem);
         unlockStickyNote(stickyNoteId);
-        print('[PreviewQueueManager] 便签预览已立即处理并添加到便签 $stickyNoteId');
+        print(
+          '[PreviewQueueManager] ${LocalizationService.instance.current.stickyNotePreviewProcessed_7421} $stickyNoteId',
+        );
       } else {
         // 锁定失败，加入对应便签的队列
         _stickyNoteQueues.putIfAbsent(stickyNoteId, () => []).add(queueItem);
         final queueLength = _stickyNoteQueues[stickyNoteId]!.length;
         print(
-          '[PreviewQueueManager] 无法锁定便签 $stickyNoteId，预览已加入队列，当前队列长度: $queueLength',
+          LocalizationService.instance.current.previewQueueLockFailed(
+            stickyNoteId,
+            queueLength,
+          ),
         );
       }
     }
@@ -660,13 +714,20 @@ class PreviewQueueManager {
         stickyNoteQueue,
       );
       final totalItems = itemsToProcess.length;
-      print('[PreviewQueueManager] 开始处理便签 $stickyNoteId 队列，共 $totalItems 个项目');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.startProcessingQueue(stickyNoteId, totalItems)}',
+      );
 
       for (int i = 0; i < itemsToProcess.length; i++) {
         final item = itemsToProcess[i];
         _processStickyNotePreviewItem(item);
         print(
-          '[PreviewQueueManager] 便签 $stickyNoteId 队列项目 ${i + 1}/$totalItems 已处理: ${item.id}',
+          LocalizationService.instance.current.previewQueueItemProcessed_7281(
+            stickyNoteId,
+            i + 1,
+            totalItems,
+            item.id,
+          ),
         );
       }
 
@@ -674,7 +735,10 @@ class PreviewQueueManager {
       stickyNoteQueue.clear();
       _stickyNoteQueues.remove(stickyNoteId);
       print(
-        '[PreviewQueueManager] 便签 $stickyNoteId 队列已清空，所有 $totalItems 个项目处理完成',
+        LocalizationService.instance.current.previewQueueCleared(
+          stickyNoteId,
+          totalItems,
+        ),
       );
 
       unlockStickyNote(stickyNoteId);
@@ -722,7 +786,9 @@ class PreviewQueueManager {
 
     if (removed) {
       _updateStickyNoteQueueNotifier();
-      print('[PreviewQueueManager] 便签预览已移除: $itemId');
+      print(
+        '[PreviewQueueManager] ${LocalizationService.instance.current.notePreviewRemoved_7421}: $itemId',
+      );
     }
   }
 
@@ -730,7 +796,9 @@ class PreviewQueueManager {
   void clearStickyNoteQueue() {
     _stickyNoteQueues.clear();
     _updateStickyNoteQueueNotifier();
-    print('[PreviewQueueManager] 便签预览队列已清空');
+    print(
+      '[PreviewQueueManager] ${LocalizationService.instance.current.previewQueueCleared_7421}',
+    );
   }
 
   /// 清空指定便签的队列
@@ -738,7 +806,12 @@ class PreviewQueueManager {
     final removed = _stickyNoteQueues.remove(stickyNoteId);
     if (removed != null && removed.isNotEmpty) {
       _updateStickyNoteQueueNotifier();
-      print('[PreviewQueueManager] 便签 $stickyNoteId 的预览队列已清空');
+      print(
+        '[PreviewQueueManager] ' +
+            LocalizationService.instance.current.stickyNotePreviewQueueCleared(
+              stickyNoteId,
+            ),
+      );
     }
   }
 

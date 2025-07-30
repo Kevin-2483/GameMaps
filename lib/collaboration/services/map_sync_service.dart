@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,8 @@ import '../blocs/presence/presence_event.dart';
 import '../utils/image_compression_utils.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 地图信息同步服务
 /// 负责处理地图封面压缩和在线状态同步
@@ -40,16 +43,25 @@ class MapSyncService {
         );
 
         if (compressedCoverBase64 == null) {
-          debugPrint('地图封面压缩失败，将不同步封面信息');
+          debugPrint(
+            LocalizationService.instance.current.mapCoverCompressionFailed_4821,
+          );
         }
       }
 
       // 发送更新事件到PresenceBloc
-      debugPrint('[MapSyncService] 同步地图信息到PresenceBloc:');
+      debugPrint(
+        '[MapSyncService] ${LocalizationService.instance.current.syncMapInfoToPresenceBloc_7421}:',
+      );
       debugPrint('[MapSyncService]   - mapId: $mapId');
       debugPrint('[MapSyncService]   - mapTitle: $mapTitle');
       debugPrint(
-        '[MapSyncService]   - 封面: ${compressedCoverBase64 != null ? '${(compressedCoverBase64.length * 0.75 / 1024).toStringAsFixed(1)}KB' : '无'}',
+        '[MapSyncService]   - ' +
+            LocalizationService.instance.current.coverSizeInfo_4821(
+              compressedCoverBase64 != null
+                  ? '${(compressedCoverBase64.length * 0.75 / 1024).toStringAsFixed(1)}KB'
+                  : LocalizationService.instance.current.none_5729,
+            ),
       );
 
       _presenceBloc.add(
@@ -63,7 +75,7 @@ class MapSyncService {
 
       return true;
     } catch (e) {
-      debugPrint('同步地图信息失败: $e');
+      debugPrint(LocalizationService.instance.current.mapSyncFailed_7285(e));
       return false;
     }
   }
@@ -103,7 +115,7 @@ class MapSyncService {
       _presenceBloc.add(UpdateCurrentMapInfo(mapId: mapId, mapTitle: newTitle));
       return true;
     } catch (e) {
-      debugPrint('更新地图标题失败: $e');
+      debugPrint(LocalizationService.instance.current.updateMapTitleFailed(e));
       return false;
     }
   }
@@ -125,7 +137,9 @@ class MapSyncService {
           );
 
       if (compressedCoverBase64 == null) {
-        debugPrint('地图封面压缩失败');
+        debugPrint(
+          LocalizationService.instance.current.mapCoverCompressionFailed_7281,
+        );
         return false;
       }
 
@@ -139,7 +153,12 @@ class MapSyncService {
 
       return true;
     } catch (e) {
-      debugPrint('更新地图封面失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapCoverUpdateFailed(
+          'MapSyncService',
+          e,
+        ),
+      );
       return false;
     }
   }

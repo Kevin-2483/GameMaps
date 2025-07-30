@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jovial_svg/jovial_svg.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class SvgTestPage extends StatefulWidget {
   const SvgTestPage({super.key});
@@ -118,7 +121,9 @@ class _SvgTestPageState extends State<SvgTestPage> {
           await rootBundle.load('assets/images/r6operators_flat/$fileName');
           validFiles.add(fileName);
         } catch (e) {
-          debugPrint('文件不存在: $fileName');
+          debugPrint(
+            LocalizationService.instance.current.fileNotFound_7421(fileName),
+          );
         }
       }
 
@@ -128,7 +133,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
       });
     } catch (e) {
       setState(() {
-        errorMessage = '加载 SVG 文件时出错: $e';
+        errorMessage = LocalizationService.instance.current.svgLoadError(e);
         isLoading = false;
       });
     }
@@ -138,13 +143,15 @@ class _SvgTestPageState extends State<SvgTestPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('R6 干员 SVG 测试'),
+        title: Text(
+          LocalizationService.instance.current.r6OperatorSvgTest_4271,
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             onPressed: _loadSvgFiles,
             icon: const Icon(Icons.refresh),
-            tooltip: '重新加载',
+            tooltip: LocalizationService.instance.current.reloadTooltip_7281,
           ),
         ],
       ),
@@ -156,7 +163,10 @@ class _SvgTestPageState extends State<SvgTestPage> {
             padding: const EdgeInsets.all(16),
             color: Theme.of(context).colorScheme.surfaceVariant,
             child: Text(
-              isLoading ? '正在加载 SVG 文件...' : '找到 ${svgFiles.length} 个 SVG 文件',
+              isLoading
+                  ? LocalizationService.instance.current.loadingSvgFiles_5421
+                  : LocalizationService.instance.current
+                        .foundSvgFilesCount_5421(svgFiles.length),
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -193,21 +203,26 @@ class _SvgTestPageState extends State<SvgTestPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadSvgFiles, child: const Text('重试')),
+            ElevatedButton(
+              onPressed: _loadSvgFiles,
+              child: Text(
+                LocalizationService.instance.current.retryButton_7281,
+              ),
+            ),
           ],
         ),
       );
     }
 
     if (svgFiles.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
-              '未找到 SVG 文件',
+              LocalizationService.instance.current.svgFileNotFound_4821,
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
           ],
@@ -263,7 +278,10 @@ class _SvgTestPageState extends State<SvgTestPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '加载失败',
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .loadFailed_7281,
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey[600],
@@ -353,7 +371,10 @@ class _SvgTestPageState extends State<SvgTestPage> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '无法加载 SVG 文件',
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .svgLoadFailed_7421,
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
                             ],
@@ -371,7 +392,7 @@ class _SvgTestPageState extends State<SvgTestPage> {
 
               // 文件信息
               Text(
-                '文件: $fileName',
+                LocalizationService.instance.current.fileNameLabel(fileName),
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
@@ -382,7 +403,9 @@ class _SvgTestPageState extends State<SvgTestPage> {
               // 关闭按钮
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('关闭'),
+                child: Text(
+                  LocalizationService.instance.current.closeButton_7281,
+                ),
               ),
             ],
           ),

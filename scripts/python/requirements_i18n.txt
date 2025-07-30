@@ -1,0 +1,4 @@
+# I18n Processor 依赖包
+aiohttp>=3.8.0
+aiofiles>=23.0.0
+PyYAML>=6.0

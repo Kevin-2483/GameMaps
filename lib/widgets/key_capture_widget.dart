@@ -1,16 +1,19 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../services/localization_service.dart';
 
 class KeyCaptureWidget extends StatefulWidget {
   final Function(String) onKeyCaptured;
   final String? initialValue;
 
   const KeyCaptureWidget({
-    Key? key,
+    super.key,
     required this.onKeyCaptured,
     this.initialValue,
-  }) : super(key: key);
+  });
 
   @override
   KeyCaptureWidgetState createState() => KeyCaptureWidgetState();
@@ -20,7 +23,7 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
   final FocusNode _focusNode = FocusNode();
   bool _isCapturing = false;
   List<String> _capturedKeys = [];
-  Set<LogicalKeyboardKey> _pressedKeys = {};
+  final Set<LogicalKeyboardKey> _pressedKeys = {};
 
   /// 清空预览框内容
   void clearCapturedKeys() {
@@ -109,17 +112,24 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
 
     // 修饰键
     if (key == LogicalKeyboardKey.controlLeft ||
-        key == LogicalKeyboardKey.controlRight)
+        key == LogicalKeyboardKey.controlRight) {
       return 'Ctrl';
+    }
     if (key == LogicalKeyboardKey.shiftLeft ||
-        key == LogicalKeyboardKey.shiftRight)
+        key == LogicalKeyboardKey.shiftRight) {
       return 'Shift';
-    if (key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight)
+    }
+    if (key == LogicalKeyboardKey.altLeft ||
+        key == LogicalKeyboardKey.altRight) {
       return 'Alt';
+    }
     if (key == LogicalKeyboardKey.metaLeft ||
-        key == LogicalKeyboardKey.metaRight)
+        key == LogicalKeyboardKey.metaRight) {
       return 'Win';
-    if (key == LogicalKeyboardKey.capsLock) return 'CapsLock';
+    }
+    if (key == LogicalKeyboardKey.capsLock) {
+      return 'CapsLock';
+    }
 
     // 特殊键
     if (key == LogicalKeyboardKey.space) return 'Space';
@@ -225,12 +235,22 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
             ),
             borderRadius: BorderRadius.circular(8),
             color: _isCapturing
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.05)
-                : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)
+                : Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           ),
           child: _capturedKeys.isEmpty
               ? Text(
-                  _isCapturing ? '请按下按键组合...' : '点击开始录制按键',
+                  _isCapturing
+                      ? LocalizationService
+                            .instance
+                            .current
+                            .pressKeyCombination_4821
+                      : LocalizationService
+                            .instance
+                            .current
+                            .clickToStartRecording_4821,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -273,12 +293,12 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
         color: _getKeyColor(key, context),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2,
           ),
@@ -394,7 +414,7 @@ class KeyCaptureWidgetState extends State<KeyCaptureWidget> {
       case 'escape':
       case 'backspace':
       case 'delete':
-        return colorScheme.surfaceVariant;
+        return colorScheme.surfaceContainerHighest;
       default:
         return colorScheme.surface;
     }

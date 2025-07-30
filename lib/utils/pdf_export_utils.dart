@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
@@ -9,6 +10,8 @@ import '../models/pdf_image_info.dart';
 // 平台特定导入
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+
+import '../services/localization_service.dart';
 
 /// PDF导出布局类型
 enum PdfLayoutType {
@@ -63,7 +66,7 @@ class PdfExportUtils {
       _chineseFont = await PdfGoogleFonts.notoSansSCRegular();
       return _chineseFont!;
     } catch (e) {
-      debugPrint('无法加载Google中文字体，使用默认字体: $e');
+      debugPrint(LocalizationService.instance.current.googleFontLoadFailed(e));
       // 如果Google字体加载失败，返回默认字体
       return pw.Font.helvetica();
     }
@@ -94,7 +97,7 @@ class PdfExportUtils {
       // 保存PDF
       return await _savePdf(pdf, config.fileName);
     } catch (e) {
-      debugPrint('PDF导出失败: $e');
+      debugPrint(LocalizationService.instance.current.pdfExportFailed_7281(e));
       return false;
     }
   }
@@ -110,7 +113,7 @@ class PdfExportUtils {
 
       return await pdf.save();
     } catch (e) {
-      debugPrint('PDF预览生成失败: $e');
+      debugPrint(LocalizationService.instance.current.pdfPreviewFailed_7285(e));
       return null;
     }
   }
@@ -397,7 +400,7 @@ class PdfExportUtils {
 
       return pdf;
     } catch (e) {
-      debugPrint('PDF文档生成失败: $e');
+      debugPrint(LocalizationService.instance.current.pdfExportFailed_7281(e));
       return null;
     }
   }
@@ -850,10 +853,12 @@ class PdfExportUtils {
         onLayout: (PdfPageFormat format) async => pdfBytes,
         name: config.fileName,
       );
-      debugPrint('PDF打印对话框已打开');
+      debugPrint(
+        LocalizationService.instance.current.pdfPrintDialogOpened_7281,
+      );
       return true;
     } catch (e) {
-      debugPrint('PDF打印失败: $e');
+      debugPrint(LocalizationService.instance.current.pdfPrintFailed_7285(e));
       return false;
     }
   }
@@ -869,12 +874,15 @@ class PdfExportUtils {
           onLayout: (PdfPageFormat format) async => pdfBytes,
           name: fileName,
         );
-        debugPrint('Web平台PDF打印对话框已打开');
+        debugPrint(
+          LocalizationService.instance.current.webPdfDialogOpened_7281,
+        );
         return true;
       } else {
         // 桌面端和移动端：让用户选择保存位置
         String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: '保存PDF文件',
+          dialogTitle:
+              LocalizationService.instance.current.savePdfDialogTitle_4821,
           fileName: '$fileName.pdf',
           type: FileType.custom,
           allowedExtensions: ['pdf'],
@@ -883,15 +891,19 @@ class PdfExportUtils {
         if (outputFile != null) {
           final file = File(outputFile);
           await file.writeAsBytes(pdfBytes);
-          debugPrint('PDF已保存到: ${file.path}');
+          debugPrint(
+            LocalizationService.instance.current.pdfSavedToPath_7281(file.path),
+          );
           return true;
         } else {
-          debugPrint('用户取消了保存操作');
+          debugPrint(
+            LocalizationService.instance.current.userCanceledSaveOperation_9274,
+          );
           return false;
         }
       }
     } catch (e) {
-      debugPrint('保存PDF失败: $e');
+      debugPrint(LocalizationService.instance.current.pdfExportFailed_7281(e));
       return false;
     }
   }
@@ -900,15 +912,15 @@ class PdfExportUtils {
   static String getLayoutTypeName(PdfLayoutType type) {
     switch (type) {
       case PdfLayoutType.onePerPage:
-        return '一页一张';
+        return LocalizationService.instance.current.onePerPage_4821;
       case PdfLayoutType.twoPerPage:
-        return '一页两张';
+        return LocalizationService.instance.current.twoPerPage_4822;
       case PdfLayoutType.fourPerPage:
-        return '一页四张';
+        return LocalizationService.instance.current.fourPerPage_4823;
       case PdfLayoutType.sixPerPage:
-        return '一页六张';
+        return LocalizationService.instance.current.sixPerPage_4824;
       case PdfLayoutType.ninePerPage:
-        return '一页九张';
+        return LocalizationService.instance.current.ninePerPage_4825;
     }
   }
 
@@ -930,9 +942,9 @@ class PdfExportUtils {
   static String getOrientationName(PdfOrientation orientation) {
     switch (orientation) {
       case PdfOrientation.portrait:
-        return '竖向';
+        return LocalizationService.instance.current.portraitOrientation_1234;
       case PdfOrientation.landscape:
-        return '横向';
+        return LocalizationService.instance.current.landscapeOrientation_5678;
     }
   }
 }

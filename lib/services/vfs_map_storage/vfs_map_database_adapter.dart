@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -5,6 +6,8 @@ import '../map_database_service.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS地图数据库服务适配器
 /// 实现与现有MapDatabaseService完全兼容的接口
@@ -34,7 +37,9 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
         }
       }
     } catch (e) {
-      debugPrint('初始化ID映射失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.idMappingInitFailed_7425(e),
+      );
     }
   }
 
@@ -218,7 +223,9 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
         maps: maps,
         exportedAt: DateTime.now(),
       ); // 构建导出文件名 - VFS系统会处理文件命名
-      debugPrint('开始导出VFS地图数据库...');
+      debugPrint(
+        LocalizationService.instance.current.exportingVfsMapDatabase_7281,
+      );
 
       // 在Web平台上，直接返回JSON数据
       if (kIsWeb) {
@@ -229,10 +236,15 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
       final jsonData = jsonEncode(mapDatabase.toJson());
 
       // 这里应该调用文件选择器，简化为返回JSON字符串
-      debugPrint('VFS地图数据库导出成功 (版本: $dbVersion, 地图数量: ${maps.length})');
+      debugPrint(
+        LocalizationService.instance.current.vfsDatabaseExportSuccess(
+          dbVersion,
+          maps.length,
+        ),
+      );
       return jsonData;
     } catch (e) {
-      debugPrint('VFS地图数据库导出失败: $e');
+      debugPrint(LocalizationService.instance.current.vfsMapExportFailed(e));
       return null;
     }
   }
@@ -242,10 +254,12 @@ class VfsMapDatabaseAdapter implements MapDatabaseService {
     try {
       // 在真实实现中，这里应该调用文件选择器
       // 目前返回false表示未实现
-      debugPrint('VFS地图数据库导入功能暂未实现');
+      debugPrint(
+        LocalizationService.instance.current.vfsMapDbImportNotImplemented_7281,
+      );
       return false;
     } catch (e) {
-      debugPrint('VFS地图数据库导入失败: $e');
+      debugPrint(LocalizationService.instance.current.vfsMapDbImportFailed(e));
       return false;
     }
   }

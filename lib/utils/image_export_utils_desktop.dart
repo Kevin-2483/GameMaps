@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+
+import '../services/localization_service.dart';
 import 'package:path/path.dart' as path;
 
 /// 桌面平台的图片导出实现
@@ -14,7 +17,8 @@ Future<bool> exportImagesImpl(
   try {
     // 让用户选择保存目录
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: '选择导出目录',
+      dialogTitle:
+          LocalizationService.instance.current.selectExportDirectory_4821,
     );
 
     if (selectedDirectory == null) {
@@ -34,7 +38,7 @@ Future<bool> exportImagesImpl(
 
     return true;
   } catch (e) {
-    print('桌面平台导出图片失败: $e');
+    print(LocalizationService.instance.current.desktopExportFailed(e));
     return false;
   }
 }
@@ -47,7 +51,7 @@ Future<bool> exportSingleImageImpl(
   try {
     // 让用户选择保存位置
     String? outputFile = await FilePicker.platform.saveFile(
-      dialogTitle: '保存图片',
+      dialogTitle: LocalizationService.instance.current.saveImageTitle_4821,
       fileName: fileName,
       type: FileType.custom,
       allowedExtensions: ['png', 'jpg', 'jpeg'],
@@ -62,7 +66,9 @@ Future<bool> exportSingleImageImpl(
 
     return true;
   } catch (e) {
-    print('桌面平台导出单张图片失败: $e');
+    print(
+      LocalizationService.instance.current.desktopExportImageFailed_7285(e),
+    );
     return false;
   }
 }

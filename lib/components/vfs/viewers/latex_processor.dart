@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:markdown/markdown.dart' as m;
+
+import '../../../services/localization_service.dart';
 
 /// LaTeX处理器 - 用于在Markdown中渲染LaTeX数学公式
 class LatexProcessor {
@@ -118,7 +121,9 @@ class LatexNode extends SpanNode {
       // LaTeX解析失败，返回错误提示
       return TextSpan(
         style: style.copyWith(color: Colors.red),
-        text: '⚠️ LaTeX错误: $textContent',
+        text: LocalizationService.instance.current.latexErrorWarning(
+          textContent,
+        ),
       );
     }
   }

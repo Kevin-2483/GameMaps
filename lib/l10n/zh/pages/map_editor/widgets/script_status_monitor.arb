@@ -1,0 +1,21 @@
+{
+  "runningScriptsCount": "运行中的脚本 ({count})",
+  "idleStatus_7421": "空闲状态",
+  "scriptCount": "{count} 个脚本",
+  "scriptEngineStatusMonitoring_7281": "脚本引擎状态监控",
+  "executionEngine_4821": "执行引擎",
+  "totalScriptsLabel_4821": "总脚本",
+  "systemMetrics_4521": "系统指标",
+  "enabledStatus_4821": "已启用",
+  "errorLabel_4821": "错误",
+  "executionEngine_4521": "执行引擎",
+  "runningStatus_4821": "运行中",
+  "noRunningScripts_7421": "当前没有运行中的脚本",
+  "stopScript_7421": "停止脚本",
+  "recentExecutionRecords_4821": "最近执行记录",
+  "noExecutionRecords_4521": "暂无执行记录",
+  "justNow_4821": "刚刚",
+  "minutesAgo_7421": "{minutes}分钟前",
+  "hoursAgo_7281": "{hours}小时前",
+  "daysAgo_7283": "天前"
+}

@@ -1,14 +1,17 @@
+// This file has been processed by AI for internationalization
 // import 'dart:convert';
 // import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_storage_service.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS地图数据迁移工具
 /// 注意：此功能已禁用，不用于生产环境
 /// 系统直接使用VFS存储，无需从传统SQLite迁移
-@Deprecated('迁移功能已禁用，直接使用VFS存储')
+@Deprecated('Migration functionality is disabled, using VFS storage directly')
 class VfsMapDataMigrator {
   final VfsMapService _vfsService;
   final VfsStorageService _storageService;
@@ -18,14 +21,28 @@ class VfsMapDataMigrator {
   /// 从MapItem迁移到VFS存储
   Future<void> migrateMapItem(MapItem mapItem) async {
     try {
-      debugPrint('开始迁移地图: ${mapItem.title}');
+      debugPrint(
+        LocalizationService.instance.current.startMigrationMap_7421(
+          mapItem.title,
+        ),
+      );
 
       // 保存地图数据到VFS
       final mapId = await _vfsService.saveMap(mapItem);
 
-      debugPrint('地图迁移完成: ${mapItem.title} -> $mapId');
+      debugPrint(
+        LocalizationService.instance.current.mapMigrationComplete(
+          mapItem.title,
+          mapId,
+        ),
+      );
     } catch (e) {
-      debugPrint('地图迁移失败: ${mapItem.title} - $e');
+      debugPrint(
+        LocalizationService.instance.current.mapMigrationFailed(
+          mapItem.title,
+          e.toString(),
+        ),
+      );
       rethrow;
     }
   }
@@ -42,7 +59,11 @@ class VfsMapDataMigrator {
       } catch (e) {
         result.failureCount++;
         result.failedMaps[map.title] = e.toString();
-        debugPrint('跳过迁移失败的地图: ${map.title}');
+        debugPrint(
+          LocalizationService.instance.current.skipFailedMigrationMap(
+            map.title,
+          ),
+        );
       }
     }
 
@@ -56,7 +77,10 @@ class VfsMapDataMigrator {
 
       if (vfsMaps.length != originalMaps.length) {
         debugPrint(
-          '迁移验证失败: 地图数量不匹配 (原始: ${originalMaps.length}, VFS: ${vfsMaps.length})',
+          LocalizationService.instance.current.migrationValidationFailed(
+            originalMaps.length,
+            vfsMaps.length,
+          ),
         );
         return false;
       }
@@ -64,19 +88,30 @@ class VfsMapDataMigrator {
       for (final originalMap in originalMaps) {
         final vfsMap = vfsMaps.firstWhere(
           (map) => map.title == originalMap.title,
-          orElse: () => throw StateError('找不到地图: ${originalMap.title}'),
+          orElse: () => throw StateError(
+            LocalizationService.instance.current.mapNotFoundError(
+              originalMap.title,
+            ),
+          ),
         );
 
         if (!_mapsEqual(originalMap, vfsMap)) {
-          debugPrint('迁移验证失败: 地图数据不匹配 - ${originalMap.title}');
+          debugPrint(
+            LocalizationService.instance.current.migrationValidationFailed(
+              originalMaps.length,
+              vfsMaps.length,
+            ),
+          );
           return false;
         }
       }
 
-      debugPrint('迁移验证成功: 所有地图数据完整');
+      debugPrint(
+        LocalizationService.instance.current.migrationValidationSuccess_7281,
+      );
       return true;
     } catch (e) {
-      debugPrint('迁移验证出错: $e');
+      debugPrint(LocalizationService.instance.current.migrationError_7425(e.toString()));
       return false;
     }
   }
@@ -100,9 +135,9 @@ class VfsMapDataMigrator {
             DateTime.now().millisecondsSinceEpoch.toString();
         await _vfsService.deleteMap(mapId);
       }
-      debugPrint('VFS数据清理完成');
+      debugPrint(LocalizationService.instance.current.vfsCleanupComplete_7281);
     } catch (e) {
-      debugPrint('VFS数据清理失败: $e');
+      debugPrint(LocalizationService.instance.current.vfsCleanupFailed_7281(e.toString()));
       rethrow;
     }
   }

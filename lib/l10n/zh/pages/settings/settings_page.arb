@@ -1,0 +1,12 @@
+{
+  "websocketConnectionManagement_4821": "WebSocket 连接管理",
+  "websocketClientConfig_4821": "管理 WebSocket 客户端连接配置",
+  "webDavConfigTitle_7281": "配置和管理 WebDAV 云存储连接",
+  "about_5421": "关于",
+  "aboutR6box_7281": "关于 R6BOX",
+  "softwareInfoLicenseAcknowledgements_4821": "软件信息、许可证和开源项目致谢",
+  "personalSettingsManagement_4821": "管理主题、地图编辑器、界面布局等个人设置",
+  "externalResourceManagement_7421": "外部资源管理",
+  "importExportBrowseData_4821": "导入、导出和浏览应用数据",
+  "webDavManagement_4271": "WebDAV 管理"
+}

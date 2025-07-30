@@ -1,4 +1,8 @@
+// This file has been processed by AI for internationalization
 /// 计时器数据模型
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
+
 class TimerData {
   final String id;
   final String name;
@@ -183,18 +187,18 @@ extension TimerModeExtension on TimerMode {
   String get displayName {
     switch (this) {
       case TimerMode.countdown:
-        return '倒计时';
+        return LocalizationService.instance.current.countdownMode_4821;
       case TimerMode.stopwatch:
-        return '正计时';
+        return LocalizationService.instance.current.stopwatchMode_7532;
     }
   }
 
   String get description {
     switch (this) {
       case TimerMode.countdown:
-        return '从设定时间倒数到零';
+        return LocalizationService.instance.current.countdownDescription_4821;
       case TimerMode.stopwatch:
-        return '从零开始正向计时';
+        return LocalizationService.instance.current.stopwatchDescription_7532;
     }
   }
 }
@@ -204,13 +208,13 @@ extension TimerStateExtension on TimerState {
   String get displayName {
     switch (this) {
       case TimerState.stopped:
-        return '已停止';
+        return LocalizationService.instance.current.timerStopped_4821;
       case TimerState.running:
-        return '运行中';
+        return LocalizationService.instance.current.timerRunning_4822;
       case TimerState.paused:
-        return '已暂停';
+        return LocalizationService.instance.current.timerPaused_4823;
       case TimerState.completed:
-        return '已完成';
+        return LocalizationService.instance.current.timerCompleted_4824;
     }
   }
 

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
@@ -10,6 +11,7 @@ import 'new_reactive_script_manager.dart';
 
 /// Timer类的导入（如果需要）
 import 'dart:async';
+import '../services/localization_service.dart';
 
 /// 地图编辑器集成适配器
 /// 提供统一的API接口，将传统的地图编辑器操作转换为响应式事件
@@ -43,7 +45,9 @@ class MapEditorIntegrationAdapter {
 
   /// 初始化地图数据
   Future<void> initializeMap(MapItem mapItem) async {
-    debugPrint('初始化地图: ${mapItem.title}');
+    debugPrint(
+      LocalizationService.instance.current.mapInitialization(mapItem.title),
+    );
     _mapDataBloc.add(InitializeMapData(mapItem: mapItem));
   }
 
@@ -53,7 +57,13 @@ class MapEditorIntegrationAdapter {
     String version = 'default',
     String? folderPath,
   }) async {
-    debugPrint('加载地图: $mapTitle, 版本: $version, 文件夹: $folderPath');
+    debugPrint(
+      LocalizationService.instance.current.loadingMapDetails(
+        mapTitle,
+        version,
+        folderPath ?? '',
+      ),
+    );
     _mapDataBloc.add(
       LoadMapData(mapTitle: mapTitle, version: version, folderPath: folderPath),
     );
@@ -74,31 +84,42 @@ class MapEditorIntegrationAdapter {
 
   /// 更新图层
   void updateLayer(MapLayer layer) {
-    debugPrint('更新图层: ${layer.name}');
+    debugPrint(
+      LocalizationService.instance.current.updateLayerLog(
+        layer.isLinkedToNext,
+        layer.name,
+      ),
+    );
     _mapDataBloc.add(UpdateLayer(layer: layer));
   }
 
   /// 批量更新图层
   void updateLayers(List<MapLayer> layers) {
-    debugPrint('批量更新图层，数量: ${layers.length}');
+    debugPrint(
+      LocalizationService.instance.current.batchUpdateLayersCount(
+        layers.length,
+      ),
+    );
     _mapDataBloc.add(UpdateLayers(layers: layers));
   }
 
   /// 添加图层
   void addLayer(MapLayer layer) {
-    debugPrint('添加图层: ${layer.name}');
+    debugPrint(LocalizationService.instance.current.addLayerLog(layer.name));
     _mapDataBloc.add(AddLayer(layer: layer));
   }
 
   /// 删除图层
   void deleteLayer(String layerId) {
-    debugPrint('删除图层: $layerId');
+    debugPrint(LocalizationService.instance.current.deleteLayer_7425(layerId));
     _mapDataBloc.add(DeleteLayer(layerId: layerId));
   }
 
   /// 重新排序图层
   void reorderLayers(int oldIndex, int newIndex) {
-    debugPrint('重新排序图层: $oldIndex -> $newIndex');
+    debugPrint(
+      LocalizationService.instance.current.reorderLayerLog(oldIndex, newIndex),
+    );
     _mapDataBloc.add(ReorderLayers(oldIndex: oldIndex, newIndex: newIndex));
   }
 
@@ -109,7 +130,11 @@ class MapEditorIntegrationAdapter {
     List<MapLayer> layersToUpdate,
   ) {
     debugPrint(
-      '组内重排序图层: $oldIndex -> $newIndex，更新图层数量: ${layersToUpdate.length}',
+      LocalizationService.instance.current.groupLayerReorderLog(
+        oldIndex,
+        newIndex,
+        layersToUpdate.length,
+      ),
     );
     _mapDataBloc.add(
       ReorderLayersInGroup(
@@ -122,7 +147,12 @@ class MapEditorIntegrationAdapter {
 
   /// 设置图层可见性
   void setLayerVisibility(String layerId, bool isVisible) {
-    debugPrint('设置图层可见性: $layerId = $isVisible');
+    debugPrint(
+      LocalizationService.instance.current.setLayerVisibility(
+        layerId,
+        isVisible,
+      ),
+    );
     _mapDataBloc.add(
       SetLayerVisibility(layerId: layerId, isVisible: isVisible),
     );
@@ -130,7 +160,9 @@ class MapEditorIntegrationAdapter {
 
   /// 设置图层透明度
   void setLayerOpacity(String layerId, double opacity) {
-    debugPrint('设置图层透明度: $layerId = $opacity');
+    debugPrint(
+      LocalizationService.instance.current.setLayerOpacity(layerId, opacity),
+    );
     _mapDataBloc.add(SetLayerOpacity(layerId: layerId, opacity: opacity));
   }
 
@@ -158,19 +190,34 @@ class MapEditorIntegrationAdapter {
 
   /// 更新绘制元素
   void updateDrawingElement(String layerId, MapDrawingElement element) {
-    debugPrint('更新绘制元素: $layerId/${element.id}');
+    debugPrint(
+      LocalizationService.instance.current.updateDrawingElement_7281(
+        layerId,
+        element.id,
+      ),
+    );
     _mapDataBloc.add(UpdateDrawingElement(layerId: layerId, element: element));
   }
 
   /// 添加绘制元素
   void addDrawingElement(String layerId, MapDrawingElement element) {
-    debugPrint('添加绘制元素: $layerId/${element.id}');
+    debugPrint(
+      LocalizationService.instance.current.addDrawingElement(
+        layerId,
+        element.id,
+      ),
+    );
     _mapDataBloc.add(AddDrawingElement(layerId: layerId, element: element));
   }
 
   /// 删除绘制元素
   void deleteDrawingElement(String layerId, String elementId) {
-    debugPrint('删除绘制元素: $layerId/$elementId');
+    debugPrint(
+      LocalizationService.instance.current.deleteDrawingElement(
+        layerId,
+        elementId,
+      ),
+    );
     _mapDataBloc.add(
       DeleteDrawingElement(layerId: layerId, elementId: elementId),
     );
@@ -178,7 +225,12 @@ class MapEditorIntegrationAdapter {
 
   /// 批量更新绘制元素
   void updateDrawingElements(String layerId, List<MapDrawingElement> elements) {
-    debugPrint('批量更新绘制元素: $layerId, 数量: ${elements.length}');
+    debugPrint(
+      LocalizationService.instance.current.batchUpdateElements(
+        layerId,
+        elements.length,
+      ),
+    );
     _mapDataBloc.add(
       UpdateDrawingElements(layerId: layerId, elements: elements),
     );
@@ -188,25 +240,39 @@ class MapEditorIntegrationAdapter {
 
   /// 添加图例组
   void addLegendGroup(LegendGroup legendGroup) {
-    debugPrint('集成适配器: 添加图例组 ${legendGroup.name}');
+    debugPrint(
+      LocalizationService.instance.current.integrationAdapterAddLegendGroup(
+        legendGroup.name,
+      ),
+    );
     _mapDataBloc.add(AddLegendGroup(legendGroup: legendGroup));
   }
 
   /// 更新图例组
   void updateLegendGroup(LegendGroup legendGroup) {
-    debugPrint('集成适配器: 更新图例组 ${legendGroup.name}');
+    debugPrint(
+      LocalizationService.instance.current.updateLegendGroup_7421(
+        legendGroup.name,
+      ),
+    );
     _mapDataBloc.add(UpdateLegendGroup(legendGroup: legendGroup));
   }
 
   /// 删除图例组
   void deleteLegendGroup(String legendGroupId) {
-    debugPrint('集成适配器: 删除图例组 $legendGroupId');
+    debugPrint(
+      LocalizationService.instance.current.integrationAdapterDeleteLegendGroup(
+        legendGroupId,
+      ),
+    );
     _mapDataBloc.add(DeleteLegendGroup(groupId: legendGroupId));
   }
 
   /// 设置图例组可见性
   void setLegendGroupVisibility(String groupId, bool isVisible) {
-    debugPrint('设置图例组可见性: $groupId = $isVisible');
+    debugPrint(
+      LocalizationService.instance.current.legendGroupVisibility(groupId),
+    );
     _mapDataBloc.add(
       SetLegendGroupVisibility(groupId: groupId, isVisible: isVisible),
     );
@@ -230,25 +296,30 @@ class MapEditorIntegrationAdapter {
 
   /// 更新便利贴
   void updateStickyNote(StickyNote note) {
-    debugPrint('更新便利贴: ${note.id}');
+    debugPrint(LocalizationService.instance.current.updateNoteDebug(note.id));
     _mapDataBloc.add(UpdateStickyNote(stickyNote: note));
   }
 
   /// 添加便利贴
   void addStickyNote(StickyNote note) {
-    debugPrint('添加便利贴: ${note.id}');
+    debugPrint(LocalizationService.instance.current.addNoteDebug_7421(note.id));
     _mapDataBloc.add(AddStickyNote(stickyNote: note));
   }
 
   /// 删除便利贴
   void deleteStickyNote(String noteId) {
-    debugPrint('删除便利贴: $noteId');
+    debugPrint(LocalizationService.instance.current.deleteNoteDebug(noteId));
     _mapDataBloc.add(DeleteStickyNote(stickyNoteId: noteId));
   }
 
   /// 重新排序便利贴
   void reorderStickyNotes(int oldIndex, int newIndex) {
-    debugPrint('重新排序便利贴: $oldIndex -> $newIndex');
+    debugPrint(
+      LocalizationService.instance.current.reorderStickyNote(
+        oldIndex,
+        newIndex,
+      ),
+    );
     _mapDataBloc.add(
       ReorderStickyNotes(oldIndex: oldIndex, newIndex: newIndex),
     );
@@ -256,7 +327,11 @@ class MapEditorIntegrationAdapter {
 
   /// 通过拖拽重新排序便利贴
   void reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
-    debugPrint('通过拖拽重新排序便利贴，数量: ${reorderedNotes.length}');
+    debugPrint(
+      LocalizationService.instance.current.reorderStickyNotesCount(
+        reorderedNotes.length,
+      ),
+    );
     _mapDataBloc.add(ReorderStickyNotesByDrag(reorderedNotes: reorderedNotes));
   }
 
@@ -280,7 +355,7 @@ class MapEditorIntegrationAdapter {
   /// 撤销操作
   void undo() {
     if (_mapDataBloc.canUndo) {
-      debugPrint('执行撤销操作');
+      debugPrint(LocalizationService.instance.current.undoOperation_7281);
       _mapDataBloc.add(const UndoMapData());
     }
   }
@@ -288,7 +363,7 @@ class MapEditorIntegrationAdapter {
   /// 重做操作
   void redo() {
     if (_mapDataBloc.canRedo) {
-      debugPrint('执行重做操作');
+      debugPrint(LocalizationService.instance.current.redoOperation_7421);
       _mapDataBloc.add(const RedoMapData());
     }
   }
@@ -303,7 +378,11 @@ class MapEditorIntegrationAdapter {
 
   /// 保存地图数据
   Future<void> saveMapData({bool forceUpdate = false}) async {
-    debugPrint('保存地图数据，强制更新: $forceUpdate');
+    debugPrint(
+      LocalizationService.instance.current.saveMapDataWithForceUpdate(
+        forceUpdate,
+      ),
+    );
     _mapDataBloc.add(SaveMapData(forceUpdate: forceUpdate));
   }
 
@@ -328,7 +407,7 @@ class MapEditorIntegrationAdapter {
   // ==================== 脚本管理操作 ====================
   /// 重置脚本引擎（当地图数据发生重大变更时调用）
   Future<void> resetScriptEngine() async {
-    debugPrint('重置脚本引擎');
+    debugPrint(LocalizationService.instance.current.resetScriptEngine_7281);
     await _scriptManager.resetScriptEngine();
   }
 
@@ -351,13 +430,15 @@ class MapEditorIntegrationAdapter {
 
   /// 更新元数据
   void updateMetadata(Map<String, dynamic> metadata) {
-    debugPrint('更新元数据: $metadata');
+    debugPrint(
+      LocalizationService.instance.current.updateMetadata_4829(metadata),
+    );
     _mapDataBloc.add(UpdateMapMetadata(metadata: metadata));
   }
 
   /// 重置地图数据
   void resetMapData() {
-    debugPrint('重置地图数据');
+    debugPrint(LocalizationService.instance.current.resetMapData_7421);
     _mapDataBloc.add(const ResetMapData());
   }
 
@@ -383,6 +464,8 @@ class MapEditorIntegrationAdapter {
   void dispose() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = null;
-    debugPrint('释放地图编辑器集成适配器资源');
+    debugPrint(
+      LocalizationService.instance.current.releaseMapEditorAdapter_4821,
+    );
   }
 }

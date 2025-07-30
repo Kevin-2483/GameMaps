@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 import '../features/page_registry.dart';
 import '../features/page-modules/home_page_module.dart';
 import '../features/page-modules/settings_page_module.dart';
@@ -33,7 +34,7 @@ class AppRouter {
         ),
       ],
       errorBuilder: (context, state) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = LocalizationService.instance.current;
         return Scaffold(
           appBar: AppBar(title: Text(l10n?.error ?? 'Error')),
           body: Center(

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class IOSComponent extends StatelessWidget {
   const IOSComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Center(
       child: Column(

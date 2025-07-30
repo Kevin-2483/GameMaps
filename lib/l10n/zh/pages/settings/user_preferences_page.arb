@@ -1,0 +1,8 @@
+{
+  "resetFailedWithError": "重置失败：{error}",
+  "resetAllSettings_4821": "重置所有设置",
+  "loadUserPreferencesFailed_7421": "加载用户偏好设置失败: {error}",
+  "retry_7281": "重试",
+  "copiedToClipboard_4821": "已复制到剪贴板",
+  "exportFailed_7421": "导出失败：{error}"
+}

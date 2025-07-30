@@ -1,7 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import '../services/localization_service.dart';
 
 /// 图片处理工具类
 class ImageUtils {
@@ -44,20 +46,29 @@ class ImageUtils {
 
         // 检查文件大小（限制为10MB）
         if (file.size > 10 * 1024 * 1024) {
-          throw Exception('图片文件过大，请选择小于10MB的图片');
+          throw Exception(
+            LocalizationService.instance.current.imageTooLargeError_4821,
+          );
         }
 
         // 检查文件扩展名
         final extension = file.extension?.toLowerCase();
         final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (extension == null || !allowedExtensions.contains(extension)) {
-          throw Exception('不支持的图片格式，请选择 JPG、PNG、GIF 或 WebP 格式的图片');
+          throw Exception(
+            LocalizationService
+                .instance
+                .current
+                .unsupportedImageFormatError_4821,
+          );
         }
 
         // 获取文件字节数据
         final bytes = file.bytes;
         if (bytes == null) {
-          throw Exception('无法读取图片数据');
+          throw Exception(
+            LocalizationService.instance.current.failedToReadImageData_7284,
+          );
         }
 
         return bytes;
@@ -83,7 +94,9 @@ class ImageUtils {
     try {
       return base64Decode(base64String);
     } catch (e) {
-      debugPrint('解码图片失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.imageDecodeFailed_4821(e),
+      );
       return null;
     }
   }
@@ -188,17 +201,20 @@ class ImageUtils {
         border: Border.all(color: borderColor.withAlpha((0.3 * 255).toInt())),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.image_not_supported_outlined,
               color: Colors.grey,
               size: 32,
             ),
-            SizedBox(height: 4),
-            Text('透明图层', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 4),
+            Text(
+              LocalizationService.instance.current.transparentLayer_7285,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
           ],
         ),
       ),
@@ -257,7 +273,7 @@ class ImageUtils {
       final image = await decodeImageFromList(imageBytes);
       return Size(image.width.toDouble(), image.height.toDouble());
     } catch (e) {
-      debugPrint('获取图片尺寸失败: $e');
+      debugPrint(LocalizationService.instance.current.failedToGetImageSize(e));
       return null;
     }
   }

@@ -1,7 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_service_provider.dart';
+import '../localization_service.dart';
 
 /// 音频播放配置
 class AudioPlayerConfig {
@@ -282,10 +284,19 @@ class AudioPlayerService extends ChangeNotifier {
         _onDurationChanged,
       );
 
-      debugPrint('🎵 AudioPlayerService: 音频播放器初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.audioPlayerInitialized_7281,
+      );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 初始化失败 - $e');
-      _setError('音频播放器初始化失败: $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.audioPlayerInitFailed_4821 +
+            ' - ' +
+            e.toString(),
+      );
+      _setError(
+        LocalizationService.instance.current.audioPlayerInitFailed_7284(e),
+      );
     }
   }
 
@@ -317,17 +328,24 @@ class AudioPlayerService extends ChangeNotifier {
         await _player.resume().timeout(
           const Duration(seconds: 10),
           onTimeout: () {
-            debugPrint('🎵 AudioPlayerService: 临时队列播放超时，但继续处理');
+            debugPrint(
+              LocalizationService.instance.current.audioPlayerTimeout_4821,
+            );
             _setState(AudioPlaybackState.playing);
           },
         );
         debugPrint(
-          '🎵 AudioPlayerService: 临时队列开始播放 - ${_tempQueueItem!.title}',
+          LocalizationService.instance.current.audioPlayerTempQueuePlaying_7421(
+            _tempQueueItem!.title,
+          ),
         );
         return true;
       } catch (e) {
         debugPrint('🎵 AudioPlayerService: 临时队列播放失败 - $e');
-        _setError('临时队列播放失败: $e');
+        _setError(
+          LocalizationService.instance.current
+              .temporaryQueuePlaybackFailed_4829(e),
+        );
         return false;
       }
     }
@@ -335,7 +353,9 @@ class AudioPlayerService extends ChangeNotifier {
     try {
       String? audioSource = source ?? _currentSource;
       if (audioSource == null) {
-        _setError('没有指定音频源');
+        _setError(
+          LocalizationService.instance.current.noAudioSourceSpecified_7281,
+        );
         return false;
       }
       _setState(AudioPlaybackState.loading);
@@ -348,15 +368,22 @@ class AudioPlayerService extends ChangeNotifier {
       await _player.resume().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          debugPrint('🎵 AudioPlayerService: 播放操作超时，但继续处理');
+          debugPrint(
+            LocalizationService.instance.current.audioPlayerTimeout_7421,
+          );
           _setState(AudioPlaybackState.playing);
         },
       );
-      debugPrint('🎵 AudioPlayerService: 开始播放 - $audioSource');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.audioPlayerStartPlaying_7421(
+              audioSource,
+            ),
+      );
       return true;
     } catch (e) {
       debugPrint('🎵 AudioPlayerService: 播放失败 - $e');
-      _setError('播放失败: $e');
+      _setError(LocalizationService.instance.current.playbackFailed_7285(e));
       return false;
     }
   }
@@ -367,14 +394,16 @@ class AudioPlayerService extends ChangeNotifier {
       await _player.pause().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          debugPrint('🎵 AudioPlayerService: 暂停操作超时，但继续处理');
+          debugPrint(
+            LocalizationService.instance.current.audioPlayerTimeout_4821,
+          );
           _setState(AudioPlaybackState.paused);
         },
       );
-      debugPrint('🎵 AudioPlayerService: 已暂停');
+      debugPrint(LocalizationService.instance.current.audioPlayerPaused_7281);
     } catch (e) {
       debugPrint('🎵 AudioPlayerService: 暂停失败 - $e');
-      _setError('暂停失败: $e');
+      _setError(LocalizationService.instance.current.pauseFailed_7285(e));
     }
   }
 
@@ -383,10 +412,13 @@ class AudioPlayerService extends ChangeNotifier {
     try {
       await _player.stop();
       _currentPosition = Duration.zero;
-      debugPrint('🎵 AudioPlayerService: 已停止');
+      debugPrint(LocalizationService.instance.current.audioPlayerStopped_7281);
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 停止失败 - $e');
-      _setError('停止失败: $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.audioPlayerStopFailure_4821(e),
+      );
+      _setError(LocalizationService.instance.current.stopFailedError(e));
     }
   }
 
@@ -407,17 +439,26 @@ class AudioPlayerService extends ChangeNotifier {
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () {
-              debugPrint('🎵 AudioPlayerService: 跳转操作超时，使用备选方案');
+              debugPrint(
+                LocalizationService.instance.current.audioPlayerFallback_4821,
+              );
               // 直接更新位置，不等待播放器响应
               _currentPosition = position;
               notifyListeners();
             },
           );
 
-      debugPrint('🎵 AudioPlayerService: 跳转到 ${position.inSeconds}秒');
+      debugPrint(
+        '🎵 AudioPlayerService: ${LocalizationService.instance.current.seekToPosition(position.inSeconds)}',
+      );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 跳转失败 - $e');
-      _setError('跳转失败: $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.seekFailed_4821 +
+            ' - ' +
+            e.toString(),
+      );
+      _setError(LocalizationService.instance.current.jumpFailed_4821(e));
 
       // 即使跳转失败，也尝试更新本地位置状态
       if (!position.isNegative &&
@@ -435,10 +476,19 @@ class AudioPlayerService extends ChangeNotifier {
       await _player.setVolume(clampedVolume);
       _volume = clampedVolume;
       notifyListeners();
-      debugPrint('🎵 AudioPlayerService: 音量设置为 ${(_volume * 100).round()}%');
+      debugPrint(
+        '🎵 AudioPlayerService: ${LocalizationService.instance.current.volumeSetTo((_volume * 100).round())}',
+      );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 设置音量失败 - $e');
-      _setError('设置音量失败: $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.setVolumeFailed_7281 +
+            ' - ' +
+            e.toString(),
+      );
+      _setError(
+        LocalizationService.instance.current.volumeSettingFailed_7285(e),
+      );
     }
   }
 
@@ -449,10 +499,19 @@ class AudioPlayerService extends ChangeNotifier {
       await _player.setPlaybackRate(clampedRate);
       _playbackRate = clampedRate;
       notifyListeners();
-      debugPrint('🎵 AudioPlayerService: 播放速度设置为 ${_playbackRate}x');
+      debugPrint(
+        '🎵 AudioPlayerService: ${LocalizationService.instance.current.playbackRateSetTo(_playbackRate)}',
+      );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 设置播放速度失败 - $e');
-      _setError('设置播放速度失败: $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.setPlaybackSpeedFailed_7281 +
+            ' - ' +
+            e.toString(),
+      );
+      _setError(
+        LocalizationService.instance.current.setPlaybackSpeedFailed_7285(e),
+      );
     }
   }
 
@@ -463,10 +522,13 @@ class AudioPlayerService extends ChangeNotifier {
       await _player.setBalance(clampedBalance);
       _balance = clampedBalance;
       notifyListeners();
-      debugPrint('🎵 AudioPlayerService: 音频平衡设置为 $_balance');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.audioBalanceSet_7421(_balance),
+      );
     } catch (e) {
       debugPrint('🎵 AudioPlayerService: 设置音频平衡失败 - $e');
-      _setError('设置音频平衡失败: $e');
+      _setError(LocalizationService.instance.current.audioBalanceError_4821(e));
     }
   }
 
@@ -485,10 +547,12 @@ class AudioPlayerService extends ChangeNotifier {
       }
       _muted = muted;
       notifyListeners();
-      debugPrint('🎵 AudioPlayerService: ${_muted ? "已静音" : "取消静音"}');
+      debugPrint(
+        '🎵 AudioPlayerService: ${_muted ? LocalizationService.instance.current.mutedStatusOn : LocalizationService.instance.current.mutedStatusOff}',
+      );
     } catch (e) {
       debugPrint('🎵 AudioPlayerService: 切换静音失败 - $e');
-      _setError('切换静音失败: $e');
+      _setError(LocalizationService.instance.current.toggleMuteFailed_7284(e));
     }
   }
 
@@ -496,14 +560,18 @@ class AudioPlayerService extends ChangeNotifier {
   void addToPlaylist(PlaylistItem item) {
     _playlist.add(item);
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 添加到播放队列 - ${item.title}');
+    debugPrint(
+      '🎵 AudioPlayerService: ${LocalizationService.instance.current.addedToQueue_7421} - ${item.title}',
+    );
   }
 
   /// 批量添加到播放队列
   void addAllToPlaylist(List<PlaylistItem> items) {
     _playlist.addAll(items);
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 批量添加到播放队列 - ${items.length}首');
+    debugPrint(
+      '🎵 AudioPlayerService: ${LocalizationService.instance.current.batchAddToQueue_7421} - ${items.length}${LocalizationService.instance.current.songsSuffix_8153}',
+    );
   }
 
   /// 在指定位置插入到播放队列
@@ -514,7 +582,9 @@ class AudioPlayerService extends ChangeNotifier {
       _playlist.insert(index, item);
     }
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 插入到播放队列[$index] - ${item.title}');
+    debugPrint(
+      '🎵 AudioPlayerService: ${LocalizationService.instance.current.insertToPlayQueue_7425(index)} - ${item.title}',
+    );
   }
 
   /// 从播放队列移除
@@ -531,7 +601,9 @@ class AudioPlayerService extends ChangeNotifier {
       }
 
       notifyListeners();
-      debugPrint('🎵 AudioPlayerService: 从播放队列移除 - ${item.title}');
+      debugPrint(
+        '🎵 AudioPlayerService: ${LocalizationService.instance.current.removedFromQueue_7421} - ${item.title}',
+      );
     }
   }
 
@@ -549,7 +621,7 @@ class AudioPlayerService extends ChangeNotifier {
     _currentIndex = -1;
     stop();
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 清空播放队列');
+    debugPrint(LocalizationService.instance.current.audioPlayerClearQueue_4821);
   }
 
   /// 替换整个播放队列（用于拖拽排序等场景）
@@ -558,13 +630,17 @@ class AudioPlayerService extends ChangeNotifier {
       ..clear()
       ..addAll(newList);
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 播放队列已更新');
+    debugPrint(
+      LocalizationService.instance.current.audioPlayerQueueUpdated_7281,
+    );
   }
 
   /// 播放队列中的指定项目
   Future<bool> playFromPlaylist(int index) async {
     if (index < 0 || index >= _playlist.length) {
-      _setError('播放队列索引超出范围');
+      _setError(
+        LocalizationService.instance.current.playlistIndexOutOfRange_7281,
+      );
       return false;
     }
 
@@ -578,13 +654,15 @@ class AudioPlayerService extends ChangeNotifier {
   /// 播放下一首
   Future<bool> playNext() async {
     if (_playlist.isEmpty) {
-      _setError('播放队列为空');
+      _setError(LocalizationService.instance.current.playQueueEmpty_4821);
       return false;
     }
 
     int nextIndex = _getNextIndex();
     if (nextIndex == -1) {
-      debugPrint('🎵 AudioPlayerService: 已到播放队列末尾');
+      debugPrint(
+        LocalizationService.instance.current.audioPlayerReachedEnd_7281,
+      );
       return false;
     }
 
@@ -594,13 +672,15 @@ class AudioPlayerService extends ChangeNotifier {
   /// 播放上一首
   Future<bool> playPrevious() async {
     if (_playlist.isEmpty) {
-      _setError('播放队列为空');
+      _setError(LocalizationService.instance.current.playQueueEmpty_7281);
       return false;
     }
 
     int prevIndex = _getPreviousIndex();
     if (prevIndex == -1) {
-      debugPrint('🎵 AudioPlayerService: 已到播放队列开头');
+      debugPrint(
+        LocalizationService.instance.current.audioPlayerReachedStart_7281,
+      );
       return false;
     }
 
@@ -611,33 +691,48 @@ class AudioPlayerService extends ChangeNotifier {
   void setPlaybackMode(PlaybackMode mode) {
     _playbackMode = mode;
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 播放模式设置为 $_playbackMode');
+    debugPrint(
+      '🎵 AudioPlayerService: ' +
+          LocalizationService.instance.current.playbackModeSetTo(_playbackMode),
+    );
   }
 
   /// 启用/禁用后台播放
   void setBackgroundPlayback(bool enabled) {
     _backgroundPlayback = enabled;
     notifyListeners();
-    debugPrint('🎵 AudioPlayerService: 后台播放 ${enabled ? "已启用" : "已禁用"}');
+    debugPrint(
+      '🎵 AudioPlayerService: ${LocalizationService.instance.current.backgroundPlayStatus(enabled ? LocalizationService.instance.current.enabled_4821 : LocalizationService.instance.current.disabled_4821)}',
+    );
   }
 
   /// 加载音频源
   Future<void> _loadAudioSource(String source) async {
-    debugPrint('🎵 AudioPlayerService: 开始加载音频源 - $source');
+    debugPrint(
+      '🎵 AudioPlayerService: ' +
+          LocalizationService.instance.current.audioSourceLoading_4821(source),
+    );
 
     if (_isNetworkUrl(source)) {
       // 网络URL直接播放
-      debugPrint('🎵 AudioPlayerService: 使用网络URL播放');
+      debugPrint(
+        LocalizationService.instance.current.audioPlayerUsingNetworkUrl_4821,
+      );
       await _player.setSourceUrl(source);
     } else {
       // VFS路径需要先获取临时文件路径或Data URI
-      debugPrint('🎵 AudioPlayerService: 从VFS生成播放URL');
+      debugPrint(
+        LocalizationService.instance.current.audioPlayerServiceGenerateUrl_4821,
+      );
       final playableUrl = await _vfsService.generateFileUrl(source);
       if (playableUrl == null) {
         throw Exception('无法从VFS获取音频文件');
       }
 
-      debugPrint('🎵 AudioPlayerService: 生成的播放URL - $playableUrl');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.generatedPlayUrl(playableUrl),
+      );
 
       if (kIsWeb) {
         // Web平台使用Data URI
@@ -652,7 +747,7 @@ class AudioPlayerService extends ChangeNotifier {
       }
     }
 
-    debugPrint('🎵 AudioPlayerService: 音频源加载完成');
+    debugPrint(LocalizationService.instance.current.audioSourceLoaded_7281);
   }
 
   /// 应用播放配置

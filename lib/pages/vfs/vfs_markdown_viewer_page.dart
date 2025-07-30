@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/vfs/viewers/vfs_markdown_renderer.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// VFS Markdown查看器页面
 class VfsMarkdownViewerPage extends BasePage {
@@ -94,33 +97,41 @@ class _VfsMarkdownViewerPageContentState
         IconButton(
           icon: const Icon(Icons.fullscreen),
           onPressed: _toggleFullscreen,
-          tooltip: '全屏模式',
+          tooltip: LocalizationService.instance.current.fullscreenMode_7281,
         ),
 
         // 更多选项
         PopupMenuButton<String>(
           onSelected: _handleMenuAction,
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'window',
               child: Row(
                 children: [
                   Icon(Icons.open_in_new),
                   SizedBox(width: 8),
-                  Text('在窗口中打开'),
+                  Text(LocalizationService.instance.current.openInWindow_4281),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'share',
               child: Row(
-                children: [Icon(Icons.share), SizedBox(width: 8), Text('分享')],
+                children: [
+                  Icon(Icons.share),
+                  SizedBox(width: 8),
+                  Text(LocalizationService.instance.current.share_7281),
+                ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'info',
               child: Row(
-                children: [Icon(Icons.info), SizedBox(width: 8), Text('文件信息')],
+                children: [
+                  Icon(Icons.info),
+                  SizedBox(width: 8),
+                  Text(LocalizationService.instance.current.fileInfo_7281),
+                ],
               ),
             ),
           ],
@@ -220,7 +231,7 @@ class _VfsMarkdownViewerPageContentState
       IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: widget.onClose ?? () => Navigator.of(context).pop(),
-        tooltip: '返回',
+        tooltip: LocalizationService.instance.current.backButton_7421,
       ),
 
       const SizedBox(width: 8),
@@ -229,7 +240,7 @@ class _VfsMarkdownViewerPageContentState
       IconButton(
         icon: const Icon(Icons.open_in_new),
         onPressed: _openInWindow,
-        tooltip: '在窗口中打开',
+        tooltip: LocalizationService.instance.current.openInWindowTooltip_4271,
       ),
     ];
   }
@@ -266,47 +277,79 @@ class _VfsMarkdownViewerPageContentState
     //   fileInfo: widget.fileInfo,
     // );
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('在窗口中打开功能需要导入窗口组件')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocalizationService.instance.current.openInWindowHint_7281,
+        ),
+      ),
+    );
   }
 
   /// 分享文件
   void _shareFile() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('分享功能开发中...')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocalizationService.instance.current.shareFeatureInDevelopment_7281,
+        ),
+      ),
+    );
   }
 
   /// 显示文件信息
   void _showFileInfo() {
     if (widget.fileInfo == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('文件信息不可用')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            LocalizationService.instance.current.fileUnavailable_4287,
+          ),
+        ),
+      );
       return;
     }
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('文件信息'),
+        title: Text(LocalizationService.instance.current.fileInfo_4821),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('文件名', widget.fileInfo!.name),
-            _buildInfoRow('大小', _formatFileSize(widget.fileInfo!.size)),
-            _buildInfoRow('创建时间', _formatDateTime(widget.fileInfo!.createdAt)),
-            _buildInfoRow('修改时间', _formatDateTime(widget.fileInfo!.modifiedAt)),
-            _buildInfoRow('类型', widget.fileInfo!.isDirectory ? '目录' : '文件'),
-            _buildInfoRow('路径', widget.vfsPath),
+            _buildInfoRow(
+              LocalizationService.instance.current.fileName_4821,
+              widget.fileInfo!.name,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.fileSizeLabel_4821,
+              _formatFileSize(widget.fileInfo!.size),
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.creationTime_4821,
+              _formatDateTime(widget.fileInfo!.createdAt),
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.modifiedTime_4821,
+              _formatDateTime(widget.fileInfo!.modifiedAt),
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.typeLabel_4821,
+              widget.fileInfo!.isDirectory
+                  ? LocalizationService.instance.current.directory_4821
+                  : LocalizationService.instance.current.file_4821,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.pathLabel_5421,
+              widget.vfsPath,
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7281),
           ),
         ],
       ),
@@ -338,9 +381,13 @@ class _VfsMarkdownViewerPageContentState
   /// 切换全屏模式
   void _toggleFullscreen() {
     // 这里可以实现全屏逻辑
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('全屏模式开发中...')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocalizationService.instance.current.fullScreenModeInDevelopment_7281,
+        ),
+      ),
+    );
   }
 
   /// 处理错误

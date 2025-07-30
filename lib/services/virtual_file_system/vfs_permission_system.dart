@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'vfs_protocol.dart';
 import 'vfs_storage_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS权限位定义
 class VfsPermission {
@@ -198,7 +201,9 @@ class VfsPermissionManager {
   /// 初始化权限系统
   Future<void> initialize() async {
     if (_isInitialized) {
-      debugPrint('VFS权限系统已初始化，跳过重复初始化');
+      debugPrint(
+        LocalizationService.instance.current.vfsInitializationSkipped_7281,
+      );
       return;
     }
 

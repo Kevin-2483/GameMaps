@@ -1,0 +1,5 @@
+{
+  "collaborationStateInitialized_7281": "协作状态初始化完成",
+  "collaborationInitFailed_7281": "初始化协作状态失败: {error}",
+  "elementLockFailed_7281": "元素锁定失败"
+}

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 // import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,8 @@ import '../models/legend_item.dart';
 // import '../services/map_database_service.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// Web平台数据库导入工具
 /// 用于将从客户端导出的JSON数据导入到Web平台数据库
@@ -16,7 +19,9 @@ class WebDatabaseImporter {
   /// 从assets中导入预设的数据库数据
   static Future<void> importFromAssets() async {
     if (!kIsWeb) {
-      debugPrint('WebDatabaseImporter: 只能在Web平台使用');
+      debugPrint(
+        LocalizationService.instance.current.webDatabaseImporterWebOnly_7281,
+      );
       return;
     }
 
@@ -26,7 +31,9 @@ class WebDatabaseImporter {
       final data = json.decode(jsonString) as Map<String, dynamic>;
 
       await _importData(data);
-      debugPrint('WebDatabaseImporter: 数据导入完成');
+      debugPrint(
+        LocalizationService.instance.current.webDatabaseImportComplete_4821,
+      );
     } catch (e) {
       debugPrint('WebDatabaseImporter: 导入失败 - $e');
       // 如果没有导出数据，使用示例数据
@@ -54,7 +61,12 @@ class WebDatabaseImporter {
             final mapItem = MapItem.fromJson(mapData as Map<String, dynamic>);
             // 直接调用强制插入方法，绕过Web平台的只读限制
             await mapService.forceInsertMap(mapItem);
-            debugPrint('WebDatabaseImporter: 成功导入地图: ${mapItem.title}');
+            debugPrint(
+              'WebDatabaseImporter: ' +
+                  LocalizationService.instance.current.mapImportSuccess(
+                    mapItem.title,
+                  ),
+            );
           } catch (e) {
             debugPrint('WebDatabaseImporter: 导入地图失败 - $e');
           }
@@ -75,9 +87,13 @@ class WebDatabaseImporter {
             );
             // 直接调用强制插入方法，绕过重复检查
             await legendService.forceInsertLegend(legendItem);
-            debugPrint('WebDatabaseImporter: 成功导入图例: ${legendItem.title}');
+            debugPrint(
+              'WebDatabaseImporter: ${LocalizationService.instance.current.legendImportSuccess_7421}: ${legendItem.title}',
+            );
           } catch (e) {
-            debugPrint('WebDatabaseImporter: 导入图例失败 - $e');
+            debugPrint(
+              'WebDatabaseImporter: ${LocalizationService.instance.current.importLegendFailed_7281} - $e',
+            );
           }
         }
       }
@@ -86,12 +102,12 @@ class WebDatabaseImporter {
 
   /// 创建示例数据（当没有导出数据时使用）
   static Future<void> _createSampleData() async {
-    debugPrint('WebDatabaseImporter: 创建示例数据');
+    debugPrint(LocalizationService.instance.current.createSampleData_7421);
     final mapService = VfsMapServiceFactory.createMapDatabaseService();
 
     // 创建示例地图
     final sampleMap = MapItem(
-      title: '示例地图',
+      title: LocalizationService.instance.current.sampleMapTitle_7281,
       imageData: _createSampleImageData(),
       version: 1,
       layers: [],
@@ -102,9 +118,11 @@ class WebDatabaseImporter {
 
     try {
       await mapService.forceInsertMap(sampleMap);
-      debugPrint('WebDatabaseImporter: 示例数据创建完成');
+      debugPrint(LocalizationService.instance.current.sampleDataCreated_7421);
     } catch (e) {
-      debugPrint('WebDatabaseImporter: 创建示例数据失败 - $e');
+      debugPrint(
+        'WebDatabaseImporter: ${LocalizationService.instance.current.createSampleDataFailed_7281} - $e',
+      );
     }
   }
 

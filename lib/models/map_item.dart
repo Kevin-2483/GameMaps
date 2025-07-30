@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'map_layer.dart';
 import 'sticky_note.dart'; // 导入StickyNote
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 part 'map_item.g.dart';
 
@@ -74,7 +77,9 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        debugPrint('解析图层数据失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.layerDataParseFailed_7421(e),
+        );
         // 如果解析失败，继续使用空列表
       }
     }
@@ -88,7 +93,9 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        debugPrint('解析图例组数据失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.legendDataParseFailed_7285(e),
+        );
         // 如果解析失败，继续使用空列表
       }
     }
@@ -102,7 +109,9 @@ class MapItem {
               .toList();
         }
       } catch (e) {
-        debugPrint('解析便签数据失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.parseNoteDataFailed_7284(e),
+        );
         // 如果解析失败，继续使用空列表
       }
     }

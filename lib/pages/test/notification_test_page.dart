@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/notification/notification_service.dart';
 import '../../services/notification/notification_models.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 通知系统测试页面
 class NotificationTestPage extends StatefulWidget {
@@ -17,7 +20,7 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
   Duration _selectedDuration = const Duration(seconds: 4);
   bool _showCloseButton = true;
   final TextEditingController _messageController = TextEditingController(
-    text: '这是一条测试消息',
+    text: LocalizationService.instance.current.testMessage_4721,
   );
 
   @override
@@ -30,7 +33,9 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('通知系统测试'),
+        title: Text(
+          LocalizationService.instance.current.notificationSystemTest_4271,
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
@@ -45,8 +50,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '消息内容',
+                    Text(
+                      LocalizationService.instance.current.messageContent_7281,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -55,8 +60,11 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: '输入要显示的消息内容',
+                      decoration: InputDecoration(
+                        hintText: LocalizationService
+                            .instance
+                            .current
+                            .inputMessageHint_4521,
                         border: OutlineInputBorder(),
                       ),
                       maxLines: 2,
@@ -74,8 +82,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '消息类型',
+                    Text(
+                      LocalizationService.instance.current.messageType_7281,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -111,8 +119,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '显示位置',
+                    Text(
+                      LocalizationService.instance.current.displayLocation_7421,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -133,8 +141,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '其他设置',
+                    Text(
+                      LocalizationService.instance.current.otherSettings_7421,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -145,7 +153,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     // 显示时长
                     Row(
                       children: [
-                        const Text('显示时长: '),
+                        Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .displayDuration_7284,
+                        ),
                         Expanded(
                           child: DropdownButton<Duration>(
                             value: _selectedDuration,
@@ -156,30 +169,60 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                                 });
                               }
                             },
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: Duration(seconds: 1),
-                                child: Text('1秒'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .oneSecond_7281,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: Duration(seconds: 2),
-                                child: Text('2秒'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .twoSeconds_4271,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: Duration(seconds: 4),
-                                child: Text('4秒'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .secondsCount_4821,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: Duration(seconds: 6),
-                                child: Text('6秒'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .secondsCount_4821,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: Duration(seconds: 10),
-                                child: Text('10秒'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .tenSeconds_4821,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: Duration.zero,
-                                child: Text('不自动关闭'),
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .doNotAutoClose_7281,
+                                ),
                               ),
                             ],
                           ),
@@ -191,7 +234,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     // 显示关闭按钮
                     Row(
                       children: [
-                        const Text('显示关闭按钮: '),
+                        Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .showCloseButton_4271,
+                        ),
                         Switch(
                           value: _showCloseButton,
                           onChanged: (value) {
@@ -214,7 +262,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _showTestNotification,
-                    child: const Text('显示通知'),
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .showNotification_1234,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -224,7 +277,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                     ),
-                    child: const Text('显示多条通知'),
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .showMultipleNotifications_4271,
+                    ),
                   ),
                 ),
               ],
@@ -239,7 +297,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey,
                     ),
-                    child: const Text('清除当前位置'),
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .clearCurrentLocation_4821,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -249,7 +312,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                     ),
-                    child: const Text('清除所有通知'),
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .clearAllNotifications_7281,
+                    ),
                   ),
                 ),
               ],
@@ -257,8 +325,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
             const SizedBox(height: 24),
 
             // 快速测试按钮
-            const Text(
-              '快速测试',
+            Text(
+              LocalizationService.instance.current.quickTest_7421,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -267,32 +335,48 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
               runSpacing: 8,
               children: [
                 ElevatedButton(
-                  onPressed: () =>
-                      _showQuickTest('成功消息', NotificationType.success),
+                  onPressed: () => _showQuickTest(
+                    LocalizationService.instance.current.successMessage_4821,
+                    NotificationType.success,
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                   ),
-                  child: const Text('成功'),
+                  child: Text(
+                    LocalizationService.instance.current.success_4821,
+                  ),
                 ),
                 ElevatedButton(
-                  onPressed: () =>
-                      _showQuickTest('错误消息', NotificationType.error),
+                  onPressed: () => _showQuickTest(
+                    LocalizationService.instance.current.errorMessage_4821(
+                      'Test Error',
+                    ),
+                    NotificationType.error,
+                  ),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text('错误'),
+                  child: Text(LocalizationService.instance.current.error_4821),
                 ),
                 ElevatedButton(
-                  onPressed: () =>
-                      _showQuickTest('警告消息', NotificationType.warning),
+                  onPressed: () => _showQuickTest(
+                    LocalizationService.instance.current.warningMessage_7284,
+                    NotificationType.warning,
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                   ),
-                  child: const Text('警告'),
+                  child: Text(
+                    LocalizationService.instance.current.warning_7281,
+                  ),
                 ),
                 ElevatedButton(
-                  onPressed: () =>
-                      _showQuickTest('信息消息', NotificationType.info),
+                  onPressed: () => _showQuickTest(
+                    LocalizationService.instance.current.infoMessage_7284,
+                    NotificationType.info,
+                  ),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: const Text('信息'),
+                  child: Text(
+                    LocalizationService.instance.current.information_7281,
+                  ),
                 ),
               ],
             ),
@@ -305,8 +389,11 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '🔥 常驻通知演示 (SnackBar 替换)',
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .persistentNotificationDemo_7281,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -314,8 +401,11 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      '演示如何替换原版 SnackBar 的常驻显示功能',
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .snackBarDemoDescription_7281,
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 16),
@@ -327,7 +417,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                           child: ElevatedButton.icon(
                             onPressed: _showPersistentNotification,
                             icon: const Icon(Icons.access_time),
-                            label: const Text('显示常驻通知'),
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .showPersistentNotification_7281,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purple,
                               foregroundColor: Colors.white,
@@ -339,7 +434,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                           child: ElevatedButton.icon(
                             onPressed: _showProgressNotification,
                             icon: const Icon(Icons.download),
-                            label: const Text('进度通知'),
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .progressNotification_4271,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.indigo,
                               foregroundColor: Colors.white,
@@ -357,7 +457,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                           child: ElevatedButton.icon(
                             onPressed: _showSnackBarCompatDemo,
                             icon: const Icon(Icons.compare_arrows),
-                            label: const Text('SnackBar兼容演示'),
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .snackBarDemo_4271,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.teal,
                               foregroundColor: Colors.white,
@@ -369,7 +474,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                           child: ElevatedButton.icon(
                             onPressed: _showImagePickerDemo,
                             icon: const Icon(Icons.image),
-                            label: const Text('图片选择演示'),
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .imageSelectionDemo_4271,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.brown,
                               foregroundColor: Colors.white,
@@ -384,7 +494,12 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
                     ElevatedButton.icon(
                       onPressed: _showUpdateNotificationDemo,
                       icon: const Icon(Icons.update),
-                      label: const Text('🔄 演示更新通知（无重新动画）'),
+                      label: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .demoUpdateNoticeWithoutAnimation_4821,
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepOrange,
                         foregroundColor: Colors.white,
@@ -454,13 +569,13 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
   String _getTypeLabel(NotificationType type) {
     switch (type) {
       case NotificationType.success:
-        return '成功';
+        return LocalizationService.instance.current.success_4821;
       case NotificationType.error:
-        return '错误';
+        return LocalizationService.instance.current.error_5732;
       case NotificationType.warning:
-        return '警告';
+        return LocalizationService.instance.current.warning_6643;
       case NotificationType.info:
-        return '信息';
+        return LocalizationService.instance.current.info_7554;
     }
   }
 
@@ -468,23 +583,23 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
   String _getPositionLabel(NotificationPosition position) {
     switch (position) {
       case NotificationPosition.topLeft:
-        return '左上';
+        return LocalizationService.instance.current.topLeft_1234;
       case NotificationPosition.topCenter:
-        return '上中';
+        return LocalizationService.instance.current.topCenter_5678;
       case NotificationPosition.topRight:
-        return '右上';
+        return LocalizationService.instance.current.topRight_9012;
       case NotificationPosition.centerLeft:
-        return '左中';
+        return LocalizationService.instance.current.centerLeft_3456;
       case NotificationPosition.center:
-        return '中心';
+        return LocalizationService.instance.current.center_7890;
       case NotificationPosition.centerRight:
-        return '右中';
+        return LocalizationService.instance.current.centerRight_1235;
       case NotificationPosition.bottomLeft:
-        return '左下';
+        return LocalizationService.instance.current.bottomLeft_6789;
       case NotificationPosition.bottomCenter:
-        return '下中';
+        return LocalizationService.instance.current.bottomCenter_0123;
       case NotificationPosition.bottomRight:
-        return '右下';
+        return LocalizationService.instance.current.bottomRight_4567;
     }
   }
 
@@ -493,7 +608,9 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     final message = _messageController.text.trim();
     if (message.isEmpty) {
       // 使用新的通知系统替换 SnackBar
-      context.showErrorSnackBar('请输入消息内容');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.inputMessageContent_7281,
+      );
       return;
     }
 
@@ -504,10 +621,14 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
       duration: _selectedDuration == Duration.zero ? null : _selectedDuration,
       showCloseButton: _showCloseButton,
       onTap: () {
-        debugPrint('通知被点击: $message');
+        debugPrint(
+          LocalizationService.instance.current.notificationClicked_4821,
+        );
       },
       onClose: () {
-        debugPrint('通知被关闭: $message');
+        debugPrint(
+          LocalizationService.instance.current.notificationClosed(message),
+        );
       },
     );
   }
@@ -524,7 +645,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     for (int i = 0; i < 4; i++) {
       Future.delayed(Duration(milliseconds: i * 500), () {
         NotificationService.instance.show(
-          message: '第${i + 1}条消息 - ${_getTypeLabel(types[i])}',
+          message: LocalizationService.instance.current
+              .messageWithIndexAndType_7421(i + 1, _getTypeLabel(types[i])),
           type: types[i],
           position: _selectedPosition,
           duration: const Duration(seconds: 6),
@@ -555,10 +677,14 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
       borderEffect: NotificationBorderEffect.glow, // 🔑 使用发光边框效果
       showCloseButton: true,
       onTap: () {
-        debugPrint('常驻通知被点击');
+        debugPrint(
+          LocalizationService.instance.current.notificationClicked_4821,
+        );
       },
       onClose: () {
-        debugPrint('常驻通知被关闭');
+        debugPrint(
+          LocalizationService.instance.current.residentNotificationClosed_7281,
+        );
       },
     );
   }
@@ -571,7 +697,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     // 显示初始进度通知
     NotificationService.instance.show(
       id: notificationId,
-      message: '正在下载文件... 0%',
+      message: LocalizationService.instance.current
+          .downloadingFileProgress_4821(0),
       type: NotificationType.info,
       position: NotificationPosition.bottomCenter,
       isPersistent: true, // 🔑 常驻显示直到完成
@@ -587,7 +714,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
         // 🔑 使用updateNotification更新现有通知（不重新播放动画）
         NotificationService.instance.updateNotification(
           notificationId: notificationId,
-          message: '正在下载文件... $progress%',
+          message: LocalizationService.instance.current
+              .downloadingFileProgress_4821(progress),
           isPersistent: progress < 100, // 🔑 完成前常驻，完成后自动消失
           borderEffect: progress == 100
               ? NotificationBorderEffect.glow
@@ -602,7 +730,10 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
           Future.delayed(const Duration(milliseconds: 100), () {
             NotificationService.instance.updateNotification(
               notificationId: notificationId,
-              message: '文件下载完成！',
+              message: LocalizationService
+                  .instance
+                  .current
+                  .fileDownloadComplete_4821,
               type: NotificationType.success,
               borderEffect: NotificationBorderEffect.glow, // 🔑 使用发光边框效果
               duration: const Duration(seconds: 3),
@@ -623,7 +754,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     // 显示初始通知
     NotificationService.instance.show(
       id: notificationId,
-      message: '🔄 这个通知将会被更新（不重新播放动画）',
+      message:
+          LocalizationService.instance.current.notificationWillBeUpdated_7281,
       type: NotificationType.info,
       position: NotificationPosition.topCenter,
       isPersistent: true,
@@ -635,7 +767,7 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     Future.delayed(const Duration(seconds: 2), () {
       NotificationService.instance.updateNotification(
         notificationId: notificationId,
-        message: '✨ 消息已更新！注意没有重新播放动画',
+        message: LocalizationService.instance.current.notificationUpdated_7281,
         type: NotificationType.warning,
         borderEffect: NotificationBorderEffect.glow,
       );
@@ -645,7 +777,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     Future.delayed(const Duration(seconds: 4), () {
       NotificationService.instance.updateNotification(
         notificationId: notificationId,
-        message: '🎉 更新完成！这就是updateNotification的威力',
+        message:
+            LocalizationService.instance.current.updateCompleteMessage_4821,
         type: NotificationType.success,
         borderEffect: NotificationBorderEffect.glow,
         duration: const Duration(seconds: 3),
@@ -680,7 +813,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
         onTap: () {
           // 显示对比信息
           NotificationService.instance.show(
-            message: '🎉 功能更强大：支持9个位置、堆叠管理、精美动画！',
+            message:
+                LocalizationService.instance.current.featureEnhancement_4821,
             type: NotificationType.info,
             position: NotificationPosition.topCenter,
             duration: const Duration(seconds: 3),
@@ -718,7 +852,7 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
     // 使用我们的通知系统替换
     if (mounted) {
       NotificationService.instance.show(
-        message: '📸 正在选择图片...',
+        message: LocalizationService.instance.current.selectingImage_7421,
         type: NotificationType.info,
         position: NotificationPosition.bottomCenter,
         isPersistent: true, // 🔑 使用新的isPersistent参数
@@ -732,7 +866,8 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
           NotificationPosition.bottomCenter,
         );
         NotificationService.instance.show(
-          message: '✅ 图片选择完成！',
+          message:
+              LocalizationService.instance.current.imageSelectionComplete_4821,
           type: NotificationType.success,
           position: NotificationPosition.bottomCenter,
           borderEffect: NotificationBorderEffect.glow, // 🔑 使用发光边框效果

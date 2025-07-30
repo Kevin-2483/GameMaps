@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,6 +22,7 @@ import '../../../utils/legend_path_resolver.dart'; // 导入图例路径解析�
 import '../../../data/map_data_bloc.dart'; // 导入MapDataBloc
 import '../../../data/map_data_event.dart'; // 导入MapDataEvent
 import '../../../data/map_data_state.dart'; // 导入MapDataState
+import '../../../services/localization_service.dart';
 
 /// 图例组管理抽屉
 class LegendGroupManagementDrawer extends StatefulWidget {
@@ -348,23 +350,31 @@ class _LegendGroupManagementDrawerState
 
     if (oldWidget.legendGroup.id != widget.legendGroup.id) {
       needsUpdate = true;
-      reason = 'ID变化';
+      reason = LocalizationService.instance.current.idChanged_4821;
       // 清除选中的图例项，因为切换到了新的图例组
       _selectedLegendItemId = null;
     } else if (oldWidget.legendGroup.legendItems.length !=
         widget.legendGroup.legendItems.length) {
       needsUpdate = true;
-      reason =
-          '图例项数量变化: ${oldWidget.legendGroup.legendItems.length} -> ${widget.legendGroup.legendItems.length}';
+      reason = LocalizationService.instance.current.legendItemCountChanged(
+        oldWidget.legendGroup.legendItems.length,
+        widget.legendGroup.legendItems.length,
+      );
     } else if (oldWidget.legendGroup.updatedAt !=
         widget.legendGroup.updatedAt) {
       needsUpdate = true;
-      reason = '更新时间变化';
+      reason = LocalizationService.instance.current.updateTimeChanged_4821;
     }
 
     if (needsUpdate) {
-      debugPrint('图例组管理抽屉更新: $reason');
-      debugPrint('新图例组有 ${widget.legendGroup.legendItems.length} 个图例项');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupDrawerUpdate(reason),
+      );
+      debugPrint(
+        LocalizationService.instance.current.newLegendGroupItemCount(
+          widget.legendGroup.legendItems.length,
+        ),
+      );
 
       setState(() {
         // 状态更新：清理不再使用的控制器
@@ -383,7 +393,12 @@ class _LegendGroupManagementDrawerState
 
     // 如果地图ID发生变化，更新路径选择管理器的当前版本
     if (oldWidget.mapId != widget.mapId && widget.mapId != null) {
-      debugPrint('地图ID变更: ${oldWidget.mapId} -> ${widget.mapId}');
+      debugPrint(
+        LocalizationService.instance.current.mapIdChanged(
+          oldWidget.mapId.toString(),
+          widget.mapId.toString(),
+        ),
+      );
 
       // 强制刷新VFS目录树状态
       setState(() {
@@ -594,20 +609,23 @@ class _LegendGroupManagementDrawerState
     String message = '';
 
     if (!widget.legendGroup.isVisible) {
-      message = '无法选择图例：图例组当前不可见，请先显示图例组';
+      message =
+          LocalizationService.instance.current.legendGroupNotVisibleError_4821;
     } else {
-      message = '无法选择图例：请先选择一个绑定了此图例组的图层';
+      message = LocalizationService.instance.current.cannotSelectLegend_4821;
     }
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择受限'),
+        title: Text(LocalizationService.instance.current.restrictedChoice_7281),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -678,7 +696,9 @@ class _LegendGroupManagementDrawerState
                     ElevatedButton.icon(
                       onPressed: _showLayerBindingDialog,
                       icon: const Icon(Icons.layers, size: 16),
-                      label: const Text('绑定图层'),
+                      label: Text(
+                        LocalizationService.instance.current.bindLayer_7281,
+                      ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -691,7 +711,10 @@ class _LegendGroupManagementDrawerState
                     IconButton(
                       icon: const Icon(Icons.edit, size: 18),
                       onPressed: _showEditNameDialog,
-                      tooltip: '编辑名称',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .editNameTooltip_7281,
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -704,7 +727,10 @@ class _LegendGroupManagementDrawerState
                   children: [
                     Expanded(
                       child: Text(
-                        '管理图例组中的图例',
+                        LocalizationService
+                            .instance
+                            .current
+                            .manageLegendGroupLegends_4821,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(
@@ -734,9 +760,12 @@ class _LegendGroupManagementDrawerState
                         children: [
                           const Icon(Icons.settings, size: 18),
                           const SizedBox(width: 6),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              '设置选项',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .settingsOption_7421,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -770,21 +799,24 @@ class _LegendGroupManagementDrawerState
                             ),
                             child: InkWell(
                               onTap: () => _togglePanel('settings'),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.settings, size: 18),
-                                  SizedBox(width: 6),
+                                  const Icon(Icons.settings, size: 18),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      '设置选项',
-                                      style: TextStyle(
+                                      LocalizationService
+                                          .instance
+                                          .current
+                                          .settingsOption_7421,
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 6),
-                                  Icon(Icons.expand_less, size: 18),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
@@ -806,9 +838,12 @@ class _LegendGroupManagementDrawerState
                         children: [
                           const Icon(Icons.folder_outlined, size: 18),
                           const SizedBox(width: 6),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'VFS图例目录',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .vfsLegendDirectory_4821,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -842,14 +877,17 @@ class _LegendGroupManagementDrawerState
                             ),
                             child: InkWell(
                               onTap: () => _togglePanel('vfsTree'),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.folder_outlined, size: 18),
-                                  SizedBox(width: 6),
+                                  const Icon(Icons.folder_outlined, size: 18),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      'VFS图例目录',
-                                      style: TextStyle(
+                                      LocalizationService
+                                          .instance
+                                          .current
+                                          .vfsLegendDirectory_7421,
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
@@ -887,9 +925,12 @@ class _LegendGroupManagementDrawerState
                         children: [
                           const Icon(Icons.storage, size: 18),
                           const SizedBox(width: 6),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              '缓存图例',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .cacheLegend_4521,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -923,21 +964,24 @@ class _LegendGroupManagementDrawerState
                             ),
                             child: InkWell(
                               onTap: () => _togglePanel('cacheDisplay'),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.storage, size: 18),
-                                  SizedBox(width: 6),
+                                  const Icon(Icons.storage, size: 18),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      '缓存图例',
-                                      style: TextStyle(
+                                      LocalizationService
+                                          .instance
+                                          .current
+                                          .cacheLegend_7421,
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 6),
-                                  Icon(Icons.expand_less, size: 18),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.expand_less, size: 18),
                                 ],
                               ),
                             ),
@@ -972,7 +1016,10 @@ class _LegendGroupManagementDrawerState
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              '图例列表 (${widget.legendGroup.legendItems.length})',
+                              LocalizationService.instance.current
+                                  .legendListTitle(
+                                    widget.legendGroup.legendItems.length,
+                                  ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -1012,7 +1059,13 @@ class _LegendGroupManagementDrawerState
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      '图例列表 (${widget.legendGroup.legendItems.length})',
+                                      LocalizationService.instance.current
+                                          .legendListTitle(
+                                            widget
+                                                .legendGroup
+                                                .legendItems
+                                                .length,
+                                          ),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
@@ -1022,8 +1075,11 @@ class _LegendGroupManagementDrawerState
                                   ElevatedButton.icon(
                                     onPressed: _showAddLegendDialog,
                                     icon: const Icon(Icons.add, size: 14),
-                                    label: const Text(
-                                      '添加图例',
+                                    label: Text(
+                                      LocalizationService
+                                          .instance
+                                          .current
+                                          .addLegend_4521,
                                       style: TextStyle(fontSize: 12),
                                     ),
                                     style: ElevatedButton.styleFrom(
@@ -1059,7 +1115,7 @@ class _LegendGroupManagementDrawerState
         final legend =
             snapshot.data ??
             legend_db.LegendItem(
-              title: '载入中...',
+              title: LocalizationService.instance.current.loading_5421,
               centerX: 0.5,
               centerY: 0.5,
               version: 1,
@@ -1143,7 +1199,11 @@ class _LegendGroupManagementDrawerState
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '位置: (${item.position.dx.toStringAsFixed(2)}, ${item.position.dy.toStringAsFixed(2)})',
+                                LocalizationService.instance.current
+                                    .positionCoordinates_7421(
+                                      item.position.dx.toStringAsFixed(2),
+                                      item.position.dy.toStringAsFixed(2),
+                                    ),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Theme.of(
@@ -1175,14 +1235,16 @@ class _LegendGroupManagementDrawerState
                           //     : () => _updateLegendItem(
                           //         item.copyWith(isVisible: !item.isVisible),
                           //       ),
-                          tooltip: item.isVisible ? '隐藏' : '显示',
+                          tooltip: item.isVisible
+                              ? LocalizationService.instance.current.hide_4821
+                              : LocalizationService.instance.current.show_4822,
                         ),
                         // 更多操作
                         // if (!widget.isPreviewMode)
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert, size: 16),
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
                               child: Row(
                                 children: [
@@ -1193,8 +1255,11 @@ class _LegendGroupManagementDrawerState
                                   ),
                                   SizedBox(width: 8),
                                   Text(
-                                    '删除',
-                                    style: TextStyle(color: Colors.red),
+                                    LocalizationService
+                                        .instance
+                                        .current
+                                        .deleteText_4821,
+                                    style: const TextStyle(color: Colors.red),
                                   ),
                                 ],
                               ),
@@ -1216,7 +1281,8 @@ class _LegendGroupManagementDrawerState
                     ...[
                       // 大小控制
                       _buildSliderControl(
-                        label: '大小',
+                        label:
+                            LocalizationService.instance.current.sizeLabel_4821,
                         value: item.size,
                         min: 0.1,
                         max: 3.0,
@@ -1230,7 +1296,10 @@ class _LegendGroupManagementDrawerState
 
                       // 旋转角度控制
                       _buildSliderControl(
-                        label: '旋转',
+                        label: LocalizationService
+                            .instance
+                            .current
+                            .rotationLabel_4821,
                         value: item.rotation,
                         min: -180.0,
                         max: 180.0,
@@ -1243,7 +1312,10 @@ class _LegendGroupManagementDrawerState
 
                       // 透明度控制
                       _buildSliderControl(
-                        label: '透明度',
+                        label: LocalizationService
+                            .instance
+                            .current
+                            .opacityLabel_7281,
                         value: item.opacity,
                         min: 0.0,
                         max: 1.0,
@@ -1273,7 +1345,10 @@ class _LegendGroupManagementDrawerState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '链接设置',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .linkSettings_4821,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -1314,7 +1389,10 @@ class _LegendGroupManagementDrawerState
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '标签',
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .label_4821,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -1327,8 +1405,11 @@ class _LegendGroupManagementDrawerState
                                 TextButton.icon(
                                   onPressed: () => _editLegendItemTags(item),
                                   icon: const Icon(Icons.edit, size: 12),
-                                  label: const Text(
-                                    '编辑',
+                                  label: Text(
+                                    LocalizationService
+                                        .instance
+                                        .current
+                                        .editLabel_4821,
                                     style: TextStyle(fontSize: 10),
                                   ),
                                   style: TextButton.styleFrom(
@@ -1371,8 +1452,10 @@ class _LegendGroupManagementDrawerState
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: '图例链接 (可选)',
-          hintText: '输入网络链接、选择VFS文件或绑定脚本',
+          labelText:
+              LocalizationService.instance.current.legendLinkOptional_4821,
+          hintText:
+              LocalizationService.instance.current.inputLinkOrSelectFile_4821,
           border: const OutlineInputBorder(),
           isDense: true,
           suffixIcon: Row(
@@ -1560,7 +1643,11 @@ class _LegendGroupManagementDrawerState
       // 直接使用绝对路径，让legendService处理路径解析
       if (actualPath.startsWith('indexeddb://')) {
         // 传递完整的VFS路径给legendService
-        debugPrint('加载图例: 绝对路径=$actualPath');
+        debugPrint(
+          LocalizationService.instance.current.legendLoadingPath_7421(
+            actualPath,
+          ),
+        );
         return await legendService.getLegendFromAbsolutePath(actualPath);
       } else {
         // 兼容相对路径的旧逻辑
@@ -1574,12 +1661,21 @@ class _LegendGroupManagementDrawerState
             : null;
 
         debugPrint(
-          '加载图例: title=$title, folderPath=$folderPath, 相对路径=$actualPath',
+          LocalizationService.instance.current.legendLoadingInfo(
+            title,
+            folderPath.toString(),
+            actualPath,
+          ),
         );
         return await legendService.getLegend(title, folderPath);
       }
     } catch (e) {
-      debugPrint('载入图例失败: $legendPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendLoadFailed_7281(
+          legendPath,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1670,11 +1766,14 @@ class _LegendGroupManagementDrawerState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑图例组名称'),
+        title: Text(
+          LocalizationService.instance.current.editLegendGroupName_4271,
+        ),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: '图例组名称',
+          decoration: InputDecoration(
+            labelText:
+                LocalizationService.instance.current.legendGroupName_4821,
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -1682,7 +1781,7 @@ class _LegendGroupManagementDrawerState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1695,7 +1794,7 @@ class _LegendGroupManagementDrawerState
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('保存'),
+            child: Text(LocalizationService.instance.current.saveButton_7421),
           ),
         ],
       ),
@@ -1726,7 +1825,7 @@ class _LegendGroupManagementDrawerState
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('添加图例'),
+          title: Text(LocalizationService.instance.current.addLegend_4271),
           content: SizedBox(
             width: 350,
             child: Column(
@@ -1741,7 +1840,10 @@ class _LegendGroupManagementDrawerState
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder_open),
-                      tooltip: '选择图例文件',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .selectLegendFileTooltip_4821,
                       onPressed: () async {
                         final selectedFile =
                             await VfsFileManagerWindow.showFilePicker(
@@ -1756,7 +1858,12 @@ class _LegendGroupManagementDrawerState
                             legendPathController.text = selectedFile;
                           });
                         } else if (selectedFile != null && mounted) {
-                          context.showErrorSnackBar('请选择.legend文件');
+                          context.showErrorSnackBar(
+                            LocalizationService
+                                .instance
+                                .current
+                                .selectLegendFileError_4821,
+                          );
                         }
                       },
                     ),
@@ -1776,7 +1883,10 @@ class _LegendGroupManagementDrawerState
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder),
-                      tooltip: '选择VFS文件',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .selectVfsFileTooltip_4821,
                       onPressed: () async {
                         final selectedFile = await _showVfsFilePicker();
                         if (selectedFile != null) {
@@ -1817,7 +1927,10 @@ class _LegendGroupManagementDrawerState
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '图例项标签',
+                            LocalizationService
+                                .instance
+                                .current
+                                .legendItemLabel_4521,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -1835,8 +1948,11 @@ class _LegendGroupManagementDrawerState
                                   }
                                 }),
                             icon: const Icon(Icons.edit, size: 14),
-                            label: const Text(
-                              '管理',
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .management_7281,
                               style: TextStyle(fontSize: 12),
                             ),
                             style: TextButton.styleFrom(
@@ -1861,8 +1977,11 @@ class _LegendGroupManagementDrawerState
                   children: [
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          labelText: 'X坐标',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .xCoordinateLabel_4521,
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
@@ -1877,8 +1996,11 @@ class _LegendGroupManagementDrawerState
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          labelText: 'Y坐标',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .yCoordinateLabel_4821,
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
@@ -1897,8 +2019,11 @@ class _LegendGroupManagementDrawerState
                   children: [
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          labelText: '大小',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .sizeLabel_4521,
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
@@ -1913,8 +2038,11 @@ class _LegendGroupManagementDrawerState
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          labelText: '旋转角度',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .rotationAngle_4521,
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
@@ -1934,7 +2062,9 @@ class _LegendGroupManagementDrawerState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             ElevatedButton(
               onPressed: selectedLegendPath.isNotEmpty
@@ -1980,7 +2110,7 @@ class _LegendGroupManagementDrawerState
                       Navigator.of(context).pop();
                     }
                   : null,
-              child: const Text('添加'),
+              child: Text(LocalizationService.instance.current.addButton_4821),
             ),
           ],
         ),
@@ -1992,12 +2122,14 @@ class _LegendGroupManagementDrawerState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除图例'),
-        content: const Text('确定要删除此图例吗？此操作不可撤销。'),
+        title: Text(LocalizationService.instance.current.deleteLegend_7421),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteLegend_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           ElevatedButton(
             onPressed: () {
@@ -2012,7 +2144,7 @@ class _LegendGroupManagementDrawerState
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
@@ -2148,7 +2280,7 @@ class _LegendGroupManagementDrawerState
     final boundLayers = _getBoundLayers();
 
     if (boundLayers.isEmpty) {
-      return '当前图例组未绑定任何图层';
+      return LocalizationService.instance.current.noLayersBoundWarning_4821;
     }
 
     final hiddenLayersCount = boundLayers
@@ -2158,13 +2290,19 @@ class _LegendGroupManagementDrawerState
 
     if (_isSmartHidingEnabled) {
       if (hiddenLayersCount == totalLayersCount) {
-        return '已启用：绑定的 $totalLayersCount 个图层均已隐藏，图例组已自动隐藏';
+        return LocalizationService.instance.current
+            .allLayersHiddenLegendAutoHidden(totalLayersCount);
       } else {
         final visibleLayersCount = totalLayersCount - hiddenLayersCount;
-        return '已启用：绑定的 $totalLayersCount 个图层中有 $visibleLayersCount 个可见，图例组已自动显示';
+        return LocalizationService.instance.current.layerVisibilityStatus(
+          totalLayersCount,
+          visibleLayersCount,
+        );
       }
     } else {
-      return '启用后，根据绑定图层的可见性自动控制图例组显示/隐藏（共 $totalLayersCount 个图层）';
+      return LocalizationService.instance.current.autoControlLegendVisibility(
+        totalLayersCount,
+      );
     }
   }
 
@@ -2189,7 +2327,9 @@ class _LegendGroupManagementDrawerState
       return selectedFile;
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('文件选择失败: $e');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.fileSelectionFailed(e),
+        );
       }
       return null;
     }
@@ -2214,13 +2354,19 @@ class _LegendGroupManagementDrawerState
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri);
         } else {
-          _showErrorMessage('无法打开链接: $url');
+          _showErrorMessage(
+            LocalizationService.instance.current.unableToOpenLink_7285(url),
+          );
         }
       } else {
-        _showErrorMessage('不支持的链接格式: $url');
+        _showErrorMessage(
+          LocalizationService.instance.current.unsupportedUrlFormat(url),
+        );
       }
     } catch (e) {
-      _showErrorMessage('打开链接失败: $e');
+      _showErrorMessage(
+        LocalizationService.instance.current.openLinkFailed_7285(e),
+      );
     }
   }
 
@@ -2238,8 +2384,11 @@ class _LegendGroupManagementDrawerState
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理图例组标签 - ${widget.legendGroup.name}',
-      maxTags: 10, // 限制最多10个标签
+      title: LocalizationService.instance.current.manageLegendGroupTagsTitle(
+        widget.legendGroup.name,
+      ),
+      maxTags:
+          10, // ${LocalizationService.instance.current.maxTagsLimitComment}
       suggestedTags: _getLegendGroupSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
       enableCustomTagsManagement: true,
@@ -2254,9 +2403,15 @@ class _LegendGroupManagementDrawerState
 
       if (mounted) {
         if (result.isEmpty) {
-          context.showInfoSnackBar('已清空图例组标签');
+          context.showInfoSnackBar(
+            LocalizationService.instance.current.legendGroupCleared_4281,
+          );
         } else {
-          context.showSuccessSnackBar('图例组标签已更新 (${result.length}个标签)');
+          context.showSuccessSnackBar(
+            LocalizationService.instance.current.legendGroupUpdated(
+              result.length,
+            ),
+          );
         }
       }
     }
@@ -2268,7 +2423,7 @@ class _LegendGroupManagementDrawerState
 
     if (tags.isEmpty) {
       return Text(
-        '暂无标签',
+        LocalizationService.instance.current.noTagsAvailable_7421,
         style: TextStyle(
           fontSize: 11,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2304,18 +2459,18 @@ class _LegendGroupManagementDrawerState
   /// 获取图例组建议标签
   List<String> _getLegendGroupSuggestedTags() {
     return [
-      '建筑',
-      '房间',
-      '入口',
-      '装置',
-      '掩体',
-      '路径',
-      '标记',
-      '战术',
-      '重要',
-      '可破坏',
-      '陷阱',
-      '监控',
+      LocalizationService.instance.current.building_4821,
+      LocalizationService.instance.current.room_4822,
+      LocalizationService.instance.current.entrance_4823,
+      LocalizationService.instance.current.device_4824,
+      LocalizationService.instance.current.shelter_4825,
+      LocalizationService.instance.current.path_4826,
+      LocalizationService.instance.current.marker_4827,
+      LocalizationService.instance.current.tactic_4828,
+      LocalizationService.instance.current.important_4829,
+      LocalizationService.instance.current.destructible_4830,
+      LocalizationService.instance.current.trap_4831,
+      LocalizationService.instance.current.surveillance_4832,
     ];
   }
 
@@ -2326,7 +2481,7 @@ class _LegendGroupManagementDrawerState
     return await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理图例项标签',
+      title: LocalizationService.instance.current.manageLegendTagsTitle_4821,
       maxTags: 10, // 限制最多10个标签
       suggestedTags: _getLegendItemSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
@@ -2338,7 +2493,7 @@ class _LegendGroupManagementDrawerState
   Widget _buildLegendItemTagsDisplay(List<String> tags) {
     if (tags.isEmpty) {
       return Text(
-        '暂无标签',
+        LocalizationService.instance.current.noTagsAvailable_7421,
         style: TextStyle(
           fontSize: 11,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2374,18 +2529,18 @@ class _LegendGroupManagementDrawerState
   /// 获取图例项建议标签
   List<String> _getLegendItemSuggestedTags() {
     return [
-      '入口',
-      '楼梯',
-      '电梯',
-      '窗户',
-      '门',
-      '墙',
-      '掩体',
-      '装置',
-      '摄像头',
-      '陷阱',
-      '可破坏',
-      '重要',
+      LocalizationService.instance.current.entrance_4821,
+      LocalizationService.instance.current.stairs_4822,
+      LocalizationService.instance.current.elevator_4823,
+      LocalizationService.instance.current.window_4824,
+      LocalizationService.instance.current.door_4825,
+      LocalizationService.instance.current.wall_4826,
+      LocalizationService.instance.current.cover_4827,
+      LocalizationService.instance.current.device_4828,
+      LocalizationService.instance.current.camera_4829,
+      LocalizationService.instance.current.trap_4830,
+      LocalizationService.instance.current.destructible_4831,
+      LocalizationService.instance.current.important_4832,
     ];
   }
 
@@ -2396,7 +2551,7 @@ class _LegendGroupManagementDrawerState
     final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理图例项标签',
+      title: LocalizationService.instance.current.manageLegendTagsTitle_4821,
       maxTags: 10, // 限制最多10个标签
       suggestedTags: _getLegendItemSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
@@ -2412,9 +2567,15 @@ class _LegendGroupManagementDrawerState
 
       if (mounted) {
         if (result.isEmpty) {
-          context.showInfoSnackBar('已清空图例项标签');
+          context.showInfoSnackBar(
+            LocalizationService.instance.current.legendItemsCleared_4281,
+          );
         } else {
-          context.showSuccessSnackBar('图例项标签已更新 (${result.length}个标签)');
+          context.showSuccessSnackBar(
+            LocalizationService.instance.current.legendLabelsUpdated(
+              result.length,
+            ),
+          );
         }
       }
     }
@@ -2427,12 +2588,21 @@ class _LegendGroupManagementDrawerState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('选择要绑定的脚本'),
+          title: Text(
+            LocalizationService.instance.current.selectScriptToBind_4271,
+          ),
           content: SizedBox(
             width: 350,
             height: 400,
             child: widget.scripts.where((script) => script.isEnabled).isEmpty
-                ? const Center(child: Text('暂无可用的启用脚本'))
+                ? Center(
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .noAvailableScripts_7281,
+                    ),
+                  )
                 : ListView(
                     children: widget.scripts
                         .where((script) => script.isEnabled)
@@ -2454,7 +2624,9 @@ class _LegendGroupManagementDrawerState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_7421,
+              ),
             ),
           ],
         );
@@ -2541,17 +2713,29 @@ class _LegendGroupManagementDrawerState
         _updateLegendItem(item.copyWith(url: newScriptUrl));
 
         if (mounted) {
-          context.showSuccessSnackBar('已更新脚本参数: ${script.name}');
+          context.showSuccessSnackBar(
+            LocalizationService.instance.current.scriptParamsUpdated_7421(
+              script.name,
+            ),
+          );
         }
       } else {
         if (mounted) {
-          context.showInfoSnackBar('脚本 ${script.name} 无需参数');
+          context.showInfoSnackBar(
+            LocalizationService.instance.current.scriptNoParamsRequired(
+              script.name,
+            ),
+          );
         }
       }
     } catch (e) {
-      debugPrint('编辑脚本参数失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.editScriptParamsFailed(e),
+      );
       if (mounted) {
-        context.showErrorSnackBar('编辑脚本参数失败: $e');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.editScriptParamsFailed(e),
+        );
       }
     }
   }

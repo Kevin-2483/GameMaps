@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/test/notification_test_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 通知测试页模块
 class NotificationTestPageModule extends PageModule {
@@ -16,7 +19,8 @@ class NotificationTestPageModule extends PageModule {
   String get path => '/notification-test';
 
   @override
-  String get displayName => '通知测试';
+  String get displayName =>
+      LocalizationService.instance.current.notificationTestPageTitle_4821;
 
   @override
   IconData get icon => Icons.notifications_active;

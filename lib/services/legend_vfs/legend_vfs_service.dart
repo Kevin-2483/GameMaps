@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../models/legend_item.dart';
 import '../virtual_file_system/virtual_file_system.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 // import '../virtual_file_system/vfs_database_initializer.dart';
 
 /// VFS图例元数据
@@ -192,7 +195,9 @@ class LegendVfsService {
         }
       }
     } catch (e) {
-      debugPrint('读取图例元数据失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendMetadataReadFailed_7421(e),
+      );
     }
 
     // 返回默认元数据
@@ -368,7 +373,11 @@ class LegendVfsService {
   Future<LegendItem?> getLegendFromAbsolutePath(String absolutePath) async {
     if (!absolutePath.startsWith('indexeddb://') ||
         !absolutePath.endsWith('.legend')) {
-      debugPrint('无效的绝对路径格式: $absolutePath');
+      debugPrint(
+        LocalizationService.instance.current.invalidAbsolutePathFormat(
+          absolutePath,
+        ),
+      );
       return null;
     }
 
@@ -378,7 +387,11 @@ class LegendVfsService {
       final pathSegments = uri.pathSegments;
 
       if (pathSegments.length < 2) {
-        debugPrint('路径段不足: $absolutePath');
+        debugPrint(
+          LocalizationService.instance.current.insufficientPathSegments(
+            absolutePath,
+          ),
+        );
         return null;
       }
 
@@ -386,29 +399,50 @@ class LegendVfsService {
       final fileName = pathSegments.last;
       final title = fileName.replaceAll('.legend', '');
 
-      debugPrint('从绝对路径获取图例: "$title", 路径: $absolutePath');
+      debugPrint(
+        LocalizationService.instance.current.legendFromAbsolutePath(
+          title,
+          absolutePath,
+        ),
+      );
 
       // 检查图例目录是否存在
       if (!await _vfs.exists(absolutePath)) {
-        debugPrint('图例目录不存在: $absolutePath');
+        debugPrint(
+          LocalizationService.instance.current.legendDirectoryNotExist_7284(
+            absolutePath,
+          ),
+        );
         return null;
       }
 
       // 读取JSON配置 - 首先尝试使用原始标题
       String jsonPath = '$absolutePath/$title.json';
-      debugPrint('查找JSON文件: $jsonPath (使用原始标题)');
+      debugPrint(
+        LocalizationService.instance.current.findJsonFileWithPath(jsonPath),
+      );
 
       if (!await _vfs.exists(jsonPath)) {
-        debugPrint('原始标题JSON文件不存在，尝试sanitized标题');
+        debugPrint(
+          LocalizationService.instance.current.originalJsonMissing_4821,
+        );
         // 如果原始标题的JSON不存在，尝试sanitized标题
         final sanitizedTitle = _sanitizeFileName(title);
         jsonPath = '$absolutePath/$sanitizedTitle.json';
         debugPrint(
-          '查找JSON文件: $jsonPath (原标题: "$title" -> 清理后: "$sanitizedTitle")',
+          LocalizationService.instance.current.jsonFileSearch_7281(
+            jsonPath,
+            title,
+            sanitizedTitle,
+          ),
         );
 
         if (!await _vfs.exists(jsonPath)) {
-          debugPrint('JSON文件不存在: $jsonPath');
+          debugPrint(
+            LocalizationService.instance.current.jsonFileNotExist_4821(
+              jsonPath,
+            ),
+          );
           return null;
         }
       }
@@ -450,7 +484,12 @@ class LegendVfsService {
         fileType: fileType,
       );
     } catch (e) {
-      debugPrint('从绝对路径获取图例失败: $absolutePath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.failedToGetLegendFromPath_7281(
+          absolutePath,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -462,28 +501,45 @@ class LegendVfsService {
           ? 'indexeddb://$_database/$_collection/${folderPath.replaceAll(RegExp(r'^/+|/+$'), '')}'
           : 'indexeddb://$_database/$_collection';
 
-      debugPrint('获取图例列表，路径: $basePath');
+      debugPrint(
+        LocalizationService.instance.current.fetchLegendListPath_7421(basePath),
+      );
       final entries = await _vfs.listDirectory(basePath);
-      debugPrint('VFS返回的条目数量: ${entries.length}');
+      debugPrint(
+        LocalizationService.instance.current.vfsEntryCount(entries.length),
+      );
 
       final legendEntries = entries
           .where((entry) => entry.isDirectory && entry.name.endsWith('.legend'))
           .toList();
-      debugPrint('找到的.legend文件夹: ${legendEntries.map((e) => e.name).toList()}');
+      debugPrint(
+        LocalizationService.instance.current.foundLegendFolders(
+          legendEntries.map((e) => e.name).toList(),
+        ),
+      );
 
       final titles = legendEntries
           .map((entry) => entry.name.replaceAll('.legend', ''))
           .map((name) {
             final desanitized = _desanitizeFileName(name);
-            debugPrint('文件夹名称转换: "$name" -> "$desanitized"');
+            debugPrint(
+              LocalizationService.instance.current.folderNameConversion(
+                name,
+                desanitized,
+              ),
+            );
             return desanitized;
           })
           .toList();
 
-      debugPrint('最终图例标题列表: $titles');
+      debugPrint(
+        LocalizationService.instance.current.finalLegendTitleList(titles),
+      );
       return titles;
     } catch (e) {
-      debugPrint('获取图例列表失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchLegendListFailed_7285(e),
+      );
       return [];
     }
   }
@@ -522,7 +578,12 @@ class LegendVfsService {
 
       return legendFiles..sort();
     } catch (e) {
-      debugPrint('获取文件夹中的图例失败: $folderPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.folderLegendError_7421(
+          folderPath,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -549,7 +610,9 @@ class LegendVfsService {
         return true;
       }
     } catch (e) {
-      debugPrint('删除图例失败: $title, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteLegendFailed(title, e),
+      );
     }
 
     return false;
@@ -577,7 +640,9 @@ class LegendVfsService {
       );
       await _saveMeta(meta);
     } catch (e) {
-      debugPrint('清空图例失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.clearLegendFailed_7285(e),
+      );
       rethrow;
     }
   }
@@ -666,7 +731,12 @@ class LegendVfsService {
 
       return subFolders;
     } catch (e) {
-      debugPrint('获取子文件夹失败: $parentPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.getSubfolderFailed_7281(
+          parentPath,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -693,14 +763,20 @@ class LegendVfsService {
       // 检查文件夹是否为空
       final entries = await _vfs.listDirectory(fullPath);
       if (entries.isNotEmpty) {
-        debugPrint('文件夹不为空，无法删除: $folderPath');
+        debugPrint(
+          LocalizationService.instance.current.folderNotEmptyCannotDelete(
+            folderPath,
+          ),
+        );
         return false;
       }
 
       await _vfs.delete(fullPath);
       return true;
     } catch (e) {
-      debugPrint('删除文件夹失败: $folderPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteFolderFailed(folderPath, e),
+      );
       return false;
     }
   }
@@ -715,13 +791,19 @@ class LegendVfsService {
 
       // 检查旧路径是否存在
       if (!await _vfs.exists(oldFullPath)) {
-        debugPrint('源文件夹不存在: $oldPath');
+        debugPrint(
+          LocalizationService.instance.current.sourceFolderNotExist_7285(
+            oldPath,
+          ),
+        );
         return false;
       }
 
       // 检查新路径是否已存在
       if (await _vfs.exists(newFullPath)) {
-        debugPrint('目标文件夹已存在: $newPath');
+        debugPrint(
+          LocalizationService.instance.current.targetFolderExists(newPath),
+        );
         return false;
       }
 
@@ -729,7 +811,13 @@ class LegendVfsService {
       final success = await _vfs.move(oldFullPath, newFullPath);
       return success;
     } catch (e) {
-      debugPrint('重命名文件夹失败: $oldPath -> $newPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.renameFolderFailed(
+          oldPath,
+          newPath,
+          e,
+        ),
+      );
       return false;
     }
   }

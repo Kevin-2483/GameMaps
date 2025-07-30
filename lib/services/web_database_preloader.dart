@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 // import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,8 @@ import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
 import '../config/config_manager.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// Web平台数据库预填充工具
 /// 为Web版本提供示例地图数据
@@ -27,7 +30,12 @@ class WebDatabasePreloader {
       // 检查是否已有示例数据
       final existingMaps = await mapService.getAllMapsSummary();
       if (existingMaps.isNotEmpty) {
-        debugPrint('已有地图数据，跳过示例数据初始化');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .skipExampleDataInitialization_7281,
+        );
         return;
       }
 
@@ -37,9 +45,13 @@ class WebDatabasePreloader {
       // 插入示例数据（这里我们直接调用底层数据库方法）
       await _insertSampleMapDirectly(sampleMap);
 
-      debugPrint('示例数据初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.sampleDataInitialized_7281,
+      );
     } catch (e) {
-      debugPrint('示例数据初始化失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.sampleDataInitFailed_7421(e),
+      );
     }
   }
 
@@ -48,7 +60,7 @@ class WebDatabasePreloader {
     // 创建默认图层
     final defaultLayer = MapLayer(
       id: 'sample_layer_1',
-      name: '示例图层',
+      name: LocalizationService.instance.current.sampleLayerName_4821,
       order: 0,
       opacity: 1.0,
       isVisible: true,
@@ -90,7 +102,7 @@ class WebDatabasePreloader {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      debugPrint('直接插入示例地图失败: $e');
+      debugPrint(LocalizationService.instance.current.mapInsertFailed_7285(e));
     }
   }
 
@@ -104,9 +116,11 @@ class WebDatabasePreloader {
         where: 'title = ?',
         whereArgs: [_sampleMapTitle],
       );
-      debugPrint('示例数据清理完成');
+      debugPrint(LocalizationService.instance.current.sampleDataCleaned_7421);
     } catch (e) {
-      debugPrint('示例数据清理失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.sampleDataCleanupFailed_7421(e),
+      );
     }
   }
 }

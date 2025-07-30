@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
@@ -9,6 +10,8 @@ import '../../../utils/image_utils.dart';
 import '../../../services/clipboard_service.dart';
 import '../utils/drawing_utils.dart';
 import 'popup_menu_utils.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 绘制工具竖直dock栏组件
 /// 显示绘制工具图标，放置在画布左侧边缘
@@ -87,79 +90,80 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   bool _isColorPopupOpen = false; // 颜色弹窗是否打开
 
   // 绘制工具配置
-  static const List<_DrawingToolConfig> _drawingTools = [
+  static List<_DrawingToolConfig> get _drawingTools => [
     _DrawingToolConfig(
       type: DrawingElementType.line,
       icon: Icons.remove,
-      label: '直线',
-      tooltip: '绘制直线',
+      label: LocalizationService.instance.current.lineToolLabel_4521,
+      tooltip: LocalizationService.instance.current.drawLineTooltip_4522,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.dashedLine,
       icon: Icons.more_horiz,
-      label: '虚线',
-      tooltip: '绘制虚线',
+      label: LocalizationService.instance.current.dashedLine_4821,
+      tooltip: LocalizationService.instance.current.drawDashedLine_7532,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.arrow,
       icon: Icons.arrow_forward,
-      label: '箭头',
-      tooltip: '绘制箭头',
+      label: LocalizationService.instance.current.arrowLabel_5421,
+      tooltip: LocalizationService.instance.current.drawArrowTooltip_8732,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.rectangle,
       icon: Icons.rectangle,
-      label: '矩形',
-      tooltip: '绘制矩形',
+      label: LocalizationService.instance.current.rectangleLabel_4521,
+      tooltip: LocalizationService.instance.current.drawRectangleTooltip_4522,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.hollowRectangle,
       icon: Icons.rectangle_outlined,
-      label: '空心矩形',
-      tooltip: '绘制空心矩形',
+      label: LocalizationService.instance.current.hollowRectangle_7421,
+      tooltip: LocalizationService.instance.current.drawHollowRectangle_8423,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.diagonalLines,
       // icon: Icons.line_style,
       icon: Icons.line_style,
-      label: '斜线区域',
-      tooltip: '绘制斜线区域',
+      label: LocalizationService.instance.current.diagonalAreaLabel_4821,
+      tooltip:
+          LocalizationService.instance.current.drawDiagonalAreaTooltip_7532,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.crossLines,
       icon: Icons.grid_3x3,
-      label: '交叉线',
-      tooltip: '绘制交叉线',
+      label: LocalizationService.instance.current.crossLinesLabel_4821,
+      tooltip: LocalizationService.instance.current.crossLinesTooltip_7532,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.dotGrid,
       icon: Icons.grid_on,
-      label: '点阵',
-      tooltip: '绘制点阵',
+      label: LocalizationService.instance.current.dotGridLabel_5421,
+      tooltip: LocalizationService.instance.current.drawDotGridTooltip_8732,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.freeDrawing,
       icon: Icons.gesture,
-      label: '自由绘制',
-      tooltip: '自由绘制',
+      label: LocalizationService.instance.current.freeDrawingLabel_4821,
+      tooltip: LocalizationService.instance.current.freeDrawingTooltip_7532,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.text,
       icon: Icons.text_fields,
-      label: '文本',
-      tooltip: '添加文本',
+      label: LocalizationService.instance.current.textLabel_4821,
+      tooltip: LocalizationService.instance.current.addTextTooltip_4821,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.eraser,
       icon: Icons.content_cut,
-      label: '橡皮擦',
-      tooltip: '擦除元素',
+      label: LocalizationService.instance.current.eraserLabel_4821,
+      tooltip: LocalizationService.instance.current.eraserTooltip_4822,
     ),
     _DrawingToolConfig(
       type: DrawingElementType.imageArea,
       icon: Icons.photo_size_select_actual,
-      label: '图片区域',
-      tooltip: '添加图片区域',
+      label: LocalizationService.instance.current.imageAreaLabel_4281,
+      tooltip: LocalizationService.instance.current.addImageAreaTooltip_4282,
     ),
   ];
 
@@ -463,7 +467,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           children: [
             // 标题
             Text(
-              '${_getToolDisplayName(tool)} 属性',
+              LocalizationService.instance.current.toolPropertiesTitle_7421(
+                _getToolDisplayName(tool),
+              ),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -491,7 +497,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '此工具无可配置属性',
+                        LocalizationService
+                            .instance
+                            .current
+                            .noConfigurableProperties_7421,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 14,
@@ -539,11 +548,11 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   String _getToolDisplayName(DrawingElementType tool) {
     final toolConfig = _drawingTools.firstWhere(
       (config) => config.type == tool,
-      orElse: () => const _DrawingToolConfig(
+      orElse: () => _DrawingToolConfig(
         type: DrawingElementType.line,
         icon: Icons.help,
-        label: '未知工具',
-        tooltip: '未知工具',
+        label: LocalizationService.instance.current.unknownToolLabel_4821,
+        tooltip: LocalizationService.instance.current.unknownTooltip_4821,
       ),
     );
     return toolConfig.label;
@@ -555,7 +564,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '弧度: ${(widget.selectedCurvature * 100).round()}%',
+          LocalizationService.instance.current.curvaturePercentage(
+            (widget.selectedCurvature * 100).round(),
+          ),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -590,7 +601,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '切割类型',
+          LocalizationService.instance.current.cuttingType_4821,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -629,15 +640,15 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
   String _getTriangleCutDisplayName(TriangleCutType type) {
     switch (type) {
       case TriangleCutType.none:
-        return '无切割';
+        return LocalizationService.instance.current.noCut_4821;
       case TriangleCutType.topLeft:
-        return '左上切割';
+        return LocalizationService.instance.current.topLeftCut_4822;
       case TriangleCutType.topRight:
-        return '右上切割';
+        return LocalizationService.instance.current.topRightCut_4823;
       case TriangleCutType.bottomLeft:
-        return '左下切割';
+        return LocalizationService.instance.current.bottomLeftCut_4824;
       case TriangleCutType.bottomRight:
-        return '右下切割';
+        return LocalizationService.instance.current.bottomRightCut_4825;
     }
   }
 
@@ -647,7 +658,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '笔触宽度: ${widget.selectedStrokeWidth.round()}px',
+          LocalizationService.instance.current.strokeWidthLabel(
+            widget.selectedStrokeWidth.round(),
+          ),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -682,7 +695,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '密度: ${widget.selectedDensity.toStringAsFixed(1)}x',
+          LocalizationService.instance.current.densityValue_7281(
+            widget.selectedDensity.toStringAsFixed(1),
+          ),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -781,7 +796,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '图片显示失败',
+                        LocalizationService
+                            .instance
+                            .current
+                            .imageLoadFailed_4721,
                         style: TextStyle(
                           color: Colors.red.shade600,
                           fontSize: 12,
@@ -821,7 +839,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   }
                 },
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('重新上传', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  LocalizationService.instance.current.reuploadText_7281,
+                  style: TextStyle(fontSize: 12),
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   foregroundColor: Colors.blue.shade600,
@@ -854,7 +875,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   }
                 },
                 icon: const Icon(Icons.clear, size: 16),
-                label: const Text('清空', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  LocalizationService.instance.current.clearText_4821,
+                  style: TextStyle(fontSize: 12),
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   foregroundColor: Colors.red.shade600,
@@ -896,7 +920,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               ),
               const SizedBox(height: 8),
               Text(
-                '点击上传图片到缓冲区',
+                LocalizationService.instance.current.uploadImageToBuffer_5421,
                 style: TextStyle(
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                   fontSize: 14,
@@ -905,7 +929,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               ),
               const SizedBox(height: 4),
               Text(
-                '支持 JPG、PNG、GIF 格式',
+                LocalizationService.instance.current.supportedImageFormats_4821,
                 style: TextStyle(
                   color: Theme.of(
                     context,
@@ -945,7 +969,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   }
                 },
                 icon: const Icon(Icons.add_photo_alternate, size: 18),
-                label: const Text('上传图片'),
+                label: Text(
+                  LocalizationService.instance.current.uploadImage_7421,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Colors.blue.shade600,
@@ -983,7 +1009,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   }
                 },
                 icon: const Icon(Icons.paste, size: 18),
-                label: const Text('剪贴板'),
+                label: Text(
+                  LocalizationService.instance.current.clipboardLabel_4271,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Colors.green.shade600,
@@ -1088,7 +1116,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       final imageData = await ImageUtils.pickAndEncodeImage();
       if (imageData != null) {
         if (!ImageUtils.isValidImageData(imageData)) {
-          throw Exception('无效的图片文件，请选择有效的图片');
+          throw Exception(
+            LocalizationService.instance.current.invalidImageFileError_4821,
+          );
         }
 
         // 先更新父组件状态
@@ -1140,7 +1170,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       }
     } catch (e) {
       // 错误处理可以在这里添加
-      debugPrint('图片上传失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.imageUploadFailed_7285(e),
+      );
     }
   }
 
@@ -1154,7 +1186,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       final imageData = await ClipboardService.readImageFromClipboard();
       if (imageData != null) {
         if (!ImageUtils.isValidImageData(imageData)) {
-          throw Exception('剪贴板中的数据不是有效的图片文件');
+          throw Exception(
+            LocalizationService.instance.current.invalidClipboardImageData_4821,
+          );
         }
 
         // 先更新父组件状态
@@ -1208,7 +1242,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
       }
     } catch (e) {
       // 错误处理可以在这里添加
-      debugPrint('从剪贴板粘贴图片失败: $e');
+      debugPrint(LocalizationService.instance.current.pasteImageFailed_4821(e));
     }
   }
 
@@ -1238,7 +1272,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '图片缓冲区',
+                    LocalizationService.instance.current.imageBuffer_4821,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1262,8 +1296,8 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         const SizedBox(height: 12),
         // 图片适应方式选择
         if (widget.imageBufferData != null) ...[
-          const Text(
-            '图片适应方式',
+          Text(
+            LocalizationService.instance.current.imageFitMethod_4821,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
@@ -1295,7 +1329,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '使用说明',
+                    LocalizationService.instance.current.usageInstructions_4821,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -1508,7 +1542,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     final iconColor = _getContrastColor(backgroundColor);
 
     return Tooltip(
-      message: '选择颜色',
+      message: LocalizationService.instance.current.selectColor_4821,
       waitDuration: const Duration(milliseconds: 500),
       child: Material(
         color: Colors.transparent,
@@ -1649,7 +1683,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
           children: [
             // 标题
             Text(
-              '最近使用的颜色',
+              LocalizationService.instance.current.recentlyUsedColors_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -1712,7 +1746,7 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
         final selectedColor = await ColorPicker.showColorPicker(
           context: context,
           initialColor: _selectedColor,
-          title: '选择颜色',
+          title: LocalizationService.instance.current.selectColor_7281,
           enableAlpha: false,
         );
         if (selectedColor != null) {
@@ -1753,7 +1787,9 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     // 更新最近使用的颜色到用户偏好
     final userPrefs = context.read<UserPreferencesProvider>();
     userPrefs.addRecentColor(color.toARGB32()).catchError((e) {
-      debugPrint('更新最近使用颜色失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.updateRecentColorsFailed(e),
+      );
     });
   }
 }

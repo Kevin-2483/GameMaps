@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import '../../models/collaboration_state.dart';
 import '../../services/collaboration_state_manager.dart';
 import 'collaboration_state_event.dart';
 import 'collaboration_state_state.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 协作状态Bloc
 /// 管理协作相关的UI状态和用户交互
@@ -99,11 +102,18 @@ class CollaborationStateBloc
         ),
       );
 
-      debugPrint('[CollaborationStateBloc] 协作状态初始化完成');
+      debugPrint(
+        '[CollaborationStateBloc] ' +
+            LocalizationService
+                .instance
+                .current
+                .collaborationStateInitialized_7281,
+      );
     } catch (e, stackTrace) {
       emit(
         CollaborationStateError(
-          message: '初始化协作状态失败: ${e.toString()}',
+          message: LocalizationService.instance.current
+              .collaborationInitFailed_7281(e.toString()),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -124,7 +134,9 @@ class CollaborationStateBloc
     );
 
     if (!success) {
-      debugPrint('[CollaborationStateBloc] 元素锁定失败: ${event.elementId}');
+      debugPrint(
+        '[CollaborationStateBloc] ${LocalizationService.instance.current.elementLockFailed_7281}: ${event.elementId}',
+      );
       // 状态会通过内部更新事件自动更新
     }
   }

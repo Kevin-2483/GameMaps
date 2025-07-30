@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
@@ -6,6 +7,7 @@ import '../../../data/new_reactive_script_manager.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
 import 'script_editor_window_reactive.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../services/localization_service.dart';
 
 /// 响应式脚本管理面板
 /// 使用新的异步响应式脚本管理器
@@ -108,7 +110,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '脚本引擎',
+              LocalizationService.instance.current.scriptEngine_4521,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -142,20 +144,20 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Row(
       children: [
         _buildStatChip(
-          label: '总数',
+          label: LocalizationService.instance.current.totalCountLabel_4821,
           value: '$totalCount',
           color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 6),
         _buildStatChip(
-          label: '启用',
+          label: LocalizationService.instance.current.enabledStatus_4821,
           value: '$enabledCount',
           color: Colors.green,
         ),
         const SizedBox(width: 6),
         if (runningCount > 0)
           _buildStatChip(
-            label: '运行中',
+            label: LocalizationService.instance.current.runningStatus_5421,
             value: '$runningCount',
             color: Colors.orange,
             isAnimated: true,
@@ -218,7 +220,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
             });
           },
           icon: const Icon(Icons.refresh, size: 16),
-          tooltip: '刷新状态',
+          tooltip: LocalizationService.instance.current.refreshStatus_4821,
           style: IconButton.styleFrom(
             minimumSize: const Size(24, 24),
             padding: EdgeInsets.zero,
@@ -228,7 +230,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         IconButton(
           onPressed: _showExecutionLogs,
           icon: const Icon(Icons.list_alt, size: 16),
-          tooltip: '查看执行日志',
+          tooltip: LocalizationService.instance.current.viewExecutionLogs_4821,
           style: IconButton.styleFrom(
             minimumSize: const Size(24, 24),
             padding: EdgeInsets.zero,
@@ -251,26 +253,26 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     return Container(
       padding: const EdgeInsets.all(8),
       child: SegmentedButton<ScriptType>(
-        segments: const [
+        segments: [
           ButtonSegment(
             value: ScriptType.automation,
-            label: Text('自动化'),
-            icon: Icon(Icons.auto_mode, size: 14),
+            label: Text(LocalizationService.instance.current.automation_7281),
+            icon: const Icon(Icons.auto_mode, size: 14),
           ),
           ButtonSegment(
             value: ScriptType.animation,
-            label: Text('动画'),
-            icon: Icon(Icons.animation, size: 14),
+            label: Text(LocalizationService.instance.current.animation_7281),
+            icon: const Icon(Icons.animation, size: 14),
           ),
           ButtonSegment(
             value: ScriptType.filter,
-            label: Text('过滤'),
-            icon: Icon(Icons.filter_list, size: 14),
+            label: Text(LocalizationService.instance.current.filterLabel_4281),
+            icon: const Icon(Icons.filter_list, size: 14),
           ),
           ButtonSegment(
             value: ScriptType.statistics,
-            label: Text('统计'),
-            icon: Icon(Icons.analytics, size: 14),
+            label: Text(LocalizationService.instance.current.statistics_4821),
+            icon: const Icon(Icons.analytics, size: 14),
           ),
         ],
         selected: {_selectedType},
@@ -307,7 +309,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '暂无${_getTypeDisplayName(_selectedType)}脚本',
+                  LocalizationService.instance.current.noScriptsAvailable_7421(
+                    _getTypeDisplayName(_selectedType),
+                  ),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.outline,
                     fontSize: 12,
@@ -317,7 +321,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
                 FilledButton.icon(
                   onPressed: widget.onNewScript,
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('创建脚本'),
+                  label: Text(
+                    LocalizationService.instance.current.createScript_4821,
+                  ),
                   style: FilledButton.styleFrom(
                     textStyle: const TextStyle(fontSize: 11),
                     padding: const EdgeInsets.symmetric(
@@ -499,7 +505,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         ),
         const SizedBox(width: 4),
         Text(
-          '执行中...',
+          LocalizationService.instance.current.executing_7421,
           style: TextStyle(
             fontSize: 9,
             color: Theme.of(context).colorScheme.primary,
@@ -522,8 +528,10 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         const SizedBox(width: 4),
         Text(
           result.success
-              ? '执行成功 (${result.executionTime.inMilliseconds}ms)'
-              : '执行失败',
+              ? LocalizationService.instance.current.executionSuccessWithTime(
+                  result.executionTime.inMilliseconds,
+                )
+              : LocalizationService.instance.current.executionFailed_7281,
           style: TextStyle(
             fontSize: 9,
             color: result.success ? Colors.green : Colors.red,
@@ -539,7 +547,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       return IconButton(
         onPressed: () => widget.scriptManager.stopScript(script.id),
         icon: const Icon(Icons.stop_circle, size: 18),
-        tooltip: '停止执行',
+        tooltip: LocalizationService.instance.current.stopExecution_7421,
         style: IconButton.styleFrom(
           foregroundColor: Colors.red,
           minimumSize: const Size(24, 24),
@@ -550,7 +558,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       return IconButton(
         onPressed: script.isEnabled ? () => _executeScript(script) : null,
         icon: const Icon(Icons.play_circle, size: 18),
-        tooltip: '执行脚本',
+        tooltip: LocalizationService.instance.current.executeScript_4821,
         style: IconButton.styleFrom(
           foregroundColor: script.isEnabled
               ? Theme.of(context).colorScheme.primary
@@ -588,7 +596,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
               ),
               const SizedBox(width: 6),
               Text(
-                result.success ? '执行成功' : '执行失败',
+                result.success
+                    ? LocalizationService.instance.current.executionSuccess_5421
+                    : LocalizationService.instance.current.executionFailed_5421,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -617,7 +627,9 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
           if (result.success && result.result != null) ...[
             const SizedBox(height: 4),
             Text(
-              '返回值: ${result.result}',
+              LocalizationService.instance.current.returnValue_4821(
+                result.result,
+              ),
               style: const TextStyle(fontSize: 10, color: Colors.green),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -669,25 +681,25 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
         _buildActionButton(
           onPressed: () => _executeScript(script),
           icon: Icons.play_arrow,
-          label: '运行',
+          label: LocalizationService.instance.current.runButton_7421,
           color: Theme.of(context).colorScheme.primary,
         ),
         _buildActionButton(
           onPressed: () => _editScript(script),
           icon: Icons.edit,
-          label: '编辑',
+          label: LocalizationService.instance.current.editButton_7281,
           color: Theme.of(context).colorScheme.secondary,
         ),
         _buildActionButton(
           onPressed: () => _duplicateScript(script),
           icon: Icons.copy,
-          label: '复制',
+          label: LocalizationService.instance.current.copyLabel_4821,
           color: Theme.of(context).colorScheme.tertiary,
         ),
         _buildActionButton(
           onPressed: () => _deleteScript(script),
           icon: Icons.delete,
-          label: '删除',
+          label: LocalizationService.instance.current.deleteButton_7281,
           color: Theme.of(context).colorScheme.error,
         ),
       ],
@@ -767,7 +779,11 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
       );
     } catch (error) {
       if (mounted) {
-        context.showErrorSnackBar('脚本执行失败: $error');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.scriptExecutionFailed_7281(
+            error,
+          ),
+        );
       }
     }
   }
@@ -780,12 +796,16 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除脚本'),
-        content: Text('确定要删除脚本 "${script.name}" 吗？'),
+        title: Text(LocalizationService.instance.current.deleteScript_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteScript_7421(
+            script.name,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7281),
           ),
           FilledButton(
             onPressed: () {
@@ -798,7 +818,7 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
@@ -808,13 +828,13 @@ class _ReactiveScriptPanelState extends State<ReactiveScriptPanel> {
   String _getTypeDisplayName(ScriptType type) {
     switch (type) {
       case ScriptType.automation:
-        return '自动化';
+        return LocalizationService.instance.current.automation_1234;
       case ScriptType.animation:
-        return '动画';
+        return LocalizationService.instance.current.animation_5678;
       case ScriptType.filter:
-        return '过滤';
+        return LocalizationService.instance.current.filter_9012;
       case ScriptType.statistics:
-        return '统计';
+        return LocalizationService.instance.current.statistics_3456;
     }
   }
 }
@@ -859,10 +879,12 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
         children: [
           const Icon(Icons.terminal, size: 20),
           const SizedBox(width: 8),
-          const Text('脚本执行日志'),
+          Text(LocalizationService.instance.current.scriptExecutionLog_4821),
           const Spacer(),
           Text(
-            '共 ${logs.length} 条',
+            LocalizationService.instance.current.totalLogsCount_7421(
+              logs.length,
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -871,17 +893,26 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
         width: 600,
         height: 400,
         child: logs.isEmpty
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.info_outline, size: 48, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text('暂无执行日志'),
-                    SizedBox(height: 8),
+                    const Icon(
+                      Icons.info_outline,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
                     Text(
-                      '执行脚本时的日志会显示在这里',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      LocalizationService.instance.current.noExecutionLogs_7421,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .scriptExecutionLogs_4521,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
                 ),
@@ -950,18 +981,18 @@ class _ExecutionLogsDialogState extends State<_ExecutionLogsDialog> {
             setState(() {});
           },
           icon: const Icon(Icons.clear_all, size: 16),
-          label: const Text('清空日志'),
+          label: Text(LocalizationService.instance.current.clearLogs_4271),
         ),
         TextButton.icon(
           onPressed: () {
             setState(() {});
           },
           icon: const Icon(Icons.refresh, size: 16),
-          label: const Text('刷新'),
+          label: Text(LocalizationService.instance.current.refreshLabel_7421),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: Text(LocalizationService.instance.current.closeButton_7281),
         ),
       ],
     );

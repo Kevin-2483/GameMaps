@@ -1,0 +1,15 @@
+{
+  "fetchLocalizationFailed": "获取本地化数据失败: {e}",
+  "exportDatabaseDialogTitle_4721": "导出R6Box数据库 (Web平台专用)",
+  "databaseExportFailed_4829": "合并数据库导出失败: {e}",
+  "exportFileNotExist_7285": "导出文件不存在: {filePath}",
+  "invalidExportFileFormat_4821": "导出文件格式不正确，缺少必要字段",
+  "invalidMapDataFormat_7281": "地图数据格式不正确",
+  "invalidLegendDataFormat_7281": "图例数据格式不正确",
+  "exportFileValidationPassed": "导出文件验证通过: {filePath}",
+  "exportValidationFailed_4821": "验证导出文件失败: {e}",
+  "fetchMapListFailed_7285": "获取地图列表失败: {e}",
+  "exportFileInfoFailed": "获取导出文件信息失败: {e}",
+  "databaseStatsError_4821": "获取数据库统计信息失败: {e}",
+  "fetchLegendListFailed_4821": "获取图例列表失败: {e}"
+}

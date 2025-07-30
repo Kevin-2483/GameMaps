@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'map_item.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 地图版本信息
 @immutable
@@ -266,7 +269,7 @@ class MapVersionManager {
     final now = DateTime.now();
     _versions['default'] = MapVersion(
       id: 'default',
-      name: '默认版本',
+      name: LocalizationService.instance.current.defaultVersionName_7281,
       createdAt: now,
       updatedAt: now,
     );
@@ -278,7 +281,7 @@ class MapVersionManager {
       final now = DateTime.now();
       _versions['default'] = MapVersion(
         id: 'default',
-        name: '默认版本',
+        name: LocalizationService.instance.current.defaultVersionName_4721,
         createdAt: now,
         updatedAt: now,
       );

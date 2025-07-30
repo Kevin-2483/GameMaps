@@ -8,7 +8,7 @@ class WebDownloader {
     final url = html.Url.createObjectUrlFromBlob(blob);
 
     // 创建下载链接并触发下载
-    final anchor = html.AnchorElement(href: url)
+    html.AnchorElement(href: url)
       ..setAttribute('download', fileName)
       ..click();
 

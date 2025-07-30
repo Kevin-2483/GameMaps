@@ -1,4 +1,7 @@
-﻿import 'package:flutter/material.dart';
+// This file has been processed by AI for internationalization
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
+import 'package:flutter/material.dart';
 import '../../../services/legend_vfs/vfs_directory_tree.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart';
 import '../../../services/legend_cache_manager.dart';
@@ -87,11 +90,11 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     );
 
     // 调试信息，帮助排查问题
-    debugPrint('同步树状态（步进型）- 当前图例组: ${widget.legendGroupId}');
-    debugPrint(
-      '当前组选中路径: ${selectedPaths.length} 个，其他组选中: ${otherSelectedPaths.length} 个',
+debugPrint(LocalizationService.instance.current.syncTreeStatusLegendGroup(widget.legendGroupId));
+debugPrint(
+      LocalizationService.instance.current.selectedPathsCount_7421(selectedPaths.length, otherSelectedPaths.length),
     );
-    debugPrint('当前版本: ${widget.versionManager.currentVersionId}');
+debugPrint(LocalizationService.instance.current.currentVersionLabel(widget.versionManager.currentVersionId ?? 'null'));
   }
 
   // 步进型更新节点选中状态 - 只针对精确匹配的路径，不递归子目录
@@ -121,13 +124,13 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
   @override
   Widget build(BuildContext context) {
     if (_treeManager.isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在加载VFS目录结构...'),
+Text(LocalizationService.instance.current.loadingVfsDirectory_7421)
           ],
         ),
       );
@@ -135,13 +138,13 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
 
     final rootNode = _treeManager.rootNode;
     if (rootNode == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.folder_off_outlined, size: 48, color: Colors.grey),
             SizedBox(height: 16),
-            Text('无法加载VFS目录', style: TextStyle(color: Colors.grey)),
+Text(LocalizationService.instance.current.failedToLoadVfsDirectory_7281, style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -154,13 +157,13 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Text(
-                '已选中: ${widget.versionManager.getSelectedPaths(widget.legendGroupId).length} 个目录',
+Text(
+                LocalizationService.instance.current.selectedDirectoriesCount(widget.versionManager.getSelectedPaths(widget.legendGroupId).length),
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const Spacer(),
-              Tooltip(
-                message: '步进型选择模式：只选择当前目录，不会递归选择子目录',
+Tooltip(
+                message: LocalizationService.instance.current.stepSelectionModeHint_4821,
                 child: Icon(
                   Icons.info_outline,
                   size: 16,
@@ -168,10 +171,10 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
+IconButton(
                 icon: const Icon(Icons.refresh, size: 18),
                 onPressed: _loadDirectoryTree,
-                tooltip: '刷新目录树',
+                tooltip: LocalizationService.instance.current.refreshDirectoryTree_7281,
               ),
             ],
           ),
@@ -309,7 +312,7 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     // 如果选中目录，加载其中的图例到缓存系统
     if (newSelectedState) {
       _loadLegendsFromDirectoryToCache(node.path);
-      debugPrint('步进型选择: 选中目录 ${node.path}');
+debugPrint(LocalizationService.instance.current.stepperSelection_4821(node.path));
     }
 
     // 如果取消选中，清理相关缓存（只清理当前路径的缓存）
@@ -319,16 +322,16 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
       ) {
         // 通知上层组件缓存已清理，让上层组件处理具体的清理逻辑
         widget.onCacheCleared?.call(path);
-        debugPrint('步进型取消: 通知上层清理路径 $path 的缓存');
+debugPrint(LocalizationService.instance.current.stepperCancelLog(path));
       });
-      debugPrint('步进型取消: 取消选中目录 ${node.path}');
+debugPrint(LocalizationService.instance.current.stepperCancelLog(node.path));
     }
   }
 
   /// 从目录加载图例到缓存系统
   Future<void> _loadLegendsFromDirectoryToCache(String directoryPath) async {
     try {
-      debugPrint('开始从目录加载图例到缓存: $directoryPath');
+debugPrint(LocalizationService.instance.current.startLoadingLegendsToCache(directoryPath));
 
       // 获取图例VFS服务
       final legendService = LegendVfsService();
@@ -336,7 +339,7 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
       // 获取目录下的所有图例文件
       final legendFiles = await legendService.getLegendsInFolder(directoryPath);
 
-      debugPrint('在目录 $directoryPath 中找到 ${legendFiles.length} 个图例文件');
+debugPrint(LocalizationService.instance.current.foundLegendFilesInDirectory(directoryPath, legendFiles.length));
 
       // 加载每个图例到缓存
       for (final legendFile in legendFiles) {
@@ -367,14 +370,14 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
               },
             );
 
-            debugPrint('已缓存图例: $legendPath');
+debugPrint(LocalizationService.instance.current.cachedLegendPath_7421(legendPath));
           }
         } catch (e) {
-          debugPrint('加载图例失败: $legendFile, 错误: $e');
+debugPrint(LocalizationService.instance.current.legendLoadFailed_7281(legendFile, e));
         }
       }
     } catch (e) {
-      debugPrint('从目录加载图例失败: $directoryPath, 错误: $e');
+debugPrint(LocalizationService.instance.current.loadLegendFailed(directoryPath, e));
     }
   }
 
@@ -383,12 +386,12 @@ class _VfsDirectoryTreeDisplayState extends State<VfsDirectoryTreeDisplay> {
     final otherGroupNames = widget.versionManager
         .getOtherGroupNamesSelectingPath(path, widget.legendGroupId);
 
-    if (otherGroupNames.isEmpty) {
-      return '此目录已被其他图例组选择';
-    } else if (otherGroupNames.length == 1) {
-      return '此目录已被图例组 "${otherGroupNames.first}" 选择';
-    } else {
-      return '此目录已被以下图例组选择：${otherGroupNames.join(", ")}';
+if (otherGroupNames.isEmpty) {
+      return LocalizationService.instance.current.directorySelectedByOthers_4821;
+} else if (otherGroupNames.length == 1) {
+      return LocalizationService.instance.current.directorySelectedByGroup(otherGroupNames.first);
+} else {
+      return LocalizationService.instance.current.directoryUsedByGroups(otherGroupNames.join(", "));
     }
   }
 

@@ -1,0 +1,17 @@
+{
+  "syncServiceNotInitialized_7281": "同步服务未初始化",
+  "syncEnabled_7421": "同步已启用",
+  "syncDisabled_7421": "同步已禁用",
+  "invalidRemoteDataFormat_7281": "无效的远程数据格式",
+  "serviceNotInitializedIgnoreData_7283": "服务未初始化，忽略远程数据",
+  "unknownRemoteDataType_4721": "未知的远程数据类型: {type}",
+  "syncServiceCleanedUp_7421": "同步服务已清理",
+  "remoteDataProcessingFailed_7421": "处理远程数据失败: {error}",
+  "syncDataFailed_7421": "发送同步数据失败: {error}",
+  "remotePointerError_4821": "处理远程用户指针失败",
+  "remoteUserJoinFailure_4821": "处理远程用户加入失败",
+  "serviceInitialized_7421": "服务已初始化",
+  "syncServiceInitialized": "同步服务初始化完成",
+  "syncServiceInitFailed": "初始化同步服务失败: {error}",
+  "remoteUserSelectionFailed_7421": "处理远程用户选择失败"
+}

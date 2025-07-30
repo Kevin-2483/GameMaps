@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
@@ -9,6 +10,8 @@ import '../../../components/common/draggable_title_bar.dart';
 import '../../../components/dialogs/script_parameters_dialog.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../components/common/window_controls.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 响应式脚本编辑器窗口
 /// 基于新的异步响应式脚本管理器的脚本编辑器
@@ -87,11 +90,15 @@ class _ReactiveScriptEditorWindowState
       });
 
       if (mounted) {
-        context.showSuccessSnackBar('脚本已保存');
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.scriptSaved_4821,
+        );
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('保存失败: $e');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.saveFailedMessage(e),
+        );
       }
     }
   }
@@ -166,7 +173,11 @@ class _ReactiveScriptEditorWindowState
       );
     } catch (error) {
       if (mounted) {
-        context.showErrorSnackBar('脚本执行失败: $error');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.scriptExecutionFailed_7281(
+            error,
+          ),
+        );
       }
     }
   }
@@ -180,16 +191,20 @@ class _ReactiveScriptEditorWindowState
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('未保存的更改'),
-        content: const Text('您有未保存的更改，确定要关闭吗？'),
+        title: Text(LocalizationService.instance.current.unsavedChanges_4821),
+        content: Text(
+          LocalizationService.instance.current.unsavedChangesWarning_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('放弃更改'),
+            child: Text(
+              LocalizationService.instance.current.discardChanges_7421,
+            ),
           ),
           FilledButton(
             onPressed: () async {
@@ -198,7 +213,7 @@ class _ReactiveScriptEditorWindowState
                 Navigator.of(context).pop(true);
               }
             },
-            child: const Text('保存并关闭'),
+            child: Text(LocalizationService.instance.current.saveAndClose_7281),
           ),
         ],
       ),
@@ -240,7 +255,8 @@ class _ReactiveScriptEditorWindowState
                       }
                     },
                     icon: const Icon(Icons.close),
-                    tooltip: '关闭编辑器',
+                    tooltip:
+                        LocalizationService.instance.current.closeEditor_7421,
                   ),
                   const SizedBox(width: 8),
                   // 未保存状态指示器
@@ -260,8 +276,8 @@ class _ReactiveScriptEditorWindowState
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        '未保存',
+                      child: Text(
+                        LocalizationService.instance.current.unsavedText_7421,
                         style: TextStyle(fontSize: 12, color: Colors.white),
                       ),
                     ),
@@ -273,7 +289,15 @@ class _ReactiveScriptEditorWindowState
                 IconButton(
                   onPressed: _toggleTheme,
                   icon: Icon(_isDarkTheme ? Icons.light_mode : Icons.dark_mode),
-                  tooltip: _isDarkTheme ? '切换到亮色主题' : '切换到暗色主题',
+                  tooltip: _isDarkTheme
+                      ? LocalizationService
+                            .instance
+                            .current
+                            .switchToLightTheme_7421
+                      : LocalizationService
+                            .instance
+                            .current
+                            .switchToDarkTheme_8532,
                 ),
                 const SizedBox(width: 4),
 
@@ -281,7 +305,7 @@ class _ReactiveScriptEditorWindowState
                 IconButton(
                   onPressed: _hasUnsavedChanges ? _saveScript : null,
                   icon: const Icon(Icons.save),
-                  tooltip: '保存脚本',
+                  tooltip: LocalizationService.instance.current.saveScript_4821,
                 ),
 
                 // 分隔符
@@ -336,13 +360,17 @@ class _ReactiveScriptEditorWindowState
                   IconButton(
                     onPressed: _scrollToTop,
                     icon: const Icon(Icons.vertical_align_top),
-                    tooltip: '跳转到顶部',
+                    tooltip:
+                        LocalizationService.instance.current.scrollToTop_4821,
                     iconSize: 20,
                   ),
                   IconButton(
                     onPressed: _scrollToEnd,
                     icon: const Icon(Icons.vertical_align_bottom),
-                    tooltip: '跳转到底部',
+                    tooltip: LocalizationService
+                        .instance
+                        .current
+                        .scrollToBottom_4821,
                     iconSize: 20,
                   ),
                   const SizedBox(width: 8),
@@ -373,11 +401,21 @@ class _ReactiveScriptEditorWindowState
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Text('执行中'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .inProgress_7421,
+                              ),
                             ] else ...[
                               const Icon(Icons.play_arrow, size: 16),
                               const SizedBox(width: 4),
-                              const Text('运行'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .runText_4821,
+                              ),
                             ],
                           ],
                         );

@@ -1,4 +1,7 @@
-﻿import 'package:flutter/material.dart';
+// This file has been processed by AI for internationalization
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// 调整大小手柄类型
@@ -459,7 +462,7 @@ class _FloatingWindowState extends State<FloatingWindow> {
           IconButton(
             onPressed: widget.onClose,
             icon: const Icon(Icons.close),
-            tooltip: '关闭',
+            tooltip: LocalizationService.instance.current.closeButton_7421,
           ),
       ],
     );

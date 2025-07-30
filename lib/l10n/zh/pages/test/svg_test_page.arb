@@ -1,0 +1,14 @@
+{
+  "fileNotFound_7421": "文件不存在: {fileName}",
+  "r6OperatorSvgTest_4271": "R6 干员 SVG 测试",
+  "reloadTooltip_7281": "重新加载",
+  "loadingSvgFiles_5421": "正在加载 SVG 文件...",
+  "foundSvgFilesCount_5421": "找到 {count} 个 SVG 文件",
+  "retryButton_7281": "重试",
+  "svgFileNotFound_4821": "未找到 SVG 文件",
+  "loadFailed_7281": "加载失败",
+  "svgLoadFailed_7421": "无法加载 SVG 文件",
+  "fileNameLabel_7281": "文件: {fileName}",
+  "closeButton_7281": "关闭",
+  "svgLoadError": "加载 SVG 文件时出错: {e}"
+}

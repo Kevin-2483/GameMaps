@@ -11,7 +11,7 @@ void main(List<String> args) async {
 
   final configPath = args[0];
   print('验证配置文件: $configPath');
-  print('${'=' * 50}');
+  print('=' * 50);
 
   final result = await ConfigValidator.validateConfigFile(configPath);
   result.printResults();

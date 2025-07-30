@@ -1,0 +1,14 @@
+{
+  "htmlParsingFailed_7285": "HTML解析失败: {e}",
+  "htmlToMarkdownFailed_4821": "HTML转Markdown失败: {e}",
+  "htmlParsingStart": "🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: {content}...",
+  "htmlProcessorNoHtmlTags_4821": "🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点",
+  "htmlTagProcessing": "🔧 HtmlToSpanVisitor.visitElement: 处理标签 - {localName}, attributes: {attributes}",
+  "videoTagDetected_7281": "🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode",
+  "videoNodeAddedToParent_7281": "🎥 HtmlToSpanVisitor: VideoNode已添加到父节点",
+  "htmlTagDetected_7281": "🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析",
+  "htmlParseComplete": "🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: {count}",
+  "imageLoadFailed_7281": "图片加载失败",
+  "htmlProcessingComplete": "🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: {count}",
+  "imageLoadFailed": "图片加载失败: {error}"
+}

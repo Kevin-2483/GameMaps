@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 快捷键列表对话框组件
 class ShortcutsDialog extends StatelessWidget {
@@ -22,7 +25,7 @@ class ShortcutsDialog extends StatelessWidget {
         children: [
           Icon(Icons.keyboard, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
-          const Text('快捷键列表'),
+Text(LocalizationService.instance.current.shortcutList_4821),
         ],
       ),
       content: SizedBox(
@@ -33,13 +36,13 @@ class ShortcutsDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 基本操作
-              _buildShortcutCategory(
-                '基本操作',
+_buildShortcutCategory(
+                LocalizationService.instance.current.basicOperations_4821,
                 {
-                  'undo': '撤销',
-                  'redo': '重做',
-                  'save': '保存',
-                  'clearLayerSelection': '清除选择',
+                  'undo': LocalizationService.instance.current.undo_4822,
+                  'redo': LocalizationService.instance.current.redo_4823,
+                  'save': LocalizationService.instance.current.save_4824,
+                  'clearLayerSelection': LocalizationService.instance.current.clearSelection_4825,
                 },
                 shortcuts,
                 context,
@@ -47,12 +50,12 @@ class ShortcutsDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 界面控制
-              _buildShortcutCategory(
-                '界面控制',
+_buildShortcutCategory(
+                LocalizationService.instance.current.uiControl_4821,
                 {
-                  'toggleSidebar': '切换侧边栏',
-                  'openZInspector': '打开Z层级检视器',
-                  'toggleLegendGroupDrawer': '切换图例组抽屉',
+                  'toggleSidebar': LocalizationService.instance.current.toggleSidebar_4822,
+                  'openZInspector': LocalizationService.instance.current.openZInspector_4823,
+                  'toggleLegendGroupDrawer': LocalizationService.instance.current.toggleLegendGroupDrawer_4824,
                 },
                 shortcuts,
                 context,
@@ -60,17 +63,17 @@ class ShortcutsDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 图层操作
-              _buildShortcutCategory(
-                '图层操作',
+_buildShortcutCategory(
+                LocalizationService.instance.current.layerOperations_4821,
                 {
-                  'prevLayer': '上一个图层',
-                  'nextLayer': '下一个图层',
-                  'prevLayerGroup': '上一个图层组',
-                  'nextLayerGroup': '下一个图层组',
-                  'hideOtherLayers': '隐藏其他图层',
-                  'hideOtherLayerGroups': '隐藏其他图层组',
-                  'showCurrentLayer': '显示当前图层',
-                  'showCurrentLayerGroup': '显示当前图层组',
+                  'prevLayer': LocalizationService.instance.current.previousLayer_4822,
+                  'nextLayer': LocalizationService.instance.current.nextLayer_4823,
+                  'prevLayerGroup': LocalizationService.instance.current.previousLayerGroup_4824,
+                  'nextLayerGroup': LocalizationService.instance.current.nextLayerGroup_4825,
+                  'hideOtherLayers': LocalizationService.instance.current.hideOtherLayers_4826,
+                  'hideOtherLayerGroups': LocalizationService.instance.current.hideOtherLayerGroups_4827,
+                  'showCurrentLayer': LocalizationService.instance.current.showCurrentLayer_4828,
+                  'showCurrentLayerGroup': LocalizationService.instance.current.showCurrentLayerGroup_4829,
                 },
                 shortcuts,
                 context,
@@ -78,33 +81,33 @@ class ShortcutsDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 图例操作
-              _buildShortcutCategory(
-                '图例操作',
+_buildShortcutCategory(
+                LocalizationService.instance.current.legendOperations_4821,
                 {
-                  'prevLegendGroup': '上一个图例组',
-                  'nextLegendGroup': '下一个图例组',
-                  'openLegendDrawer': '打开图例组绑定抽屉',
-                  'hideOtherLegendGroups': '隐藏其他图例组',
-                  'showCurrentLegendGroup': '显示当前图例组',
+                  'prevLegendGroup': LocalizationService.instance.current.previousLegendGroup_4822,
+                  'nextLegendGroup': LocalizationService.instance.current.nextLegendGroup_4823,
+                  'openLegendDrawer': LocalizationService.instance.current.openLegendDrawer_4824,
+                  'hideOtherLegendGroups': LocalizationService.instance.current.hideOtherLegendGroups_4825,
+                  'showCurrentLegendGroup': LocalizationService.instance.current.showCurrentLegendGroup_4826,
                 },
                 shortcuts,
                 context,
               ),
               _buildShortcutCategory(
                 '帮助',
-                {'showShortcuts': '显示快捷键列表'},
+                {'showShortcuts': LocalizationService.instance.current.showShortcutsList_7281},
                 shortcuts,
                 context,
               ),
               const SizedBox(height: 16),
 
               // 版本管理
-              _buildShortcutCategory(
-                '版本管理',
+_buildShortcutCategory(
+                LocalizationService.instance.current.versionManagement_4821,
                 {
-                  'prevVersion': '上一个版本',
-                  'nextVersion': '下一个版本',
-                  'createNewVersion': '创建新版本',
+                  'prevVersion': LocalizationService.instance.current.previousVersion_4822,
+                  'nextVersion': LocalizationService.instance.current.nextVersion_4823,
+                  'createNewVersion': LocalizationService.instance.current.createNewVersion_4824,
                 },
                 shortcuts,
                 context,
@@ -112,19 +115,19 @@ class ShortcutsDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 快速选择
-              _buildShortcutCategory(
-                '快速选择 (图层组)',
+_buildShortcutCategory(
+                LocalizationService.instance.current.quickSelectLayerGroup,
                 {
-                  'selectLayerGroup1': '选择图层组 1',
-                  'selectLayerGroup2': '选择图层组 2',
-                  'selectLayerGroup3': '选择图层组 3',
-                  'selectLayerGroup4': '选择图层组 4',
-                  'selectLayerGroup5': '选择图层组 5',
-                  'selectLayerGroup6': '选择图层组 6',
-                  'selectLayerGroup7': '选择图层组 7',
-                  'selectLayerGroup8': '选择图层组 8',
-                  'selectLayerGroup9': '选择图层组 9',
-                  'selectLayerGroup10': '选择图层组 10',
+                  'selectLayerGroup1': LocalizationService.instance.current.selectLayerGroup1,
+                  'selectLayerGroup2': LocalizationService.instance.current.selectLayerGroup2,
+                  'selectLayerGroup3': LocalizationService.instance.current.selectLayerGroup3,
+                  'selectLayerGroup4': LocalizationService.instance.current.selectLayerGroup4,
+                  'selectLayerGroup5': LocalizationService.instance.current.selectLayerGroup5,
+                  'selectLayerGroup6': LocalizationService.instance.current.selectLayerGroup6,
+                  'selectLayerGroup7': LocalizationService.instance.current.selectLayerGroup7,
+                  'selectLayerGroup8': LocalizationService.instance.current.selectLayerGroup8,
+                  'selectLayerGroup9': LocalizationService.instance.current.selectLayerGroup9,
+                  'selectLayerGroup10': LocalizationService.instance.current.selectLayerGroup10,
                 },
                 shortcuts,
                 context,
@@ -132,21 +135,21 @@ class ShortcutsDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 快速选择图层
-              _buildShortcutCategory(
-                '快速选择 (图层)',
+_buildShortcutCategory(
+                LocalizationService.instance.current.quickSelectLayerCategory_4821,
                 {
-                  'selectLayer1': '选择图层 1',
-                  'selectLayer2': '选择图层 2',
-                  'selectLayer3': '选择图层 3',
-                  'selectLayer4': '选择图层 4',
-                  'selectLayer5': '选择图层 5',
-                  'selectLayer6': '选择图层 6',
-                  'selectLayer7': '选择图层 7',
-                  'selectLayer8': '选择图层 8',
-                  'selectLayer9': '选择图层 9',
-                  'selectLayer10': '选择图层 10',
-                  'selectLayer11': '选择图层 11',
-                  'selectLayer12': '选择图层 12',
+                  'selectLayer1': LocalizationService.instance.current.selectLayer1_4822,
+                  'selectLayer2': LocalizationService.instance.current.selectLayer2_4823,
+                  'selectLayer3': LocalizationService.instance.current.selectLayer3_4824,
+                  'selectLayer4': LocalizationService.instance.current.selectLayer4_4825,
+                  'selectLayer5': LocalizationService.instance.current.selectLayer5_4826,
+                  'selectLayer6': LocalizationService.instance.current.selectLayer6_4827,
+                  'selectLayer7': LocalizationService.instance.current.selectLayer7_4828,
+                  'selectLayer8': LocalizationService.instance.current.selectLayer8_4829,
+                  'selectLayer9': LocalizationService.instance.current.selectLayer9_4830,
+                  'selectLayer10': LocalizationService.instance.current.selectLayer10_4831,
+                  'selectLayer11': LocalizationService.instance.current.selectLayer11_4832,
+                  'selectLayer12': LocalizationService.instance.current.selectLayer12_4833,
                 },
                 shortcuts,
                 context,
@@ -158,7 +161,7 @@ class ShortcutsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+child: Text(LocalizationService.instance.current.closeButton_7421),
         ),
       ],
     );
@@ -220,8 +223,8 @@ class ShortcutsDialog extends StatelessWidget {
   /// 构建快捷键芯片（使用与设置页面相同的样式）
   Widget _buildShortcutChips(List<String> shortcuts, BuildContext context) {
     if (shortcuts.isEmpty) {
-      return Text(
-        '未设置',
+return Text(
+        LocalizationService.instance.current.notSet_7281,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 12,

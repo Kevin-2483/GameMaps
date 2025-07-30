@@ -1,0 +1,9 @@
+{
+  "mapScriptsLoaded": "为地图 {mapTitle} 加载了 {scriptCount} 个脚本",
+  "parseParamFailed": "解析参数定义失败: {line}, 错误: {e}",
+  "scriptEngineResetDone_7281": "脚本引擎重置完成",
+  "resetReactiveScriptEngine_4821": "重置新响应式脚本引擎",
+  "scriptEngineResetFailed_7285": "脚本引擎重置失败: {e}",
+  "initReactiveScriptManager": "初始化新响应式脚本管理器，地图标题: {mapTitle}",
+  "releaseResourceManager_4821": "释放新响应式脚本管理器资源"
+}

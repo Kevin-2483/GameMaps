@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+
+import '../services/localization_service.dart';
 
 /// 通用节流管理器
 /// 支持对任意函数进行节流控制，防止高频调用
@@ -39,7 +42,9 @@ class ThrottleManager {
       try {
         action(latestValue);
       } catch (e) {
-        debugPrint('节流执行出错 [$key]: $e');
+        debugPrint(
+          LocalizationService.instance.current.throttleError_7425(key, e),
+        );
       } finally {
         // 清理
         _pendingValues.remove(key);
@@ -57,7 +62,9 @@ class ThrottleManager {
       try {
         action(value);
       } catch (e) {
-        debugPrint('节流立即执行出错 [$key]: $e');
+        debugPrint(
+          LocalizationService.instance.current.throttleErrorImmediate(key, e),
+        );
       } finally {
         _pendingValues.remove(key);
         _timers.remove(key);
@@ -92,7 +99,11 @@ class ThrottleManager {
   /// 释放所有资源
   void dispose() {
     cancelAll();
-    debugPrint('ThrottleManager已释放，清理了${_timers.length}个定时器');
+    debugPrint(
+      LocalizationService.instance.current.throttleManagerReleased(
+        _timers.length,
+      ),
+    );
   }
 }
 

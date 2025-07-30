@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../models/websocket_client_config.dart';
 import '../../../services/database_path_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// WebSocket 客户端配置数据库服务
 /// 管理多个 WebSocket 客户端身份配置
@@ -15,7 +18,9 @@ class WebSocketClientDatabaseService {
   Future<void> initialize() async {
     await _initDatabase();
     if (kDebugMode) {
-      debugPrint('WebSocket 客户端数据库服务初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.websocketClientDbInitComplete_7281,
+      );
     }
   }
 
@@ -90,14 +95,21 @@ class WebSocketClientDatabaseService {
     });
 
     if (kDebugMode) {
-      debugPrint('WebSocket 客户端配置数据库表创建完成');
+      debugPrint(
+        LocalizationService.instance.current.websocketTableCreated_7281,
+      );
     }
   }
 
   /// 数据库升级
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (kDebugMode) {
-      debugPrint('WebSocket 客户端配置数据库从版本 $oldVersion 升级到 $newVersion');
+      debugPrint(
+        LocalizationService.instance.current.websocketDbUpgradeMessage(
+          oldVersion,
+          newVersion,
+        ),
+      );
     }
   }
 
@@ -133,7 +145,11 @@ class WebSocketClientDatabaseService {
     }
 
     if (kDebugMode) {
-      debugPrint('WebSocket 客户端配置已保存: ${config.displayName}');
+      debugPrint(
+        LocalizationService.instance.current.websocketConfigSaved(
+          config.displayName,
+        ),
+      );
     }
   }
 
@@ -190,7 +206,11 @@ class WebSocketClientDatabaseService {
     }
 
     if (kDebugMode) {
-      debugPrint('WebSocket 客户端配置已删除: $clientId');
+      debugPrint(
+        LocalizationService.instance.current.websocketClientConfigDeleted(
+          clientId,
+        ),
+      );
     }
   }
 
@@ -213,7 +233,11 @@ class WebSocketClientDatabaseService {
     await _setActiveClientId(clientId);
 
     if (kDebugMode) {
-      debugPrint('活跃 WebSocket 客户端配置已设置: $clientId');
+      debugPrint(
+        LocalizationService.instance.current.activeWebSocketClientConfigSet(
+          clientId,
+        ),
+      );
     }
   }
 

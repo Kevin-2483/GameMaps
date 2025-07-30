@@ -1,0 +1,139 @@
+{
+  "success": true,
+  "results": [
+    {
+      "test_name": "简单问题",
+      "result": {
+        "success": true,
+        "content": "人工智能是模拟人类智能的机器系统，能够执行学习、推理、决策等任务。",
+        "response_time": 0.12942004203796387,
+        "analysis": {
+          "length": 33,
+          "has_code": false,
+          "has_json": false,
+          "is_structured": false,
+          "completeness": "incomplete"
+        },
+        "token_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 19,
+          "total_tokens": 43,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 24
+        }
+      }
+    },
+    {
+      "test_name": "代码生成",
+      "result": {
+        "success": true,
+        "content": "# 递归方法计算斐波那契数列第n项\n\n以下是使用递归方法计算斐波那契数列第n项的Python函数：\n\n```python\ndef fibonacci_recursive(n):\n    \"\"\"\n    使用递归方法计算斐波那契数列的第n项\n    \n    参数:\n    n -- 要计算的斐波那契数列的项数(从0开始)\n    \n    返回:\n    斐波那契数列的第n项\n    \n    异常:\n    ValueError -- 当n为负数时抛出\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n必须是非负整数\")\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci_recursive(n-1) + fibonacci_recursive(n-2)\n```\n\n## 使用示例\n\n```python\n# 打印前10项斐波那契数列\nfor i in range(10):\n    print(f\"fibonacci({i}) = {fibonacci_recursive(i)}\")\n\n# 计算特定项\nn = 10\nprint(f\"\\n斐波那契数列的第{n}项是: {fibonacci_recursive(n)}\")\n```\n\n## 注意事项\n\n1. 递归方法虽然简洁，但对于较大的n值效率很低，因为它会重复计算许多子问题。\n2. 时间复杂度为O(2^n)，随着n增大，计算时间会急剧增加。\n3. 对于",
+        "response_time": 0.14077377319335938,
+        "analysis": {
+          "length": 707,
+          "has_code": true,
+          "has_json": true,
+          "is_structured": true,
+          "completeness": "complete"
+        },
+        "token_usage": {
+          "prompt_tokens": 38,
+          "completion_tokens": 300,
+          "total_tokens": 338,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 38
+        }
+      }
+    },
+    {
+      "test_name": "复杂推理",
+      "result": {
+        "success": true,
+        "content": "### 问题重述\n\n我们有三个人：A、B、C。他们中：\n\n- 一个人总是说真话（真话者）。\n- 一个人总是说假话（假话者）。\n- 一个人有时说真话，有时说假话（不定者）。\n\n他们分别说了以下的话：\n\n- A说：\"B是说假话的人。\"\n- B说：\"C不是说真话的人。\"\n- C说：\"A和B中有一个是说真话的人。\"\n\n我们的目标是确定谁是总是说真话的人，谁是总是说假话的人，以及谁是有时说真话有时说假话的人。\n\n### 解决思路\n\n为了找出每个人的身份，我们可以尝试假设每个人分别是真话者、假话者或不定者，然后验证他们的陈述是否自洽。由于不定者的陈述可能是真也可能是假，我们需要确保在假设中只有一个人是不定者，而其他两个人一个是真话者，一个是假话者。\n\n### 尝试假设\n\n让我们尝试不同的假设：\n\n#### 假设1：A是真话者\n\n如果A是真话者，那么A的陈述“B是说假话的人”必须为真。因此：\n\n- A：真话者。\n- B：假话者。\n\n那么C的身份只能是不定者。\n\n现在验证B和C的陈述：\n\n- B是假话者，所以B的陈述“C不是说真话的人”是假话。这意味着“C是说真话的人”是真的。但是C实际上是不定者，不是总是说真话的人，这与B的假话一致（因为B说假话，所以“C不是说真话的人”是假的，即“C是说真话的人”是真的，但C不是总是说真话的人，矛盾）。这里出现矛盾，因为如果C是不定者，那么“C是说真话的人”是假的，这与B的假话“C不是说真话的人”是假的（即“C是说真话的人”是真的）矛盾。\n\n因此，假设A是真话者导致矛盾，所以A不可能是真话者。\n\n#### 假设2：B是真话者\n\n如果B是真话者，那么B的陈述“C不是说真话的人”必须为真。因此：\n\n- B：真话者。\n- C：不是真话者（即C是假话者或不定者）。\n\nA的身份可能是假话者或不定者。\n\n考虑A的陈述",
+        "response_time": 0.13834333419799805,
+        "analysis": {
+          "length": 776,
+          "has_code": false,
+          "has_json": false,
+          "is_structured": true,
+          "completeness": "complete"
+        },
+        "token_usage": {
+          "prompt_tokens": 117,
+          "completion_tokens": 500,
+          "total_tokens": 617,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 117
+        }
+      }
+    },
+    {
+      "test_name": "国际化任务",
+      "result": {
+        "success": true,
+        "content": "Here's the solution with the Dart code replaced with l10n calls and the corresponding ARB entries:\n\n```json\n{\n  \"replaced_code\": \"Widget buildUserProfile() {\\n  return Column(\\n    children: [\\n      Text(AppLocalizations.of(context)!.userInfo),\\n      Text('${AppLocalizations.of(context)!.nameLabel}: ${user.name}'),\\n      Text('${AppLocalizations.of(context)!.ageLabel}: ${user.age}${AppLocalizations.of(context)!.yearsSuffix}'),\\n      ElevatedButton(\\n        onPressed: () => logout(),\\n        child: Text(AppLocalizations.of(context)!.logoutButton),\\n      ),\\n    ],\\n  );\\n}\",\n  \"arb_entries\": {\n    \"userInfo\": {\n      \"description\": \"Title for user information section\",\n      \"message\": \"用户信息\"\n    },\n    \"nameLabel\": {\n      \"description\": \"Label text for user's name\",\n      \"message\": \"姓名\"\n    },\n    \"ageLabel\": {\n      \"description\": \"Label text for user's age\",\n      \"message\": \"年龄\"\n    },\n    \"yearsSuffix\": {\n      \"description\": \"Suffix for age value indicating years\",\n      \"message\": \"岁\"\n    },\n    \"logoutButton\": {\n      \"description\": \"Text for logout button\",\n      \"message\": \"退出登录\"\n    }\n  }\n}\n```\n\nNotes:\n1. The code assumes you have generated AppLocalizations class using flutter_localizations\n2. The ARB entries include descriptions for better context for translators\n3. The age display is split into two parts (label and suffix) for better flexibility in different languages\n4. String interpolation is maintained in the same way but now uses localized strings for the static parts",
+        "response_time": 0.12602710723876953,
+        "analysis": {
+          "length": 1517,
+          "has_code": true,
+          "has_json": true,
+          "is_structured": true,
+          "completeness": "complete",
+          "dart_specific": true,
+          "json_valid": true
+        },
+        "token_usage": {
+          "prompt_tokens": 181,
+          "completion_tokens": 382,
+          "total_tokens": 563,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 181
+        }
+      }
+    },
+    {
+      "test_name": "JSON任务",
+      "result": {
+        "success": true,
+        "content": "以下是根据您的要求优化后的配置文件，添加了重要配置项、优化了结构、添加了注释说明，并确保JSON格式正确：\n\n```json\n{\n  \"api_settings\": {\n    \"url\": \"https://api.openai.com/v1/chat/completions\",\n    \"model\": \"gpt-3.5-turbo\",\n    \"temperature\": 0.1,\n    \"max_tokens\": 2048,\n    \"top_p\": 1.0,\n    \"frequency_penalty\": 0,\n    \"presence_penalty\": 0,\n    \"timeout\": 30,\n    \"api_key\": \"your_api_key_here\"\n  },\n  \"processing\": {\n    \"concurrent_requests\": 5,\n    \"max_retries\": 3,\n    \"retry_delay\": 2,\n    \"rate_limit\": {\n      \"requests_per_minute\": 60,\n      \"throttle_delay\": 1\n    }\n  },\n  \"logging\": {\n    \"level\": \"info\",\n    \"format\": \"json\",\n    \"path\": \"/var/log/api_service.log\"\n  },\n  \"monitoring\": {\n    \"enabled\": true,\n    \"metrics_endpoint\": \"/metrics\",\n    \"port\": 9090\n  },\n  \"security\": {\n    \"ssl_verify\": true,\n    \"headers\": {\n      \"Content-Type\": \"application/json\",\n      \"Authorization\": \"Bearer ${api_key}\"\n    }\n  }\n}\n```\n\n优化说明：\n\n1. 添加的重要配置项：\n   - API设置中添加了max_tokens、top_p等模型参数\n   - 添加了API密钥配置\n   - 添加了超时设置\n   - 添加了速率限制配置\n   - 添加了日志记录配置\n   - 添加了监控配置\n   - 添加了安全相关配置\n\n2. 结构优化：\n   - 将并发和重试配置分组到processing下\n   - 添加了清晰的分组（api_settings, processing, logging等）\n   - 使用嵌套结构组织相关配置\n\n3. 注释说明（虽然JSON不支持注释，但这里用说明代替）：\n   - temperature: 控制输出的随机性(0-2)\n   - max_tokens: 响应最大token数\n   - concurrent_requests: 最大并发请求数\n   - retry_delay: 重试间隔(秒)\n   - ssl_verify: 是否验证SSL证书\n\n4. 格式验证：\n   - 已确保所有引号、括号匹配\n   - 使用2空格缩进\n   - 保持一致的命名风格(snake_case)\n\n5. 其他改进：\n   - 添加了速率限制配置\n   - 添加了监控端点\n   - 安全头部分离配置\n  ",
+        "response_time": 0.13535237312316895,
+        "analysis": {
+          "length": 1442,
+          "has_code": true,
+          "has_json": true,
+          "is_structured": true,
+          "completeness": "complete",
+          "json_valid": true
+        },
+        "token_usage": {
+          "prompt_tokens": 155,
+          "completion_tokens": 599,
+          "total_tokens": 754,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 155
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total_tests": 5,
+    "successful_tests": 5,
+    "total_time": 0.6699166297912598,
+    "average_response_time": 0.13398332595825196
+  }
+}

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../components/common/radial_gesture_menu.dart';
@@ -5,6 +6,8 @@ import '../../../models/map_item.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 地图编辑器径向菜单集成组件
 class MapEditorRadialMenu extends StatefulWidget {
@@ -150,7 +153,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         RadialMenuItem(
           id: 'no_layer_groups',
           icon: Icons.info_outline,
-          label: '暂无图层组',
+          label: LocalizationService.instance.current.noLayerGroups_4521,
           onTap: () {},
         ),
       );
@@ -286,7 +289,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         RadialMenuItem(
           id: 'no_recent_colors',
           icon: Icons.info_outline,
-          label: '暂无最近颜色',
+          label: LocalizationService.instance.current.noRecentColors_4821,
           onTap: () {},
         ),
       );
@@ -319,7 +322,7 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
             ? '${note.content.substring(0, 10)}...'
             : note.content;
       } else {
-        displayText = '空便签';
+        displayText = LocalizationService.instance.current.emptyNote_4251;
       }
 
       items.add(
@@ -414,35 +417,35 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
         RadialMenuItem(
           id: 'drawing_tools',
           icon: Icons.brush,
-          label: '绘图工具',
+          label: LocalizationService.instance.current.drawingTools_4821,
           color: Colors.blue,
           subItems: _getDrawingToolItems(),
         ),
         RadialMenuItem(
           id: 'recent_colors',
           icon: Icons.palette,
-          label: '最近颜色',
+          label: LocalizationService.instance.current.recentColors_7281,
           color: Colors.purple,
           subItems: _getRecentColorItems(),
         ),
         RadialMenuItem(
           id: 'layer_groups',
           icon: Icons.layers,
-          label: '图层组',
+          label: LocalizationService.instance.current.layerGroups_4821,
           color: Colors.green,
           subItems: _getLayerGroupItems(),
         ),
         RadialMenuItem(
           id: 'layers',
           icon: Icons.layers,
-          label: '图层',
+          label: LocalizationService.instance.current.layersLabel_4821,
           color: Colors.orange,
           subItems: _getLayerItems(),
         ),
         RadialMenuItem(
           id: 'sticky_notes',
           icon: Icons.sticky_note_2,
-          label: '便签',
+          label: LocalizationService.instance.current.stickyNoteLabel_4821,
           color: Colors.brown,
           subItems: _getStickyNoteItems(),
         ),

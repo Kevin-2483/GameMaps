@@ -1,9 +1,13 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});
@@ -19,7 +23,7 @@ class _SettingsPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Scaffold(
       body: Column(
@@ -62,7 +66,12 @@ class _SettingsPageContent extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.tune),
               title: Text(l10n.userPreferences),
-              subtitle: Text('管理主题、地图编辑器、界面布局等个人设置'),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .personalSettingsManagement_4821,
+              ),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/user-preferences'),
             ),
@@ -86,8 +95,18 @@ class _SettingsPageContent extends StatelessWidget {
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.cloud_sync),
-              title: const Text('外部资源管理'),
-              subtitle: const Text('导入、导出和浏览应用数据'),
+              title: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .externalResourceManagement_7421,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .importExportBrowseData_4821,
+              ),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/external-resources'),
             ),
@@ -96,15 +115,26 @@ class _SettingsPageContent extends StatelessWidget {
             if (!kIsWeb)
               ListTile(
                 leading: const Icon(Icons.cloud),
-                title: const Text('WebDAV 管理'),
-                subtitle: const Text('配置和管理 WebDAV 云存储连接'),
+                title: Text(
+                  LocalizationService.instance.current.webDavManagement_4271,
+                ),
+                subtitle: Text(
+                  LocalizationService.instance.current.webDavConfigTitle_7281,
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () => context.go('/webdav-manager'),
               ),
             ListTile(
               leading: const Icon(Icons.wifi),
-              title: const Text('WebSocket 连接管理'),
-              subtitle: const Text('管理 WebSocket 客户端连接配置'),
+              title: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .websocketConnectionManagement_4821,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.websocketClientConfig_4821,
+              ),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/websocket-manager'),
             ),
@@ -121,12 +151,20 @@ class _SettingsPageContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('关于', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.about_5421,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('关于 R6BOX'),
-              subtitle: const Text('软件信息、许可证和开源项目致谢'),
+              title: Text(LocalizationService.instance.current.aboutR6box_7281),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .softwareInfoLicenseAcknowledgements_4821,
+              ),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => context.go('/about'),
             ),

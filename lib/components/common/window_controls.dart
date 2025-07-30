@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/window_manager_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 通用窗口控制组件
 /// 提供最小化、最大化/还原、全屏等窗口控制功能
@@ -74,7 +77,7 @@ class _WindowControlsState extends State<WindowControls>
         });
       }
     } catch (e) {
-      debugPrint('获取全屏状态失败: $e');
+      debugPrint(LocalizationService.instance.current.fullScreenStatusError(e));
     }
   }
 
@@ -87,14 +90,18 @@ class _WindowControlsState extends State<WindowControls>
           !appWindow.isMaximized) {
         WindowManagerService().saveCurrentWindowSize();
         if (kDebugMode) {
-          debugPrint('窗口大小保存请求已发送（非最大化状态）');
+          debugPrint(
+            LocalizationService.instance.current.windowSizeSaveRequestSent_7281,
+          );
         }
       } else if (kDebugMode && appWindow.isMaximized) {
-        debugPrint('跳过保存：当前处于最大化状态');
+        debugPrint(LocalizationService.instance.current.skipSaveMaximizedState);
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('保存窗口大小失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.saveWindowSizeFailed_7285(e),
+        );
       }
     }
   }
@@ -115,7 +122,7 @@ class _WindowControlsState extends State<WindowControls>
           _saveWindowSizeIfEnabled(context);
           appWindow.minimize();
         },
-        tooltip: '最小化',
+        tooltip: LocalizationService.instance.current.minimizeButton_7281,
       ),
 
       SizedBox(width: widget.spacing),
@@ -127,7 +134,7 @@ class _WindowControlsState extends State<WindowControls>
           _saveWindowSizeIfEnabled(context);
           appWindow.maximizeOrRestore();
         },
-        tooltip: '最大化/还原',
+        tooltip: LocalizationService.instance.current.maximizeOrRestore_7281,
       ),
 
       // 在Windows平台上不显示全屏按钮
@@ -146,7 +153,9 @@ class _WindowControlsState extends State<WindowControls>
               // 切换全屏状态
               FullScreen.setFullScreen(!_isFullScreen);
             } catch (e) {
-              debugPrint('切换全屏模式失败: $e');
+              debugPrint(
+                LocalizationService.instance.current.fullscreenToggleFailed(e),
+              );
             }
           },
           tooltip: _isFullScreen ? '退出全屏' : '全屏',
@@ -161,7 +170,7 @@ class _WindowControlsState extends State<WindowControls>
         _buildWindowButton(
           icon: Icons.close,
           onPressed: widget.onClose ?? () => appWindow.close(),
-          tooltip: '关闭',
+          tooltip: LocalizationService.instance.current.closeButton_4821,
           isCloseButton: true,
         ),
       ]);

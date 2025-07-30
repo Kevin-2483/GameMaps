@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 文件冲突处理动作
 enum VfsConflictAction {
@@ -139,7 +142,8 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
 
   String _generateSuggestedName(String baseName) {
     // 生成唯一的建议名称，如 "文件名 (副本)", "文件名 (副本 2)" 等
-    String suggestedName = '$baseName (副本)';
+    String suggestedName =
+        '$baseName ${LocalizationService.instance.current.copySuffix_7421}';
     int counter = 2;
 
     // 这里应该检查目标路径是否存在同名文件，但由于我们在对话框中
@@ -154,19 +158,24 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
     setState(() {
       if (name.isEmpty) {
         _isValidName = false;
-        _errorMessage = '名称不能为空';
+        _errorMessage =
+            LocalizationService.instance.current.nameCannotBeEmpty_4821;
       } else if (name.contains(RegExp(r'[<>:"/\\|?*]'))) {
         _isValidName = false;
-        _errorMessage = '名称包含无效字符: < > : " / \\ | ? *';
+        _errorMessage =
+            LocalizationService.instance.current.invalidCharacters_4821;
       } else if (name.startsWith('.') || name.endsWith('.')) {
         _isValidName = false;
-        _errorMessage = '名称不能以点号开头或结尾';
+        _errorMessage =
+            LocalizationService.instance.current.invalidNameDotError_4821;
       } else if (name.length > 255) {
         _isValidName = false;
-        _errorMessage = '名称长度不能超过255个字符';
+        _errorMessage =
+            LocalizationService.instance.current.nameLengthExceeded_4821;
       } else if (_isReservedName(name)) {
         _isValidName = false;
-        _errorMessage = '不能使用系统保留名称';
+        _errorMessage =
+            LocalizationService.instance.current.reservedNameError_4821;
       } else {
         _isValidName = true;
         _errorMessage = null;
@@ -247,7 +256,7 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '文件冲突',
+                    LocalizationService.instance.current.fileConflict_4821,
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
@@ -273,7 +282,12 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '目标位置已存在同名${conflictInfo.isDirectory ? "文件夹" : "文件"}:',
+                    LocalizationService.instance.current
+                        .duplicateItemExists_7281(
+                          conflictInfo.isDirectory
+                              ? LocalizationService.instance.current.folder_7281
+                              : LocalizationService.instance.current.file_4821,
+                        ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.w500,
@@ -304,7 +318,10 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                   if (widget.remainingConflicts != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      '还有 ${widget.remainingConflicts} 个冲突需要处理',
+                      LocalizationService.instance.current
+                          .remainingConflictsToResolve(
+                            widget.remainingConflicts ?? 0,
+                          ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
@@ -323,7 +340,10 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                   children: [
                     // 处理选项
                     Text(
-                      '请选择处理方式:',
+                      LocalizationService
+                          .instance
+                          .current
+                          .selectProcessingMethod_4821,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
@@ -340,8 +360,15 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                           _selectedAction = value!;
                         });
                       },
-                      title: const Text('重命名'),
-                      subtitle: const Text('保留两个文件，重命名新文件'),
+                      title: Text(
+                        LocalizationService.instance.current.rename_4821,
+                      ),
+                      subtitle: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .keepTwoFilesRenameNew_4821,
+                      ),
                       secondary: const Icon(Icons.drive_file_rename_outline),
                     ),
 
@@ -359,7 +386,10 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                               child: TextField(
                                 controller: _nameController,
                                 decoration: InputDecoration(
-                                  hintText: '输入新名称',
+                                  hintText: LocalizationService
+                                      .instance
+                                      .current
+                                      .inputNewNameHint_4821,
                                   errorText: _errorMessage,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -409,8 +439,15 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                           _selectedAction = value!;
                         });
                       },
-                      title: const Text('覆盖'),
-                      subtitle: const Text('用新文件替换现有文件'),
+                      title: Text(
+                        LocalizationService.instance.current.overlayText_4821,
+                      ),
+                      subtitle: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .replaceExistingFileWithNew_7281,
+                      ),
                       secondary: Icon(
                         Icons.file_copy,
                         color: colorScheme.error,
@@ -427,8 +464,15 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                             _selectedAction = value!;
                           });
                         },
-                        title: const Text('合并'),
-                        subtitle: const Text('合并文件夹内容，子文件冲突时会再次询问'),
+                        title: Text(
+                          LocalizationService.instance.current.mergeText_4821,
+                        ),
+                        subtitle: Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .mergeFolderPrompt_4821,
+                        ),
                         secondary: const Icon(Icons.merge),
                       ),
 
@@ -441,8 +485,15 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                           _selectedAction = value!;
                         });
                       },
-                      title: const Text('跳过'),
-                      subtitle: const Text('跳过此文件，保留现有文件'),
+                      title: Text(
+                        LocalizationService.instance.current.skip_4821,
+                      ),
+                      subtitle: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .skipFileKeepExisting_7281,
+                      ),
                       secondary: const Icon(Icons.skip_next),
                     ),
 
@@ -457,8 +508,18 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                             _applyToAll = value ?? false;
                           });
                         },
-                        title: const Text('应用到所有冲突'),
-                        subtitle: const Text('对剩余的所有冲突使用相同的处理方式'),
+                        title: Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .applyToAllConflicts_7281,
+                        ),
+                        subtitle: Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .applySameResolutionToAllConflicts_4821,
+                        ),
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
                   ],
@@ -474,7 +535,9 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_7281,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
@@ -483,7 +546,9 @@ class _VfsFileConflictDialogState extends State<VfsFileConflictDialog> {
                           !_isValidName)
                       ? null
                       : _handleConfirm,
-                  child: const Text('确定'),
+                  child: Text(
+                    LocalizationService.instance.current.confirmButton_7281,
+                  ),
                 ),
               ],
             ),
@@ -584,7 +649,10 @@ class _VfsBatchConflictDialogState extends State<VfsBatchConflictDialog> {
           final extension = conflict.isDirectory
               ? ''
               : conflict.fileName.substring(conflict.fileName.lastIndexOf('.'));
-          newName = '$baseName (副本)$extension';
+          newName =
+              '$baseName' +
+              LocalizationService.instance.current.copySuffix_7285 +
+              '$extension';
         }
 
         _results.add(

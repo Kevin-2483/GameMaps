@@ -1,0 +1,23 @@
+{
+  "smartDynamicDisplayInfo_7284": "📏 智能动态显示区域信息:",
+  "basicScreenSize": "基础屏幕尺寸: {width} x {height}",
+  "displayAreaMultiplierLabel_4821": "显示区域倍数",
+  "affectsPerspectiveBuffer_4821": "影响透视缓冲",
+  "perspectiveBufferFactorDebug": "   - 透视缓冲调节系数: {factor}x",
+  "baseBufferMultiplierLog": "   - 基础缓冲区倍数: {multiplier}x",
+  "xPerspectiveFactor": "   - X方向透视因子: {factor}",
+  "perspectiveStrengthDebug": "   - 当前透视强度: {value} (0~1)",
+  "dynamicBufferMultiplierInfo": "   - 动态缓冲区倍数: {multiplier}x (智能计算)",
+  "yPerspectiveFactor": "   - Y方向透视因子: {factor}",
+  "basicDisplayArea_7421": "基础显示区域: {width} x {height}",
+  "bufferedAreaSize": "   - 缓冲后区域: {width} x {height}",
+  "performanceOptimizationInfo_7281": "🎯 性能优化信息:",
+  "centerOffsetDebug": "   - 中心偏移: ({dx}, {dy})",
+  "gridSpacingInfo": "   - 基础网格间距: {baseSpacing}px → 实际间距: {actualSpacing}px",
+  "iconSizeDebug": "   - 基础图标大小: {baseSize}px → 实际大小: {actualSize}px",
+  "triangleHeightInfo": "   - 三角形高度: {value}px (行间距)",
+  "windowScalingFactorDebug": "   - 窗口随动系数: {factor} (影响内容缩放)",
+  "startCachingSvgFiles_7281": "🎨 开始缓存SVG文件...",
+  "bufferCalculationFormula_4821": "💡 缓冲计算公式: {baseMultiplier} × (1 + {perspectiveStrength} × {bufferFactor} × {areaMultiplier}) = {result}",
+  "svgLoadFailed_4821": "加载SVG失败: {svgPath} - {e}"
+}

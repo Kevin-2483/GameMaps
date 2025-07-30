@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
 import '../models/map_item_summary.dart';
 import 'database_path_service.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 地图数据库服务
 class MapDatabaseService {
@@ -170,15 +173,26 @@ class MapDatabaseService {
   /// 更新地图
   Future<void> updateMap(MapItem map) async {
     try {
-      debugPrint('MapDatabaseService.updateMap 开始执行');
-      debugPrint('- 地图ID: ${map.id}');
-      debugPrint('- 地图标题: ${map.title}');
+      debugPrint(
+        LocalizationService
+            .instance
+            .current
+            .mapDatabaseServiceUpdateMapStart_7281,
+      );
+      debugPrint(LocalizationService.instance.current.mapIdDebug(map.id?.toString() ?? 'null'));
+      debugPrint(
+        '- ${LocalizationService.instance.current.mapTitle_7421}: ${map.title}',
+      );
 
       final db = await database;
-      debugPrint('数据库连接成功');
+      debugPrint(LocalizationService.instance.current.databaseConnected_7281);
 
       final databaseData = map.toDatabase();
-      debugPrint('数据序列化完成，字段: ${databaseData.keys.toList()}');
+      debugPrint(
+        LocalizationService.instance.current.dataSerializationComplete(
+          databaseData.keys.toList(),
+        ),
+      );
 
       // 检查图层数据序列化
       if (map.layers.isNotEmpty) {
@@ -186,10 +200,22 @@ class MapDatabaseService {
           final layersJson = json.encode(
             map.layers.map((e) => e.toJson()).toList(),
           );
-          debugPrint('图层数据序列化成功，长度: ${layersJson.length}');
+          debugPrint(
+            LocalizationService.instance.current.layerSerializationSuccess(
+              layersJson.length,
+            ),
+          );
         } catch (e) {
-          debugPrint('图层数据序列化失败: $e');
-          throw Exception('图层数据序列化失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.layerSerializationFailed_4829(
+              e,
+            ),
+          );
+          throw Exception(
+            LocalizationService.instance.current.layerSerializationFailed_7284(
+              e,
+            ),
+          );
         }
       }
 
@@ -199,10 +225,19 @@ class MapDatabaseService {
           final legendGroupsJson = json.encode(
             map.legendGroups.map((e) => e.toJson()).toList(),
           );
-          debugPrint('图例组数据序列化成功，长度: ${legendGroupsJson.length}');
+          debugPrint(
+            LocalizationService.instance.current
+                .legendGroupSerializationSuccess(legendGroupsJson.length),
+          );
         } catch (e) {
-          debugPrint('图例组数据序列化失败: $e');
-          throw Exception('图例组数据序列化失败: $e');
+          debugPrint(
+            LocalizationService.instance.current
+                .legendGroupSerializationFailed_4821(e),
+          );
+          throw Exception(
+            LocalizationService.instance.current
+                .legendGroupSerializationFailed_7285(e),
+          );
         }
       }
 
@@ -213,15 +248,25 @@ class MapDatabaseService {
         whereArgs: [map.id],
       );
 
-      debugPrint('数据库更新完成，影响行数: $updateResult');
+      debugPrint(
+        LocalizationService.instance.current.databaseUpdateComplete(
+          updateResult,
+        ),
+      );
 
       if (updateResult == 0) {
-        throw Exception('没有找到要更新的地图记录，ID: ${map.id}');
+        throw Exception(
+          LocalizationService.instance.current.mapRecordNotFoundWithId(map.id?.toString() ?? 'null'),
+        );
       }
     } catch (e, stackTrace) {
-      debugPrint('MapDatabaseService.updateMap 错误:');
-      debugPrint('错误: $e');
-      debugPrint('堆栈: $stackTrace');
+      debugPrint(
+        LocalizationService.instance.current.mapDatabaseServiceError_4821,
+      );
+      debugPrint(LocalizationService.instance.current.errorMessage(e));
+      debugPrint(
+        LocalizationService.instance.current.stackTraceMessage_7421(stackTrace),
+      );
       rethrow;
     }
   }
@@ -268,7 +313,8 @@ class MapDatabaseService {
 
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: '保存地图数据库',
+        dialogTitle:
+            LocalizationService.instance.current.saveMapDatabaseTitle_4821,
         fileName:
             'maps_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.db',
         type: FileType.custom,
@@ -281,12 +327,18 @@ class MapDatabaseService {
         await file.writeAsString(jsonData);
 
         debugPrint(
-          '数据库导出成功: $outputFile (版本: $dbVersion, 地图数量: ${maps.length})',
+          LocalizationService.instance.current.databaseExportSuccess(
+            outputFile,
+            dbVersion,
+            maps.length,
+          ),
         );
         return outputFile;
       }
     } catch (e) {
-      debugPrint('导出数据库失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportDatabaseFailed_7421(e),
+      );
     }
     return null;
   }
@@ -313,18 +365,29 @@ class MapDatabaseService {
             if (importedMap.version > existingMap.version) {
               await updateMap(importedMap.copyWith(id: existingMap.id));
               debugPrint(
-                '更新地图: ${importedMap.title} (版本 ${existingMap.version} -> ${importedMap.version})',
+                LocalizationService.instance.current.mapUpdateMessage(
+                  importedMap.title,
+                  existingMap.version,
+                  importedMap.version,
+                ),
               );
             } else {
               debugPrint(
-                '跳过地图: ${importedMap.title} (当前版本 ${existingMap.version} >= 导入版本 ${importedMap.version})',
+                LocalizationService.instance.current.skipMapMessage(
+                  importedMap.title,
+                  existingMap.version,
+                  importedMap.version,
+                ),
               );
             }
           } else {
             // 不存在则直接添加
             await forceInsertMap(importedMap.copyWith(id: null));
             debugPrint(
-              '添加新地图: ${importedMap.title} (版本 ${importedMap.version})',
+              LocalizationService.instance.current.addNewMapWithVersion(
+                importedMap.title,
+                importedMap.version,
+              ),
             );
           }
         }
@@ -332,7 +395,9 @@ class MapDatabaseService {
         return true;
       }
     } catch (e) {
-      debugPrint('导入数据库失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.databaseImportFailed_7421(e),
+      );
     }
     return false;
   }

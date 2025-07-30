@@ -1,0 +1,6 @@
+{
+  "localizationVersionNotHigher": "本地化文件版本 {version} 不高于当前版本 {currentVersion}，跳过导入",
+  "exportLocalDbFailed": "导出本地化数据库失败: {e}",
+  "importLocalizationFailed_7285": "导入本地化文件失败: {e}",
+  "exportMapLocalizationFileTitle_4821": "导出地图本地化文件"
+}

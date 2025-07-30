@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../data/new_reactive_script_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 脚本参数输入对话框
 class ScriptParametersDialog extends StatefulWidget {
@@ -97,7 +100,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '脚本参数设置',
+              LocalizationService.instance.current.scriptParameterSettings_4821,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -125,7 +128,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '脚本: ${widget.scriptName}',
+                    LocalizationService.instance.current.scriptName_7421(
+                      widget.scriptName,
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -138,7 +143,7 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
             // 参数说明
             if (widget.parameters.isNotEmpty) ...[
               Text(
-                '请设置以下参数：',
+                LocalizationService.instance.current.setParametersPrompt_4821,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -179,7 +184,10 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '请检查并修正参数输入错误',
+                        LocalizationService
+                            .instance
+                            .current
+                            .checkAndCorrectInputError_4821,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onErrorContainer,
                           fontSize: 12,
@@ -196,9 +204,12 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_4271),
         ),
-        FilledButton(onPressed: _validateAndSubmit, child: const Text('确认')),
+        FilledButton(
+          onPressed: _validateAndSubmit,
+          child: Text(LocalizationService.instance.current.confirmButton_7281),
+        ),
       ],
     );
   }
@@ -292,13 +303,17 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
     return TextFormField(
       controller: _controllers[param.name],
       decoration: InputDecoration(
-        hintText: param.defaultValue ?? '请输入${param.name}',
+        hintText:
+            param.defaultValue ??
+            LocalizationService.instance.current.inputPrompt(param.name),
         border: const OutlineInputBorder(),
         isDense: true,
       ),
       validator: (value) {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
-          return '${param.name}是必填参数';
+          return LocalizationService.instance.current.requiredParameter(
+            param.name,
+          );
         }
         return null;
       },
@@ -309,7 +324,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
     return TextFormField(
       controller: _controllers[param.name],
       decoration: InputDecoration(
-        hintText: param.defaultValue ?? '请输入整数',
+        hintText:
+            param.defaultValue ??
+            LocalizationService.instance.current.inputIntegerHint_4521,
         border: const OutlineInputBorder(),
         isDense: true,
       ),
@@ -317,10 +334,12 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?\d*'))],
       validator: (value) {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
-          return '${param.name}是必填参数';
+          return LocalizationService.instance.current.requiredParameter(
+            param.name,
+          );
         }
         if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
-          return '请输入有效的整数';
+          return LocalizationService.instance.current.invalidIntegerError_4821;
         }
         return null;
       },
@@ -331,7 +350,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
     return TextFormField(
       controller: _controllers[param.name],
       decoration: InputDecoration(
-        hintText: param.defaultValue ?? '请输入数字',
+        hintText:
+            param.defaultValue ??
+            LocalizationService.instance.current.enterNumberHint_4521,
         border: const OutlineInputBorder(),
         isDense: true,
       ),
@@ -341,12 +362,14 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
       ],
       validator: (value) {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
-          return '${param.name}是必填参数';
+          return LocalizationService.instance.current.requiredParameter(
+            param.name,
+          );
         }
         if (value != null &&
             value.isNotEmpty &&
             double.tryParse(value) == null) {
-          return '请输入有效的数字';
+          return LocalizationService.instance.current.invalidNumberInput_4821;
         }
         return null;
       },
@@ -366,7 +389,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
         ),
         const SizedBox(width: 8),
         Text(
-          _boolValues[param.name] == true ? '是' : '否',
+          _boolValues[param.name] == true
+              ? LocalizationService.instance.current.yes_4821
+              : LocalizationService.instance.current.no_4821,
           style: const TextStyle(fontSize: 14),
         ),
       ],
@@ -392,7 +417,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
     return DropdownButtonFormField<String>(
       value: currentValue?.isNotEmpty == true ? currentValue : null,
       decoration: InputDecoration(
-        hintText: param.defaultValue ?? '请选择${param.name}',
+        hintText:
+            param.defaultValue ??
+            LocalizationService.instance.current.selectParamPrompt(param.name),
         border: const OutlineInputBorder(),
         isDense: true,
       ),
@@ -406,7 +433,9 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
       },
       validator: (value) {
         if (param.isRequired && (value == null || value.trim().isEmpty)) {
-          return '${param.name}是必填参数';
+          return LocalizationService.instance.current.requiredParamError_7421(
+            param.name,
+          );
         }
         return null;
       },
@@ -431,15 +460,15 @@ class _ScriptParametersDialogState extends State<ScriptParametersDialog> {
   String _getTypeDisplayName(ScriptParameterType type) {
     switch (type) {
       case ScriptParameterType.string:
-        return '文本';
+        return LocalizationService.instance.current.textType_1234;
       case ScriptParameterType.integer:
-        return '整数';
+        return LocalizationService.instance.current.integerType_5678;
       case ScriptParameterType.number:
-        return '数字';
+        return LocalizationService.instance.current.numberType_9012;
       case ScriptParameterType.boolean:
-        return '布尔';
+        return LocalizationService.instance.current.booleanType_3456;
       case ScriptParameterType.enumeration:
-        return '选择';
+        return LocalizationService.instance.current.enumType_7890;
     }
   }
 

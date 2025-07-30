@@ -1,0 +1,11 @@
+{
+  "fileOpenFailed_5421": "打开文件失败",
+  "fileNameLabel": "文件名: {fileName}",
+  "unsupportedFileType_4271": "不支持的文件类型",
+  "fileTypeWithExtension": "文件类型: .{extension}",
+  "supportedImageFormats_7281": "• 图片: png, jpg, jpeg, gif, bmp, webp, svg",
+  "supportedFileTypes_4821": "当前支持的文件类型:",
+  "videoFormats_7281": "• 视频: mp4, avi, mov, wmv",
+  "supportedTextFormats_7281": "• 文本: txt, log, csv, json",
+  "confirmButton_7281": "确定"
+}

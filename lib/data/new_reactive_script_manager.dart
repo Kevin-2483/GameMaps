@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import '../utils/filename_sanitizer.dart';
 import 'new_reactive_script_engine.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
+import '../services/localization_service.dart';
 
 /// 新的响应式脚本管理器
 /// 基于消息传递机制，支持跨平台异步执行
@@ -64,7 +66,11 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
   /// 初始化管理器
   Future<void> initialize({String? mapTitle}) async {
-    debugPrint('初始化新响应式脚本管理器，地图标题: $mapTitle');
+    debugPrint(
+      LocalizationService.instance.current.initReactiveScriptManager(
+        mapTitle ?? '',
+      ),
+    );
 
     await _reactiveEngine.initializeScriptEngine();
 
@@ -113,7 +119,12 @@ class NewReactiveScriptManager extends ChangeNotifier {
         }
       }
 
-      debugPrint('为地图 $_currentMapTitle 加载了 ${_scripts.length} 个脚本');
+      debugPrint(
+        LocalizationService.instance.current.mapScriptsLoaded(
+          _currentMapTitle ?? '',
+          _scripts.length,
+        ),
+      );
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load scripts: $e');
@@ -481,7 +492,9 @@ class NewReactiveScriptManager extends ChangeNotifier {
             );
           }
         } catch (e) {
-          debugPrint('解析参数定义失败: $line, 错误: $e');
+          debugPrint(
+            LocalizationService.instance.current.parseParamFailed(line, e),
+          );
         }
       }
     }
@@ -611,7 +624,6 @@ class NewReactiveScriptManager extends ChangeNotifier {
         return value.toLowerCase() == 'true';
       case ScriptParameterType.enumeration:
       case ScriptParameterType.string:
-      default:
         return value;
     }
   }
@@ -654,7 +666,9 @@ class NewReactiveScriptManager extends ChangeNotifier {
 
   /// 重置脚本引擎（用于地图编辑器重新进入时清理状态）
   Future<void> resetScriptEngine() async {
-    debugPrint('重置新响应式脚本引擎');
+    debugPrint(
+      LocalizationService.instance.current.resetReactiveScriptEngine_4821,
+    );
 
     try {
       // 重新初始化脚本引擎
@@ -667,16 +681,22 @@ class NewReactiveScriptManager extends ChangeNotifier {
       _lastResults.clear();
       notifyListeners();
 
-      debugPrint('脚本引擎重置完成');
+      debugPrint(
+        LocalizationService.instance.current.scriptEngineResetDone_7281,
+      );
     } catch (e) {
-      debugPrint('脚本引擎重置失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.scriptEngineResetFailed_7285(e),
+      );
     }
   }
 
   /// 清理资源
   @override
   void dispose() {
-    debugPrint('释放新响应式脚本管理器资源');
+    debugPrint(
+      LocalizationService.instance.current.releaseResourceManager_4821,
+    );
 
     _mapDataSubscription?.cancel();
     _mapDataSubscription = null;

@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../components/examples/radial_gesture_menu_example.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 径向手势菜单演示页面模块
 class RadialGestureDemoPageModule extends PageModule {
@@ -16,7 +19,8 @@ class RadialGestureDemoPageModule extends PageModule {
   String get path => '/radial-gesture-demo';
 
   @override
-  String get displayName => '径向手势菜单演示';
+  String get displayName =>
+      LocalizationService.instance.current.radialGestureDemoTitle_4721;
 
   @override
   IconData get icon => Icons.gesture;

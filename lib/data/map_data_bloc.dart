@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import '../models/sticky_note.dart';
 import '../models/timer_data.dart';
 import 'map_data_event.dart';
 import 'map_data_state.dart';
+import '../services/localization_service.dart';
 
 /// 响应式地图数据管理Bloc
 class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
@@ -94,7 +96,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       try {
         listener(data);
       } catch (e) {
-        debugPrint('数据变更监听器执行失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.dataChangeListenerFailed_4821(e),
+        );
       }
     }
   }
@@ -116,7 +120,11 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         event.folderPath,
       );
       if (mapItem == null) {
-        emit(const MapDataError(message: '地图不存在'));
+        emit(
+          MapDataError(
+            message: LocalizationService.instance.current.mapNotFound_7281,
+          ),
+        );
         return;
       } // 加载图层数据
       final layers = await _mapService.getMapLayers(
@@ -159,7 +167,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     } catch (e, stackTrace) {
       emit(
         MapDataError(
-          message: '加载地图数据失败: ${e.toString()}',
+          message: LocalizationService.instance.current.mapDataLoadFailed_7421(
+            e.toString(),
+          ),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -191,7 +201,8 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     } catch (e, stackTrace) {
       emit(
         MapDataError(
-          message: '初始化地图数据失败: ${e.toString()}',
+          message: LocalizationService.instance.current
+              .mapDataInitializationFailed_7421(e.toString()),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -730,7 +741,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     } catch (e, stackTrace) {
       emit(
         MapDataError(
-          message: '保存地图数据失败: ${e.toString()}',
+          message: LocalizationService.instance.current.mapDataSaveFailed_7421(
+            e.toString(),
+          ),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -984,8 +997,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('添加便签失败: $e');
-      emit(MapDataError(message: '添加便签失败: $e'));
+      debugPrint(LocalizationService.instance.current.addNoteFailed_7285(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.addNoteFailed(e),
+        ),
+      );
     }
   }
 
@@ -1025,8 +1042,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
         _notifyDataChangeListeners(newState);
       }
     } catch (e) {
-      debugPrint('更新便签失败: $e');
-      emit(MapDataError(message: '更新便签失败: $e'));
+      debugPrint(LocalizationService.instance.current.updateNoteFailed_7284(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.updateNoteFailed(e),
+        ),
+      );
     }
   }
 
@@ -1057,8 +1078,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('删除便签失败: $e');
-      emit(MapDataError(message: '删除便签失败: $e'));
+      debugPrint(LocalizationService.instance.current.deleteNoteFailed_7281(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.deleteNoteFailed(e),
+        ),
+      );
     }
   }
 
@@ -1098,8 +1123,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('重新排序便签失败: $e');
-      emit(MapDataError(message: '重新排序便签失败: $e'));
+      debugPrint(
+        LocalizationService.instance.current.reorderNotesFailed_4821(e),
+      );
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.reorderNotesFailed(e),
+        ),
+      );
     }
   }
 
@@ -1125,8 +1156,15 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('通过拖拽重新排序便签失败: $e');
-      emit(MapDataError(message: '通过拖拽重新排序便签失败: $e'));
+      debugPrint(
+        LocalizationService.instance.current.dragToReorderFailed_7285(e),
+      );
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current
+              .dragToReorderFailed_7285(e),
+        ),
+      );
     }
   }
 
@@ -1147,7 +1185,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       // 检查是否已存在相同ID的计时器
       final existingTimer = currentState.getTimerById(event.timer.id);
       if (existingTimer != null) {
-        emit(const MapDataError(message: '计时器ID已存在'));
+        emit(
+          MapDataError(
+            message:
+                LocalizationService.instance.current.timerIdExistsError_4821,
+          ),
+        );
         return;
       }
 
@@ -1162,10 +1205,16 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
       emit(newState);
       _notifyDataChangeListeners(newState);
-      debugPrint('计时器已创建: ${event.timer.id}');
+      debugPrint(
+        LocalizationService.instance.current.timerCreated(event.timer.id),
+      );
     } catch (e) {
-      debugPrint('创建计时器失败: $e');
-      emit(MapDataError(message: '创建计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.timerCreationFailed(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.timerCreationFailed(e),
+        ),
+      );
     }
   }
 
@@ -1194,8 +1243,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('更新计时器失败: $e');
-      emit(MapDataError(message: '更新计时器失败: $e'));
+      debugPrint(
+        LocalizationService.instance.current.timerUpdateFailed_7284(e),
+      );
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.timerUpdateFailed(e),
+        ),
+      );
     }
   }
 
@@ -1226,10 +1281,16 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
       emit(newState);
       _notifyDataChangeListeners(newState);
-      debugPrint('计时器已删除: ${event.timerId}');
+      debugPrint(
+        LocalizationService.instance.current.timerDeleted(event.timerId),
+      );
     } catch (e) {
-      debugPrint('删除计时器失败: $e');
-      emit(MapDataError(message: '删除计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.deleteTimerFailed(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.deleteTimerFailed(e),
+        ),
+      );
     }
   }
 
@@ -1244,12 +1305,23 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     try {
       final timer = currentState.getTimerById(event.timerId);
       if (timer == null) {
-        emit(const MapDataError(message: '计时器不存在'));
+        emit(
+          MapDataError(
+            message: LocalizationService.instance.current.timerNotExist_7281,
+          ),
+        );
         return;
       }
 
       if (!timer.state.canStart) {
-        emit(const MapDataError(message: '计时器当前状态无法启动'));
+        emit(
+          MapDataError(
+            message: LocalizationService
+                .instance
+                .current
+                .timerCannotStartInCurrentState_4287,
+          ),
+        );
         return;
       }
 
@@ -1277,8 +1349,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('启动计时器失败: $e');
-      emit(MapDataError(message: '启动计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.timerStartFailed_7285(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.timerStartFailed(e),
+        ),
+      );
     }
   }
 
@@ -1293,12 +1369,23 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     try {
       final timer = currentState.getTimerById(event.timerId);
       if (timer == null) {
-        emit(const MapDataError(message: '计时器不存在'));
+        emit(
+          MapDataError(
+            message: LocalizationService.instance.current.timerNotExist_7283,
+          ),
+        );
         return;
       }
 
       if (!timer.state.canPause) {
-        emit(const MapDataError(message: '计时器当前状态无法暂停'));
+        emit(
+          MapDataError(
+            message: LocalizationService
+                .instance
+                .current
+                .timerCannotPauseCurrentState_7281,
+          ),
+        );
         return;
       }
 
@@ -1325,8 +1412,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('暂停计时器失败: $e');
-      emit(MapDataError(message: '暂停计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.timerPauseFailed_7285(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.pauseTimerFailed(e),
+        ),
+      );
     }
   }
 
@@ -1338,12 +1429,23 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     try {
       final timer = currentState.getTimerById(event.timerId);
       if (timer == null) {
-        emit(const MapDataError(message: '计时器不存在'));
+        emit(
+          MapDataError(
+            message: LocalizationService.instance.current.timerNotExist_7284,
+          ),
+        );
         return;
       }
 
       if (!timer.state.canStop) {
-        emit(const MapDataError(message: '计时器当前状态无法停止'));
+        emit(
+          MapDataError(
+            message: LocalizationService
+                .instance
+                .current
+                .timerCannotStopCurrentState_4821,
+          ),
+        );
         return;
       }
 
@@ -1376,8 +1478,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('停止计时器失败: $e');
-      emit(MapDataError(message: '停止计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.timerStopFailed_4821(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.stopTimerFailed(e),
+        ),
+      );
     }
   }
 
@@ -1392,7 +1498,11 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
     try {
       final timer = currentState.getTimerById(event.timerId);
       if (timer == null) {
-        emit(const MapDataError(message: '计时器不存在'));
+        emit(
+          MapDataError(
+            message: LocalizationService.instance.current.timerNotExist_7281,
+          ),
+        );
         return;
       }
 
@@ -1425,8 +1535,12 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('重置计时器失败: $e');
-      emit(MapDataError(message: '重置计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.resetTimerFailed(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.resetTimerFailed(e),
+        ),
+      );
     }
   }
 
@@ -1467,7 +1581,9 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newMapState);
       // 注意：这里不调用_notifyDataChangeListeners以避免过于频繁的通知
     } catch (e) {
-      debugPrint('计时器时间更新失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.timerUpdateFailed_7284(e),
+      );
     }
   }
 
@@ -1491,8 +1607,16 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
       emit(newState);
       _notifyDataChangeListeners(newState);
     } catch (e) {
-      debugPrint('批量更新计时器失败: $e');
-      emit(MapDataError(message: '批量更新计时器失败: $e'));
+      debugPrint(
+        LocalizationService.instance.current.batchUpdateTimerFailed_7285(e),
+      );
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.batchUpdateTimerFailed(
+            e,
+          ),
+        ),
+      );
     }
   }
 
@@ -1518,10 +1642,14 @@ class MapDataBloc extends Bloc<MapDataEvent, MapDataState> {
 
       emit(newState);
       _notifyDataChangeListeners(newState);
-      debugPrint('所有计时器已清空');
+      debugPrint(LocalizationService.instance.current.allTimersCleared_4821);
     } catch (e) {
-      debugPrint('清空计时器失败: $e');
-      emit(MapDataError(message: '清空计时器失败: $e'));
+      debugPrint(LocalizationService.instance.current.clearTimerFailed_4821(e));
+      emit(
+        MapDataError(
+          message: LocalizationService.instance.current.clearTimerFailed(e),
+        ),
+      );
     }
   }
 

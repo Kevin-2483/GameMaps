@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -114,7 +113,7 @@ class UserPreferencesPerformanceBenchmark {
       final user = loadedUsers[i];
       final updatedUser = MockUserPreferences(
         userId: user.userId,
-        displayName: user.displayName + '_updated',
+        displayName: '${user.displayName}_updated',
         settings: user.settings,
         updatedAt: DateTime.now(),
       );
@@ -204,7 +203,7 @@ class UserPreferencesPerformanceBenchmark {
           await txn.update(
             'test_users',
             {
-              'display_name': user.displayName + '_updated',
+              'display_name': '${user.displayName}_updated',
               'updated_at': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'user_id = ?',

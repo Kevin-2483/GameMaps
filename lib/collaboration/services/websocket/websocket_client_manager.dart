@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../models/websocket_client_config.dart';
@@ -5,6 +6,8 @@ import 'websocket_client_init_service.dart';
 import 'websocket_client_service.dart';
 import 'websocket_client_database_service.dart';
 import 'websocket_secure_storage_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// WebSocket 客户端管理器
 /// 提供统一的接口来管理多个客户端身份和连接
@@ -51,7 +54,12 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('初始化 WebSocket 客户端管理器');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .initializeWebSocketClientManager_4821,
+        );
       }
 
       // 初始化数据库服务
@@ -67,11 +75,13 @@ class WebSocketClientManager {
       _isInitialized = true;
 
       if (kDebugMode) {
-        debugPrint('WebSocket 客户端管理器初始化完成');
+        debugPrint(
+          LocalizationService.instance.current.websocketManagerInitialized_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('WebSocket 客户端管理器初始化失败: $e');
+        debugPrint(LocalizationService.instance.current.webSocketInitFailed(e));
       }
       rethrow;
     }
@@ -86,7 +96,11 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('使用 Web API Key 创建客户端: $displayName');
+        debugPrint(
+          LocalizationService.instance.current.createClientWithWebApiKey(
+            displayName,
+          ),
+        );
       }
 
       final config = await _initService.initializeWithWebApiKey(
@@ -97,13 +111,19 @@ class WebSocketClientManager {
       await _refreshConfigs();
 
       if (kDebugMode) {
-        debugPrint('客户端创建成功: ${config.clientId}');
+        debugPrint(
+          LocalizationService.instance.current.clientCreatedSuccessfully(
+            config.clientId,
+          ),
+        );
       }
 
       return config;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('创建客户端失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientCreationFailed_5421(e),
+        );
       }
       rethrow;
     }
@@ -122,7 +142,11 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('创建默认客户端: $displayName');
+        debugPrint(
+          LocalizationService.instance.current.createDefaultClient_7281(
+            displayName,
+          ),
+        );
       }
 
       final config = await _initService.createDefaultConfig(
@@ -137,13 +161,19 @@ class WebSocketClientManager {
       await _refreshConfigs();
 
       if (kDebugMode) {
-        debugPrint('默认客户端创建成功: ${config.clientId}');
+        debugPrint(
+          LocalizationService.instance.current.clientCreatedSuccessfully(
+            config.clientId,
+          ),
+        );
       }
 
       return config;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('创建默认客户端失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientCreationFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -173,18 +203,26 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('设置活跃客户端: $clientId');
+        debugPrint(
+          LocalizationService.instance.current.setActiveClient_7421(clientId),
+        );
       }
 
       await _dbService.setActiveClientConfig(clientId);
       await _refreshActiveConfig();
 
       if (kDebugMode) {
-        debugPrint('活跃客户端设置成功: $clientId');
+        debugPrint(
+          LocalizationService.instance.current.clientSetSuccessfully_4821(
+            clientId,
+          ),
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('设置活跃客户端失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.setActiveClientFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -202,7 +240,11 @@ class WebSocketClientManager {
     try {
       final config = await _dbService.getClientConfig(clientId);
       if (config == null) {
-        throw Exception('客户端配置不存在: $clientId');
+        throw Exception(
+          LocalizationService.instance.current.clientConfigNotFound_7285(
+            clientId,
+          ),
+        );
       }
 
       final updatedConfig = await _initService.updateClientConfig(
@@ -216,13 +258,18 @@ class WebSocketClientManager {
       await _refreshActiveConfig();
 
       if (kDebugMode) {
-        debugPrint('客户端配置更新成功: $clientId');
+        debugPrint(
+          LocalizationService.instance.current
+              .clientConfigUpdatedSuccessfully_7284(clientId),
+        );
       }
 
       return updatedConfig;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('更新客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientConfigUpdateFailed(e),
+        );
       }
       rethrow;
     }
@@ -234,7 +281,9 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('删除客户端配置: $clientId');
+        debugPrint(
+          LocalizationService.instance.current.deleteClientConfig(clientId),
+        );
       }
 
       // 如果正在连接此客户端，先断开连接
@@ -247,11 +296,16 @@ class WebSocketClientManager {
       await _refreshActiveConfig();
 
       if (kDebugMode) {
-        debugPrint('客户端配置删除成功: $clientId');
+        debugPrint(
+          LocalizationService.instance.current
+              .clientConfigDeletedSuccessfully_7421(clientId),
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('删除客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.deleteClientConfigFailed(e),
+        );
       }
       rethrow;
     }
@@ -270,7 +324,10 @@ class WebSocketClientManager {
       return await _initService.validateConfig(config);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('验证客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current
+              .clientConfigValidationFailed_4821(e),
+        );
       }
       return false;
     }
@@ -282,7 +339,11 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('开始连接 WebSocket 服务器: ${clientId ?? "活跃客户端"}');
+        debugPrint(
+          LocalizationService.instance.current.startWebSocketConnection_7281(
+            clientId ?? LocalizationService.instance.current.activeClient_7281,
+          ),
+        );
       }
 
       final success = await _clientService.connect(clientId);
@@ -294,7 +355,9 @@ class WebSocketClientManager {
       return success;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('连接 WebSocket 服务器失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.websocketConnectionFailed(e),
+        );
       }
       return false;
     }
@@ -306,13 +369,17 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('断开 WebSocket 连接');
+        debugPrint(
+          LocalizationService.instance.current.disconnectWebSocket_7421,
+        );
       }
 
       await _clientService.disconnect();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('断开 WebSocket 连接失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.websocketDisconnectFailed(e),
+        );
       }
     }
   }
@@ -380,7 +447,11 @@ class WebSocketClientManager {
     try {
       final config = await _dbService.getClientConfig(clientId);
       if (config == null) {
-        throw Exception('客户端配置不存在: $clientId');
+        throw Exception(
+          LocalizationService.instance.current.clientConfigNotFound_7285(
+            clientId,
+          ),
+        );
       }
 
       // 创建导出数据（不包含私钥ID）
@@ -393,7 +464,9 @@ class WebSocketClientManager {
       return exportData;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('导出客户端配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.exportClientConfigFailed(e),
+        );
       }
       rethrow;
     }
@@ -405,7 +478,9 @@ class WebSocketClientManager {
 
     try {
       if (kDebugMode) {
-        debugPrint('开始清理过期数据');
+        debugPrint(
+          LocalizationService.instance.current.startCleaningExpiredData_1234,
+        );
       }
 
       // 获取所有配置
@@ -416,18 +491,24 @@ class WebSocketClientManager {
         final isValid = await _initService.validateConfig(config);
         if (!isValid) {
           if (kDebugMode) {
-            debugPrint('发现无效配置，准备清理: ${config.clientId}');
+            debugPrint(
+              LocalizationService.instance.current.invalidConfigCleanup(
+                config.clientId,
+              ),
+            );
           }
           await deleteConfig(config.clientId);
         }
       }
 
       if (kDebugMode) {
-        debugPrint('过期数据清理完成');
+        debugPrint(
+          LocalizationService.instance.current.expiredDataCleaned_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理过期数据失败: $e');
+        debugPrint(LocalizationService.instance.current.cleanupFailed_7285(e));
       }
     }
   }
@@ -439,7 +520,9 @@ class WebSocketClientManager {
       _configsController.add(configs);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('刷新配置列表失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.refreshConfigFailed_7284(e),
+        );
       }
     }
   }
@@ -451,7 +534,9 @@ class WebSocketClientManager {
       _activeConfigController.add(activeConfig);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('刷新活跃配置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.refreshConfigFailed_5421(e),
+        );
       }
     }
   }
@@ -459,7 +544,9 @@ class WebSocketClientManager {
   /// 确保管理器已初始化
   void _ensureInitialized() {
     if (!_isInitialized) {
-      throw Exception('WebSocket 客户端管理器未初始化，请先调用 initialize()');
+      throw Exception(
+        LocalizationService.instance.current.websocketNotInitializedError_7281,
+      );
     }
   }
 

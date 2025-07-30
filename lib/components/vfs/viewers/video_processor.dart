@@ -1,10 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/config/all.dart';
-import 'package:markdown_widget/widget/span_node.dart';
-import 'package:markdown_widget/widget/widget_visitor.dart';
+
 import 'package:markdown_widget/widget/all.dart';
 import 'package:markdown/markdown.dart' as m;
 import 'media_kit_video_player.dart';
+import '../../../services/localization_service.dart';
 
 /// 视频处理器 - 用于在Markdown中渲染视频内容
 /// 支持HTML video标签和自定义Markdown视频语法
@@ -32,19 +33,26 @@ class VideoProcessor {
       ),
     );
     debugPrint(
-      '🎥 VideoProcessor.containsVideo: text长度=${text.length}, 包含视频=$result',
+      LocalizationService.instance.current.videoProcessorDebug(
+        text.length,
+        result,
+      ),
     );
     return result;
   }
 
   /// 创建视频节点生成器
   static SpanNodeGeneratorWithTag createGenerator() {
-    debugPrint('🎥 VideoProcessor: 创建视频生成器');
+    debugPrint(LocalizationService.instance.current.videoProcessorCreated_4821);
     return SpanNodeGeneratorWithTag(
       tag: videoTag,
       generator: (e, config, visitor) {
         debugPrint(
-          '🎥 VideoProcessor: 生成VideoNode - tag: ${e.tag}, attributes: ${e.attributes}, textContent: ${e.textContent}',
+          LocalizationService.instance.current.videoNodeGenerationLog(
+            e.tag,
+            e.attributes,
+            e.textContent,
+          ),
         );
         return VideoNode(e.attributes, e.textContent);
       },
@@ -108,7 +116,9 @@ class VideoProcessor {
 
   /// 转换Markdown图片语法为视频（如果是视频文件）
   static String convertMarkdownVideos(String content) {
-    debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 开始转换');
+    debugPrint(
+      LocalizationService.instance.current.videoProcessorStartConversion_7281,
+    );
     // 将Markdown图片语法中的视频文件转换为video标签
     final pattern = RegExp(
       r'!\[(.*?)\]\(([^)]*\.(mp4|webm|ogg|mov|avi|mkv|m4v))\)',
@@ -118,7 +128,9 @@ class VideoProcessor {
     final result = content.replaceAllMapped(pattern, (match) {
       final alt = match.group(1) ?? '';
       final src = match.group(2) ?? '';
-      debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 转换 $src');
+      debugPrint(
+        '🎥 ${LocalizationService.instance.current.videoProcessorConvertMarkdownVideos_7425(src)}',
+      );
 
       // 构建video标签
       final controls = 'controls';
@@ -130,11 +142,15 @@ class VideoProcessor {
           : '';
 
       final videoTag = '<video src="$src" $controls $width $height></video>';
-      debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 生成标签 $videoTag');
+      debugPrint(
+        '🎥 VideoProcessor.convertMarkdownVideos: ${LocalizationService.instance.current.generateTagMessage(videoTag)}',
+      );
       return videoTag;
     });
 
-    debugPrint('🎥 VideoProcessor.convertMarkdownVideos: 转换完成');
+    debugPrint(
+      LocalizationService.instance.current.videoConversionComplete_7281,
+    );
     return result;
   }
 }
@@ -166,12 +182,17 @@ class VideoNode extends SpanNode {
 
   VideoNode(this.attributes, this.textContent) {
     debugPrint(
-      '🎥 VideoNode: 创建节点 - attributes: $attributes, textContent: $textContent',
+      LocalizationService.instance.current.videoNodeCreationLog(
+        attributes,
+        textContent,
+      ),
     );
   }
   @override
   InlineSpan build() {
-    debugPrint('🎥 VideoNode.build: 开始构建 - src: ${attributes['src']}');
+    debugPrint(
+      '🎥 VideoNode.build: ${LocalizationService.instance.current.videoNodeBuildStart(attributes['src'] ?? '')}',
+    );
 
     double? width;
     double? height;
@@ -204,9 +225,7 @@ class VideoNode extends SpanNode {
       maxHeight: height ?? 450,
     );
 
-    debugPrint(
-      '🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: $src)',
-    );
+    debugPrint(LocalizationService.instance.current.videoNodeBuildLog(src));
 
     return WidgetSpan(
       child: MediaKitVideoPlayer(url: src, config: config, muted: muted),
@@ -277,7 +296,9 @@ class VideoSyntax extends m.InlineSyntax {
     final input = match.input;
     final matchValue = input.substring(match.start, match.end);
 
-    debugPrint('🎥 VideoSyntax.onMatch: 匹配到视频标签 - $matchValue');
+    debugPrint(
+      '🎥 VideoSyntax.onMatch: ${LocalizationService.instance.current.videoTagMatched(matchValue)}',
+    );
 
     // 解析video标签属性
     final attributes = <String, String>{};
@@ -331,7 +352,10 @@ class VideoSyntax extends m.InlineSyntax {
     element.attributes.addAll(attributes);
 
     debugPrint(
-      '🎥 VideoSyntax.onMatch: 创建视频元素 - tag: ${element.tag}, attributes: ${element.attributes}',
+      LocalizationService.instance.current.videoElementCreationLog(
+        element.tag,
+        element.attributes,
+      ),
     );
 
     parser.addNode(element);

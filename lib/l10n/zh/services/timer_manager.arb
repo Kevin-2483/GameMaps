@@ -1,0 +1,8 @@
+{
+  "timerCompleted_7281": "计时器已完成: {timerId}",
+  "timerManagerCleaned_7281": "计时器管理器已清理",
+  "timerStarted_7281": "计时器已启动: {timerId}",
+  "timerStopped_7285": "计时器已停止",
+  "allTimersStopped_7281": "所有计时器已停止",
+  "timerPaused_7285": "计时器已暂停: {timerId}"
+}

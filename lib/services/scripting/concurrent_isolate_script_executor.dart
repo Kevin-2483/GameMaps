@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:math' as math;
@@ -6,6 +7,8 @@ import 'package:hetu_script/hetu_script.dart';
 import '../../models/script_data.dart';
 import 'script_executor_base.dart';
 import 'external_function_registry.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// 支持并发的Isolate脚本执行器
 /// 基于现有的IsolateScriptExecutor，但支持真正的多任务并发执行
@@ -245,14 +248,25 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
 
         // 处理异步结果
         if (result is Future) {
-          debugPrint('[DEBUG] 处理异步外部函数: ${call.functionName}');
+          debugPrint(
+            '[DEBUG] ${LocalizationService.instance.current.debugAsyncFunction_7425}: ${call.functionName}',
+          );
           result
               .then((asyncResult) {
                 debugPrint(
-                  '[DEBUG] 异步函数 ${call.functionName} 完成，结果类型: ${asyncResult.runtimeType}',
+                  '[DEBUG] ' +
+                      LocalizationService.instance.current
+                          .asyncFunctionCompleteDebug(
+                            call.functionName,
+                            asyncResult.runtimeType.toString(),
+                          ),
                 );
                 final serializedResult = _serializeResult(asyncResult);
-                debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
+                debugPrint(
+                  '[DEBUG] ' +
+                      LocalizationService.instance.current
+                          .serializedResultDebug_7281(serializedResult),
+                );
 
                 final response = ExternalFunctionResponse(
                   callId: call.callId,
@@ -267,7 +281,9 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
                 _isolateSendPort?.send(responseMessage.toJson());
               })
               .catchError((error) {
-                debugPrint('[DEBUG] 异步函数 ${call.functionName} 出错: $error');
+                debugPrint(
+                  '[DEBUG] ${LocalizationService.instance.current.asyncFunctionError_4821(call.functionName, error)}',
+                );
                 final response = ExternalFunctionResponse(
                   callId: call.callId,
                   error: error.toString(),
@@ -283,10 +299,12 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
         } else {
           // 处理同步结果
           debugPrint(
-            '[DEBUG] 处理同步外部函数: ${call.functionName}，结果类型: ${result.runtimeType}',
+            '[DEBUG] ${LocalizationService.instance.current.syncExternalFunctionDebug_7421(call.functionName, result.runtimeType.toString())}',
           );
           final serializedResult = _serializeResult(result);
-          debugPrint('[DEBUG] 序列化后的结果: $serializedResult');
+          debugPrint(
+            '[DEBUG] ${LocalizationService.instance.current.serializedResultDebug_7425}: $serializedResult',
+          );
 
           final response = ExternalFunctionResponse(
             callId: call.callId,
@@ -316,7 +334,9 @@ class ConcurrentIsolateScriptExecutor implements IScriptExecutor {
       }
     } catch (e) {
       // 函数执行错误，发送错误响应
-      debugPrint('[DEBUG] 外部函数 ${call.functionName} 执行出错: $e');
+      debugPrint(
+        '[DEBUG] ${LocalizationService.instance.current.externalFunctionError_4821(call.functionName, e)}',
+      );
       final response = ExternalFunctionResponse(
         callId: call.callId,
         error: e.toString(),

@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/widgets.dart';
 import '../models/legend_item.dart' as legend_db;
 import 'legend_vfs/legend_vfs_service.dart';
 import 'dart:async';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 图例缓存状态
 enum LegendLoadingState {
@@ -145,7 +148,11 @@ class LegendCacheManager extends ChangeNotifier {
   /// 批量加载指定目录下的所有图例到缓存
   Future<void> loadDirectoryToCache(String directoryPath) async {
     try {
-      debugPrint('开始批量加载目录到缓存: $directoryPath');
+      debugPrint(
+        LocalizationService.instance.current.startBatchLoadingDirectoryToCache(
+          directoryPath,
+        ),
+      );
 
       final legendService = LegendVfsService();
       final legendFiles = await legendService.getLegendsInFolder(directoryPath);
@@ -159,9 +166,19 @@ class LegendCacheManager extends ChangeNotifier {
         await getLegendData(legendPath);
       }
 
-      debugPrint('批量加载完成: $directoryPath, 共 ${legendFiles.length} 个图例');
+      debugPrint(
+        LocalizationService.instance.current.batchLoadComplete_7281(
+          directoryPath,
+          legendFiles.length,
+        ),
+      );
     } catch (e) {
-      debugPrint('批量加载目录失败: $directoryPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.batchLoadDirectoryFailed(
+          directoryPath,
+          e,
+        ),
+      );
     }
   }
 
@@ -211,7 +228,12 @@ class LegendCacheManager extends ChangeNotifier {
     }
 
     if (keysToRemove.isNotEmpty) {
-      debugPrint('图例缓存: 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项');
+      debugPrint(
+        LocalizationService.instance.current.legendCacheCleaned(
+          folderPath,
+          keysToRemove.length,
+        ),
+      );
       notifyListeners();
     }
   }
@@ -223,8 +245,14 @@ class LegendCacheManager extends ChangeNotifier {
   }) {
     final keysToRemove = <String>[];
 
-    debugPrint('步进型缓存清理开始: 目标目录="$folderPath"');
-    debugPrint('当前缓存键: ${_cache.keys.toList()}');
+    debugPrint(
+      LocalizationService.instance.current.steppedCacheCleanStart(folderPath),
+    );
+    debugPrint(
+      LocalizationService.instance.current.currentCacheKeys(
+        _cache.keys.toList(),
+      ),
+    );
 
     for (final path in _cache.keys) {
       // 步进型清理：只清理精确匹配该目录的图例
@@ -234,7 +262,11 @@ class LegendCacheManager extends ChangeNotifier {
         // 根目录：只清理没有"/"的路径（不包括子目录中的文件）
         shouldRemove = !path.contains('/');
         debugPrint(
-          '根目录检查: 路径="$path", 包含/=${path.contains('/')}, 应移除=$shouldRemove',
+          LocalizationService.instance.current.rootDirectoryCheck(
+            path,
+            path.contains('/'),
+            shouldRemove,
+          ),
         );
       } else {
         // 特定目录：只清理以"folderPath/"开头但下一级没有更多"/"的路径
@@ -244,22 +276,36 @@ class LegendCacheManager extends ChangeNotifier {
           // 如果相对路径中不包含"/"，说明是直接在该目录下的文件
           shouldRemove = !relativePath.contains('/');
           debugPrint(
-            '子目录检查: 路径="$path", 相对路径="$relativePath", 包含/=${relativePath.contains('/')}, 应移除=$shouldRemove',
+            LocalizationService.instance.current.subdirectoryCheck(
+              path,
+              relativePath,
+              relativePath.contains('/'),
+              shouldRemove,
+            ),
           );
         } else {
-          debugPrint('路径不匹配: 路径="$path", 不以"$folderPath/"开头');
+          debugPrint(
+            LocalizationService.instance.current.pathMismatch_7284(
+              path,
+              folderPath,
+            ),
+          );
         }
       }
 
       // 如果在排除列表中，则不清理
       if (shouldRemove && excludePaths?.contains(path) == true) {
         shouldRemove = false;
-        debugPrint('排除列表跳过: 路径="$path"');
+        debugPrint(
+          LocalizationService.instance.current.excludedListSkipped_7285(path),
+        );
       }
 
       if (shouldRemove) {
         keysToRemove.add(path);
-        debugPrint('标记移除: 路径="$path"');
+        debugPrint(
+          LocalizationService.instance.current.markRemovedWithPath(path),
+        );
       }
     }
 
@@ -270,12 +316,21 @@ class LegendCacheManager extends ChangeNotifier {
 
     if (keysToRemove.isNotEmpty) {
       debugPrint(
-        '图例缓存 (步进型): 清理了目录 "$folderPath" 下的 ${keysToRemove.length} 个缓存项（不包括子目录）',
+        LocalizationService.instance.current.legendCacheCleaned(
+          folderPath,
+          keysToRemove.length,
+        ),
       );
-      debugPrint('被清理的路径: $keysToRemove');
+      debugPrint(
+        LocalizationService.instance.current.cleanedPaths_7285(keysToRemove),
+      );
       notifyListeners();
     } else {
-      debugPrint('图例缓存 (步进型): 目录 "$folderPath" 下没有需要清理的缓存项');
+      debugPrint(
+        LocalizationService.instance.current.legendCacheNoItemsToClean(
+          folderPath,
+        ),
+      );
     }
   }
 
@@ -333,7 +388,9 @@ class LegendCacheManager extends ChangeNotifier {
       loadedAt: DateTime.now(),
     );
 
-    debugPrint('图例已添加到缓存: $legendPath');
+    debugPrint(
+      LocalizationService.instance.current.legendAddedToCache(legendPath),
+    );
     notifyListeners();
   }
 

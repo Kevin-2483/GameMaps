@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/timer_data.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 计时器管理器
 /// 负责管理所有计时器的运行状态和时间更新
@@ -49,7 +52,7 @@ class TimerManager {
       (timer) => _updateTimer(timerId, timerData),
     );
 
-    debugPrint('计时器已启动: $timerId');
+    debugPrint(LocalizationService.instance.current.timerStarted_7281(timerId));
   }
 
   /// 暂停计时器
@@ -58,7 +61,9 @@ class TimerManager {
     if (timer != null) {
       timer.cancel();
       _activeTimers.remove(timerId);
-      debugPrint('计时器已暂停: $timerId');
+      debugPrint(
+        LocalizationService.instance.current.timerPaused_7285(timerId),
+      );
     }
   }
 
@@ -70,7 +75,9 @@ class TimerManager {
       _activeTimers.remove(timerId);
       _startTimes.remove(timerId);
       _pausedDurations.remove(timerId);
-      debugPrint('计时器已停止: $timerId');
+      debugPrint(
+        LocalizationService.instance.current.timerStopped_7285 + ': $timerId',
+      );
     }
   }
 
@@ -82,7 +89,7 @@ class TimerManager {
     _activeTimers.clear();
     _startTimes.clear();
     _pausedDurations.clear();
-    debugPrint('所有计时器已停止');
+    debugPrint(LocalizationService.instance.current.allTimersStopped_7281);
   }
 
   /// 更新计时器时间
@@ -128,7 +135,9 @@ class TimerManager {
     // 如果计时器完成，停止它
     if (shouldComplete) {
       stopTimer(timerId);
-      debugPrint('计时器已完成: $timerId');
+      debugPrint(
+        LocalizationService.instance.current.timerCompleted_7281(timerId),
+      );
     }
   }
 
@@ -147,7 +156,7 @@ class TimerManager {
   void dispose() {
     stopAllTimers();
     _mapDataBloc = null;
-    debugPrint('计时器管理器已清理');
+    debugPrint(LocalizationService.instance.current.timerManagerCleaned_7281);
   }
 
   /// 获取调试信息

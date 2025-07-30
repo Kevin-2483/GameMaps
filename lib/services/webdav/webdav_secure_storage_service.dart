@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// WebDAV安全存储服务
 /// 使用flutter_secure_storage安全存储WebDAV认证凭据
@@ -31,7 +34,9 @@ class WebDavSecureStorageService {
   Future<void> initialize() async {
     // 安全存储服务不需要特殊初始化，_secureStorage 已在构造时初始化
     if (kDebugMode) {
-      debugPrint('WebDAV安全存储服务初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.webDavInitializationComplete_7281,
+      );
     }
   }
 
@@ -45,18 +50,28 @@ class WebDavSecureStorageService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(storageKey, password);
         if (kDebugMode) {
-          debugPrint('WebDAV密码已存储到 SharedPreferences (macOS): $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordStored(
+              authAccountId,
+            ),
+          );
         }
       } else {
         // 其他平台使用安全存储
         await _secureStorage.write(key: storageKey, value: password);
         if (kDebugMode) {
-          debugPrint('WebDAV密码已安全存储: $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordStored(
+              authAccountId,
+            ),
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('存储WebDAV密码失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.webDavPasswordSaveFailed(e),
+        );
       }
       rethrow;
     }
@@ -74,27 +89,37 @@ class WebDavSecureStorageService {
         password = prefs.getString(storageKey);
         if (kDebugMode && password != null) {
           debugPrint(
-            'WebDAV密码从 SharedPreferences 获取成功 (macOS): $authAccountId',
+            LocalizationService.instance.current.webDavPasswordRetrievedMacos(
+              authAccountId,
+            ),
           );
         }
       } else {
         // 其他平台使用安全存储
         password = await _secureStorage.read(key: storageKey);
         if (kDebugMode && password != null) {
-          debugPrint('WebDAV密码获取成功: $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordSuccess_7285(
+              authAccountId,
+            ),
+          );
         }
       }
 
       if (password == null) {
         if (kDebugMode) {
-          debugPrint('WebDAV密码未找到: $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordNotFound(
+              authAccountId,
+            ),
+          );
         }
       }
 
       return password;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取WebDAV密码失败: $e');
+        debugPrint(LocalizationService.instance.current.webDavPasswordError(e));
       }
       return null;
     }
@@ -110,18 +135,28 @@ class WebDavSecureStorageService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(storageKey);
         if (kDebugMode) {
-          debugPrint('WebDAV密码已从 SharedPreferences 删除 (macOS): $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordRemoved(
+              authAccountId,
+            ),
+          );
         }
       } else {
         // 其他平台使用安全存储
         await _secureStorage.delete(key: storageKey);
         if (kDebugMode) {
-          debugPrint('WebDAV密码已删除: $authAccountId');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordDeleted(
+              authAccountId,
+            ),
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('删除WebDAV密码失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.webDavPasswordDeletionFailed(e),
+        );
       }
       rethrow;
     }
@@ -145,7 +180,10 @@ class WebDavSecureStorageService {
       return password != null;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('检查WebDAV密码存在性失败: $e');
+        debugPrint(
+          LocalizationService.instance.current
+              .checkWebDavPasswordExistenceFailed_4821(e),
+        );
       }
       return false;
     }
@@ -182,7 +220,9 @@ class WebDavSecureStorageService {
       return authAccountIds;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取所有WebDAV认证账户ID失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.failedToGetWebDavAccountIds(e),
+        );
       }
       return [];
     }
@@ -203,7 +243,9 @@ class WebDavSecureStorageService {
         }
 
         if (kDebugMode) {
-          debugPrint('所有WebDAV密码已从 SharedPreferences 清理 (macOS)');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordsClearedMacOs,
+          );
         }
       } else {
         // 其他平台使用安全存储
@@ -216,12 +258,16 @@ class WebDavSecureStorageService {
         }
 
         if (kDebugMode) {
-          debugPrint('所有WebDAV密码已清理');
+          debugPrint(
+            LocalizationService.instance.current.allWebDavPasswordsCleared_7281,
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理所有WebDAV密码失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clearWebDavPasswordsFailed(e),
+        );
       }
       rethrow;
     }
@@ -243,7 +289,9 @@ class WebDavSecureStorageService {
       };
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取WebDAV存储统计信息失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.webDavStatsError_4821(e),
+        );
       }
       return {
         'password_count': 0,
@@ -265,7 +313,9 @@ class WebDavSecureStorageService {
 
       if (actualPassword == null) {
         if (kDebugMode) {
-          debugPrint('WebDAV认证凭据验证失败：密码未找到');
+          debugPrint(
+            LocalizationService.instance.current.webDavAuthFailed_7281,
+          );
         }
         return false;
       }
@@ -276,7 +326,9 @@ class WebDavSecureStorageService {
       return username.isNotEmpty && actualPassword.isNotEmpty;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('WebDAV认证凭据验证失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.webDavAuthFailed_7285(e),
+        );
       }
       return false;
     }

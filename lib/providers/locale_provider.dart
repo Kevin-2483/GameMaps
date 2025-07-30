@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 class LocaleProvider extends ChangeNotifier {
   static const String _localeKey = 'locale';
@@ -21,9 +24,11 @@ class LocaleProvider extends ChangeNotifier {
 
     if (localeCode != null) {
       _locale = Locale(localeCode);
+      LocalizationService.instance.setLocale(_locale!);
     } else {
       // 使用系统默认语言
       _locale = null;
+      LocalizationService.instance.setLocale(const Locale('zh'));
     }
     notifyListeners();
   }
@@ -31,6 +36,15 @@ class LocaleProvider extends ChangeNotifier {
   // 设置语言
   Future<void> setLocale(Locale? locale) async {
     _locale = locale;
+
+    // 更新本地化服务
+    if (locale != null) {
+      LocalizationService.instance.setLocale(locale);
+    } else {
+      // 使用默认语言（中文）
+      LocalizationService.instance.setLocale(const Locale('zh'));
+    }
+
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
@@ -45,9 +59,9 @@ class LocaleProvider extends ChangeNotifier {
   String getLanguageName(Locale locale) {
     switch (locale.languageCode) {
       case 'en':
-        return 'English';
+        return LocalizationService.instance.current.englishLanguage_4821;
       case 'zh':
-        return '中文';
+        return LocalizationService.instance.current.chineseLanguage_5732;
       default:
         return locale.languageCode;
     }

@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../services/work_status_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 工作状态退出确认对话框
 /// 当应用处于工作状态时，用户尝试关闭应用会显示此对话框
@@ -26,7 +29,7 @@ class WorkStatusExitDialog extends StatelessWidget {
             size: 24,
           ),
           const SizedBox(width: 8),
-          const Text('程序正在工作中'),
+          Text(LocalizationService.instance.current.programWorking_1234),
         ],
       ),
       content: Column(
@@ -34,7 +37,7 @@ class WorkStatusExitDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '当前正在执行：',
+            LocalizationService.instance.current.currentOperation_7281,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -47,13 +50,15 @@ class WorkStatusExitDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              workDescription.isNotEmpty ? workDescription : '未知任务',
+              workDescription.isNotEmpty
+                  ? workDescription
+                  : LocalizationService.instance.current.unknownTask_7421,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            '强制退出可能会导致数据丢失或程序状态异常。建议等待当前任务完成后再退出。',
+            LocalizationService.instance.current.forceExitWarning_4821,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -66,7 +71,7 @@ class WorkStatusExitDialog extends StatelessWidget {
             Navigator.of(context).pop(false);
             onCancel?.call();
           },
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
         FilledButton(
           onPressed: () {
@@ -77,7 +82,7 @@ class WorkStatusExitDialog extends StatelessWidget {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('仍要退出'),
+          child: Text(LocalizationService.instance.current.confirmExit_7284),
         ),
       ],
     );

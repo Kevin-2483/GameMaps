@@ -1,0 +1,10 @@
+{
+  "webDavAccountCreated": "WebDAV认证账户已创建: {authAccountId}",
+  "webDavAccountUpdated": "WebDAV认证账户已更新: {authAccountId}",
+  "cannotDeleteAuthAccountWithConfigs": "无法删除认证账户，仍有 {count} 个配置在使用此账户",
+  "webDavAuthAccountDeleted": "WebDAV认证账户已删除: {authAccountId}",
+  "webDavInitialized_7281": "WebDAV数据库服务初始化完成",
+  "webDavConfigCreated": "WebDAV配置已创建: {configId}",
+  "webDavConfigUpdated": "WebDAV配置已更新: {configId}",
+  "webDavConfigDeleted": "WebDAV配置已删除: {configId}"
+}

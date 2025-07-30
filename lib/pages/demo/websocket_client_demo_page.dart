@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../models/websocket_client_config.dart';
 import '../../collaboration/services/websocket/websocket_client_manager.dart';
 import '../../collaboration/services/websocket/websocket_client_service.dart';
+import '../../services/localization_service.dart';
 
 /// WebSocket 客户端演示页面
 class WebSocketClientDemoPage extends StatefulWidget {
@@ -78,7 +79,12 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
       _manager.messageStream.listen((message) {
         if (mounted) {
           setState(() {
-            _messages.add('收到: ${message.type} - ${message.data}');
+            _messages.add(
+              LocalizationService.instance.current.receivedMessage(
+                message.type,
+                message.data,
+              ),
+            );
           });
         }
       });
@@ -89,7 +95,10 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
           setState(() {
             _errors.add(error);
           });
-          _showSnackBar('错误: $error', isError: true);
+          _showSnackBar(
+            LocalizationService.instance.current.errorMessage(error),
+            isError: true,
+          );
         }
       });
 
@@ -97,9 +106,17 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         _isInitialized = true;
       });
 
-      _showSnackBar('WebSocket 客户端管理器初始化成功');
+      _showSnackBar(
+        LocalizationService
+            .instance
+            .current
+            .websocketManagerInitializedSuccess_4821,
+      );
     } catch (e) {
-      _showSnackBar('初始化失败: $e', isError: true);
+      _showSnackBar(
+        LocalizationService.instance.current.initializationFailed(e),
+        isError: true,
+      );
     }
   }
 
@@ -143,27 +160,27 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
     switch (_connectionState) {
       case WebSocketConnectionState.connected:
         statusColor = Colors.green;
-        statusText = '已连接';
+        statusText = LocalizationService.instance.current.connected_4821;
         break;
       case WebSocketConnectionState.connecting:
         statusColor = Colors.orange;
-        statusText = '连接中';
+        statusText = LocalizationService.instance.current.connecting_5723;
         break;
       case WebSocketConnectionState.authenticating:
         statusColor = Colors.blue;
-        statusText = '认证中';
+        statusText = LocalizationService.instance.current.authenticating_6934;
         break;
       case WebSocketConnectionState.reconnecting:
         statusColor = Colors.amber;
-        statusText = '重连中';
+        statusText = LocalizationService.instance.current.reconnecting_7845;
         break;
       case WebSocketConnectionState.error:
         statusColor = Colors.red;
-        statusText = '错误';
+        statusText = LocalizationService.instance.current.error_8956;
         break;
       default:
         statusColor = Colors.grey;
-        statusText = '未连接';
+        statusText = LocalizationService.instance.current.disconnected_9067;
     }
 
     return Card(
@@ -172,7 +189,10 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('连接状态', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.connectionStatus_4821,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -190,10 +210,21 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
             ),
             if (_activeConfig != null) ...[
               const SizedBox(height: 8),
-              Text('活跃客户端: ${_activeConfig!.displayName}'),
-              Text('客户端ID: ${_activeConfig!.clientId}'),
               Text(
-                '服务器: ${_activeConfig!.server.host}:${_activeConfig!.server.port}',
+                LocalizationService.instance.current.activeClientDisplay(
+                  _activeConfig!.displayName,
+                ),
+              ),
+              Text(
+                LocalizationService.instance.current.clientIdLabel(
+                  _activeConfig!.clientId,
+                ),
+              ),
+              Text(
+                LocalizationService.instance.current.serverInfo_4827(
+                  _activeConfig!.server.host,
+                  _activeConfig!.server.port,
+                ),
               ),
             ],
           ],
@@ -209,7 +240,10 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('客户端管理', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.clientManagement_7281,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
 
             // Web API Key 创建
@@ -570,7 +604,13 @@ class _WebSocketClientDemoPageState extends State<WebSocketClientDemoPage> {
       case 'validate':
         try {
           final isValid = await _manager.validateConfig(config.clientId);
-          _showSnackBar('配置验证结果: ${isValid ? "有效" : "无效"}');
+          _showSnackBar(
+            LocalizationService.instance.current.configValidationResult(
+              isValid
+                  ? LocalizationService.instance.current.valid_4821
+                  : LocalizationService.instance.current.invalid_5739,
+            ),
+          );
         } catch (e) {
           _showSnackBar('验证配置失败: $e', isError: true);
         }

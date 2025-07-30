@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+// This file has been processed by AI for internationalization
+import '../../services/localization_service.dart';
+import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_permission_system.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
@@ -45,7 +47,9 @@ class VfsPermissionDialog extends StatefulWidget {
         ),
       );
     } catch (e) {
-      context.showErrorSnackBar('获取文件权限失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.filePermissionFailed_7285(e),
+      );
       return null;
     }
   }
@@ -94,7 +98,10 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
                         style: theme.textTheme.titleLarge,
                       ),
                       Text(
-                        '权限管理',
+                        LocalizationService
+                            .instance
+                            .current
+                            .permissionManagement_7421,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -126,7 +133,10 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '系统保护文件 - 此文件受系统保护，不可删除或修改权限',
+                        LocalizationService
+                            .instance
+                            .current
+                            .systemProtectedFileWarning_4821,
                         style: TextStyle(color: Colors.orange.shade700),
                       ),
                     ),
@@ -138,7 +148,9 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
 
             // 当前权限显示
             Text(
-              '当前权限: ${_permissions.toString()}',
+              LocalizationService.instance.current.currentPermissions_7421(
+                _permissions.toString(),
+              ),
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontFamily: 'monospace',
                 backgroundColor: colorScheme.surfaceVariant,
@@ -149,39 +161,66 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
 
             // 权限设置
             if (!_permissions.isSystemProtected) ...[
-              Text('权限设置', style: theme.textTheme.titleMedium),
+              Text(
+                LocalizationService.instance.current.permissionSettings_7281,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
 
-              _buildPermissionSection('用户权限', _permissions.userPermissions, (
-                value,
-              ) {
-                setState(() {
-                  _permissions = _permissions.copyWith(userPermissions: value);
-                });
-              }),
+              _buildPermissionSection(
+                LocalizationService.instance.current.userPermissionsTitle_7281,
+                _permissions.userPermissions,
+                (value) {
+                  setState(() {
+                    _permissions = _permissions.copyWith(
+                      userPermissions: value,
+                    );
+                  });
+                },
+              ),
 
-              _buildPermissionSection('组权限', _permissions.groupPermissions, (
-                value,
-              ) {
-                setState(() {
-                  _permissions = _permissions.copyWith(groupPermissions: value);
-                });
-              }),
+              _buildPermissionSection(
+                LocalizationService.instance.current.groupPermissions_7421,
+                _permissions.groupPermissions,
+                (value) {
+                  setState(() {
+                    _permissions = _permissions.copyWith(
+                      groupPermissions: value,
+                    );
+                  });
+                },
+              ),
 
-              _buildPermissionSection('其他权限', _permissions.otherPermissions, (
-                value,
-              ) {
-                setState(() {
-                  _permissions = _permissions.copyWith(otherPermissions: value);
-                });
-              }),
+              _buildPermissionSection(
+                LocalizationService.instance.current.otherPermissions_7281,
+                _permissions.otherPermissions,
+                (value) {
+                  setState(() {
+                    _permissions = _permissions.copyWith(
+                      otherPermissions: value,
+                    );
+                  });
+                },
+              ),
             ] else ...[
-              Text('权限详情', style: theme.textTheme.titleMedium),
+              Text(
+                LocalizationService.instance.current.permissionDetails_7281,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
 
-              _buildPermissionDisplay('用户权限', _permissions.userPermissions),
-              _buildPermissionDisplay('组权限', _permissions.groupPermissions),
-              _buildPermissionDisplay('其他权限', _permissions.otherPermissions),
+              _buildPermissionDisplay(
+                LocalizationService.instance.current.userPermissions_7281,
+                _permissions.userPermissions,
+              ),
+              _buildPermissionDisplay(
+                LocalizationService.instance.current.groupPermissions_4821,
+                _permissions.groupPermissions,
+              ),
+              _buildPermissionDisplay(
+                LocalizationService.instance.current.otherPermissions_7281,
+                _permissions.otherPermissions,
+              ),
             ],
 
             const SizedBox(height: 24),
@@ -192,7 +231,9 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_4271,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 if (!_permissions.isSystemProtected)
@@ -204,7 +245,12 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('保存'),
+                        : Text(
+                            LocalizationService
+                                .instance
+                                .current
+                                .saveButton_7284,
+                          ),
                   ),
               ],
             ),
@@ -227,7 +273,7 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
         Row(
           children: [
             _buildPermissionCheckbox(
-              '读取',
+              LocalizationService.instance.current.readPermission_4821,
               permissions & VfsPermission.read != 0,
               (value) => onChanged(
                 value
@@ -237,7 +283,7 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
             ),
             const SizedBox(width: 16),
             _buildPermissionCheckbox(
-              '写入',
+              LocalizationService.instance.current.writePermission_4821,
               permissions & VfsPermission.write != 0,
               (value) => onChanged(
                 value
@@ -247,7 +293,7 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
             ),
             const SizedBox(width: 16),
             _buildPermissionCheckbox(
-              '执行',
+              LocalizationService.instance.current.executePermission_4821,
               permissions & VfsPermission.execute != 0,
               (value) => onChanged(
                 value
@@ -271,17 +317,17 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
         Row(
           children: [
             _buildPermissionIndicator(
-              '读取',
+              LocalizationService.instance.current.readPermission_5421,
               permissions & VfsPermission.read != 0,
             ),
             const SizedBox(width: 16),
             _buildPermissionIndicator(
-              '写入',
+              LocalizationService.instance.current.writePermission_7421,
               permissions & VfsPermission.write != 0,
             ),
             const SizedBox(width: 16),
             _buildPermissionIndicator(
-              '执行',
+              LocalizationService.instance.current.executeAction_7421,
               permissions & VfsPermission.execute != 0,
             ),
           ],
@@ -339,12 +385,19 @@ class _VfsPermissionDialogState extends State<VfsPermissionDialog> {
           _permissions,
         );
 
-        Navigator.of(context).pop(_permissions);
-
-        context.showSuccessSnackBar('权限已保存');
+        if (mounted) {
+          Navigator.of(context).pop(_permissions);
+          context.showSuccessSnackBar(
+            LocalizationService.instance.current.permissionSaved_7421,
+          );
+        }
       }
     } catch (e) {
-      context.showErrorSnackBar('保存权限失败: $e');
+      if (mounted) {
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.savePermissionFailed(e),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:typed_data';
@@ -11,6 +12,8 @@ import '../../../services/clipboard_service.dart';
 import '../utils/drawing_utils.dart'; // 导入绘制工具函数
 import '../../../services/notification/notification_service.dart';
 import '../../../services/notification/notification_models.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 优化的绘制工具栏，避免在工具选择时触发主页面的setState
 class DrawingToolbarOptimized extends StatefulWidget {
@@ -314,15 +317,15 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   String _getTriangleCutLabel(TriangleCutType triangleCut) {
     switch (triangleCut) {
       case TriangleCutType.none:
-        return '无切割';
+        return LocalizationService.instance.current.noCut_4821;
       case TriangleCutType.topLeft:
-        return '左上三角';
+        return LocalizationService.instance.current.topLeftTriangle_4821;
       case TriangleCutType.topRight:
-        return '右上三角';
+        return LocalizationService.instance.current.topRightTriangle_4821;
       case TriangleCutType.bottomRight:
-        return '右下三角';
+        return LocalizationService.instance.current.bottomRightTriangle_4821;
       case TriangleCutType.bottomLeft:
-        return '左下三角';
+        return LocalizationService.instance.current.bottomLeftTriangle_4821;
     }
   }
 
@@ -392,31 +395,31 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
   String _getToolTooltip(String toolName) {
     switch (toolName) {
       case 'line':
-        return '实线';
+        return LocalizationService.instance.current.solidLine_4821;
       case 'dashedLine':
-        return '虚线';
+        return LocalizationService.instance.current.dashedLine_5732;
       case 'arrow':
-        return '箭头';
+        return LocalizationService.instance.current.arrow_6423;
       case 'rectangle':
-        return '实心矩形';
+        return LocalizationService.instance.current.solidRectangle_7524;
       case 'hollowRectangle':
-        return '空心矩形';
+        return LocalizationService.instance.current.hollowRectangle_8635;
       case 'diagonalLines':
-        return '单斜线';
+        return LocalizationService.instance.current.singleDiagonalLine_9746;
       case 'crossLines':
-        return '交叉线';
+        return LocalizationService.instance.current.crossLines_0857;
       case 'dotGrid':
-        return '点阵';
+        return LocalizationService.instance.current.dotGrid_1968;
       case 'freeDrawing':
-        return '像素笔';
+        return LocalizationService.instance.current.pixelPen_2079;
       case 'text':
-        return '文本框';
+        return LocalizationService.instance.current.textBox_3180;
       case 'eraser':
-        return '橡皮擦';
+        return LocalizationService.instance.current.eraser_4291;
       case 'imageArea':
-        return '图片选区';
+        return LocalizationService.instance.current.imageSelection_5302;
       default:
-        return '工具';
+        return LocalizationService.instance.current.tool_6413;
     }
   }
 
@@ -431,8 +434,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Drawing tools
-            const Text(
-              '工具',
+            Text(
+              LocalizationService.instance.current.toolsTitle_7281,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
@@ -466,7 +469,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                       child: OutlinedButton.icon(
                         onPressed: widget.canUndo ? widget.onUndo : null,
                         icon: const Icon(Icons.undo),
-                        label: const Text('撤销'),
+                        label: Text(
+                          LocalizationService.instance.current.undoAction_7421,
+                        ),
                       ),
                     ),
                   if (widget.onUndo != null && widget.onRedo != null)
@@ -476,7 +481,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                       child: OutlinedButton.icon(
                         onPressed: widget.canRedo ? widget.onRedo : null,
                         icon: const Icon(Icons.redo),
-                        label: const Text('重做'),
+                        label: Text(
+                          LocalizationService.instance.current.redo_7281,
+                        ),
                       ),
                     ),
                 ],
@@ -491,8 +498,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '最近使用',
+                      Text(
+                        LocalizationService.instance.current.recentlyUsed_7421,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -516,8 +523,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ),
 
             // Color picker
-            const Text(
-              '颜色',
+            Text(
+              LocalizationService.instance.current.colorLabel_5421,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
@@ -549,8 +556,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    const Text(
-                      '自定义颜色',
+                    Text(
+                      LocalizationService.instance.current.customColor_7421,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -577,7 +584,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '点击调色盘按钮添加自定义颜色',
+                          LocalizationService
+                              .instance
+                              .current
+                              .clickToAddCustomColor_4821,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium?.color
@@ -603,8 +613,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '常用线条宽度',
+                        Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .commonLineWidth_4821,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -628,14 +641,17 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '线条粗细',
+                  Text(
+                    LocalizationService.instance.current.lineThickness_4521,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   IconButton(
                     onPressed: () => _showStrokeWidthManager(context),
                     icon: const Icon(Icons.settings, size: 18),
-                    tooltip: '管理常用线条宽度',
+                    tooltip: LocalizationService
+                        .instance
+                        .current
+                        .manageStrokeWidths_4821,
                     constraints: const BoxConstraints(
                       minWidth: 24,
                       minHeight: 24,
@@ -668,8 +684,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             // Pattern density (only show for pattern tools)
             if (_shouldShowDensityControl()) ...[
               const SizedBox(height: 8),
-              const Text(
-                '图案密度',
+              Text(
+                LocalizationService.instance.current.patternDensity_7281,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
@@ -693,8 +709,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             // Curvature control (for rectangular selections)
             if (_shouldShowCurvatureControl()) ...[
               const SizedBox(height: 8),
-              const Text(
-                '弧度',
+              Text(
+                LocalizationService.instance.current.radianUnit_7421,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
@@ -716,8 +732,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             ], // Triangle cut control (for rectangular selections)
             if (_shouldShowTriangleCutControl()) ...[
               const SizedBox(height: 8),
-              const Text(
-                '对角线切割',
+              Text(
+                LocalizationService.instance.current.diagonalCutting_4521,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
@@ -765,7 +781,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () => _handleToolSelection(null),
-                  child: const Text('取消选择'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelSelection_4271,
+                  ),
                 ),
               ),
 
@@ -777,10 +795,23 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 icon: const Icon(Icons.layers),
                 label: Text(
                   widget.selectedStickyNote != null
-                      ? '便签元素检视器 (${widget.selectedStickyNote!.elements.length})'
+                      ? LocalizationService.instance.current
+                            .stickyNoteInspectorWithCount(
+                              widget.selectedStickyNote!.elements.length,
+                            )
                       : widget.selectedLayer != null
-                      ? 'Z层级检视器 (${widget.selectedLayer!.elements.length})'
-                      : 'Z层级检视器 (${widget.getCurrentDrawingTargetLayer?.call()?.elements.length ?? 0})',
+                      ? LocalizationService.instance.current
+                            .zLayerInspectorWithCount(
+                              widget.selectedLayer!.elements.length,
+                            )
+                      : LocalizationService.instance.current
+                            .zLayerInspectorWithCount(
+                              widget.getCurrentDrawingTargetLayer
+                                      ?.call()
+                                      ?.elements
+                                      .length ??
+                                  0,
+                            ),
                 ),
               ),
             ),
@@ -953,7 +984,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     final result = await ColorPicker.showColorPickerWithActions(
       context: context,
       initialColor: _effectiveColor,
-      title: '高级颜色选择器',
+      title: LocalizationService.instance.current.advancedColorPicker_4821,
       enableAlpha: true,
     );
 
@@ -967,15 +998,20 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           await userPrefs.addCustomColor(selectedColor.value);
           _handleColorSelection(selectedColor);
           if (mounted) {
-            context.showSuccessSnackBar('颜色已添加到自定义');
+            context.showSuccessSnackBar(
+              LocalizationService.instance.current.colorAddedToCustom_7281,
+            );
           }
         } catch (e) {
           if (mounted) {
             String errorMessage = '添加颜色失败';
-            if (e.toString().contains('该颜色已存在')) {
+            if (e.toString().contains(
+              LocalizationService.instance.current.colorAlreadyExists_7281,
+            )) {
               errorMessage = '该颜色已存在于自定义颜色中';
             } else {
-              errorMessage = '添加颜色失败: $e';
+              errorMessage = LocalizationService.instance.current
+                  .addColorFailed(e);
             }
             context.showErrorSnackBar(errorMessage);
           }
@@ -1000,7 +1036,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('管理常用线条宽度'),
+        title: Text(LocalizationService.instance.current.manageLineWidths_4821),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -1008,7 +1044,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '当前数量: ${currentWidths.length}/5',
+                LocalizationService.instance.current.currentCount(
+                  currentWidths.length,
+                ),
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(
@@ -1018,8 +1056,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               const SizedBox(height: 16),
               if (currentWidths.isNotEmpty) ...[
-                const Text(
-                  '已添加的线条宽度:',
+                Text(
+                  LocalizationService.instance.current.addedLineWidth_4821,
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
@@ -1050,7 +1088,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '还没有添加常用线条宽度',
+                    LocalizationService
+                        .instance
+                        .current
+                        .noCommonLineWidthAdded_4821,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Theme.of(
@@ -1071,7 +1112,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                       _showAddStrokeWidthDialog(context, userPrefs);
                     },
                     icon: const Icon(Icons.add),
-                    label: const Text('添加新的线条宽度'),
+                    label: Text(
+                      LocalizationService.instance.current.addNewLineWidth_4821,
+                    ),
                   ),
                 )
               else
@@ -1084,7 +1127,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '已达到最大数量限制 (5个)',
+                    LocalizationService.instance.current.maxLimitReached_5421,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.orange.shade700,
@@ -1098,7 +1141,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -1119,12 +1162,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加线条宽度'),
+        title: Text(LocalizationService.instance.current.addLineWidth_4821),
         content: StatefulBuilder(
           builder: (context, setState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('宽度: ${newWidth.round()}px'),
+              Text(
+                LocalizationService.instance.current.widthWithPx_7421(
+                  newWidth.round(),
+                ),
+              ),
               const SizedBox(height: 16),
               Slider(
                 value: newWidth,
@@ -1139,14 +1186,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           ElevatedButton(
             onPressed: () {
               final currentWidths = provider.tools.favoriteStrokeWidths;
               if (!currentWidths.contains(newWidth)) {
                 if (currentWidths.length >= 5) {
-                  context.showErrorSnackBar('最多只能添加5个常用线条宽度');
+                  context.showErrorSnackBar(
+                    LocalizationService.instance.current.maxLineWidthLimit_4821,
+                  );
                   return;
                 }
                 final newWidths = List<double>.from(currentWidths);
@@ -1155,12 +1204,18 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                 provider.updateTools(favoriteStrokeWidths: newWidths);
                 Navigator.of(context).pop();
 
-                context.showSuccessSnackBar('已添加线条宽度 ${newWidth.round()}px');
+                context.showSuccessSnackBar(
+                  LocalizationService.instance.current.lineWidthAdded(
+                    newWidth.round(),
+                  ),
+                );
               } else {
-                context.showErrorSnackBar('该线条宽度已存在');
+                context.showErrorSnackBar(
+                  LocalizationService.instance.current.lineWidthExists_4821,
+                );
               }
             },
-            child: const Text('添加'),
+            child: Text(LocalizationService.instance.current.addButton_7421),
           ),
         ],
       ),
@@ -1229,7 +1284,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '图片缓冲区',
+                    LocalizationService.instance.current.imageBuffer_7281,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1253,8 +1308,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         const SizedBox(height: 12),
         // 图片适应方式选择
         if (widget.imageBufferData != null) ...[
-          const Text(
-            '图片适应方式',
+          Text(
+            LocalizationService.instance.current.imageFitMethod_4821,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
@@ -1286,7 +1341,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '使用说明',
+                    LocalizationService.instance.current.instructions_4521,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -1385,7 +1440,11 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
     // 调用回调函数更新缓冲区图片适应方式
     widget.onImageBufferFitChanged?.call(fit);
 
-    context.showSuccessSnackBar('图片适应方式已设置为: ${getBoxFitDisplayName(fit)}');
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current.boxFitModeSetTo(
+        getBoxFitDisplayName(fit),
+      ),
+    );
   }
 
   /// 构建图片缓冲区显示组件（显示已上传的图片）
@@ -1418,7 +1477,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '图片显示失败',
+                        LocalizationService
+                            .instance
+                            .current
+                            .imageLoadFailed_7421,
                         style: TextStyle(
                           color: Colors.red.shade600,
                           fontSize: 12,
@@ -1441,7 +1503,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               child: OutlinedButton.icon(
                 onPressed: _handleImageUpload,
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('重新上传', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  LocalizationService.instance.current.reuploadText_4821,
+                  style: TextStyle(fontSize: 12),
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   foregroundColor: Colors.blue.shade600,
@@ -1458,7 +1523,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
                   widget.onImageBufferCleared?.call();
                 },
                 icon: const Icon(Icons.clear, size: 16),
-                label: const Text('清空', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  LocalizationService.instance.current.clearText_4821,
+                  style: TextStyle(fontSize: 12),
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   foregroundColor: Colors.red.shade600,
@@ -1500,7 +1568,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               const SizedBox(height: 8),
               Text(
-                '点击上传图片到缓冲区',
+                LocalizationService.instance.current.uploadImageToBuffer_4521,
                 style: TextStyle(
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                   fontSize: 14,
@@ -1509,7 +1577,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               const SizedBox(height: 4),
               Text(
-                '支持 JPG、PNG、GIF 格式',
+                LocalizationService.instance.current.supportedImageFormats_4821,
                 style: TextStyle(
                   color: Theme.of(
                     context,
@@ -1530,7 +1598,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               child: ElevatedButton.icon(
                 onPressed: _handleImageUpload,
                 icon: const Icon(Icons.add_photo_alternate, size: 18),
-                label: const Text('上传图片'),
+                label: Text(
+                  LocalizationService.instance.current.uploadImage_7421,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Colors.blue.shade600,
@@ -1549,7 +1619,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               child: ElevatedButton.icon(
                 onPressed: _handleClipboardPaste,
                 icon: const Icon(Icons.paste, size: 18),
-                label: const Text('剪贴板'),
+                label: Text(
+                  LocalizationService.instance.current.clipboardLabel_4271,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Colors.green.shade600,
@@ -1576,7 +1648,7 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       if (mounted) {
         NotificationService.instance.show(
           id: notificationId,
-          message: '正在选择图片...',
+          message: LocalizationService.instance.current.selectingImage_4821,
           type: NotificationType.info,
           isPersistent: true,
           borderEffect: NotificationBorderEffect.loading,
@@ -1589,7 +1661,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       if (imageData != null) {
         // 验证图片数据
         if (!ImageUtils.isValidImageData(imageData)) {
-          throw Exception('无效的图片文件，请选择有效的图片');
+          throw Exception(
+            LocalizationService.instance.current.invalidImageFileError_4821,
+          );
         }
 
         // 更新缓冲区
@@ -1601,8 +1675,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           final mimeType = ImageUtils.getImageMimeType(imageData);
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message:
-                '图片已上传到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
+            message: LocalizationService.instance.current.imageUploadedToBuffer(
+              sizeInKB,
+              mimeType.toString(),
+            ),
             type: NotificationType.success,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -1614,7 +1690,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         if (mounted) {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: '已取消图片选择',
+            message: LocalizationService
+                .instance
+                .current
+                .imageSelectionCancelled_4521,
             type: NotificationType.info,
             isPersistent: false,
             duration: const Duration(seconds: 2),
@@ -1633,7 +1712,9 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         // 更新通知为错误状态
         NotificationService.instance.updateNotification(
           notificationId: notificationId,
-          message: '图片上传失败: $errorMessage',
+          message: LocalizationService.instance.current.imageUploadFailed(
+            errorMessage,
+          ),
           type: NotificationType.error,
           isPersistent: false,
           duration: const Duration(seconds: 4),
@@ -1652,7 +1733,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       if (mounted) {
         NotificationService.instance.show(
           id: notificationId,
-          message: '正在从剪贴板读取图片...',
+          message: LocalizationService
+              .instance
+              .current
+              .readingImageFromClipboard_4721,
           type: NotificationType.info,
           isPersistent: true,
           borderEffect: NotificationBorderEffect.loading,
@@ -1665,12 +1749,16 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
       if (imageData != null) {
         // 验证图片数据
         if (!ImageUtils.isValidImageData(imageData)) {
-          throw Exception('剪贴板中的数据不是有效的图片文件');
+          throw Exception(
+            LocalizationService.instance.current.invalidClipboardImageData_4271,
+          );
         }
 
         // 检查图片大小（限制为10MB）
         if (imageData.length > ImageUtils.maxFileSize) {
-          throw Exception('剪贴板中的图片过大，请选择小于10MB的图片');
+          throw Exception(
+            LocalizationService.instance.current.imageTooLargeError_4821,
+          );
         }
 
         // 更新缓冲区
@@ -1682,8 +1770,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           final mimeType = ImageUtils.getImageMimeType(imageData);
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message:
-                '图片已从剪贴板读取到缓冲区\n大小: ${sizeInKB}KB${mimeType != null ? ' · 类型: $mimeType' : ''}',
+            message: LocalizationService.instance.current
+                .imageCopiedToBuffer_7421(sizeInKB, mimeType.toString()),
             type: NotificationType.success,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -1695,7 +1783,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         if (mounted) {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: '剪贴板中没有图片数据',
+            message: LocalizationService
+                .instance
+                .current
+                .noImageDataInClipboard_4821,
             type: NotificationType.warning,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -1714,7 +1805,8 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
         // 更新通知为错误状态
         NotificationService.instance.updateNotification(
           notificationId: notificationId,
-          message: '从剪贴板读取图片失败: $errorMessage',
+          message: LocalizationService.instance.current
+              .clipboardImageReadFailed(errorMessage),
           type: NotificationType.error,
           isPersistent: false,
           duration: const Duration(seconds: 4),

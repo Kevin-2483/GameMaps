@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/map_item.dart';
@@ -5,6 +6,8 @@ import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../services/clipboard_service.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 快捷键动作实现类
 /// 包含所有快捷键回调方法的具体实现
@@ -110,7 +113,10 @@ class KeyboardShortcutActions {
     try {
       return canUndoReactive();
     } catch (e) {
-      debugPrint('检查撤销状态失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.checkUndoStatusFailed_4821 +
+            ': $e',
+      );
       return false;
     }
   }
@@ -119,7 +125,9 @@ class KeyboardShortcutActions {
     try {
       return canRedoReactive();
     } catch (e) {
-      debugPrint('检查重做状态失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.checkRedoStatusFailed_4821(e),
+      );
       return false;
     }
   }
@@ -131,11 +139,15 @@ class KeyboardShortcutActions {
     try {
       if (canUndoReactive()) {
         undoReactive();
-        debugPrint('使用响应式系统撤销');
+        debugPrint(
+          LocalizationService.instance.current.useReactiveSystemUndo_7281,
+        );
         return;
       }
     } catch (e) {
-      debugPrint('响应式系统撤销失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemUndoFailed_7421(e),
+      );
     }
   }
 
@@ -146,11 +158,15 @@ class KeyboardShortcutActions {
     try {
       if (canRedoReactive()) {
         redoReactive();
-        debugPrint('使用响应式系统重做');
+        debugPrint(
+          LocalizationService.instance.current.redoWithReactiveSystem_4821,
+        );
         return;
       }
     } catch (e) {
-      debugPrint('响应式系统重做失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemRedoFailed_7421(e),
+      );
     }
   }
 
@@ -166,7 +182,9 @@ class KeyboardShortcutActions {
       final selectionRect = (mapCanvas as dynamic).currentSelectionRect;
       if (selectionRect == null) {
         if (context.mounted) {
-          NotificationService.instance.showInfo('请先选择一个区域再复制');
+          NotificationService.instance.showInfo(
+            LocalizationService.instance.current.selectRegionBeforeCopy_7281,
+          );
         }
         return;
       }
@@ -174,7 +192,9 @@ class KeyboardShortcutActions {
       final imageData = await (mapCanvas as dynamic)
           .captureCanvasAreaToRgbaUint8List(selectionRect);
       if (imageData == null) {
-        throw Exception('无法捕获画布区域');
+        throw Exception(
+          LocalizationService.instance.current.canvasCaptureError_4821,
+        );
       }
 
       final success = await ClipboardService.copyCanvasSelectionToClipboard(
@@ -185,14 +205,23 @@ class KeyboardShortcutActions {
 
       if (context.mounted) {
         if (success) {
-          NotificationService.instance.showSuccess('选区已复制到剪贴板');
+          NotificationService.instance.showSuccess(
+            LocalizationService
+                .instance
+                .current
+                .selectionCopiedToClipboard_4821,
+          );
         } else {
-          NotificationService.instance.showError('复制到剪贴板失败');
+          NotificationService.instance.showError(
+            LocalizationService.instance.current.copyToClipboardFailed_4821,
+          );
         }
       }
     } catch (e) {
       if (context.mounted) {
-        NotificationService.instance.showError('复制到剪贴板失败: $e');
+        NotificationService.instance.showError(
+          LocalizationService.instance.current.copyToClipboardFailed(e),
+        );
       }
     }
   }
@@ -486,7 +515,9 @@ class KeyboardShortcutActions {
 
     if (legendGroups.isEmpty) {
       if (context.mounted) {
-        NotificationService.instance.showInfo('没有可切换的图例组');
+        NotificationService.instance.showInfo(
+          LocalizationService.instance.current.noLegendGroupsAvailable_4821,
+        );
       }
       return;
     }
@@ -523,7 +554,9 @@ class KeyboardShortcutActions {
 
     if (legendGroups.isEmpty) {
       if (context.mounted) {
-        NotificationService.instance.showInfo('没有可切换的图例组');
+        NotificationService.instance.showInfo(
+          LocalizationService.instance.current.noLegendGroupsAvailable_4821,
+        );
       }
       return;
     }
@@ -569,7 +602,9 @@ class KeyboardShortcutActions {
           }
         } else {
           if (context.mounted) {
-            NotificationService.instance.showInfo('当前选中图层没有绑定图例组');
+            NotificationService.instance.showInfo(
+              LocalizationService.instance.current.noLegendGroupBound_7281,
+            );
           }
           return;
         }
@@ -592,7 +627,12 @@ class KeyboardShortcutActions {
           }
         } else {
           if (context.mounted) {
-            NotificationService.instance.showInfo('当前选中图层组没有绑定图例组');
+            NotificationService.instance.showInfo(
+              LocalizationService
+                  .instance
+                  .current
+                  .noLegendGroupBoundToLayerGroup_4821,
+            );
           }
           return;
         }
@@ -631,7 +671,9 @@ class KeyboardShortcutActions {
         showLegendGroupManagementDrawer(firstGroup);
       } else {
         if (context.mounted) {
-          NotificationService.instance.showInfo('当前地图没有图例组');
+          NotificationService.instance.showInfo(
+            LocalizationService.instance.current.noLegendGroupInCurrentMap_4821,
+          );
         }
       }
     }
@@ -648,7 +690,9 @@ class KeyboardShortcutActions {
       final selectedLayer = getSelectedLayer();
       if (selectedLayer == null) {
         if (context.mounted) {
-          NotificationService.instance.showInfo('请先选择一个图层');
+          NotificationService.instance.showInfo(
+            LocalizationService.instance.current.selectLayerFirst_4281,
+          );
         }
         return;
       }
@@ -768,7 +812,9 @@ class KeyboardShortcutActions {
         targetLayer = getCurrentDrawingTargetLayer();
         if (targetLayer == null) {
           if (context.mounted) {
-            NotificationService.instance.showInfo('没有可用的图层');
+            NotificationService.instance.showInfo(
+              LocalizationService.instance.current.noAvailableLayers_4821,
+            );
           }
           return;
         }
@@ -787,25 +833,33 @@ class KeyboardShortcutActions {
     final currentMap = getCurrentMap();
     if (currentMap == null) {
       if (context.mounted) {
-        NotificationService.instance.showError('没有可保存的地图数据');
+        NotificationService.instance.showError(
+          LocalizationService.instance.current.noMapDataToSave_4821,
+        );
       }
       return;
     }
 
     try {
       if (context.mounted) {
-        NotificationService.instance.showInfo('正在保存地图...');
+        NotificationService.instance.showInfo(
+          LocalizationService.instance.current.savingMap_7281,
+        );
       }
 
       // 直接调用响应式版本保存逻辑，避免循环调用
       await saveWithReactiveVersions(currentMap);
 
       if (context.mounted) {
-        NotificationService.instance.showSuccess('地图保存成功');
+        NotificationService.instance.showSuccess(
+          LocalizationService.instance.current.mapSavedSuccessfully_7281,
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        NotificationService.instance.showError('保存地图失败: $e');
+        NotificationService.instance.showError(
+          LocalizationService.instance.current.mapSaveFailed_7285(e),
+        );
       }
     }
   }
@@ -830,7 +884,9 @@ class KeyboardShortcutActions {
       final previousVersion = versions[currentIndex - 1];
       switchVersion((previousVersion as dynamic).versionId).catchError((error) {
         if (context.mounted) {
-          NotificationService.instance.showError('切换版本失败: $error');
+          NotificationService.instance.showError(
+            LocalizationService.instance.current.versionSwitchFailed(error),
+          );
         }
       });
     }
@@ -855,7 +911,9 @@ class KeyboardShortcutActions {
       final nextVersion = versions[currentIndex + 1];
       switchVersion((nextVersion as dynamic).versionId).catchError((error) {
         if (context.mounted) {
-          NotificationService.instance.showError('切换版本失败: $error');
+          NotificationService.instance.showError(
+            LocalizationService.instance.current.versionSwitchFailed(error),
+          );
         }
       });
     }
@@ -869,7 +927,9 @@ class KeyboardShortcutActions {
 
     createVersion(versionName).catchError((error) {
       if (context.mounted) {
-        NotificationService.instance.showError('创建版本失败: $error');
+        NotificationService.instance.showError(
+          LocalizationService.instance.current.versionCreationFailed(error),
+        );
       }
     });
   }
@@ -881,10 +941,16 @@ class KeyboardShortcutActions {
     final boundLegendGroups = getBoundLegendGroups();
     if (boundLegendGroups.isNotEmpty) {
       final firstBoundGroup = boundLegendGroups.first;
-      debugPrint('自动切换图例组抽屉到绑定的图例组: ${firstBoundGroup.name}');
+      debugPrint(
+        LocalizationService.instance.current.autoSwitchLegendGroupDrawer(
+          firstBoundGroup.name,
+        ),
+      );
       showLegendGroupManagementDrawer(firstBoundGroup);
     } else {
-      debugPrint('当前选中的图层或图层组没有绑定任何图例组');
+      debugPrint(
+        LocalizationService.instance.current.noLegendGroupSelected_4821,
+      );
     }
   }
 }

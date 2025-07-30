@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -14,6 +15,8 @@ import 'user_preferences/user_preferences_service.dart';
 import 'audio/audio_player_service.dart';
 import 'tts_service.dart';
 import 'legend_cache_manager.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 应用清理服务
 /// 负责在应用关闭时清理临时文件、缓存、日志等
@@ -28,7 +31,9 @@ class CleanupService {
   Future<void> performCleanup() async {
     if (_isCleanupInProgress) {
       if (kDebugMode) {
-        debugPrint('清理操作已在进行中，跳过重复执行');
+        debugPrint(
+          LocalizationService.instance.current.skipDuplicateExecution_4821,
+        );
       }
       return;
     }
@@ -38,7 +43,9 @@ class CleanupService {
 
     try {
       if (kDebugMode) {
-        debugPrint('开始执行应用清理操作...');
+        debugPrint(
+          LocalizationService.instance.current.startCleanupOperation_7281,
+        );
       }
 
       // 1. 关闭所有数据库连接
@@ -46,7 +53,11 @@ class CleanupService {
       await _closeDatabaseConnections();
       dbStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('数据库连接关闭耗时: ${dbStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.dbConnectionCloseTime(
+            dbStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 2. 停止所有脚本执行器
@@ -54,7 +65,11 @@ class CleanupService {
       await _stopScriptExecutors();
       scriptStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('脚本执行器停止耗时: ${scriptStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.scriptExecutionTime(
+            scriptStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 3. 停止音频服务
@@ -62,7 +77,11 @@ class CleanupService {
       await _stopAudioServices();
       audioStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('音频服务停止耗时: ${audioStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.audioServiceStopTime(
+            audioStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 4. 清理缓存
@@ -70,7 +89,11 @@ class CleanupService {
       await _cleanupCaches();
       cacheStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('缓存清理耗时: ${cacheStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.cacheCleanupTime(
+            cacheStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 5. 清理临时文件
@@ -78,7 +101,11 @@ class CleanupService {
       await _cleanupTemporaryFiles();
       tempStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('临时文件清理耗时: ${tempStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.tempFileCleanupTime(
+            tempStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 6. 清理日志文件（可选）
@@ -86,7 +113,11 @@ class CleanupService {
       await _cleanupLogFiles();
       logStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('日志文件清理耗时: ${logStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.logCleanupTime(
+            logStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       // 7. 关闭VFS系统
@@ -94,18 +125,29 @@ class CleanupService {
       await _closeVfsSystem();
       vfsStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('VFS系统关闭耗时: ${vfsStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.vfsShutdownTime(
+            vfsStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
 
       totalStopwatch.stop();
       if (kDebugMode) {
-        debugPrint('应用清理操作完成，总耗时: ${totalStopwatch.elapsedMilliseconds}ms');
+        debugPrint(
+          LocalizationService.instance.current.cleanupCompleted(
+            totalStopwatch.elapsedMilliseconds,
+          ),
+        );
       }
     } catch (e) {
       totalStopwatch.stop();
       if (kDebugMode) {
         debugPrint(
-          '清理操作过程中发生错误: $e，已耗时: ${totalStopwatch.elapsedMilliseconds}ms',
+          LocalizationService.instance.current.cleanupErrorWithDuration(
+            e,
+            totalStopwatch.elapsedMilliseconds,
+          ),
         );
       }
     } finally {
@@ -117,57 +159,83 @@ class CleanupService {
   Future<void> _closeDatabaseConnections() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在关闭数据库连接...');
+        debugPrint(
+          LocalizationService.instance.current.closingDbConnection_7281,
+        );
       }
 
       // 关闭用户偏好数据库
       try {
         await UserPreferencesDatabaseService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭用户偏好数据库失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.closeUserPrefDbFailed(e),
+          );
       }
 
       // 关闭地图本地化数据库
       try {
         await MapLocalizationService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭地图本地化数据库失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.mapLocalizationDbCloseFailed(
+              e,
+            ),
+          );
       }
 
       // 关闭VFS存储数据库
       try {
         await VfsStorageService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭VFS存储数据库失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.vfsDatabaseCloseFailure(e),
+          );
       }
 
       // 关闭地图数据库
       try {
         await MapDatabaseService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭地图数据库失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.mapDatabaseCloseFailed(e),
+          );
       }
 
       // 关闭图例数据库
       try {
         await LegendDatabaseService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭图例数据库失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.closeLegendDatabaseFailed(e),
+          );
       }
 
       // 关闭用户偏好服务
       try {
         await UserPreferencesService().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭用户偏好服务失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.userPreferenceCloseFailed(e),
+          );
       }
 
       if (kDebugMode) {
-        debugPrint('数据库连接关闭完成');
+        debugPrint(
+          LocalizationService.instance.current.databaseConnectionClosed_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('关闭数据库连接时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.databaseCloseError_4821(e),
+        );
       }
     }
   }
@@ -176,7 +244,9 @@ class CleanupService {
   Future<void> _stopScriptExecutors() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在停止脚本执行器...');
+        debugPrint(
+          LocalizationService.instance.current.stoppingScriptExecutor_7421,
+        );
       }
 
       // 停止各种脚本执行器
@@ -185,15 +255,22 @@ class CleanupService {
         // 这些服务可能需要特定的停止方法
         // 由于它们可能是单例，我们只能尝试调用dispose方法
       } catch (e) {
-        if (kDebugMode) debugPrint('停止脚本执行器失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.scriptExecutorFailure_4829(e),
+          );
       }
 
       if (kDebugMode) {
-        debugPrint('脚本执行器停止完成');
+        debugPrint(
+          LocalizationService.instance.current.scriptExecutorStopped_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('停止脚本执行器时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.scriptExecutorError_7425(e),
+        );
       }
     }
   }
@@ -202,29 +279,39 @@ class CleanupService {
   Future<void> _stopAudioServices() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在停止音频服务...');
+        debugPrint(
+          LocalizationService.instance.current.stoppingAudioService_7421,
+        );
       }
 
       // 停止音频播放服务
       try {
         await AudioPlayerService().dispose();
       } catch (e) {
-        if (kDebugMode) debugPrint('停止音频播放服务失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.audioServiceStopFailed(e),
+          );
       }
 
       // 停止TTS服务
       try {
         await TtsService().dispose();
       } catch (e) {
-        if (kDebugMode) debugPrint('停止TTS服务失败: $e');
+        if (kDebugMode)
+          debugPrint(LocalizationService.instance.current.ttsServiceFailed(e));
       }
 
       if (kDebugMode) {
-        debugPrint('音频服务停止完成');
+        debugPrint(
+          LocalizationService.instance.current.audioServiceStopped_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('停止音频服务时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.audioServiceError_4829(e),
+        );
       }
     }
   }
@@ -233,22 +320,27 @@ class CleanupService {
   Future<void> _cleanupCaches() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在清理缓存...');
+        debugPrint(LocalizationService.instance.current.clearingCache_7421);
       }
 
       // 清理图例缓存
       try {
         LegendCacheManager().clearAllCache();
       } catch (e) {
-        if (kDebugMode) debugPrint('清理图例缓存失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.clearLegendCacheFailed(e),
+          );
       }
 
       if (kDebugMode) {
-        debugPrint('缓存清理完成');
+        debugPrint(LocalizationService.instance.current.cacheCleared_7281);
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理缓存时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.cacheCleanError_7284(e),
+        );
       }
     }
   }
@@ -257,7 +349,7 @@ class CleanupService {
   Future<void> _cleanupTemporaryFiles() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在清理临时文件...');
+        debugPrint(LocalizationService.instance.current.cleaningTempFiles_7421);
       }
 
       if (!kIsWeb &&
@@ -297,11 +389,18 @@ class CleanupService {
               try {
                 await entity.delete();
                 if (kDebugMode) {
-                  debugPrint('删除临时文件: ${entity.path}');
+                  debugPrint(
+                    LocalizationService.instance.current.deleteTempFile(
+                      entity.path,
+                    ),
+                  );
                 }
               } catch (e) {
                 if (kDebugMode) {
-                  debugPrint('删除临时文件失败: ${entity.path}, 错误: $e');
+                  debugPrint(
+                    LocalizationService.instance.current
+                        .deleteTempFileFailed_7421(entity.path, e),
+                  );
                 }
               }
             }
@@ -310,11 +409,13 @@ class CleanupService {
       }
 
       if (kDebugMode) {
-        debugPrint('临时文件清理完成');
+        debugPrint(LocalizationService.instance.current.tempFileCleaned_7281);
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理临时文件时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.tempFileCleanupError_4821(e),
+        );
       }
     }
   }
@@ -323,7 +424,9 @@ class CleanupService {
   Future<void> _cleanupLogFiles() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在清理过期日志文件...');
+        debugPrint(
+          LocalizationService.instance.current.cleaningExpiredLogs_7281,
+        );
       }
 
       if (!kIsWeb &&
@@ -343,12 +446,21 @@ class CleanupService {
                 if (stat.modified.isBefore(cutoffDate)) {
                   await entity.delete();
                   if (kDebugMode) {
-                    debugPrint('删除过期日志文件: ${entity.path}');
+                    debugPrint(
+                      LocalizationService.instance.current.deleteExpiredLogFile(
+                        entity.path,
+                      ),
+                    );
                   }
                 }
               } catch (e) {
                 if (kDebugMode) {
-                  debugPrint('删除日志文件失败: ${entity.path}, 错误: $e');
+                  debugPrint(
+                    LocalizationService.instance.current.logDeletionFailed_7421(
+                      entity.path,
+                      e,
+                    ),
+                  );
                 }
               }
             }
@@ -357,11 +469,15 @@ class CleanupService {
       }
 
       if (kDebugMode) {
-        debugPrint('日志文件清理完成');
+        debugPrint(
+          LocalizationService.instance.current.logCleanupComplete_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理日志文件时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.logCleanupError_5421(e),
+        );
       }
     }
   }
@@ -370,22 +486,29 @@ class CleanupService {
   Future<void> _closeVfsSystem() async {
     try {
       if (kDebugMode) {
-        debugPrint('正在关闭VFS系统...');
+        debugPrint(LocalizationService.instance.current.closingVfsSystem_7281);
       }
 
       // 关闭VFS服务提供者
       try {
         await VfsServiceProvider().close();
       } catch (e) {
-        if (kDebugMode) debugPrint('关闭VFS服务提供者失败: $e');
+        if (kDebugMode)
+          debugPrint(
+            LocalizationService.instance.current.vfsProviderCloseFailed(e),
+          );
       }
 
       if (kDebugMode) {
-        debugPrint('VFS系统关闭完成');
+        debugPrint(
+          LocalizationService.instance.current.vfsShutdownComplete_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('关闭VFS系统时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.vfsErrorClosing_5421(e),
+        );
       }
     }
   }
@@ -428,7 +551,11 @@ class CleanupService {
             if (shouldDelete) {
               await entity.delete();
               if (kDebugMode) {
-                debugPrint('删除临时文件: ${entity.path}');
+                debugPrint(
+                  LocalizationService.instance.current.deleteTempFile(
+                    entity.path,
+                  ),
+                );
               }
             }
           } else if (entity is Directory) {
@@ -464,7 +591,10 @@ class CleanupService {
                 if (isEmpty) {
                   await entity.delete();
                   if (kDebugMode) {
-                    debugPrint('删除空目录: ${entity.path}');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .deleteEmptyDirectory_7281(entity.path),
+                    );
                   }
                 }
               } catch (e) {
@@ -474,13 +604,23 @@ class CleanupService {
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('清理文件/目录失败: ${entity.path}, 错误: $e');
+            debugPrint(
+              LocalizationService.instance.current.cleanupFailedMessage(
+                entity.path,
+                e,
+              ),
+            );
           }
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理目录失败: ${directory.path}, 错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.cleanDirectoryFailed(
+            directory.path,
+            e,
+          ),
+        );
       }
     }
   }

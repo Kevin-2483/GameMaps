@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/test/svg_test_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class SvgTestPageModule extends PageModule {
   @override
@@ -10,7 +13,8 @@ class SvgTestPageModule extends PageModule {
   String get path => '/svg-test';
 
   @override
-  String get displayName => 'SVG 测试';
+  String get displayName =>
+      LocalizationService.instance.current.svgTestPageTitle_4821;
 
   @override
   IconData get icon => Icons.image;

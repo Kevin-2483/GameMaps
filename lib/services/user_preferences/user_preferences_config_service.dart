@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_service_provider.dart';
 import '../../models/user_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// 用户偏好设置多配置管理服务
 /// 使用VFS在fs集合中存储配置JSON文件
@@ -27,9 +30,11 @@ class UserPreferencesConfigService {
       await _ensureConfigDirectory();
 
       _isInitialized = true;
-      debugPrint('用户偏好设置配置管理系统初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.userPreferencesInitComplete_4821,
+      );
     } catch (e) {
-      debugPrint('初始化配置管理系统失败: $e');
+      debugPrint(LocalizationService.instance.current.configInitFailed_7285(e));
       rethrow;
     }
   }
@@ -38,10 +43,14 @@ class UserPreferencesConfigService {
   Future<void> _ensureConfigDirectory() async {
     try {
       await _vfsProvider.createDirectory(_collection, _configDir);
-      debugPrint('配置目录已创建或已存在');
+      debugPrint(
+        LocalizationService.instance.current.configDirCreatedOrExists_7281,
+      );
     } catch (e) {
       // 目录可能已存在，这是正常的
-      debugPrint('配置目录创建: $e');
+      debugPrint(
+        LocalizationService.instance.current.configDirCreationError_4821(e),
+      );
     }
   }
 
@@ -208,10 +217,16 @@ class UserPreferencesConfigService {
 
       // 注意：不再需要从索引文件中移除，getAllConfigs会直接扫描目录
 
-      debugPrint('配置删除成功: $configId');
+      debugPrint(
+        LocalizationService.instance.current.configDeletedSuccessfully(
+          configId,
+        ),
+      );
       return true;
     } catch (e) {
-      debugPrint('删除配置失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteConfigFailed_7281(e),
+      );
       return false;
     }
   }
@@ -257,7 +272,9 @@ class UserPreferencesConfigService {
         createdAt: DateTime.parse(data['createdAt'] as String),
       );
     } catch (e) {
-      debugPrint('获取配置信息失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchConfigFailed_7284(e),
+      );
       return null;
     }
   }

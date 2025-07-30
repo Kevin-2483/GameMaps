@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../models/sticky_note.dart';
 import '../../../utils/image_utils.dart';
@@ -5,6 +6,8 @@ import '../../../components/color_picker_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import 'dart:typed_data';
 import 'dart:async';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class StickyNotePanel extends StatefulWidget {
   final List<StickyNote> stickyNotes;
@@ -64,10 +67,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           // 添加便签按钮
           if (!widget.isPreviewMode) _buildAddButton(),
           const SizedBox(height: 16),
-          const Expanded(
+          Expanded(
             child: Center(
-              child: Text(
-                '暂无便签\n点击上方按钮添加新便签',
+child: Text(
+                LocalizationService.instance.current.emptyNotesMessage_7421,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14),
               ),
@@ -118,7 +121,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       child: ElevatedButton.icon(
         onPressed: widget.onStickyNoteAdded,
         icon: const Icon(Icons.add),
-        label: const Text('添加便签'),
+label: Text(LocalizationService.instance.current.addNote_7421),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -247,10 +250,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                       ), // Z层级检视器按钮 (只在便签被选中时显示)
                       if (widget.selectedStickyNote?.id == note.id &&
                           widget.onZIndexInspectorRequested != null)
-                        Tooltip(
+Tooltip(
                           message: note.elements.isNotEmpty
-                              ? '便签元素检视器 (${note.elements.length}个元素)'
-                              : '便签元素检视器 (无元素)',
+                              ? LocalizationService.instance.current.noteElementInspectorWithCount_7421(note.elements.length)
+                              : LocalizationService.instance.current.noteElementInspectorEmpty_1589,
                           child: GestureDetector(
                             onTap: widget.onZIndexInspectorRequested,
                             child: Container(
@@ -267,12 +270,12 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                         ),
 
                       // 删除按钮
-                      IconButton(
+IconButton(
                         icon: const Icon(Icons.delete, size: 16),
                         onPressed: () => _showDeleteDialog(context, note),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
-                        tooltip: '删除便签',
+                        tooltip: LocalizationService.instance.current.deleteNoteTooltip_7281,
                       ),
                     ],
                   ],
@@ -341,8 +344,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           controller: controller,
           enabled: !widget.isPreviewMode,
           style: const TextStyle(fontSize: 14),
-          decoration: const InputDecoration(
-            hintText: '便签标题',
+decoration: InputDecoration(
+            hintText: LocalizationService.instance.current.noteTitleHint_4821,
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             isDense: true,
@@ -350,8 +353,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           textInputAction: TextInputAction.done,
           onSubmitted: (value) {
             if (value.trim() != note.title) {
-              final updatedNote = note.copyWith(
-                title: value.trim().isEmpty ? '无标题便签' : value.trim(),
+final updatedNote = note.copyWith(
+                title: value.trim().isEmpty ? LocalizationService.instance.current.untitledNote_4821 : value.trim(),
                 updatedAt: DateTime.now(),
               );
               widget.onStickyNoteUpdated(updatedNote);
@@ -362,9 +365,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           onTapOutside: (event) {
             // 当用户点击输入框外部时保存标题
             if (controller.text.trim() != note.title) {
-              final updatedNote = note.copyWith(
+final updatedNote = note.copyWith(
                 title: controller.text.trim().isEmpty
-                    ? '无标题便签'
+                    ? LocalizationService.instance.current.untitledNote_4721
                     : controller.text.trim(),
                 updatedAt: DateTime.now(),
               );
@@ -376,9 +379,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           onEditingComplete: () {
             // 当用户完成编辑时保存标题
             if (controller.text.trim() != note.title) {
-              final updatedNote = note.copyWith(
+final updatedNote = note.copyWith(
                 title: controller.text.trim().isEmpty
-                    ? '无标题便签'
+                    ? LocalizationService.instance.current.untitledNote_4721
                     : controller.text.trim(),
                 updatedAt: DateTime.now(),
               );
@@ -406,7 +409,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           // 透明度滑块
           Row(
             children: [
-              const Text('不透明度:', style: TextStyle(fontSize: 11)),
+Text(LocalizationService.instance.current.opacityLabel_7281, style: TextStyle(fontSize: 11)),
               const SizedBox(width: 3),
               Flexible(
                 child: Slider(
@@ -493,8 +496,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                   note.backgroundImageData != null ? Icons.edit : Icons.upload,
                   size: 20,
                 ),
-                title: Text(
-                  note.backgroundImageData != null ? '更换背景图片' : '上传背景图片',
+title: Text(
+                  note.backgroundImageData != null ? LocalizationService.instance.current.changeBackgroundImage_5421 : LocalizationService.instance.current.uploadBackgroundImage_5421,
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -504,7 +507,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
               if (note.backgroundImageData != null) ...[
                 ListTile(
                   leading: const Icon(Icons.settings, size: 20),
-                  title: const Text('背景图片设置'),
+title: Text(LocalizationService.instance.current.backgroundImageSetting_4271),
                   onTap: () {
                     Navigator.pop(context);
                     _showBackgroundImageSettings(context, note);
@@ -512,7 +515,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline, size: 20),
-                  title: const Text('移除背景图片'),
+title: Text(LocalizationService.instance.current.removeBackgroundImage_4271),
                   onTap: () {
                     Navigator.pop(context);
                     _removeBackgroundImage(note);
@@ -540,12 +543,12 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         );
 
         widget.onStickyNoteUpdated(updatedNote);
-        widget.onSuccess?.call('背景图片已上传');
+widget.onSuccess?.call(LocalizationService.instance.current.backgroundImageUploaded_4821);
 
-        debugPrint('便签背景图片已上传，将在地图保存时存储到资产系统 (${imageData.length} bytes)');
+debugPrint(LocalizationService.instance.current.noteBackgroundImageUploaded(imageData.length));
       }
     } catch (e) {
-      widget.onError?.call('上传图片失败: $e');
+widget.onError?.call(LocalizationService.instance.current.imageUploadFailed(e));
     }
   }
 
@@ -554,20 +557,20 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('背景图片设置'),
+title: Text(LocalizationService.instance.current.backgroundImageSetting_4271),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // 图片适应方式
             DropdownButtonFormField<BoxFit>(
               value: note.backgroundImageFit,
-              decoration: const InputDecoration(labelText: '图片适应方式'),
-              items: const [
-                DropdownMenuItem(value: BoxFit.cover, child: Text('覆盖')),
-                DropdownMenuItem(value: BoxFit.contain, child: Text('包含')),
-                DropdownMenuItem(value: BoxFit.fill, child: Text('填充')),
-                DropdownMenuItem(value: BoxFit.fitWidth, child: Text('适合宽度')),
-                DropdownMenuItem(value: BoxFit.fitHeight, child: Text('适合高度')),
+decoration: InputDecoration(labelText: LocalizationService.instance.current.imageFitMethod_7281),
+              items: [
+DropdownMenuItem(value: BoxFit.cover, child: Text(LocalizationService.instance.current.boxFitCover_7285)),
+DropdownMenuItem(value: BoxFit.contain, child: Text(LocalizationService.instance.current.boxFitContain_7281)),
+DropdownMenuItem(value: BoxFit.fill, child: Text(LocalizationService.instance.current.boxFitFill_4821)),
+DropdownMenuItem(value: BoxFit.fitWidth, child: Text(LocalizationService.instance.current.fitWidthOption_4821)),
+DropdownMenuItem(value: BoxFit.fitHeight, child: Text(LocalizationService.instance.current.fitHeight_4821)),
               ],
               onChanged: (BoxFit? value) {
                 if (value != null) {
@@ -582,7 +585,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
             const SizedBox(height: 16),
 
             // 背景图片透明度
-            Text('背景图片透明度: ${(note.backgroundImageOpacity * 100).round()}%'),
+Text(LocalizationService.instance.current.backgroundImageOpacityLabel((note.backgroundImageOpacity * 100).round())),
             Slider(
               value: note.backgroundImageOpacity,
               min: 0.0,
@@ -601,7 +604,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -616,16 +619,16 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       updatedAt: DateTime.now(),
     );
     widget.onStickyNoteUpdated(updatedNote);
-    widget.onSuccess?.call('背景图片已移除');
+widget.onSuccess?.call(LocalizationService.instance.current.backgroundImageRemoved_4821);
   }
 
   /// 显示颜色选择器
   void _showColorPicker(BuildContext context, StickyNote note) {
     showDialog<Color>(
       context: context,
-      builder: (context) => ColorPickerDialog(
+builder: (context) => ColorPickerDialog(
         initialColor: note.backgroundColor,
-        title: '选择便签颜色',
+        title: LocalizationService.instance.current.selectNoteColor_7281,
       ),
     ).then((Color? selectedColor) {
       if (selectedColor != null) {
@@ -664,19 +667,19 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除便签'),
-        content: Text('确定要删除便签 "${note.title}" 吗？此操作不可撤销。'),
+title: Text(LocalizationService.instance.current.deleteNote_7421),
+content: Text(LocalizationService.instance.current.confirmDeleteNote(note.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               widget.onStickyNoteDeleted(note);
             },
-            child: const Text('删除'),
+child: Text(LocalizationService.instance.current.delete_7281),
           ),
         ],
       ),
@@ -701,10 +704,10 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
         PopupMenuItem<String>(
           value: 'duplicate',
           child: Row(
-            children: const [
-              Icon(Icons.copy, size: 16),
-              SizedBox(width: 8),
-              Text('复制便签'),
+            children: [
+              const Icon(Icons.copy, size: 16),
+              const SizedBox(width: 8),
+              Text(LocalizationService.instance.current.copyNote_7281)
             ],
           ),
         ),
@@ -717,17 +720,17 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                 size: 16,
               ),
               const SizedBox(width: 8),
-              Text(note.isCollapsed ? '展开便签' : '折叠便签'),
+Text(note.isCollapsed ? LocalizationService.instance.current.expandNote_5421 : LocalizationService.instance.current.collapseNote_5421),
             ],
           ),
         ),
         PopupMenuItem<String>(
           value: 'move_to_top',
           child: Row(
-            children: const [
-              Icon(Icons.vertical_align_top, size: 16),
-              SizedBox(width: 8),
-              Text('移到顶层'),
+            children: [
+              const Icon(Icons.vertical_align_top, size: 16),
+              const SizedBox(width: 8),
+              Text(LocalizationService.instance.current.moveToTop_7281)
             ],
           ),
         ),
@@ -758,7 +761,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   void _duplicateStickyNote(StickyNote note) {
     // TODO: 当前接口设计限制，复制功能需要在上层组件中实现
     // 这里先显示提示信息，实际复制逻辑需要在MapItem级别处理
-    widget.onSuccess?.call('复制功能将在下个版本中实现');
+widget.onSuccess?.call(LocalizationService.instance.current.copyFeatureComingSoon_7281);
   }
 
   /// 切换折叠状态
@@ -782,7 +785,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       updatedAt: DateTime.now(),
     );
     widget.onStickyNoteUpdated(updatedNote);
-    widget.onSuccess?.call('便签已移到顶层');
+widget.onSuccess?.call(LocalizationService.instance.current.noteMovedToTop1234);
   }
 
   /// 构建便签标签管理区域
@@ -809,8 +812,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 6),
-              Text(
-                '标签',
+Text(
+                LocalizationService.instance.current.label_5421,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -830,8 +833,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      '管理',
+child: Text(
+                      LocalizationService.instance.current.management_4821,
                       style: TextStyle(
                         fontSize: 10,
                         color: Theme.of(context).colorScheme.onPrimary,
@@ -852,11 +855,11 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   void _showStickyNoteTagsManagerDialog(StickyNote note) async {
     final currentTags = note.tags ?? [];
 
-    final result = await TagsManagerUtils.showTagsDialog(
+final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: '管理便签标签 - ${note.title}',
-      maxTags: 10, // 限制最多10个标签
+      title: LocalizationService.instance.current.manageNoteTagsTitle(note.title),
+      maxTags: 10, // LocalizationService.instance.current.maxTagsLimit
       suggestedTags: _getStickyNoteSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
       enableCustomTagsManagement: true,
@@ -870,9 +873,9 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
       widget.onStickyNoteUpdated(updatedNote);
 
       if (result.isEmpty) {
-        widget.onSuccess?.call('已清空便签标签');
+widget.onSuccess?.call(LocalizationService.instance.current.notesTagsCleared_7281);
       } else {
-        widget.onSuccess?.call('便签标签已更新 (${result.length}个标签)');
+widget.onSuccess?.call(LocalizationService.instance.current.noteTagsUpdated(result.length));
       }
     }
   }
@@ -880,8 +883,8 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
   /// 构建便签标签显示
   Widget _buildStickyNoteTagsDisplay(List<String> tags) {
     if (tags.isEmpty) {
-      return Text(
-        '暂无标签',
+return Text(
+        LocalizationService.instance.current.noTagsAvailable_7281,
         style: TextStyle(
           fontSize: 11,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -916,19 +919,19 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
 
   /// 获取便签建议标签
   List<String> _getStickyNoteSuggestedTags() {
-    return [
-      '重要',
-      '待办',
-      '已完成',
-      '临时',
-      '提醒',
-      '想法',
-      '计划',
-      '问题',
-      '解决方案',
-      '备注',
-      '分析',
-      '总结',
+return [
+      LocalizationService.instance.current.important_1234,
+      LocalizationService.instance.current.todo_5678,
+      LocalizationService.instance.current.completed_9012,
+      LocalizationService.instance.current.temporary_3456,
+      LocalizationService.instance.current.reminder_7890,
+      LocalizationService.instance.current.idea_2345,
+      LocalizationService.instance.current.plan_6789,
+      LocalizationService.instance.current.problem_0123,
+      LocalizationService.instance.current.solution_4567,
+      LocalizationService.instance.current.note_8901,
+      LocalizationService.instance.current.analysis_2346,
+      LocalizationService.instance.current.summary_7892,
     ];
   }
 }

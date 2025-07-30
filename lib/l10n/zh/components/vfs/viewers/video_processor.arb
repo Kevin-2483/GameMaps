@@ -1,0 +1,14 @@
+{
+  "videoProcessorStartConversion_7281": "🎥 VideoProcessor.convertMarkdownVideos: 开始转换",
+  "videoProcessorConvertMarkdownVideos_7425": "VideoProcessor.convertMarkdownVideos: 转换 {src}",
+  "generateTagMessage": "生成标签 {videoTag}",
+  "videoConversionComplete_7281": "🎥 VideoProcessor.convertMarkdownVideos: 转换完成",
+  "videoNodeBuildStart": "开始构建 - src: {src}",
+  "videoNodeCreationLog": "🎥 VideoNode: 创建节点 - attributes: {attributes}, textContent: {textContent}",
+  "videoNodeBuildLog": "🎥 VideoNode.build: 返回WidgetSpan - MediaKitVideoPlayer(url: {src})",
+  "videoTagMatched": "匹配到视频标签 - {matchValue}",
+  "videoElementCreationLog": "🎥 VideoSyntax.onMatch: 创建视频元素 - tag: {tag}, attributes: {attributes}",
+  "videoProcessorDebug": "🎥 VideoProcessor.containsVideo: text长度={textLength}, 包含视频={result}",
+  "videoProcessorCreated_4821": "🎥 VideoProcessor: 创建视频生成器",
+  "videoNodeGenerationLog": "🎥 VideoProcessor: 生成VideoNode - tag: {tag}, attributes: {attributes}, textContent: {textContent}"
+}

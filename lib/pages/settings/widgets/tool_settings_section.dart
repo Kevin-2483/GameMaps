@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
@@ -6,6 +7,8 @@ import '../../../components/color_picker_dialog.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class ToolSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -23,7 +26,7 @@ class ToolSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '工具设置',
+              LocalizationService.instance.current.toolSettings_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -32,7 +35,7 @@ class ToolSettingsSection extends StatelessWidget {
 
             // 最近使用的颜色
             Text(
-              '最近使用的颜色',
+              LocalizationService.instance.current.recentlyUsedColors_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -83,13 +86,17 @@ class ToolSettingsSection extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () => _addNewColor(context, provider),
                   icon: Icon(Icons.add),
-                  label: Text('添加颜色'),
+                  label: Text(
+                    LocalizationService.instance.current.addColor_7421,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _clearRecentColors(context, provider),
                   icon: Icon(Icons.clear_all),
-                  label: Text('清空'),
+                  label: Text(
+                    LocalizationService.instance.current.clearText_4821,
+                  ),
                 ),
               ],
             ),
@@ -98,7 +105,7 @@ class ToolSettingsSection extends StatelessWidget {
 
             // 自定义颜色
             Text(
-              '自定义颜色',
+              LocalizationService.instance.current.customColor_7421,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -150,13 +157,17 @@ class ToolSettingsSection extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () => _addNewCustomColor(context, provider),
                   icon: Icon(Icons.add),
-                  label: Text('添加自定义颜色'),
+                  label: Text(
+                    LocalizationService.instance.current.addCustomColor_4271,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _clearCustomColors(context, provider),
                   icon: Icon(Icons.clear_all),
-                  label: Text('清空'),
+                  label: Text(
+                    LocalizationService.instance.current.clearButton_7421,
+                  ),
                 ),
               ],
             ),
@@ -166,7 +177,7 @@ class ToolSettingsSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '常用线条宽度',
+                  LocalizationService.instance.current.commonLineWidth_4521,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -195,14 +206,16 @@ class ToolSettingsSection extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _addStrokeWidth(context, provider),
               icon: Icon(Icons.add),
-              label: Text('添加线条宽度'),
+              label: Text(
+                LocalizationService.instance.current.addLineWidth_4821,
+              ),
             ),
 
             const SizedBox(height: 16),
 
             // 工具栏布局
             Text(
-              '工具栏布局',
+              LocalizationService.instance.current.toolbarLayout_4521,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -243,8 +256,12 @@ class ToolSettingsSection extends StatelessWidget {
 
             // 显示高级工具
             SwitchListTile(
-              title: Text('显示高级工具'),
-              subtitle: Text('在工具栏中显示专业级工具'),
+              title: Text(
+                LocalizationService.instance.current.showAdvancedTools_4271,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.showProToolsInToolbar_4271,
+              ),
               value: tools.showAdvancedTools,
               onChanged: (value) =>
                   provider.updateTools(showAdvancedTools: value),
@@ -254,18 +271,23 @@ class ToolSettingsSection extends StatelessWidget {
 
             // 拖动控制柄大小
             Text(
-              '拖动控制柄大小',
+              LocalizationService.instance.current.dragHandleSizeHint_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             ListTile(
-              title: Text('控制柄大小'),
+              title: Text(LocalizationService.instance.current.handleSize_4821),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('调整绘制元素控制柄的大小'),
+                  Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .adjustDrawingElementHandleSize_7281,
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -285,7 +307,9 @@ class ToolSettingsSection extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    '当前: ${tools.handleSize.round()}px',
+                    LocalizationService.instance.current.currentSize_7421(
+                      tools.handleSize.round(),
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -301,7 +325,12 @@ class ToolSettingsSection extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _resetToolSettings(context, provider),
                     icon: Icon(Icons.restore),
-                    label: Text('重置工具设置'),
+                    label: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .resetToolSettings_4271,
+                    ),
                   ),
                 ),
               ],
@@ -314,13 +343,15 @@ class ToolSettingsSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '自定义标签',
+                  LocalizationService.instance.current.customLabel_7281,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '${tools.customTags.length} 个标签',
+                  LocalizationService.instance.current.tagCount(
+                    tools.customTags.length,
+                  ),
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
@@ -360,7 +391,7 @@ class ToolSettingsSection extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    '暂无自定义标签',
+                    LocalizationService.instance.current.noCustomTags_7281,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                 ),
@@ -374,20 +405,26 @@ class ToolSettingsSection extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () => _showTagsManager(context, provider),
                   icon: const Icon(Icons.label),
-                  label: const Text('管理标签'),
+                  label: Text(
+                    LocalizationService.instance.current.manageTags_4271,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _addCustomTag(context, provider),
                   icon: const Icon(Icons.add),
-                  label: const Text('添加标签'),
+                  label: Text(
+                    LocalizationService.instance.current.addLabel_4271,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 if (tools.customTags.isNotEmpty)
                   OutlinedButton.icon(
                     onPressed: () => _clearCustomTags(context, provider),
                     icon: const Icon(Icons.clear_all),
-                    label: const Text('清空'),
+                    label: Text(
+                      LocalizationService.instance.current.clearText_4821,
+                    ),
                   ),
               ],
             ),
@@ -396,7 +433,7 @@ class ToolSettingsSection extends StatelessWidget {
 
             // TTS 设置
             Text(
-              'TTS 语音合成设置',
+              LocalizationService.instance.current.ttsSettingsTitle_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -405,8 +442,15 @@ class ToolSettingsSection extends StatelessWidget {
 
             // TTS 启用开关
             SwitchListTile(
-              title: Text('启用语音合成'),
-              subtitle: Text('开启后将支持语音朗读功能'),
+              title: Text(
+                LocalizationService.instance.current.enableSpeechSynthesis_4271,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .enableVoiceReadingFeature_4821,
+              ),
               value: tools.tts.enabled,
               onChanged: (value) {
                 provider.updateTools(tts: tools.tts.copyWith(enabled: value));
@@ -428,15 +472,22 @@ class ToolSettingsSection extends StatelessWidget {
 
               // 语音速度
               ListTile(
-                title: Text('语音速度'),
+                title: Text(
+                  LocalizationService.instance.current.voiceSpeed_4251,
+                ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('调整语音播放速度'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .adjustVoiceSpeed_4271,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text('慢'),
+                        Text(LocalizationService.instance.current.slow_7284),
                         Expanded(
                           child: Slider(
                             value: tools.tts.speechRate.clamp(0.1, 1.0),
@@ -451,11 +502,13 @@ class ToolSettingsSection extends StatelessWidget {
                             },
                           ),
                         ),
-                        Text('快'),
+                        Text(LocalizationService.instance.current.fast_4821),
                       ],
                     ),
                     Text(
-                      '当前: ${(tools.tts.speechRate * 100).round()}%',
+                      LocalizationService.instance.current.currentSpeechRate(
+                        (tools.tts.speechRate * 100).round(),
+                      ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -464,11 +517,18 @@ class ToolSettingsSection extends StatelessWidget {
 
               // 音量
               ListTile(
-                title: Text('音量'),
+                title: Text(
+                  LocalizationService.instance.current.volumeTitle_4821,
+                ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('调整语音播放音量'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .adjustVoiceVolume_4251,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -491,7 +551,9 @@ class ToolSettingsSection extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      '当前: ${(tools.tts.volume * 100).round()}%',
+                      LocalizationService.instance.current.currentVolume(
+                        (tools.tts.volume * 100).round(),
+                      ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -500,15 +562,22 @@ class ToolSettingsSection extends StatelessWidget {
 
               // 音调
               ListTile(
-                title: Text('音调'),
+                title: Text(
+                  LocalizationService.instance.current.toneTitle_4821,
+                ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('调整语音音调高低'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .adjustVoicePitch_4271,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text('低'),
+                        Text(LocalizationService.instance.current.low_7284),
                         Expanded(
                           child: Slider(
                             value: tools.tts.pitch.clamp(0.5, 2.0),
@@ -523,11 +592,13 @@ class ToolSettingsSection extends StatelessWidget {
                             },
                           ),
                         ),
-                        Text('高'),
+                        Text(LocalizationService.instance.current.high_7281),
                       ],
                     ),
                     Text(
-                      '当前: ${tools.tts.pitch.toStringAsFixed(1)}',
+                      LocalizationService.instance.current.currentPitch(
+                        tools.tts.pitch.toStringAsFixed(1),
+                      ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -550,13 +621,20 @@ class ToolSettingsSection extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () => _testTts(context),
                     icon: Icon(Icons.play_arrow),
-                    label: Text('测试语音'),
+                    label: Text(
+                      LocalizationService.instance.current.testVoice_7281,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () => _resetTtsSettings(context, provider),
                     icon: Icon(Icons.restore),
-                    label: Text('重置TTS设置'),
+                    label: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .resetTtsSettings_4271,
+                    ),
                   ),
                 ],
               ),
@@ -585,7 +663,7 @@ class ToolSettingsSection extends StatelessWidget {
     ColorPicker.showColorPicker(
       context: context,
       initialColor: Colors.blue,
-      title: '添加最近使用颜色',
+      title: LocalizationService.instance.current.addRecentColorsTitle_7421,
       enableAlpha: true,
     ).then((selectedColor) {
       if (selectedColor != null) {
@@ -601,19 +679,23 @@ class ToolSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('清空最近颜色'),
-        content: Text('确定要清空所有最近使用的颜色吗？'),
+        title: Text(
+          LocalizationService.instance.current.clearRecentColors_4271,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmClearRecentColors_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
               provider.updateTools(recentColors: []);
               Navigator.of(context).pop();
             },
-            child: Text('清空'),
+            child: Text(LocalizationService.instance.current.clearText_4821),
           ),
         ],
       ),
@@ -631,7 +713,9 @@ class ToolSettingsSection extends StatelessWidget {
 
     // 检查是否已达到最大数量限制
     if (currentWidths.length >= 5) {
-      context.showInfoSnackBar('最多只能添加5个常用线条宽度');
+      context.showInfoSnackBar(
+        LocalizationService.instance.current.maxLineWidthLimit_4821,
+      );
       return;
     }
 
@@ -640,15 +724,21 @@ class ToolSettingsSection extends StatelessWidget {
       builder: (context) {
         double newWidth = 1.0;
         return AlertDialog(
-          title: Text('添加线条宽度'),
+          title: Text(LocalizationService.instance.current.addLineWidth_4821),
           content: StatefulBuilder(
             builder: (context, setState) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('宽度: ${newWidth.round()}px'),
+                Text(
+                  LocalizationService.instance.current.widthWithPx_7421(
+                    newWidth.round(),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  '当前数量: ${currentWidths.length}/5',
+                  LocalizationService.instance.current.currentCount(
+                    currentWidths.length,
+                  ),
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -665,14 +755,19 @@ class ToolSettingsSection extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             ElevatedButton(
               onPressed: () {
                 final newWidths = List<double>.from(currentWidths);
                 if (!newWidths.contains(newWidth)) {
                   if (newWidths.length >= 5) {
-                    context.showInfoSnackBar('最多只能添加5个常用线条宽度');
+                    context.showInfoSnackBar(
+                      LocalizationService
+                          .instance
+                          .current
+                          .maxLineWidthLimit_4821,
+                    );
                     return;
                   }
                   newWidths.add(newWidth);
@@ -680,12 +775,18 @@ class ToolSettingsSection extends StatelessWidget {
                   provider.updateTools(favoriteStrokeWidths: newWidths);
                   Navigator.of(context).pop();
 
-                  context.showSuccessSnackBar('已添加线条宽度 ${newWidth.round()}px');
+                  context.showSuccessSnackBar(
+                    LocalizationService.instance.current.lineWidthAdded(
+                      newWidth.round(),
+                    ),
+                  );
                 } else {
-                  context.showInfoSnackBar('该线条宽度已存在');
+                  context.showInfoSnackBar(
+                    LocalizationService.instance.current.lineWidthExists_4821,
+                  );
                 }
               },
-              child: Text('添加'),
+              child: Text(LocalizationService.instance.current.addButton_7421),
             ),
           ],
         );
@@ -774,12 +875,19 @@ class ToolSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('重置工具设置'),
-        content: Text('确定要将工具设置重置为默认值吗？此操作不可撤销。'),
+        title: Text(
+          LocalizationService.instance.current.resetToolSettings_4271,
+        ),
+        content: Text(
+          LocalizationService
+              .instance
+              .current
+              .resetToolSettingsConfirmation_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -792,13 +900,15 @@ class ToolSettingsSection extends StatelessWidget {
                 showAdvancedTools: defaultTools.showAdvancedTools,
               );
               Navigator.of(context).pop();
-              context.showSuccessSnackBar('工具设置已重置');
+              context.showSuccessSnackBar(
+                LocalizationService.instance.current.toolSettingsReset_4821,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: Text('重置'),
+            child: Text(LocalizationService.instance.current.resetButton_5421),
           ),
         ],
       ),
@@ -826,7 +936,7 @@ class ToolSettingsSection extends StatelessWidget {
     ColorPicker.showColorPicker(
       context: context,
       initialColor: Colors.purple,
-      title: '添加自定义颜色',
+      title: LocalizationService.instance.current.addCustomColor_7421,
       enableAlpha: true,
     ).then((selectedColor) {
       if (selectedColor != null) {
@@ -842,19 +952,23 @@ class ToolSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('清空自定义颜色'),
-        content: Text('确定要清空所有自定义颜色吗？'),
+        title: Text(
+          LocalizationService.instance.current.clearCustomColors_4271,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmClearCustomColors_7421,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
               provider.updateTools(customColors: []);
               Navigator.of(context).pop();
             },
-            child: Text('清空'),
+            child: Text(LocalizationService.instance.current.clearText_4821),
           ),
         ],
       ),
@@ -892,12 +1006,14 @@ class ToolSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('清空自定义标签'),
-        content: const Text('确定要清空所有自定义标签吗？'),
+        title: Text(LocalizationService.instance.current.clearCustomTags_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmClearAllTags_7281,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -905,7 +1021,10 @@ class ToolSettingsSection extends StatelessWidget {
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('清空', style: TextStyle(color: Colors.white)),
+            child: Text(
+              LocalizationService.instance.current.clearText_4821,
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -1000,12 +1119,16 @@ class ToolSettingsSection extends StatelessWidget {
 
       if (context.mounted) {
         context.showSuccessSnackBar(
-          'TTS 测试已开始播放 (${_getLanguageDisplayName(currentLanguage ?? 'zh-CN')})',
+          LocalizationService.instance.current.ttsTestStartedPlaying(
+            _getLanguageDisplayName(currentLanguage ?? 'zh-CN'),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        context.showErrorSnackBar('TTS 测试失败: ${e.toString()}');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.ttsTestFailed(e.toString()),
+        );
       }
     }
   }
@@ -1055,24 +1178,28 @@ class ToolSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重置TTS设置'),
-        content: const Text('确定要重置TTS设置为默认值吗？'),
+        title: Text(LocalizationService.instance.current.resetTtsSettings_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmResetTtsSettings_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               provider.updateTools(tts: TtsPreferences.createDefault());
-              context.showSuccessSnackBar('TTS设置已重置');
+              context.showSuccessSnackBar(
+                LocalizationService.instance.current.ttsSettingsReset_4821,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: const Text('重置'),
+            child: Text(LocalizationService.instance.current.resetButton_7421),
           ),
         ],
       ),
@@ -1115,7 +1242,7 @@ class _AddCustomTagDialogState extends State<_AddCustomTagDialog> {
     // 检查是否已存在
     if (widget.provider.tools.customTags.contains(tag)) {
       setState(() {
-        _errorText = '标签已存在';
+        _errorText = LocalizationService.instance.current.tagAlreadyExists_7281;
       });
       return;
     }
@@ -1130,12 +1257,12 @@ class _AddCustomTagDialogState extends State<_AddCustomTagDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('添加自定义标签'),
+      title: Text(LocalizationService.instance.current.addCustomTag_4271),
       content: TextField(
         controller: _controller,
         decoration: InputDecoration(
-          labelText: '标签名称',
-          hintText: '输入标签名称',
+          labelText: LocalizationService.instance.current.labelName_4821,
+          hintText: LocalizationService.instance.current.hintLabelName_7532,
           border: const OutlineInputBorder(),
           errorText: _errorText,
         ),
@@ -1151,9 +1278,12 @@ class _AddCustomTagDialogState extends State<_AddCustomTagDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
-        ElevatedButton(onPressed: _addTag, child: const Text('添加')),
+        ElevatedButton(
+          onPressed: _addTag,
+          child: Text(LocalizationService.instance.current.addButton_7284),
+        ),
       ],
     );
   }
@@ -1306,11 +1436,11 @@ class _TtsLanguageSelectorState extends State<_TtsLanguageSelector> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: const Text('语言'),
+      title: Text(LocalizationService.instance.current.languageSetting_4821),
       subtitle: Text(
         widget.currentLanguage != null
             ? _getLanguageDisplayName(widget.currentLanguage!)
-            : '默认',
+            : LocalizationService.instance.current.defaultLanguage_7421,
       ),
       trailing: _isLoading
           ? const SizedBox(
@@ -1321,7 +1451,12 @@ class _TtsLanguageSelectorState extends State<_TtsLanguageSelector> {
           : DropdownButton<String>(
               value: widget.currentLanguage,
               items: [
-                const DropdownMenuItem(value: null, child: Text('默认')),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    LocalizationService.instance.current.defaultOption_7281,
+                  ),
+                ),
                 if (_availableLanguages != null)
                   ..._availableLanguages!.map<DropdownMenuItem<String>>((lang) {
                     final languageCode = lang.toString();
@@ -1442,11 +1577,12 @@ class _TtsVoiceSelectorState extends State<_TtsVoiceSelector> {
       return locale;
     }
 
-    return '未知语音';
+    return LocalizationService.instance.current.unknownVoice_4821;
   }
 
   String _getCurrentVoiceDisplayName() {
-    if (widget.currentVoice == null) return '默认';
+    if (widget.currentVoice == null)
+      return LocalizationService.instance.current.defaultVoice_4821;
 
     final name = widget.currentVoice!['name'] ?? '';
     final locale = widget.currentVoice!['locale'] ?? '';
@@ -1457,7 +1593,7 @@ class _TtsVoiceSelectorState extends State<_TtsVoiceSelector> {
       return name;
     }
 
-    return '自定义语音';
+    return LocalizationService.instance.current.customVoice_5732;
   }
 
   @override
@@ -1466,7 +1602,7 @@ class _TtsVoiceSelectorState extends State<_TtsVoiceSelector> {
     final currentVoiceId = _getCurrentVoiceId();
 
     return ListTile(
-      title: const Text('语音'),
+      title: Text(LocalizationService.instance.current.voiceTitle_4271),
       subtitle: Text(_getCurrentVoiceDisplayName()),
       trailing: _isLoading
           ? const SizedBox(
@@ -1477,9 +1613,11 @@ class _TtsVoiceSelectorState extends State<_TtsVoiceSelector> {
           : DropdownButton<String>(
               value: currentVoiceId,
               items: [
-                const DropdownMenuItem<String>(
+                DropdownMenuItem<String>(
                   value: 'default',
-                  child: Text('默认'),
+                  child: Text(
+                    LocalizationService.instance.current.defaultText_1234,
+                  ),
                 ),
                 ...filteredVoices.asMap().entries.map<DropdownMenuItem<String>>(
                   (entry) {

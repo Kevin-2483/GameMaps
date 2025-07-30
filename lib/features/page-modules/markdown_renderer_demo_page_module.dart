@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/demo/markdown_renderer_demo_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// Markdown 渲染器演示页面模块
 class MarkdownRendererDemoPageModule extends PageModule {
@@ -11,7 +14,8 @@ class MarkdownRendererDemoPageModule extends PageModule {
   String get path => '/demo/markdown';
 
   @override
-  String get displayName => 'Markdown 渲染器演示';
+  String get displayName =>
+      LocalizationService.instance.current.markdownRendererDemo_4821;
 
   @override
   IconData get icon => Icons.code;

@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:typed_data';
+
+import '../services/localization_service.dart';
 
 /// Web平台下载助手类
 /// 使用HTML5的download API实现文件下载
@@ -35,7 +38,9 @@ class WebDownloadHelper {
       html.document.body?.children.remove(anchor);
       html.Url.revokeObjectUrl(url);
     } catch (e) {
-      throw Exception('Web文件下载失败: $e');
+      throw Exception(
+        LocalizationService.instance.current.webDownloadFailed_7285(e),
+      );
     }
   }
 }

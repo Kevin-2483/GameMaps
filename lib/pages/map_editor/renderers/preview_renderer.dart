@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 // import 'dart:ui' as ui;
 // import 'dart:typed_data';
 // import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../utils/drawing_utils.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 预览渲染器 - 负责绘制正在绘制过程中的预览内容
 class PreviewRenderer {
@@ -112,7 +115,7 @@ class PreviewRenderer {
       // 绘制文本预览提示
       final textPainter = TextPainter(
         text: TextSpan(
-          text: "点击添加文本",
+          text: LocalizationService.instance.current.clickToAddText_7281,
           style: TextStyle(
             color: color.withAlpha((0.7 * 255).toInt()),
             fontSize: 12.0,

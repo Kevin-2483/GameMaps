@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'work_status_action.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 工作状态管理服务
 /// 用于管理应用程序的工作状态，当应用处于工作状态时：
@@ -50,7 +53,11 @@ class WorkStatusService extends ChangeNotifier {
       _workDescription = description;
       notifyListeners();
       if (kDebugMode) {
-        debugPrint('工作状态开始: $description');
+        debugPrint(
+          LocalizationService.instance.current.workStatusStart_7285(
+            description,
+          ),
+        );
       }
     } else if (_workDescription != description) {
       _workDescription = description;
@@ -78,7 +85,7 @@ class WorkStatusService extends ChangeNotifier {
       _actions = []; // 清空操作控件
       notifyListeners();
       if (kDebugMode) {
-        debugPrint('工作状态结束');
+        debugPrint(LocalizationService.instance.current.workStatusEnded_7281);
       }
     }
   }
@@ -108,7 +115,9 @@ class WorkStatusService extends ChangeNotifier {
       _actions = []; // 清空操作控件
       notifyListeners();
       if (kDebugMode) {
-        debugPrint('强制结束所有工作状态');
+        debugPrint(
+          LocalizationService.instance.current.forceTerminateAllWorkStatus_4821,
+        );
       }
     }
   }

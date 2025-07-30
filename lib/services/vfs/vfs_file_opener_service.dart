@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../components/vfs/viewers/vfs_image_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_text_viewer_window.dart';
@@ -5,6 +6,8 @@ import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_video_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_audio_player_window.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS文件打开配置
 class VfsFileOpenConfig {
@@ -147,7 +150,11 @@ class VfsFileOpenerService {
         fileInfo: fileInfo,
       );
     } catch (e) {
-      _showErrorDialog(context, '打开文件失败', e.toString());
+      _showErrorDialog(
+        context,
+        LocalizationService.instance.current.fileOpenFailed_5421,
+        e.toString(),
+      );
     }
   }
 
@@ -346,25 +353,37 @@ class VfsFileOpenerService {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('不支持的文件类型'),
+        title: Text(
+          LocalizationService.instance.current.unsupportedFileType_4271,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('文件名: $fileName'),
-            Text('文件类型: .$extension'),
+            Text(LocalizationService.instance.current.fileNameLabel(fileName)),
+            Text(
+              LocalizationService.instance.current.fileTypeWithExtension(
+                extension,
+              ),
+            ),
             const SizedBox(height: 16),
-            const Text('当前支持的文件类型:'),
-            const Text('• 图片: png, jpg, jpeg, gif, bmp, webp, svg'),
-            const Text('• 视频: mp4, avi, mov, wmv'),
-            const Text('• 文本: txt, log, csv, json'),
+            Text(LocalizationService.instance.current.supportedFileTypes_4821),
+            Text(
+              LocalizationService.instance.current.supportedImageFormats_7281,
+            ),
+            Text(LocalizationService.instance.current.videoFormats_7281),
+            Text(
+              LocalizationService.instance.current.supportedTextFormats_7281,
+            ),
             const Text('• Markdown: md, markdown'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -385,7 +404,9 @@ class VfsFileOpenerService {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),

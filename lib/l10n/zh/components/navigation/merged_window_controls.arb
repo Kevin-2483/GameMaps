@@ -1,0 +1,11 @@
+{
+  "closeButton_5421": "关闭",
+  "closeButton_7281": "关闭",
+  "minimizeButton_4821": "最小化",
+  "windowSizeSaveRequestSent_7281": "窗口大小保存请求已发送（非最大化状态）",
+  "maximizeOrRestore_7281": "最大化/还原",
+  "exitFullscreen_4821": "退出全屏",
+  "enterFullscreen_4822": "全屏",
+  "skipSaveMaximizedState_4821": "跳过保存：当前处于最大化状态",
+  "saveWindowSizeFailed_7285": "保存窗口大小失败: {e}"
+}

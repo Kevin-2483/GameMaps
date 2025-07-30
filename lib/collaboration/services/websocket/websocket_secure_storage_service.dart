@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fast_rsa/fast_rsa.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// RSA 密钥对
 class KeyPair {
@@ -39,7 +42,9 @@ class WebSocketSecureStorageService {
   Future<void> initialize() async {
     // 安全存储服务不需要特殊初始化，_secureStorage 已在构造时初始化
     if (kDebugMode) {
-      debugPrint('WebSocket 安全存储服务初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.webSocketInitComplete_4821,
+      );
     }
   }
 
@@ -53,7 +58,9 @@ class WebSocketSecureStorageService {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('生成 RSA 密钥对失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.rsaKeyPairGenerationFailed(e),
+        );
       }
       rethrow;
     }
@@ -64,12 +71,21 @@ class WebSocketSecureStorageService {
     try {
       final pkixKey = await RSA.convertPublicKeyToPKIX(rsaPublicKeyPem);
       if (kDebugMode) {
-        debugPrint('公钥格式转换成功: RSA PUBLIC KEY → PUBLIC KEY');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .publicKeyFormatConversionSuccess_7281,
+        );
       }
       return pkixKey;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('公钥格式转换失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.publicKeyConversionFailed_7285(
+            e,
+          ),
+        );
       }
       rethrow;
     }
@@ -79,23 +95,31 @@ class WebSocketSecureStorageService {
   Future<KeyPair> generateServerCompatibleKeyPair() async {
     try {
       if (kDebugMode) {
-        debugPrint('开始生成2048位RSA密钥对...');
+        debugPrint(
+          LocalizationService.instance.current.generatingRsaKeyPair_7284,
+        );
       }
 
       final keyPair = await RSA.generate(2048);
       if (kDebugMode) {
-        debugPrint('RSA密钥对生成完成，开始转换公钥格式...');
+        debugPrint(
+          LocalizationService.instance.current.rsaKeyPairGenerated_7281,
+        );
       }
       // 转换公钥为 PKIX 格式 (PUBLIC KEY)
       final pkixPublicKey = await convertPublicKeyToPKIX(keyPair.publicKey);
       if (kDebugMode) {
-        debugPrint('公钥格式转换完成');
+        debugPrint(
+          LocalizationService.instance.current.publicKeyConversionComplete_4821,
+        );
       }
 
       return KeyPair(publicKey: pkixPublicKey, privateKey: keyPair.privateKey);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('生成服务器兼容密钥对失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.keyGenerationFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -114,21 +138,30 @@ class WebSocketSecureStorageService {
         await prefs.setString(storageKey, privateKeyPem);
         if (kDebugMode) {
           debugPrint(
-            '私钥已存储到 SharedPreferences ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId',
+            LocalizationService.instance.current.privateKeyStoredMessage(
+              kIsWeb ? "(Web)" : "(macOS)",
+              privateKeyId,
+            ),
           );
         }
       } else {
         // 其他平台使用安全存储
         await _secureStorage.write(key: storageKey, value: privateKeyPem);
         if (kDebugMode) {
-          debugPrint('私钥已安全存储: $privateKeyId');
+          debugPrint(
+            LocalizationService.instance.current.privateKeyStoredSafely_4821(
+              privateKeyId,
+            ),
+          );
         }
       }
 
       return privateKeyId;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('存储私钥失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.storePrivateKeyFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -146,27 +179,41 @@ class WebSocketSecureStorageService {
         privateKeyPem = prefs.getString(storageKey);
         if (kDebugMode && privateKeyPem != null) {
           debugPrint(
-            '私钥从 SharedPreferences 获取成功 ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId',
+            LocalizationService.instance.current
+                .privateKeyRetrievedSuccessfully_7281(
+                  kIsWeb ? "(Web)" : "(macOS)",
+                  privateKeyId,
+                ),
           );
         }
       } else {
         // 其他平台使用安全存储
         privateKeyPem = await _secureStorage.read(key: storageKey);
         if (kDebugMode && privateKeyPem != null) {
-          debugPrint('私钥获取成功: $privateKeyId');
+          debugPrint(
+            LocalizationService.instance.current.privateKeyObtainedSuccessfully(
+              privateKeyId,
+            ),
+          );
         }
       }
 
       if (privateKeyPem == null) {
         if (kDebugMode) {
-          debugPrint('私钥未找到: $privateKeyId');
+          debugPrint(
+            LocalizationService.instance.current.privateKeyNotFound_7281(
+              privateKeyId,
+            ),
+          );
         }
       }
 
       return privateKeyPem;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取私钥失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.privateKeyFetchFailed(e),
+        );
       }
       return null;
     }
@@ -183,19 +230,28 @@ class WebSocketSecureStorageService {
         await prefs.remove(storageKey);
         if (kDebugMode) {
           debugPrint(
-            '私钥已从 SharedPreferences 删除 ${kIsWeb ? "(Web)" : "(macOS)"}: $privateKeyId',
+            LocalizationService.instance.current.privateKeyRemovedLog(
+              kIsWeb ? "(Web)" : "(macOS)",
+              privateKeyId,
+            ),
           );
         }
       } else {
         // 其他平台使用安全存储
         await _secureStorage.delete(key: storageKey);
         if (kDebugMode) {
-          debugPrint('私钥已删除: $privateKeyId');
+          debugPrint(
+            LocalizationService.instance.current.privateKeyDeleted_7281(
+              privateKeyId,
+            ),
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('删除私钥失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.deletePrivateKeyFailed(e),
+        );
       }
       rethrow;
     }
@@ -210,7 +266,11 @@ class WebSocketSecureStorageService {
       // 获取私钥
       final privateKeyPem = await getPrivateKey(privateKeyId);
       if (privateKeyPem == null) {
-        throw Exception('私钥未找到: $privateKeyId');
+        throw Exception(
+          LocalizationService.instance.current.privateKeyNotFound_7285(
+            privateKeyId,
+          ),
+        );
       }
 
       // 解密数据
@@ -222,7 +282,11 @@ class WebSocketSecureStorageService {
       return decryptedData;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('使用私钥解密失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.privateKeyDecryptionFailed_4821(
+            e,
+          ),
+        );
       }
       rethrow;
     }
@@ -234,7 +298,11 @@ class WebSocketSecureStorageService {
       // 获取私钥
       final privateKeyPem = await getPrivateKey(privateKeyId);
       if (privateKeyPem == null) {
-        throw Exception('私钥未找到: $privateKeyId');
+        throw Exception(
+          LocalizationService.instance.current.privateKeyNotFound_7285(
+            privateKeyId,
+          ),
+        );
       }
 
       // 签名数据
@@ -247,7 +315,9 @@ class WebSocketSecureStorageService {
       return signature;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('使用私钥签名失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.privateKeySignFailed_7285(e),
+        );
       }
       rethrow;
     }
@@ -270,7 +340,9 @@ class WebSocketSecureStorageService {
       return privateKeyPem != null;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('检查私钥存在性失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.checkPrivateKeyFailed_4821(e),
+        );
       }
       return false;
     }
@@ -306,7 +378,9 @@ class WebSocketSecureStorageService {
       return privateKeyIds;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取所有私钥ID失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fetchPrivateKeyIdsFailed_7285(e),
+        );
       }
       return [];
     }
@@ -331,7 +405,9 @@ class WebSocketSecureStorageService {
 
         if (kDebugMode) {
           debugPrint(
-            '已从 SharedPreferences 清理 ${privateKeyKeys.length} 个私钥 ${kIsWeb ? "(Web)" : "(macOS)"}',
+            LocalizationService.instance.current.cleanedPrivateKeysCount(
+              '${privateKeyKeys.length} ${kIsWeb ? "(Web)" : "(macOS)"}',
+            ),
           );
         }
       } else {
@@ -346,12 +422,18 @@ class WebSocketSecureStorageService {
         }
 
         if (kDebugMode) {
-          debugPrint('已清理 ${privateKeyKeys.length} 个私钥');
+          debugPrint(
+            LocalizationService.instance.current.cleanedPrivateKeysCount(
+              privateKeyKeys.length,
+            ),
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理所有私钥失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clearPrivateKeysFailed_7421(e),
+        );
       }
       rethrow;
     }
@@ -372,13 +454,19 @@ class WebSocketSecureStorageService {
       );
 
       if (kDebugMode) {
-        debugPrint('签名验证结果: ${isValid ? "有效" : "无效"}');
+        debugPrint(
+          '${LocalizationService.instance.current.signatureVerificationResult_7425(isValid ? LocalizationService.instance.current.valid_8421 : LocalizationService.instance.current.invalid_9352)}',
+        );
       }
 
       return isValid;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('验证签名失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.signatureVerificationFailed_4829(
+            e,
+          ),
+        );
       }
       return false;
     }
@@ -395,7 +483,9 @@ class WebSocketSecureStorageService {
       };
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取存储统计信息失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.storageStatsError_4821(e),
+        );
       }
       return {
         'private_key_count': 0,

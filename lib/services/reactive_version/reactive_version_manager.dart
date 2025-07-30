@@ -1,8 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
 import '../../services/legend_cache_manager.dart';
 import '../legend_vfs/legend_vfs_service.dart';
+import '../localization_service.dart';
 
 /// 版本会话状态（响应式）
 class ReactiveVersionState {
@@ -177,7 +179,7 @@ class ReactiveVersionManager extends ChangeNotifier {
       _currentVersionId = versionId;
     }
 
-    debugPrint('初始化版本会话 [$mapTitle/$versionId]: ${versionName ?? versionId}');
+debugPrint(LocalizationService.instance.current.initVersionSession(mapTitle, versionId, versionName ?? versionId));
     notifyListeners();
     return state;
   }
@@ -190,7 +192,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     Map<String, dynamic>? metadata,
   }) {
     if (_versionStates.containsKey(versionId)) {
-      throw ArgumentError('版本已存在: $versionId');
+throw ArgumentError(LocalizationService.instance.current.versionExists_7285(versionId));
     }
     MapItem? initialData;
 
@@ -198,8 +200,8 @@ class ReactiveVersionManager extends ChangeNotifier {
     if (sourceVersionId != null &&
         _versionStates.containsKey(sourceVersionId)) {
       initialData = _versionStates[sourceVersionId]?.sessionData;
-      debugPrint(
-        '从版本 $sourceVersionId 复制数据: ${initialData != null ? '有数据(图层数: ${initialData.layers.length})' : '无数据'}',
+debugPrint(
+        LocalizationService.instance.current.copyDataFromVersion(sourceVersionId, initialData != null ? LocalizationService.instance.current.dataWithLayers_5729(initialData.layers.length) : LocalizationService.instance.current.noData_6943),
       );
     }
 
@@ -214,7 +216,7 @@ class ReactiveVersionManager extends ChangeNotifier {
       }
 
       _versionPathSelections[versionId] = newVersionPathSelections;
-      debugPrint('从版本 $sourceVersionId 复制路径选择状态到 $versionId');
+debugPrint(LocalizationService.instance.current.copyPathSelectionStatus(sourceVersionId, versionId));
     } else {
       // 创建空的路径选择状态
       _versionPathSelections[versionId] = <String, Set<String>>{};
@@ -227,9 +229,9 @@ class ReactiveVersionManager extends ChangeNotifier {
       metadata: metadata,
     );
 
-    debugPrint(
-      '创建新版本会话 [$mapTitle/$versionId]: $versionName' +
-          (sourceVersionId != null ? ' (从 $sourceVersionId 复制)' : ''),
+debugPrint(
+      LocalizationService.instance.current.createVersionSession_4821(mapTitle, versionId, versionName) +
+          (sourceVersionId != null ? LocalizationService.instance.current.copiedFrom_5729(sourceVersionId) : ''),
     );
 
     return state;
@@ -238,11 +240,11 @@ class ReactiveVersionManager extends ChangeNotifier {
   /// 删除版本（仅从内存中删除会话状态）
   void deleteVersion(String versionId) {
     if (versionId == 'default') {
-      throw ArgumentError('无法删除默认版本');
+throw ArgumentError(LocalizationService.instance.current.cannotDeleteDefaultVersion_4271);
     }
 
     if (!_versionStates.containsKey(versionId)) {
-      debugPrint('版本不存在，无需删除: $versionId');
+debugPrint(LocalizationService.instance.current.versionNotExistNeedDelete(versionId));
       return;
     }
 
@@ -262,20 +264,20 @@ class ReactiveVersionManager extends ChangeNotifier {
       _activeEditingVersionId = null;
     }
 
-    debugPrint('删除版本会话 [$mapTitle/$versionId]');
+debugPrint(LocalizationService.instance.current.deleteVersionSession(mapTitle, versionId));
     notifyListeners();
   }
 
   /// 切换到指定版本
   void switchToVersion(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-      throw ArgumentError('版本不存在: $versionId');
+throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_4821(versionId));
     }
 
     final previousVersionId = _currentVersionId;
     _currentVersionId = versionId;
 
-    debugPrint('切换版本 [$mapTitle]: $previousVersionId -> $versionId');
+debugPrint(LocalizationService.instance.current.versionSwitchLog_7421(mapTitle, previousVersionId ?? 'null', versionId));
     notifyListeners();
   }
 
@@ -290,7 +292,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     Function(String legendGroupId, String path)? onPathAdded,
     Function(String legendGroupId, String path)? onPathRemoved,
   }) {
-    debugPrint('开始比较版本路径差异: $fromVersionId -> $toVersionId');
+debugPrint(LocalizationService.instance.current.compareVersionPathDiff_4827(fromVersionId, toVersionId));
 
     // 确保两个版本的路径选择数据存在
     _ensureVersionPathSelectionExists(fromVersionId);
@@ -301,7 +303,7 @@ class ReactiveVersionManager extends ChangeNotifier {
 
     // 验证路径数据
     if (fromPaths.isEmpty && toPaths.isEmpty) {
-      debugPrint('警告: 两个版本都没有路径选择数据');
+debugPrint(LocalizationService.instance.current.versionWarning_4821);
       return;
     }
 
@@ -331,19 +333,19 @@ class ReactiveVersionManager extends ChangeNotifier {
       }
     }
 
-    debugPrint('路径差异分析完成:');
-    debugPrint(
-      '  新增路径: ${addedPaths.values.fold(0, (sum, set) => sum + set.length)} 个',
+debugPrint(LocalizationService.instance.current.pathDiffAnalysisComplete_7281);
+debugPrint(
+      LocalizationService.instance.current.addedPathsCount(addedPaths.values.fold(0, (sum, set) => (sum as int) + set.length)),
     );
-    debugPrint(
-      '  移除路径: ${removedPaths.values.fold(0, (sum, set) => sum + set.length)} 个',
+debugPrint(
+      LocalizationService.instance.current.removedPathsCount_7421(removedPaths.values.fold(0, (sum, set) => (sum as int) + set.length)),
     );
 
     // 处理新增的路径（加载到缓存）
     for (final entry in addedPaths.entries) {
       final legendGroupId = entry.key;
       for (final path in entry.value) {
-        debugPrint('加载路径到缓存: $legendGroupId -> $path');
+debugPrint(LocalizationService.instance.current.loadingPathToCache(legendGroupId, path));
         onPathAdded?.call(legendGroupId, path);
         _loadPathToCache(path);
       }
@@ -356,11 +358,11 @@ class ReactiveVersionManager extends ChangeNotifier {
         // 检查该路径是否还被目标版本的其他图例组使用
         final stillUsed = toPaths.values.any((paths) => paths.contains(path));
         if (!stillUsed) {
-          debugPrint('从缓存清理路径: $legendGroupId -> $path');
+debugPrint(LocalizationService.instance.current.cacheCleanPath(legendGroupId, path));
           onPathRemoved?.call(legendGroupId, path);
           _clearPathFromCache(path);
         } else {
-          debugPrint('路径仍被其他图例组使用，跳过清理: $path');
+debugPrint(LocalizationService.instance.current.pathStillInUse(path));
         }
       }
     }
@@ -383,7 +385,7 @@ class ReactiveVersionManager extends ChangeNotifier {
   /// 将路径加载到缓存
   Future<void> _loadPathToCache(String path) async {
     try {
-      debugPrint('正在加载路径到缓存: $path');
+debugPrint(LocalizationService.instance.current.loadingPathToCache_7281(path));
 
       final cacheManager = LegendCacheManager();
       final legendService = LegendVfsService();
@@ -391,7 +393,7 @@ class ReactiveVersionManager extends ChangeNotifier {
       // 获取目录下的所有图例文件
       final legendFiles = await legendService.getLegendsInFolder(path);
 
-      debugPrint('在路径 $path 中找到 ${legendFiles.length} 个图例文件');
+debugPrint(LocalizationService.instance.current.legendFilesFound_7281(path, legendFiles.length));
 
       // 逐个加载图例到缓存
       for (final legendFile in legendFiles) {
@@ -400,15 +402,15 @@ class ReactiveVersionManager extends ChangeNotifier {
 
           // 使用缓存管理器的异步加载方法
           await cacheManager.getLegendData(legendPath);
-          debugPrint('已加载到缓存: $legendPath');
+debugPrint(LocalizationService.instance.current.loadedToCache_7281(legendPath));
         } catch (e) {
-          debugPrint('加载图例失败: $legendFile, 错误: $e');
+debugPrint(LocalizationService.instance.current.legendLoadFailed_7281(legendFile, e));
         }
       }
 
-      debugPrint('路径加载完成: $path');
+debugPrint(LocalizationService.instance.current.pathLoadedComplete_728(path));
     } catch (e) {
-      debugPrint('加载路径到缓存失败: $path, 错误: $e');
+debugPrint(LocalizationService.instance.current.loadPathToCacheFailed(path, e));
     }
   }
 
@@ -419,76 +421,76 @@ class ReactiveVersionManager extends ChangeNotifier {
 
       // 使用已有的步进型清理方法
       cacheManager.clearCacheByFolderStepwise(path);
-      debugPrint('已从缓存清理路径: $path');
+debugPrint(LocalizationService.instance.current.cacheCleanedPath_7281(path));
     } catch (e) {
-      debugPrint('从缓存清理路径失败: $path, 错误: $e');
+debugPrint(LocalizationService.instance.current.cacheCleanFailed(path, e));
     }
   }
 
   /// 智能版本切换（包含缓存管理）
   void switchToVersionWithCacheManagement(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-      throw ArgumentError('版本不存在: $versionId');
+throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_7284(versionId));
     }
 
     final previousVersionId = _currentVersionId;
-    debugPrint('开始智能版本切换: $previousVersionId -> $versionId');
+debugPrint(LocalizationService.instance.current.versionSwitchStart(previousVersionId ?? 'null', versionId));
 
     // 如果有之前的版本，比较路径差异并更新缓存
     if (previousVersionId != null && previousVersionId != versionId) {
-      debugPrint('比较版本路径差异: $previousVersionId vs $versionId');
+debugPrint(LocalizationService.instance.current.compareVersionPathDiff(previousVersionId, versionId));
 
       // 输出当前版本的路径选择状态
       final fromPaths = _getVersionAllPaths(previousVersionId);
       final toPaths = _getVersionAllPaths(versionId);
 
-      debugPrint('源版本 $previousVersionId 路径选择:');
+debugPrint(LocalizationService.instance.current.sourceVersionPathSelection_7281(previousVersionId));
       for (final entry in fromPaths.entries) {
-        debugPrint('  图例组 ${entry.key}: ${entry.value.join(", ")}');
+debugPrint('  ${LocalizationService.instance.current.legendGroup_7421} ${entry.key}: ${entry.value.join(", ")}');
       }
 
-      debugPrint('目标版本 $versionId 路径选择:');
+debugPrint(LocalizationService.instance.current.versionPathSelection_7281(versionId));
       for (final entry in toPaths.entries) {
-        debugPrint('  图例组 ${entry.key}: ${entry.value.join(", ")}');
+debugPrint(LocalizationService.instance.current.legendGroup_7421(entry.key, entry.value.join(", ")));
       }
 
       compareVersionPathsAndUpdateCache(
         previousVersionId,
         versionId,
         onPathAdded: (legendGroupId, path) {
-          debugPrint('版本切换-加载路径: [$legendGroupId] $path');
+debugPrint(LocalizationService.instance.current.versionSwitchPath_4821(legendGroupId, path));
         },
         onPathRemoved: (legendGroupId, path) {
-          debugPrint('版本切换-清理路径: [$legendGroupId] $path');
+debugPrint(LocalizationService.instance.current.versionSwitchCleanPath(legendGroupId, path));
         },
       );
     } else {
-      debugPrint(
-        '无需比较路径差异: previousVersionId=$previousVersionId, versionId=$versionId',
+debugPrint(
+        LocalizationService.instance.current.noNeedComparePathDiff(previousVersionId ?? 'null', versionId),
       );
     }
 
     // 执行版本切换
     switchToVersion(versionId);
 
-    debugPrint('智能版本切换完成: $previousVersionId -> $versionId');
+debugPrint(LocalizationService.instance.current.versionSwitchComplete(previousVersionId ?? 'null', versionId));
   }
 
   /// 开始编辑指定版本
   void startEditingVersion(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-      throw ArgumentError('版本不存在: $versionId');
+throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_4821(versionId));
     }
 
     _activeEditingVersionId = versionId;
-    debugPrint('开始编辑版本 [$mapTitle/$versionId]');
+debugPrint(LocalizationService.instance.current.startEditingVersion(mapTitle, versionId));
     notifyListeners();
   }
 
   /// 停止编辑当前版本
   void stopEditingVersion() {
     if (_activeEditingVersionId != null) {
-      debugPrint('停止编辑版本 [$mapTitle/$_activeEditingVersionId]');
+debugPrint(LocalizationService.instance.current.stopEditingVersion(mapTitle, _activeEditingVersionId ?? 'null'));
       _activeEditingVersionId = null;
       notifyListeners();
     }
@@ -502,7 +504,7 @@ class ReactiveVersionManager extends ChangeNotifier {
   }) {
     final currentState = _versionStates[versionId];
     if (currentState == null) {
-      debugPrint('版本不存在，无法更新数据: $versionId');
+debugPrint(LocalizationService.instance.current.versionNotFoundCannotUpdate(versionId));
       return;
     }
 
@@ -513,8 +515,8 @@ class ReactiveVersionManager extends ChangeNotifier {
     );
     _versionDataCache[versionId] = newData;
 
-    debugPrint(
-      '更新版本会话数据 [$mapTitle/$versionId], 标记为${markAsChanged ? '已修改' : '未修改'}, 图层数: ${newData.layers.length}',
+debugPrint(
+      LocalizationService.instance.current.updateVersionSessionData_4821(mapTitle, versionId, markAsChanged ? LocalizationService.instance.current.modified_5732 : LocalizationService.instance.current.notModified_6843, newData.layers.length),
     );
     notifyListeners();
   }
@@ -528,7 +530,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     final currentState = _versionStates[versionId];
     final sessionData = currentState?.sessionData;
     if (sessionData == null) {
-      debugPrint('版本或会话数据不存在，无法更新图层: $versionId');
+debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(versionId));
       return;
     }
 
@@ -549,7 +551,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     final currentState = _versionStates[versionId];
     final sessionData = currentState?.sessionData;
     if (sessionData == null) {
-      debugPrint('版本或会话数据不存在，无法更新图例组: $versionId');
+debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(versionId));
       return;
     }
 
@@ -570,7 +572,7 @@ class ReactiveVersionManager extends ChangeNotifier {
         lastModified: DateTime.now(),
       );
 
-      debugPrint('标记版本已保存 [$mapTitle/$versionId]');
+debugPrint(LocalizationService.instance.current.versionSavedLog('$mapTitle', '$versionId'));
       notifyListeners();
     }
   }
@@ -590,7 +592,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     }
 
     if (hasChanges) {
-      debugPrint('标记所有版本已保存 [$mapTitle]');
+debugPrint(LocalizationService.instance.current.allVersionsSaved_7281(mapTitle));
       notifyListeners();
     }
   }
@@ -604,7 +606,7 @@ class ReactiveVersionManager extends ChangeNotifier {
         lastModified: DateTime.now(),
       );
 
-      debugPrint('更新版本名称 [$mapTitle/$versionId]: $newName');
+debugPrint(LocalizationService.instance.current.updateVersionName(mapTitle, versionId, newName));
       notifyListeners();
     }
   }
@@ -618,7 +620,7 @@ class ReactiveVersionManager extends ChangeNotifier {
         lastModified: DateTime.now(),
       );
 
-      debugPrint('更新版本元数据 [$mapTitle/$versionId]');
+debugPrint(LocalizationService.instance.current.updateVersionMetadata_7421(mapTitle, versionId));
       notifyListeners();
     }
   }
@@ -631,16 +633,16 @@ class ReactiveVersionManager extends ChangeNotifier {
   }) {
     final sourceState = _versionStates[sourceVersionId];
     if (sourceState == null) {
-      throw ArgumentError('源版本不存在: $sourceVersionId');
+throw ArgumentError(LocalizationService.instance.current.sourceVersionNotFound_4821(sourceVersionId));
     }
 
     if (_versionStates.containsKey(newVersionId)) {
-      throw ArgumentError('目标版本已存在: $newVersionId');
+throw ArgumentError(LocalizationService.instance.current.targetVersionExists_4821(newVersionId));
     }
 
-    final newState = ReactiveVersionState(
+final newState = ReactiveVersionState(
       versionId: newVersionId,
-      versionName: newVersionName ?? '${sourceState.versionName} (副本)',
+      versionName: newVersionName ?? '${sourceState.versionName} ' + LocalizationService.instance.current.copySuffix_4821,
       sessionData: sourceState.sessionData,
       hasUnsavedChanges: true, // 副本标记为已修改，需要保存
       createdAt: DateTime.now(),
@@ -654,22 +656,22 @@ class ReactiveVersionManager extends ChangeNotifier {
       _versionDataCache[newVersionId] = sourceSessionData;
     }
 
-    debugPrint('复制版本会话 [$mapTitle]: $sourceVersionId -> $newVersionId');
+debugPrint(LocalizationService.instance.current.copyVersionSession(mapTitle, sourceVersionId, newVersionId));
     notifyListeners();
     return newState;
   }
 
   /// 获取版本会话摘要信息
-  String getSessionSummary() {
+String getSessionSummary() {
     final totalVersions = _versionStates.length;
     final unsavedCount = _versionStates.values
         .where((state) => state.hasUnsavedChanges)
         .length;
     final editingInfo = _activeEditingVersionId != null
-        ? ', 编辑中: $_activeEditingVersionId'
+        ? ', ' + LocalizationService.instance.current.editingVersion_7421(_activeEditingVersionId!)
         : '';
 
-    return '地图: $mapTitle, 版本: $totalVersions, 未保存: $unsavedCount, 当前: $_currentVersionId$editingInfo';
+    return LocalizationService.instance.current.mapSessionSummary_1589(mapTitle, totalVersions, unsavedCount, _currentVersionId ?? 'null') + editingInfo;
   }
 
   /// 清理所有会话状态
@@ -680,7 +682,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     _currentVersionId = null;
     _activeEditingVersionId = null;
 
-    debugPrint('清理所有版本会话状态 [$mapTitle]');
+debugPrint(LocalizationService.instance.current.clearSessionState_7421(mapTitle));
     notifyListeners();
   }
 
@@ -691,7 +693,7 @@ class ReactiveVersionManager extends ChangeNotifier {
       _versionStates[versionId] = currentState.copyWith(clearSessionData: true);
       _versionDataCache.remove(versionId);
 
-      debugPrint('清理版本会话数据 [$mapTitle/$versionId]');
+debugPrint(LocalizationService.instance.current.cleanVersionSessionData(mapTitle, versionId));
       notifyListeners();
     }
   }
@@ -703,14 +705,14 @@ class ReactiveVersionManager extends ChangeNotifier {
     // 检查当前版本是否存在
     if (_currentVersionId != null &&
         !_versionStates.containsKey(_currentVersionId)) {
-      debugPrint('警告：当前版本ID无效: $_currentVersionId');
+debugPrint(LocalizationService.instance.current.invalidVersionIdWarning(_currentVersionId ?? 'null'));
       isValid = false;
     }
 
     // 检查正在编辑的版本是否存在
     if (_activeEditingVersionId != null &&
         !_versionStates.containsKey(_activeEditingVersionId)) {
-      debugPrint('警告：正在编辑的版本ID无效: $_activeEditingVersionId');
+debugPrint(LocalizationService.instance.current.invalidVersionIdWarning(_activeEditingVersionId ?? 'null'));
       isValid = false;
     }
 
@@ -718,7 +720,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     for (final entry in _versionStates.entries) {
       if (entry.value.sessionData != null &&
           !_versionDataCache.containsKey(entry.key)) {
-        debugPrint('警告：版本 ${entry.key} 的会话数据缓存丢失');
+debugPrint(LocalizationService.instance.current.versionSessionCacheMissing_7421(entry.key));
         isValid = false;
       }
     }
@@ -804,8 +806,8 @@ class ReactiveVersionManager extends ChangeNotifier {
       _versionPathSelections[versionId]![legendGroupId]!.remove(path);
     }
 
-    debugPrint(
-      '版本 $versionId 图例组 $legendGroupId ${selected ? '选中' : '取消选中'} 路径: $path',
+debugPrint(
+      LocalizationService.instance.current.versionLegendGroupStatusPath(versionId, legendGroupId, selected ? LocalizationService.instance.current.selected_3632 : LocalizationService.instance.current.unselected_3633, path),
     );
     notifyListeners();
   }
@@ -825,7 +827,7 @@ class ReactiveVersionManager extends ChangeNotifier {
     // 清空当前图例组在当前版本的选择
     _versionPathSelections[versionId]![legendGroupId]!.clear();
 
-    debugPrint('重置版本 $versionId 图例组 $legendGroupId 的选择');
+debugPrint(LocalizationService.instance.current.resetVersionLegendSelection(versionId, legendGroupId));
     notifyListeners();
   }
 
@@ -839,12 +841,12 @@ class ReactiveVersionManager extends ChangeNotifier {
     if (isPathSelectedByOtherGroups(folderPath, legendGroupId) ||
         getSelectedPaths(legendGroupId).contains(folderPath)) {
       // 路径仍在使用中，不清理
-      debugPrint('步进型清理: 路径 $folderPath 仍被使用，跳过清理');
+debugPrint(LocalizationService.instance.current.steppedCleanupSkip_4827(folderPath));
       return;
     }
 
     // 通知清理缓存（只清理该路径本身，不递归清理子路径）
-    debugPrint('步进型清理: 清理路径 $folderPath 的缓存');
+debugPrint(LocalizationService.instance.current.steppedCleanupLog(folderPath));
     onClearCache(folderPath);
   }
 

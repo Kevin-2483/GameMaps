@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "total_tests": 4,
+  "successful_tests": 4,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test_name": "简单字符串替换",
+      "success": true,
+      "error": null
+    },
+    {
+      "test_name": "复杂字符串插值",
+      "success": true,
+      "error": null
+    },
+    {
+      "test_name": "JSON格式验证",
+      "success": true,
+      "error": null
+    },
+    {
+      "test_name": "性能基准测试",
+      "success": true,
+      "error": null
+    }
+  ]
+}

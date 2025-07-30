@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -11,12 +11,12 @@ import '../../components/layout/main_layout.dart';
 import '../../components/layout/page_configuration.dart';
 import '../../components/web/web_readonly_components.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
 import '../../models/map_directory_item.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
-import '../../services/virtual_file_system/vfs_storage_service.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../mixins/map_localization_mixin.dart';
 // import '../../components/common/config_aware_widgets.dart';
@@ -50,7 +50,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     with MapLocalizationMixin, AutoPresenceMixin {
   final VfsMapService _vfsMapService =
       VfsMapServiceFactory.createVfsMapService();
-  final VfsStorageService _storageService = VfsStorageService();
+  // final VfsStorageService _storageService = VfsStorageService(); // 暂时注释未使用的字段
   final VfsServiceProvider _vfsServiceProvider = VfsServiceProvider();
   List<MapDirectoryItem> _items = [];
   List<MapDirectoryItem> _filteredItems = []; // 筛选后的项目
@@ -73,7 +73,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
   @override
   String getCurrentUserName() {
-    return _cachedClientName ?? '未知客户端';
+    return _cachedClientName ??
+        LocalizationService.instance.current.unknownClient_7281;
   }
 
   /// 异步获取并缓存客户端信息
@@ -88,17 +89,24 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         });
         if (kDebugMode) {
           debugPrint(
-            '客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}',
+            LocalizationService.instance.current.clientInfoLoaded(
+              activeConfig.clientId,
+              activeConfig.displayName,
+            ),
           );
         }
       } else {
         if (kDebugMode) {
-          debugPrint('未找到活跃的客户端配置');
+          debugPrint(
+            LocalizationService.instance.current.noActiveClientConfig_7281,
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取客户端信息失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clientInfoFetchFailed(e),
+        );
       }
     }
   }
@@ -145,7 +153,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '在线用户',
+            LocalizationService.instance.current.onlineUsers_4821,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
@@ -156,7 +164,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             height: 100,
             alignment: Alignment.center,
             child: Text(
-              '协作服务未初始化',
+              LocalizationService
+                  .instance
+                  .current
+                  .collaborationServiceNotInitialized_4821,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -174,7 +185,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '在线用户',
+                LocalizationService.instance.current.onlineUsers_7421,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -192,7 +203,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '在线用户',
+                LocalizationService.instance.current.onlineUsers_7421,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -203,7 +214,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 height: 100,
                 alignment: Alignment.center,
                 child: Text(
-                  '暂无在线用户',
+                  LocalizationService.instance.current.noOnlineUsers_7421,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -217,7 +228,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '用户 (${onlineUsers.length})',
+              LocalizationService.instance.current.onlineUsersCount(
+                onlineUsers.length,
+              ),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -252,8 +265,8 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                         const SizedBox(height: 8),
                         Text(
                           isCurrentUser
-                              ? '${user.displayName ?? user.userName} (我)'
-                              : (user.displayName ?? user.userName),
+                              ? '${user.displayName} ${LocalizationService.instance.current.currentUserSuffix_4821}'
+                              : user.displayName,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 fontWeight: isCurrentUser
@@ -310,7 +323,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '活跃地图',
+            LocalizationService.instance.current.activeMap_7421,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
@@ -321,7 +334,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             height: 100,
             alignment: Alignment.center,
             child: Text(
-              '协作服务未初始化',
+              LocalizationService
+                  .instance
+                  .current
+                  .collaborationServiceNotInitialized_4821,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -339,7 +355,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '活跃地图',
+                LocalizationService.instance.current.activeMap_7281,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -364,7 +380,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '活跃地图',
+                LocalizationService.instance.current.activeMap_7421,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -375,7 +391,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 height: 100,
                 alignment: Alignment.center,
                 child: Text(
-                  '暂无活跃地图',
+                  LocalizationService.instance.current.noActiveMap_7421,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -389,7 +405,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '活跃地图 (${mapGroups.length})',
+              LocalizationService.instance.current.activeMapWithCount(
+                mapGroups.length,
+              ),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -419,7 +437,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   child: InkWell(
                     onTap: () {
                       // 可以添加点击进入地图的功能
-                      context.showInfoSnackBar('进入活跃地图: $mapTitle');
+                      context.showInfoSnackBar(
+                        LocalizationService.instance.current.enterActiveMap(
+                          mapTitle,
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +460,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                               : Container(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.surfaceVariant,
+                                  ).colorScheme.surfaceContainerHighest,
                                   child: Icon(
                                     Icons.image_not_supported,
                                     size: 48,
@@ -483,7 +505,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                                       Expanded(
                                         child: Text(
                                           isCurrentUser
-                                              ? '${user.userName} (我)'
+                                              ? '${user.userName} ${LocalizationService.instance.current.meIndicator_7281}'
                                               : user.userName,
                                           style: Theme.of(context)
                                               .textTheme
@@ -512,7 +534,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           ),
                         ),
@@ -546,13 +568,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   String _getStatusText(UserActivityStatus status) {
     switch (status) {
       case UserActivityStatus.editing:
-        return '编辑中';
+        return LocalizationService.instance.current.editingStatus_4821;
       case UserActivityStatus.viewing:
-        return '查看中';
+        return LocalizationService.instance.current.viewingStatus_5732;
       case UserActivityStatus.idle:
-        return '在线';
+        return LocalizationService.instance.current.idleStatus_6943;
       case UserActivityStatus.offline:
-        return '离线';
+        return LocalizationService.instance.current.offlineStatus_7154;
     }
   }
 
@@ -605,7 +627,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     }
 
     // 默认头像：显示用户名首字母
-    final displayName = user.displayName ?? user.userName;
+    final displayName = user.displayName;
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     return CircleAvatar(
@@ -714,7 +736,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
               );
             }
           } catch (e) {
-            debugPrint('加载地图摘要失败: $e');
+            debugPrint(
+              LocalizationService.instance.current.mapSummaryLoadFailed(mapName, e.toString()),
+            );
             // 创建基本的MapItemSummary作为回退
             final mapSummary = MapItemSummary(
               id: mapName.hashCode,
@@ -822,7 +846,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = LocalizationService.instance.current;
         _showErrorSnackBar(l10n.loadMapsFailed(e.toString()));
       }
     }
@@ -846,7 +870,12 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   }
 
   void _updateBreadcrumbs() {
-    _breadcrumbs = [const BreadcrumbItem(name: '首页', path: '')];
+    _breadcrumbs = [
+      BreadcrumbItem(
+        name: LocalizationService.instance.current.homePage_7281,
+        path: '',
+      ),
+    ];
 
     if (_currentPath.isNotEmpty) {
       final parts = _currentPath.split('/');
@@ -894,7 +923,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           ? imageBytes
           : _compressImage(imageBytes);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = LocalizationService.instance.current;
         final mapInfo = await _showAddMapDialog(l10n);
         if (mapInfo != null && mapInfo['title']?.isNotEmpty == true) {
           try {
@@ -952,7 +981,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         return Uint8List.fromList(img.encodePng(resized));
       }
     } catch (e) {
-      debugPrint('图片压缩失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.imageCompressionFailed_7284(e),
+      );
     }
     return imageBytes;
   }
@@ -965,16 +996,22 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('地图已存在'),
-          content: Text('地图 "$mapTitle" 已存在，是否要覆盖现有地图？'),
+          title: Text(
+            LocalizationService.instance.current.mapAlreadyExists_4271,
+          ),
+          content: Text(
+            LocalizationService.instance.current.mapExistsConfirmation(
+              mapTitle,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('覆盖'),
+              child: Text(LocalizationService.instance.current.coverText_4821),
             ),
           ],
         );
@@ -1007,9 +1044,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
               const SizedBox(height: 16),
               TextField(
                 controller: versionController,
-                decoration: const InputDecoration(
-                  labelText: '地图版本',
-                  hintText: '输入地图版本号',
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.mapVersion_4821,
+                  hintText:
+                      LocalizationService.instance.current.enterMapVersion_4822,
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -1018,7 +1057,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             TextButton(
               onPressed: () {
@@ -1030,7 +1069,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   ).pop({'title': title, 'version': version});
                 }
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_7281,
+              ),
             ),
           ],
         );
@@ -1039,7 +1080,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   }
 
   Future<void> _deleteMap(MapItemSummary map) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1049,11 +1090,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除'),
+              child: Text(LocalizationService.instance.current.delete_7281),
             ),
           ],
         );
@@ -1074,90 +1117,41 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         _showErrorSnackBar(l10n.deleteMapFailed(e.toString()));
       }
     }
-  }
+  }  
+  // Future<void> _uploadLocalizationFile() async {
+  //   try {
+  //     final success = await localizationService.importLocalizationFile();
 
-  Future<void> _uploadLocalizationFile() async {
-    try {
-      final success = await localizationService.importLocalizationFile();
+  //     if (success) {
+  //       await _loadDirectoryContents(
+  //         _currentPath.isEmpty ? null : _currentPath,
+  //       ); // 重新加载以应用新的本地化
+  //       _showSuccessSnackBar(
+  //         LocalizationService
+  //             .instance
+  //             .current
+  //             .localizationFileUploadSuccess_4821,
+  //       );
+  //     } else {
+  //       _showErrorSnackBar(
+  //         LocalizationService
+  //             .instance
+  //             .current
+  //             .localizationVersionTooLowOrUploadCancelled_7281,
+  //       );
+  //     }
+  //   } catch (e) {
+  //     _showErrorSnackBar(
+  //       LocalizationService.instance.current.uploadLocalizationFailed_7421(
+  //         e.toString(),
+  //       ),
+  //     );
+  //   }
+  // }
 
-      if (success) {
-        await _loadDirectoryContents(
-          _currentPath.isEmpty ? null : _currentPath,
-        ); // 重新加载以应用新的本地化
-        _showSuccessSnackBar('本地化文件上传成功');
-      } else {
-        _showErrorSnackBar('本地化文件版本过低或取消上传');
-      }
-    } catch (e) {
-      _showErrorSnackBar('上传本地化文件失败: ${e.toString()}');
-    }
-  }
 
-  void _openMapEditor(String mapTitle) async {
-    final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
-      'ReadOnlyMode',
-    );
 
-    // 构建绝对路径
-    String absoluteMapPath;
-    if (_currentPath.isEmpty) {
-      absoluteMapPath = 'indexeddb://r6box/maps/$mapTitle.mapdata/';
-    } else {
-      absoluteMapPath =
-          'indexeddb://r6box/maps/$_currentPath/$mapTitle.mapdata/';
-    }
 
-    // 获取地图摘要信息用于在线状态更新
-    MapItemSummary? mapSummary;
-    try {
-      final summaries = await _vfsMapService.getAllMapsSummary(
-        _currentPath.isEmpty ? null : _currentPath,
-      );
-      mapSummary = summaries.firstWhere((summary) => summary.title == mapTitle);
-    } catch (e) {
-      debugPrint('获取地图摘要失败: $e');
-    }
-
-    // 更新在线状态为viewing
-    if (mapSummary != null) {
-      presenceBloc.add(
-        UpdateCurrentUserStatus(
-          status: UserActivityStatus.viewing,
-          metadata: {
-            'mapId': mapSummary.id.toString(),
-            'mapTitle': mapSummary.title,
-            'mapCover': mapSummary.imageData,
-          },
-        ),
-      );
-    }
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => MapEditorPage(
-          mapTitle: mapTitle,
-          folderPath: _currentPath.isEmpty ? null : _currentPath,
-          absoluteMapPath: absoluteMapPath, // 传递绝对路径
-          isPreviewMode: isReadOnly, // 只读模式强制预览模式
-        ),
-      ),
-    );
-
-    // 退出编辑器后的状态清理由AutoPresenceManager自动处理
-
-    // 地图编辑器关闭后，强制重新检查页面配置
-    if (mounted) {
-      // 使用延迟确保页面已完全恢复
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          // 发送页面配置通知以重新显示TrayNavigation
-          PageConfigurationNotification(
-            showTrayNavigation: true,
-          ).dispatch(context);
-        }
-      });
-    }
-  }
 
   void _openMapEditorWithPath(String mapTitle, String itemPath) async {
     debugPrint(
@@ -1408,15 +1402,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         },
         onTap: () {
           // 对于搜索结果中的地图，需要特殊处理路径
-          if (item is MapFileItem) {
-            debugPrint(
-              'DEBUG: Opening map with title: ${item.mapSummary.title}, path: ${item.path}',
-            );
-            _openMapEditorWithPath(item.mapSummary.title, item.path);
-          } else {
-            debugPrint('DEBUG: Opening map with title: ${map.title}');
-            _openMapEditor(map.title);
-          }
+          debugPrint(
+            'DEBUG: Opening map with title: ${item.mapSummary.title}, path: ${item.path}',
+          );
+          _openMapEditorWithPath(item.mapSummary.title, item.path);
         },
         onRename: () async {
           final isReadOnly = await ConfigManager.instance.isFeatureEnabled(
@@ -1446,7 +1435,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
     return Scaffold(
       body: Column(
         children: [
@@ -1462,7 +1451,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   ),
                 ),
                 const SizedBox(width: 24),
-                Container(
+                SizedBox(
                   height: 36,
                   width: 200,
                   child: TextField(
@@ -1967,8 +1956,7 @@ class _MapCard extends StatelessWidget {
               onTap: onTap,
               onSecondaryTapDown: (details) {
                 if (onRename != null ||
-                    onUpdateCover != null ||
-                    onDelete != null) {
+                    onUpdateCover != null) {
                   _showMapContextMenu(context, details.globalPosition);
                 }
               },
@@ -1977,7 +1965,7 @@ class _MapCard extends StatelessWidget {
                 child: map.imageData != null
                     ? Image.memory(map.imageData!, fit: BoxFit.cover)
                     : Container(
-                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.image_not_supported,
                           size: 48,
@@ -2049,11 +2037,10 @@ class _MapCard extends StatelessWidget {
               ],
             ),
           ),
-        if (onDelete != null)
-          PopupMenuItem(
-            value: 'delete',
-            child: const Row(
-              children: [
+        PopupMenuItem(
+          value: 'delete',
+          child: const Row(
+            children: [
                 Icon(Icons.delete, size: 16, color: Colors.red),
                 SizedBox(width: 8),
                 Text('删除', style: TextStyle(color: Colors.red)),
@@ -2070,7 +2057,7 @@ class _MapCard extends StatelessWidget {
           onUpdateCover?.call();
           break;
         case 'delete':
-          onDelete?.call();
+          onDelete.call();
           break;
       }
     });

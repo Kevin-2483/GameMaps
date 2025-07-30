@@ -1,0 +1,11 @@
+{
+  "vfsPlatformIOCreatingTempFile_4821": "🔗 VfsPlatformIO: 开始创建临时文件",
+  "tempFileCreated_7285": "成功创建临时文件",
+  "tempFileExists_4821": "🔗 VfsPlatformIO: 临时文件已存在，直接返回路径",
+  "createTempDir_7425": "创建应用临时目录",
+  "createWebDavTempDir_4721": "创建WebDAV导入临时目录",
+  "webDavTempFilesCleaned": "🔗 VfsPlatformIO: 已清理WebDAV导入临时文件",
+  "vfsPlatformIOCleanedTempFiles_7281": "🔗 VfsPlatformIO: 已清理临时文件",
+  "cleanWebDavTempFilesFailed_4721": "清理WebDAV导入临时文件失败",
+  "tempFileCleanupFailed_7421": "清理临时文件失败"
+}

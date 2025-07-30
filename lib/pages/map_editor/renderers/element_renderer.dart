@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'dart:math' as math;
 import '../../../models/map_layer.dart';
 import '../utils/drawing_utils.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 元素渲染器 - 负责绘制地图元素的核心渲染逻辑
 class ElementRenderer {
@@ -333,7 +336,7 @@ class ElementRenderer {
     // 绘制提示文本
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '加载中...',
+        text: LocalizationService.instance.current.loadingText_7281,
         style: TextStyle(
           color: Colors.blue.withValues(alpha: 0.7),
           fontSize: 12.0,

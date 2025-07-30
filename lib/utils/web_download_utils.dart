@@ -1,8 +1,10 @@
-import 'dart:typed_data';
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
+
 // 条件导入：Web平台使用dart:html实现，其他平台使用存根实现
 import 'web_download_helper_stub.dart'
     if (dart.library.html) 'web_download_helper.dart';
+import '../services/localization_service.dart';
 
 /// Web平台文件下载工具类
 /// 提供Web平台兼容的文件下载功能
@@ -21,13 +23,17 @@ class WebDownloadUtils {
     String mimeType = 'application/octet-stream',
   }) async {
     if (!kIsWeb) {
-      throw UnsupportedError('WebDownloadUtils只能在Web平台使用');
+      throw UnsupportedError(
+        LocalizationService.instance.current.webDownloadUtilsWebOnly_7281,
+      );
     }
 
     try {
       await WebDownloadHelper.downloadFile(fileName, data, mimeType);
     } catch (e) {
-      throw Exception('Web文件下载失败: $e');
+      throw Exception(
+        LocalizationService.instance.current.webFileDownloadFailed_7285(e),
+      );
     }
   }
 
@@ -40,7 +46,9 @@ class WebDownloadUtils {
     Uint8List zipData,
   ) async {
     if (!kIsWeb) {
-      throw UnsupportedError('WebDownloadUtils只能在Web平台使用');
+      throw UnsupportedError(
+        LocalizationService.instance.current.webDownloadUtilsWebOnly_7281,
+      );
     }
 
     try {
@@ -50,7 +58,9 @@ class WebDownloadUtils {
         'application/zip',
       );
     } catch (e) {
-      throw Exception('Web压缩包下载失败: $e');
+      throw Exception(
+        LocalizationService.instance.current.webDownloadFailed_7285(e),
+      );
     }
   }
 
@@ -61,7 +71,9 @@ class WebDownloadUtils {
     List<Map<String, dynamic>> files,
   ) async {
     if (!kIsWeb) {
-      throw UnsupportedError('WebDownloadUtils只能在Web平台使用');
+      throw UnsupportedError(
+        LocalizationService.instance.current.webDownloadUtilsWebOnly_7281,
+      );
     }
 
     for (final file in files) {
@@ -75,7 +87,9 @@ class WebDownloadUtils {
         // 添加小延迟，避免浏览器阻止多个下载
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        throw Exception('批量下载文件 "$fileName" 失败: $e');
+        throw Exception(
+          LocalizationService.instance.current.batchDownloadFailed(fileName, e),
+        );
       }
     }
   }

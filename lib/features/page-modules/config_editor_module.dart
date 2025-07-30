@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/config/config_editor_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 // import '../../config/build_config.dart';
 // import '../../config/config_manager.dart';
 
@@ -16,7 +19,8 @@ class ConfigEditorModule extends PageModule {
   String get path => '/config';
 
   @override
-  String get displayName => '配置编辑器';
+  String get displayName =>
+      LocalizationService.instance.current.configEditorDisplayName_4821;
 
   @override
   IconData get icon => Icons.settings_applications;

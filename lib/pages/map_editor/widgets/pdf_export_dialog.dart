@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import '../../../utils/pdf_export_utils.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../services/notification/notification_models.dart';
 import '../../../models/pdf_image_info.dart';
+import '../../../services/localization_service.dart';
 
 /// PDF导出配置对话框
 class PdfExportDialog extends StatefulWidget {
@@ -61,7 +63,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 8),
-          const Text('导出为PDF'),
+          Text(LocalizationService.instance.current.exportAsPdf_7281),
         ],
       ),
       content: SizedBox(
@@ -84,8 +86,11 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                       icon: Icons.drive_file_rename_outline,
                       child: TextField(
                         controller: _fileNameController,
-                        decoration: const InputDecoration(
-                          hintText: '请输入文件名',
+                        decoration: InputDecoration(
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .fileNameHint_4521,
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),
@@ -95,7 +100,8 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
                     // 图片列表
                     _buildSection(
-                      title: '图片列表 (${_imageInfos.length}张)',
+                      title: LocalizationService.instance.current
+                          .imageListTitle(_imageInfos.length),
                       icon: Icons.photo_library,
                       child: Container(
                         height: 200,
@@ -121,7 +127,12 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                       icon: Icons.view_module,
                       child: Row(
                         children: [
-                          const Text('布局类型: '),
+                          Text(
+                            LocalizationService
+                                .instance
+                                .current
+                                .layoutType_7281,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<PdfLayoutType>(
@@ -161,7 +172,12 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                           // 纸张大小
                           Row(
                             children: [
-                              const Text('纸张大小: '),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .paperSize_4821,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: DropdownButtonFormField<PdfPaperSize>(
@@ -193,7 +209,12 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                           // 方向
                           Row(
                             children: [
-                              const Text('页面方向: '),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .pageOrientation_7281,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: DropdownButtonFormField<PdfOrientation>(
@@ -239,7 +260,12 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                           // 页边距
                           Row(
                             children: [
-                              const Text('页边距: '),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .marginLabel_4821,
+                              ),
                               Expanded(
                                 child: Slider(
                                   value: _margin,
@@ -260,7 +286,12 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                           // 图片间距
                           Row(
                             children: [
-                              const Text('图片间距: '),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .imageSpacing_7281,
+                              ),
                               Expanded(
                                 child: Slider(
                                   value: _spacing,
@@ -299,13 +330,29 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('总图片数量: ${widget.images.length}'),
+                            Text(
+                              LocalizationService.instance.current
+                                  .totalImageCount(widget.images.length),
+                            ),
 
                             Text(
-                              '布局: ${PdfExportUtils.getLayoutTypeName(_selectedLayout)}',
+                              LocalizationService.instance.current
+                                  .layoutTypeName(
+                                    PdfExportUtils.getLayoutTypeName(
+                                      _selectedLayout,
+                                    ),
+                                  ),
                             ),
                             Text(
-                              '纸张: ${PdfExportUtils.getPaperSizeName(_selectedPaperSize)} (${PdfExportUtils.getOrientationName(_selectedOrientation)})',
+                              LocalizationService.instance.current
+                                  .paperSizeAndOrientation(
+                                    PdfExportUtils.getPaperSizeName(
+                                      _selectedPaperSize,
+                                    ),
+                                    PdfExportUtils.getOrientationName(
+                                      _selectedOrientation,
+                                    ),
+                                  ),
                             ),
                             if (kIsWeb) ...[
                               const SizedBox(height: 8),
@@ -329,7 +376,10 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Web平台将使用打印功能导出PDF',
+                                        LocalizationService
+                                            .instance
+                                            .current
+                                            .webPlatformExportPdf_4728,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Theme.of(
@@ -359,13 +409,13 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_4271),
         ),
         if (!kIsWeb) ...[
           OutlinedButton.icon(
             onPressed: _isExporting ? null : _printPdf,
             icon: const Icon(Icons.print, size: 16),
-            label: const Text('打印'),
+            label: Text(LocalizationService.instance.current.printLabel_4271),
           ),
           const SizedBox(width: 8),
         ],
@@ -377,7 +427,11 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(kIsWeb ? '打印PDF' : '导出PDF'),
+              : Text(
+                  kIsWeb
+                      ? LocalizationService.instance.current.printPdf_1234
+                      : LocalizationService.instance.current.exportPdf_5678,
+                ),
         ),
       ],
     );
@@ -440,8 +494,8 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'PDF预览',
+                Text(
+                  LocalizationService.instance.current.pdfPreview_4521,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
@@ -449,7 +503,9 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                   OutlinedButton.icon(
                     onPressed: _previewPdf,
                     icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('生成预览'),
+                    label: Text(
+                      LocalizationService.instance.current.generatePreview_7421,
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -476,13 +532,13 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
   Widget _buildPreviewContent() {
     if (_isGeneratingPreview) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在生成预览...'),
+            Text(LocalizationService.instance.current.generatingPreview_7421),
           ],
         ),
       );
@@ -500,7 +556,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              '点击"生成预览"查看PDF效果',
+              LocalizationService.instance.current.clickToGeneratePreview_4821,
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ],
@@ -555,11 +611,21 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
           ),
         ),
         title: Text(
-          imageInfo.title.isEmpty ? '图片 ${index + 1}' : imageInfo.title,
+          imageInfo.title.isEmpty
+              ? LocalizationService.instance.current.imageTitleWithIndex(
+                  index + 1,
+                )
+              : imageInfo.title,
           style: const TextStyle(fontSize: 14),
         ),
         subtitle: imageInfo.content.isEmpty
-            ? const Text('点击编辑标题和内容', style: TextStyle(fontSize: 12))
+            ? Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .clickToEditTitleAndContent_7281,
+                style: TextStyle(fontSize: 12),
+              )
             : Text(
                 imageInfo.content,
                 style: const TextStyle(fontSize: 12),
@@ -584,7 +650,9 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('编辑图片 ${index + 1}'),
+        title: Text(
+          LocalizationService.instance.current.editImageTitle(index + 1),
+        ),
         content: SizedBox(
           width: 400,
           child: Column(
@@ -592,9 +660,11 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: '标题',
-                  hintText: '请输入图片标题（可选）',
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.titleLabel_4521,
+                  hintText:
+                      LocalizationService.instance.current.imageTitleHint_4522,
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 1,
@@ -602,9 +672,13 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
               const SizedBox(height: 16),
               TextField(
                 controller: contentController,
-                decoration: const InputDecoration(
-                  labelText: '内容',
-                  hintText: '请输入图片描述内容（可选）',
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.contentLabel_4521,
+                  hintText: LocalizationService
+                      .instance
+                      .current
+                      .imageDescriptionHint_4522,
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -615,7 +689,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () {
@@ -627,7 +701,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
               });
               Navigator.of(context).pop();
             },
-            child: const Text('保存'),
+            child: Text(LocalizationService.instance.current.saveButton_7421),
           ),
         ],
       ),
@@ -639,9 +713,13 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
   Future<void> _printPdf() async {
     if (_fileNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入文件名')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            LocalizationService.instance.current.enterFileName_4821,
+          ),
+        ),
+      );
       return;
     }
 
@@ -655,7 +733,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
       // 显示打印进度
       NotificationService.instance.show(
         id: notificationId,
-        message: '正在准备打印...',
+        message: LocalizationService.instance.current.preparingToPrint_7281,
         type: NotificationType.info,
         isPersistent: true,
         borderEffect: NotificationBorderEffect.loading,
@@ -676,7 +754,8 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         if (success) {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: 'PDF打印对话框已打开',
+            message:
+                LocalizationService.instance.current.pdfPrintDialogOpened_4821,
             type: NotificationType.success,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -685,7 +764,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         } else {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: 'PDF打印失败，请重试',
+            message: LocalizationService.instance.current.pdfPrintFailed_4821,
             type: NotificationType.error,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -697,7 +776,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
       if (mounted) {
         NotificationService.instance.updateNotification(
           notificationId: notificationId,
-          message: 'PDF打印失败: $e',
+          message: LocalizationService.instance.current.pdfPrintFailed_7285(e),
           type: NotificationType.error,
           isPersistent: false,
           duration: const Duration(seconds: 3),
@@ -742,27 +821,42 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         setState(() {
           _isGeneratingPreview = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('预览生成失败: 无法生成PDF数据')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.instance.current.pdfGenerationFailed_7281
+                  .toString(),
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isGeneratingPreview = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('预览生成失败: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.instance.current.previewGenerationFailed_7421(
+                e.toString(),
+              ),
+            ),
+          ),
+        );
       }
     }
   }
 
   Future<void> _exportToPdf() async {
     if (_fileNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入文件名')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            LocalizationService.instance.current.enterFileName_4821,
+          ),
+        ),
+      );
       return;
     }
 
@@ -776,7 +870,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
       // 显示导出进度
       NotificationService.instance.show(
         id: notificationId,
-        message: '正在生成PDF...',
+        message: LocalizationService.instance.current.generatingPdf_7421,
         type: NotificationType.info,
         isPersistent: true,
         borderEffect: NotificationBorderEffect.loading,
@@ -800,7 +894,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         if (success) {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: 'PDF导出成功',
+            message: LocalizationService.instance.current.pdfExportSuccess_4821,
             type: NotificationType.success,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -810,7 +904,8 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
         } else {
           NotificationService.instance.updateNotification(
             notificationId: notificationId,
-            message: 'PDF导出失败，请重试',
+            message: LocalizationService.instance.current.pdfExportFailed_7281
+                .toString(),
             type: NotificationType.error,
             isPersistent: false,
             duration: const Duration(seconds: 3),
@@ -822,7 +917,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
       if (mounted) {
         NotificationService.instance.updateNotification(
           notificationId: notificationId,
-          message: 'PDF导出失败: $e',
+          message: LocalizationService.instance.current.pdfExportFailed_7281(e),
           type: NotificationType.error,
           isPersistent: false,
           duration: const Duration(seconds: 3),

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -5,6 +6,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../../models/websocket_client_config.dart';
 import 'websocket_secure_storage_service.dart';
 import 'websocket_client_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// WebSocket 客户端认证服务
 /// 实现挑战-响应认证机制
@@ -20,7 +23,11 @@ class WebSocketClientAuthService {
   ) async {
     try {
       if (kDebugMode) {
-        debugPrint('开始 WebSocket 认证流程: ${config.clientId}');
+        debugPrint(
+          LocalizationService.instance.current.startWebSocketAuthProcess(
+            config.clientId,
+          ),
+        );
       }
 
       // 1. 发送认证消息
@@ -30,13 +37,15 @@ class WebSocketClientAuthService {
       final authResult = await _handleAuthenticationFlow(channel, config);
 
       if (kDebugMode) {
-        debugPrint('认证结果: ${authResult ? "成功" : "失败"}');
+        debugPrint(
+          '${LocalizationService.instance.current.authenticationResult_7425}: ${authResult ? LocalizationService.instance.current.success_8421 : LocalizationService.instance.current.failure_9352}',
+        );
       }
 
       return authResult;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('认证过程中发生错误: $e');
+        debugPrint(LocalizationService.instance.current.authenticationError(e));
       }
       return false;
     }
@@ -50,7 +59,11 @@ class WebSocketClientAuthService {
   ) async {
     try {
       if (kDebugMode) {
-        debugPrint('开始 WebSocket 认证流程 (使用外部流): ${config.clientId}');
+        debugPrint(
+          LocalizationService.instance.current.startWebSocketAuthFlow(
+            config.clientId,
+          ),
+        );
       }
 
       // 处理认证流程
@@ -61,13 +74,17 @@ class WebSocketClientAuthService {
       );
 
       if (kDebugMode) {
-        debugPrint('认证结果: ${authResult ? "成功" : "失败"}');
+        debugPrint(
+          '${LocalizationService.instance.current.authenticationResult_7425}: ${authResult ? LocalizationService.instance.current.success_8421 : LocalizationService.instance.current.failure_9352}',
+        );
       }
 
       return authResult;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('认证过程中发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.authenticationError_7425(e),
+        );
       }
       return false;
     }
@@ -87,7 +104,9 @@ class WebSocketClientAuthService {
     channel.sink.add(messageJson);
 
     if (kDebugMode) {
-      debugPrint('已发送认证消息: ${config.clientId}');
+      debugPrint(
+        LocalizationService.instance.current.authMessageSent(config.clientId),
+      );
     }
   }
 
@@ -108,7 +127,9 @@ class WebSocketClientAuthService {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('认证流程处理错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.authProcessError_4821(e),
+        );
       }
       return false;
     }
@@ -129,7 +150,9 @@ class WebSocketClientAuthService {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('认证流程处理错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.authProcessError_4821(e),
+        );
       }
       return false;
     }
@@ -154,7 +177,9 @@ class WebSocketClientAuthService {
       final messageJson = jsonEncode(message.toJson());
       channel.sink.add(messageJson);
       if (kDebugMode) {
-        debugPrint('已发送认证消息: ${message.type}');
+        debugPrint(
+          LocalizationService.instance.current.authMessageSent(message.type),
+        );
       }
       return true;
     });
@@ -172,7 +197,9 @@ class WebSocketClientAuthService {
         const Duration(seconds: 30),
         onTimeout: (sink) {
           if (kDebugMode) {
-            debugPrint('认证流程超时');
+            debugPrint(
+              LocalizationService.instance.current.authenticationTimeout_7281,
+            );
           }
           sink.close();
         },
@@ -192,7 +219,12 @@ class WebSocketClientAuthService {
                     : message.data as String?;
                 if (challenge != null) {
                   if (kDebugMode) {
-                    debugPrint('收到服务器挑战');
+                    debugPrint(
+                      LocalizationService
+                          .instance
+                          .current
+                          .serverChallengeReceived_4289,
+                    );
                   }
 
                   // 解密挑战
@@ -203,7 +235,12 @@ class WebSocketClientAuthService {
 
                   if (decryptedChallenge == null) {
                     if (kDebugMode) {
-                      debugPrint('认证失败: 挑战解密失败');
+                      debugPrint(
+                        LocalizationService
+                            .instance
+                            .current
+                            .authFailedChallengeDecrypt_7281,
+                      );
                     }
                     await subscription.cancel();
                     if (!completer.isCompleted) completer.complete(false);
@@ -219,14 +256,22 @@ class WebSocketClientAuthService {
                   final sendResult = await sendMessage(responseMessage);
 
                   if (kDebugMode) {
-                    debugPrint('已发送挑战响应，结果: $sendResult');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .challengeResponseSentResult(sendResult),
+                    );
                   }
                 }
                 break;
 
               case 'auth_success':
                 if (kDebugMode) {
-                  debugPrint('认证成功');
+                  debugPrint(
+                    LocalizationService
+                        .instance
+                        .current
+                        .authenticationSuccess_7421,
+                  );
                 }
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(true);
@@ -237,7 +282,11 @@ class WebSocketClientAuthService {
                     ? message.data['reason'] as String? ?? '未知原因'
                     : message.data as String? ?? '未知原因';
                 if (kDebugMode) {
-                  debugPrint('认证失败: $reason');
+                  debugPrint(
+                    LocalizationService.instance.current.authenticationFailed(
+                      reason,
+                    ),
+                  );
                 }
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(false);
@@ -248,7 +297,11 @@ class WebSocketClientAuthService {
                     ? message.data['message'] as String? ?? '未知错误'
                     : message.data as String? ?? '未知错误';
                 if (kDebugMode) {
-                  debugPrint('服务器返回错误: $error');
+                  debugPrint(
+                    LocalizationService.instance.current.serverErrorResponse(
+                      error,
+                    ),
+                  );
                 }
                 await subscription.cancel();
                 if (!completer.isCompleted) completer.complete(false);
@@ -257,26 +310,33 @@ class WebSocketClientAuthService {
               default:
                 // 忽略其他类型的消息
                 if (kDebugMode) {
-                  debugPrint('忽略消息类型: ${message.type}');
+                  debugPrint(
+                    LocalizationService.instance.current
+                        .ignoredMessageType_7281(message.type),
+                  );
                 }
                 break;
             }
           } catch (e) {
             if (kDebugMode) {
-              debugPrint('解析消息失败: $e');
+              debugPrint(
+                LocalizationService.instance.current.parseMessageFailed_7285(e),
+              );
             }
           }
         },
         onError: (error) async {
           if (kDebugMode) {
-            debugPrint('Stream 错误: $error');
+            debugPrint(
+              LocalizationService.instance.current.streamError_7284(error),
+            );
           }
           await subscription.cancel();
           if (!completer.isCompleted) completer.complete(false);
         },
         onDone: () async {
           if (kDebugMode) {
-            debugPrint('Stream 已关闭');
+            debugPrint(LocalizationService.instance.current.streamClosed_8251);
           }
           if (!completer.isCompleted) completer.complete(false);
         },
@@ -285,7 +345,9 @@ class WebSocketClientAuthService {
       return await completer.future;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('认证流程处理错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.authProcessError_4821(e),
+        );
       }
     }
 
@@ -304,13 +366,19 @@ class WebSocketClientAuthService {
       );
 
       if (kDebugMode) {
-        debugPrint('挑战解密成功');
+        debugPrint(
+          LocalizationService.instance.current.challengeDecryptedSuccess_7281,
+        );
       }
 
       return decrypted;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('挑战解密失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.challengeDecryptionFailed_7421(
+            e,
+          ),
+        );
       }
       return null;
     }
@@ -330,13 +398,17 @@ class WebSocketClientAuthService {
       );
 
       if (kDebugMode) {
-        debugPrint('消息签名验证结果: ${isValid ? "有效" : "无效"}');
+        debugPrint(
+          '${LocalizationService.instance.current.signatureVerificationResult_7425(isValid ? LocalizationService.instance.current.valid_8421 : LocalizationService.instance.current.invalid_9352)}',
+        );
       }
 
       return isValid;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('验证消息签名失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.signatureVerificationFailed(e),
+        );
       }
       return false;
     }
@@ -351,13 +423,17 @@ class WebSocketClientAuthService {
       );
 
       if (kDebugMode) {
-        debugPrint('消息签名成功');
+        debugPrint(
+          LocalizationService.instance.current.messageSignedSuccessfully_7281,
+        );
       }
 
       return signature;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('消息签名失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.signatureFailed_7285(e),
+        );
       }
       return null;
     }
@@ -377,7 +453,9 @@ class WebSocketClientAuthService {
     final token = base64Encode(tokenBytes);
 
     if (kDebugMode) {
-      debugPrint('生成认证令牌: $clientId');
+      debugPrint(
+        LocalizationService.instance.current.generateAuthToken(clientId),
+      );
     }
 
     return token;
@@ -395,14 +473,23 @@ class WebSocketClientAuthService {
 
       if (clientId != expectedClientId) {
         if (kDebugMode) {
-          debugPrint('令牌验证失败: 客户端ID不匹配');
+          debugPrint(
+            LocalizationService.instance.current.tokenVerificationFailed_7421(
+              'Client ID mismatch',
+            ),
+          );
         }
         return false;
       }
 
       if (timestamp == null) {
         if (kDebugMode) {
-          debugPrint('令牌验证失败: 时间戳缺失');
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .tokenValidationFailedTimestampMissing_4821,
+          );
         }
         return false;
       }
@@ -414,19 +501,27 @@ class WebSocketClientAuthService {
 
       if (tokenAge > maxAge) {
         if (kDebugMode) {
-          debugPrint('令牌验证失败: 令牌已过期');
+          debugPrint(
+            LocalizationService.instance.current.tokenValidationFailed_7281,
+          );
         }
         return false;
       }
 
       if (kDebugMode) {
-        debugPrint('令牌验证成功: $clientId');
+        debugPrint(
+          LocalizationService.instance.current.tokenValidationSuccess(
+            clientId ?? 'unknown',
+          ),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('令牌验证失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.tokenVerificationFailed_7421(e),
+        );
       }
       return false;
     }

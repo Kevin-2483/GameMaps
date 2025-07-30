@@ -1,0 +1,20 @@
+{
+  "websocketNotConnectedSkipBroadcast_7281": "WebSocket未连接，跳过广播用户状态更新（离线模式）",
+  "userStateInitFailed_4821": "初始化用户状态失败",
+  "userStatusChangeBroadcast": "用户状态发生变化，准备广播: {currentStatus} -> {newStatus}",
+  "userStatusUnchangedSkipBroadcast_4821": "用户状态无变化，跳过广播",
+  "mapInfoChangedBroadcast": "地图信息发生变化，准备广播: mapId={mapId}, mapTitle={mapTitle}",
+  "mapInfoUnchangedSkipBroadcast_4821": "地图信息无变化，跳过广播",
+  "websocketError_4829": "处理WebSocket消息时出错: {error}",
+  "userStatusBroadcastError_4821": "处理用户状态广播时出错: {error}",
+  "handleOnlineStatusError_4821": "处理在线状态列表响应时出错: {error}",
+  "onlineStatusProcessed": "成功处理在线状态列表，共 {count} 个用户",
+  "fetchOnlineStatusFailed": "获取在线状态列表失败: {error}",
+  "unknownError": "未知错误",
+  "mapCoverCompressionFailed_7281": "地图封面压缩失败，无法满足大小限制，跳过发送",
+  "mapCoverRecompressed": "地图封面已重新压缩: {oldSize}KB -> {newSize}KB",
+  "broadcastStatusUpdateFailed": "广播用户状态更新失败: {error}",
+  "mapCoverCompressionFailed_7421": "地图封面压缩失败: {compressionError}，跳过发送",
+  "requestOnlineStatusFailed": "请求在线状态列表失败: {error}",
+  "fetchUserPreferencesFailed_4821": "获取用户偏好设置失败: {e}"
+}

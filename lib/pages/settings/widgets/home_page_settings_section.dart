@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 主页设置板块
 class HomePageSettingsSection extends StatelessWidget {
@@ -23,7 +26,10 @@ class HomePageSettingsSection extends StatelessWidget {
               children: [
                 const Icon(Icons.home),
                 const SizedBox(width: 8),
-                Text('主页设置', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  LocalizationService.instance.current.homePageSettings_4821,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -56,15 +62,18 @@ class HomePageSettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('标题设置', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.titleSetting_1234,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
 
         // 标题文字
         TextFormField(
           initialValue: preferences.homePage.titleText,
-          decoration: const InputDecoration(
-            labelText: '标题文字',
-            hintText: '输入主页标题文字',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.titleLabel_4821,
+            hintText: LocalizationService.instance.current.titleHint_4821,
             border: OutlineInputBorder(),
           ),
           onChanged: (value) {
@@ -81,7 +90,11 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '标题字体大小倍数: ${(preferences.homePage.titleFontSizeMultiplier * 100).toStringAsFixed(1)}%',
+                LocalizationService.instance.current
+                    .titleFontSizeMultiplierText(
+                      (preferences.homePage.titleFontSizeMultiplier * 100)
+                          .toStringAsFixed(1),
+                    ),
               ),
             ),
           ],
@@ -112,7 +125,10 @@ class HomePageSettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('显示区域设置', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.displayLocaleSetting_4821,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
 
         // 显示区域倍数
@@ -120,7 +136,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '显示区域倍数: ${preferences.homePage.displayAreaMultiplier.toStringAsFixed(1)}x',
+                LocalizationService.instance.current.displayAreaMultiplierText(
+                  preferences.homePage.displayAreaMultiplier.toStringAsFixed(1),
+                ),
               ),
             ),
           ],
@@ -146,7 +164,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '窗口大小随动系数: ${preferences.homePage.windowScalingFactor.toStringAsFixed(2)}',
+                LocalizationService.instance.current.windowScalingFactorLabel(
+                  preferences.homePage.windowScalingFactor.toStringAsFixed(2),
+                ),
               ),
             ),
           ],
@@ -176,7 +196,10 @@ class HomePageSettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('性能设置', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.performanceSettings_7281,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
 
         // 基础网格间距
@@ -184,7 +207,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '基础网格间距: ${preferences.homePage.baseNodeSpacing.toStringAsFixed(0)}px',
+                LocalizationService.instance.current.baseGridSpacing_4827(
+                  preferences.homePage.baseNodeSpacing.toStringAsFixed(0),
+                ),
               ),
             ),
           ],
@@ -209,7 +234,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '基础图标大小: ${preferences.homePage.baseSvgRenderSize.toStringAsFixed(0)}px',
+                LocalizationService.instance.current.baseIconSizeText(
+                  preferences.homePage.baseSvgRenderSize.toStringAsFixed(0),
+                ),
               ),
             ),
           ],
@@ -235,7 +262,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '摄像机移动速度: ${preferences.homePage.cameraSpeed.toStringAsFixed(0)}px/s',
+                LocalizationService.instance.current.cameraSpeedLabel(
+                  preferences.homePage.cameraSpeed.toStringAsFixed(0),
+                ),
               ),
             ),
           ],
@@ -265,13 +294,20 @@ class HomePageSettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('视觉效果设置', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.visualEffectsSettings_4821,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
 
         // 启用主题颜色滤镜
         SwitchListTile(
-          title: const Text('启用主题颜色滤镜'),
-          subtitle: const Text('让图标颜色适应当前主题'),
+          title: Text(
+            LocalizationService.instance.current.enableThemeColorFilter_7281,
+          ),
+          subtitle: Text(
+            LocalizationService.instance.current.adaptiveIconTheme_7421,
+          ),
           value: preferences.homePage.enableThemeColorFilter,
           onChanged: (value) {
             _updateHomePageSettings(
@@ -287,7 +323,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '基础缓冲区倍数: ${preferences.homePage.baseBufferMultiplier.toStringAsFixed(1)}x',
+                LocalizationService.instance.current.baseBufferMultiplierText(
+                  preferences.homePage.baseBufferMultiplier.toStringAsFixed(1),
+                ),
               ),
             ),
           ],
@@ -313,7 +351,11 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '透视缓冲调节系数: ${preferences.homePage.perspectiveBufferFactor.toStringAsFixed(1)}x',
+                LocalizationService.instance.current
+                    .perspectiveBufferFactorLabel(
+                      preferences.homePage.perspectiveBufferFactor
+                          .toStringAsFixed(1),
+                    ),
               ),
             ),
           ],
@@ -339,7 +381,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '图标放大系数: ${preferences.homePage.iconEnlargementFactor.toStringAsFixed(1)}x',
+                LocalizationService.instance.current.iconEnlargementFactorLabel(
+                  preferences.homePage.iconEnlargementFactor.toStringAsFixed(1),
+                ),
               ),
             ),
           ],
@@ -365,7 +409,9 @@ class HomePageSettingsSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'SVG分布记录数量: ${preferences.homePage.recentSvgHistorySize}',
+                LocalizationService.instance.current.svgDistributionRecordCount(
+                  preferences.homePage.recentSvgHistorySize,
+                ),
               ),
             ),
           ],

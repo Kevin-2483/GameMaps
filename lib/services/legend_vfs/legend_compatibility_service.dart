@@ -1,9 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/legend_item.dart';
 import 'legend_vfs_service.dart';
+import '../localization_service.dart';
 
 /// 图例存储兼容性服务
 /// 提供与传统数据库服务相同的接口，但内部使用VFS存储
@@ -127,7 +129,9 @@ class LegendCompatibilityService {
   /// 设置数据库版本
   Future<void> setDatabaseVersion(int version) async {
     // VFS版本管理通过元数据实现，这里暂时不实现
-    debugPrint('VFS版本管理暂未实现');
+    debugPrint(
+      LocalizationService.instance.current.vfsVersionNotImplemented_7281,
+    );
   }
 
   /// 导出数据库到文件
@@ -150,7 +154,8 @@ class LegendCompatibilityService {
 
       // 选择保存文件位置
       String? filePath = await FilePicker.platform.saveFile(
-        dialogTitle: '导出图例数据库',
+        dialogTitle:
+            LocalizationService.instance.current.exportLegendDatabase_4821,
         fileName:
             'legends_vfs_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
@@ -164,7 +169,9 @@ class LegendCompatibilityService {
       }
       return null;
     } catch (e) {
-      debugPrint('导出图例数据库失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportLegendFailed_7285(e),
+      );
       rethrow;
     }
   }
@@ -199,7 +206,9 @@ class LegendCompatibilityService {
       }
       return false;
     } catch (e) {
-      debugPrint('导入图例数据库失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.importLegendDatabaseFailed(e),
+      );
       rethrow;
     }
   }
@@ -243,7 +252,7 @@ class LegendCompatibilityService {
 
       // 检查必要字段
       if (legend.title.isEmpty) {
-        issues.add('图例标题为空');
+        issues.add(LocalizationService.instance.current.legendTitleEmpty_7281);
         isValid = false;
       }
 
@@ -251,12 +260,20 @@ class LegendCompatibilityService {
           legend.centerX > 1 ||
           legend.centerY < 0 ||
           legend.centerY > 1) {
-        issues.add('图例 "${legend.title}" 中心点坐标无效');
+        issues.add(
+          LocalizationService.instance.current.invalidLegendCenterPoint(
+            '${legend.title}',
+          ),
+        );
         isValid = false;
       }
 
       if (legend.version <= 0) {
-        issues.add('图例 "${legend.title}" 版本号无效');
+        issues.add(
+          LocalizationService.instance.current.invalidLegendVersion_7421(
+            legend.title,
+          ),
+        );
         isValid = false;
       }
 
@@ -264,11 +281,20 @@ class LegendCompatibilityService {
       try {
         final reloaded = await _vfsService.getLegend(legend.title);
         if (reloaded == null) {
-          issues.add('图例 "${legend.title}" 无法重新加载');
+          issues.add(
+            LocalizationService.instance.current.legendReloadFailed_7421(
+              legend.title,
+            ),
+          );
           isValid = false;
         }
       } catch (e) {
-        issues.add('图例 "${legend.title}" 加载错误: $e');
+        issues.add(
+          LocalizationService.instance.current.legendLoadError_7285(
+            legend.title,
+            e,
+          ),
+        );
         isValid = false;
       }
 
@@ -291,6 +317,8 @@ class LegendCompatibilityService {
   /// 关闭数据库连接（兼容性方法）
   Future<void> close() async {
     // VFS服务不需要显式关闭，这里提供兼容性
-    debugPrint('VFS服务不需要显式关闭');
+    debugPrint(
+      LocalizationService.instance.current.vfsServiceNoNeedToClose_7281,
+    );
   }
 }

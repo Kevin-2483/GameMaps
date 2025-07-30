@@ -1,0 +1,10 @@
+{
+  "countdownMode_4821": "倒计时",
+  "stopwatchMode_7532": "正计时",
+  "countdownDescription_4821": "从设定时间倒数到零",
+  "stopwatchDescription_7532": "从零开始正向计时",
+  "timerStopped_4821": "已停止",
+  "timerRunning_4822": "运行中",
+  "timerPaused_4823": "已暂停",
+  "timerCompleted_4824": "已完成"
+}

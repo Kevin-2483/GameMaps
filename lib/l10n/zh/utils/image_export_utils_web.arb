@@ -1,0 +1,4 @@
+{
+  "webExportImageFailed": "Web平台导出图片失败: {e}",
+  "webExportSingleImageFailed": "Web平台导出单张图片失败: {e}"
+}

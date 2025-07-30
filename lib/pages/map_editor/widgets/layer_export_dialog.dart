@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
@@ -7,6 +8,7 @@ import 'map_canvas.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../services/notification/notification_models.dart';
 import 'pdf_export_dialog.dart';
+import '../../../services/localization_service.dart';
 
 /// 图层导出对话框
 class LayerExportDialog extends StatefulWidget {
@@ -140,7 +142,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
           _isGeneratingPreview = false;
         });
       }
-      debugPrint('生成预览失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.previewGenerationFailed_7421(e),
+      );
     }
   }
 
@@ -380,7 +384,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '导出图片 ${index + 1}',
+                    LocalizationService.instance.current.exportImageTitle_7421(
+                      index + 1,
+                    ),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -426,7 +432,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '图片生成失败',
+                            LocalizationService
+                                .instance
+                                .current
+                                .imageGenerationFailed_4821,
                             style: TextStyle(
                               fontSize: 12,
                               color: Theme.of(
@@ -458,8 +467,11 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                   const SizedBox(width: 4),
                   Text(
                     image != null
-                        ? '尺寸: ${image.width} × ${image.height}'
-                        : '无效图片',
+                        ? LocalizationService.instance.current.imageDimensions(
+                            image.width,
+                            image.height,
+                          )
+                        : LocalizationService.instance.current.invalidImage,
                     style: TextStyle(
                       fontSize: 11,
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -535,7 +547,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '分割线',
+                          LocalizationService.instance.current.dividerText_4821,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -552,7 +564,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '背景',
+                          LocalizationService.instance.current.background_7281,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -585,7 +597,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '图层 ID: ${item.layer.id}',
+                      LocalizationService.instance.current.layerId(
+                        item.layer.id,
+                      ),
                       style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -593,7 +607,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     ),
                     const Spacer(),
                     Text(
-                      '顺序: ${item.layer.order}',
+                      LocalizationService.instance.current.layerOrderText(
+                        item.layer.order,
+                      ),
                       style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -628,7 +644,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '背景元素',
+                      LocalizationService
+                          .instance
+                          .current
+                          .backgroundElement_4821,
                       style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(
@@ -728,7 +747,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
             // 分割线文本
             Expanded(
               child: Text(
-                '分割线',
+                LocalizationService.instance.current.dividerText_4821,
                 style: TextStyle(
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
@@ -771,7 +790,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
             // 背景文本
             Expanded(
               child: Text(
-                '背景',
+                LocalizationService.instance.current.background_5421,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -833,7 +852,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '图例组: ${legendGroup.legendItems.length} 项',
+                    LocalizationService.instance.current.legendGroupItemCount(
+                      legendGroup.legendItems.length,
+                    ),
                     style: const TextStyle(fontSize: 9, color: Colors.grey),
                   ),
                 ],
@@ -890,7 +911,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                 children: [
                   Text(
                     item.stickyNote.title.isEmpty
-                        ? '无标题便签'
+                        ? LocalizationService.instance.current.untitledNote_4721
                         : item.stickyNote.title,
                     style: const TextStyle(
                       fontSize: 11,
@@ -1002,7 +1023,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                '图层组 ${groupIndex + 1} (${group.length} 个图层)',
+                LocalizationService.instance.current.layerGroupInfo(
+                  groupIndex + 1,
+                  group.length,
+                ),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -1062,7 +1086,13 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                   children: [
                     // 图层名称
                     Text(
-                      isGroup ? '${layer.name} (组)' : layer.name,
+                      isGroup
+                          ? '${layer.name} ' +
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .groupSuffix_7281
+                          : layer.name,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: isIndented
                             ? Theme.of(
@@ -1080,7 +1110,8 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     Row(
                       children: [
                         Text(
-                          '透明度: ${(layer.opacity * 100).toInt()}%',
+                          LocalizationService.instance.current
+                              .opacityPercentage((layer.opacity * 100).toInt()),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -1091,7 +1122,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '元素: ${layer.elements.length}',
+                          LocalizationService.instance.current.elementCount(
+                            layer.elements.length,
+                          ),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -1259,7 +1292,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                     Row(
                       children: [
                         Text(
-                          '透明度: ${(legendGroup.opacity * 100).toInt()}%',
+                          LocalizationService.instance.current
+                              .opacityPercentage(
+                                (legendGroup.opacity * 100).toInt(),
+                              ),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -1270,7 +1306,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '图例: ${legendGroup.legendItems.length}',
+                          LocalizationService.instance.current.legendTitle(
+                            legendGroup.legendItems.length,
+                          ),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -1300,7 +1338,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
         children: [
           Icon(Icons.download, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
-          const Text('导出图层为PNG'),
+          Text(LocalizationService.instance.current.exportLayerAsPng_7281),
         ],
       ),
       content: SizedBox(
@@ -1326,7 +1364,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '可选择的图层',
+                          LocalizationService
+                              .instance
+                              .current
+                              .selectableLayers_7281,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1425,8 +1466,11 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                     _generatePreview();
                                   },
                                   icon: const Icon(Icons.add_box, size: 16),
-                                  label: const Text(
-                                    '添加全部图层',
+                                  label: Text(
+                                    LocalizationService
+                                        .instance
+                                        .current
+                                        .addAllLayers_4821,
                                     style: TextStyle(fontSize: 12),
                                   ),
                                   style: ElevatedButton.styleFrom(
@@ -1446,8 +1490,11 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                     Icons.horizontal_rule,
                                     size: 16,
                                   ),
-                                  label: const Text(
-                                    '添加分割线',
+                                  label: Text(
+                                    LocalizationService
+                                        .instance
+                                        .current
+                                        .addDividerLine_4821,
                                     style: TextStyle(fontSize: 12),
                                   ),
                                   style: OutlinedButton.styleFrom(
@@ -1464,8 +1511,11 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                 child: OutlinedButton.icon(
                                   onPressed: _addBackground,
                                   icon: const Icon(Icons.image, size: 16),
-                                  label: const Text(
-                                    '添加背景',
+                                  label: Text(
+                                    LocalizationService
+                                        .instance
+                                        .current
+                                        .addBackground_7281,
                                     style: TextStyle(fontSize: 12),
                                   ),
                                   style: OutlinedButton.styleFrom(
@@ -1503,7 +1553,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '导出列表',
+                          LocalizationService.instance.current.exportList_7281,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1524,9 +1574,12 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: _selectedItems.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
-                                '点击左侧加号\n添加图层',
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .addLayerHint_7281,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Colors.grey),
                               ),
@@ -1564,7 +1617,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '导出预览',
+                          LocalizationService
+                              .instance
+                              .current
+                              .exportPreview_4821,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1573,7 +1629,9 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         ),
                         const Spacer(),
                         Text(
-                          '${_previewImages.length} 张图片',
+                          LocalizationService.instance.current.imageCount(
+                            _previewImages.length,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(
@@ -1600,7 +1658,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  '暂无导出项目',
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .noExportItems_7281,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(
@@ -1610,7 +1671,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '从左侧添加图层或项目',
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .addLayerOrItemFromLeft_4821,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Theme.of(
@@ -1622,13 +1686,18 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                             ),
                           )
                         : _isGeneratingPreview
-                        ? const Center(
+                        ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                CircularProgressIndicator(),
-                                SizedBox(height: 16),
-                                Text('正在生成预览图片...'),
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .generatingPreviewImage_7281,
+                                ),
                               ],
                             ),
                           )
@@ -1652,7 +1721,7 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
         ElevatedButton(
           onPressed: _selectedItems.isNotEmpty
@@ -1665,7 +1734,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       if (mounted) {
                         NotificationService.instance.show(
                           id: notificationId,
-                          message: '正在导出图片...',
+                          message: LocalizationService
+                              .instance
+                              .current
+                              .exportingImage_7421,
                           type: NotificationType.info,
                           isPersistent: true,
                           borderEffect: NotificationBorderEffect.loading,
@@ -1694,7 +1766,8 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           if (success) {
                             NotificationService.instance.updateNotification(
                               notificationId: notificationId,
-                              message: '成功导出 ${validImages.length} 张图片',
+                              message: LocalizationService.instance.current
+                                  .exportSuccessMessage(validImages.length),
                               type: NotificationType.success,
                               isPersistent: false,
                               duration: const Duration(seconds: 3),
@@ -1704,7 +1777,10 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                           } else {
                             NotificationService.instance.updateNotification(
                               notificationId: notificationId,
-                              message: '导出失败，请重试',
+                              message: LocalizationService
+                                  .instance
+                                  .current
+                                  .exportFailedRetry_4821,
                               type: NotificationType.success,
                               isPersistent: false,
                               duration: const Duration(seconds: 3),
@@ -1714,19 +1790,31 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                         }
                       } else {
                         if (mounted) {
-                          context.showErrorSnackBar('没有有效的图片可导出');
+                          context.showErrorSnackBar(
+                            LocalizationService
+                                .instance
+                                .current
+                                .noValidImageToExport_4821,
+                          );
                         }
                       }
                     } catch (e) {
-                      debugPrint('导出失败: $e');
+                      debugPrint(
+                        LocalizationService.instance.current.exportFailed_7285(
+                          e,
+                        ),
+                      );
                       if (mounted) {
-                        context.showErrorSnackBar('导出失败: $e');
+                        context.showErrorSnackBar(
+                          LocalizationService.instance.current
+                              .exportFailed_7284(e),
+                        );
                       }
                     }
                   }
                 }
               : null,
-          child: const Text('导出图片'),
+          child: Text(LocalizationService.instance.current.exportImage_7421),
         ),
         const SizedBox(width: 8),
         ElevatedButton.icon(
@@ -1760,23 +1848,38 @@ class _LayerExportDialogState extends State<LayerExportDialog> {
                       } else {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('没有有效的图片可导出')),
+                            SnackBar(
+                              content: Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .noValidImageToExport_7281,
+                              ),
+                            ),
                           );
                         }
                       }
                     } catch (e) {
-                      debugPrint('获取图片失败: $e');
+                      debugPrint(
+                        LocalizationService.instance.current
+                            .fetchImageFailed_7285(e),
+                      );
                       if (mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('获取图片失败: $e')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              LocalizationService.instance.current
+                                  .imageFetchFailed(e),
+                            ),
+                          ),
+                        );
                       }
                     }
                   }
                 }
               : null,
           icon: const Icon(Icons.picture_as_pdf),
-          label: const Text('导出PDF'),
+          label: Text(LocalizationService.instance.current.exportPdf_7281),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.secondary,
             foregroundColor: Theme.of(context).colorScheme.onSecondary,

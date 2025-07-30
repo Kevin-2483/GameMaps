@@ -1,0 +1,12 @@
+{
+  "vfsFileInfoError_4821": "获取VFS文件信息失败: {e}",
+  "audioLoadFailed_7421": "加载音频信息失败: {e}",
+  "loadingAudio_7421": "正在加载音频...",
+  "retry_7284": "重试",
+  "audioLoadFailed_7281": "音频加载失败",
+  "copyLink_4821": "复制链接",
+  "copyAudioLink_4821": "复制音频链接: {vfsPath}",
+  "audioLinkCopiedToClipboard_4821": "音频链接已复制到剪贴板",
+  "modifiedAtTime_7281": "修改于 {time}",
+  "audioFile_7281": "音频文件"
+}

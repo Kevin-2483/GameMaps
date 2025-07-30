@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../models/webdav_config.dart';
 import '../database_path_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// WebDAV数据库服务
 /// 管理WebDAV配置和认证账户的数据库操作
@@ -15,7 +18,7 @@ class WebDavDatabaseService {
   Future<void> initialize() async {
     await _initDatabase();
     if (kDebugMode) {
-      debugPrint('WebDAV数据库服务初始化完成');
+      debugPrint(LocalizationService.instance.current.webDavInitialized_7281);
     }
   }
 
@@ -101,7 +104,11 @@ class WebDavDatabaseService {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     if (kDebugMode) {
-      debugPrint('WebDAV认证账户已创建: ${account.authAccountId}');
+      debugPrint(
+        LocalizationService.instance.current.webDavAccountCreated(
+          account.authAccountId,
+        ),
+      );
     }
   }
 
@@ -146,7 +153,11 @@ class WebDavDatabaseService {
     );
 
     if (kDebugMode) {
-      debugPrint('WebDAV认证账户已更新: ${account.authAccountId}');
+      debugPrint(
+        LocalizationService.instance.current.webDavAccountUpdated(
+          account.authAccountId,
+        ),
+      );
     }
   }
 
@@ -157,7 +168,11 @@ class WebDavDatabaseService {
     // 检查是否有配置使用此认证账户
     final configs = await getConfigsByAuthAccount(authAccountId);
     if (configs.isNotEmpty) {
-      throw Exception('无法删除认证账户，仍有 ${configs.length} 个配置在使用此账户');
+      throw Exception(
+        LocalizationService.instance.current.cannotDeleteAuthAccountWithConfigs(
+          configs.length,
+        ),
+      );
     }
 
     await db.delete(
@@ -167,7 +182,11 @@ class WebDavDatabaseService {
     );
 
     if (kDebugMode) {
-      debugPrint('WebDAV认证账户已删除: $authAccountId');
+      debugPrint(
+        LocalizationService.instance.current.webDavAuthAccountDeleted(
+          authAccountId,
+        ),
+      );
     }
   }
 
@@ -188,7 +207,11 @@ class WebDavDatabaseService {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     if (kDebugMode) {
-      debugPrint('WebDAV配置已创建: ${config.configId}');
+      debugPrint(
+        LocalizationService.instance.current.webDavConfigCreated(
+          config.configId,
+        ),
+      );
     }
   }
 
@@ -264,7 +287,11 @@ class WebDavDatabaseService {
     );
 
     if (kDebugMode) {
-      debugPrint('WebDAV配置已更新: ${config.configId}');
+      debugPrint(
+        LocalizationService.instance.current.webDavConfigUpdated(
+          config.configId,
+        ),
+      );
     }
   }
 
@@ -278,7 +305,9 @@ class WebDavDatabaseService {
     );
 
     if (kDebugMode) {
-      debugPrint('WebDAV配置已删除: $configId');
+      debugPrint(
+        LocalizationService.instance.current.webDavConfigDeleted(configId),
+      );
     }
   }
 

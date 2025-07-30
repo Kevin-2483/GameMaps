@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'vfs_storage_service.dart';
 import 'vfs_protocol.dart';
 import 'vfs_permission_system.dart';
 import 'virtual_file_system.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS数据库初始化服务
 /// 用于在应用启动时统一初始化VFS系统，包括根文件系统和应用数据库
@@ -27,12 +30,14 @@ class VfsDatabaseInitializer {
   Future<void> initializeApplicationVfs() async {
     // 如果已经初始化过，直接返回
     if (_isInitialized) {
-      debugPrint('VFS系统已初始化，跳过重复初始化');
+      debugPrint(LocalizationService.instance.current.vfsInitialized_7281);
       return;
     }
 
     try {
-      debugPrint('开始初始化应用VFS系统...');
+      debugPrint(
+        LocalizationService.instance.current.initializingVfsSystem_7281,
+      );
 
       // 2. 初始化根文件系统
       await _initializeRootFileSystem();
@@ -45,9 +50,13 @@ class VfsDatabaseInitializer {
 
       // 标记为已初始化
       _isInitialized = true;
-      debugPrint('应用VFS系统初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.vfsInitializationComplete_7281,
+      );
     } catch (e) {
-      debugPrint('应用VFS系统初始化失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.vfsInitializationFailed_7421(e),
+      );
       rethrow;
     }
   }
@@ -56,7 +65,9 @@ class VfsDatabaseInitializer {
   Future<void> initializeDefaultDatabase() async {
     // 如果已经通过 initializeApplicationVfs 初始化过，直接返回
     if (_isInitialized) {
-      debugPrint('VFS系统已通过全局初始化完成，跳过默认数据库初始化');
+      debugPrint(
+        LocalizationService.instance.current.vfsInitializedSkipDb_4821,
+      );
       return;
     }
     await _initializeRootFileSystem();
@@ -65,11 +76,13 @@ class VfsDatabaseInitializer {
   /// 初始化根文件系统
   Future<void> _initializeRootFileSystem() async {
     try {
-      debugPrint('开始初始化VFS根文件系统...');
+      debugPrint(
+        LocalizationService.instance.current.vfsInitializationStart_7281,
+      );
 
       // 检查是否已经初始化过
       if (await _isAlreadyInitialized()) {
-        debugPrint('VFS根文件系统已存在，跳过初始化');
+        debugPrint(LocalizationService.instance.current.vfsRootExists_7281);
         _vfs.mount('r6box', 'fs');
         return;
       }
@@ -82,9 +95,9 @@ class VfsDatabaseInitializer {
       // 标记为已初始化
       await _markAsInitialized();
 
-      debugPrint('VFS根文件系统初始化完成');
+      debugPrint(LocalizationService.instance.current.vfsRootInitialized_7281);
     } catch (e) {
-      debugPrint('VFS根文件系统初始化失败: $e');
+      debugPrint(LocalizationService.instance.current.vfsRootInitFailed(e));
       rethrow;
     }
   }
@@ -92,7 +105,9 @@ class VfsDatabaseInitializer {
   /// 初始化应用数据库和挂载点
   Future<void> _initializeApplicationDatabases() async {
     try {
-      debugPrint('开始初始化应用数据库...');
+      debugPrint(
+        LocalizationService.instance.current.initializingAppDatabase_7281,
+      );
 
       // 创建应用数据库的集合目录
       const databaseName = 'r6box';
@@ -155,7 +170,7 @@ class VfsDatabaseInitializer {
       mimeType: 'application/json',
     );
     await _storage.writeFile('indexeddb://r6box/fs/.initialized', content);
-    debugPrint('VFS根文件系统标记为已初始化');
+    debugPrint(LocalizationService.instance.current.vfsRootInitialized_7281);
   }
 
   /// 获取数据库统计信息
@@ -181,7 +196,13 @@ class VfsDatabaseInitializer {
             totalFiles += collectionStats['totalFiles'] as int;
             totalSize += collectionStats['totalSize'] as int;
           } catch (e) {
-            debugPrint('获取集合统计失败: $dbName/$collection - $e');
+            debugPrint(
+              LocalizationService.instance.current.collectionStatsError(
+                dbName,
+                collection,
+                e,
+              ),
+            );
           }
         }
 
@@ -194,7 +215,9 @@ class VfsDatabaseInitializer {
 
       return stats;
     } catch (e) {
-      debugPrint('获取数据库统计信息失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.databaseStatsError_4821(e),
+      );
       return {'error': e.toString()};
     }
   }

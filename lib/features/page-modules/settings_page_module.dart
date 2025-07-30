@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/settings/settings_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 设置页模块 - 始终优先级最低（999）
 class SettingsPageModule extends PageModule {
@@ -16,7 +19,8 @@ class SettingsPageModule extends PageModule {
   String get path => '/settings';
 
   @override
-  String get displayName => '设置';
+  String get displayName =>
+      LocalizationService.instance.current.settingsDisplayName_4821;
 
   @override
   IconData get icon => Icons.settings;

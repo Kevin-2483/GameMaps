@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import '../utils/extension_settings_helper.dart';
+
+import '../services/localization_service.dart';
 
 /// 图例组智能隐藏管理器
 /// 使用扩展设置存储每个地图的图例组智能隐藏状态
@@ -29,7 +32,13 @@ class LegendGroupSmartHideManager {
     );
 
     if (kDebugMode) {
-      debugPrint('图例组智能隐藏状态已保存: $mapId/$legendGroupId = $enabled');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupHiddenStatusSaved(
+          mapId,
+          legendGroupId,
+          enabled,
+        ),
+      );
     }
   }
 
@@ -47,7 +56,9 @@ class LegendGroupSmartHideManager {
     await ExtensionSettingsManager.instance.clearLegendGroupSmartHide(mapId);
 
     if (kDebugMode) {
-      debugPrint('已清除地图 $mapId 的所有图例组智能隐藏设置');
+      debugPrint(
+        LocalizationService.instance.current.clearedMapLegendSettings(mapId),
+      );
     }
   }
 
@@ -64,7 +75,9 @@ class LegendGroupSmartHideManager {
   /// 从JSON导入智能隐藏设置
   static Future<void> importSettings(Map<String, dynamic> data) async {
     if (!data.containsKey('mapId') || !data.containsKey('smartHideSettings')) {
-      throw ArgumentError('无效的导入数据格式');
+      throw ArgumentError(
+        LocalizationService.instance.current.invalidImportDataFormat_4271,
+      );
     }
 
     final mapId = data['mapId'] as String;
@@ -77,7 +90,12 @@ class LegendGroupSmartHideManager {
     }
 
     if (kDebugMode) {
-      debugPrint('已导入地图 $mapId 的图例组智能隐藏设置: ${settings.length} 项');
+      debugPrint(
+        LocalizationService.instance.current.importedMapLegendSettings(
+          mapId,
+          settings.length,
+        ),
+      );
     }
   }
 }
@@ -110,7 +128,13 @@ class LegendGroupZoomFactorManager {
     );
 
     if (kDebugMode) {
-      debugPrint('图例组缩放因子已保存: $mapId/$legendGroupId = $zoomFactor');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupZoomFactorSaved(
+          mapId,
+          legendGroupId,
+          zoomFactor,
+        ),
+      );
     }
   }
 
@@ -130,7 +154,9 @@ class LegendGroupZoomFactorManager {
     await ExtensionSettingsManager.instance.clearLegendGroupZoomFactors(mapId);
 
     if (kDebugMode) {
-      debugPrint('已清除地图 $mapId 的所有图例组缩放因子设置');
+      debugPrint(
+        LocalizationService.instance.current.clearedMapLegendGroups_7421(mapId),
+      );
     }
   }
 
@@ -147,7 +173,9 @@ class LegendGroupZoomFactorManager {
   /// 从JSON导入缩放因子设置
   static Future<void> importSettings(Map<String, dynamic> data) async {
     if (!data.containsKey('mapId') || !data.containsKey('zoomFactorSettings')) {
-      throw ArgumentError('无效的导入数据格式');
+      throw ArgumentError(
+        LocalizationService.instance.current.invalidImportDataFormat_7281,
+      );
     }
 
     final mapId = data['mapId'] as String;
@@ -160,7 +188,12 @@ class LegendGroupZoomFactorManager {
     }
 
     if (kDebugMode) {
-      debugPrint('已导入地图 $mapId 的图例组缩放因子设置: ${settings.length} 项');
+      debugPrint(
+        LocalizationService.instance.current.importedMapLegendSettings(
+          mapId,
+          settings.length,
+        ),
+      );
     }
   }
 }
@@ -322,7 +355,12 @@ class ExtensionSettingsUsageExample {
     );
 
     if (kDebugMode) {
-      debugPrint('图例组 $legendGroupId 智能隐藏状态: $isEnabled');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupSmartHideStatus_7421(
+          legendGroupId,
+          isEnabled,
+        ),
+      );
     }
 
     // 在组件中设置智能隐藏状态
@@ -343,7 +381,9 @@ class ExtensionSettingsUsageExample {
     );
 
     if (kDebugMode) {
-      debugPrint('智能隐藏状态已保存: $enabled');
+      debugPrint(
+        LocalizationService.instance.current.smartHideStatusSaved(enabled),
+      );
     }
   }
 
@@ -353,7 +393,9 @@ class ExtensionSettingsUsageExample {
     await CanvasViewManager.recordZoomLevel(mapId, zoomLevel);
 
     if (kDebugMode) {
-      debugPrint('缩放级别已记录: $zoomLevel');
+      debugPrint(
+        LocalizationService.instance.current.zoomLevelRecorded(zoomLevel),
+      );
     }
   }
 
@@ -367,14 +409,25 @@ class ExtensionSettingsUsageExample {
     await ToolbarLayoutManager.saveToolbarPosition(toolbarId, x, y);
 
     if (kDebugMode) {
-      debugPrint('工具栏 $toolbarId 位置已保存: ($x, $y)');
+      debugPrint(
+        LocalizationService.instance.current.toolbarPositionSaved(
+          toolbarId,
+          x,
+          y,
+        ),
+      );
     }
   }
 
   /// 示例：获取扩展设置统计信息
   static Map<String, dynamic> getUsageStats() {
     if (!ExtensionSettingsManager.isInitialized) {
-      return {'error': '扩展设置管理器未初始化'};
+      return {
+        'error': LocalizationService
+            .instance
+            .current
+            .extensionManagerNotInitialized_7281,
+      };
     }
 
     return ExtensionSettingsManager.instance.getStorageStats();

@@ -1,0 +1,20 @@
+{
+  "pdfPreviewFailed_7285": "PDF预览生成失败: {e}",
+  "pdfGenerationFailed_7281": "PDF文档生成失败: {e}",
+  "googleFontLoadFailed": "无法加载Google中文字体，使用默认字体: {e}",
+  "pdfPrintDialogOpened_7281": "PDF打印对话框已打开",
+  "webPdfDialogOpened_7281": "Web平台PDF打印对话框已打开",
+  "savePdfDialogTitle_4821": "保存PDF文件",
+  "pdfPrintFailed_7285": "PDF打印失败: {e}",
+  "pdfSavedToPath_7281": "PDF已保存到: {path}",
+  "userCanceledSaveOperation_9274": "用户取消了保存操作",
+  "pdfSaveFailed_7421": "保存PDF失败: {e}",
+  "portraitOrientation_1234": "竖向",
+  "landscapeOrientation_5678": "横向",
+  "pdfExportFailed_7281": "PDF导出失败: {e}",
+  "onePerPage_4821": "一页一张",
+  "twoPerPage_4822": "一页两张",
+  "fourPerPage_4823": "一页四张",
+  "sixPerPage_4824": "一页六张",
+  "ninePerPage_4825": "一页九张"
+}

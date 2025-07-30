@@ -1,0 +1,16 @@
+{
+  "createNoteImageSelectionElement_7421": "创建便签图片选区元素: imageData={imageBufferData}",
+  "processingQueueElement_7421": "处理队列元素: {elementId} 添加到图层: {layerId}",
+  "addText_4271": "添加文本",
+  "drawingToolManagerCallbackNotSet_4821": "DrawingToolManager: addDrawingElement回调未设置或目标图层ID为空，无法添加元素",
+  "textContent_4521": "文本内容",
+  "cancelButton_4271": "取消",
+  "fontSizeLabel": "字体大小: {value}px",
+  "confirmButton_7281": "确定",
+  "addTextWithFontSize": "添加文本 (字体大小: {fontSize}px)",
+  "cancelButton_7421": "取消",
+  "addTextToNote_7421": "添加文本到便签",
+  "addTextToNoteWithFontSize": "添加文本到便签 (字体大小: {fontSize}px)",
+  "cancel_4821": "取消",
+  "noteImageSelectionDebug_7421": "便签创建图片选区: 缓冲区数据={value}"
+}

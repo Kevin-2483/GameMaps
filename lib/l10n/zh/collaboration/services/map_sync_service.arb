@@ -1,0 +1,10 @@
+{
+  "updateMapTitleFailed": "更新地图标题失败: {e}",
+  "mapCoverUpdateFailed": "更新地图封面失败: {e}",
+  "mapCoverCompressionFailed_7281": "地图封面压缩失败",
+  "mapCoverCompressionFailed_4821": "地图封面压缩失败，将不同步封面信息",
+  "syncMapInfoToPresenceBloc_7421": "同步地图信息到PresenceBloc",
+  "coverSizeInfo_4821": "封面: {size}",
+  "none_5729": "无",
+  "mapSyncFailed_7285": "同步地图信息失败: {e}"
+}

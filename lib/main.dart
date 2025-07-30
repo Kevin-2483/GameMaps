@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +22,8 @@ import 'services/window_manager_service.dart';
 import 'services/notification/notification_service.dart';
 import 'services/notification/notification_models.dart';
 import 'collaboration/global_collaboration_service.dart';
+import 'l10n/app_localizations.dart';
+import 'services/localization_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,18 +48,24 @@ void main() async {
 
   // Initialize configuration manager
   await ConfigManager.instance.loadFromAssets();
+
+  // Initialize localization service
+  LocalizationService.instance.initialize();
+
   // Initialize VFS system
   try {
     final vfsInitializer = VfsDatabaseInitializer();
     await vfsInitializer.initializeApplicationVfs();
-    debugPrint('VFS系统初始化成功');
+    debugPrint(
+      LocalizationService.instance.current.vfsInitializationSuccess_7281,
+    );
 
     // Initialize legend service to ensure proper mounting
     // final legendService = LegendCompatibilityService();
     // await legendService.initialize();
     // debugPrint('图例服务初始化成功');
   } catch (e) {
-    debugPrint('VFS系统初始化失败: $e');
+    debugPrint(LocalizationService.instance.current.vfsInitFailed_7281(e));
     // VFS初始化失败不应该阻止应用启动，只记录错误
   }
 
@@ -76,9 +85,18 @@ void main() async {
   // Initialize global collaboration service (without auto-connect)
   try {
     await GlobalCollaborationService.instance.initialize();
-    debugPrint('全局协作服务初始化成功');
+    debugPrint(
+      LocalizationService
+          .instance
+          .current
+          .globalCollaborationServiceInitialized_7281,
+    );
   } catch (e) {
-    debugPrint('全局协作服务初始化失败: $e');
+    debugPrint(
+      LocalizationService.instance.current.globalCollaborationServiceInitFailed(
+        e,
+      ),
+    );
     // 协作服务初始化失败不应该阻止应用启动，只记录错误
   }
 

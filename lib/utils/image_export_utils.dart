@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -5,6 +6,8 @@ import 'dart:ui' as ui;
 import 'image_export_utils_desktop.dart'
     if (dart.library.html) 'image_export_utils_web.dart'
     as platform;
+
+import '../services/localization_service.dart';
 
 /// 图片导出工具类
 /// 提供跨平台的图片导出功能
@@ -41,7 +44,7 @@ class ImageExportUtils {
         format: format,
       );
     } catch (e) {
-      print('导出图片失败: $e');
+      print(LocalizationService.instance.current.exportImageFailed_7421(e));
       return false;
     }
   }
@@ -67,7 +70,7 @@ class ImageExportUtils {
         fileName: fileName,
       );
     } catch (e) {
-      print('导出图片失败: $e');
+      print(LocalizationService.instance.current.exportImageFailed_7421(e));
       return false;
     }
   }

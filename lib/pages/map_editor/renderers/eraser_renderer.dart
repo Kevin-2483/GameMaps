@@ -31,7 +31,6 @@ class EraserRenderer {
     if (affectingErasers.isEmpty) {
       // 没有橡皮擦影响，直接绘制
 
-
       ElementRenderer.drawElement(
         canvas,
         element,

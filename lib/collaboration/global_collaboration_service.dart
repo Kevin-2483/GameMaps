@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
@@ -5,6 +6,8 @@ import 'services/websocket/websocket_client_manager.dart';
 import 'services/websocket/websocket_client_service.dart';
 import 'services/collaboration_state_manager.dart';
 import 'blocs/presence/presence_bloc.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 全局协作服务
 /// 管理WebSocket连接和PresenceBloc的全局实例
@@ -26,7 +29,9 @@ class GlobalCollaborationService {
   /// 获取WebSocket管理器实例
   WebSocketClientManager get webSocketManager {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+      throw Exception(
+        LocalizationService.instance.current.serviceNotInitializedError_4821,
+      );
     }
     return _webSocketManager;
   }
@@ -34,7 +39,9 @@ class GlobalCollaborationService {
   /// 获取PresenceBloc实例
   PresenceBloc get presenceBloc {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+      throw Exception(
+        LocalizationService.instance.current.serviceNotInitializedError_4821,
+      );
     }
     return _presenceBloc;
   }
@@ -42,7 +49,9 @@ class GlobalCollaborationService {
   /// 获取CollaborationStateManager实例
   CollaborationStateManager get collaborationStateManager {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+      throw Exception(
+        LocalizationService.instance.current.serviceNotInitializedError_4821,
+      );
     }
     return _collaborationStateManager;
   }
@@ -57,12 +66,16 @@ class GlobalCollaborationService {
     Color? userColor,
   }) {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化，请先调用 initialize()');
+      throw Exception(
+        LocalizationService.instance.current.serviceNotInitializedError_7281,
+      );
     }
 
     if (_userInfoSet) {
       if (kDebugMode) {
-        debugPrint('用户信息已设置，跳过重复设置');
+        debugPrint(
+          LocalizationService.instance.current.userInfoSetSkipped_7281,
+        );
       }
       return;
     }
@@ -78,7 +91,10 @@ class GlobalCollaborationService {
 
     if (kDebugMode) {
       debugPrint(
-        'GlobalCollaborationService 用户信息已设置: userId=$userId, displayName=$displayName',
+        LocalizationService.instance.current.globalCollaborationUserInfoSet(
+          userId,
+          displayName,
+        ),
       );
     }
   }
@@ -88,14 +104,24 @@ class GlobalCollaborationService {
   Future<void> initialize() async {
     if (_isInitialized) {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 已经初始化');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .globalCollaborationServiceInitialized_7281,
+        );
       }
       return;
     }
 
     try {
       if (kDebugMode) {
-        debugPrint('开始初始化 GlobalCollaborationService');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .initializingGlobalCollaborationService_7281,
+        );
       }
 
       // 初始化WebSocket管理器（不自动连接）
@@ -111,11 +137,19 @@ class GlobalCollaborationService {
       _isInitialized = true;
 
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 初始化完成');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .globalCollaborationServiceInitialized_4821,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 初始化失败: $e');
+        debugPrint(
+          LocalizationService.instance.current
+              .globalCollaborationServiceInitFailed(e),
+        );
       }
       rethrow;
     }
@@ -125,12 +159,19 @@ class GlobalCollaborationService {
   /// 如果没有活跃配置，会自动创建默认配置
   Future<bool> connect([String? clientId]) async {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化');
+      throw Exception(
+        LocalizationService
+            .instance
+            .current
+            .globalCollaborationNotInitialized_4821,
+      );
     }
 
     try {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 开始连接WebSocket');
+        debugPrint(
+          LocalizationService.instance.current.webSocketConnectionStart_7281,
+        );
       }
 
       // 检查是否有活跃的配置，如果没有则创建默认配置
@@ -138,10 +179,15 @@ class GlobalCollaborationService {
         var activeConfig = await _webSocketManager.getActiveConfig();
         if (activeConfig == null) {
           if (kDebugMode) {
-            debugPrint('没有找到活跃的WebSocket配置，创建默认配置');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .noActiveWebSocketConfigFound_7281,
+            );
           }
           final defaultConfig = await _webSocketManager.createDefaultClient(
-            '地图集客户端',
+            LocalizationService.instance.current.atlasClient_7421,
             host: 'localhost',
             port: 8080,
             path: '/ws/client',
@@ -157,18 +203,25 @@ class GlobalCollaborationService {
         // WebSocket连接成功，PresenceBloc会自动处理连接状态
 
         if (kDebugMode) {
-          debugPrint('GlobalCollaborationService WebSocket连接成功');
+          debugPrint(
+            LocalizationService.instance.current.websocketConnectedSuccess_4821,
+          );
         }
       } else {
         if (kDebugMode) {
-          debugPrint('GlobalCollaborationService WebSocket连接失败');
+          debugPrint(
+            LocalizationService.instance.current.websocketConnectionFailed_4821,
+          );
         }
       }
 
       return success;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 连接失败: $e');
+        debugPrint(
+          LocalizationService.instance.current
+              .globalCollaborationServiceConnectionFailed(e),
+        );
       }
       return false;
     }
@@ -182,7 +235,9 @@ class GlobalCollaborationService {
 
     try {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 断开WebSocket连接');
+        debugPrint(
+          LocalizationService.instance.current.disconnectWebSocket_4821,
+        );
       }
 
       // WebSocket断开连接，PresenceBloc会自动处理断开状态
@@ -190,11 +245,15 @@ class GlobalCollaborationService {
       await _webSocketManager.disconnect();
 
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService WebSocket连接已断开');
+        debugPrint(
+          LocalizationService.instance.current.websocketDisconnected_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 断开连接失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.connectionFailed_7285(e),
+        );
       }
     }
   }
@@ -202,7 +261,12 @@ class GlobalCollaborationService {
   /// 请求在线状态列表
   Future<bool> requestOnlineStatusList() async {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化');
+      throw Exception(
+        LocalizationService
+            .instance
+            .current
+            .globalCollaborationNotInitialized_7281,
+      );
     }
 
     // 确保WebSocket已连接
@@ -238,7 +302,12 @@ class GlobalCollaborationService {
   /// 发送WebSocket消息
   Future<bool> sendMessage(WebSocketMessage message) async {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化');
+      throw Exception(
+        LocalizationService
+            .instance
+            .current
+            .globalCollaborationNotInitialized_7281,
+      );
     }
 
     return await _webSocketManager.sendMessage(message);
@@ -247,7 +316,12 @@ class GlobalCollaborationService {
   /// 发送JSON消息
   Future<bool> sendJson(Map<String, dynamic> data) async {
     if (!_isInitialized) {
-      throw Exception('GlobalCollaborationService 未初始化');
+      throw Exception(
+        LocalizationService
+            .instance
+            .current
+            .globalCollaborationNotInitialized_4821,
+      );
     }
 
     return await _webSocketManager.sendJson(data);
@@ -261,7 +335,12 @@ class GlobalCollaborationService {
 
     try {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 开始释放资源');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .globalCollaborationServiceReleaseResources_7421,
+        );
       }
 
       await _presenceBloc.close();
@@ -270,11 +349,15 @@ class GlobalCollaborationService {
       _isInitialized = false;
 
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 资源释放完成');
+        debugPrint(
+          LocalizationService.instance.current.resourceReleaseComplete_4821,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('GlobalCollaborationService 释放资源失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.resourceReleaseFailed_4821(e),
+        );
       }
     }
   }

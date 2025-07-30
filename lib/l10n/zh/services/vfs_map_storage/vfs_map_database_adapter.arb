@@ -1,0 +1,8 @@
+{
+  "exportingVfsMapDatabase_7281": "开始导出VFS地图数据库...",
+  "vfsDatabaseExportSuccess": "VFS地图数据库导出成功 (版本: {dbVersion}, 地图数量: {mapCount})",
+  "vfsMapDbImportNotImplemented_7281": "VFS地图数据库导入功能暂未实现",
+  "vfsMapExportFailed": "VFS地图数据库导出失败: {e}",
+  "vfsMapDbImportFailed": "VFS地图数据库导入失败: {e}",
+  "idMappingInitFailed_7425": "初始化ID映射失败: {e}"
+}

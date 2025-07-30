@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/test/fullscreen_test_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 全屏测试页面模块 - 用于演示 TrayNavigation 控制
 class FullscreenTestPageModule extends PageModule {
@@ -16,7 +19,8 @@ class FullscreenTestPageModule extends PageModule {
   String get path => '/fullscreen-test';
 
   @override
-  String get displayName => '全屏测试';
+  String get displayName =>
+      LocalizationService.instance.current.fullscreenTest_4821;
 
   @override
   IconData get icon => Icons.fullscreen;

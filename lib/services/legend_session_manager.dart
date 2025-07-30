@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/widgets.dart';
 import '../models/map_item.dart';
 import '../models/legend_item.dart' as legend_db;
 import '../utils/legend_path_resolver.dart';
 import 'legend_cache_manager.dart';
 import 'dart:async';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 图例会话数据
 class LegendSessionData {
@@ -108,7 +111,11 @@ class LegendSessionManager extends ChangeNotifier {
     // 预加载所有图例
     await preloadLegends(allLegendPaths.toList());
 
-    debugPrint('图例会话管理器: 初始化完成，预加载图例数量: ${allLegendPaths.length}');
+    debugPrint(
+      LocalizationService.instance.current.legendSessionManagerInitialized(
+        allLegendPaths.length,
+      ),
+    );
   }
 
   /// 获取图例数据（同步，从会话缓存中获取）
@@ -143,7 +150,12 @@ class LegendSessionManager extends ChangeNotifier {
     try {
       // 转换占位符路径为实际路径
       final actualPath = _convertToActualPath(legendPath);
-      debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
+      debugPrint(
+        LocalizationService.instance.current.legendPathConversion_7281(
+          legendPath,
+          actualPath,
+        ),
+      );
 
       // 从缓存管理器获取数据
       final legendData = await _cacheManager.getLegendData(actualPath);
@@ -151,17 +163,30 @@ class LegendSessionManager extends ChangeNotifier {
       if (legendData != null) {
         // 加载成功，添加到会话
         _addLegendToSession(legendPath, legendData);
-        debugPrint('图例会话管理器: 成功加载 $legendPath');
+        debugPrint(
+          LocalizationService.instance.current.legendSessionManagerLoaded(
+            legendPath,
+          ),
+        );
         return legendData;
       } else {
         // 加载失败
         _markLegendFailed(legendPath);
-        debugPrint('图例会话管理器: 加载失败 $legendPath');
+        debugPrint(
+          LocalizationService.instance.current.legendSessionManagerLoadFailed(
+            legendPath,
+          ),
+        );
         return null;
       }
     } catch (e) {
       _markLegendFailed(legendPath);
-      debugPrint('图例会话管理器: 加载异常 $legendPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendSessionManagerError(
+          legendPath,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -191,7 +216,10 @@ class LegendSessionManager extends ChangeNotifier {
     final futures = pathsToLoad.map((path) => _loadSingleLegend(path));
     await Future.wait(futures);
 
-    debugPrint('图例会话管理器: 批量预加载完成，数量: ${pathsToLoad.length}');
+    debugPrint(
+      LocalizationService.instance.current
+          .legendSessionManagerBatchPreloadComplete(pathsToLoad.length),
+    );
   }
 
   /// 添加新图例到会话（当用户添加新图例项时调用）
@@ -226,7 +254,10 @@ class LegendSessionManager extends ChangeNotifier {
     );
 
     notifyListeners();
-    debugPrint('图例会话管理器: 移除图例 $legendPath');
+    debugPrint(
+      LocalizationService.instance.current
+          .legendSessionManagerRemoveLegend_7281(legendPath),
+    );
   }
 
   /// 清除会话数据
@@ -237,7 +268,9 @@ class LegendSessionManager extends ChangeNotifier {
       failedPaths: {},
     );
     notifyListeners();
-    debugPrint('图例会话管理器: 清除会话数据');
+    debugPrint(
+      LocalizationService.instance.current.sessionManagerClearData_7281,
+    );
   }
 
   /// 重新加载失败的图例
@@ -254,7 +287,11 @@ class LegendSessionManager extends ChangeNotifier {
     // 重新加载
     await preloadLegends(failedPaths);
 
-    debugPrint('图例会话管理器: 重试失败的图例，数量: ${failedPaths.length}');
+    debugPrint(
+      LocalizationService.instance.current.legendSessionManagerRetryCount(
+        failedPaths.length,
+      ),
+    );
   }
 
   /// 获取会话统计信息
@@ -292,7 +329,12 @@ class LegendSessionManager extends ChangeNotifier {
     try {
       // 转换占位符路径为实际路径
       final actualPath = _convertToActualPath(legendPath);
-      debugPrint('图例会话管理器: 路径转换 $legendPath -> $actualPath');
+      debugPrint(
+        LocalizationService.instance.current.legendSessionManagerPathConversion(
+          legendPath,
+          actualPath,
+        ),
+      );
 
       final legendData = await _cacheManager.getLegendData(actualPath);
 
@@ -303,7 +345,11 @@ class LegendSessionManager extends ChangeNotifier {
       }
     } catch (e) {
       _markLegendFailed(legendPath);
-      debugPrint('图例会话管理器: 加载单个图例失败 $legendPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendSessionManagerLoadFailed(
+          e,
+        ),
+      );
     }
   }
 

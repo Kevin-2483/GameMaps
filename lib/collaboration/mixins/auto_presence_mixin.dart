@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,8 @@ import '../models/user_presence.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
 import '../global_collaboration_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 自动在线状态管理Mixin
 ///
@@ -64,7 +67,11 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
 
       // 不自动连接WebSocket，让用户手动决定是否连接
       debugPrint(
-        '协作服务已初始化，WebSocket连接状态: ${globalService.isConnected ? "已连接" : "未连接（离线模式）"}',
+        LocalizationService.instance.current.collabServiceStatus(
+          globalService.isConnected
+              ? LocalizationService.instance.current.connected_3632
+              : LocalizationService.instance.current.disconnectedOffline_3632,
+        ),
       );
 
       // 初始化MapSyncService
@@ -90,24 +97,36 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
 
       _collaborationInitialized = true;
       debugPrint(
-        '协作服务初始化完成，WebSocket连接状态: ${_webSocketManager.connectionState}',
+        LocalizationService.instance.current.collabServiceInitStatus(
+          _webSocketManager.connectionState,
+        ),
       );
 
       // 如果WebSocket已连接，立即请求在线状态列表
       if (globalService.isConnected) {
-        debugPrint('WebSocket已连接，请求在线状态列表');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .websocketConnectedStatusRequest_4821,
+        );
         await _presenceBloc.requestOnlineStatusList();
       }
 
       // 监听WebSocket连接状态变化，在连接成功后请求在线状态列表
       _webSocketManager.connectionStateStream.listen((state) {
         if (state == WebSocketConnectionState.connected) {
-          debugPrint('WebSocket连接成功，请求在线状态列表');
+          debugPrint(
+            LocalizationService.instance.current.websocketConnectedSuccess_4821,
+          );
           _presenceBloc.requestOnlineStatusList();
         }
       });
     } catch (e) {
-      debugPrint('协作服务初始化失败: $e');
+      debugPrint(
+        LocalizationService.instance.current
+            .collaborationServiceInitFailed_4821(e),
+      );
     }
   }
 
@@ -119,9 +138,14 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
       // 先退出地图编辑器，清理状态
       _autoPresenceManager.exitMapEditor();
 
-      debugPrint('协作服务已清理');
+      debugPrint(
+        LocalizationService.instance.current.collaborationServiceCleaned_7281,
+      );
     } catch (e) {
-      debugPrint('协作服务清理失败: $e');
+      debugPrint(
+        LocalizationService.instance.current
+            .collaborationServiceCleanupFailed_7421(e),
+      );
     }
   }
 
@@ -136,18 +160,28 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
     );
 
     if (!_collaborationInitialized) {
-      debugPrint('[AutoPresenceMixin] 协作服务未初始化，跳过enterMapEditor');
+      debugPrint(
+        '[AutoPresenceMixin] ' +
+            LocalizationService
+                .instance
+                .current
+                .collabServiceNotInitialized_4821,
+      );
       return;
     }
 
-    debugPrint('[AutoPresenceMixin] 调用AutoPresenceManager.enterMapEditor');
+    debugPrint(
+      '[AutoPresenceMixin] ${LocalizationService.instance.current.autoPresenceEnterMapEditor_7421}',
+    );
     await _autoPresenceManager.enterMapEditor(
       mapId: mapId,
       mapTitle: mapTitle,
       mapCover: mapCover,
       mapDataBloc: getMapDataBloc(),
     );
-    debugPrint('[AutoPresenceMixin] AutoPresenceManager.enterMapEditor 调用完成');
+    debugPrint(
+      '[AutoPresenceMixin] AutoPresenceManager.enterMapEditor ${LocalizationService.instance.current.mapEditorCallComplete_7421}',
+    );
   }
 
   /// 退出地图编辑器
@@ -198,7 +232,12 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
   /// 获取PresenceBloc（用于UI组件）
   PresenceBloc get presenceBloc {
     if (!_collaborationInitialized) {
-      throw StateError('协作服务未初始化，请先调用 initializeCollaboration()');
+      throw StateError(
+        LocalizationService
+            .instance
+            .current
+            .collaborationServiceNotInitialized_4821,
+      );
     }
     return _presenceBloc;
   }
@@ -234,24 +273,32 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('在线用户'),
+        title: Text(LocalizationService.instance.current.onlineUsers_4271),
         content: BlocBuilder<PresenceBloc, PresenceState>(
           bloc: _presenceBloc,
           builder: (context, state) {
             if (state is! PresenceLoaded) {
-              return const SizedBox(
+              return SizedBox(
                 width: 300,
                 height: 100,
-                child: Center(child: Text('加载中...')),
+                child: Center(
+                  child: Text(
+                    LocalizationService.instance.current.loadingText_4821,
+                  ),
+                ),
               );
             }
             final allUsers = [state.currentUser, ...state.remoteUsers.values];
 
             if (allUsers.isEmpty) {
-              return const SizedBox(
+              return SizedBox(
                 width: 300,
                 height: 100,
-                child: Center(child: Text('暂无在线用户')),
+                child: Center(
+                  child: Text(
+                    LocalizationService.instance.current.noOnlineUsers_4271,
+                  ),
+                ),
               );
             }
 
@@ -271,7 +318,7 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7281),
           ),
         ],
       ),
@@ -367,7 +414,9 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        '正在编辑: ${user.currentMapTitle}',
+                        LocalizationService.instance.current.editingMapTitle(
+                          user.currentMapTitle ?? 'unknown',
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.blue.shade800,
@@ -403,13 +452,13 @@ mixin AutoPresenceMixin<T extends StatefulWidget> on State<T> {
   String _getStatusText(UserActivityStatus status) {
     switch (status) {
       case UserActivityStatus.idle:
-        return '在线';
+        return LocalizationService.instance.current.onlineStatus_4821;
       case UserActivityStatus.offline:
-        return '离线';
+        return LocalizationService.instance.current.offlineStatus_5732;
       case UserActivityStatus.viewing:
-        return '查看中';
+        return LocalizationService.instance.current.viewingStatus_6943;
       case UserActivityStatus.editing:
-        return '编辑中';
+        return LocalizationService.instance.current.editingStatus_7154;
     }
   }
 

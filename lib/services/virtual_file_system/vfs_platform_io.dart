@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// IO平台（移动端/桌面端）的VFS平台接口实现
 class VfsPlatformIO {
@@ -16,7 +19,9 @@ class VfsPlatformIO {
     // 确保目录存在
     if (!await tempDir.exists()) {
       await tempDir.create(recursive: true);
-      debugPrint('🔗 VfsPlatformIO: 创建应用临时目录 - ${tempDir.path}');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.createTempDir_7425} - ${tempDir.path}',
+      );
     }
 
     return tempDir;
@@ -43,7 +48,9 @@ class VfsPlatformIO {
     // 确保目录存在
     if (!await webdavImportDir.exists()) {
       await webdavImportDir.create(recursive: true);
-      debugPrint('🔗 VfsPlatformIO: 创建WebDAV导入临时目录 - ${webdavImportDir.path}');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.createWebDavTempDir_4721} - ${webdavImportDir.path}',
+      );
     }
 
     return webdavImportDir;
@@ -67,10 +74,12 @@ class VfsPlatformIO {
 
       if (await webdavImportDir.exists()) {
         await webdavImportDir.delete(recursive: true);
-        debugPrint('🔗 VfsPlatformIO: 已清理WebDAV导入临时文件');
+        debugPrint(LocalizationService.instance.current.webDavTempFilesCleaned);
       }
     } catch (e) {
-      debugPrint('🔗 VfsPlatformIO: 清理WebDAV导入临时文件失败 - $e');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.cleanWebDavTempFilesFailed_4721} - $e',
+      );
     }
   }
 
@@ -82,10 +91,17 @@ class VfsPlatformIO {
 
       if (await vfsFilesDir.exists()) {
         await vfsFilesDir.delete(recursive: true);
-        debugPrint('🔗 VfsPlatformIO: 已清理临时文件');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .vfsPlatformIOCleanedTempFiles_7281,
+        );
       }
     } catch (e) {
-      debugPrint('🔗 VfsPlatformIO: 清理临时文件失败 - $e');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.tempFileCleanupFailed_7421} - $e',
+      );
     }
   }
 
@@ -101,7 +117,9 @@ class VfsPlatformIO {
     String? mimeType,
   ) async {
     try {
-      debugPrint('🔗 VfsPlatformIO: 开始创建临时文件');
+      debugPrint(
+        LocalizationService.instance.current.vfsPlatformIOCreatingTempFile_4821,
+      );
 
       // 获取临时目录
       final tempDir = await getTempDirectory();
@@ -120,14 +138,16 @@ class VfsPlatformIO {
       if (await tempFile.exists()) {
         final existingData = await tempFile.readAsBytes();
         if (_bytesEqual(existingData, data)) {
-          debugPrint('🔗 VfsPlatformIO: 临时文件已存在，直接返回路径');
+          debugPrint(LocalizationService.instance.current.tempFileExists_4821);
           return tempFile.path;
         }
       }
 
       // 写入临时文件
       await tempFile.writeAsBytes(data);
-      debugPrint('🔗 VfsPlatformIO: 成功创建临时文件 - ${tempFile.path}');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.tempFileCreated_7285} - ${tempFile.path}',
+      );
 
       return tempFile.path;
     } catch (e) {

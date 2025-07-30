@@ -1,0 +1,8 @@
+{
+  "websocketDbUpgradeMessage": "WebSocket 客户端配置数据库从版本 {oldVersion} 升级到 {newVersion}",
+  "websocketClientDbInitComplete_7281": "WebSocket 客户端数据库服务初始化完成",
+  "websocketConfigSaved": "WebSocket 客户端配置已保存: {displayName}",
+  "websocketClientConfigDeleted": "WebSocket 客户端配置已删除: {clientId}",
+  "websocketTableCreated_7281": "WebSocket 客户端配置数据库表创建完成",
+  "activeWebSocketClientConfigSet": "活跃 WebSocket 客户端配置已设置: {clientId}"
+}

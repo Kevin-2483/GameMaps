@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/legend_item.dart' as legend_db;
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class LegendPanel extends StatelessWidget {
   final List<LegendGroup> legendGroups;
@@ -26,9 +29,9 @@ class LegendPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return legendGroups.isEmpty
-        ? const Center(
+        ? Center(
             child: Text(
-              '暂无图例组',
+              LocalizationService.instance.current.noLegendGroup_4521,
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
           )
@@ -53,12 +56,16 @@ class LegendPanel extends StatelessWidget {
         subtitle: Row(
           children: [
             Text(
-              '${legendGroup.legendItems.length} 个图例',
+              LocalizationService.instance.current.legendItemCount(
+                legendGroup.legendItems.length,
+              ),
               style: const TextStyle(fontSize: 12),
             ),
             const SizedBox(width: 8),
             Text(
-              '透明度: ${(legendGroup.opacity * 100).round()}%',
+              LocalizationService.instance.current.opacityPercentage(
+                (legendGroup.opacity * 100).round(),
+              ),
               style: const TextStyle(fontSize: 12),
             ),
           ],
@@ -82,30 +89,30 @@ class LegendPanel extends StatelessWidget {
             if (onLayerBinding != null)
               IconButton(
                 icon: const Icon(Icons.layers, size: 18),
-                tooltip: '图层绑定',
+                tooltip: LocalizationService.instance.current.layerBinding_4271,
                 onPressed: () => onLayerBinding!(legendGroup),
               ),
             // if (!isPreviewMode)
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, size: 18),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
                       Icon(Icons.edit, size: 16),
                       SizedBox(width: 8),
-                      Text('编辑'),
+                      Text(LocalizationService.instance.current.edit_7281),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
                       Icon(Icons.delete, size: 16),
                       SizedBox(width: 8),
-                      Text('删除'),
+                      Text(LocalizationService.instance.current.delete_5421),
                     ],
                   ),
                 ),
@@ -139,19 +146,20 @@ class LegendPanel extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑图例组'),
+        title: Text(LocalizationService.instance.current.editLegendGroup_4271),
         content: TextField(
           controller: nameController,
           textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: '图例组名称',
+          decoration: InputDecoration(
+            labelText:
+                LocalizationService.instance.current.legendGroupName_4821,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           ElevatedButton(
             onPressed: () {
@@ -164,7 +172,7 @@ class LegendPanel extends StatelessWidget {
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('保存'),
+            child: Text(LocalizationService.instance.current.saveButton_7421),
           ),
         ],
       ),
@@ -175,12 +183,18 @@ class LegendPanel extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除图例组'),
-        content: Text('确定要删除图例组 "${legendGroup.name}" 吗？此操作不可撤销。'),
+        title: Text(
+          LocalizationService.instance.current.deleteLegendGroup_4271,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteLegendGroup_7281(
+            legendGroup.name,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () {
@@ -188,7 +202,7 @@ class LegendPanel extends StatelessWidget {
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),

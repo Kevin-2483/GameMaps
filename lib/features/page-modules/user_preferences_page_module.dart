@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/settings/user_preferences_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 用户偏好设置页面模块
 class UserPreferencesPageModule extends PageModule {
@@ -16,7 +19,8 @@ class UserPreferencesPageModule extends PageModule {
   String get path => '/user-preferences';
 
   @override
-  String get displayName => '用户偏好设置';
+  String get displayName =>
+      LocalizationService.instance.current.userPreferences_4821;
 
   @override
   IconData get icon => Icons.person_outline;

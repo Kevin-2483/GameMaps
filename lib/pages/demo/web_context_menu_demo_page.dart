@@ -1,8 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../../components/web/web_context_menu_handler.dart';
 import '../../components/layout/main_layout.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../services/localization_service.dart';
 
 /// Web右键菜单测试页面
 class WebContextMenuDemoPage extends BasePage {
@@ -25,7 +27,10 @@ class _WebContextMenuDemoContent extends StatefulWidget {
 class _WebContextMenuDemoContentState
     extends State<_WebContextMenuDemoContent> {
   int _selectedItemIndex = -1;
-  final List<String> _items = List.generate(10, (index) => '项目 ${index + 1}');
+  final List<String> _items = List.generate(
+    10,
+    (index) => LocalizationService.instance.current.projectItem(index + 1),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,9 @@ class _WebContextMenuDemoContentState
       preventWebContextMenu: kIsWeb,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Web右键菜单演示'),
+          title: Text(
+            LocalizationService.instance.current.webRightClickDemo_4821,
+          ),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: Padding(
@@ -49,26 +56,66 @@ class _WebContextMenuDemoContentState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Web平台右键菜单说明',
+                        LocalizationService
+                            .instance
+                            .current
+                            .webPlatformRightClickMenuDescription_4821,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '当前平台: ${kIsWeb ? 'Web浏览器' : '桌面/移动设备'}',
+                        LocalizationService.instance.current.currentPlatform(
+                          kIsWeb
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .webBrowser_5732
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .desktopMobile_6943,
+                        ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: kIsWeb ? Colors.orange : Colors.green,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        '在Web平台上：\n'
-                        '• 浏览器默认的右键菜单已被禁用\n'
-                        '• 使用Flutter自定义的右键菜单\n'
-                        '• 与桌面平台保持一致的交互体验\n\n'
-                        '在桌面/移动平台上：\n'
-                        '• 使用系统原生的右键菜单样式\n'
-                        '• 保持平台原生的交互体验',
+                      Text(
+                        LocalizationService
+                                .instance
+                                .current
+                                .webPlatformFeatures_4821 +
+                            '\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .browserContextMenuDisabled_4821 +
+                            '\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .flutterCustomContextMenu_4821 +
+                            '\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .consistentDesktopExperience_4821 +
+                            '\n\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .desktopMobilePlatforms_4821 +
+                            '\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .nativeContextMenuStyle_4821 +
+                            '\n' +
+                            LocalizationService
+                                .instance
+                                .current
+                                .nativeInteractionExperience_4821,
                       ),
                     ],
                   ),
@@ -103,7 +150,10 @@ class _WebContextMenuDemoContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('简单右键菜单', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.simpleRightClickMenu_7281,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
 
             // 可右键的区域
@@ -113,29 +163,42 @@ class _WebContextMenuDemoContentState
                   ContextMenuItem(
                     label: '新建',
                     icon: Icons.add,
-                    onTap: () => _showMessage('新建项目'),
+                    onTap: () => _showMessage(
+                      LocalizationService
+                          .instance
+                          .current
+                          .createNewProject_7281,
+                    ),
                   ),
                   ContextMenuItem(
-                    label: '打开',
+                    label: LocalizationService.instance.current.open_7281,
                     icon: Icons.folder_open,
-                    onTap: () => _showMessage('打开文件'),
+                    onTap: () => _showMessage(
+                      LocalizationService.instance.current.openFile_7282,
+                    ),
                   ),
                   const ContextMenuItem.divider(),
                   ContextMenuItem(
-                    label: '复制',
+                    label: LocalizationService.instance.current.copy_4821,
                     icon: Icons.copy,
-                    onTap: () => _showMessage('已复制'),
+                    onTap: () => _showMessage(
+                      LocalizationService.instance.current.copiedMessage_7532,
+                    ),
                   ),
                   ContextMenuItem(
-                    label: '粘贴',
+                    label: LocalizationService.instance.current.paste_4821,
                     icon: Icons.paste,
-                    onTap: () => _showMessage('已粘贴'),
+                    onTap: () => _showMessage(
+                      LocalizationService.instance.current.pastedMessage_4821,
+                    ),
                   ),
                   const ContextMenuItem.divider(),
                   ContextMenuItem(
-                    label: '属性',
+                    label: LocalizationService.instance.current.properties_4821,
                     icon: Icons.settings,
-                    onTap: () => _showMessage('显示属性'),
+                    onTap: () => _showMessage(
+                      LocalizationService.instance.current.showProperties_4821,
+                    ),
                   ),
                 ],
                 child: Container(
@@ -152,16 +215,25 @@ class _WebContextMenuDemoContentState
                       style: BorderStyle.solid,
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.mouse, size: 48),
                         SizedBox(height: 8),
-                        Text('右键点击这里', style: TextStyle(fontSize: 16)),
+                        Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .rightClickHere_7281,
+                          style: TextStyle(fontSize: 16),
+                        ),
                         SizedBox(height: 4),
                         Text(
-                          '试试看右键菜单功能',
+                          LocalizationService
+                              .instance
+                              .current
+                              .tryRightClickMenu_4821,
                           style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
@@ -183,7 +255,10 @@ class _WebContextMenuDemoContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('列表项右键菜单', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.listItemContextMenu_4821,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
 
             // 列表
@@ -199,32 +274,43 @@ class _WebContextMenuDemoContentState
                       ContextMenuItem(
                         label: '查看详情',
                         icon: Icons.visibility,
-                        onTap: () => _showMessage('查看 $item 详情'),
+                        onTap: () => _showMessage(
+                          LocalizationService.instance.current
+                              .viewItemDetails_7421(item),
+                        ),
                       ),
                       ContextMenuItem(
-                        label: '编辑',
+                        label:
+                            LocalizationService.instance.current.editLabel_5421,
                         icon: Icons.edit,
-                        onTap: () => _showMessage('编辑 $item'),
+                        onTap: () => _showMessage(
+                          LocalizationService.instance.current
+                              .editItemMessage_5421(item),
+                        ),
                       ),
                       ContextMenuItem(
-                        label: '重命名',
+                        label: LocalizationService.instance.current.rename_7421,
                         icon: Icons.edit,
                         onTap: () => _showRenameDialog(index),
                       ),
                       const ContextMenuItem.divider(),
                       ContextMenuItem(
-                        label: '复制',
+                        label: LocalizationService.instance.current.copy_4821,
                         icon: Icons.copy,
                         onTap: () => _copyItem(index),
                       ),
                       ContextMenuItem(
                         label: '移动',
                         icon: Icons.move_up,
-                        onTap: () => _showMessage('移动 $item'),
+                        onTap: () => _showMessage(
+                          LocalizationService.instance.current.moveItem_7421(
+                            item,
+                          ),
+                        ),
                       ),
                       const ContextMenuItem.divider(),
                       ContextMenuItem(
-                        label: '删除',
+                        label: LocalizationService.instance.current.delete_7281,
                         icon: Icons.delete,
                         onTap: () => _deleteItem(index),
                       ),
@@ -248,7 +334,20 @@ class _WebContextMenuDemoContentState
                           ),
                         ),
                         title: Text(item),
-                        subtitle: Text('右键查看选项 - ${kIsWeb ? 'Web模式' : '桌面模式'}'),
+                        subtitle: Text(
+                          LocalizationService.instance.current
+                              .rightClickOptionsWithMode_7421(
+                                kIsWeb
+                                    ? LocalizationService
+                                          .instance
+                                          .current
+                                          .webMode_1589
+                                    : LocalizationService
+                                          .instance
+                                          .current
+                                          .desktopMode_2634,
+                              ),
+                        ),
                         trailing: const Icon(Icons.more_vert),
                         onTap: () {
                           setState(() {
@@ -273,21 +372,29 @@ class _WebContextMenuDemoContentState
 
   void _copyItem(int index) {
     setState(() {
-      _items.insert(index + 1, '${_items[index]} (副本)');
+      _items.insert(
+        index + 1,
+        '${_items[index]} ' +
+            LocalizationService.instance.current.copySuffix_7281,
+      );
     });
-    _showMessage('已复制项目');
+    _showMessage(LocalizationService.instance.current.projectCopied_4821);
   }
 
   void _deleteItem(int index) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除"${_items[index]}"吗？'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteItem_7421(
+            _items[index],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           TextButton(
             onPressed: () {
@@ -300,9 +407,11 @@ class _WebContextMenuDemoContentState
                   _selectedItemIndex--;
                 }
               });
-              _showMessage('已删除项目');
+              _showMessage(
+                LocalizationService.instance.current.projectDeleted_7281,
+              );
             },
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
@@ -317,11 +426,11 @@ class _WebContextMenuDemoContentState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名'),
+        title: Text(LocalizationService.instance.current.rename_4821),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '新名称',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.newNameLabel_4521,
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -329,7 +438,7 @@ class _WebContextMenuDemoContentState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7281),
           ),
           TextButton(
             onPressed: () {
@@ -337,11 +446,15 @@ class _WebContextMenuDemoContentState
                 setState(() {
                   _items[index] = controller.text.trim();
                 });
-                _showMessage('已重命名');
+                _showMessage(
+                  LocalizationService.instance.current.renamedSuccessfully_7281,
+                );
               }
               Navigator.of(context).pop();
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),

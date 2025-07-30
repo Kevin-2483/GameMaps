@@ -1,5 +1,7 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../services/audio/audio_player_service.dart';
+import '../../../services/localization_service.dart';
 
 /// 音频播放器组件
 class AudioPlayerWidget extends StatefulWidget {
@@ -87,14 +89,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   void dispose() {
     if (!widget.connectToExisting) {
       _audioService.stop().catchError((e) {
-        debugPrint('停止音频播放失败: $e');
+        debugPrint(LocalizationService.instance.current.audioPlaybackFailed(e));
       });
       _audioService.dispose().catchError((e) {
-        debugPrint('清理音频服务失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.audioServiceCleanupFailed(e),
+        );
       });
     } else {
       _audioService.removeListeners(); // 只注销监听，不销毁底层播放器
-      debugPrint('🎵 窗口关闭，音频继续在后台播放');
+      debugPrint(LocalizationService.instance.current.audioBackgroundPlay_7281);
     }
     _progressAnimationController.dispose();
     _volumeAnimationController.dispose();
@@ -123,7 +127,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         await _audioService.playFromPlaylist(0);
       }
     } catch (e) {
-      widget.onError?.call('初始化播放器失败: $e');
+      widget.onError?.call(
+        LocalizationService.instance.current.playerInitFailed_4821(e),
+      );
     }
   }
 
@@ -132,7 +138,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     try {
       _audioService.forceRefreshUI();
       final currentSource = _audioService.currentSource;
-      debugPrint('🎵 检查播放状态 - 当前源: $currentSource, 目标源: ${widget.source}');
+      debugPrint(
+        LocalizationService.instance.current.checkPlayStatus(
+          currentSource ?? '',
+          widget.source,
+        ),
+      );
       final playlistItem = PlaylistItem(
         source: widget.source,
         title: widget.title,
@@ -146,7 +157,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         if (_audioService.currentSource == widget.source) {
           // 已经在播放同一个音频，直接刷新UI即可
           _audioService.forceRefreshUI();
-          debugPrint('🎵 插播请求与当前播放源一致，跳过插播。');
+          debugPrint(
+            LocalizationService.instance.current.skipSameSourceAd_7285,
+          );
           return;
         }
         _audioService.removeFromPlaylistBySource(widget.source);
@@ -164,19 +177,46 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       }
       await Future.delayed(const Duration(milliseconds: 100));
       _audioService.forceRefreshUI();
-      debugPrint('🎵 连接到现有播放器完成:');
-      debugPrint('  - 当前播放: ${_audioService.currentSource}');
-      debugPrint('  - 播放状态: ${_audioService.state}');
       debugPrint(
-        '  - 播放进度: ${_audioService.currentPosition}/${_audioService.totalDuration}',
+        LocalizationService.instance.current.connectionToPlayerComplete_7281,
       );
-      debugPrint('  - 播放列表长度: ${_audioService.playlist.length}');
-      debugPrint('  - 当前索引: ${_audioService.currentIndex}');
-      debugPrint('  - 是否播放我们的音频: ${_isPlayingOurAudio()}');
-      debugPrint('  - 是否在播放列表中: ${_isInPlaylist()}');
+      debugPrint(
+        LocalizationService.instance.current.currentPlaying(
+          _audioService.currentSource ?? '',
+        ),
+      );
+      debugPrint(
+        '  - ${LocalizationService.instance.current.playbackStatus_7421}: ${_audioService.state}',
+      );
+      debugPrint(
+        LocalizationService.instance.current.playbackProgress(
+          _audioService.currentPosition,
+          _audioService.totalDuration,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.playlistLength(
+          _audioService.playlist.length,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.currentIndexLog(
+          _audioService.currentIndex,
+        ),
+      );
+      debugPrint(
+        '  - ${LocalizationService.instance.current.playOurAudioPrompt_4821}: ${_isPlayingOurAudio()}',
+      );
+      debugPrint(
+        '  - ${LocalizationService.instance.current.isInPlaylistCheck_7425}: ${_isInPlaylist()}',
+      );
     } catch (e) {
-      debugPrint('🎵 连接到播放器失败: $e');
-      widget.onError?.call('连接到播放器失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.playerConnectionFailed_7285(e),
+      );
+      widget.onError?.call(
+        LocalizationService.instance.current.playerConnectionFailed(e),
+      );
     }
   }
 
@@ -238,7 +278,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.music_note, size: 32),
@@ -276,7 +316,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           IconButton(
             onPressed: () => setState(() => _isMinimized = false),
             icon: const Icon(Icons.keyboard_arrow_up),
-            tooltip: '展开播放器',
+            tooltip: LocalizationService.instance.current.expandPlayer_7281,
           ),
         ],
       ),
@@ -289,12 +329,15 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text('音频播放器', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            LocalizationService.instance.current.audioPlayerTitle_7281,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const Spacer(),
           // 播放列表按钮
           IconButton(
             icon: const Icon(Icons.queue_music),
-            tooltip: '播放列表',
+            tooltip: LocalizationService.instance.current.playlistTooltip_4271,
             onPressed: () => setState(() => _showPlaylistPanel = true),
           ),
           // 播放模式切换
@@ -303,7 +346,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
           IconButton(
             onPressed: () => setState(() => _isMinimized = true),
             icon: const Icon(Icons.keyboard_arrow_down),
-            tooltip: '最小化播放器',
+            tooltip: LocalizationService.instance.current.minimizePlayer_4821,
           ),
         ],
       ),
@@ -347,7 +390,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     final playlist = _audioService.playlist;
     return Material(
       borderRadius: BorderRadius.circular(16),
-      color: Theme.of(context).dialogBackgroundColor,
+      color:
+          DialogTheme.of(context).backgroundColor ??
+          Theme.of(context).colorScheme.surface,
       child: Container(
         width: 400,
         height: 480,
@@ -358,8 +403,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               children: [
                 const Icon(Icons.queue_music),
                 const SizedBox(width: 8),
-                const Text(
-                  '播放列表',
+                Text(
+                  LocalizationService.instance.current.playlistTitle_4821,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
@@ -371,9 +416,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             ),
             const Divider(),
             if (playlist.isEmpty)
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: Text('播放列表为空', style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    LocalizationService.instance.current.playlistEmpty_7281,
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
               )
             else
@@ -429,7 +477,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                         children: [
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
-                            tooltip: '移除',
+                            tooltip: LocalizationService
+                                .instance
+                                .current
+                                .remove_4821,
                             onPressed: () {
                               setState(() {
                                 _audioService.removeFromPlaylistBySource(
@@ -463,7 +514,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         width: 200,
         height: 200,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -569,11 +620,18 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                             .round(),
                       );
                       debugPrint(
-                        '🎵 进度条拖拽到: ${_formatDuration(position)} / ${_formatDuration(_audioService.totalDuration)}',
+                        LocalizationService.instance.current
+                            .progressBarDraggedTo(
+                              _formatDuration(position),
+                              _formatDuration(_audioService.totalDuration),
+                            ),
                       );
                       // 异步调用seek，不阻塞UI
                       _audioService.seek(position).catchError((e) {
-                        debugPrint('进度条拖拽跳转失败: $e');
+                        debugPrint(
+                          LocalizationService.instance.current
+                              .progressBarDragFail_4821(e),
+                        );
                       });
                     }
                   : null, // 如果没有总时长，禁用拖拽
@@ -613,7 +671,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                 : null,
             icon: const Icon(Icons.skip_previous),
             iconSize: 36,
-            tooltip: '上一首',
+            tooltip: LocalizationService.instance.current.previousTrack_7281,
           ),
           // 快退
           IconButton(
@@ -623,7 +681,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
               _audioService
                   .seek(newPosition.isNegative ? Duration.zero : newPosition)
                   .catchError((e) {
-                    debugPrint('快退操作失败: $e');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .fastRewindFailed_4821(e),
+                    );
                   });
             },
             icon: const Icon(Icons.replay_10),
@@ -644,7 +705,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                 color: Theme.of(context).colorScheme.onPrimary,
               ),
               iconSize: 48,
-              tooltip: _audioService.isPlaying ? '暂停' : '播放',
+              tooltip: _audioService.isPlaying
+                  ? LocalizationService.instance.current.pauseButton_4821
+                  : LocalizationService.instance.current.playButton_4821,
             ),
           ),
           // 快进
@@ -654,7 +717,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                   _audioService.currentPosition + const Duration(seconds: 10);
               if (newPosition < _audioService.totalDuration) {
                 _audioService.seek(newPosition).catchError((e) {
-                  debugPrint('快进操作失败: $e');
+                  debugPrint(
+                    '${LocalizationService.instance.current.fastForwardFailed_7285}: $e',
+                  );
                 });
               }
             },
@@ -670,7 +735,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                 : null,
             icon: const Icon(Icons.skip_next),
             iconSize: 36,
-            tooltip: '下一首',
+            tooltip: LocalizationService.instance.current.nextSong_7281,
           ),
         ],
       ),
@@ -689,13 +754,13 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             onPressed: () =>
                 setState(() => _showVolumeSlider = !_showVolumeSlider),
             icon: Icon(_getVolumeIcon()),
-            tooltip: '音量控制',
+            tooltip: LocalizationService.instance.current.volumeControl_7281,
           ),
 
           // 播放速度
           PopupMenuButton<double>(
             icon: const Icon(Icons.speed),
-            tooltip: '播放速度',
+            tooltip: LocalizationService.instance.current.playbackSpeed_4821,
             onSelected: (speed) => _audioService.setPlaybackRate(speed),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 0.5, child: Text('0.5x')),
@@ -712,7 +777,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             onPressed: () =>
                 setState(() => _showEqualizerPanel = !_showEqualizerPanel),
             icon: const Icon(Icons.tune),
-            tooltip: '音频均衡器',
+            tooltip: LocalizationService.instance.current.audioEqualizer_4821,
           ),
 
           // 静音切换
@@ -721,7 +786,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             icon: Icon(
               _audioService.muted ? Icons.volume_off : Icons.volume_up,
             ),
-            tooltip: _audioService.muted ? '取消静音' : '静音',
+            tooltip: _audioService.muted
+                ? LocalizationService.instance.current.unmute_4721
+                : LocalizationService.instance.current.mute_5832,
           ),
 
           // 更多选项
@@ -729,27 +796,33 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             onSelected: _handleMenuAction,
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'add_to_playlist',
                 child: ListTile(
                   leading: Icon(Icons.playlist_add),
-                  title: Text('添加到播放列表'),
+                  title: Text(
+                    LocalizationService.instance.current.addToPlaylist_4271,
+                  ),
                   dense: true,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'sleep_timer',
                 child: ListTile(
                   leading: Icon(Icons.timer),
-                  title: Text('睡眠定时器'),
+                  title: Text(
+                    LocalizationService.instance.current.sleepTimer_4271,
+                  ),
                   dense: true,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'audio_info',
                 child: ListTile(
                   leading: Icon(Icons.info),
-                  title: Text('音频信息'),
+                  title: Text(
+                    LocalizationService.instance.current.audioInfo_4271,
+                  ),
                   dense: true,
                 ),
               ),
@@ -767,7 +840,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         border: Border(
           top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
@@ -786,7 +859,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('音量控制', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.volumeControl_4821,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -814,7 +890,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        Text('音频平衡', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.audioBalance_7281,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -843,35 +922,39 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       tooltip: '播放模式',
       onSelected: _audioService.setPlaybackMode,
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: PlaybackMode.sequential,
           child: ListTile(
             leading: Icon(Icons.playlist_play),
-            title: Text('顺序播放'),
+            title: Text(
+              LocalizationService.instance.current.sequentialPlayback_4271,
+            ),
             dense: true,
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: PlaybackMode.loopAll,
           child: ListTile(
             leading: Icon(Icons.repeat),
-            title: Text('循环列表'),
+            title: Text(LocalizationService.instance.current.circularList_7421),
             dense: true,
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: PlaybackMode.loopOne,
           child: ListTile(
             leading: Icon(Icons.repeat_one),
-            title: Text('单曲循环'),
+            title: Text(
+              LocalizationService.instance.current.singleCycleMode_4271,
+            ),
             dense: true,
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: PlaybackMode.shuffle,
           child: ListTile(
             leading: Icon(Icons.shuffle),
-            title: Text('随机播放'),
+            title: Text(LocalizationService.instance.current.randomPlay_4271),
             dense: true,
           ),
         ),
@@ -953,8 +1036,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
         }
       }
     } catch (e) {
-      debugPrint('播放/暂停操作失败: $e');
-      widget.onError?.call('播放操作失败: $e');
+      debugPrint(LocalizationService.instance.current.playPauseFailed_4821(e));
+      widget.onError?.call(
+        LocalizationService.instance.current.playbackFailed_4821(e),
+      );
     }
   }
 
@@ -1005,12 +1090,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('睡眠定时器'),
-        content: const Text('定时器功能正在开发中...'),
+        title: Text(LocalizationService.instance.current.sleepTimer_4271),
+        content: Text(
+          LocalizationService.instance.current.timerInDevelopment_7421,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -1022,28 +1111,55 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('音频信息'),
+        title: Text(LocalizationService.instance.current.audioInfo_4271),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('标题', widget.title),
-            if (widget.artist != null) _buildInfoRow('艺术家', widget.artist!),
-            if (widget.album != null) _buildInfoRow('专辑', widget.album!),
-            _buildInfoRow('源', widget.isVfsPath ? 'VFS文件' : '网络URL'),
-            _buildInfoRow('时长', _formatDuration(_audioService.totalDuration)),
             _buildInfoRow(
-              '当前位置',
+              LocalizationService.instance.current.title_5421,
+              widget.title,
+            ),
+            if (widget.artist != null)
+              _buildInfoRow(
+                LocalizationService.instance.current.artistLabel_4821,
+                widget.artist!,
+              ),
+            if (widget.album != null)
+              _buildInfoRow(
+                LocalizationService.instance.current.albumLabel_4821,
+                widget.album!,
+              ),
+            _buildInfoRow(
+              LocalizationService.instance.current.sourceLabel_4821,
+              widget.isVfsPath
+                  ? LocalizationService.instance.current.vfsFileLabel_4822
+                  : LocalizationService.instance.current.networkUrlLabel_4823,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.durationLabel_4821,
+              _formatDuration(_audioService.totalDuration),
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.currentPosition_4821,
               _formatDuration(_audioService.currentPosition),
             ),
-            _buildInfoRow('播放速度', '${_audioService.playbackRate}x'),
-            _buildInfoRow('音量', '${(_audioService.volume * 100).round()}%'),
+            _buildInfoRow(
+              LocalizationService.instance.current.playbackSpeed_7421,
+              '${_audioService.playbackRate}x',
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.volumeLabel_4821,
+              '${(_audioService.volume * 100).round()}%',
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),

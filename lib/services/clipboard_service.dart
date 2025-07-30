@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:path/path.dart' as path;
 import 'package:super_clipboard/super_clipboard.dart';
 
 import 'virtual_file_system/vfs_platform_io.dart';
+import 'localization_service.dart';
 
 /// 剪贴板服务类，负责处理图像复制到系统剪贴板
 class ClipboardService {
@@ -22,7 +24,7 @@ class ClipboardService {
   }) async {
     try {
       if (rgbaData.isEmpty || width <= 0 || height <= 0) {
-        debugPrint('无效的图像数据');
+        debugPrint(LocalizationService.instance.current.invalidImageData_7281);
         return false;
       }
 
@@ -49,7 +51,9 @@ class ClipboardService {
       // 其他平台处理（需要文件系统支持）
       return await _copyImageOnNativePlatforms(pngBytes, width, height);
     } catch (e) {
-      debugPrint('复制地图选中区域失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.copyMapSelectionFailed_4829(e),
+      );
       return false;
     }
   }
@@ -69,10 +73,17 @@ class ClipboardService {
 
         await clipboard.write([item]);
 
-        debugPrint('Web: 地图选中区域已成功复制到剪贴板: ${width}x$height');
+        debugPrint(
+          LocalizationService.instance.current.mapAreaCopiedToClipboard(
+            width,
+            height,
+          ),
+        );
         return true;
       } else {
-        debugPrint('Web: 系统剪贴板不可用，使用事件监听器方式');
+        debugPrint(
+          LocalizationService.instance.current.clipboardUnavailableWeb_9274,
+        );
 
         // 在 Web 平台上，如果 SystemClipboard.instance 为空，
         // 我们需要设置剪贴板事件监听器来处理复制操作
@@ -80,7 +91,7 @@ class ClipboardService {
         return await _copyToClipboardFallback(width, height, isWeb: true);
       }
     } catch (e) {
-      debugPrint('Web 平台复制图像失败: $e');
+      debugPrint(LocalizationService.instance.current.webImageCopyFailed(e));
       return await _copyToClipboardFallback(width, height, isWeb: true);
     }
   }
@@ -120,28 +131,41 @@ class ClipboardService {
 
           await clipboard.write([item]);
 
-          debugPrint('地图选中区域已成功复制到剪贴板: ${width}x$height');
+          debugPrint(
+            LocalizationService.instance.current.mapAreaCopiedToClipboard(
+              width,
+              height,
+            ),
+          );
 
           // 清理临时文件
           try {
             await tempFile.delete();
           } catch (e) {
-            debugPrint('警告：无法删除临时文件: $e');
+            debugPrint(
+              LocalizationService.instance.current.tempFileDeletionWarning(e),
+            );
           }
 
           return true;
         } else {
-          debugPrint('系统剪贴板不可用，尝试平台特定实现');
+          debugPrint(
+            LocalizationService.instance.current.clipboardUnavailable_7281,
+          );
           return await _copyImageWithPlatformChannels(tempFile, width, height);
         }
       } catch (e) {
-        debugPrint('使用 super_clipboard 复制图像失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.clipboardCopyImageFailed(e),
+        );
 
         // 回退到平台特定的实现
         return await _copyImageWithPlatformChannels(tempFile, width, height);
       }
     } catch (e) {
-      debugPrint('原生平台复制图像失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.nativeImageCopyFailed_4821(e),
+      );
       return false;
     }
   }
@@ -165,16 +189,24 @@ class ClipboardService {
         ]);
 
         if (result.exitCode == 0) {
-          debugPrint('Windows: 图像已成功复制到剪贴板');
+          debugPrint(
+            LocalizationService.instance.current.imageCopiedToClipboard_4821,
+          );
           // 清理临时文件
           try {
             await imageFile.delete();
           } catch (e) {
-            debugPrint('警告：无法删除临时文件: $e');
+            debugPrint(
+              LocalizationService.instance.current.tempFileDeletionWarning(e),
+            );
           }
           return true;
         } else {
-          debugPrint('Windows PowerShell 复制失败: ${result.stderr}');
+          debugPrint(
+            LocalizationService.instance.current.windowsPowerShellCopyFailed(
+              result.stderr,
+            ),
+          );
         }
       } else if (Platform.isMacOS) {
         // macOS 平台：使用 osascript
@@ -184,16 +216,26 @@ class ClipboardService {
         ]);
 
         if (result.exitCode == 0) {
-          debugPrint('macOS: 图像已成功复制到剪贴板');
+          debugPrint(
+            LocalizationService.instance.current.imageCopiedToClipboard_4821,
+          );
           // 清理临时文件
           try {
             await imageFile.delete();
           } catch (e) {
-            debugPrint('警告：无法删除临时文件: $e');
+            debugPrint(
+              LocalizationService.instance.current.tempFileDeletionWarning_4821(
+                e,
+              ),
+            );
           }
           return true;
         } else {
-          debugPrint('macOS osascript 复制失败: ${result.stderr}');
+          debugPrint(
+            LocalizationService.instance.current.macOsCopyFailed_7421(
+              result.stderr,
+            ),
+          );
         }
       } else if (Platform.isLinux) {
         // Linux 平台：尝试使用 xclip
@@ -207,23 +249,36 @@ class ClipboardService {
         ]);
 
         if (result.exitCode == 0) {
-          debugPrint('Linux: 图像已成功复制到剪贴板');
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .imageCopiedToClipboardLinux_4821,
+          );
           // 清理临时文件
           try {
             await imageFile.delete();
           } catch (e) {
-            debugPrint('警告：无法删除临时文件: $e');
+            debugPrint(
+              LocalizationService.instance.current.tempFileDeletionWarning(e),
+            );
           }
           return true;
         } else {
-          debugPrint('Linux xclip 复制失败: ${result.stderr}');
+          debugPrint(
+            LocalizationService.instance.current.linuxXclipCopyFailed(
+              result.stderr,
+            ),
+          );
         }
       }
 
       // 如果平台特定实现失败，回退到文本模式
       return await _copyToClipboardFallback(width, height);
     } catch (e) {
-      debugPrint('平台特定复制实现失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.platformCopyFailed_7285(e),
+      );
       return await _copyToClipboardFallback(width, height);
     }
   }
@@ -238,14 +293,28 @@ class ClipboardService {
       final platformHint = isWeb ? 'Web平台' : '此平台';
       await Clipboard.setData(
         ClipboardData(
-          text: '地图选中区域已保存 (${width}x$height) - 图像剪贴板功能在$platformHint不可用',
+          text: LocalizationService.instance.current.mapSelectionSavedWithSize(
+            width,
+            height,
+            platformHint,
+          ),
         ),
       );
 
-      debugPrint('已回退到文本模式复制: ${width}x$height (${isWeb ? 'Web' : 'Native'})');
+      debugPrint(
+        LocalizationService.instance.current.fallbackToTextModeCopy(
+          width,
+          height,
+          isWeb
+              ? LocalizationService.instance.current.web_1234
+              : LocalizationService.instance.current.native_5678,
+        ),
+      );
       return true;
     } catch (e) {
-      debugPrint('文本模式复制也失败了: $e');
+      debugPrint(
+        LocalizationService.instance.current.textModeCopyFailed_4821(e),
+      );
       return false;
     }
   }
@@ -276,7 +345,10 @@ class ClipboardService {
             if (pngData != null) {
               final isSynthesized = reader.isSynthesized(Formats.png);
               debugPrint(
-                'super_clipboard: 从剪贴板成功读取PNG图片，大小: ${pngData!.length} 字节${isSynthesized ? ' (合成)' : ''}',
+                LocalizationService.instance.current.clipboardPngReadSuccess(
+                  pngData!.length.toString(),
+                  isSynthesized,
+                ),
               );
               return pngData;
             }
@@ -296,7 +368,9 @@ class ClipboardService {
 
             if (jpegData != null) {
               debugPrint(
-                'super_clipboard: 从剪贴板成功读取JPEG图片，大小: ${jpegData!.length} 字节',
+                LocalizationService.instance.current.jpegImageReadSuccess(
+                  jpegData!.length,
+                ),
               );
               return jpegData;
             }
@@ -316,27 +390,44 @@ class ClipboardService {
 
             if (gifData != null) {
               debugPrint(
-                'super_clipboard: 从剪贴板成功读取GIF图片，大小: ${gifData!.length} 字节',
+                LocalizationService.instance.current.clipboardGifReadSuccess(
+                  gifData!.length,
+                ),
               );
               return gifData;
             }
           }
 
-          debugPrint('super_clipboard: 剪贴板中没有支持的图片格式');
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .clipboardNoSupportedImageFormat_4821,
+          );
         } catch (e) {
-          debugPrint('super_clipboard 读取失败: $e，回退到平台特定实现');
+          debugPrint(
+            LocalizationService.instance.current.superClipboardReadError_7425(
+              e,
+            ),
+          );
         }
       } else {
-        debugPrint('系统剪贴板不可用，使用平台特定实现');
+        debugPrint(
+          LocalizationService.instance.current.clipboardUnavailable_7421,
+        );
       }
       // 回退到平台特定的实现
       if (kIsWeb) {
-        debugPrint('Web 平台不支持平台特定的剪贴板读取实现');
+        debugPrint(
+          LocalizationService.instance.current.webClipboardNotSupported_7281,
+        );
         return null;
       }
       return await _readImageWithPlatformChannels();
     } catch (e) {
-      debugPrint('从剪贴板读取图片失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.clipboardImageReadFailed(e),
+      );
       return null;
     }
   }
@@ -346,7 +437,9 @@ class ClipboardService {
     try {
       // Web 平台不支持文件系统操作
       if (kIsWeb) {
-        debugPrint('Web 平台不支持平台特定的剪贴板读取实现');
+        debugPrint(
+          LocalizationService.instance.current.webClipboardNotSupported_7281,
+        );
         return null;
       }
 
@@ -390,13 +483,20 @@ class ClipboardService {
             try {
               await tempFile.delete();
             } catch (e) {
-              debugPrint('警告：无法删除临时文件: $e');
+              debugPrint(
+                LocalizationService.instance.current.tempFileDeletionWarning(e),
+              );
             }
-            debugPrint('Windows: 从剪贴板成功读取图片，大小: ${bytes.length} 字节');
+            debugPrint(
+              LocalizationService.instance.current
+                  .windowsClipboardImageReadSuccess(bytes.length),
+            );
             return bytes;
           }
         } else {
-          debugPrint('Windows PowerShell 读取失败或剪贴板中没有图片');
+          debugPrint(
+            LocalizationService.instance.current.powershellReadError_4821,
+          );
         }
       } else if (Platform.isMacOS) {
         // macOS 平台：使用 osascript
@@ -422,13 +522,20 @@ class ClipboardService {
             try {
               await tempFile.delete();
             } catch (e) {
-              debugPrint('警告：无法删除临时文件: $e');
+              debugPrint(
+                LocalizationService.instance.current
+                    .tempFileDeletionWarning_7284(e),
+              );
             }
-            debugPrint('macOS: 从剪贴板成功读取图片，大小: ${bytes.length} 字节');
+            debugPrint(
+              'macOS: ${LocalizationService.instance.current.clipboardImageReadSuccess_7285}, ${LocalizationService.instance.current.sizeInBytes_7285(bytes.length)}',
+            );
             return bytes;
           }
         } else {
-          debugPrint('macOS osascript 读取失败或剪贴板中没有图片');
+          debugPrint(
+            LocalizationService.instance.current.macOsScriptReadFailed_7281,
+          );
         }
       } else if (Platform.isLinux) {
         // Linux 平台：尝试使用 xclip
@@ -442,17 +549,23 @@ class ClipboardService {
 
         if (result.exitCode == 0 && result.stdout.isNotEmpty) {
           final bytes = result.stdout as Uint8List;
-          debugPrint('Linux: 从剪贴板成功读取图片，大小: ${bytes.length} 字节');
+          debugPrint(
+            'Linux: ${LocalizationService.instance.current.clipboardImageReadSuccess_7425(bytes.length)}',
+          );
           return bytes;
         } else {
-          debugPrint('Linux xclip 读取失败或剪贴板中没有图片');
+          debugPrint(
+            LocalizationService.instance.current.linuxXclipReadFailed_7281,
+          );
         }
       }
 
-      debugPrint('平台特定的剪贴板读取不支持或失败');
+      debugPrint(LocalizationService.instance.current.clipboardReadError_4821);
       return null;
     } catch (e) {
-      debugPrint('平台特定剪贴板读取实现失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.clipboardReadFailed_7285(e),
+      );
       return null;
     }
   }

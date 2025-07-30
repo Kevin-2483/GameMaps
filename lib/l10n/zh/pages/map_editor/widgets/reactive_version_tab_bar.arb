@@ -1,0 +1,14 @@
+{
+  "createNewVersion_4271": "创建新版本",
+  "versionNameLabel_4821": "版本名称",
+  "versionNameHint_4822": "输入版本名称",
+  "cancelButton_7421": "取消",
+  "createButton_7421": "创建",
+  "deleteVersion_4271": "删除版本",
+  "cancelButton_4271": "取消",
+  "confirmDeleteVersion_7281": "确定要删除版本 \"{versionName}\" 吗？\n此操作无法撤销。",
+  "delete_4821": "删除",
+  "responsiveVersionTabDebug": "响应式版本标签栏构建: 版本数量={versionCount}, 当前版本={currentVersion}, 未保存版本={hasUnsavedVersions}",
+  "noVersionAvailable_7281": "暂无版本",
+  "createNewVersion_4821": "创建新版本"
+}

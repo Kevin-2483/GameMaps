@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// VFS文件重命名对话框
 class VfsFileRenameDialog extends StatefulWidget {
@@ -63,19 +66,24 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
     setState(() {
       if (name.isEmpty) {
         _isValidName = false;
-        _errorMessage = '名称不能为空';
+        _errorMessage =
+            LocalizationService.instance.current.nameCannotBeEmpty_4821;
       } else if (name.contains(RegExp(r'[<>:"/\\|?*]'))) {
         _isValidName = false;
-        _errorMessage = '名称包含无效字符: < > : " / \\ | ? *';
+        _errorMessage =
+            LocalizationService.instance.current.invalidCharactersError_4821;
       } else if (name.startsWith('.') || name.endsWith('.')) {
         _isValidName = false;
-        _errorMessage = '名称不能以点号开头或结尾';
+        _errorMessage =
+            LocalizationService.instance.current.invalidNameDotError_4821;
       } else if (name.length > 255) {
         _isValidName = false;
-        _errorMessage = '名称长度不能超过255个字符';
+        _errorMessage =
+            LocalizationService.instance.current.nameLengthExceedLimit_4829;
       } else if (_isReservedName(name)) {
         _isValidName = false;
-        _errorMessage = '不能使用系统保留名称';
+        _errorMessage =
+            LocalizationService.instance.current.reservedNameError_4821;
       } else {
         _isValidName = true;
         _errorMessage = null;
@@ -149,7 +157,10 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '重命名 ${widget.fileInfo.isDirectory ? "文件夹" : "文件"}',
+                    LocalizationService.instance.current
+                        .renameFileOrFolder_7421(
+                          widget.fileInfo.isDirectory ? 'folder' : 'file',
+                        ),
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
@@ -175,7 +186,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '当前名称:',
+                    LocalizationService.instance.current.currentNameLabel_4821,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
@@ -195,7 +206,7 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
 
             // 新名称输入
             Text(
-              '新名称:',
+              LocalizationService.instance.current.newLabel_4821,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
@@ -210,7 +221,10 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
                     controller: _nameController,
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: '输入新名称',
+                      hintText: LocalizationService
+                          .instance
+                          .current
+                          .inputNewNameHint_4821,
                       errorText: _errorMessage,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -251,7 +265,9 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
             if (_extension.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                '注意: 文件扩展名 "$_extension" 将保持不变',
+                LocalizationService.instance.current.fileExtensionNotice(
+                  _extension,
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
                   fontStyle: FontStyle.italic,
@@ -267,12 +283,12 @@ class _VfsFileRenameDialogState extends State<VfsFileRenameDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(LocalizationService.instance.current.cancel_4821),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _isValidName ? _handleRename : null,
-                  child: const Text('重命名'),
+                  child: Text(LocalizationService.instance.current.rename_4821),
                 ),
               ],
             ),

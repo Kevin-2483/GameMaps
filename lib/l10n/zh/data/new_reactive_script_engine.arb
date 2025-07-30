@@ -1,0 +1,27 @@
+{
+  "stopScript_7285": "停止脚本: {scriptId}",
+  "clearScriptEngineDataAccessor_7281": "清空脚本引擎数据访问器",
+  "scriptEngineDataUpdater": "更新脚本引擎数据访问器，图层数量: {layersCount}，便签数量: {notesCount}，图例组数量: {groupsCount}",
+  "@scriptEngineDataUpdater": {
+    "description": "Debug message for script engine data updater with layer count, sticky notes count and legend groups count",
+    "placeholders": {
+      "layersCount": {},
+      "notesCount": {},
+      "groupsCount": {}
+    }
+  },
+  "setVfsAccessorWithMapTitle": "设置VFS访问器，地图标题: {mapTitle}",
+  "scriptError_7284": "脚本错误: {error}",
+  "scriptExecutionResult_7421": "脚本执行{result}",
+  "success_7422": "成功",
+  "failure_7423": "失败",
+  "scriptExecutionError_7284": "脚本执行异常: {e}",
+  "maxConcurrentScriptsReached": "达到最大并发脚本数限制 ({maxExecutors})",
+  "scriptExecutorCreation_7281": "为脚本 {scriptId} 创建新的执行器和函数处理器 (当前池大小: {poolSize})",
+  "initializingScriptEngine": "初始化新响应式脚本引擎 (支持 {maxConcurrentExecutors} 个并发脚本)",
+  "clearAllScriptLogs_7281": "清空所有脚本执行日志",
+  "externalFunctionsRegisteredToIsolateExecutor_7281": "已注册所有外部函数到Isolate执行器",
+  "scriptExecutorCleanup_7421": "清理脚本执行器: {scriptId}",
+  "cleanScriptHandler_7421": "清理脚本函数处理器: {scriptId}",
+  "releaseScriptEngineResources_4821": "释放新响应式脚本引擎资源"
+}

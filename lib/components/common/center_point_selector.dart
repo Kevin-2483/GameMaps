@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../models/legend_item.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class CenterPointSelector extends StatefulWidget {
   final Uint8List imageData;
@@ -120,7 +123,7 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
           children: [
             Row(
               children: [
-                const Text('X轴: '),
+                Text(LocalizationService.instance.current.xAxisLabel_7281),
                 Expanded(
                   child: Slider(
                     value: _centerX,
@@ -139,7 +142,7 @@ class _CenterPointSelectorState extends State<CenterPointSelector> {
             ),
             Row(
               children: [
-                const Text('Y轴: '),
+                Text(LocalizationService.instance.current.yAxisLabel_7284),
                 Expanded(
                   child: Slider(
                     value: _centerY,

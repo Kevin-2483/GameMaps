@@ -1,0 +1,17 @@
+{
+  "startBatchLoadingDirectoryToCache": "开始批量加载目录到缓存: {directoryPath}",
+  "batchLoadComplete_7281": "批量加载完成: {directoryPath}, 共 {count} 个图例",
+  "batchLoadDirectoryFailed": "批量加载目录失败: {directoryPath}, 错误: {e}",
+  "legendCacheCleaned_7281": "图例缓存: 清理了目录 \"{folderPath}\" 下的 {count} 个缓存项",
+  "steppedCacheCleanStart": "步进型缓存清理开始: 目标目录=\"{folderPath}\"",
+  "currentCacheKeys": "当前缓存键: {keys}",
+  "rootDirectoryCheck": "根目录检查: 路径=\"{path}\", 包含/={containsSlash}, 应移除={shouldRemove}",
+  "subdirectoryCheck": "子目录检查: 路径=\"{path}\", 相对路径=\"{relativePath}\", 包含/={containsSlash}, 应移除={shouldRemove}",
+  "pathMismatch_7284": "路径不匹配: 路径=\"{path}\", 不以\"{folderPath}/\"开头",
+  "markRemovedWithPath": "标记移除: 路径=\"{path}\"",
+  "legendCacheCleaned": "图例缓存 (步进型): 清理了目录 \"{folderPath}\" 下的 {count} 个缓存项（不包括子目录）",
+  "cleanedPaths_7285": "被清理的路径: {keysToRemove}",
+  "legendCacheNoItemsToClean": "图例缓存 (步进型): 目录 \"{folderPath}\" 下没有需要清理的缓存项",
+  "legendAddedToCache": "图例已添加到缓存: {legendPath}",
+  "excludedListSkipped_7285": "排除列表跳过: 路径=\"{path}\""
+}

@@ -1,0 +1,7 @@
+{
+  "webPlatformUnsupportedDirectoryCreation_4821": "Web平台不支持创建目录",
+  "webPlatformNotSupported_7281": "Web平台不支持创建文件",
+  "webPlatformNoNeedCleanTempFiles_4821": "🔗 VfsPlatformWeb: Web平台不需要清理临时文件",
+  "webPlatformNotSupportTempFile_4821": "Web平台不支持生成临时文件，请使用Data URI或Blob URL",
+  "webTempDirUnsupported_7281": "Web平台不支持获取临时目录"
+}

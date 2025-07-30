@@ -1,0 +1,12 @@
+{
+  "audioPlayerInitFailed": "初始化音频播放器失败: {e}",
+  "playPauseFailed_7285": "播放/暂停操作失败: {e}",
+  "playbackFailed_7285": "播放操作失败: {e}",
+  "progressBarDragFail_4821": "进度条拖拽跳转失败: {e}",
+  "loadingAudio_7281": "正在加载音频...",
+  "rewindFailed_4821": "快退操作失败: {error}",
+  "rewind10Seconds_7539": "快退10秒",
+  "fastForwardFailed_4821": "快进操作失败: {e}",
+  "playbackSpeed_4821": "播放速度",
+  "volumeLabel_8472": "音量"
+}

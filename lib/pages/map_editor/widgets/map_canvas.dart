@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:r6box/pages/map_editor/widgets/layer_export_dialog.dart';
 import '../../../services/legend_session_manager.dart';
 import '../../../services/legend_cache_manager.dart';
@@ -34,6 +35,7 @@ import '../../../data/new_reactive_script_manager.dart'; // 新增：导入脚�
 import '../../../components/color_filter_dialog.dart'; // 导入色彩滤镜组件
 import '../../../services/notification/notification_service.dart';
 import 'canvas_ruler.dart'; // 导入刻度尺组件
+import '../../../services/localization_service.dart';
 
 // 画布固定尺寸常量，确保坐标转换的一致性
 const double kCanvasWidth = 1600.0;
@@ -338,7 +340,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         return image;
       }
     } catch (e) {
-      debugPrint('导出图层失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportLayerFailed_7421(e),
+      );
     } finally {
       // 清除导出状态
       setState(() {
@@ -411,14 +415,18 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           _exportBoundaryKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
       if (boundary == null) {
-        debugPrint('导出边界未找到');
+        debugPrint(
+          LocalizationService.instance.current.exportBoundaryNotFound_7281,
+        );
         return null;
       }
 
       final image = await boundary.toImage(pixelRatio: 2.0);
       return image;
     } catch (e) {
-      debugPrint('导出组失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportGroupFailed_7285(e),
+      );
       return null;
     } finally {
       // 清理导出状态
@@ -878,7 +886,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                         onAccept: (legendPath) {
                                           // 这个方法主要用于兼容性，实际处理在onAcceptWithDetails中
                                           debugPrint(
-                                            '接收到拖拽的图例(onAccept): $legendPath',
+                                            LocalizationService.instance.current
+                                                .dragLegendAccepted_5421(
+                                                  legendPath,
+                                                ),
                                           );
                                         },
                                         onAcceptWithDetails: (details) {
@@ -892,7 +903,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                             final localPosition = renderBox
                                                 .globalToLocal(globalPosition);
                                             debugPrint(
-                                              '拖拽释放位置 - 全局: $globalPosition, 本地: $localPosition',
+                                              LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .dragReleasePosition_7421(
+                                                    globalPosition,
+                                                    localPosition,
+                                                  ),
                                             );
 
                                             // 考虑 InteractiveViewer 的变换矩阵进行坐标转换
@@ -901,7 +918,12 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                                   localPosition,
                                                 );
                                             debugPrint(
-                                              '转换后的画布坐标: $canvasPosition',
+                                              LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .convertedCanvasPosition_7281(
+                                                    canvasPosition,
+                                                  ),
                                             );
 
                                             _handleLegendDragAccept(
@@ -910,7 +932,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                             );
                                           } else {
                                             debugPrint(
-                                              '警告：无法获取RenderBox，使用默认位置处理拖拽',
+                                              LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .renderBoxWarning_4721,
                                             );
                                             // 使用默认位置(画布中心)
                                             final defaultPosition =
@@ -999,7 +1024,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                                                               width: 8,
                                                             ),
                                                             Text(
-                                                              '释放以添加图例到此位置',
+                                                              LocalizationService
+                                                                  .instance
+                                                                  .current
+                                                                  .releaseToAddLegend_4821,
                                                               style: TextStyle(
                                                                 color: Theme.of(context)
                                                                     .colorScheme
@@ -1104,7 +1132,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       // 使用X轴缩放作为缩放等级（通常X和Y轴缩放相同）
       return transform.entry(0, 0);
     } catch (e) {
-      debugPrint('获取缩放等级失败: $e，返回默认值1.0');
+      debugPrint(
+        LocalizationService.instance.current.scaleLevelErrorWithDefault(e, 1.0),
+      );
       return 1.0;
     }
   }
@@ -1139,12 +1169,26 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         canvasY.clamp(0.0, kCanvasHeight),
       );
 
-      debugPrint('坐标转换: 本地($localPosition) -> 画布($clampedPosition)');
-      debugPrint('变换信息: 缩放($scaleX, $scaleY), 平移($translateX, $translateY)');
+      debugPrint(
+        LocalizationService.instance.current.coordinateConversion(
+          localPosition,
+          clampedPosition,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.transformInfo(
+          scaleX,
+          scaleY,
+          translateX,
+          translateY,
+        ),
+      );
 
       return clampedPosition;
     } catch (e) {
-      debugPrint('坐标转换失败: $e，使用原始坐标');
+      debugPrint(
+        LocalizationService.instance.current.coordinateConversionFailed_7421(e),
+      );
       // 如果转换失败，返回限制在画布范围内的原始坐标
       return Offset(
         localPosition.dx.clamp(0.0, kCanvasWidth),
@@ -1242,24 +1286,46 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   Widget _buildLegendWidget(LegendGroup legendGroup) {
-    debugPrint('=== 构建图例组: ${legendGroup.name} ===');
-    debugPrint('图例组可见性: ${legendGroup.isVisible}');
-    debugPrint('图例项数量: ${legendGroup.legendItems.length}');
+    debugPrint(
+      '=== ' +
+          LocalizationService.instance.current.buildingLegendGroupTitle(
+            legendGroup.name,
+          ) +
+          ' ===',
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendGroupVisibility(
+        legendGroup.isVisible,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendItemCount(
+        legendGroup.legendItems.length,
+      ),
+    );
 
     if (!legendGroup.isVisible) {
-      debugPrint('图例组不可见，返回空Widget');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupInvisible_7281,
+      );
       return const SizedBox.shrink();
     }
 
     if (legendGroup.legendItems.isEmpty) {
-      debugPrint('图例组没有图例项');
+      debugPrint(LocalizationService.instance.current.legendGroupEmpty_7281);
       return const SizedBox.shrink();
     }
 
     for (int i = 0; i < legendGroup.legendItems.length; i++) {
       final item = legendGroup.legendItems[i];
       debugPrint(
-        '图例项 $i: ${item.id}, 路径: ${item.legendPath}, 位置: (${item.position.dx}, ${item.position.dy})',
+        LocalizationService.instance.current.legendItemInfo(
+          i,
+          item.id,
+          item.legendPath,
+          item.position.dx,
+          item.position.dy,
+        ),
       );
     }
 
@@ -1320,32 +1386,61 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
   }
 
   Widget _buildLegendSticker(LegendItem item) {
-    debugPrint('--- 构建图例贴纸: ${item.id} ---');
-    debugPrint('图例路径: ${item.legendPath}');
-    debugPrint('图例位置: (${item.position.dx}, ${item.position.dy})');
-    debugPrint('图例可见性: ${item.isVisible}');
-    debugPrint('图例会话管理器是否存在: ${widget.legendSessionManager != null}');
+    debugPrint(
+      '--- ${LocalizationService.instance.current.buildLegendSticker_7421}: ${item.id} ---',
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendPathDebug(item.legendPath),
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendPosition(
+        item.position.dx,
+        item.position.dy,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendVisibility(item.isVisible),
+    );
+    debugPrint(
+      LocalizationService.instance.current.debugLegendSessionManagerExists(
+        widget.legendSessionManager != null,
+      ),
+    );
 
     // 优先使用图例会话管理器
     if (widget.legendSessionManager != null) {
-      debugPrint('使用图例会话管理器构建');
+      debugPrint(
+        LocalizationService.instance.current.buildLegendSessionManager_4821,
+      );
       return _buildLegendStickerFromSession(item);
     }
 
-    debugPrint('回退到异步加载方式');
+    debugPrint(
+      LocalizationService.instance.current.fallbackToAsyncLoading_7281,
+    );
     // 回退到旧的异步加载方式（兼容性）
     return FutureBuilder<legend_db.LegendItem?>(
       future: _loadLegendFromPath(item.legendPath),
       builder: (context, snapshot) {
-        debugPrint('FutureBuilder 状态: ${snapshot.connectionState}');
-        debugPrint('FutureBuilder 数据: ${snapshot.data}');
-        debugPrint('FutureBuilder 错误: ${snapshot.error}');
+        debugPrint(
+          LocalizationService.instance.current.futureBuilderStatus(
+            snapshot.connectionState,
+          ),
+        );
+        debugPrint(
+          LocalizationService.instance.current.futureBuilderData(snapshot.data ?? 'null'),
+        );
+        debugPrint(
+          LocalizationService.instance.current.futureBuilderError(
+            snapshot.error ?? 'null',
+          ),
+        );
 
         // 使用默认的未知图例作为fallback
         final legend =
             snapshot.data ??
             legend_db.LegendItem(
-              title: '未知图例',
+              title: LocalizationService.instance.current.unknownLegend_4821,
               centerX: 0.5,
               centerY: 0.5,
               version: 1,
@@ -1374,21 +1469,35 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           item.legendPath,
         );
 
-        debugPrint('图例会话管理器状态:');
-        debugPrint('  - 图例数据: ${legendData != null ? "已加载" : "未加载"}');
-        debugPrint('  - 加载状态: $loadingState');
+        debugPrint(
+          LocalizationService.instance.current.legendSessionManagerStatus_7281,
+        );
+        debugPrint(
+          '  - ${LocalizationService.instance.current.legendDataStatus_4821(legendData != null ? LocalizationService.instance.current.loaded_4821 : LocalizationService.instance.current.notLoaded_4821)}',
+        );
+        debugPrint(
+          LocalizationService.instance.current.loadingStateMessage_5421(
+            loadingState,
+          ),
+        );
 
         if (legendData != null) {
-          debugPrint('  - 使用已加载的图例数据');
+          debugPrint(
+            LocalizationService.instance.current.useLoadedLegendData_7281,
+          );
           // 图例已加载
           return _buildLegendStickerWidget(item, legendData, false);
         } else {
           // 图例未加载或加载失败
           final isLoading = loadingState == LegendLoadingState.loading;
-          debugPrint('  - 图例未加载，是否正在加载: $isLoading');
+          debugPrint(
+            LocalizationService.instance.current.legendLoadingStatus(isLoading),
+          );
 
           final legend = legend_db.LegendItem(
-            title: isLoading ? '加载中...' : '未知图例',
+            title: isLoading
+                ? LocalizationService.instance.current.loading_5421
+                : LocalizationService.instance.current.unknownLegend_7632,
             centerX: 0.5,
             centerY: 0.5,
             version: 1,
@@ -1417,19 +1526,33 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     legend_db.LegendItem legend,
     bool isLoading,
   ) {
-    debugPrint('*** 构建图例贴纸Widget ***');
-    debugPrint('图例ID: ${item.id}');
-    debugPrint('图例是否可见: ${item.isVisible}');
-    debugPrint('图例数据有图片: ${legend.hasImageData}');
-    debugPrint('是否正在加载: $isLoading');
+    debugPrint(
+      LocalizationService.instance.current.buildLegendStickerWidget_7421,
+    );
+    debugPrint(LocalizationService.instance.current.legendId_4821(item.id));
+    debugPrint(
+      LocalizationService.instance.current.legendVisibilityStatus(
+        item.isVisible,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.legendHasImageData(
+        legend.hasImageData,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.loadingStatusCheck(isLoading),
+    );
 
     if (!item.isVisible) {
-      debugPrint('图例不可见，返回空Widget');
+      debugPrint(
+        LocalizationService.instance.current.legendInvisibleWidget_4821,
+      );
       return const SizedBox.shrink();
     }
 
     if (!legend.hasImageData && !isLoading) {
-      debugPrint('图例没有图片数据且不在加载中，返回空Widget');
+      debugPrint(LocalizationService.instance.current.legendNoImageData_4821);
       return const SizedBox.shrink();
     }
 
@@ -1439,7 +1562,12 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       item.position.dy * kCanvasHeight,
     );
 
-    debugPrint('画布位置: (${canvasPosition.dx}, ${canvasPosition.dy})');
+    debugPrint(
+      LocalizationService.instance.current.canvasPositionDebug(
+        canvasPosition.dx,
+        canvasPosition.dy,
+      ),
+    );
 
     // 计算图例的中心点（基于图例的中心点坐标）
     final imageSize = 60.0 * item.size; // 基础大小60像素
@@ -1449,7 +1577,11 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     );
 
     debugPrint(
-      '图片大小: $imageSize, 中心偏移: (${centerOffset.dx}, ${centerOffset.dy})',
+      LocalizationService.instance.current.imageSizeAndOffset_7281(
+        imageSize,
+        centerOffset.dx,
+        centerOffset.dy,
+      ),
     );
 
     Widget stickerWidget = Container(
@@ -1589,7 +1721,12 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
       return await legendService.getLegend(title, folderPath);
     } catch (e) {
-      debugPrint('载入图例失败: $legendPath, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendLoadFailed_7281(
+          legendPath,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1961,7 +2098,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         // 注意：这里为了保持同步性，我们使用一个简化的处理
         // 实际的图例数据将在_buildLegendSticker中异步载入
         final legend = legend_db.LegendItem(
-          title: '图例',
+          title: LocalizationService.instance.current.legendTitle_4821,
           centerX: 0.5,
           centerY: 0.5,
           version: 1,
@@ -2613,17 +2750,29 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                 .executeScript(script.id, runtimeParameters: runtimeParameters)
                 .catchError((error) {
                   if (context.mounted) {
-                    context.showErrorSnackBar('脚本执行失败: $error');
+                    context.showErrorSnackBar(
+                      LocalizationService.instance.current
+                          .scriptExecutionFailed_7281(error),
+                    );
                   }
                 });
           } else {
             if (context.mounted) {
-              context.showErrorSnackBar('未找到绑定的脚本: $scriptId');
+              context.showErrorSnackBar(
+                LocalizationService.instance.current.scriptNotFoundError(
+                  scriptId,
+                ),
+              );
             }
           }
         } else {
           if (context.mounted) {
-            context.showErrorSnackBar('脚本管理器未初始化，无法执行脚本');
+            context.showErrorSnackBar(
+              LocalizationService
+                  .instance
+                  .current
+                  .scriptManagerNotInitializedError_42,
+            );
           }
         }
         return;
@@ -2767,9 +2916,13 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
     String message;
     if (!containingGroup.isVisible) {
-      message = '无法操作图例：图例组"${containingGroup.name}"当前不可见';
+      message = LocalizationService.instance.current.legendOperationDisabled(
+        containingGroup.name,
+      );
     } else {
-      message = '无法操作图例：请先选择一个绑定了图例组"${containingGroup.name}"的图层';
+      message = LocalizationService.instance.current.cannotOperateLegend(
+        containingGroup.name,
+      );
     }
 
     // 使用 SnackBar 显示消息，因为在 Canvas 中显示对话框可能会有问题
@@ -2799,13 +2952,19 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri);
         } else {
-          _showUrlErrorMessage('无法打开链接: $url');
+          _showUrlErrorMessage(
+            LocalizationService.instance.current.unableToOpenUrl(url),
+          );
         }
       } else {
-        _showUrlErrorMessage('不支持的链接格式: $url');
+        _showUrlErrorMessage(
+          LocalizationService.instance.current.unsupportedUrlFormat(url),
+        );
       }
     } catch (e) {
-      _showUrlErrorMessage('打开链接失败: $e');
+      _showUrlErrorMessage(
+        LocalizationService.instance.current.urlOpenFailed_7285(e),
+      );
     }
   }
 
@@ -2874,7 +3033,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('编辑便签'),
+          title: Text(LocalizationService.instance.current.editNote_4271),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -2882,8 +3041,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: '标题',
+                  decoration: InputDecoration(
+                    labelText:
+                        LocalizationService.instance.current.titleLabel_4821,
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 1,
@@ -2891,8 +3051,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                 const SizedBox(height: 16),
                 TextField(
                   controller: contentController,
-                  decoration: const InputDecoration(
-                    labelText: '内容',
+                  decoration: InputDecoration(
+                    labelText:
+                        LocalizationService.instance.current.contentLabel_4521,
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 5,
@@ -2904,13 +3065,15 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_7281,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
                 final updatedNote = note.copyWith(
                   title: titleController.text.trim().isEmpty
-                      ? '无标题便签'
+                      ? LocalizationService.instance.current.untitledNote_7281
                       : titleController.text.trim(),
                   content: contentController.text,
                   updatedAt: DateTime.now(),
@@ -2918,7 +3081,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
                 widget.onStickyNoteUpdated!(updatedNote);
                 Navigator.of(context).pop();
               },
-              child: const Text('保存'),
+              child: Text(LocalizationService.instance.current.saveButton_7421),
             ),
           ],
         );
@@ -3369,7 +3532,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     for (int layerIndex = 0; layerIndex < sortedLayers.length; layerIndex++) {
       final layer = sortedLayers[layerIndex];
       if (!layer.isVisible) {
-        debugPrint('跳过不可见图层: ${layer.name}');
+        debugPrint(
+          LocalizationService.instance.current.skipInvisibleLayer(layer.name),
+        );
         continue;
       }
 
@@ -3415,7 +3580,11 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     // 收集所有图例组 - 支持增量更新
     for (final legendGroup in widget.mapItem.legendGroups) {
       if (!legendGroup.isVisible) {
-        debugPrint('跳过不可见图例组: ${legendGroup.name}');
+        debugPrint(
+          LocalizationService.instance.current.skippingInvisibleLegendGroup(
+            legendGroup.name,
+          ),
+        );
         continue;
       }
 
@@ -3436,9 +3605,19 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
         }
       }
 
-      debugPrint('绑定的图层: $boundLayerNames');
-      debugPrint('计算得到的 legendRenderOrder: $legendRenderOrder');
-      debugPrint('是否选中: $isLegendSelected');
+      debugPrint(
+        LocalizationService.instance.current.boundLayersLog_7284(
+          boundLayerNames,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.legendRenderOrderDebug_7421(
+          legendRenderOrder,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.isSelectedCheck(isLegendSelected),
+      );
 
       // 如果图例组没有绑定到任何图层，使用默认位置（-1确保在最底层）
       if (legendRenderOrder == -1) {
@@ -3447,7 +3626,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
       }
 
       debugPrint(
-        '添加图例组元素 - renderOrder=$legendRenderOrder, selected=$isLegendSelected',
+        LocalizationService.instance.current.addLegendGroupElement(
+          legendRenderOrder,
+          isLegendSelected,
+        ),
       );
       allElements.add(
         _LayeredElement(
@@ -3465,21 +3647,34 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     for (int noteIndex = 0; noteIndex < sortedStickyNotes.length; noteIndex++) {
       final note = sortedStickyNotes[noteIndex];
       if (!note.isVisible) {
-        debugPrint('跳过不可见便签: ${note.title}');
+        debugPrint(
+          LocalizationService.instance.current.skippingInvisibleNote(
+            note.title,
+          ),
+        );
         continue;
       }
 
       final isSelectedNote = widget.selectedStickyNote?.id == note.id;
 
       debugPrint(
-        '处理便签: ${note.title}(zIndex=${note.zIndex}), 索引=$noteIndex, 可见=${note.isVisible}',
+        LocalizationService.instance.current.noteProcessing(
+          note.title,
+          note.zIndex,
+          noteIndex,
+          note.isVisible,
+        ),
       );
       debugPrint('是否选中: $isSelectedNote'); // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
       // 使用 1000000 + noteIndex 确保便签始终在所有其他元素之上
       final renderOrder = 1000000 + noteIndex;
 
       debugPrint(
-        '添加便签元素 - renderOrder=$renderOrder (原zIndex=${note.zIndex}), selected=$isSelectedNote',
+        LocalizationService.instance.current.debugAddNoteElement(
+          renderOrder,
+          note.zIndex,
+          isSelectedNote,
+        ),
       );
       allElements.add(
         _LayeredElement(
@@ -3696,7 +3891,11 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
     // 立即预加载新的图片元素
     if (newImageElements.isNotEmpty) {
-      debugPrint('检测到 ${newImageElements.length} 个新的图片元素，开始预加载');
+      debugPrint(
+        LocalizationService.instance.current.newImageElementsDetected_7281(
+          newImageElements.length,
+        ),
+      );
       for (final element in newImageElements) {
         _getOrDecodeElementImage(element);
       }
@@ -3712,7 +3911,7 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
     _imageCache.clear();
     _imageDecodingFutures.clear();
 
-    debugPrint('已清理所有图片缓存');
+    debugPrint(LocalizationService.instance.current.clearedImageCache_7281);
   }
 
   /// 检查并清理孤立的图片缓存（元素已删除但缓存仍存在）
@@ -3750,7 +3949,10 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
 
     if (orphanedCacheKeys.isNotEmpty) {
       debugPrint(
-        '已清理 ${orphanedCacheKeys.length} 个孤立的图片缓存项: $orphanedCacheKeys',
+        LocalizationService.instance.current.cleanedOrphanedCacheItems(
+          orphanedCacheKeys.length,
+          orphanedCacheKeys,
+        ),
       );
 
       // 触发重绘以反映缓存清理的结果
@@ -4172,11 +4374,15 @@ class _LayerPainter extends CustomPainter {
         // debugPrint('shouldApplyThemeAdaptation: $shouldApplyThemeAdaptation');
       } catch (e) {
         // 如果无法获取用户偏好，使用默认值
-        debugPrint('获取用户偏好失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fetchUserPreferenceFailed(e),
+        );
         shouldApplyThemeAdaptation = false;
       }
     } else {
-      debugPrint('context为null，无法获取主题信息');
+      debugPrint(
+        LocalizationService.instance.current.nullContextThemeInfo_4821,
+      );
     }
 
     // 根据主题适配状态设置或移除滤镜
@@ -4193,7 +4399,9 @@ class _LayerPainter extends CustomPainter {
           layer.id,
           themeAdaptationSettings,
         );
-        debugPrint('为图层 ${layer.id} 设置主题适配滤镜');
+        debugPrint(
+          LocalizationService.instance.current.setThemeFilterForLayer(layer.id),
+        );
       } else {
         // 如果主题适配被禁用，移除主题适配滤镜
         ColorFilterSessionManager().setThemeAdaptationFilter(layer.id, null);

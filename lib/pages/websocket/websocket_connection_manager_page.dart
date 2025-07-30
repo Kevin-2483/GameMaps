@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:r6box/services/notification/notification_service.dart';
@@ -5,9 +6,10 @@ import 'package:r6box/services/notification/notification_service.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../components/layout/main_layout.dart';
 import '../../collaboration/services/websocket/websocket_client_manager.dart';
-import '../../collaboration/services/websocket/websocket_client_service.dart';
 import '../../models/websocket_client_config.dart';
 import '../../collaboration/services/websocket/websocket_client_init_service.dart';
+import '../../collaboration/services/websocket/websocket_client_service.dart';
+import '../../services/localization_service.dart';
 
 /// WebSocket 连接管理页面
 class WebSocketConnectionManagerPage extends BasePage {
@@ -35,7 +37,6 @@ class _WebSocketConnectionManagerPageContent extends StatefulWidget {
 class _WebSocketConnectionManagerPageState
     extends State<_WebSocketConnectionManagerPageContent> {
   final WebSocketClientManager _manager = WebSocketClientManager();
-  final WebSocketClientService _service = WebSocketClientService();
   final WebSocketClientInitService _initService = WebSocketClientInitService();
 
   // 状态管理
@@ -89,18 +90,24 @@ class _WebSocketConnectionManagerPageState
     try {
       await _manager.initialize();
       await _loadConfigs();
-      _addLog('WebSocket 连接管理器初始化成功');
+      _addLog(
+        LocalizationService.instance.current.webSocketManagerInitialized_7281,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = '初始化失败: $e';
+        _errorMessage = LocalizationService.instance.current
+            .initializationFailed(e);
       });
-      _addLog('初始化失败: $e');
+      _addLog(
+        LocalizationService.instance.current.initializationFailed_7285(e),
+      );
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -112,12 +119,16 @@ class _WebSocketConnectionManagerPageState
       setState(() {
         _connectionState = state;
       });
-      _addLog('连接状态变更: ${_getStateDisplayName(state)}');
+      _addLog(
+        LocalizationService.instance.current.connectionStateChanged_7281(
+          _getStateDisplayName(state),
+        ),
+      );
     });
 
     // 监听错误信息
     _errorSubscription = _manager.errorStream.listen((error) {
-      _addLog('错误: $error');
+      _addLog(LocalizationService.instance.current.errorLog_7421(error));
     });
 
     // 监听延迟变化
@@ -126,7 +137,7 @@ class _WebSocketConnectionManagerPageState
       setState(() {
         _currentPingDelay = delay;
       });
-      _addLog('延迟更新: ${delay}ms');
+      _addLog(LocalizationService.instance.current.delayUpdateLog(delay));
     });
 
     // 监听WebSocket消息（包括用户状态广播）
@@ -139,7 +150,12 @@ class _WebSocketConnectionManagerPageState
         final spaceId = data['space_id'] as String?;
 
         _addLog(
-          '用户状态广播: 用户=$userId, 在线状态=$onlineStatus, 活动状态=$activityStatus, 空间=$spaceId',
+          LocalizationService.instance.current.userStatusBroadcast_7421(
+            activityStatus ?? 'unknown',
+            onlineStatus ?? 'unknown',
+            spaceId ?? 'unknown',
+            userId ?? 'unknown',
+          ),
         );
       }
     });
@@ -150,7 +166,9 @@ class _WebSocketConnectionManagerPageState
       setState(() {
         _configs = configs;
       });
-      _addLog('配置列表已更新，共 ${configs.length} 个配置');
+      _addLog(
+        LocalizationService.instance.current.configListUpdated(configs.length),
+      );
     });
 
     // 监听活跃配置变化
@@ -160,9 +178,14 @@ class _WebSocketConnectionManagerPageState
         _activeConfig = config;
       });
       if (config != null) {
-        _addLog('活跃配置变更: ${config.displayName} (${config.clientId})');
+        _addLog(
+          LocalizationService.instance.current.activeConfigChange(
+            config.displayName,
+            config.clientId,
+          ),
+        );
       } else {
-        _addLog('活跃配置已清除');
+        _addLog(LocalizationService.instance.current.activeConfigCleared_7281);
       }
     });
   }
@@ -181,13 +204,23 @@ class _WebSocketConnectionManagerPageState
         _currentPingDelay = _manager.currentPingDelay;
       });
 
-      _addLog('配置列表已加载，共 ${configs.length} 个配置');
+      _addLog(
+        LocalizationService.instance.current.configListLoaded(configs.length),
+      );
       if (activeConfig != null) {
-        _addLog('当前活跃配置: ${activeConfig.displayName}');
-        _addLog('当前连接状态: ${_getStateDisplayName(_connectionState)}');
+        _addLog(
+          LocalizationService.instance.current.activeConfigLog(
+            activeConfig.displayName,
+          ),
+        );
+        _addLog(
+          LocalizationService.instance.current.currentConnectionState_7421(
+            _getStateDisplayName(_connectionState),
+          ),
+        );
       }
     } catch (e) {
-      _addLog('加载配置失败: $e');
+      _addLog(LocalizationService.instance.current.loadConfigFailed(e));
     }
   }
 
@@ -223,17 +256,17 @@ class _WebSocketConnectionManagerPageState
   String _getStateDisplayName(WebSocketConnectionState state) {
     switch (state) {
       case WebSocketConnectionState.disconnected:
-        return '已断开';
+        return LocalizationService.instance.current.disconnected_4821;
       case WebSocketConnectionState.connecting:
-        return '连接中';
+        return LocalizationService.instance.current.connecting_5732;
       case WebSocketConnectionState.authenticating:
-        return '认证中';
+        return LocalizationService.instance.current.authenticating_6943;
       case WebSocketConnectionState.connected:
-        return '已连接';
+        return LocalizationService.instance.current.connected_7154;
       case WebSocketConnectionState.reconnecting:
-        return '重连中';
+        return LocalizationService.instance.current.reconnecting_8265;
       case WebSocketConnectionState.error:
-        return '错误';
+        return LocalizationService.instance.current.error_9376;
     }
   }
 
@@ -287,7 +320,9 @@ class _WebSocketConnectionManagerPageState
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('创建新的客户端配置'),
+          title: Text(
+            LocalizationService.instance.current.createNewClientConfig_7281,
+          ),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -295,17 +330,27 @@ class _WebSocketConnectionManagerPageState
               children: [
                 TextField(
                   controller: displayNameController,
-                  decoration: const InputDecoration(
-                    labelText: '显示名称',
-                    hintText: '输入客户端显示名称',
+                  decoration: InputDecoration(
+                    labelText: LocalizationService
+                        .instance
+                        .current
+                        .displayNameLabel_4821,
+                    hintText: LocalizationService
+                        .instance
+                        .current
+                        .displayNameHint_4821,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: webApiKeyController,
-                  decoration: const InputDecoration(
-                    labelText: 'Web API Key',
-                    hintText: '输入 Web API Key',
+                  decoration: InputDecoration(
+                    labelText: LocalizationService
+                        .instance
+                        .current
+                        .webApiKeyLabel_4821,
+                    hintText:
+                        LocalizationService.instance.current.webApiKeyHint_7532,
                   ),
                 ),
               ],
@@ -314,27 +359,38 @@ class _WebSocketConnectionManagerPageState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_7421,
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
                 final displayName = displayNameController.text.trim();
                 final webApiKey = webApiKeyController.text.trim();
+                final navigator = Navigator.of(context);
 
                 if (displayName.isEmpty) {
-                  context.showErrorSnackBar('请输入显示名称');
+                  context.showErrorSnackBar(
+                    LocalizationService.instance.current.enterDisplayName_4821,
+                  );
                   return;
                 }
 
                 if (webApiKey.isEmpty) {
-                  context.showErrorSnackBar('请输入 Web API Key');
+                  context.showErrorSnackBar(
+                    LocalizationService.instance.current.enterWebApiKey_4821,
+                  );
                   return;
                 }
 
                 await _createConfigWithWebApiKey(webApiKey, displayName);
-                Navigator.of(context).pop();
+                if (mounted) {
+                  navigator.pop();
+                }
               },
-              child: const Text('创建'),
+              child: Text(
+                LocalizationService.instance.current.createButton_7421,
+              ),
             ),
           ],
         );
@@ -350,7 +406,12 @@ class _WebSocketConnectionManagerPageState
     String webApiKey,
     String displayName,
   ) async {
-    _addLog('开始使用 Web API Key 创建客户端配置...');
+    _addLog(
+      LocalizationService
+          .instance
+          .current
+          .startCreatingClientConfigWithWebApiKey_4821,
+    );
 
     try {
       final config = await _initService.initializeWithWebApiKey(
@@ -358,29 +419,41 @@ class _WebSocketConnectionManagerPageState
         displayName,
       );
 
-      _addLog('客户端配置创建成功: ${config.displayName} (${config.clientId})');
+      _addLog(
+        LocalizationService.instance.current.clientConfigCreatedSuccessfully(
+          config.displayName,
+          config.clientId,
+        ),
+      );
       await _loadConfigs();
     } catch (e) {
-      _addLog('使用 Web API Key 创建客户端配置失败: $e');
+      _addLog(
+        LocalizationService.instance.current.webApiKeyClientConfigFailed(e),
+      );
     }
   }
 
   /// 设置活跃配置
   Future<void> _setActiveConfig(WebSocketClientConfig config) async {
-    _addLog('设置活跃配置: ${config.displayName} (${config.clientId})');
+    _addLog(
+      LocalizationService.instance.current.setActiveConfig(
+        config.displayName,
+        config.clientId,
+      ),
+    );
 
     try {
       await _manager.setActiveConfig(config.clientId);
       await _loadConfigs(); // 刷新状态
-      _addLog('活跃配置设置成功');
+      _addLog(LocalizationService.instance.current.activeConfigSetSuccess_4821);
     } catch (e) {
-      _addLog('设置活跃配置失败: $e');
+      _addLog(LocalizationService.instance.current.setActiveConfigFailed(e));
     }
   }
 
   /// 取消活跃配置
   Future<void> _clearActiveConfig() async {
-    _addLog('取消当前活跃配置...');
+    _addLog(LocalizationService.instance.current.cancelActiveConfig_7421);
 
     try {
       // 先断开连接
@@ -391,15 +464,22 @@ class _WebSocketConnectionManagerPageState
       // 清除活跃配置（设置为空字符串）
       await _manager.setActiveConfig('');
       await _loadConfigs(); // 刷新状态
-      _addLog('活跃配置已取消');
+      _addLog(LocalizationService.instance.current.activeConfigCancelled_7281);
     } catch (e) {
-      _addLog('取消活跃配置失败: $e');
+      _addLog(
+        LocalizationService.instance.current.cancelActiveConfigFailed_7285(e),
+      );
     }
   }
 
   /// 连接到指定配置
   Future<void> _connectToConfig(WebSocketClientConfig config) async {
-    _addLog('开始连接到: ${config.displayName} (${config.clientId})');
+    _addLog(
+      LocalizationService.instance.current.connectingToTarget(
+        config.clientId,
+        config.displayName,
+      ),
+    );
 
     try {
       // 先设置为活跃配置
@@ -408,24 +488,32 @@ class _WebSocketConnectionManagerPageState
       // 然后连接
       final success = await _manager.connect(config.clientId);
       if (success) {
-        _addLog('连接成功');
+        _addLog(LocalizationService.instance.current.connectionSuccess_4821);
       } else {
-        _addLog('连接失败');
+        _addLog(
+          LocalizationService.instance.current.connectionFailed_7281(
+            'Connection attempt failed',
+          ),
+        );
       }
     } catch (e) {
-      _addLog('连接错误: $e');
+      final errorMessage = LocalizationService.instance.current
+          .connectionError_5421(e);
+      _addLog(errorMessage);
     }
   }
 
   /// 断开连接
   Future<void> _disconnect() async {
-    _addLog('断开当前连接...');
+    _addLog(
+      LocalizationService.instance.current.disconnectCurrentConnection_7281,
+    );
 
     try {
       await _manager.disconnect();
-      _addLog('连接已断开');
+      _addLog(LocalizationService.instance.current.connectionDisconnected_4821);
     } catch (e) {
-      _addLog('断开连接失败: $e');
+      _addLog(LocalizationService.instance.current.disconnectFailed_7285(e));
     }
   }
 
@@ -434,30 +522,46 @@ class _WebSocketConnectionManagerPageState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除配置 "${config.displayName}" 吗？'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteConfig(
+            config.displayName,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      _addLog('删除配置: ${config.displayName} (${config.clientId})');
+      _addLog(
+        LocalizationService.instance.current.deleteConfigLog_7421(
+          config.displayName,
+          config.clientId,
+        ),
+      );
 
       try {
         await _manager.deleteConfig(config.clientId);
-        _addLog('配置删除成功');
+        _addLog(
+          LocalizationService
+              .instance
+              .current
+              .configurationDeletedSuccessfully_7421,
+        );
         await _loadConfigs();
       } catch (e) {
-        _addLog('删除配置失败: $e');
+        _addLog(
+          LocalizationService.instance.current.deleteConfigFailed_7284(e),
+        );
       }
     }
   }
@@ -468,7 +572,7 @@ class _WebSocketConnectionManagerPageState
     setState(() {
       _logs.clear();
     });
-    _addLog('日志已清空');
+    _addLog(LocalizationService.instance.current.logCleared_7281);
   }
 
   @override
@@ -485,7 +589,8 @@ class _WebSocketConnectionManagerPageState
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: widget.onClose,
-                  tooltip: '关闭',
+                  tooltip:
+                      LocalizationService.instance.current.closeButton_7421,
                 ),
             ],
           ),
@@ -513,7 +618,9 @@ class _WebSocketConnectionManagerPageState
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _initializeManager,
-                          child: const Text('重试'),
+                          child: Text(
+                            LocalizationService.instance.current.retry_4821,
+                          ),
                         ),
                       ],
                     ),
@@ -557,12 +664,17 @@ class _WebSocketConnectionManagerPageState
               ),
               child: Row(
                 children: [
-                  Text('连接配置', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    LocalizationService.instance.current.connectionConfig_7281,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const Spacer(),
                   ElevatedButton.icon(
                     onPressed: _createNewConfig,
                     icon: const Icon(Icons.add),
-                    label: const Text('新建'),
+                    label: Text(
+                      LocalizationService.instance.current.newButton_4821,
+                    ),
                   ),
                 ],
               ),
@@ -582,12 +694,18 @@ class _WebSocketConnectionManagerPageState
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            '暂无连接配置',
+                            LocalizationService
+                                .instance
+                                .current
+                                .noConnectionConfig_4521,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '点击"新建"按钮创建第一个连接配置',
+                            LocalizationService
+                                .instance
+                                .current
+                                .createFirstConnectionHint_4821,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -678,22 +796,32 @@ class _WebSocketConnectionManagerPageState
                               },
                               itemBuilder: (context) => [
                                 if (!isActive)
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'setActive',
                                     child: ListTile(
                                       leading: Icon(Icons.radio_button_checked),
-                                      title: Text('设为活跃'),
+                                      title: Text(
+                                        LocalizationService
+                                            .instance
+                                            .current
+                                            .setAsActive_7281,
+                                      ),
                                       contentPadding: EdgeInsets.zero,
                                     ),
                                   ),
                                 if (isActive)
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'clearActive',
                                     child: ListTile(
                                       leading: Icon(
                                         Icons.radio_button_unchecked,
                                       ),
-                                      title: Text('取消活跃'),
+                                      title: Text(
+                                        LocalizationService
+                                            .instance
+                                            .current
+                                            .cancelActive_7281,
+                                      ),
                                       contentPadding: EdgeInsets.zero,
                                     ),
                                   ),
@@ -703,11 +831,16 @@ class _WebSocketConnectionManagerPageState
                                                 .disconnected ||
                                         _connectionState ==
                                             WebSocketConnectionState.error))
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'connect',
                                     child: ListTile(
                                       leading: Icon(Icons.play_arrow),
-                                      title: Text('连接'),
+                                      title: Text(
+                                        LocalizationService
+                                            .instance
+                                            .current
+                                            .connect_4821,
+                                      ),
                                       contentPadding: EdgeInsets.zero,
                                     ),
                                   ),
@@ -724,19 +857,29 @@ class _WebSocketConnectionManagerPageState
                                         _connectionState ==
                                             WebSocketConnectionState
                                                 .reconnecting))
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'disconnect',
                                     child: ListTile(
                                       leading: Icon(Icons.stop),
-                                      title: Text('断开'),
+                                      title: Text(
+                                        LocalizationService
+                                            .instance
+                                            .current
+                                            .disconnect_7421,
+                                      ),
                                       contentPadding: EdgeInsets.zero,
                                     ),
                                   ),
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'delete',
                                   child: ListTile(
                                     leading: Icon(Icons.delete),
-                                    title: Text('删除'),
+                                    title: Text(
+                                      LocalizationService
+                                          .instance
+                                          .current
+                                          .delete_4821,
+                                    ),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                 ),
@@ -767,7 +910,7 @@ class _WebSocketConnectionManagerPageState
   Widget _buildConnectionStatus() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withOpacity(0.3),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -805,23 +948,32 @@ class _WebSocketConnectionManagerPageState
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('断开'),
+                    child: Text(
+                      LocalizationService.instance.current.disconnect_7421,
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              '当前配置: ${_activeConfig!.displayName}',
+              LocalizationService.instance.current.currentConfigDisplay(
+                _activeConfig!.displayName,
+              ),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
-              '服务器: ${_activeConfig!.server.host}:${_activeConfig!.server.port}',
+              LocalizationService.instance.current.serverInfo(
+                _activeConfig!.server.host,
+                _activeConfig!.server.port,
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             if (_connectionState == WebSocketConnectionState.connected &&
                 _currentPingDelay > 0)
               Text(
-                '延迟: ${_currentPingDelay}ms',
+                LocalizationService.instance.current.latencyWithValue(
+                  _currentPingDelay,
+                ),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: _currentPingDelay < 100
                       ? Colors.green
@@ -851,12 +1003,17 @@ class _WebSocketConnectionManagerPageState
           ),
           child: Row(
             children: [
-              Text('活动日志', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                LocalizationService.instance.current.activityLog_7281,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const Spacer(),
               TextButton.icon(
                 onPressed: _clearLogs,
                 icon: const Icon(Icons.clear_all),
-                label: const Text('清空'),
+                label: Text(
+                  LocalizationService.instance.current.clearText_4821,
+                ),
               ),
             ],
           ),
@@ -869,7 +1026,7 @@ class _WebSocketConnectionManagerPageState
             child: _logs.isEmpty
                 ? Center(
                     child: Text(
-                      '暂无日志',
+                      LocalizationService.instance.current.noLogsAvailable_7421,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),

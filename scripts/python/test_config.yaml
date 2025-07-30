@@ -1,0 +1,102 @@
+# I18n处理器测试配置文件
+
+# 基础测试配置
+basic_tests:
+  # 是否启用基础功能测试
+  enabled: true
+  # 测试超时时间（秒）
+  timeout: 30
+  # 测试用例
+  test_cases:
+    - name: "单行替换测试"
+      type: "single_line"
+      enabled: true
+    - name: "多行替换测试"
+      type: "multi_line"
+      enabled: true
+    - name: "AI标记处理测试"
+      type: "ai_marker"
+      enabled: true
+    - name: "错误处理测试"
+      type: "error_handling"
+      enabled: true
+
+# 批量测试配置
+batch_tests:
+  # 是否启用批量测试
+  enabled: true
+  # 最大测试文件数
+  max_files: 10
+  # 随机选择文件
+  random_selection: true
+  # 成功率阈值（百分比）
+  success_threshold: 80
+  # 测试超时时间（秒）
+  timeout: 60
+
+# 压力测试配置
+stress_tests:
+  # 是否启用压力测试
+  enabled: false
+  # 测试轮数
+  iterations: 5
+  # 每轮测试文件数
+  files_per_iteration: 5
+  # 成功率阈值（百分比）
+  success_threshold: 80
+  # 测试间隔（秒）
+  interval: 1
+
+# 性能测试配置
+performance_tests:
+  # 是否启用性能测试
+  enabled: true
+  # 大文件测试
+  large_file_test:
+    enabled: true
+    # 文件行数
+    line_count: 1000
+    # 性能阈值（秒）
+    time_threshold: 1.0
+  # 并发测试
+  concurrent_test:
+    enabled: false
+    # 并发数
+    concurrency: 3
+    # 测试文件数
+    file_count: 10
+
+# 测试环境配置
+environment:
+  # 临时目录前缀
+  temp_dir_prefix: "i18n_test_"
+  # 是否保留测试文件（调试用）
+  keep_test_files: false
+  # 日志级别
+  log_level: "INFO"
+  # 是否显示详细输出
+  verbose: true
+
+# 模拟AI响应配置
+mock_ai:
+  # 是否启用模拟AI响应
+  enabled: true
+  # 响应延迟（秒）
+  response_delay: 0.1
+  # 模拟失败率（百分比）
+  failure_rate: 5
+  # 键名生成策略
+  key_naming_strategy: "semantic"  # semantic, sequential, random
+
+# 报告配置
+reporting:
+  # 是否生成详细报告
+  detailed_report: true
+  # 报告格式
+  format: "console"  # console, json, html
+  # 报告输出目录
+  output_dir: "test_reports"
+  # 是否包含失败详情
+  include_failures: true
+  # 是否包含性能数据
+  include_performance: true

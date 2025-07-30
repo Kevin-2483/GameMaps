@@ -1,0 +1,21 @@
+{
+  "webSocketDemoTitle_4271": "WebSocket 客户端演示",
+  "initializationFailed_7421": "初始化失败: {e}",
+  "websocketManagerInitializedSuccess_4821": "WebSocket 客户端管理器初始化成功",
+  "connectionStatus_4821": "连接状态",
+  "activeClientDisplay": "活跃客户端: {displayName}",
+  "clientIdLabel": "客户端ID: {clientId}",
+  "clientManagement_7281": "客户端管理",
+  "connected_4821": "已连接",
+  "connecting_5723": "连接中",
+  "authenticating_6934": "认证中",
+  "reconnecting_7845": "重连中",
+  "error_8956": "错误",
+  "disconnected_9067": "未连接",
+  "serverInfo_4827": "服务器: {host}:{port}",
+  "configValidationResult": "配置验证结果: {result}",
+  "valid_4821": "有效",
+  "invalid_5739": "无效",
+  "errorMessage": "错误: {error}",
+  "receivedMessage": "收到: {type} - {data}"
+}

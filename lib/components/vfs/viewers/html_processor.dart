@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:html/dom.dart' as h;
 import 'package:markdown/markdown.dart' as m;
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:html/parser.dart';
 import 'package:html/dom_parsing.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'video_processor.dart';
+
+import '../../../services/localization_service.dart';
 
 /// HTML处理器 - 用于在Markdown中渲染HTML内容
 /// 基于markdown_widget的HTML扩展支持
@@ -63,7 +66,12 @@ class HtmlProcessor {
     TextStyle? parentStyle,
   }) {
     debugPrint(
-      '🔧 HtmlProcessor.parseHtml: 开始解析 - textContent: ${node.textContent.substring(0, node.textContent.length > 100 ? 100 : node.textContent.length)}...',
+      LocalizationService.instance.current.htmlParsingStart(
+        node.textContent.substring(
+          0,
+          node.textContent.length > 100 ? 100 : node.textContent.length,
+        ),
+      ),
     );
 
     try {
@@ -74,17 +82,21 @@ class HtmlProcessor {
 
       // 如果不包含HTML标签，直接返回文本节点
       if (!text.contains(htmlRep)) {
-        debugPrint('🔧 HtmlProcessor.parseHtml: 不包含HTML标签，返回文本节点');
+        debugPrint(
+          LocalizationService.instance.current.htmlProcessorNoHtmlTags_4821,
+        );
         return [TextNode(text: node.text)];
       }
 
-      debugPrint('🔧 HtmlProcessor.parseHtml: 检测到HTML标签，开始解析');
+      debugPrint(LocalizationService.instance.current.htmlTagDetected_7281);
 
       // 解析HTML片段
       h.DocumentFragment document = parseFragment(text);
 
       debugPrint(
-        '🔧 HtmlProcessor.parseHtml: 解析完成，节点数量: ${document.nodes.length}',
+        LocalizationService.instance.current.htmlParseComplete(
+          document.nodes.length,
+        ),
       );
 
       // 使用HTML转SpanNode访问器处理
@@ -94,7 +106,9 @@ class HtmlProcessor {
       ).toVisit(document.nodes.toList());
 
       debugPrint(
-        '🔧 HtmlProcessor.parseHtml: 转换完成，SpanNode数量: ${result.length}',
+        LocalizationService.instance.current.htmlProcessingComplete(
+          result.length,
+        ),
       );
       return result;
     } catch (e) {
@@ -206,7 +220,9 @@ class HtmlProcessor {
 
       return result;
     } catch (e) {
-      debugPrint('HTML转Markdown失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.htmlToMarkdownFailed_4821(e),
+      );
       return content;
     }
   }
@@ -502,9 +518,7 @@ class HtmlProcessor {
       });
 
       // 如果没有显式的tbody，使用整个表格内容
-      if (bodyContent == null) {
-        bodyContent = tableContent;
-      }
+      bodyContent ??= tableContent;
 
       final rows = <String>[];
 
@@ -695,11 +709,11 @@ class HtmlProcessor {
 /// 继承自markdown的Element类，添加文本内容支持
 class HtmlElement extends m.Element {
   /// HTML元素的文本内容
+  @override
   final String textContent;
 
   /// 构造函数
-  HtmlElement(String tag, List<m.Node>? children, this.textContent)
-    : super(tag, children);
+  HtmlElement(super.tag, super.children, this.textContent);
 
   /// 获取元素的纯文本内容
   String get plainText => textContent;
@@ -754,8 +768,8 @@ class HtmlToSpanVisitor extends TreeVisitor {
 
   /// 构造函数
   HtmlToSpanVisitor({WidgetVisitor? visitor, TextStyle? parentStyle})
-    : this.visitor = visitor ?? WidgetVisitor(),
-      this.parentStyle = parentStyle ?? const TextStyle();
+    : visitor = visitor ?? WidgetVisitor(),
+      parentStyle = parentStyle ?? const TextStyle();
 
   /// 访问HTML节点列表并转换为SpanNode列表
   List<SpanNode> toVisit(List<h.Node> nodes) {
@@ -789,17 +803,22 @@ class HtmlToSpanVisitor extends TreeVisitor {
   void visitElement(h.Element node) {
     final localName = node.localName ?? '';
     debugPrint(
-      '🔧 HtmlToSpanVisitor.visitElement: 处理标签 - $localName, attributes: ${node.attributes}',
+      LocalizationService.instance.current.htmlTagProcessing(
+        localName,
+        node.attributes,
+      ),
     );
 
     // 特殊处理video标签 - 直接创建VideoNode
     if (localName == 'video') {
-      debugPrint('🎥 HtmlToSpanVisitor: 发现video标签，创建VideoNode');
+      debugPrint(LocalizationService.instance.current.videoTagDetected_7281);
       final videoNode = _createVideoNode(node);
       final last = _spansStack.last;
       if (last is ElementNode) {
         last.accept(videoNode);
-        debugPrint('🎥 HtmlToSpanVisitor: VideoNode已添加到父节点');
+        debugPrint(
+          LocalizationService.instance.current.videoNodeAddedToParent_7281,
+        );
       }
       return; // video标签不需要处理子节点
     }
@@ -907,7 +926,10 @@ extension HtmlConfigExtension on MarkdownConfig {
                         Icon(Icons.broken_image, color: Colors.red.shade400),
                         const SizedBox(width: 8),
                         Text(
-                          '图片加载失败',
+                          LocalizationService
+                              .instance
+                              .current
+                              .imageLoadFailed_7281,
                           style: TextStyle(color: Colors.red.shade600),
                         ),
                       ],
@@ -931,7 +953,7 @@ extension HtmlConfigExtension on MarkdownConfig {
                   Icon(Icons.broken_image, color: Colors.red.shade400),
                   const SizedBox(width: 8),
                   Text(
-                    '图片加载失败: $error',
+                    LocalizationService.instance.current.imageLoadFailed(error),
                     style: TextStyle(color: Colors.red.shade600),
                   ),
                 ],
@@ -1141,7 +1163,9 @@ class HtmlUtils {
     try {
       return parseFragment(html);
     } catch (e) {
-      debugPrint('HTML解析失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.htmlParsingFailed_7285(e),
+      );
       return null;
     }
   }

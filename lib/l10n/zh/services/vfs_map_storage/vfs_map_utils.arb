@@ -1,0 +1,13 @@
+{
+  "validationError_7285": "验证过程出错: {error}",
+  "metadataFileMissing_7285": "元数据文件不存在: meta.json",
+  "missingRequiredField_4827": "元数据缺少必需字段: {field}",
+  "metadataFileFormatError_7285": "元数据文件格式错误: {e}",
+  "mapNotFound_7425": "地图不存在: {mapId}",
+  "backupRestoreUnimplemented_7281": "恢复备份功能待实现",
+  "mapBackupCreated": "地图备份创建完成: {mapId} -> {backupPath} ({length} bytes)",
+  "mapBackupFailed_7285": "创建地图备份失败: {e}",
+  "mapRestoreFailed_7285": "从备份恢复地图失败: {e}",
+  "mapPackageExportComplete": "地图包导出完成: {mapId} -> {exportPath}",
+  "exportMapFailed_7285": "导出地图包失败: {e}"
+}

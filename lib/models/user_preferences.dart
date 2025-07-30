@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 part 'user_preferences.g.dart';
 
@@ -100,7 +103,8 @@ class UserPreferences {
     final now = DateTime.now();
     return UserPreferences(
       userId: userId,
-      displayName: displayName ?? '用户',
+      displayName:
+          displayName ?? LocalizationService.instance.current.defaultUser_4821,
       theme: ThemePreferences.createDefault(),
       homePage: HomePagePreferences.createDefault(),
       mapEditor: MapEditorPreferences.createDefault(),
@@ -762,18 +766,18 @@ class ToolPreferences {
       ],
       showAdvancedTools: false,
       handleSize: 16.0,
-      customTags: const [
-        '重要',
-        '紧急',
-        '完成',
-        '临时',
-        '备注',
-        '标记',
-        '高优先级',
-        '低优先级',
-        '计划',
-        '想法',
-        '参考',
+      customTags: [
+        LocalizationService.instance.current.importantTag_1234,
+        LocalizationService.instance.current.urgentTag_5678,
+        LocalizationService.instance.current.completedTag_9012,
+        LocalizationService.instance.current.temporaryTag_3456,
+        LocalizationService.instance.current.noteTag_7890,
+        LocalizationService.instance.current.markTag_2345,
+        LocalizationService.instance.current.highPriorityTag_6789,
+        LocalizationService.instance.current.lowPriorityTag_0123,
+        LocalizationService.instance.current.planTag_4567,
+        LocalizationService.instance.current.ideaTag_8901,
+        LocalizationService.instance.current.referenceTag_1235,
       ],
       recentTags: const [],
       tts: TtsPreferences.createDefault(),

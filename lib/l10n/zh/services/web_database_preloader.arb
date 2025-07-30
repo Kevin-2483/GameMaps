@@ -1,0 +1,9 @@
+{
+  "sampleDataCleaned_7421": "示例数据清理完成",
+  "sampleDataCleanupFailed_7421": "示例数据清理失败: {e}",
+  "sampleDataInitialized_7281": "示例数据初始化完成",
+  "skipExampleDataInitialization_7281": "已有地图数据，跳过示例数据初始化",
+  "sampleDataInitFailed_7421": "示例数据初始化失败: {e}",
+  "sampleLayerName_4821": "示例图层",
+  "mapInsertFailed_7285": "直接插入示例地图失败: {e}"
+}

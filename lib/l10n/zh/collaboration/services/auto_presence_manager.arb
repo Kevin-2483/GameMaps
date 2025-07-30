@@ -1,0 +1,7 @@
+{
+  "mapInfoSyncComplete_7281": "地图信息同步完成",
+  "skipUpdateMapTitle_7421": "跳过更新地图标题：不在编辑器中或mapId为空",
+  "coverSizeLabel_7421": "封面大小: {size}KB",
+  "skipMapCoverUpdate_7421": "跳过更新地图封面：不在编辑器中或mapId为空",
+  "saveCurrentMapId_7425": "保存当前地图ID"
+}

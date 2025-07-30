@@ -3,6 +3,7 @@ import '../../config/config_manager.dart';
 import '../../config/app_config.dart';
 import '../../components/common/config_aware_widgets.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../../services/notification/notification_service.dart';
 
 /// 配置编辑器页面
@@ -91,12 +92,14 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
     setState(() {
       _config = newConfig;
     });
-    context.showSuccessSnackBar(AppLocalizations.of(context)!.configUpdated);
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current!.configUpdated,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Scaffold(
       appBar: AppBar(
@@ -138,7 +141,7 @@ class _ConfigEditorPageState extends State<ConfigEditorPage> {
   }
 
   Widget _buildPlatformTab(String platform) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return ListView(
       padding: const EdgeInsets.all(16),

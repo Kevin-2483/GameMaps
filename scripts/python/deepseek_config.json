@@ -1,0 +1,40 @@
+{
+  "api_settings": {
+    "url": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-chat",
+    "temperature": 0.1,
+    "max_tokens": 2000,
+    "top_p": 0.95,
+    "frequency_penalty": 0,
+    "presence_penalty": 0
+  },
+  "processing_settings": {
+    "max_concurrent": 3,
+    "retry_attempts": 3,
+    "retry_delay": 2.0,
+    "timeout": 60,
+    "validate_line_count": true
+  },
+  "output_settings": {
+    "arb_base_path": "lib/l10n",
+    "backup_original": true,
+    "validate_line_count": true,
+    "arb_file_extension": ".arb",
+    "preserve_directory_structure": true
+  },
+  "deepseek_specific": {
+    "description": "DeepSeek API专用配置",
+    "features": [
+      "支持中文理解",
+      "代码生成能力强",
+      "JSON格式输出稳定",
+      "逻辑推理能力优秀"
+    ],
+    "optimization": {
+      "use_system_message": true,
+      "explicit_json_request": true,
+      "detailed_examples": true,
+      "error_handling": "graceful"
+    }
+  }
+}

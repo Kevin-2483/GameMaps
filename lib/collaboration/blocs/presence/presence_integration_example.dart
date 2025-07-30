@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:typed_data';
@@ -5,6 +6,8 @@ import 'dart:typed_data';
 import '../../services/websocket/websocket_client_manager.dart';
 import '../../services/map_sync_service.dart';
 import 'presence.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// PresenceBloc与MapDataBloc集成示例
 ///
@@ -52,9 +55,12 @@ class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
     // 初始化用户在线状态
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PresenceBloc>().add(
-        const InitializePresence(
+        InitializePresence(
           currentClientId: 'client123', // 实际应用中从WebSocket客户端管理器获取
-          currentUserName: '用户名', // 实际应用中从用户配置获取
+          currentUserName: LocalizationService
+              .instance
+              .current
+              .userName_7284, // 实际应用中从用户配置获取
         ),
       );
 
@@ -69,7 +75,7 @@ class _PresenceAwareMapViewState extends State<PresenceAwareMapView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('协作地图'),
+        title: Text(LocalizationService.instance.current.collaborativeMap_4271),
         actions: [
           // 在线用户指示器
           BlocBuilder<PresenceBloc, PresenceState>(
@@ -137,7 +143,9 @@ class CollaborationStatusBar extends StatelessWidget {
             children: [
               // 当前用户状态
               _buildStatusChip(
-                '我: ${_getStatusText(state.currentUser.status)}',
+                LocalizationService.instance.current.userStatusWithName(
+                  _getStatusText(state.currentUser.status),
+                ),
                 _getStatusColor(state.currentUser.status),
               ),
 
@@ -146,7 +154,10 @@ class CollaborationStatusBar extends StatelessWidget {
               // 其他用户状态
               if (state.hasOtherEditingUsers)
                 _buildStatusChip(
-                  '${state.editingUserCount - (state.currentUser.isEditing ? 1 : 0)} 人正在编辑',
+                  LocalizationService.instance.current.usersEditingCount(
+                    state.editingUserCount -
+                        (state.currentUser.isEditing ? 1 : 0),
+                  ),
                   Colors.orange,
                 ),
 
@@ -181,13 +192,13 @@ class CollaborationStatusBar extends StatelessWidget {
   String _getStatusText(UserActivityStatus status) {
     switch (status) {
       case UserActivityStatus.editing:
-        return '编辑中';
+        return LocalizationService.instance.current.editingStatus_4821;
       case UserActivityStatus.viewing:
-        return '查看中';
+        return LocalizationService.instance.current.viewingStatus_7532;
       case UserActivityStatus.idle:
-        return '在线';
+        return LocalizationService.instance.current.idleStatus_6194;
       case UserActivityStatus.offline:
-        return '离线';
+        return LocalizationService.instance.current.offlineStatus_3087;
     }
   }
 
@@ -219,7 +230,7 @@ class MapContent extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('地图内容区域'),
+          Text(LocalizationService.instance.current.mapContentArea_7281),
           const SizedBox(height: 20),
 
           // 地图信息同步演示按钮
@@ -241,7 +252,10 @@ class MapSyncDemoButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text('地图信息同步演示:', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          LocalizationService.instance.current.mapSyncDemoTitle_7281,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 10),
 
         Wrap(
@@ -250,19 +264,23 @@ class MapSyncDemoButtons extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () => _syncDemoMap1(context),
-              child: const Text('同步地图1'),
+              child: Text(LocalizationService.instance.current.syncMap1_1234),
             ),
             ElevatedButton(
               onPressed: () => _syncDemoMap2(context),
-              child: const Text('同步地图2'),
+              child: Text(LocalizationService.instance.current.syncMap2_7421),
             ),
             ElevatedButton(
               onPressed: () => _updateMapTitle(context),
-              child: const Text('更新标题'),
+              child: Text(
+                LocalizationService.instance.current.updateTitle_4271,
+              ),
             ),
             ElevatedButton(
               onPressed: () => _clearMapInfo(context),
-              child: const Text('清除地图信息'),
+              child: Text(
+                LocalizationService.instance.current.clearMapInfo_4821,
+              ),
             ),
           ],
         ),
@@ -276,14 +294,16 @@ class MapSyncDemoButtons extends StatelessWidget {
 
     mapSyncService.syncCurrentMapInfo(
       mapId: 'demo_map_1',
-      mapTitle: '演示地图 - 蓝色主题',
+      mapTitle: LocalizationService.instance.current.demoMapBlueTheme_4821,
       mapCover: demoImageData,
       coverQuality: 70,
     );
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('已同步演示地图1信息')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(LocalizationService.instance.current.demoMapSynced_7281),
+      ),
+    );
   }
 
   void _syncDemoMap2(BuildContext context) {
@@ -292,33 +312,45 @@ class MapSyncDemoButtons extends StatelessWidget {
 
     mapSyncService.syncCurrentMapInfo(
       mapId: 'demo_map_2',
-      mapTitle: '演示地图 - 绿色主题',
+      mapTitle: LocalizationService.instance.current.demoMapGreenTheme_7281,
       mapCover: demoImageData,
       coverQuality: 80,
     );
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('已同步演示地图2信息')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(LocalizationService.instance.current.demoMapSynced_7421),
+      ),
+    );
   }
 
   void _updateMapTitle(BuildContext context) {
     mapSyncService.updateMapTitle(
       'demo_map_1',
-      '演示地图 - 已重命名 ${DateTime.now().millisecondsSinceEpoch}',
+      LocalizationService.instance.current.renamedDemoMap(
+        DateTime.now().millisecondsSinceEpoch,
+      ),
     );
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('已更新地图标题')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocalizationService.instance.current.mapTitleUpdated_7281,
+        ),
+      ),
+    );
   }
 
   void _clearMapInfo(BuildContext context) {
     mapSyncService.clearCurrentMapInfo();
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('已清除地图信息')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocalizationService.instance.current.mapClearedMessage_4827,
+        ),
+      ),
+    );
   }
 
   /// 创建演示用的图片数据（简单的彩色方块）
@@ -358,11 +390,11 @@ class OnlineUsersDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blue),
             child: Text(
-              '在线用户',
-              style: TextStyle(color: Colors.white, fontSize: 24),
+              LocalizationService.instance.current.onlineUsers_4821,
+              style: const TextStyle(color: Colors.white, fontSize: 24),
             ),
           ),
           Expanded(
@@ -411,7 +443,13 @@ class OnlineUsersDrawer extends StatelessWidget {
                 ),
               ),
               title: Text(
-                isCurrentUser ? '${user.userName} (我)' : user.userName,
+                isCurrentUser
+                    ? '${user.userName} ' +
+                          LocalizationService
+                              .instance
+                              .current
+                              .currentUserSuffix_7281
+                    : user.userName,
                 style: TextStyle(
                   fontWeight: isCurrentUser
                       ? FontWeight.bold
@@ -485,11 +523,12 @@ class OnlineUsersDrawer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '正在编辑:',
+                  LocalizationService.instance.current.editingLabel_7421,
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Text(
-                  user.currentMapTitle ?? '未知地图',
+                  user.currentMapTitle ??
+                      LocalizationService.instance.current.unknownMap_4821,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -508,13 +547,13 @@ class OnlineUsersDrawer extends StatelessWidget {
   String _getStatusText(UserActivityStatus status) {
     switch (status) {
       case UserActivityStatus.editing:
-        return '正在编辑';
+        return LocalizationService.instance.current.editingStatus_4821;
       case UserActivityStatus.viewing:
-        return '正在查看';
+        return LocalizationService.instance.current.viewingStatus_5723;
       case UserActivityStatus.idle:
-        return '在线';
+        return LocalizationService.instance.current.idleStatus_6934;
       case UserActivityStatus.offline:
-        return '离线';
+        return LocalizationService.instance.current.offlineStatus_7845;
     }
   }
 

@@ -1,4 +1,7 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 工作状态操作控件类型
 enum WorkStatusActionType {
@@ -47,13 +50,14 @@ class WorkStatusAction {
   /// 创建取消操作
   factory WorkStatusAction.cancel({
     required VoidCallback onPressed,
-    String tooltip = '取消操作',
+    String? tooltip,
     bool enabled = true,
   }) {
     return WorkStatusAction(
       type: WorkStatusActionType.cancel,
       icon: Icons.close,
-      tooltip: tooltip,
+      tooltip:
+          tooltip ?? LocalizationService.instance.current.cancelOperation_4821,
       onPressed: onPressed,
       isDangerous: true,
       enabled: enabled,
@@ -63,13 +67,15 @@ class WorkStatusAction {
   /// 创建暂停操作
   factory WorkStatusAction.pause({
     required VoidCallback onPressed,
-    String tooltip = '暂停操作',
+    String? tooltip,
     bool enabled = true,
   }) {
     return WorkStatusAction(
       type: WorkStatusActionType.pause,
       icon: Icons.pause,
-      tooltip: tooltip,
+      tooltip:
+          tooltip ??
+          LocalizationService.instance.current.pauseOperationTooltip_7281,
       onPressed: onPressed,
       enabled: enabled,
     );
@@ -78,13 +84,14 @@ class WorkStatusAction {
   /// 创建重试操作
   factory WorkStatusAction.retry({
     required VoidCallback onPressed,
-    String tooltip = '重试操作',
+    String? tooltip,
     bool enabled = true,
   }) {
     return WorkStatusAction(
       type: WorkStatusActionType.retry,
       icon: Icons.refresh,
-      tooltip: tooltip,
+      tooltip:
+          tooltip ?? LocalizationService.instance.current.retryTooltip_7281,
       onPressed: onPressed,
       enabled: enabled,
     );

@@ -1,0 +1,17 @@
+{
+  "windowStateOnExit": "退出时读取窗口状态: {width}x{height}, 最大化: {maximized}",
+  "resetWindowSizeFailed_4829": "重置窗口大小失败: {e}",
+  "windowSizeResetToDefault_4821": "窗口大小已重置为默认值",
+  "autoSaveWindowSizeDisabled_7281": "自动保存窗口大小已禁用，跳过保存",
+  "saveMaximizeStatusEnabled_4821": "保存最大化状态：已开启记住最大化状态设置",
+  "saveWindowSizeNotMaximized_4821": "保存窗口大小：当前非最大化状态",
+  "windowStateSavedSuccessfully_7281": "退出时窗口状态保存成功",
+  "skipSaveMaximizedStateNotEnabled_4821": "跳过保存：最大化状态但未开启记住最大化状态设置",
+  "windowStateSaveError": "退出时保存窗口状态异常: {e}",
+  "windowStateSaveFailed_7281": "退出时窗口状态保存失败",
+  "windowSizeApplied": "窗口大小已应用: {windowWidth}x{windowHeight}, 位置由系统决定, 最大化: {isMaximized}",
+  "windowSizeError_7425": "应用窗口大小失败: {e}",
+  "windowSizeSaved": "窗口大小已保存: {width}x{height}, 最大化: {maximized} (位置由系统决定)",
+  "saveWindowSizeFailed_7285": "手动保存窗口大小失败: {e}",
+  "windowSizeSaveFailed_7281": "窗口大小保存失败"
+}

@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../services/localization_service.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
 import '../data/map_data_state.dart';
@@ -33,7 +36,8 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
           return IconButton(
             icon: const Icon(Icons.timer_outlined),
             onPressed: () => _showCreateTimerDialog(context),
-            tooltip: '创建计时器',
+            tooltip:
+                LocalizationService.instance.current.createTimerTooltip_7421,
           );
         }
 
@@ -189,7 +193,8 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                             _buildMenuItem(
                               icon: Icons.play_arrow,
                               color: Colors.green,
-                              text: '开始 ${currentTimer.name}',
+                              text: LocalizationService.instance.current
+                                  .startTimerName_7281(currentTimer.name),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 widget.mapDataBloc.add(
@@ -201,7 +206,8 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                             _buildMenuItem(
                               icon: Icons.pause,
                               color: Colors.orange,
-                              text: '暂停 ${currentTimer.name}',
+                              text: LocalizationService.instance.current
+                                  .pauseTimerName(currentTimer.name),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 widget.mapDataBloc.add(
@@ -213,7 +219,8 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                             _buildMenuItem(
                               icon: Icons.stop,
                               color: Colors.red,
-                              text: '停止 ${currentTimer.name}',
+                              text: LocalizationService.instance.current
+                                  .stopTimerName(currentTimer.name),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 widget.mapDataBloc.add(
@@ -225,7 +232,8 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                             _buildMenuItem(
                               icon: Icons.refresh,
                               color: Colors.blue,
-                              text: '重置 ${currentTimer.name}',
+                              text: LocalizationService.instance.current
+                                  .resetTimerName(currentTimer.name),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 widget.mapDataBloc.add(
@@ -286,7 +294,10 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                           _buildMenuItem(
                             icon: Icons.add,
                             color: Colors.blue,
-                            text: '创建新计时器',
+                            text: LocalizationService
+                                .instance
+                                .current
+                                .createNewTimer_4821,
                             onTap: () {
                               Navigator.of(context).pop();
                               _showCreateTimerDialog(context);
@@ -295,7 +306,10 @@ class _CompactTimerWidgetState extends State<CompactTimerWidget> {
                           _buildMenuItem(
                             icon: Icons.settings,
                             color: Colors.grey,
-                            text: '管理计时器',
+                            text: LocalizationService
+                                .instance
+                                .current
+                                .manageTimers_4821,
                             onTap: () {
                               Navigator.of(context).pop();
                               _showTimerManagementDialog(context, currentState);
@@ -437,7 +451,7 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('创建计时器'),
+      title: Text(LocalizationService.instance.current.createTimer_4271),
       content: SizedBox(
         width: 300,
         child: Column(
@@ -445,15 +459,20 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '计时器名称',
-                hintText: '请输入计时器名称',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.timerNameLabel_4821,
+                hintText:
+                    LocalizationService.instance.current.timerNameHint_4821,
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<TimerMode>(
               value: _mode,
-              decoration: const InputDecoration(labelText: '计时器类型'),
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.timerTypeLabel_7281,
+              ),
               items: TimerMode.values.map((mode) {
                 return DropdownMenuItem(
                   value: mode,
@@ -471,14 +490,19 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
             // 只有倒计时模式才显示时间设置
             if (_mode == TimerMode.countdown) ...[
               const SizedBox(height: 16),
-              const Text('时间设置'),
+              Text(LocalizationService.instance.current.timeSettings_7284),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _hoursController,
-                      decoration: const InputDecoration(labelText: '小时'),
+                      decoration: InputDecoration(
+                        labelText: LocalizationService
+                            .instance
+                            .current
+                            .hoursLabel_4821,
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -486,7 +510,12 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
                   Expanded(
                     child: TextField(
                       controller: _minutesController,
-                      decoration: const InputDecoration(labelText: '分钟'),
+                      decoration: InputDecoration(
+                        labelText: LocalizationService
+                            .instance
+                            .current
+                            .minutesLabel_7281,
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -494,7 +523,12 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
                   Expanded(
                     child: TextField(
                       controller: _secondsController,
-                      decoration: const InputDecoration(labelText: '秒'),
+                      decoration: InputDecoration(
+                        labelText: LocalizationService
+                            .instance
+                            .current
+                            .secondsLabel_4821,
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                   ),
@@ -507,9 +541,12 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
-        TextButton(onPressed: _createTimer, child: const Text('创建')),
+        TextButton(
+          onPressed: _createTimer,
+          child: Text(LocalizationService.instance.current.createButton_7281),
+        ),
       ],
     );
   }
@@ -517,7 +554,9 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
   void _createTimer() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      context.showErrorSnackBar('请输入计时器名称');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.enterTimerName_4821,
+      );
       return;
     }
 
@@ -532,7 +571,9 @@ class _CreateTimerDialogState extends State<CreateTimerDialog> {
       duration = Duration(hours: hours, minutes: minutes, seconds: seconds);
 
       if (duration.inMilliseconds <= 0) {
-        context.showErrorSnackBar('请设置有效的时间');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.setValidTimeError_4821,
+        );
         return;
       }
     }
@@ -567,12 +608,16 @@ class TimerManagementDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('计时器管理'),
+      title: Text(LocalizationService.instance.current.timerManagement_4271),
       content: SizedBox(
         width: 400,
         height: 300,
         child: timers.isEmpty
-            ? const Center(child: Text('暂无计时器'))
+            ? Center(
+                child: Text(
+                  LocalizationService.instance.current.noTimerAvailable_7281,
+                ),
+              )
             : ListView.builder(
                 itemCount: timers.length,
                 itemBuilder: (context, index) {
@@ -597,7 +642,7 @@ class TimerManagementDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: Text(LocalizationService.instance.current.closeButton_7421),
         ),
         TextButton(
           onPressed: () {
@@ -607,7 +652,7 @@ class TimerManagementDialog extends StatelessWidget {
               builder: (context) => CreateTimerDialog(mapDataBloc: mapDataBloc),
             );
           },
-          child: const Text('创建新计时器'),
+          child: Text(LocalizationService.instance.current.createNewTimer_4271),
         ),
       ],
     );
@@ -617,12 +662,14 @@ class TimerManagementDialog extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: const Text('确定要删除这个计时器吗？'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteTimer_7421,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () {
@@ -630,7 +677,7 @@ class TimerManagementDialog extends StatelessWidget {
               Navigator.of(context).pop();
               Navigator.of(context).pop(); // 关闭管理对话框
             },
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),

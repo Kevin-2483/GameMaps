@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import '../models/user_presence.dart';
 import 'websocket/websocket_client_manager.dart';
 import 'websocket/websocket_client_service.dart';
 import 'map_sync_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 自动在线状态管理器
 ///
@@ -90,7 +93,9 @@ class AutoPresenceManager {
     _isEditingMap = false;
     _currentMapId = mapId; // 保存当前地图ID
 
-    debugPrint('[AutoPresenceManager] 保存当前地图ID: $_currentMapId');
+    debugPrint(
+      '[AutoPresenceManager] ${LocalizationService.instance.current.saveCurrentMapId_7425}: $_currentMapId',
+    );
 
     // 同步地图信息
     await _mapSyncService.syncCurrentMapInfo(
@@ -99,7 +104,10 @@ class AutoPresenceManager {
       mapCover: mapCover,
     );
 
-    debugPrint('[AutoPresenceManager] 地图信息同步完成');
+    debugPrint(
+      '[AutoPresenceManager] ' +
+          LocalizationService.instance.current.mapInfoSyncComplete_7281,
+    );
 
     // 设置为查看状态
     _updateStatus(UserActivityStatus.viewing);
@@ -155,7 +163,9 @@ class AutoPresenceManager {
     );
 
     if (!_isInEditor || _currentMapId == null) {
-      debugPrint('[AutoPresenceManager] 跳过更新地图标题：不在编辑器中或mapId为空');
+      debugPrint(
+        '[AutoPresenceManager] ${LocalizationService.instance.current.skipUpdateMapTitle_7421}',
+      );
       return;
     }
 
@@ -166,14 +176,16 @@ class AutoPresenceManager {
   /// 更新地图封面
   void updateMapCover(Uint8List newCover) {
     debugPrint(
-      '[AutoPresenceManager] updateMapCover called, 封面大小: ${(newCover.length / 1024).toStringAsFixed(1)}KB',
+      '[AutoPresenceManager] updateMapCover called, ${LocalizationService.instance.current.coverSizeLabel_7421((newCover.length / 1024).toStringAsFixed(1))}',
     );
     debugPrint(
       '[AutoPresenceManager] _isInEditor: $_isInEditor, _currentMapId: $_currentMapId',
     );
 
     if (!_isInEditor || _currentMapId == null) {
-      debugPrint('[AutoPresenceManager] 跳过更新地图封面：不在编辑器中或mapId为空');
+      debugPrint(
+        '[AutoPresenceManager] ${LocalizationService.instance.current.skipMapCoverUpdate_7421}',
+      );
       return;
     }
 

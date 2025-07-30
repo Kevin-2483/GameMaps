@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,7 @@ import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 // import '../../components/web/web_readonly_components.dart';
 import '../../components/common/draggable_title_bar.dart';
@@ -54,6 +56,8 @@ import '../../../services/notification/notification_service.dart';
 import '../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 import '../../collaboration/mixins/auto_presence_mixin.dart'; // 导入在线状态管理混入
 import '../../collaboration/services/websocket/websocket_client_manager.dart'; // 导入WebSocket客户端管理器
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class MapEditorPage extends BasePage {
   final MapItem? mapItem; // 可选的预加载地图数据
@@ -134,7 +138,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取用户偏好设置显示名称失败: $e');
+debugPrint(LocalizationService.instance.current.getUserPreferenceFailed_4821(e));
       }
     }
 
@@ -153,18 +157,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _cachedClientName = activeConfig.displayName;
         });
         if (kDebugMode) {
-          debugPrint(
-            '客户端信息已加载: ID=${activeConfig.clientId}, Name=${activeConfig.displayName}',
+debugPrint(
+            LocalizationService.instance.current.clientInfoLoaded(activeConfig.clientId, activeConfig.displayName),
           );
         }
       } else {
         if (kDebugMode) {
-          debugPrint('未找到活跃的客户端配置');
+debugPrint(LocalizationService.instance.current.noActiveClientConfig_7281);
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取客户端信息失败: $e');
+debugPrint(LocalizationService.instance.current.clientInfoFetchFailed(e));
       }
     }
   }
@@ -298,41 +302,41 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
       _savePanelStatesOnExit().catchError((e) {
-        debugPrint('在dispose中保存面板状态失败: $e');
+debugPrint(LocalizationService.instance.current.savePanelStateFailed_7421(e));
       });
     }
 
     // 保存智能隐藏状态到扩展存储（现在使用保存的引用，不访问context）
     if (_currentMap != null) {
       _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
-        debugPrint('在dispose中保存智能隐藏状态失败: $e');
+debugPrint(LocalizationService.instance.current.saveSmartHideStateFailed_7285(e));
       });
 
       // 保存缩放因子状态到扩展存储
       _saveLegendGroupZoomFactorsOnExit().catchError((e) {
-        debugPrint('在dispose中保存缩放因子状态失败: $e');
+debugPrint(LocalizationService.instance.current.saveScaleFactorFailed_7285(e));
       });
     }
 
     // 清理图例缓存管理器的所有缓存
     try {
       LegendCacheManager().clearAllCache();
-      debugPrint('地图编辑器退出：已清理所有图例缓存');
+debugPrint(LocalizationService.instance.current.mapEditorExitCleanup_4821);
     } catch (e) {
-      debugPrint('在dispose中清理图例缓存失败: $e');
+debugPrint(LocalizationService.instance.current.legendCacheCleanupFailed_7285(e));
     }
 
     // 清理颜色滤镜会话管理器的所有滤镜
     try {
       ColorFilterSessionManager().clearAllFilters();
-      debugPrint('地图编辑器退出：已清理所有颜色滤镜');
+debugPrint(LocalizationService.instance.current.mapEditorExitMessage_4821);
     } catch (e) {
-      debugPrint('在dispose中清理颜色滤镜失败: $e');
+debugPrint(LocalizationService.instance.current.colorFilterCleanupError_4821(e));
     }
 
     // 释放在线状态管理资源
     disposeCollaboration();
-    debugPrint('在线状态管理资源已释放');
+debugPrint(LocalizationService.instance.current.resourceReleased_4821);
 
     // 释放响应式系统资源
     disposeReactiveIntegration();
@@ -397,7 +401,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     }
 
-    debugPrint('图例组智能隐藏状态已初始化: $_legendGroupSmartHideStates');
+debugPrint(LocalizationService.instance.current.legendGroupSmartHideInitialized(_legendGroupSmartHideStates));
   }
 
   /// 初始化图例组缩放因子状态
@@ -424,7 +428,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     }
 
-    debugPrint('图例组缩放因子状态已初始化: $_legendGroupZoomFactors');
+debugPrint(LocalizationService.instance.current.legendGroupZoomFactorInitialized(_legendGroupZoomFactors));
   }
 
   /// 获取图例组智能隐藏状态
@@ -451,7 +455,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
     }
 
-    debugPrint('图例组 $legendGroupId 智能隐藏状态已更新: $enabled');
+debugPrint(LocalizationService.instance.current.legendGroupSmartHideStatusUpdated(legendGroupId, enabled));
   }
 
   /// 获取图例组缩放因子
@@ -478,7 +482,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
     }
 
-    debugPrint('图例组 $legendGroupId 缩放因子已更新: $zoomFactor');
+debugPrint(LocalizationService.instance.current.legendGroupZoomUpdated_7281(legendGroupId, zoomFactor));
   }
 
   /// 处理从缓存拖拽图例到画布
@@ -512,13 +516,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
           _currentLegendGroupForManagement!.id,
         );
         legendSize = zoomFactor / currentZoomLevel;
-        debugPrint(
-          '使用动态公式计算图例大小: zoomFactor=$zoomFactor, currentZoom=$currentZoomLevel, legendSize=$legendSize',
+debugPrint(
+          LocalizationService.instance.current.dynamicFormulaLegendSizeCalculation(zoomFactor, currentZoomLevel, legendSize),
         );
       } else {
         // 使用固定大小
         legendSize = defaultLegendSize;
-        debugPrint('使用固定图例大小: $legendSize');
+debugPrint(LocalizationService.instance.current.fixedLegendSizeUsage(legendSize));
       }
 
       // 使用LegendPathResolver处理路径占位符
@@ -552,32 +556,32 @@ class _MapEditorContentState extends State<_MapEditorContent>
         updatedAt: now,
       );
 
-      debugPrint(
-        '拖拽添加图例项到地图编辑器: ID=${newItem.id}, legendId=${newItem.legendId}',
+debugPrint(
+        LocalizationService.instance.current.dragToAddLegendItem_7421(newItem.id, newItem.legendId ?? 'null'),
       );
-      debugPrint(
-        '更新前图例数量: ${_currentLegendGroupForManagement!.legendItems.length}',
+debugPrint(
+        LocalizationService.instance.current.legendCountBeforeUpdate(_currentLegendGroupForManagement!.legendItems.length),
       );
-      debugPrint('更新后图例数量: ${updatedGroup.legendItems.length}');
+debugPrint(LocalizationService.instance.current.updatedLegendCount(updatedGroup.legendItems.length));
 
       // 更新图例组
       _updateLegendGroup(updatedGroup);
 
       // 显示成功提示
       if (mounted) {
-        context.showSuccessSnackBar(
-          '已将图例添加到 ${updatedGroup.name} (${updatedGroup.legendItems.length}个图例)',
+context.showSuccessSnackBar(
+          LocalizationService.instance.current.legendAddedToGroup(updatedGroup.name, updatedGroup.legendItems.length),
         );
       }
 
-      debugPrint('从缓存拖拽添加图例: $legendPath 到位置: $canvasPosition');
+debugPrint(LocalizationService.instance.current.dragLegendFromCache(legendPath, canvasPosition));
     }
   }
 
   /// 处理拖拽开始 - 临时关闭抽屉
   void _handleDragStart() {
     if (_isLegendGroupManagementDrawerOpen && !_isDragTemporaryHidden) {
-      debugPrint('拖拽开始：临时关闭图例组管理抽屉');
+debugPrint(LocalizationService.instance.current.dragStartCloseDrawer_4821);
       setState(() {
         _isDragTemporaryHidden = true;
         _hiddenLegendGroupForDrag = _currentLegendGroupForManagement;
@@ -588,13 +592,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 处理拖拽结束 - 重新打开抽屉
   void _handleDragEnd() {
-    debugPrint('拖拽结束：检查是否需要重新打开图例组管理抽屉');
+debugPrint(LocalizationService.instance.current.dragEndCheckDrawer_4821);
     debugPrint('  _isDragTemporaryHidden: $_isDragTemporaryHidden');
     debugPrint('  _wasDrawerOpenBeforeDrag: $_wasDrawerOpenBeforeDrag');
     debugPrint('  _hiddenLegendGroupForDrag: $_hiddenLegendGroupForDrag');
 
     if (_isDragTemporaryHidden && _wasDrawerOpenBeforeDrag) {
-      debugPrint('拖拽结束：重新打开图例组管理抽屉');
+debugPrint(LocalizationService.instance.current.dragEndReopenLegendDrawer_7281);
       setState(() {
         _isDragTemporaryHidden = false;
         // 保持原来的状态不变，只取消临时隐藏
@@ -633,9 +637,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         }
       }
 
-      debugPrint('地图 ${_currentMap!.title} 的图例组智能隐藏状态已保存');
+debugPrint(LocalizationService.instance.current.mapLegendAutoHideStatusSaved(_currentMap!.title));
     } catch (e) {
-      debugPrint('保存图例组智能隐藏状态失败: $e');
+debugPrint(LocalizationService.instance.current.saveLegendGroupStateFailed(e));
     }
   }
 
@@ -668,9 +672,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         }
       }
 
-      debugPrint('地图 ${_currentMap!.title} 的图例组缩放因子状态已保存');
+debugPrint(LocalizationService.instance.current.mapLegendScaleSaved(_currentMap!.title));
     } catch (e) {
-      debugPrint('保存图例组缩放因子状态失败: $e');
+debugPrint(LocalizationService.instance.current.saveLegendScaleFactorFailed(e));
     }
   }
 
@@ -681,7 +685,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       // 1. 首先初始化响应式系统（传递地图绝对路径）
       await initializeReactiveSystem(mapAbsolutePath: widget.absoluteMapPath);
-      debugPrint('响应式系统初始化完成');
+debugPrint(LocalizationService.instance.current.responsiveSystemInitialized_7281);
 
       // 2. 然后加载地图数据
       await _loadMapData();
@@ -699,7 +703,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
         // 6. 初始化在线状态管理
         await initializeCollaboration();
-        debugPrint('在线状态管理初始化完成');
+debugPrint(LocalizationService.instance.current.onlineStatusInitComplete_4821);
 
         // 7. 进入地图编辑器模式，设置地图信息用于协作
         await enterMapEditor(
@@ -707,17 +711,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
           mapTitle: _currentMap!.title,
           mapCover: _currentMap!.imageData,
         );
-        debugPrint('已进入地图编辑器协作模式: ${_currentMap!.title}');
+debugPrint(LocalizationService.instance.current.enteredMapEditorMode(_currentMap!.title));
       } // 8. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
-      debugPrint('新脚本引擎重新初始化完成');
+debugPrint(LocalizationService.instance.current.scriptEngineReinitialized_4821);
 
       // 9. 初始化键盘快捷键操作实例
       _initializeKeyboardShortcutActions();
-      debugPrint('键盘快捷键操作实例初始化完成');
+debugPrint(LocalizationService.instance.current.keyboardShortcutsInitialized_7421);
     } catch (e) {
-      _showErrorSnackBar('初始化地图失败: ${e.toString()}');
-      debugPrint('地图和响应式系统初始化失败: $e');
+_showErrorSnackBar(LocalizationService.instance.current.mapInitializationFailed_7421(e.toString()));
+debugPrint(LocalizationService.instance.current.mapAndResponsiveSystemInitFailed(e));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -735,11 +739,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
           widget.folderPath,
         );
         if (loadedMap == null) {
-          throw Exception('未找到标题为 "${widget.mapTitle}" 的地图');
+throw Exception(LocalizationService.instance.current.mapNotFoundWithTitle(widget.mapTitle ?? 'null'));
         }
         _currentMap = loadedMap;
       } else {
-        throw Exception('mapItem 和 mapTitle 都为空');
+throw Exception(LocalizationService.instance.current.mapItemAndTitleEmpty_9274);
       }
 
       // 移除预载图例，改为按需载入
@@ -762,9 +766,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 初始化图例组缩放因子状态
       _initializeLegendGroupZoomFactors();
 
-      debugPrint('地图数据加载完成: ${_currentMap!.title}');
+debugPrint(LocalizationService.instance.current.mapDataLoaded_7421(_currentMap!.title));
     } catch (e) {
-      debugPrint('加载地图数据失败: $e');
+debugPrint(LocalizationService.instance.current.mapDataLoadFailed_7284(e));
       rethrow;
     }
   }
@@ -833,12 +837,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
   /// 初始化响应式版本管理系统
   Future<void> _initializeReactiveVersionManagement() async {
     if (_currentMap == null) {
-      debugPrint('无法初始化响应式版本管理：当前地图为空');
+debugPrint(LocalizationService.instance.current.failedToInitializeReactiveVersionManagement_7285);
       return;
     }
 
     try {
-      debugPrint('开始初始化响应式版本管理，地图标题: ${_currentMap!.title}');
+debugPrint(LocalizationService.instance.current.initializingReactiveVersionManagement(_currentMap!.title));
 
       // 初始化响应式版本管理（重构后通过集成适配器）
       initializeVersionManagement(
@@ -847,20 +851,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
         folderPath: widget.folderPath,
       );
 
-      debugPrint('响应式版本管理器已创建');
+debugPrint(LocalizationService.instance.current.responsiveVersionManagerCreated_4821);
 
       // 加载VFS中所有已存储的版本
       await _loadExistingVersionsFromVfs(); // 确保默认版本存在并开始编辑
       bool shouldStartEditingDefault = false;
       if (!allVersionStates.any((v) => v.versionId == 'default')) {
-        final defaultVersionState = await createVersion(
+final defaultVersionState = await createVersion(
           'default',
-          versionName: '默认版本',
+          versionName: LocalizationService.instance.current.defaultVersionName_4821,
         );
-        debugPrint('默认版本已创建: ${defaultVersionState?.versionId}');
+debugPrint(LocalizationService.instance.current.defaultVersionCreated_7281(defaultVersionState?.versionId ?? 'null'));
         // 新创建的版本会自动切换并开始编辑，不需要额外设置
       } else {
-        debugPrint('默认版本已存在');
+debugPrint(LocalizationService.instance.current.defaultVersionExists_7281);
         shouldStartEditingDefault = true;
       }
 
@@ -870,12 +874,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
         if (shouldStartEditingDefault ||
             allVersionStates.any((v) => v.versionId == 'default')) {
           versionAdapter?.versionManager.startEditingVersion('default');
-          debugPrint('开始编辑默认版本以确保数据同步正常工作');
+debugPrint(LocalizationService.instance.current.startEditingDefaultVersion_7281);
         } else if (allVersionStates.isNotEmpty) {
           // 如果没有默认版本但有其他版本，开始编辑第一个版本
           final firstVersionId = allVersionStates.first.versionId;
           versionAdapter?.versionManager.startEditingVersion(firstVersionId);
-          debugPrint('开始编辑第一个可用版本: $firstVersionId');
+debugPrint(LocalizationService.instance.current.startEditingFirstVersion_7281(firstVersionId));
         }
       }
 
@@ -897,14 +901,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
             setState(() {
               // 当版本状态变化时，触发UI重建
             });
-            debugPrint('版本状态已更新，版本数量: ${allVersionStates.length}');
+debugPrint(LocalizationService.instance.current.versionStatusUpdated_7281(allVersionStates.length));
           }
         });
       }
 
-      debugPrint('响应式版本管理系统初始化完成，当前版本: $currentVersionId');
+debugPrint(LocalizationService.instance.current.versionSystemInitialized(currentVersionId ?? 'null'));
     } catch (e) {
-      debugPrint('响应式版本管理初始化失败: $e');
+debugPrint(LocalizationService.instance.current.responsiveVersionInitFailed(e));
     }
   }
 
@@ -913,7 +917,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 获取当前响应式系统的数据状态
       final currentMapData = getCurrentMapData();
       if (currentMapData == null) {
-        debugPrint('当前响应式系统没有数据，跳过同步');
+debugPrint(LocalizationService.instance.current.noDataSkipSync_4821);
         return;
       }
 
@@ -921,7 +925,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final activeVersionId =
           versionAdapter?.versionManager.activeEditingVersionId;
       if (activeVersionId == null) {
-        debugPrint('没有正在编辑的版本，跳过数据同步到版本系统');
+debugPrint(LocalizationService.instance.current.noEditingVersionSkipSync_7281);
         return;
       }
 
@@ -940,17 +944,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
         markAsChanged: false, // 初始同步不标记为已修改
       );
 
-      debugPrint(
-        '初始数据同步完成 [$activeVersionId], 图层数: ${mapItemToSync.layers.length}, 便签数: ${mapItemToSync.stickyNotes.length}',
+debugPrint(
+        LocalizationService.instance.current.initialDataSyncComplete(activeVersionId, mapItemToSync.layers.length, mapItemToSync.stickyNotes.length),
       );
 
       // 详细日志：便签绘画元素数量
       for (int i = 0; i < mapItemToSync.stickyNotes.length; i++) {
         final note = mapItemToSync.stickyNotes[i];
-        debugPrint('  同步便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+debugPrint(LocalizationService.instance.current.syncNoteDebug_7421(i, note.title, note.elements.length));
       }
     } catch (e) {
-      debugPrint('同步当前数据到版本系统失败: $e');
+debugPrint(LocalizationService.instance.current.syncDataFailed_7285(e));
       // 不抛出异常，允许系统继续工作
     }
   }
@@ -960,21 +964,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null) return;
 
     try {
-      debugPrint('开始从VFS加载已存储的版本...');
+debugPrint(LocalizationService.instance.current.loadingStoredVersionFromVfs_4821);
 
       // 获取VFS中所有版本ID
       final versionIds = await _vfsMapService.getMapVersions(
         _currentMap!.title,
         widget.folderPath,
       );
-      debugPrint('找到 ${versionIds.length} 个已存储的版本: $versionIds');
+debugPrint(LocalizationService.instance.current.foundStoredVersions_7281(versionIds.length, versionIds));
 
       // 获取所有版本的元数据（包含版本名称）
       final versionNames = await _vfsMapService.getAllVersionNames(
         _currentMap!.title,
         widget.folderPath,
       );
-      debugPrint('版本名称映射: $versionNames');
+debugPrint(LocalizationService.instance.current.versionNameMapping_7281(versionNames));
 
       // 为每个版本创建响应式版本状态并加载完整数据到会话
       for (final versionId in versionIds) {
@@ -983,7 +987,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
           // 检查版本是否已经在响应式系统中
           if (versionAdapter?.versionManager.versionExists(versionId) == true) {
-            debugPrint('版本 $versionId 已存在于响应式系统中，但需要确保数据已加载');
+debugPrint(LocalizationService.instance.current.versionExistsInReactiveSystem_7421(versionId));
 
             // 检查是否已有会话数据，如果没有则加载
             final existingState = versionAdapter?.versionManager
@@ -997,16 +1001,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
           // 加载版本完整数据到会话中
           await _loadVersionDataToSession(versionId, versionName);
 
-          debugPrint('已加载版本到响应式系统: $versionId ($versionName)');
+debugPrint(LocalizationService.instance.current.versionLoadedToReactiveSystem(versionId, versionName));
         } catch (e) {
-          debugPrint('加载版本 $versionId 失败: $e');
+debugPrint(LocalizationService.instance.current.versionLoadFailed_7281(versionId, e));
           // 继续加载其他版本
         }
       }
 
-      debugPrint('完成从VFS加载版本，响应式系统中共有 ${allVersionStates.length} 个版本');
+debugPrint(LocalizationService.instance.current.versionLoadedFromVfs_7281(allVersionStates.length));
     } catch (e) {
-      debugPrint('从VFS加载版本失败: $e');
+debugPrint(LocalizationService.instance.current.versionLoadFailure_7285(e));
       // 不抛出异常，允许系统继续工作
     }
   }
@@ -1019,7 +1023,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     if (_currentMap == null) return;
 
     try {
-      debugPrint('开始加载版本数据到会话: $versionId'); // 从VFS加载该版本的完整数据
+debugPrint(LocalizationService.instance.current.startLoadingVersionDataToSession(versionId)); // 从VFS加载该版本的完整数据
       final versionLayers = await _vfsMapService.getMapLayers(
         _currentMap!.title,
         versionId,
@@ -1051,12 +1055,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
         initialData: versionMapData,
       );
 
-      debugPrint(
-        '版本 $versionId 数据已加载到会话，图层数: ${versionLayers.length}, 图例组数: ${versionLegendGroups.length}, 便签数: ${versionStickyNotes.length}',
+debugPrint(
+        LocalizationService.instance.current.versionDataLoaded(versionId, versionLayers.length, versionLegendGroups.length, versionStickyNotes.length),
       );
     } catch (e) {
       // 如果加载失败，至少创建空的版本状态
-      debugPrint('加载版本 $versionId 数据失败，创建空版本状态: $e');
+debugPrint(LocalizationService.instance.current.versionLoadFailed_7281(versionId, e));
       versionAdapter?.versionManager.initializeVersion(
         versionId,
         versionName: versionName,
@@ -1069,9 +1073,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 监听地图数据变化
     mapDataStream.listen((state) {
       if (state is MapDataLoaded) {
-        debugPrint('=== 响应式监听器收到 MapDataLoaded 事件 ===');
-        debugPrint(
-          '响应式数据图层order: ${state.layers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(LocalizationService.instance.current.mapDataLoadedEvent_4821);
+debugPrint(
+          LocalizationService.instance.current.responsiveDataLayerOrder(state.layers.map((l) => '${l.name}(${l.order})').toList()),
         );
 
         // 同步更新传统状态
@@ -1083,8 +1087,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
               legendGroups: state.legendGroups,
             );
 
-            debugPrint(
-              '_currentMap已更新，图层order: ${_currentMap!.layers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+              LocalizationService.instance.current.currentMapUpdatedLayersOrder_7421(_currentMap!.layers.map((l) => '${l.name}(${l.order})').toList()),
             );
 
             // 同步更新选中图层的引用，确保引用最新的图层对象
@@ -1093,7 +1097,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               _selectedLayer = state.layers
                   .where((layer) => layer.id == selectedLayerId)
                   .firstOrNull;
-              debugPrint('选中图层引用已更新: ${_selectedLayer?.name}');
+debugPrint(LocalizationService.instance.current.selectedLayerUpdated_7421(_selectedLayer?.name ?? 'null'));
             }
 
             // 同步更新选中图层组的引用
@@ -1107,7 +1111,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 updatedGroup.add(updatedLayer);
               }
               _selectedLayerGroup = updatedGroup;
-              debugPrint('选中图层组引用已更新');
+debugPrint(LocalizationService.instance.current.selectedLayerGroupUpdated_4821);
             }
 
             // 同步更新选中便利贴的引用，确保引用最新的便利贴对象
@@ -1125,8 +1129,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
               _currentLegendGroupForManagement = state.legendGroups
                   .where((group) => group.id == managedGroupId)
                   .firstOrNull;
-              debugPrint(
-                '图例组管理状态已同步: ${_currentLegendGroupForManagement?.name}',
+debugPrint(
+                LocalizationService.instance.current.legendGroupManagementStatusSynced(_currentLegendGroupForManagement?.name ?? 'null'),
               );
             }
 
@@ -1135,16 +1139,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
             _hasUnsavedChanges = hasUnsavedChangesReactive;
 
             // 更新显示顺序
-            debugPrint('调用 _updateDisplayOrderAfterLayerChange()');
+debugPrint(LocalizationService.instance.current.updateDisplayOrderLog_7281);
             _updateDisplayOrderAfterLayerChange();
-            debugPrint(
-              '_updateDisplayOrderAfterLayerChange() 完成，_displayOrderLayers: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+              LocalizationService.instance.current.updateDisplayOrderLog(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
             );
           });
 
           // 重要：在状态同步后，确保UI能够正确反映更改状态
           // 这样用户就能看到未保存的更改指示
-          debugPrint('UI状态已同步响应式数据，未保存更改: $_hasUnsavedChanges');
+debugPrint(LocalizationService.instance.current.uiStateSyncedWithUnsavedChanges(_hasUnsavedChanges));
         }
       }
     });
@@ -1163,7 +1167,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       setState(() {
         _hasUnsavedChanges = hasUnsavedChangesReactive;
       });
-      debugPrint('已同步响应式系统的未保存状态到UI: $_hasUnsavedChanges');
+debugPrint(LocalizationService.instance.current.syncUnsavedStateToUI(_hasUnsavedChanges));
     }
   }
 
@@ -1172,7 +1176,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _updateScriptMapDataAccessor() {
     // 新的响应式脚本管理器通过MapDataBloc自动访问地图数据
     // 无需手动设置访问器
-    debugPrint('新的响应式脚本管理器自动通过MapDataBloc访问地图数据');
+debugPrint(LocalizationService.instance.current.responsiveScriptManagerAccessMapData_4821);
   }
 
   /// 从用户首选项初始化界面布局
@@ -1453,7 +1457,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           );
 
           updateStickyNoteReactive(updatedStickyNote);
-          debugPrint('使用响应式系统删除便签绘制元素: ${_selectedStickyNote!.id}/$elementId');
+debugPrint(LocalizationService.instance.current.deleteStickyNoteElementDebug(_selectedStickyNote!.id, elementId));
 
           // 如果删除的是图片元素，强制触发缓存清理
           if (elementToDelete.type == DrawingElementType.imageArea) {
@@ -1465,11 +1469,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
           }
 
           // 显示删除成功消息
-          _showSuccessSnackBar('已删除便签元素');
+_showSuccessSnackBar(LocalizationService.instance.current.noteElementDeleted_7281);
           return;
         } catch (e) {
-          debugPrint('响应式系统删除便签元素失败: $e');
-          _showErrorSnackBar('删除便签元素失败: $e');
+debugPrint(LocalizationService.instance.current.responsiveSystemDeleteNoteFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.deleteNoteElementFailed(e));
           return;
         }
       }
@@ -1488,7 +1492,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 尝试使用响应式系统删除元素
     try {
       deleteDrawingElementReactive(_selectedLayer!.id, elementId);
-      debugPrint('使用响应式系统删除绘制元素: ${_selectedLayer!.id}/$elementId');
+debugPrint(LocalizationService.instance.current.debugRemoveElement(_selectedLayer!.id, elementId));
 
       // 响应式系统会自动处理撤销历史和数据同步
       // 无需手动调用 _saveToUndoHistory() 和 _updateLayer()
@@ -1503,10 +1507,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
 
       // 显示删除成功消息
-      _showSuccessSnackBar('已删除绘制元素');
+_showSuccessSnackBar(LocalizationService.instance.current.drawingElementDeleted_7281);
     } catch (e) {
-      debugPrint('响应式系统删除元素失败: $e');
-      _showErrorSnackBar('删除元素失败: $e');
+debugPrint(LocalizationService.instance.current.responsiveSystemDeleteFailed_4821(e));
+_showErrorSnackBar(LocalizationService.instance.current.deleteElementFailed(e));
     }
   }
 
@@ -1532,12 +1536,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
           );
 
           updateStickyNoteReactive(updatedStickyNote);
-          debugPrint(
-            '使用响应式系统更新便签绘制元素: ${_selectedStickyNote!.id}/${element.id}',
+debugPrint(
+            LocalizationService.instance.current.updateStickyNoteElement(_selectedStickyNote!.id, element.id),
           );
 
           // 显示更新成功消息
-          _showSuccessSnackBar('已更新便签元素标签');
+_showSuccessSnackBar(LocalizationService.instance.current.noteTagUpdated_4821);
           return;
         }
       }
@@ -1545,14 +1549,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 如果没有选中便签或元素不属于便签，则处理图层中的元素
       if (_selectedLayer != null) {
         updateDrawingElementReactive(_selectedLayer!.id, element);
-        debugPrint('使用响应式系统更新图层绘制元素: ${_selectedLayer!.id}/${element.id}');
+debugPrint(LocalizationService.instance.current.updateLayerElementWithReactiveSystem(_selectedLayer!.id, element.id));
 
         // 显示更新成功消息
-        _showSuccessSnackBar('已更新图层元素标签');
+_showSuccessSnackBar(LocalizationService.instance.current.layerElementLabelUpdated_4821);
       }
     } catch (e) {
-      debugPrint('响应式系统更新元素失败: $e');
-      _showErrorSnackBar('更新元素失败: $e');
+debugPrint(LocalizationService.instance.current.responsiveSystemUpdateFailed_5421(e));
+_showErrorSnackBar(LocalizationService.instance.current.updateElementFailed(e));
     }
   }
 
@@ -1590,9 +1594,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _addDefaultLayer() {
     if (_currentMap == null) return;
 
-    final defaultLayer = MapLayer(
+final defaultLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '图层 1',
+      name: LocalizationService.instance.current.layer1_7281,
       order: 0,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -1601,7 +1605,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统添加默认图层
     try {
       addLayerReactive(defaultLayer);
-      debugPrint('使用响应式系统添加默认图层: ${defaultLayer.name}');
+debugPrint(LocalizationService.instance.current.addDefaultLayerWithReactiveSystem(defaultLayer.name));
 
       // 更新UI状态
       setState(() {
@@ -1610,9 +1614,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _updateDisplayOrderAfterLayerChange();
       });
 
-      debugPrint('默认图层已添加: "${defaultLayer.name}"');
+debugPrint(LocalizationService.instance.current.defaultLayerAdded_7421(defaultLayer.name));
     } catch (e) {
-      debugPrint('响应式系统添加默认图层失败: $e');
+debugPrint(LocalizationService.instance.current.responsiveSystemAddLayerFailed(e));
       // // 如果响应式系统失败，回退到传统方式
       // setState(() {
       //   _currentMap = _currentMap!.copyWith(
@@ -1627,9 +1631,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _addNewLayer() {
     if (_currentMap == null) return;
 
-    final newLayer = MapLayer(
+final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '图层 ${_currentMap!.layers.length + 1}',
+      name: LocalizationService.instance.current.layerName_7421(_currentMap!.layers.length + 1),
       order: _currentMap!.layers.length,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -1638,7 +1642,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统添加图层
     try {
       addLayerReactive(newLayer);
-      debugPrint('使用响应式系统添加图层: ${newLayer.name}');
+debugPrint(LocalizationService.instance.current.addLayerWithReactiveSystem(newLayer.name));
 
       // 更新UI状态
       setState(() {
@@ -1648,10 +1652,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
 
       // 显示成功消息
-      _showSuccessSnackBar('已添加图层 "${newLayer.name}"');
+_showSuccessSnackBar(LocalizationService.instance.current.layerAdded(newLayer.name));
     } catch (e) {
-      debugPrint('响应式系统添加图层失败: $e');
-      _showErrorSnackBar('添加图层失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemAddLayerFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.addLayerFailed_4821(e.toString()));
     }
   }
 
@@ -1661,7 +1665,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统删除图层
     try {
       deleteLayerReactive(layer.id);
-      debugPrint('使用响应式系统删除图层: ${layer.name}');
+debugPrint(LocalizationService.instance.current.deleteLayerWithReactiveSystem(layer.name));
 
       // 更新UI状态
       setState(() {
@@ -1698,10 +1702,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
       });
 
       // 显示成功消息
-      _showSuccessSnackBar('已删除图层 "${layer.name}"');
+_showSuccessSnackBar(LocalizationService.instance.current.layerDeleted(layer.name));
     } catch (e) {
-      debugPrint('响应式系统删除图层失败: $e');
-      _showErrorSnackBar('删除图层失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemDeleteLayerFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.layerDeletionFailed_7421(e.toString()));
     }
   }
 
@@ -1825,7 +1829,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   // 修改：新的优先显示逻辑，支持图层和图层组的组合显示
   void _prioritizeLayerAndGroupDisplay() {
-    debugPrint('优先显示图层和图层组的组合');
+debugPrint(LocalizationService.instance.current.priorityLayerGroupCombination_7281);
 
     if (_currentMap == null) return;
 
@@ -1871,15 +1875,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // （后绘制的显示在上层）
       _displayOrderLayers = [...otherLayers, ...groupLayers, ...priorityLayers];
 
-      debugPrint('重新排列后的显示顺序:');
-      debugPrint(
-        '- 其他图层: ${otherLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(LocalizationService.instance.current.rearrangedOrder_4281);
+debugPrint(
+        LocalizationService.instance.current.otherLayersDebug_7421(otherLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
-      debugPrint(
-        '- 组内图层: ${groupLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.groupLayersDebug_7421(groupLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
-      debugPrint(
-        '- 优先图层: ${priorityLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.priorityLayersDebug_7421(priorityLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
     });
   }
@@ -1899,13 +1903,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
   }
 
   void _prioritizeLayerGroup(List<MapLayer> group) {
-    debugPrint('=== _prioritizeLayerGroup 开始 ===');
-    debugPrint('优先显示图层组: ${group.map((l) => l.name).toList()}');
-    debugPrint(
-      '当前_currentMap.layers顺序: ${_currentMap?.layers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(LocalizationService.instance.current.prioritizeLayerGroupStart_7281);
+debugPrint(LocalizationService.instance.current.priorityLayerGroupDisplay(group.map((l) => l.name).toList()));
+debugPrint(
+      LocalizationService.instance.current.currentLayerOrderDebug(_currentMap?.layers.map((l) => '${l.name}(${l.order})').toList() ?? []),
     );
-    debugPrint(
-      '当前_displayOrderLayers顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+      LocalizationService.instance.current.displayOrderLayersDebug(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
     );
 
     if (_currentMap == null) return;
@@ -1917,8 +1921,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       final groupLayers = <MapLayer>[];
       final groupLayerIds = group.map((l) => l.id).toSet();
 
-      debugPrint(
-        'allLayers从_currentMap获取: ${allLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.allLayersDebugMessage_7421(allLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
 
       // 分离组内图层和其他图层，保持在当前地图数据中的实际顺序
@@ -1932,20 +1936,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
       // 不再按order排序，保持图层在_currentMap!.layers中的实际顺序
       // 这样可以正确反映组内重排序的结果
-      debugPrint(
-        '分离后的组内图层顺序: ${groupLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.separatedGroupLayersOrder_7284(groupLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
-      debugPrint(
-        '分离后的非组图层顺序: ${nonGroupLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.nonGroupLayersOrderDebug(nonGroupLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
 
       // 重新组织显示顺序：非组图层在前，组图层在后（后绘制的显示在上层）
       _displayOrderLayers = [...nonGroupLayers, ...groupLayers];
 
-      debugPrint(
-        '最终_displayOrderLayers顺序: ${_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()}',
+debugPrint(
+        LocalizationService.instance.current.finalDisplayOrderLayersDebug(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
       );
-      debugPrint('=== _prioritizeLayerGroup 结束 ===');
+debugPrint(LocalizationService.instance.current.prioritizeLayerGroupEnd_7281);
     });
   }
 
@@ -1967,7 +1971,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       _selectedDrawingTool = null; // 清除选中的绘制工具
       _selectedElementId = null; // 清除选中的元素
     });
-    debugPrint('绘制工具已禁用');
+debugPrint(LocalizationService.instance.current.drawingToolDisabled_4287);
   }
 
   /// 检查绘制工具是否应该被禁用
@@ -2034,7 +2038,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     try {
       updateLayerReactive(updatedLayer);
     } catch (e) {
-      _showErrorSnackBar('更新图层失败: ${e.toString()}');
+_showErrorSnackBar(LocalizationService.instance.current.layerUpdateFailed_7421(e.toString()));
     }
   }
 
@@ -2079,10 +2083,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-      _showSuccessSnackBar('图层顺序已更新');
+_showSuccessSnackBar(LocalizationService.instance.current.layerOrderUpdated_4821);
     } catch (e) {
-      debugPrint('响应式系统重排序图层失败: $e');
-      _showErrorSnackBar('重排序图层失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemReorderFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.reorderLayerFailed(e.toString()));
     }
   }
 
@@ -2111,10 +2115,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-      _showSuccessSnackBar('图层组内顺序已更新');
+_showSuccessSnackBar(LocalizationService.instance.current.layerGroupOrderUpdated_4821);
     } catch (e) {
-      debugPrint('响应式系统组内重排序图层失败: $e');
-      _showErrorSnackBar('组内重排序图层失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemGroupReorderFailed_4821(e));
+_showErrorSnackBar(LocalizationService.instance.current.layerReorderFailed_7285(e.toString()));
     }
   }
 
@@ -2269,7 +2273,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 显示成功消息
       // _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
     } catch (e) {
-      _showErrorSnackBar('批量更新图层失败: ${e.toString()}');
+_showErrorSnackBar(LocalizationService.instance.current.batchUpdateLayerFailed(e.toString()));
     }
   }
 
@@ -2369,9 +2373,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _addLegendGroup() {
     if (_currentMap == null) return;
 
-    final newGroup = LegendGroup(
+final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '图例组 ${_currentMap!.legendGroups.length + 1}',
+      name: LocalizationService.instance.current.legendGroupName(_currentMap!.legendGroups.length + 1),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -2384,9 +2388,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
       setLegendGroupSmartHideState(newGroup.id, true);
 
       // 显示成功消息
-      _showSuccessSnackBar('已添加图例组 "${newGroup.name}"');
+_showSuccessSnackBar(LocalizationService.instance.current.legendGroupAdded_7421(newGroup.name));
     } catch (e) {
-      _showErrorSnackBar('添加图例组失败: ${e.toString()}');
+_showErrorSnackBar(LocalizationService.instance.current.addLegendGroupFailed(e.toString()));
     }
   }
 
@@ -2428,13 +2432,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统删除图例组
     try {
       deleteLegendGroupReactive(group.id);
-      debugPrint('使用响应式系统删除图例组: ${group.name}');
+debugPrint(LocalizationService.instance.current.debugRemoveLegendGroup(group.name));
 
       // 显示成功消息
-      _showSuccessSnackBar('已删除图例组 "${group.name}"');
+_showSuccessSnackBar(LocalizationService.instance.current.legendGroupDeleted(group.name));
     } catch (e) {
-      debugPrint('响应式系统删除图例组失败: $e');
-      _showErrorSnackBar('删除图例组失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemDeleteLegendGroupFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.deleteLegendGroupFailed_7421(e.toString()));
     }
   }
 
@@ -2442,12 +2446,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
-    debugPrint('地图编辑器：更新图例组 ${updatedGroup.name}');
-    debugPrint('更新的图例项数量: ${updatedGroup.legendItems.length}');
+debugPrint(LocalizationService.instance.current.mapEditorUpdateLegendGroup(updatedGroup.name));
+debugPrint(LocalizationService.instance.current.updatedLegendItemsCount(updatedGroup.legendItems.length));
 
     // 如果当前正在管理这个图例组，同时更新管理抽屉的状态
     if (_currentLegendGroupForManagement?.id == updatedGroup.id) {
-      debugPrint('同步更新图例组管理抽屉的状态');
+debugPrint(LocalizationService.instance.current.syncLegendGroupDrawerStatus_4821);
       setState(() {
         _currentLegendGroupForManagement = updatedGroup;
       });
@@ -2456,13 +2460,13 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 使用响应式系统更新图例组
     try {
       updateLegendGroupReactive(updatedGroup);
-      debugPrint('使用响应式系统更新图例组: ${updatedGroup.name}');
+debugPrint(LocalizationService.instance.current.updateLegendGroupWithReactiveSystem(updatedGroup.name));
 
       // // 显示成功消息
       // _showSuccessSnackBar('已更新图例组 "${updatedGroup.name}"');
     } catch (e) {
-      debugPrint('响应式系统更新图例组失败: $e');
-      _showErrorSnackBar('更新图例组失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.responsiveSystemUpdateFailed_7285(e));
+_showErrorSnackBar(LocalizationService.instance.current.updateLegendGroupFailed(e.toString()));
     }
   } // 处理透明度预览
 
@@ -2721,14 +2725,14 @@ class _MapEditorContentState extends State<_MapEditorContent>
     final adapter = versionAdapter!;
     final versionManager = adapter.versionManager;
 
-    debugPrint('开始保存响应式版本数据 [地图: ${baseMap.title}]');
-    debugPrint('版本数量: ${allVersionStates.length}');
+debugPrint(LocalizationService.instance.current.startSavingResponsiveVersionData(baseMap.title));
+debugPrint(LocalizationService.instance.current.versionCount_7281(allVersionStates.length));
 
     for (final versionState in allVersionStates) {
       final versionId = versionState.versionId;
-      debugPrint('保存版本: $versionId (${versionState.versionName})');
-      debugPrint(
-        '版本状态: 有会话数据=${versionState.sessionData != null}, 有未保存更改=${versionState.hasUnsavedChanges}',
+debugPrint(LocalizationService.instance.current.saveVersion_7281(versionId, versionState.versionName));
+debugPrint(
+        LocalizationService.instance.current.versionStatusDebug(versionState.sessionData != null, versionState.hasUnsavedChanges),
       );
 
       // 获取版本的完整数据
@@ -2738,10 +2742,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         versionMapData = versionState.sessionData!.copyWith(
           updatedAt: DateTime.now(),
         );
-        debugPrint('版本 $versionId 使用会话数据，图层数: ${versionMapData.layers.length}');
+debugPrint(LocalizationService.instance.current.versionSessionUsage_7281(versionId, versionMapData.layers.length));
       } else {
         // 如果没有会话数据，尝试从VFS加载该版本的数据
-        debugPrint('版本 $versionId 没有会话数据，尝试从VFS加载');
+debugPrint(LocalizationService.instance.current.versionNoSessionData_7281(versionId));
         try {
           final versionExists = await _vfsMapService.mapVersionExists(
             baseMap.title,
@@ -2771,16 +2775,16 @@ class _MapEditorContentState extends State<_MapEditorContent>
               stickyNotes: stickyNotes,
               updatedAt: DateTime.now(),
             );
-            debugPrint(
-              '从VFS加载版本 $versionId 数据，图层数: ${mapLayers.length}, 便签数: ${stickyNotes.length}',
+debugPrint(
+              LocalizationService.instance.current.loadingVersionData_7281(versionId, mapLayers.length, stickyNotes.length),
             );
           } else {
             // 版本不存在，使用基础地图数据（这可能是第一次保存）
             versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
-            debugPrint('版本 $versionId 不存在，使用基础数据作为初始数据');
+debugPrint(LocalizationService.instance.current.versionNotFoundUsingDefault_7281(versionId));
           }
         } catch (e) {
-          debugPrint('加载版本 $versionId 数据失败: $e，使用基础数据');
+debugPrint(LocalizationService.instance.current.loadVersionDataFailed_7421(versionId, e));
           versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
         }
       }
@@ -2808,7 +2812,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 5. 标记所有版本为已保存状态
     versionManager.markAllVersionsSaved();
 
-    debugPrint('所有响应式版本数据已成功保存到VFS存储');
+debugPrint(LocalizationService.instance.current.allReactiveVersionsSavedToVfs_7281);
   }
 
   /// 保存单个版本的数据到VFS存储
@@ -2818,12 +2822,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     required bool isDefault,
   }) async {
     try {
-      debugPrint('保存版本数据到VFS: ${versionData.title}/$versionId');
+debugPrint(LocalizationService.instance.current.saveVersionToVfs(versionData.title, versionId));
 
       if (isDefault) {
         // 默认版本：使用完整的saveMap方法（包含清理逻辑）
         await _vfsMapService.saveMap(versionData, widget.folderPath);
-        debugPrint('默认版本已保存 (完整重建)');
+debugPrint(LocalizationService.instance.current.defaultVersionSaved_7281);
       } else {
         // 其他版本：确保版本目录存在
         final versionExists = await _vfsMapService.mapVersionExists(
@@ -2869,10 +2873,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
           );
         }
 
-        debugPrint('版本 $versionId 数据已保存 (使用该版本的实际数据)');
+debugPrint(LocalizationService.instance.current.versionDataSaved_7281(versionId));
       }
     } catch (e) {
-      debugPrint('保存版本数据失败 [$versionId]: $e');
+debugPrint(LocalizationService.instance.current.versionSaveFailed_7281(versionId, e));
       rethrow;
     }
   }
@@ -2897,8 +2901,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       // 生成唯一的版本ID
       final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
 
-      debugPrint(
-        '创建版本前状态: 当前版本=$currentVersionId, 当前地图图层数=${_currentMap!.layers.length}',
+debugPrint(
+        LocalizationService.instance.current.versionCreationStatus(currentVersionId ?? 'null', _currentMap!.layers.length),
       );
 
       // 使用响应式版本管理创建新版本（从当前版本复制数据）
@@ -2909,8 +2913,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
       );
 
       if (newVersionState != null) {
-        debugPrint(
-          '新版本已创建: $versionId, 会话数据=${newVersionState.sessionData != null ? '有(图层数: ${newVersionState.sessionData!.layers.length})' : '无'}',
+debugPrint(
+          LocalizationService.instance.current.versionCreatedMessage_7421(versionId, newVersionState.sessionData != null ? LocalizationService.instance.current.hasLayersMessage_5832(newVersionState.sessionData!.layers.length) : LocalizationService.instance.current.noData_6943),
         );
 
         setState(() {
@@ -2937,18 +2941,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
             updatedAt: newVersionState.lastModified,
             folderPath: widget.folderPath,
           );
-          debugPrint('版本名称已保存到元数据: $name (ID: $versionId)');
+debugPrint(LocalizationService.instance.current.versionSavedToMetadata(name, versionId));
         } catch (e) {
-          debugPrint('保存版本元数据失败: $e');
+debugPrint(LocalizationService.instance.current.versionMetadataSaveFailed_7421(e));
           // 不影响主流程，只是记录错误
         }
 
-        debugPrint('新版本已创建: $versionId');
-        _showSuccessSnackBar('版本 "$name" 已创建');
+debugPrint(LocalizationService.instance.current.newVersionCreated_7281(versionId));
+_showSuccessSnackBar(LocalizationService.instance.current.versionCreated_7421(name));
       }
     } catch (e) {
-      debugPrint('创建版本失败: $e');
-      _showErrorSnackBar('创建版本失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.versionCreationFailed_7285(e));
+_showErrorSnackBar(LocalizationService.instance.current.versionCreationFailed(e.toString()));
     }
   }
 
@@ -3049,18 +3053,18 @@ class _MapEditorContentState extends State<_MapEditorContent>
         });
 
         // _showSuccessSnackBar('已切换到版本');
-        debugPrint('已切换到版本: $versionId');
+debugPrint(LocalizationService.instance.current.switchedToVersion_7281(versionId));
       });
     } catch (e) {
-      debugPrint('切换版本失败: $e');
-      _showErrorSnackBar('切换版本失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.versionSwitchFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.versionSwitchFailed(e.toString()));
     }
   }
 
   /// 删除版本（使用响应式系统）
   Future<void> _deleteVersion(String versionId) async {
     if (_currentMap == null || versionId == 'default') {
-      _showErrorSnackBar('无法删除默认版本');
+_showErrorSnackBar(LocalizationService.instance.current.cannotDeleteDefaultVersion_4821);
       return;
     }
 
@@ -3072,7 +3076,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
       await deleteVersion(versionId);
 
       // 删除VFS存储中的版本数据和元数据
-      debugPrint('开始删除版本存储数据...');
+debugPrint(LocalizationService.instance.current.startDeletingVersionData_7281);
 
       // 1. 删除VFS中的版本数据
       try {
@@ -3081,9 +3085,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
           versionId,
           widget.folderPath,
         );
-        debugPrint('VFS版本数据删除成功: $versionId');
+debugPrint(LocalizationService.instance.current.vfsVersionDeletedSuccessfully(versionId));
       } catch (e) {
-        debugPrint('删除VFS版本数据失败: $e');
+debugPrint(LocalizationService.instance.current.deleteVfsVersionDataFailed(e));
         // 如果删除VFS数据失败，仍然继续删除元数据
       }
 
@@ -3094,9 +3098,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
           versionId,
           widget.folderPath,
         );
-        debugPrint('版本元数据删除成功: $versionId');
+debugPrint(LocalizationService.instance.current.versionMetadataDeletedSuccessfully(versionId));
       } catch (e) {
-        debugPrint('删除版本元数据失败: $e');
+debugPrint(LocalizationService.instance.current.deleteVersionMetadataFailed(e, widget.mapTitle ?? 'unknown', versionId));
         // 元数据删除失败不影响主流程
       }
 
@@ -3114,11 +3118,11 @@ class _MapEditorContentState extends State<_MapEditorContent>
         // 响应式系统会自动管理状态
       });
 
-      _showSuccessSnackBar('版本已完全删除');
-      debugPrint('版本删除完成: $versionId');
+_showSuccessSnackBar(LocalizationService.instance.current.versionDeletedSuccessfully_7281);
+debugPrint(LocalizationService.instance.current.versionDeletedComplete(versionId));
     } catch (e) {
-      debugPrint('删除版本失败: $e');
-      _showErrorSnackBar('删除版本失败: ${e.toString()}');
+debugPrint(LocalizationService.instance.current.deleteVersionFailed(e));
+_showErrorSnackBar(LocalizationService.instance.current.deleteVersionFailed(e.toString()));
     }
   }
 
@@ -3146,8 +3150,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
     // 使用ReactiveVersionTabBar的静态属性检查是否有未保存的版本
     final hasUnsavedVersions = ReactiveVersionTabBar.hasAnyUnsavedVersions;
-    debugPrint(
-      '退出确认检查: _hasUnsavedChanges=$_hasUnsavedChanges, hasUnsavedVersions=$hasUnsavedVersions',
+debugPrint(
+      LocalizationService.instance.current.exitConfirmationCheck(_hasUnsavedChanges, hasUnsavedVersions),
     );
 
     // 如果没有未保存更改且没有未保存的版本，或者在预览模式，直接允许退出
@@ -3160,12 +3164,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('未保存的更改'),
-        content: const Text('您有未保存的更改，确定要退出吗？'),
+title: Text(LocalizationService.instance.current.unsavedChanges_4271),
+content: Text(LocalizationService.instance.current.unsavedChangesWarning_7284),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () async {
@@ -3174,7 +3178,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 await _savePanelStatesOnExit(); // 保存面板状态
               }
             },
-            child: const Text('不保存退出'),
+child: Text(LocalizationService.instance.current.exitWithoutSaving_7281),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -3187,7 +3191,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 }
               }
             },
-            child: const Text('保存并退出'),
+child: Text(LocalizationService.instance.current.saveAndExit_4271),
           ),
         ],
       ),
@@ -3228,10 +3232,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         );
 
         _panelStatesChanged = false;
-        debugPrint('面板状态已在退出时保存');
+debugPrint(LocalizationService.instance.current.panelStateSavedOnExit_4821);
       }
     } catch (e) {
-      debugPrint('保存面板状态失败: $e');
+debugPrint(LocalizationService.instance.current.savePanelStateFailed_7285(e));
     }
   } // 处理工具栏自动关闭逻辑
 
@@ -3350,18 +3354,17 @@ class _MapEditorContentState extends State<_MapEditorContent>
     final hasSelectedGroup =
         _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
 
-    if (hasSelectedLayer && hasSelectedGroup) {
-      // 既选中图层又选中图层组
-      return '图层: ${_selectedLayer!.name} | 组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}';
-    } else if (hasSelectedLayer) {
+if (hasSelectedLayer && hasSelectedGroup) {
+      return LocalizationService.instance.current.selectedLayerAndGroup_7281(_selectedLayer!.name, _selectedLayerGroup!.map((layer) => layer.name).join(', '));
+} else if (hasSelectedLayer) {
       // 只选中图层
-      return '当前: ${_selectedLayer!.name}';
-    } else if (hasSelectedGroup) {
+      return LocalizationService.instance.current.currentSelectedLayer_7421(_selectedLayer!.name);
+} else if (hasSelectedGroup) {
       // 只选中图层组
-      return '图层组: ${_selectedLayerGroup!.map((layer) => layer.name).join(', ')}';
-    } else {
+      return LocalizationService.instance.current.selectedLayerGroupMessage(_selectedLayerGroup!.map((layer) => layer.name).join(', '));
+} else {
       // 没有选择
-      return '未选择图层';
+      return LocalizationService.instance.current.noLayerSelected_4821;
     }
   }
 
@@ -3398,7 +3401,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 构建地图编辑器标题
   Widget _buildMapEditorTitle() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
     final baseTitle = widget.isPreviewMode ? l10n.mapPreview : l10n.mapEditor;
     final titleText = '$baseTitle - ${widget.mapTitle}';
 
@@ -3438,15 +3441,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
       const SizedBox(width: 4),
 
       // 地图信息按钮
-      IconButton(
+IconButton(
         icon: const Icon(Icons.info_outline),
         onPressed: _showMapInfo,
-        tooltip: '地图信息',
+        tooltip: LocalizationService.instance.current.mapInfo_7421,
       ),
 
       // 十字线按钮
       const SizedBox(width: 4),
-      IconButton(
+IconButton(
         icon: Icon(
           Icons.square_foot,
           color: _isCrosshairEnabled
@@ -3458,21 +3461,21 @@ class _MapEditorContentState extends State<_MapEditorContent>
             _isCrosshairEnabled = !_isCrosshairEnabled;
           });
         },
-        tooltip: _isCrosshairEnabled ? '关闭十字线' : '开启十字线',
+        tooltip: _isCrosshairEnabled ? LocalizationService.instance.current.disableCrosshair_42 : LocalizationService.instance.current.enableCrosshair_42,
       ),
 
       // 导出按钮
       const SizedBox(width: 4),
-      IconButton(
+IconButton(
         icon: const Icon(Icons.arrow_outward),
         onPressed: _showExportDialog,
-        tooltip: '导出图层',
+        tooltip: LocalizationService.instance.current.exportLayer_7421,
       ),
 
       // 保存按钮（仅在编辑模式下显示）
       if (!widget.isPreviewMode) ...[
         const SizedBox(width: 4),
-        IconButton(
+IconButton(
           icon: _isLoading
               ? const SizedBox(
                   width: 20,
@@ -3484,7 +3487,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 )
               : const Icon(Icons.save),
           onPressed: _isLoading ? null : saveMap,
-          tooltip: _isLoading ? '保存中...' : '保存',
+          tooltip: _isLoading ? LocalizationService.instance.current.savingInProgress_42 : LocalizationService.instance.current.save_73,
         ),
       ],
 
@@ -3503,7 +3506,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
 
   /// 显示地图信息对话框
   void _showMapInfo() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     showDialog(
       context: context,
@@ -3513,7 +3516,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
             children: [
               Icon(Icons.map, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
-              Text('地图信息'),
+Text(LocalizationService.instance.current.mapInfo_7281)
             ],
           ),
           content: SizedBox(
@@ -3523,25 +3526,25 @@ class _MapEditorContentState extends State<_MapEditorContent>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildInfoRow('地图名称', widget.mapTitle ?? '未知地图'),
-                  _buildInfoRow('编辑模式', widget.isPreviewMode ? '预览模式' : '编辑模式'),
+_buildInfoRow(LocalizationService.instance.current.mapName_4821, widget.mapTitle ?? LocalizationService.instance.current.unknownMap_4821),
+_buildInfoRow(LocalizationService.instance.current.editMode_4821, widget.isPreviewMode ? LocalizationService.instance.current.previewMode_4822 : LocalizationService.instance.current.editMode_4821),
                   if (widget.folderPath != null)
-                    _buildInfoRow('文件夹路径', widget.folderPath ?? ''),
-                  _buildInfoRow('当前版本', 'default'),
+_buildInfoRow(LocalizationService.instance.current.folderPathLabel_4821, widget.folderPath ?? ''),
+_buildInfoRow(LocalizationService.instance.current.currentVersion_7281, 'default'),
                   const SizedBox(height: 16),
-                  Text(
-                    '编辑器状态',
+Text(
+                    LocalizationService.instance.current.editorStatus_4521,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildStatusRow(
-                    '是否有未保存更改',
+_buildStatusRow(
+                    LocalizationService.instance.current.unsavedChangesPrompt_7421,
                     _hasUnsavedChanges ||
                         ReactiveVersionTabBar.hasAnyUnsavedVersions,
                   ),
-                  _buildStatusRow('面板状态已更改', _panelStatesChanged),
+_buildStatusRow(LocalizationService.instance.current.panelStatusChanged_7281, _panelStatesChanged),
                   const SizedBox(height: 16),
                   // 快捷键按钮
                   SizedBox(
@@ -3552,7 +3555,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                         ShortcutsDialog.show(context); // 显示快捷键对话框
                       },
                       icon: const Icon(Icons.keyboard),
-                      label: const Text('查看快捷键列表'),
+label: Text(LocalizationService.instance.current.viewShortcutList_7281),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -3590,7 +3593,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
               orElse: () => throw Exception('Layer not found: $layerId'),
             );
             if (mounted) {
-              context.showSuccessSnackBar('导出图层: ${layer?.name ?? layerId}');
+context.showSuccessSnackBar(LocalizationService.instance.current.exportLayerSuccess(layer?.name ?? layerId));
             }
           },
         );
@@ -3655,8 +3658,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   color: status ? Colors.green : Colors.grey,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  status ? '是' : '否',
+Text(
+                  status ? LocalizationService.instance.current.yes_4287 : LocalizationService.instance.current.no_4287,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: status ? Colors.green : Colors.grey,
                     fontWeight: FontWeight.w500,
@@ -3696,7 +3699,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   leading: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
+IconButton(
                         icon: _isLoading
                             ? const SizedBox(
                                 width: 20,
@@ -3718,7 +3721,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                   context.pop(); // 使用 go_router 的方式退出
                                 }
                               },
-                        tooltip: _isLoading ? '保存中...' : '返回',
+                        tooltip: _isLoading ? LocalizationService.instance.current.savingInProgress_42 : LocalizationService.instance.current.backButton_75,
                       ),
                       Icon(
                         Icons.edit_location,
@@ -3896,10 +3899,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                                       .onSecondaryContainer,
                                                 ),
                                                 const SizedBox(width: 8),
-                                                Text(
+Text(
                                                   _selectedStickyNote != null
-                                                      ? '便签元素检视器 - ${_selectedStickyNote!.title}'
-                                                      : 'Z层级检视器',
+                                                      ? LocalizationService.instance.current.stickyNoteInspectorTitle_7421(_selectedStickyNote!.title)
+                                                      : LocalizationService.instance.current.zLevelInspector_1589,
                                                   style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
@@ -4142,8 +4145,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
                                 ),
-                                child: Text(
-                                  '暂无可用图层\n请先创建或显示图层',
+child: Text(
+                                  LocalizationService.instance.current.noAvailableLayers_4721,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -4179,10 +4182,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-          IconButton(
+IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addNewLayer,
-            tooltip: layout.showTooltips ? '添加图层' : null,
+            tooltip: layout.showTooltips ? LocalizationService.instance.current.addLayer_7281 : null,
           ),
         ],
         child: _isLayerPanelCollapsed
@@ -4220,8 +4223,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
     );
     // 图例管理面板
     panels.add(
-      _buildCollapsiblePanel(
-        title: '图例管理',
+_buildCollapsiblePanel(
+        title: LocalizationService.instance.current.legendManagement_4821,
         icon: Icons.legend_toggle,
         isCollapsed: _isLegendPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('legend'),
@@ -4235,7 +4238,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
           IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addLegendGroup,
-            tooltip: layout.showTooltips ? '添加图例组' : null,
+            tooltip: layout.showTooltips ? LocalizationService.instance.current.addLegendGroup_7352 : null,
           ),
         ],
         child: _isLegendPanelCollapsed
@@ -4268,10 +4271,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-          IconButton(
+IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addNewStickyNote,
-            tooltip: layout.showTooltips ? '添加便签' : null,
+            tooltip: layout.showTooltips ? LocalizationService.instance.current.addStickyNote_7421 : null,
           ),
         ],
         child: _isStickyNotePanelCollapsed
@@ -4304,10 +4307,10 @@ class _MapEditorContentState extends State<_MapEditorContent>
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-          IconButton(
+IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _showNewScriptDialog,
-            tooltip: layout.showTooltips ? '新建脚本' : null,
+            tooltip: layout.showTooltips ? LocalizationService.instance.current.newScript_7281 : null,
           ),
         ],
         child: _isScriptPanelCollapsed
@@ -4376,8 +4379,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
               ),
               // 自动关闭开关（仅在折叠状态时显示）
               if (onAutoCloseToggled != null) ...[
-                Tooltip(
-                  message: '自动关闭：当点击其他工具栏时自动关闭此工具栏',
+Tooltip(
+                  message: LocalizationService.instance.current.autoCloseTooltip_4821,
                   child: Transform.scale(
                     scale: 0.8,
                     child: Switch(
@@ -4435,8 +4438,8 @@ class _MapEditorContentState extends State<_MapEditorContent>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '自动关闭',
+Text(
+                              LocalizationService.instance.current.autoClose_7421,
                               style: TextStyle(
                                 fontSize: isNarrowScreen ? 11 : 12,
                                 color: Theme.of(context).hintColor,
@@ -4577,7 +4580,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                   // 更新最近使用的颜色
                   final userPrefs = context.read<UserPreferencesProvider>();
                   userPrefs.addRecentColor(color.value).catchError((e) {
-                    debugPrint('更新最近使用颜色失败: $e');
+debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
                   });
                 },
                 child: Container(
@@ -4623,7 +4626,7 @@ class _MapEditorContentState extends State<_MapEditorContent>
                     // 更新最近使用的颜色
                     final userPrefs = context.read<UserPreferencesProvider>();
                     userPrefs.addRecentColor(color.toARGB32()).catchError((e) {
-                      debugPrint('更新最近使用颜色失败: $e');
+debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
                     });
                   },
                   onStrokeWidthChanged: (width) {
@@ -4681,20 +4684,20 @@ class _MapEditorContentState extends State<_MapEditorContent>
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 添加调试信息
-        debugPrint('=== 构建地图画布 ===');
-        debugPrint('当前地图: ${_currentMap?.title}');
-        debugPrint('图例组数量: ${_currentMap?.legendGroups.length ?? 0}');
+debugPrint(LocalizationService.instance.current.buildingMapCanvas_7281);
+debugPrint(LocalizationService.instance.current.currentMapTitle_7421(_currentMap?.title ?? 'null'));
+debugPrint(LocalizationService.instance.current.legendGroupCount(_currentMap?.legendGroups.length ?? 0));
         if (_currentMap?.legendGroups != null) {
           for (int i = 0; i < _currentMap!.legendGroups.length; i++) {
             final group = _currentMap!.legendGroups[i];
-            debugPrint(
-              '图例组 $i: ${group.name}, 可见: ${group.isVisible}, 图例项: ${group.legendItems.length}',
+debugPrint(
+              LocalizationService.instance.current.legendGroupInfo(i, group.name, group.isVisible, group.legendItems.length),
             );
           }
         }
-        debugPrint('版本适配器存在: ${versionAdapter != null}');
-        debugPrint(
-          '图例会话管理器存在: ${versionAdapter?.legendSessionManager != null}',
+debugPrint(LocalizationService.instance.current.versionAdapterExists_7281(versionAdapter != null));
+debugPrint(
+          LocalizationService.instance.current.legendSessionManagerExists_7281(versionAdapter?.legendSessionManager != null),
         );
 
         // 创建用于显示的地图副本，使用重新排序的图层
@@ -4833,12 +4836,12 @@ class _MapEditorContentState extends State<_MapEditorContent>
     // 如果有绑定的图例组，切换到第一个
     if (boundLegendGroups.isNotEmpty) {
       final firstBoundGroup = boundLegendGroups.first;
-      debugPrint('自动切换图例组抽屉到绑定的图例组: ${firstBoundGroup.name}');
+debugPrint(LocalizationService.instance.current.autoSwitchLegendGroupDrawer(firstBoundGroup.name));
 
       // 切换到第一个绑定的图例组
       _showLegendGroupManagementDrawer(firstBoundGroup);
     } else {
-      debugPrint('当前选中的图层或图层组没有绑定任何图例组');
+debugPrint(LocalizationService.instance.current.noLegendGroupBound_7281);
     }
   }
 
@@ -4851,9 +4854,9 @@ class _MapEditorContentState extends State<_MapEditorContent>
   void _addNewStickyNote() {
     if (_currentMap == null) return;
 
-    final newNote = StickyNote(
+final newNote = StickyNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: '新便签 ${_currentMap!.stickyNotes.length + 1}',
+      title: LocalizationService.instance.current.newNoteTitle(_currentMap!.stickyNotes.length + 1),
       position: const Offset(0.1, 0.1), // 相对位置 (10%, 10%)
       size: const Size(0.2, 0.15), // 相对大小 (20%宽, 15%高)
       opacity: 1.0,
@@ -5032,7 +5035,7 @@ class _ReactiveScriptCreateDialogState
             size: 20,
           ),
           const SizedBox(width: 8),
-          const Text('新建响应式脚本'),
+Text(LocalizationService.instance.current.createResponsiveScript_4821),
         ],
       ),
       content: SizedBox(
@@ -5062,8 +5065,8 @@ class _ReactiveScriptCreateDialogState
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      '响应式脚本会自动响应地图数据变化，确保实时数据一致性',
+child: Text(
+                      LocalizationService.instance.current.responsiveScriptDescription_4521,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.primary,
@@ -5076,8 +5079,8 @@ class _ReactiveScriptCreateDialogState
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '脚本名称',
+decoration: InputDecoration(
+                labelText: LocalizationService.instance.current.scriptName_4521,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.edit),
               ),
@@ -5085,8 +5088,8 @@ class _ReactiveScriptCreateDialogState
             const SizedBox(height: 16),
             TextField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: '描述',
+decoration: InputDecoration(
+                labelText: LocalizationService.instance.current.descriptionLabel_4821,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.description),
               ),
@@ -5095,8 +5098,8 @@ class _ReactiveScriptCreateDialogState
             const SizedBox(height: 16),
             DropdownButtonFormField<ScriptType>(
               value: _selectedType,
-              decoration: const InputDecoration(
-                labelText: '脚本类型',
+decoration: InputDecoration(
+                labelText: LocalizationService.instance.current.scriptType_4521,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.category),
               ),
@@ -5128,12 +5131,12 @@ class _ReactiveScriptCreateDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
         FilledButton.icon(
           onPressed: _saveScript,
           icon: const Icon(Icons.save, size: 16),
-          label: const Text('创建脚本'),
+label: Text(LocalizationService.instance.current.createScript_4271),
         ),
       ],
     );
@@ -5141,7 +5144,7 @@ class _ReactiveScriptCreateDialogState
 
   void _saveScript() async {
     if (_nameController.text.trim().isEmpty) {
-      context.showErrorSnackBar('请输入脚本名称');
+context.showErrorSnackBar(LocalizationService.instance.current.enterScriptName_4821);
       return;
     }
 
@@ -5163,7 +5166,7 @@ class _ReactiveScriptCreateDialogState
     Navigator.of(context).pop();
 
     // 显示成功
-    context.showSuccessSnackBar('响应式脚本 "${script.name}" 创建成功');
+context.showSuccessSnackBar(LocalizationService.instance.current.scriptCreatedSuccessfully(script.name));
   }
 
   IconData _getTypeIcon(ScriptType type) {
@@ -5197,15 +5200,15 @@ class _ReactiveScriptCreateDialogState
   }
 
   String _getTypeDisplayName(ScriptType type) {
-    switch (type) {
+switch (type) {
       case ScriptType.automation:
-        return '自动化';
+        return LocalizationService.instance.current.automation_1234;
       case ScriptType.animation:
-        return '动画';
+        return LocalizationService.instance.current.animation_5678;
       case ScriptType.filter:
-        return '过滤';
+        return LocalizationService.instance.current.filter_9012;
       case ScriptType.statistics:
-        return '统计';
+        return LocalizationService.instance.current.statistics_3456;
     }
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 // 复制_isValidTargetPath方法进行测试
 bool _isValidTargetPath(String path) {
   // 只允许 indexeddb://r6box/ 开头的绝对路径

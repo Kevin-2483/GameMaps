@@ -1,0 +1,8 @@
+{
+  "transparentLayer_7285": "透明图层",
+  "failedToGetImageSize": "获取图片尺寸失败: {e}",
+  "imageTooLargeError_4821": "图片文件过大，请选择小于10MB的图片",
+  "failedToReadImageData_7284": "无法读取图片数据",
+  "unsupportedImageFormatError_4821": "不支持的图片格式，请选择 JPG、PNG、GIF 或 WebP 格式的图片",
+  "imageDecodeFailed_4821": "解码图片失败: {error}"
+}

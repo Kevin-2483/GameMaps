@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'legend_vfs_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS目录节点
 class VfsDirectoryNode {
@@ -114,11 +117,17 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
       // 构建目录树
       _rootNode = _buildDirectoryTree(folders);
 
-      debugPrint('VFS目录树: 加载完成，根节点包含 ${_rootNode?.children.length ?? 0} 个子目录');
+      debugPrint(
+        LocalizationService.instance.current.vfsDirectoryTreeLoaded(
+          _rootNode?.children.length ?? 0,
+        ),
+      );
     } catch (e) {
-      debugPrint('VFS目录树: 加载失败 $e');
+      debugPrint(
+        LocalizationService.instance.current.vfsDirectoryLoadFailed_7421(e),
+      );
       _rootNode = VfsDirectoryNode(
-        name: '根目录',
+        name: LocalizationService.instance.current.rootDirectoryName_4721,
         path: '',
         isRoot: true,
         isExpanded: true,
@@ -133,7 +142,7 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
   VfsDirectoryNode _buildDirectoryTree(List<String> folders) {
     // 创建根节点
     final root = VfsDirectoryNode(
-      name: '图例库',
+      name: LocalizationService.instance.current.exampleLibrary_7421,
       path: '',
       isRoot: true,
       isExpanded: true,
@@ -142,20 +151,32 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
     // 构建节点映射
     final Map<String, VfsDirectoryNode> nodeMap = {'': root};
 
-    debugPrint('VFS目录树: 开始构建，输入文件夹数量: ${folders.length}');
-    for (final folder in folders) {
-      debugPrint('VFS目录树: 处理文件夹路径: $folder');
-    }
-
+    debugPrint(
+      LocalizationService.instance.current.vfsDirectoryTreeStartBuilding(
+        folders.length,
+      ),
+    );
     // 处理所有文件夹路径
     for (final folderPath in folders) {
       final pathSegments = folderPath
           .split('/')
           .where((s) => s.isNotEmpty)
           .toList();
+      
+      debugPrint(
+        LocalizationService.instance.current.vfsDirectoryTreeProcessingPath(
+          folderPath,
+          pathSegments.join(', '),
+        ),
+      );
       String currentPath = '';
 
-      debugPrint('VFS目录树: 处理路径 "$folderPath"，分段: $pathSegments');
+      debugPrint(
+        LocalizationService.instance.current.vfsDirectoryTreeProcessingPath(
+          folderPath,
+          pathSegments,
+        ),
+      );
 
       for (int i = 0; i < pathSegments.length; i++) {
         final segment = pathSegments[i];
@@ -177,13 +198,26 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
           if (parentNode != null) {
             parentNode.children.add(newNode);
             debugPrint(
-              'VFS目录树: 创建节点 "$segment" (路径: $currentPath)，添加到父节点 "${parentNode.name}" (路径: $parentPath)',
+              LocalizationService.instance.current.vfsDirectoryTreeCreateNode(
+                segment,
+                currentPath,
+                parentNode.name,
+                parentPath,
+              ),
             );
           } else {
-            debugPrint('VFS目录树: 警告 - 找不到父节点: $parentPath');
+            debugPrint(
+              LocalizationService.instance.current.vfsTreeWarningParentNotFound(
+                parentPath,
+              ),
+            );
           }
         } else {
-          debugPrint('VFS目录树: 节点已存在: $currentPath');
+          debugPrint(
+            LocalizationService.instance.current.vfsNodeExists_7281(
+              currentPath,
+            ),
+          );
         }
       }
     }
@@ -191,7 +225,11 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
     // 对所有节点的子节点进行排序
     _sortChildrenRecursively(root);
 
-    debugPrint('VFS目录树: 构建完成，根节点包含 ${root.children.length} 个子节点');
+    debugPrint(
+      LocalizationService.instance.current.vfsDirectoryTreeBuilt_7281(
+        root.children.length,
+      ),
+    );
     _printTreeStructure(root, 0);
 
     return root;

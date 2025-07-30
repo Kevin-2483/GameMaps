@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/webdav/webdav_manager_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class WebDavManagerPageModule extends PageModule {
   @override
@@ -11,7 +14,8 @@ class WebDavManagerPageModule extends PageModule {
   String get path => '/webdav-manager';
 
   @override
-  String get displayName => 'WebDAV 管理';
+  String get displayName =>
+      LocalizationService.instance.current.webDavManagement_4821;
 
   @override
   IconData get icon => Icons.cloud;

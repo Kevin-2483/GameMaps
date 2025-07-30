@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/user_preferences.dart';
 import '../widgets/shortcuts_dialog.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 地图编辑器键盘快捷键管理器
 class KeyboardShortcutsManager {
@@ -281,7 +284,7 @@ class KeyboardShortcutsManager {
     // 动态获取按键对应的LogicalKeyboardKey
     LogicalKeyboardKey? targetKey = _getLogicalKeyFromString(key);
     if (targetKey == null) {
-      debugPrint('不支持的按键: $key');
+      debugPrint(LocalizationService.instance.current.unsupportedKey_7425(key));
       return false;
     }
 
@@ -318,7 +321,15 @@ class KeyboardShortcutsManager {
         (winRequired == winPressed);
 
     debugPrint(
-      '快捷键检查: $shortcut, 主键匹配: $keyMatch, 修饰键匹配: ${(ctrlRequired == ctrlPressed) && (shiftRequired == shiftPressed) && (altRequired == altPressed) && (winRequired == winPressed)}, 最终结果: $result',
+      LocalizationService.instance.current.shortcutCheckResult(
+        shortcut,
+        keyMatch,
+        (ctrlRequired == ctrlPressed) &&
+            (shiftRequired == shiftPressed) &&
+            (altRequired == altPressed) &&
+            (winRequired == winPressed),
+        result,
+      ),
     );
     return result;
   }

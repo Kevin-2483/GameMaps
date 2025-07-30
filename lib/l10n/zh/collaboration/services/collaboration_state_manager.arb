@@ -1,0 +1,13 @@
+{
+  "lockConflictDescription": "用户 {userName} 尝试锁定已被锁定的元素",
+  "elementLockReleased_7425": "元素锁定已释放",
+  "elementLockedSuccessfully_7281": "[CollaborationStateManager] 元素锁定成功: {elementId} by {currentUserId}",
+  "selectedElementsUpdated": "[CollaborationStateManager] 用户选择已更新: {count} 个元素",
+  "conflictResolved_7421": "冲突已解决",
+  "simulateCheckUserOfflineStatus_4821": "模拟检查用户离线状态",
+  "offline_4821": "离线",
+  "userStateRemoved_4821": "已移除用户状态",
+  "expiredLocksCleaned_4821": "已清理 {count} 个过期锁定",
+  "initializationComplete_7421": "初始化完成",
+  "cannotReleaseLock": "无法释放其他用户的锁定: {elementId}"
+}

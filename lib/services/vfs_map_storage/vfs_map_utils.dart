@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_storage_service.dart';
@@ -5,6 +6,8 @@ import '../virtual_file_system/vfs_protocol.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS地图缓存管理器
 /// 提供地图数据的缓存机制，提高访问性能
@@ -113,7 +116,9 @@ class VfsMapIntegrityValidator {
       // 4. 验证资产引用
       await _validateAssetReferences(mapId, result);
     } catch (e) {
-      result.addError('验证过程出错: $e');
+      result.addError(
+        LocalizationService.instance.current.validationError_7285(e),
+      );
     }
 
     return result;
@@ -128,7 +133,9 @@ class VfsMapIntegrityValidator {
 
     final metaData = await _storageService.readFile(metaPath);
     if (metaData == null) {
-      result.addError('元数据文件不存在: meta.json');
+      result.addError(
+        LocalizationService.instance.current.metadataFileMissing_7285,
+      );
       return;
     }
     try {
@@ -143,11 +150,17 @@ class VfsMapIntegrityValidator {
 
       for (final field in requiredFields) {
         if (!metaJson.containsKey(field)) {
-          result.addWarning('元数据缺少必需字段: $field');
+          result.addWarning(
+            LocalizationService.instance.current.missingRequiredField_4827(
+              field,
+            ),
+          );
         }
       }
     } catch (e) {
-      result.addError('元数据文件格式错误: $e');
+      result.addError(
+        LocalizationService.instance.current.metadataFileFormatError_7285(e),
+      );
     }
   }
 
@@ -207,7 +220,9 @@ class VfsMapBackupService {
     try {
       final map = await _mapService.getMapById(mapId);
       if (map == null) {
-        throw Exception('地图不存在: $mapId');
+        throw Exception(
+          LocalizationService.instance.current.mapNotFound_7425(mapId),
+        );
       } // 导出地图数据为JSON
       final backupData = {
         'version': '1.2.0',
@@ -219,10 +234,14 @@ class VfsMapBackupService {
       // TODO: 实现保存逻辑 - 可以使用 _storageService 或文件系统API
       // await _storageService.writeFile(backupPath, utf8.encode(backupJson));
       debugPrint(
-        '地图备份创建完成: $mapId -> $backupPath (${backupJson.length} bytes)',
+        LocalizationService.instance.current.mapBackupCreated(
+          mapId,
+          backupPath,
+          backupJson.length,
+        ),
       );
     } catch (e) {
-      debugPrint('创建地图备份失败: $e');
+      debugPrint(LocalizationService.instance.current.mapBackupFailed_7285(e));
       rethrow;
     }
   }
@@ -233,9 +252,11 @@ class VfsMapBackupService {
       // TODO: 使用 _storageService 从备份路径读取数据
       // final backupData = await _storageService.readFile(backupPath);
       // 暂时抛出未实现异常
-      throw UnimplementedError('恢复备份功能待实现');
+      throw UnimplementedError(
+        LocalizationService.instance.current.backupRestoreUnimplemented_7281,
+      );
     } catch (e) {
-      debugPrint('从备份恢复地图失败: $e');
+      debugPrint(LocalizationService.instance.current.mapRestoreFailed_7285(e));
       rethrow;
     }
   }
@@ -245,7 +266,9 @@ class VfsMapBackupService {
     try {
       final map = await _mapService.getMapById(mapId);
       if (map == null) {
-        throw Exception('地图不存在: $mapId');
+        throw Exception(
+          LocalizationService.instance.current.mapNotFound_7425(mapId),
+        );
       }
 
       // 收集所有引用的资产
@@ -265,9 +288,14 @@ class VfsMapBackupService {
         }
       }
 
-      debugPrint('地图包导出完成: $mapId -> $exportPath');
+      debugPrint(
+        LocalizationService.instance.current.mapPackageExportComplete(
+          mapId,
+          exportPath,
+        ),
+      );
     } catch (e) {
-      debugPrint('导出地图包失败: $e');
+      debugPrint(LocalizationService.instance.current.exportMapFailed_7285(e));
       rethrow;
     }
   }

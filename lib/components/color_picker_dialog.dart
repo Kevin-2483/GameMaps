@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../services/notification/notification_service.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 颜色选择操作类型
 enum ColorPickerAction { directUse, addToCustom, cancel }
@@ -20,13 +23,14 @@ class ColorPickerDialog extends StatefulWidget {
   final bool enableAlpha;
   final bool showCustomActions;
 
-  const ColorPickerDialog({
+  ColorPickerDialog({
     super.key,
     required this.initialColor,
-    this.title = '选择颜色',
+    String? title,
     this.enableAlpha = false,
     this.showCustomActions = false,
-  });
+  }) : title =
+           title ?? LocalizationService.instance.current.colorPickerTitle_4821;
 
   @override
   State<ColorPickerDialog> createState() => _ColorPickerDialogState();
@@ -68,7 +72,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     action: ColorPickerAction.cancel,
                   ),
                 ),
-                child: const Text('取消'),
+                child: Text(
+                  LocalizationService.instance.current.cancelButton_7421,
+                ),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(
@@ -77,7 +83,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     action: ColorPickerAction.directUse,
                   ),
                 ),
-                child: const Text('直接使用'),
+                child: Text(
+                  LocalizationService.instance.current.directUse_4821,
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(
@@ -86,17 +94,23 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     action: ColorPickerAction.addToCustom,
                   ),
                 ),
-                child: const Text('添加到自定义'),
+                child: Text(
+                  LocalizationService.instance.current.addToCustom_7281,
+                ),
               ),
             ]
           : [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('取消'),
+                child: Text(
+                  LocalizationService.instance.current.cancelButton_7281,
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(_currentColor),
-                child: const Text('确定'),
+                child: Text(
+                  LocalizationService.instance.current.confirmButton_7281,
+                ),
               ),
             ],
     );
@@ -168,29 +182,37 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('输入颜色值'),
+        title: Text(LocalizationService.instance.current.inputColorValue_4821),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('支持以下格式：'),
+            Text(LocalizationService.instance.current.supportedFormats_7281),
             const SizedBox(height: 8),
-            const Text(
-              '• ARGB: FFFF0000 (红色，不透明)',
+            Text(
+              LocalizationService.instance.current.argbColorDescription_7281,
               style: TextStyle(fontSize: 12),
             ),
-            const Text('• RGB: FF0000 (红色)', style: TextStyle(fontSize: 12)),
-            const Text('• 带#号: #FF0000', style: TextStyle(fontSize: 12)),
-            const Text(
-              '• CSS颜色名: red, blue, green等',
+            Text(
+              LocalizationService.instance.current.rgbColorDescription_7281,
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              LocalizationService.instance.current.colorWithHashTag_7281,
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              LocalizationService.instance.current.cssColorNames_4821,
               style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: '颜色值',
-                hintText: '例如: FF0000, #FF0000, red',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.colorValueLabel_4821,
+                hintText:
+                    LocalizationService.instance.current.colorValueHint_4821,
                 border: OutlineInputBorder(),
               ),
               textCapitalization: TextCapitalization.characters,
@@ -200,7 +222,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -209,10 +231,14 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 _updateColor(HSVColor.fromColor(color));
                 Navigator.of(context).pop();
               } else {
-                context.showErrorSnackBar('无效的颜色格式，请检查输入');
+                context.showErrorSnackBar(
+                  LocalizationService.instance.current.invalidColorFormat_4821,
+                );
               }
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -321,7 +347,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               children: [
                 // 亮度滑条
                 _buildSlider(
-                  '亮度',
+                  LocalizationService.instance.current.brightness_7285,
                   _currentHsv.value,
                   (value) => _updateColor(_currentHsv.withValue(value)),
                   Colors.black,
@@ -332,7 +358,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
                 // 饱和度滑条
                 _buildSlider(
-                  '饱和度',
+                  LocalizationService.instance.current.saturationLabel_4821,
                   _currentHsv.saturation,
                   (value) => _updateColor(_currentHsv.withSaturation(value)),
                   Colors.white,
@@ -343,7 +369,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 if (widget.enableAlpha) ...[
                   const SizedBox(height: 12),
                   _buildSlider(
-                    '透明度',
+                    LocalizationService.instance.current.opacityLabel_4821,
                     _currentHsv.alpha,
                     (value) => _updateColor(_currentHsv.withAlpha(value)),
                     Colors.transparent,
@@ -386,7 +412,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
           // 亮度滑条
           _buildSlider(
-            '亮度',
+            LocalizationService.instance.current.brightnessLabel_4821,
             _currentHsv.value,
             (value) => _updateColor(_currentHsv.withValue(value)),
             Colors.black,
@@ -397,7 +423,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
           // 饱和度滑条
           _buildSlider(
-            '饱和度',
+            LocalizationService.instance.current.saturationLabel_4821,
             _currentHsv.saturation,
             (value) => _updateColor(_currentHsv.withSaturation(value)),
             Colors.white,
@@ -408,7 +434,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           if (widget.enableAlpha) ...[
             const SizedBox(height: 12),
             _buildSlider(
-              '透明度',
+              LocalizationService.instance.current.transparencyLabel_4821,
               _currentHsv.alpha,
               (value) => _updateColor(_currentHsv.withAlpha(value)),
               Colors.transparent,
@@ -465,7 +491,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               ),
               const SizedBox(height: 4),
               Text(
-                '点击输入颜色值',
+                LocalizationService.instance.current.clickToInputColorValue,
                 style: TextStyle(
                   color:
                       (_currentColor.computeLuminance() > 0.5
@@ -616,9 +642,10 @@ class ColorPicker {
   static Future<Color?> showColorPicker({
     required BuildContext context,
     required Color initialColor,
-    String title = '选择颜色',
+    String? title,
     bool enableAlpha = false,
   }) async {
+    title ??= LocalizationService.instance.current.colorPickerTitle_4821;
     return await showDialog<Color>(
       context: context,
       builder: (context) => ColorPickerDialog(
@@ -633,9 +660,10 @@ class ColorPicker {
   static Future<ColorPickerResult?> showColorPickerWithActions({
     required BuildContext context,
     required Color initialColor,
-    String title = '选择颜色',
+    String? title,
     bool enableAlpha = false,
   }) async {
+    title ??= LocalizationService.instance.current.colorPickerTitle_4821;
     return await showDialog<ColorPickerResult>(
       context: context,
       builder: (context) => ColorPickerDialog(

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import '../../data/map_data_event.dart';
 import '../../models/map_layer.dart';
 import '../../utils/script_data_converter.dart';
 import '../tts_service.dart';
+import '../localization_service.dart';
 
 /// 外部函数处理器
 /// 统一处理所有脚本执行器的外部函数调用实现
@@ -31,9 +33,13 @@ class ExternalFunctionHandler {
   void _initializeTtsService() async {
     try {
       await _ttsService.initialize();
-      debugPrint('TTS 服务初始化成功');
+      debugPrint(
+        LocalizationService.instance.current.ttsInitializationSuccess_7281,
+      );
     } catch (e) {
-      debugPrint('TTS 服务初始化失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.ttsInitializationFailed(e),
+      );
     }
   }
 
@@ -41,10 +47,14 @@ class ExternalFunctionHandler {
   /// 参数: text, [可选参数映射]
   void handleSay(String text, [String? optionsJson]) async {
     try {
-      debugPrint('处理语音合成: text="$text"');
+      debugPrint(
+        LocalizationService.instance.current.voiceSynthesisLog_7285(text),
+      );
 
       if (text.isEmpty) {
-        debugPrint('语音合成: 文本为空，跳过');
+        debugPrint(
+          LocalizationService.instance.current.voiceSynthesisEmptyText_7281,
+        );
         return;
       }
 
@@ -93,8 +103,12 @@ class ExternalFunctionHandler {
 
       addExecutionLog(logMessage);
     } catch (e) {
-      debugPrint('语音合成失败: $e');
-      addExecutionLog('语音合成失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.speechSynthesisFailed_7285(e),
+      );
+      addExecutionLog(
+        LocalizationService.instance.current.voiceSynthesisFailed_7281(e),
+      );
     }
   }
 
@@ -103,11 +117,17 @@ class ExternalFunctionHandler {
     try {
       if (_scriptId != null) {
         await _ttsService.stopBySource(_scriptId);
-        addExecutionLog('已停止脚本 $_scriptId 的所有TTS播放');
+        addExecutionLog(
+          LocalizationService.instance.current.stoppedScriptTtsPlayback_7421(
+            _scriptId,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('停止脚本TTS失败: $e');
-      addExecutionLog('停止脚本TTS失败: $e');
+      debugPrint(LocalizationService.instance.current.scriptTtsFailed_4821(e));
+      addExecutionLog(
+        LocalizationService.instance.current.scriptTtsFailure_4829(e),
+      );
     }
   }
 
@@ -121,12 +141,20 @@ class ExternalFunctionHandler {
     try {
       await _ttsService.initialize();
       final languages = _ttsService.availableLanguages;
-      addExecutionLog('获取TTS语言列表: ${languages?.length ?? 0} 种语言');
+      addExecutionLog(
+        LocalizationService.instance.current.ttsLanguageListObtained(
+          languages?.length ?? 0,
+        ),
+      );
       // 转换为可序列化的字符串列表
       return languages?.map((lang) => lang.toString()).toList() ?? [];
     } catch (e) {
-      debugPrint('获取TTS语言列表失败: $e');
-      addExecutionLog('获取TTS语言列表失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.ttsLanguageListError_4821(e),
+      );
+      addExecutionLog(
+        LocalizationService.instance.current.fetchTtsLanguagesFailed_4821(e),
+      );
       return [];
     }
   }
@@ -136,7 +164,11 @@ class ExternalFunctionHandler {
     try {
       await _ttsService.initialize();
       final voices = _ttsService.availableVoices;
-      addExecutionLog('获取TTS语音列表: ${voices?.length ?? 0} 种语音');
+      addExecutionLog(
+        LocalizationService.instance.current.ttsVoiceListCount(
+          voices?.length ?? 0,
+        ),
+      );
       // 转换为可序列化的Map列表
       return voices?.map((voice) {
             if (voice is Map) {
@@ -150,8 +182,10 @@ class ExternalFunctionHandler {
           }).toList() ??
           [];
     } catch (e) {
-      debugPrint('获取TTS语音列表失败: $e');
-      addExecutionLog('获取TTS语音列表失败: $e');
+      debugPrint(LocalizationService.instance.current.ttsListFetchFailed(e));
+      addExecutionLog(
+        LocalizationService.instance.current.ttsListFetchFailed_7285(e),
+      );
       return [];
     }
   }
@@ -160,11 +194,20 @@ class ExternalFunctionHandler {
   dynamic handleTtsIsLanguageAvailable(String language) async {
     try {
       final isAvailable = await _ttsService.isLanguageAvailable(language);
-      addExecutionLog('检查语言 $language 可用性: $isAvailable');
+      addExecutionLog(
+        LocalizationService.instance.current.checkLanguageAvailability_7421(
+          language,
+          isAvailable,
+        ),
+      );
       return isAvailable;
     } catch (e) {
-      debugPrint('检查语言可用性失败: $e');
-      addExecutionLog('检查语言可用性失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.languageCheckFailed_7285(e),
+      );
+      addExecutionLog(
+        LocalizationService.instance.current.languageCheckFailed_7285(e),
+      );
       return false;
     }
   }
@@ -173,11 +216,17 @@ class ExternalFunctionHandler {
   dynamic handleTtsGetSpeechRateRange() async {
     try {
       final range = await _ttsService.getSpeechRateRange();
-      addExecutionLog('获取TTS语音速度范围: $range');
+      addExecutionLog(
+        LocalizationService.instance.current.ttsSpeedRangeLog(range ?? {}),
+      );
       return range;
     } catch (e) {
-      debugPrint('获取语音速度范围失败: $e');
-      addExecutionLog('获取语音速度范围失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.failedToGetVoiceSpeedRange(e.toString()),
+      );
+      addExecutionLog(
+        LocalizationService.instance.current.failedToGetVoiceSpeedRange(e.toString()),
+      );
       return null;
     }
   }
@@ -316,14 +365,19 @@ class ExternalFunctionHandler {
 
   /// 处理读取JSON函数
   Future<Map<String, dynamic>?> handleReadJson(String path) async {
-    debugPrint('读取JSON文件: $path');
+    debugPrint(LocalizationService.instance.current.readingJsonFile_7421(path));
     // TODO: 实现VFS文件读取
     return null;
   }
 
   /// 处理写入文本函数
   Future<void> handleWriteText(String path, String content) async {
-    debugPrint('写入文本文件: $path, 内容长度: ${content.length}');
+    debugPrint(
+      LocalizationService.instance.current.writeTextFileLog_7421(
+        path,
+        content.length,
+      ),
+    );
     // TODO: 实现VFS文件写入
   }
 
@@ -440,7 +494,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -465,7 +521,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -499,7 +557,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -524,7 +584,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -558,7 +620,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     final filteredElements = <Map<String, dynamic>>[];
@@ -604,7 +668,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -639,7 +705,9 @@ class ExternalFunctionHandler {
       tags = (decoded as List).cast<String>();
     } catch (e) {
       debugPrint('Error parsing tags JSON: $e');
-      addExecutionLog('标签筛选失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.tagFilterFailedJsonError_4821,
+      );
       return [];
     }
     if (_mapDataBloc.state is MapDataLoaded) {
@@ -747,7 +815,13 @@ class ExternalFunctionHandler {
             ),
           ),
         );
-        addExecutionLog('更新图层 ${layer.id} 中元素 $elementId 的属性 $property');
+        addExecutionLog(
+          LocalizationService.instance.current.updateLayerElementProperty_7421(
+            layer.id,
+            elementId,
+            property,
+          ),
+        );
         return;
       }
     }
@@ -765,12 +839,20 @@ class ExternalFunctionHandler {
           elements: List.from(note.elements)..[elementIndex] = updatedElement,
         );
         _mapDataBloc.add(UpdateStickyNote(stickyNote: updatedNote));
-        addExecutionLog('更新便签 ${note.id} 中元素 $elementId 的属性 $property');
+        addExecutionLog(
+          LocalizationService.instance.current.updateNoteElementProperty(
+            note.id,
+            elementId,
+            property,
+          ),
+        );
         return;
       }
     }
 
-    addExecutionLog('未找到元素 $elementId');
+    addExecutionLog(
+      LocalizationService.instance.current.elementNotFound_4821(elementId),
+    );
   }
 
   /// 处理移动元素
@@ -781,7 +863,9 @@ class ExternalFunctionHandler {
       position = jsonDecode(positionJson) as Map<String, dynamic>;
     } catch (e) {
       debugPrint('Error parsing position JSON: $e');
-      addExecutionLog('移动元素失败：JSON解析错误');
+      addExecutionLog(
+        LocalizationService.instance.current.moveElementFailedJsonError_4821,
+      );
       return;
     }
 
@@ -811,7 +895,12 @@ class ExternalFunctionHandler {
           ),
         );
         addExecutionLog(
-          '移动图层 ${layer.id} 中元素 $elementId 偏移 ($deltaX, $deltaY)',
+          LocalizationService.instance.current.moveLayerElementOffset(
+            layer.id,
+            elementId,
+            deltaX,
+            deltaY,
+          ),
         );
         return;
       }
@@ -832,12 +921,21 @@ class ExternalFunctionHandler {
           elements: List.from(note.elements)..[elementIndex] = updatedElement,
         );
         _mapDataBloc.add(UpdateStickyNote(stickyNote: updatedNote));
-        addExecutionLog('移动便签 ${note.id} 中元素 $elementId 偏移 ($deltaX, $deltaY)');
+        addExecutionLog(
+          LocalizationService.instance.current.moveNoteElementOffset_4821(
+            note.id,
+            elementId,
+            deltaX,
+            deltaY,
+          ),
+        );
         return;
       }
     }
 
-    addExecutionLog('未找到元素 $elementId');
+    addExecutionLog(
+      LocalizationService.instance.current.elementNotFound_4821(elementId),
+    );
   }
 
   /// 处理创建文本元素
@@ -879,7 +977,9 @@ class ExternalFunctionHandler {
           elements: [...firstLayer.elements, textElement],
         );
         _mapDataBloc.add(UpdateLayer(layer: updatedLayer));
-        addExecutionLog('创建文本元素: "$text" 在位置 ($x, $y)');
+        addExecutionLog(
+          LocalizationService.instance.current.createTextElementLog(text, x, y),
+        );
       }
     }
   }
@@ -887,13 +987,23 @@ class ExternalFunctionHandler {
   /// 处理更新文本内容
   void handleUpdateTextContent(String elementId, String newText) {
     handleUpdateElementProperty(elementId, 'text', newText);
-    addExecutionLog('更新元素 $elementId 的文本内容为: "$newText"');
+    addExecutionLog(
+      LocalizationService.instance.current.updateElementTextLog(
+        elementId,
+        newText,
+      ),
+    );
   }
 
   /// 处理更新文本大小
   void handleUpdateTextSize(String elementId, double newSize) {
     handleUpdateElementProperty(elementId, 'fontSize', newSize);
-    addExecutionLog('更新元素 $elementId 的文本大小为: $newSize');
+    addExecutionLog(
+      LocalizationService.instance.current.updateElementSizeLog(
+        elementId,
+        newSize,
+      ),
+    );
   }
 
   /// 处理更新图例组
@@ -905,7 +1015,9 @@ class ExternalFunctionHandler {
     try {
       updates = jsonDecode(updatesJson) as Map<String, dynamic>;
     } catch (e) {
-      addExecutionLog('解析图例组更新参数JSON失败: $e');
+      addExecutionLog(
+        LocalizationService.instance.current.failedToParseLegendUpdateJson(e),
+      );
       return;
     }
 
@@ -913,7 +1025,9 @@ class ExternalFunctionHandler {
     final groupIndex = state.legendGroups.indexWhere((g) => g.id == groupId);
 
     if (groupIndex == -1) {
-      addExecutionLog('未找到图例组 $groupId');
+      addExecutionLog(
+        LocalizationService.instance.current.legendGroupNotFound(groupId),
+      );
       return;
     }
 
@@ -926,19 +1040,31 @@ class ExternalFunctionHandler {
     );
 
     _mapDataBloc.add(UpdateLegendGroup(legendGroup: updatedGroup));
-    addExecutionLog('更新图例组 $groupId');
+    addExecutionLog(
+      LocalizationService.instance.current.updateLegendGroupLog(groupId),
+    );
   }
 
   /// 处理更新图例组可见性
   void handleUpdateLegendGroupVisibility(String groupId, bool isVisible) {
     handleUpdateLegendGroup(groupId, jsonEncode({'isVisible': isVisible}));
-    addExecutionLog('设置图例组 $groupId 可见性为: $isVisible');
+    addExecutionLog(
+      LocalizationService.instance.current.setLegendGroupVisibility(
+        groupId,
+        isVisible,
+      ),
+    );
   }
 
   /// 处理更新图例组透明度
   void handleUpdateLegendGroupOpacity(String groupId, double opacity) {
     handleUpdateLegendGroup(groupId, jsonEncode({'opacity': opacity}));
-    addExecutionLog('设置图例组 $groupId 透明度为: $opacity');
+    addExecutionLog(
+      LocalizationService.instance.current.setLegendGroupOpacityLog_7421(
+        groupId,
+        opacity,
+      ),
+    );
   }
 
   /// 处理更新图例项
@@ -950,7 +1076,10 @@ class ExternalFunctionHandler {
     try {
       updates = jsonDecode(updatesJson) as Map<String, dynamic>;
     } catch (e) {
-      addExecutionLog('解析图例项更新参数JSON失败: $e');
+      addExecutionLog(
+        LocalizationService.instance.current
+            .failedToParseLegendUpdateParamsJson('$e'),
+      );
       return;
     }
 
@@ -984,12 +1113,16 @@ class ExternalFunctionHandler {
         );
 
         _mapDataBloc.add(UpdateLegendGroup(legendGroup: updatedGroup));
-        addExecutionLog('更新图例项 $itemId');
+        addExecutionLog(
+          LocalizationService.instance.current.updateLegendItem_7425(itemId),
+        );
         return;
       }
     }
 
-    addExecutionLog('未找到图例项 $itemId');
+    addExecutionLog(
+      LocalizationService.instance.current.legendItemNotFound_7285(itemId),
+    );
   }
 
   /// 辅助方法：更新元素属性
@@ -1020,7 +1153,11 @@ class ExternalFunctionHandler {
       case 'tags':
         return element.copyWith(tags: (value as List).cast<String>());
       default:
-        addExecutionLog('不支持的属性: $property');
+        addExecutionLog(
+          LocalizationService.instance.current.unsupportedProperty_7285(
+            property,
+          ),
+        );
         return element;
     }
   }

@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import '../models/collaboration_state.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 协作状态管理器
 /// 独立于WebSocket的协作状态管理，为WebRTC做准备
@@ -82,7 +85,7 @@ class CollaborationStateManager {
     _startLockTimeoutTimer();
 
     debugPrint(
-      '[CollaborationStateManager] 初始化完成: userId=$userId, displayName=$displayName',
+      '[CollaborationStateManager] ${LocalizationService.instance.current.initializationComplete_7421}: userId=$userId, displayName=$displayName',
     );
   }
 
@@ -117,7 +120,8 @@ class CollaborationStateManager {
             elementId: elementId,
             conflictType: ConflictType.lockConflict,
             involvedUserIds: [_currentUserId!, existingLock.lockedByUserId],
-            description: '用户 $_currentUserDisplayName 尝试锁定已被锁定的元素',
+            description: LocalizationService.instance.current
+                .lockConflictDescription(_currentUserDisplayName ?? 'unknown'),
             elementType: elementType,
           );
           return false;
@@ -139,7 +143,10 @@ class CollaborationStateManager {
     _notifyLockStateChanged();
 
     debugPrint(
-      '[CollaborationStateManager] 元素锁定成功: $elementId by $_currentUserId',
+      LocalizationService.instance.current.elementLockedSuccessfully_7281(
+        _currentUserId ?? 'unknown',
+        elementId,
+      ),
     );
     return true;
   }
@@ -153,14 +160,18 @@ class CollaborationStateManager {
 
     // 只能释放自己的锁定
     if (existingLock.lockedByUserId != _currentUserId) {
-      debugPrint('[CollaborationStateManager] 无法释放其他用户的锁定: $elementId');
+      debugPrint(
+        '[CollaborationStateManager] ${LocalizationService.instance.current.cannotReleaseLock(elementId)}',
+      );
       return false;
     }
 
     _elementLocks.remove(elementId);
     _notifyLockStateChanged();
 
-    debugPrint('[CollaborationStateManager] 元素锁定已释放: $elementId');
+    debugPrint(
+      '[CollaborationStateManager] ${LocalizationService.instance.current.elementLockReleased_7425}: $elementId',
+    );
     return true;
   }
 
@@ -204,7 +215,10 @@ class CollaborationStateManager {
     _notifySelectionStateChanged();
 
     debugPrint(
-      '[CollaborationStateManager] 用户选择已更新: ${selectedElementIds.length} 个元素',
+      '[CollaborationStateManager] ' +
+          LocalizationService.instance.current.selectedElementsUpdated(
+            selectedElementIds.length,
+          ),
     );
   }
 
@@ -314,7 +328,9 @@ class CollaborationStateManager {
       );
       _notifyConflictChanged();
 
-      debugPrint('[CollaborationStateManager] 冲突已解决: $conflictId');
+      debugPrint(
+        '[CollaborationStateManager] ${LocalizationService.instance.current.conflictResolved_7421}: $conflictId',
+      );
     }
   }
 
@@ -334,7 +350,7 @@ class CollaborationStateManager {
     // TODO: 将来集成WebRTC协议时，这里将实现真实的在线状态检测
     // 当前为模拟实现，始终返回离线状态
     debugPrint(
-      '[CollaborationStateManager] 模拟检查用户离线状态: ${userId ?? _currentUserId} - 离线',
+      '[CollaborationStateManager] ${LocalizationService.instance.current.simulateCheckUserOfflineStatus_4821}: ${userId ?? _currentUserId} - ${LocalizationService.instance.current.offline_4821}',
     );
     return true;
   }
@@ -381,7 +397,9 @@ class CollaborationStateManager {
     _notifySelectionStateChanged();
     _notifyCursorStateChanged();
 
-    debugPrint('[CollaborationStateManager] 已移除用户状态: $userId');
+    debugPrint(
+      '[CollaborationStateManager] ${LocalizationService.instance.current.userStateRemoved_4821}: $userId',
+    );
   }
 
   // ==================== 私有方法 ====================
@@ -461,7 +479,7 @@ class CollaborationStateManager {
       }
       _notifyLockStateChanged();
       debugPrint(
-        '[CollaborationStateManager] 已清理 ${expiredLocks.length} 个过期锁定',
+        '[CollaborationStateManager] ${LocalizationService.instance.current.expiredLocksCleaned_4821(expiredLocks.length)}',
       );
     }
   }

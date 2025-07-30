@@ -1,0 +1,14 @@
+{
+  "userPreferencesSaved_7281": "用户偏好设置已保存: {displayName}",
+  "useGetAllUsersAsyncMethod": "请使用 getAllUsersAsync() 方法",
+  "saveUserPreferenceFailed": "保存用户偏好设置失败: {e}",
+  "colorAlreadyExists_7281": "该颜色已存在",
+  "commonStrokeWidthAdded": "常用线条宽度已添加: {strokeWidth}px",
+  "customColorAdded_7281": "自定义颜色已添加: {color}",
+  "importSettingsFailed_7421": "导入设置失败: {e}",
+  "userPreferencesMigration_7281": "执行用户偏好设置数据迁移...",
+  "loadUserPreferencesFailed": "加载当前用户偏好设置失败: {e}",
+  "dataMigrationComplete_7281": "数据迁移完成",
+  "userPreferencesInitialized_7281": "用户偏好设置服务初始化完成",
+  "userPreferenceInitFailed_7421": "用户偏好设置服务初始化失败: {e}"
+}

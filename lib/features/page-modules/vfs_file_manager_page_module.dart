@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/vfs/vfs_file_manager_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// VFS文件管理器页面模块
 class VfsFileManagerPageModule extends PageModule {
@@ -16,7 +19,8 @@ class VfsFileManagerPageModule extends PageModule {
   String get path => '/vfs-file-manager';
 
   @override
-  String get displayName => 'VFS文件管理器';
+  String get displayName =>
+      LocalizationService.instance.current.vfsFileManager_4821;
 
   @override
   IconData get icon => Icons.folder;

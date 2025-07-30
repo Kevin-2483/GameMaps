@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +11,8 @@ import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 import '../../utils/web_download_stub.dart'
     if (dart.library.html) '../../utils/web_download_web.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
@@ -18,8 +21,6 @@ import '../../services/virtual_file_system/vfs_platform_io.dart';
 import '../../services/work_status_service.dart';
 import '../../services/work_status_action.dart';
 import '../../services/notification/notification_service.dart';
-
-import '../../l10n/app_localizations.dart';
 import '../../components/vfs/vfs_file_picker_window.dart';
 import '../../services/webdav/webdav_client_service.dart';
 import '../../services/webdav/webdav_database_service.dart';
@@ -111,12 +112,18 @@ class _ExternalResourcesPageContentState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(title: '外部资源管理', icon: Icons.cloud_sync),
+          DraggableTitleBar(
+            title: LocalizationService
+                .instance
+                .current
+                .externalResourceManagement_7421,
+            icon: Icons.cloud_sync,
+          ),
           Expanded(
             child: SafeArea(
               child: SingleChildScrollView(
@@ -164,7 +171,9 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '导入预览 (共 $totalFiles 个项目)',
+                  LocalizationService.instance.current.importPreviewWithCount(
+                    totalFiles,
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -181,7 +190,7 @@ class _ExternalResourcesPageContentState
                       vertical: 12,
                     ),
                   ),
-                  child: const Text('取消'),
+                  child: Text(LocalizationService.instance.current.cancel_4821),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
@@ -211,14 +220,20 @@ class _ExternalResourcesPageContentState
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
-                              '处理中...',
+                            Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .processing_5421,
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
                         )
-                      : const Text(
-                          '确认并处理',
+                      : Text(
+                          LocalizationService
+                              .instance
+                              .current
+                              .confirmAndProcess_7281,
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                 ),
@@ -253,7 +268,7 @@ class _ExternalResourcesPageContentState
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '文件映射列表',
+                    LocalizationService.instance.current.fileMappingList_4521,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -270,7 +285,10 @@ class _ExternalResourcesPageContentState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '需要处理',
+                        LocalizationService
+                            .instance
+                            .current
+                            .processingRequired_4821,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onErrorContainer,
                           fontWeight: FontWeight.w500,
@@ -290,7 +308,11 @@ class _ExternalResourcesPageContentState
                           : Icons.expand_less,
                       size: 18,
                     ),
-                    label: Text(_importListCollapsed ? '展开' : '折叠'),
+                    label: Text(
+                      _importListCollapsed
+                          ? LocalizationService.instance.current.expand_4821
+                          : LocalizationService.instance.current.collapse_4821,
+                    ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -328,7 +350,10 @@ class _ExternalResourcesPageContentState
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '请检查并修改文件的目标路径。您可以直接编辑路径或点击文件夹图标选择目标位置。',
+                        LocalizationService
+                            .instance
+                            .current
+                            .checkAndModifyPath_4821,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
@@ -366,8 +391,16 @@ class _ExternalResourcesPageContentState
                     Expanded(
                       child: Text(
                         hasIssues
-                            ? '检测到 ${_fileMappings.where((m) => !m.isValidPath).length} 个路径问题，请展开列表进行修正'
-                            : '所有文件路径检查通过，可以直接导入',
+                            ? LocalizationService.instance.current
+                                  .pathIssuesDetected_7281(
+                                    _fileMappings
+                                        .where((m) => !m.isValidPath)
+                                        .length,
+                                  )
+                            : LocalizationService
+                                  .instance
+                                  .current
+                                  .allPathsValid_7281,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: hasIssues
                               ? Theme.of(context).colorScheme.error
@@ -406,7 +439,7 @@ class _ExternalResourcesPageContentState
               label: SizedBox(
                 width: 150, // 调整源文件列宽度
                 child: Text(
-                  '源文件',
+                  LocalizationService.instance.current.sourceFile_7281,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -417,7 +450,7 @@ class _ExternalResourcesPageContentState
               label: SizedBox(
                 width: 300, // 设置目标路径列的固定宽度
                 child: Text(
-                  '目标路径',
+                  LocalizationService.instance.current.targetPath_4821,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -428,7 +461,7 @@ class _ExternalResourcesPageContentState
               label: SizedBox(
                 width: 60, // 调整操作列宽度
                 child: Text(
-                  '操作',
+                  LocalizationService.instance.current.operation_4821,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -456,7 +489,10 @@ class _ExternalResourcesPageContentState
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '源文件',
+                            LocalizationService
+                                .instance
+                                .current
+                                .sourceFile_7281,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface
@@ -1808,10 +1844,10 @@ class _ExternalResourcesPageContentState
               ),
               child: Text(
                 '{\n'
-                '  "name": "测试资源包",\n'
+                '  "name": "${LocalizationService.instance.current.testResourcePackageName_4821}",\n'
                 '  "version": "1.2.0",\n'
-                '  "description": "用于测试外部资源上传功能的示例资源包",\n'
-                '  "author": "测试用户",\n'
+                '  "description": "${LocalizationService.instance.current.testResourcePackageDescription_4822}",\n'
+                '  "author": "${LocalizationService.instance.current.testUser_4823}",\n'
                 '  "created_at": "2024-01-15",\n'
                 '  "file_mappings": {\n'
                 '    "logo.png": "indexeddb://r6box/fs/assets/images/logo.png",\n'
@@ -1819,7 +1855,7 @@ class _ExternalResourcesPageContentState
                 '    "sounds": "indexeddb://r6box/maps/assets/sound",\n'
                 '    "docs": "indexeddb://r6box/fs/docs"\n'
                 '  },\n'
-                '  "tags": ["测试", "示例", "资源包"],\n'
+                '  "tags": ["${LocalizationService.instance.current.testTag_4824}", "${LocalizationService.instance.current.exampleTag_4825}", "${LocalizationService.instance.current.resourcePackageTag_4826}"],\n'
                 '  "requirements": {\n'
                 '    "min_app_version": "1.2.0"\n'
                 '  }\n'
@@ -1992,24 +2028,37 @@ class _ExternalResourcesPageContentState
               final metadataContent = utf8.decode(file.content as List<int>);
               metadata = json.decode(metadataContent) as Map<String, dynamic>;
             } catch (e) {
-              throw Exception('元数据文件格式错误：$e');
+              throw Exception(
+                LocalizationService.instance.current.metadataFormatError_7281(
+                  e,
+                ),
+              );
             }
           }
         }
       }
 
       // 3. 验证元数据
-      WorkStatusService().updateWorkDescription('正在验证元数据文件...');
+      WorkStatusService().updateWorkDescription(
+        LocalizationService.instance.current.validatingMetadataFile_4821,
+      );
 
       if (metadata == null) {
-        throw Exception('ZIP文件根目录中未找到metadata.json文件');
+        throw Exception(
+          LocalizationService
+              .instance
+              .current
+              .metadataJsonNotFoundInZipRoot_7281,
+        );
       }
 
       // 4. 保存元数据信息
       _importMetadata = metadata;
 
       // 5. 准备文件映射预览
-      WorkStatusService().updateWorkDescription('正在准备文件映射预览...');
+      WorkStatusService().updateWorkDescription(
+        LocalizationService.instance.current.preparingFileMappingPreview_4821,
+      );
 
       await _prepareFileMappingPreview(tempPath, metadata);
 
@@ -2027,7 +2076,11 @@ class _ExternalResourcesPageContentState
       try {
         await _cleanupTempFiles(tempPath);
       } catch (cleanupError) {
-        debugPrint('清理临时文件失败：$cleanupError');
+        debugPrint(
+          LocalizationService.instance.current.cleanupTempFilesFailed(
+            cleanupError,
+          ),
+        );
       }
       rethrow;
     }
@@ -2052,7 +2105,9 @@ class _ExternalResourcesPageContentState
       // 使用简单格式，将所有文件复制到同一目标路径
       await _prepareSimpleMapping(tempPath, defaultTargetPath);
     } else {
-      throw Exception('元数据中未指定target_path或file_mappings');
+      throw Exception(
+        LocalizationService.instance.current.missingMetadataFields_4821,
+      );
     }
   }
 
@@ -2184,12 +2239,18 @@ class _ExternalResourcesPageContentState
     try {
       // 构建完整的临时文件夹路径
       final fullTempPath = 'indexeddb://r6box/fs/$tempPath';
-      debugPrint('🗑️ 开始清理临时文件夹: $fullTempPath');
+      debugPrint(
+        LocalizationService.instance.current.startCleaningTempFolder_4821(
+          fullTempPath,
+        ),
+      );
 
       // 检查临时文件夹是否存在
       final exists = await _vfsService.vfs.exists(fullTempPath);
       if (!exists) {
-        debugPrint('🗑️ 临时文件夹不存在，无需清理: $fullTempPath');
+        debugPrint(
+          LocalizationService.instance.current.tempFolderNotExist(fullTempPath),
+        );
         return;
       }
 
@@ -2199,12 +2260,22 @@ class _ExternalResourcesPageContentState
         recursive: true,
       );
       if (success) {
-        debugPrint('🗑️ 临时文件夹清理成功: $fullTempPath');
+        debugPrint(
+          LocalizationService.instance.current.tempFolderCleanedSuccessfully(
+            fullTempPath,
+          ),
+        );
       } else {
-        debugPrint('🗑️ 临时文件夹清理失败: $fullTempPath');
+        debugPrint(
+          LocalizationService.instance.current.tempFolderCleanupFailed(
+            fullTempPath,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('🗑️ 清理临时文件失败：$e');
+      debugPrint(
+        LocalizationService.instance.current.cleanTempFilesFailed_4821(e),
+      );
     }
   }
 
@@ -2385,7 +2456,9 @@ class _ExternalResourcesPageContentState
         }
       }
     } catch (e) {
-      _showErrorSnackBar('选择路径失败：$e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.pathSelectionFailed_7421(e),
+      );
     }
   }
 
@@ -2453,7 +2526,9 @@ class _ExternalResourcesPageContentState
         .toList();
 
     if (enabledWebdavConfigs.isEmpty) {
-      _showErrorSnackBar('没有可用的WebDAV配置，请先在WebDAV管理页面添加配置');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.noWebDavConfigAvailable_7281,
+      );
       return;
     }
 
@@ -2472,7 +2547,9 @@ class _ExternalResourcesPageContentState
   /// 获取有效的导出映射
   List<ExportMapping>? _getValidMappings() {
     if (_exportMappings.isEmpty) {
-      _showErrorSnackBar('请至少添加一个导出项');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.addAtLeastOneExportItem_4821,
+      );
       return null;
     }
 
@@ -2486,7 +2563,9 @@ class _ExternalResourcesPageContentState
         .toList();
 
     if (validMappings.isEmpty) {
-      _showErrorSnackBar('请确保所有导出项都有有效的源路径和导出名称');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.ensureValidExportPaths_4821,
+      );
       return null;
     }
 
@@ -2500,7 +2579,9 @@ class _ExternalResourcesPageContentState
     return await showDialog<WebDavConfig>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择WebDAV配置'),
+        title: Text(
+          LocalizationService.instance.current.selectWebDavConfig_7281,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: configs
@@ -2517,7 +2598,7 @@ class _ExternalResourcesPageContentState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
         ],
       ),
@@ -2536,7 +2617,10 @@ class _ExternalResourcesPageContentState
     try {
       // 开始导出状态
       final workStatusService = WorkStatusService();
-      workStatusService.startWorking('正在准备导出...', taskId: 'export');
+      workStatusService.startWorking(
+        LocalizationService.instance.current.preparingExport_7281,
+        taskId: 'export',
+      );
 
       // 创建临时文件夹
       final tempFolderName =
@@ -2652,7 +2736,9 @@ class _ExternalResourcesPageContentState
       // 使用VFS服务生成系统临时文件路径
       final systemTempPath = await _vfsService.generateFileUrl(tempVfsPath);
       if (systemTempPath == null) {
-        throw Exception('无法生成系统临时文件路径');
+        throw Exception(
+          LocalizationService.instance.current.cannotGenerateTempPath_4821,
+        );
       }
 
       // 上传ZIP文件到WebDAV的指定文件夹中
@@ -2664,7 +2750,9 @@ class _ExternalResourcesPageContentState
       );
 
       if (!success) {
-        throw Exception('WebDAV上传失败');
+        throw Exception(
+          LocalizationService.instance.current.webDavUploadFailed_7281,
+        );
       }
 
       // 生成并上传metadata.json文件
@@ -2673,9 +2761,13 @@ class _ExternalResourcesPageContentState
       // 清理VFS临时文件
       await _vfsService.vfs.delete(tempVfsPath);
 
-      debugPrint('成功上传到WebDAV：$remotePath');
+      debugPrint(
+        LocalizationService.instance.current.webDavUploadSuccess(remotePath),
+      );
     } catch (e) {
-      throw Exception('WebDAV上传失败：$e');
+      throw Exception(
+        LocalizationService.instance.current.webDavUploadFailed_7421(e),
+      );
     }
   }
 
@@ -2994,7 +3086,8 @@ class _ExternalResourcesPageContentState
 
       // 使用文件选择器让用户选择保存位置
       final result = await FilePicker.platform.saveFile(
-        dialogTitle: '保存导出文件',
+        dialogTitle:
+            LocalizationService.instance.current.saveExportFileTitle_4821,
         fileName: defaultFileName,
         type: FileType.custom,
         allowedExtensions: ['zip'],
@@ -3007,7 +3100,9 @@ class _ExternalResourcesPageContentState
       }
     } catch (e) {
       // 如果文件选择器失败，尝试下载到默认位置
-      debugPrint('文件选择器失败，尝试下载：$e');
+      debugPrint(
+        LocalizationService.instance.current.filePickerFailedWithError(e),
+      );
       await _downloadFile(zipBytes);
     }
   }
@@ -3030,7 +3125,9 @@ class _ExternalResourcesPageContentState
         await file.writeAsBytes(zipBytes);
       }
     } catch (e) {
-      throw Exception('下载失败：$e');
+      throw Exception(
+        LocalizationService.instance.current.downloadFailed_7425(e),
+      );
     }
   }
 

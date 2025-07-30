@@ -1,0 +1,14 @@
+{
+  "vfsRootInitialized_7281": "VFS根文件系统初始化完成",
+  "collectionStatsError": "获取集合统计失败: {dbName}/{collection} - {e}",
+  "vfsInitialized_7281": "VFS系统已初始化，跳过重复初始化",
+  "databaseStatsError_4821": "获取数据库统计信息失败: {e}",
+  "initializingVfsSystem_7281": "开始初始化应用VFS系统...",
+  "vfsInitializationComplete_7281": "应用VFS系统初始化完成",
+  "vfsInitializationFailed_7421": "应用VFS系统初始化失败: {e}",
+  "vfsInitializedSkipDb_4821": "VFS系统已通过全局初始化完成，跳过默认数据库初始化",
+  "vfsInitializationStart_7281": "开始初始化VFS根文件系统...",
+  "vfsRootExists_7281": "VFS根文件系统已存在，跳过初始化",
+  "vfsRootInitFailed": "VFS根文件系统初始化失败: {e}",
+  "initializingAppDatabase_7281": "开始初始化应用数据库..."
+}

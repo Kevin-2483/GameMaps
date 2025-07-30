@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -20,6 +21,8 @@ import 'vfs_permission_dialog.dart';
 import '../common/floating_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
 import '../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 文件选择回调类型定义
 typedef FileSelectionCallback = void Function(List<String> selectedPaths);
@@ -323,7 +326,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       }
     } catch (e) {
       setState(() {
-        _errorMessage = '初始化失败: $e';
+        _errorMessage = LocalizationService.instance.current
+            .initializationFailed(e);
       });
     } finally {
       setState(() {
@@ -384,7 +388,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       // 排序文件
       _sortFiles();
     } catch (e) {
-      _showErrorSnackBar('加载文件失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.fileLoadFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -562,32 +568,47 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     // 添加选择数量限制
     if (widget.allowMultipleSelection) {
-      restrictions.add('支持多选');
+      restrictions.add(
+        LocalizationService.instance.current.supportMultipleSelection_7281,
+      );
     } else {
-      restrictions.add('仅单选');
+      restrictions.add(
+        LocalizationService.instance.current.singleSelectionOnly_4821,
+      );
     } // 添加选择类型限制（优先使用新的 SelectionType）
     switch (widget.selectionType) {
       case SelectionType.filesOnly:
         if (widget.allowedExtensions != null &&
             widget.allowedExtensions!.isNotEmpty) {
           restrictions.add(
-            '仅指定类型文件 (${widget.allowedExtensions!.join(', ')}) • 文件夹可导航',
+            LocalizationService.instance.current.fileTypeRestriction_7421(
+              widget.allowedExtensions!.join(', '),
+            ),
           );
         } else {
-          restrictions.add('仅文件 • 文件夹可导航');
+          restrictions.add(
+            LocalizationService
+                .instance
+                .current
+                .onlyFilesAndFoldersNavigable_7281,
+          );
         }
         break;
       case SelectionType.directoriesOnly:
-        restrictions.add('仅文件夹');
+        restrictions.add(LocalizationService.instance.current.folderOnly_7281);
         break;
       case SelectionType.both:
         if (widget.allowedExtensions != null &&
             widget.allowedExtensions!.isNotEmpty) {
           restrictions.add(
-            '文件夹和指定类型文件 (${widget.allowedExtensions!.join(', ')})',
+            LocalizationService.instance.current.folderAndFileTypesRestriction(
+              widget.allowedExtensions!.join(', '),
+            ),
           );
         } else {
-          restrictions.add('文件和文件夹');
+          restrictions.add(
+            LocalizationService.instance.current.filesAndFolders_7281,
+          );
         }
         break;
     }
@@ -603,7 +624,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _selectedFiles.clear(); // 清空选择
     });
 
-    _showInfoSnackBar('已复制 ${files.length} 个项目');
+    _showInfoSnackBar(
+      LocalizationService.instance.current.copiedItemsCount(files.length),
+    );
   }
 
   /// 剪切文件
@@ -614,7 +637,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       _selectedFiles.clear(); // 清空选择
     });
 
-    _showInfoSnackBar('已剪切 ${files.length} 个项目');
+    _showInfoSnackBar(
+      LocalizationService.instance.current.itemsCutMessage(files.length),
+    );
   }
 
   /// 生成唯一的文件名建议
@@ -655,7 +680,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     int counter = 2;
     while (counter <= 100) {
       // 限制尝试次数避免无限循环
-      suggestedName = '$baseName (副本 $counter)$extension';
+      suggestedName =
+          '$baseName (${LocalizationService.instance.current.copy_3632} $counter)$extension';
       testPath = _currentPath.isEmpty
           ? suggestedName
           : '$_currentPath/$suggestedName';
@@ -845,7 +871,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           successCount++;
         } catch (e) {
           // 记录单个文件的错误，但继续处理其他文件
-          debugPrint('处理文件 ${file.name} 时出错: $e');
+          debugPrint(
+            LocalizationService.instance.current.fileProcessingError_7281(
+              file.name,
+              e,
+            ),
+          );
         }
       }
 
@@ -855,9 +886,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       }
 
       await _navigateToPath(_currentPath);
-      _showInfoSnackBar('粘贴完成，成功处理 $successCount 个项目');
+      _showInfoSnackBar(
+        LocalizationService.instance.current.pasteCompleteSuccessfully(
+          successCount,
+        ),
+      );
     } catch (e) {
-      _showErrorSnackBar('粘贴失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.pasteFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -1016,8 +1053,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 删除文件
   Future<void> _deleteFiles(List<VfsFileInfo> files) async {
     final confirmed = await _showConfirmDialog(
-      '确认删除',
-      '确定要删除选中的 ${files.length} 个项目吗？此操作不可撤销。',
+      LocalizationService.instance.current.confirmDeletionTitle_4821,
+      LocalizationService.instance.current.confirmDeletionMessage_4821(
+        files.length,
+      ),
     );
 
     if (!confirmed) return;
@@ -1074,9 +1113,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       );
 
       await _navigateToPath(_currentPath);
-      _showInfoSnackBar('重命名成功');
+      _showInfoSnackBar(
+        LocalizationService.instance.current.renameSuccess_4821,
+      );
     } catch (e) {
-      _showErrorSnackBar('重命名失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.renameFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -1094,7 +1137,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     try {
       await VfsFileOpenerService.openFile(context, file.path, fileInfo: file);
     } catch (e) {
-      _showErrorSnackBar('打开文件失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.fileOpenFailed_7285(e),
+      );
       // 如果文件打开失败，回退到显示文件元数据
       await _showFileMetadata(file);
     }
@@ -1107,16 +1152,23 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       if (updatedPermissions != null) {
         // 权限已更新，刷新文件列表
         await _navigateToPath(_currentPath);
-        _showInfoSnackBar('权限已更新');
+        _showInfoSnackBar(
+          LocalizationService.instance.current.permissionUpdated_4821,
+        );
       }
     } catch (e) {
-      _showErrorSnackBar('权限管理失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.permissionFailed_7284(e),
+      );
     }
   }
 
   /// 创建新文件夹
   Future<void> _createNewFolder() async {
-    final name = await _showTextInputDialog('新建文件夹', '文件夹名称');
+    final name = await _showTextInputDialog(
+      LocalizationService.instance.current.createFolderTitle_4821,
+      LocalizationService.instance.current.folderNameHint_5732,
+    );
     if (name == null || name.trim().isEmpty) return;
 
     setState(() {
@@ -1129,10 +1181,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           : '$_currentPath/${name.trim()}';
       await _vfsService.createDirectory(_selectedCollection!, folderPath);
       await _navigateToPath(_currentPath);
-      _showInfoSnackBar('文件夹创建成功');
+      _showInfoSnackBar(
+        LocalizationService.instance.current.folderCreatedSuccessfully_4821,
+      );
     } catch (e) {
-      _showErrorSnackBar('创建文件夹失败: $e');
-      debugPrint('创建文件夹失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.createFolderFailed(e),
+      );
+      debugPrint(
+        LocalizationService.instance.current.folderCreationFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -1143,7 +1201,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 显示搜索对话框
   Future<void> _showSearchDialog() async {
     if (_selectedDatabase == null) {
-      _showErrorSnackBar('请先选择数据库');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.selectDatabaseFirst_4821,
+      );
       return;
     }
 
@@ -2462,7 +2522,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       // 创建一个虚拟的文件信息对象来表示当前目录
       final currentDirInfo = VfsFileInfo(
-        name: _currentPath.isEmpty ? '根目录' : _currentPath.split('/').last,
+        name: _currentPath.isEmpty
+            ? LocalizationService.instance.current.rootDirectory_7421
+            : _currentPath.split('/').last,
         path: pathUri,
         size: 0,
         isDirectory: true,
@@ -2472,7 +2534,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       await _managePermissions(currentDirInfo);
     } catch (e) {
-      _showErrorSnackBar('无法查看权限: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.permissionViewError_4821(e),
+      );
     }
   }
 
@@ -2485,13 +2549,19 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     // 如果没有选中任何文件，显示提示信息
     if (selectedFileInfos.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.info_outline, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('选择文件以查看元数据', style: TextStyle(color: Colors.grey)),
+            Text(
+              LocalizationService
+                  .instance
+                  .current
+                  .selectFileToViewMetadata_7281,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -2520,7 +2590,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '已选择 ${selectedFileInfos.length} 个项目',
+                            LocalizationService.instance.current
+                                .selectedItemsCount(
+                                  selectedFileInfos.length,
+                                  _currentFiles.length,
+                                ),
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),
@@ -2530,25 +2604,25 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                     const Divider(),
 
                     _buildMetadataRow(
-                      '总数量',
+                      LocalizationService.instance.current.totalCount_7281,
                       selectedFileInfos.length.toString(),
                     ),
                     _buildMetadataRow(
-                      '文件夹数量',
+                      LocalizationService.instance.current.folderCount_4821,
                       selectedFileInfos
                           .where((f) => f.isDirectory)
                           .length
                           .toString(),
                     ),
                     _buildMetadataRow(
-                      '文件数量',
+                      LocalizationService.instance.current.fileCount_4821,
                       selectedFileInfos
                           .where((f) => !f.isDirectory)
                           .length
                           .toString(),
                     ),
                     _buildMetadataRow(
-                      '总大小',
+                      LocalizationService.instance.current.totalSize_4821,
                       _formatFileSize(
                         selectedFileInfos.fold(
                           0,
@@ -2561,7 +2635,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                     if (selectedFileInfos.any((f) => !f.isDirectory)) ...[
                       const Divider(),
                       Text(
-                        '文件类型统计',
+                        LocalizationService
+                            .instance
+                            .current
+                            .fileTypeStatistics_4821,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
@@ -2581,7 +2658,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '选中的文件',
+                      LocalizationService.instance.current.selectedFile_7281,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -2639,17 +2716,37 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
             const Divider(),
 
-            _buildMetadataRow('类型', file.isDirectory ? '文件夹' : '文件'),
-            _buildMetadataRow('大小', _formatFileSize(file.size)),
-            _buildMetadataRow('创建时间', _formatDateTime(file.createdAt)),
-            _buildMetadataRow('修改时间', _formatDateTime(file.modifiedAt)),
+            _buildMetadataRow(
+              LocalizationService.instance.current.typeLabel_4821,
+              file.isDirectory
+                  ? LocalizationService.instance.current.folderType_4821
+                  : LocalizationService.instance.current.fileType_4821,
+            ),
+            _buildMetadataRow(
+              LocalizationService.instance.current.fileSize_4821,
+              _formatFileSize(file.size),
+            ),
+            _buildMetadataRow(
+              LocalizationService.instance.current.creationTime_4821,
+              _formatDateTime(file.createdAt),
+            ),
+            _buildMetadataRow(
+              LocalizationService.instance.current.modifiedTime_4821,
+              _formatDateTime(file.modifiedAt),
+            ),
 
             if (file.mimeType != null)
-              _buildMetadataRow('MIME类型', file.mimeType!),
+              _buildMetadataRow(
+                LocalizationService.instance.current.mimeType_4821,
+                file.mimeType!,
+              ),
 
             if (file.metadata != null && file.metadata!.isNotEmpty) ...[
               const Divider(),
-              Text('自定义元数据', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                LocalizationService.instance.current.customMetadata_7281,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               for (final entry in file.metadata!.entries)
                 _buildMetadataRow(entry.key, entry.value.toString()),
@@ -2671,14 +2768,21 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           type = file.mimeType!;
         } else {
           final extension = file.name.split('.').last.toLowerCase();
-          type = extension.isEmpty ? '无扩展名' : '.$extension';
+          type = extension.isEmpty
+              ? LocalizationService.instance.current.noExtension_7281
+              : '.$extension';
         }
         fileTypeCount[type] = (fileTypeCount[type] ?? 0) + 1;
       }
     }
 
     return fileTypeCount.entries
-        .map((entry) => _buildMetadataRow(entry.key, '${entry.value} 个文件'))
+        .map(
+          (entry) => _buildMetadataRow(
+            entry.key,
+            '${LocalizationService.instance.current.fileCount(entry.value)}',
+          ),
+        )
         .toList();
   }
 
@@ -2749,17 +2853,37 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('存储信息', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    LocalizationService.instance.current.storageInfo_7281,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 16),
 
                   if (_selectedDatabase != null &&
                       _selectedCollection != null) ...[
-                    _buildMetadataRow('数据库', _selectedDatabase!),
-                    _buildMetadataRow('集合', _selectedCollection!),
-                    _buildMetadataRow('文件总数', _currentFiles.length.toString()),
-                    _buildMetadataRow('选中数量', _selectedFiles.length.toString()),
+                    _buildMetadataRow(
+                      LocalizationService.instance.current.databaseLabel_4821,
+                      _selectedDatabase!,
+                    ),
+                    _buildMetadataRow(
+                      LocalizationService.instance.current.collectionLabel_4821,
+                      _selectedCollection!,
+                    ),
+                    _buildMetadataRow(
+                      LocalizationService.instance.current.totalFiles_4821,
+                      _currentFiles.length.toString(),
+                    ),
+                    _buildMetadataRow(
+                      LocalizationService.instance.current.selectedCount_7284,
+                      _selectedFiles.length.toString(),
+                    ),
                   ] else
-                    const Text('请选择数据库和集合'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .selectDatabaseAndCollection_7421,
+                    ),
                 ],
               ),
             ),
@@ -2780,12 +2904,18 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       switch (widget.selectionType) {
         case SelectionType.filesOnly:
           if (file.isDirectory) {
-            message = '当前选择模式只能选择文件';
+            message = LocalizationService
+                .instance
+                .current
+                .fileSelectionModeWarning_4821;
           }
           break;
         case SelectionType.directoriesOnly:
           if (!file.isDirectory) {
-            message = '当前选择模式只能选择文件夹';
+            message = LocalizationService
+                .instance
+                .current
+                .folderSelectionRequired_4821;
           }
           break;
         case SelectionType.both:
@@ -2797,7 +2927,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
       if (message.isEmpty &&
           file.isDirectory &&
           widget.allowDirectorySelection == false) {
-        message = '当前选择模式不允许选择文件夹';
+        message = LocalizationService
+            .instance
+            .current
+            .directorySelectionNotAllowed_4821;
       }
 
       // 检查文件扩展名限制
@@ -2807,7 +2940,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           widget.allowedExtensions!.isNotEmpty) {
         final extension = file.name.split('.').last.toLowerCase();
         final allowedExts = widget.allowedExtensions!.join(', ');
-        message = '不支持的文件类型: .$extension\n只允许: $allowedExts';
+        message = LocalizationService.instance.current.unsupportedFileType(
+          extension,
+        );
       }
 
       if (message.isNotEmpty) {
@@ -2882,11 +3017,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -2914,11 +3051,13 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -2948,14 +3087,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     if (isSystemProtected) {
       return Tooltip(
-        message: '系统保护文件',
+        message: LocalizationService.instance.current.systemProtectedFile_4821,
         child: Icon(Icons.shield, size: 16, color: Colors.orange),
       );
     }
 
     // 对于普通文件，显示简单的权限指示
     return Tooltip(
-      message: '用户文件',
+      message: LocalizationService.instance.current.userFile_4821,
       child: Icon(Icons.lock_open, size: 16, color: Colors.green.shade600),
     );
   }
@@ -3005,10 +3144,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           const SizedBox(width: 8),
           Text(
             someSelected
-                ? '已选择 ${_selectedFiles.length} / ${files.length} 项'
+                ? LocalizationService.instance.current.selectedItemsCount(
+                    _selectedFiles.length,
+                    files.length,
+                  )
                 : isMultipleSelectionAllowed
-                ? '全选 (${files.length} 项)'
-                : '单选模式 (${files.length} 项)',
+                ? LocalizationService.instance.current.selectAllWithCount(
+                    files.length,
+                  )
+                : LocalizationService.instance.current
+                      .singleSelectionModeWithCount(files.length),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -3033,7 +3178,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 _copyFiles(selectedFileInfos);
               },
               icon: const Icon(Icons.copy),
-              tooltip: '复制选中项',
+              tooltip:
+                  LocalizationService.instance.current.copySelectedItems_4821,
               iconSize: 20,
             ),
             IconButton(
@@ -3044,7 +3190,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 _cutFiles(selectedFileInfos);
               },
               icon: const Icon(Icons.cut),
-              tooltip: '剪切选中项',
+              tooltip:
+                  LocalizationService.instance.current.cutSelectedItems_4821,
               iconSize: 20,
             ),
             IconButton(
@@ -3055,7 +3202,8 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 _deleteFiles(selectedFileInfos);
               },
               icon: const Icon(Icons.delete, color: Colors.red),
-              tooltip: '删除选中项',
+              tooltip:
+                  LocalizationService.instance.current.deleteSelectedItems_4821,
               iconSize: 20,
             ),
           ],
@@ -3067,7 +3215,12 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 处理上传操作
   Future<void> _handleUpload(String uploadType) async {
     if (_selectedDatabase == null || _selectedCollection == null) {
-      _showErrorSnackBar('请先选择数据库和集合');
+      _showErrorSnackBar(
+        LocalizationService
+            .instance
+            .current
+            .selectDatabaseAndCollectionFirst_7281,
+      );
       return;
     }
 
@@ -3081,7 +3234,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           break;
       }
     } catch (e) {
-      _showErrorSnackBar('上传失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.uploadFailedWithError(e),
+      );
     }
   }
 
@@ -3104,7 +3259,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
     final directory = Directory(selectedDirectory);
     if (!directory.existsSync()) {
-      _showErrorSnackBar('选择的文件夹不存在');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.folderNotExist_4821,
+      );
       return;
     }
 
@@ -3147,10 +3304,14 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         }
       }
 
-      _showInfoSnackBar('成功上传 $successCount 个文件');
+      _showInfoSnackBar(
+        LocalizationService.instance.current.fileUploadSuccess(successCount),
+      );
       await _refreshCurrentDirectory();
     } catch (e) {
-      _showErrorSnackBar('上传文件失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.fileUploadFailed_7284(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -3293,7 +3454,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 处理下载操作
   Future<void> _handleDownload(String downloadType) async {
     if (_selectedDatabase == null || _selectedCollection == null) {
-      _showErrorSnackBar('请先选择数据库和集合');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.selectDatabaseFirst_7281,
+      );
       return;
     }
 
@@ -3313,7 +3476,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           break;
       }
     } catch (e) {
-      _showErrorSnackBar('下载失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.downloadFailed_7285(e),
+      );
     }
   }
 
@@ -3324,7 +3489,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         .toList();
 
     if (selectedFiles.isEmpty) {
-      _showErrorSnackBar('请先选择要下载的文件或文件夹');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.selectFileOrFolderFirst_7281,
+      );
       return;
     }
 
@@ -3334,7 +3501,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
   /// 下载当前目录
   Future<void> _downloadCurrentDirectory({bool compress = false}) async {
     if (_currentFiles.isEmpty) {
-      _showErrorSnackBar('当前目录为空');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.emptyDirectory_7281,
+      );
       return;
     }
 
@@ -3355,7 +3524,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         await _downloadFilesNormally(files);
       }
     } catch (e) {
-      _showErrorSnackBar('下载失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.downloadFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -3395,11 +3566,19 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       String message = '';
       if (fileCount > 0 && folderCount > 0) {
-        message = '已下载 $fileCount 个文件和 $folderCount 个文件夹到 $downloadPath';
+        message = LocalizationService.instance.current.downloadSummary(
+          fileCount,
+          folderCount,
+          downloadPath,
+        );
       } else if (fileCount > 0) {
-        message = '已下载 $fileCount 个文件到 $downloadPath';
+        message = LocalizationService.instance.current.filesDownloaded_7421(
+          fileCount,
+          downloadPath,
+        );
       } else if (folderCount > 0) {
-        message = '已下载 $folderCount 个文件夹到 $downloadPath';
+        message = LocalizationService.instance.current
+            .foldersDownloadedToPath_7281(folderCount, downloadPath);
       }
 
       if (message.isNotEmpty) {
@@ -3435,7 +3614,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         if (kIsWeb) {
           // Web平台：直接下载压缩包
           final fileName = WebDownloadUtils.generateTimestampedFileName(
-            _currentPath.isEmpty ? '根目录' : _currentPath.split('/').last,
+            _currentPath.isEmpty
+                ? LocalizationService.instance.current.rootDirectory_5421
+                : _currentPath.split('/').last,
             'zip',
           );
           await WebDownloadUtils.downloadZipFile(
@@ -3444,13 +3625,19 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           );
 
           final fileSize = _formatFileSize(zipData.length);
-          _showInfoSnackBar('已压缩下载 $totalFiles 个文件\n压缩包大小: $fileSize');
+          _showInfoSnackBar(
+            LocalizationService.instance.current.filesCompressedInfo(
+              totalFiles,
+              fileSize,
+            ),
+          );
         } else {
           // 桌面平台：选择保存位置和文件名
           final zipPath = await FilePicker.platform.saveFile(
-            dialogTitle: '保存压缩文件',
+            dialogTitle:
+                LocalizationService.instance.current.saveZipFileTitle_4821,
             fileName:
-                '${_currentPath.isEmpty ? '根目录' : _currentPath.split('/').last}_${DateTime.now().millisecondsSinceEpoch}.zip',
+                '${_currentPath.isEmpty ? LocalizationService.instance.current.rootDirectory_5732 : _currentPath.split('/').last}_${DateTime.now().millisecondsSinceEpoch}.zip',
             type: FileType.custom,
             allowedExtensions: ['zip'],
           );
@@ -3463,14 +3650,21 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
           final fileSize = _formatFileSize(zipData.length);
           _showInfoSnackBar(
-            '已压缩下载 $totalFiles 个文件到 $zipPath\n压缩包大小: $fileSize',
+            LocalizationService.instance.current.filesCompressedInfo(
+              totalFiles,
+              zipPath,
+            ),
           );
         }
       } else {
-        _showErrorSnackBar('压缩失败');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.compressionFailed_7281,
+        );
       }
     } catch (e) {
-      _showErrorSnackBar('压缩下载失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.compressionDownloadFailed(e),
+      );
     }
   }
 
@@ -3580,18 +3774,24 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
 
       String message = '';
       if (fileCount > 0 && directoryCount > 0) {
-        message = '已下载 $fileCount 个文件和 $directoryCount 个目录';
+        message = LocalizationService.instance.current
+            .downloadedFilesAndDirectories(fileCount, directoryCount);
       } else if (fileCount > 0) {
-        message = '已下载 $fileCount 个文件';
+        message = LocalizationService.instance.current.downloadedFilesCount(
+          fileCount,
+        );
       } else if (directoryCount > 0) {
-        message = '已下载 $directoryCount 个目录中的文件';
+        message = LocalizationService.instance.current
+            .downloadedFilesFromDirectories(directoryCount);
       }
 
       if (message.isNotEmpty) {
         _showInfoSnackBar(message);
       }
     } catch (e) {
-      _showErrorSnackBar('Web平台下载失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.webDownloadFailed_7285(e),
+      );
     } finally {
       setState(() {
         _isLoading = false;

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 // import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -5,6 +6,8 @@ import 'package:sqflite/sqflite.dart';
 // import 'package:path/path.dart';
 import '../../models/user_preferences.dart';
 import '../database_path_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// 用户偏好设置数据库服务
 /// 使用SQLite数据库替代SharedPreferences以提升性能
@@ -83,7 +86,9 @@ class UserPreferencesDatabaseService {
     });
 
     if (kDebugMode) {
-      debugPrint('用户偏好设置数据库表创建完成');
+      debugPrint(
+        LocalizationService.instance.current.userPreferencesTableCreated_7281,
+      );
     }
   }
 
@@ -97,7 +102,9 @@ class UserPreferencesDatabaseService {
       ''');
 
       if (kDebugMode) {
-        debugPrint('数据库升级：添加 home_page_data 字段');
+        debugPrint(
+          LocalizationService.instance.current.databaseUpgradeMessage_7281,
+        );
       }
     }
 
@@ -106,12 +113,19 @@ class UserPreferencesDatabaseService {
       await _migrateLayoutDataForMergedWindowControls(db);
 
       if (kDebugMode) {
-        debugPrint('数据库升级：为 layout_data 添加 windowControlsMode 字段');
+        debugPrint(
+          LocalizationService.instance.current.databaseUpgradeLayoutData_7281,
+        );
       }
     }
 
     if (kDebugMode) {
-      debugPrint('用户偏好设置数据库从版本 $oldVersion 升级到 $newVersion');
+      debugPrint(
+        LocalizationService.instance.current.userPreferenceDbUpgrade_7421(
+          oldVersion,
+          newVersion,
+        ),
+      );
     }
   }
 
@@ -153,7 +167,11 @@ class UserPreferencesDatabaseService {
     await _setCurrentUserId(userId);
 
     if (kDebugMode) {
-      debugPrint('用户偏好设置已保存到数据库: ${updatedPreferences.displayName}');
+      debugPrint(
+        LocalizationService.instance.current.userPreferencesSavedToDatabase(
+          updatedPreferences.displayName,
+        ),
+      );
     }
   }
 
@@ -210,7 +228,9 @@ class UserPreferencesDatabaseService {
     }
 
     if (kDebugMode) {
-      debugPrint('用户配置已删除: $userId');
+      debugPrint(
+        LocalizationService.instance.current.userConfigDeleted(userId),
+      );
     }
   }
 
@@ -278,7 +298,9 @@ class UserPreferencesDatabaseService {
     await _setCurrentUserId('');
 
     if (kDebugMode) {
-      debugPrint('所有用户偏好设置数据已清除');
+      debugPrint(
+        LocalizationService.instance.current.allUserPreferencesCleared_4821,
+      );
     }
   }
 
@@ -379,7 +401,9 @@ class UserPreferencesDatabaseService {
 
             if (kDebugMode) {
               debugPrint(
-                '已为用户 $userId 迁移 enableMergedWindowControls 到 windowControlsMode',
+                LocalizationService.instance.current.migratedWindowControlsMode(
+                  userId,
+                ),
               );
             }
           }
@@ -390,7 +414,9 @@ class UserPreferencesDatabaseService {
             needsUpdate = true;
 
             if (kDebugMode) {
-              debugPrint('已为用户 $userId 添加 windowControlsMode 字段');
+              debugPrint(
+                LocalizationService.instance.current.userFieldAdded(userId),
+              );
             }
           }
 
@@ -405,7 +431,12 @@ class UserPreferencesDatabaseService {
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('解析用户 $userId 的 layout_data 失败: $e');
+            debugPrint(
+              LocalizationService.instance.current.parseUserLayoutFailed(
+                userId,
+                e,
+              ),
+            );
           }
           // 如果解析失败，使用默认的 LayoutPreferences
           final defaultLayout = LayoutPreferences.createDefault();
@@ -419,7 +450,9 @@ class UserPreferencesDatabaseService {
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('迁移 layout_data 时发生错误: $e');
+        debugPrint(
+          LocalizationService.instance.current.layoutDataMigrationError(e),
+        );
       }
     }
   }

@@ -1,9 +1,10 @@
 /// 测试并发脚本执行的示例代码
 /// 这个文件展示了如何同时执行多个脚本
+library;
 
 import 'package:flutter/material.dart';
-import '../data/new_reactive_script_manager.dart';
-import '../models/script_data.dart';
+import 'package:r6box/data/new_reactive_script_manager.dart';
+import 'package:r6box/models/script_data.dart';
 
 /// 并发脚本执行测试
 class ConcurrentScriptExecutionTest {

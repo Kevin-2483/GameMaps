@@ -1,0 +1,8 @@
+{
+  "programWorking_1234": "程序正在工作中",
+  "currentOperation_7281": "当前正在执行：",
+  "unknownTask_7421": "未知任务",
+  "forceExitWarning_4821": "强制退出可能会导致数据丢失或程序状态异常。建议等待当前任务完成后再退出。",
+  "cancelButton_7421": "取消",
+  "confirmExit_7284": "仍要退出"
+}

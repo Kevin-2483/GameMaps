@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 用户活动状态枚举
 enum UserActivityStatus {
@@ -194,7 +197,7 @@ class UserPresence extends Equatable {
   @override
   String toString() {
     return 'UserPresence(clientId: $clientId, userName: $userName, displayName: $displayName, '
-        'avatar: ${avatar != null ? "[有头像]" : "[无头像]"}, status: $status, '
+        'avatar: ${avatar != null ? LocalizationService.instance.current.hasAvatar_4821 : LocalizationService.instance.current.noAvatar_4821}, status: $status, '
         'lastSeen: $lastSeen, isOnline: $isOnline)';
   }
 }

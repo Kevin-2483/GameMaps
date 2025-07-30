@@ -1,8 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 import '../../providers/user_preferences_provider.dart';
 import 'widgets/theme_settings_section.dart';
@@ -15,6 +17,8 @@ import 'widgets/extension_settings_section.dart';
 
 import '../../components/common/draggable_title_bar.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class UserPreferencesPage extends BasePage {
   const UserPreferencesPage({super.key});
@@ -58,12 +62,16 @@ class _UserPreferencesPageContentState
       // 复制到剪贴板作为备选方案
       await Clipboard.setData(ClipboardData(text: jsonData));
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        context.showSuccessSnackBar('${l10n.settingsExported} (已复制到剪贴板)');
+        final l10n = LocalizationService.instance.current!;
+        context.showSuccessSnackBar(
+          '${l10n.settingsExported} (${LocalizationService.instance.current.copiedToClipboard_4821})',
+        );
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('导出失败：${e.toString()}');
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.exportFailed_7285(e.toString()),
+        );
       }
     }
   }
@@ -82,20 +90,20 @@ class _UserPreferencesPageContentState
         await provider.importSettings(jsonData);
 
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = LocalizationService.instance.current!;
           context.showSuccessSnackBar(l10n.settingsImported);
         }
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = LocalizationService.instance.current!;
         context.showErrorSnackBar(l10n.importFailed(e.toString()));
       }
     }
   }
 
   Future<void> _resetSettings() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -129,7 +137,11 @@ class _UserPreferencesPageContentState
         }
       } catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('重置失败：${e.toString()}');
+          context.showErrorSnackBar(
+            LocalizationService.instance.current.resetFailedWithError(
+              e.toString(),
+            ),
+          );
         }
       }
     }
@@ -137,7 +149,7 @@ class _UserPreferencesPageContentState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Scaffold(
       body: Column(
@@ -189,7 +201,10 @@ class _UserPreferencesPageContentState
                         const Icon(Icons.restore, color: Colors.red),
                         const SizedBox(width: 8),
                         Text(
-                          '重置所有设置',
+                          LocalizationService
+                              .instance
+                              .current
+                              .resetAllSettings_4821,
                           style: const TextStyle(color: Colors.red),
                         ),
                       ],
@@ -215,13 +230,16 @@ class _UserPreferencesPageContentState
                         const Icon(Icons.error, size: 64, color: Colors.red),
                         const SizedBox(height: 16),
                         Text(
-                          '加载用户偏好设置失败: ${provider.error}',
+                          LocalizationService.instance.current
+                              .loadUserPreferencesFailed(provider.error.toString()),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () => provider.initialize(),
-                          child: const Text('重试'),
+                          child: Text(
+                            LocalizationService.instance.current.retry_7281,
+                          ),
                         ),
                       ],
                     ),

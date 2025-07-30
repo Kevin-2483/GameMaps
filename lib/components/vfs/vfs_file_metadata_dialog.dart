@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// VFS文件元数据对话框
 class VfsFileMetadataDialog extends StatefulWidget {
@@ -56,7 +59,9 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '文件信息 - ${widget.fileInfo.name}',
+                      LocalizationService.instance.current.fileInfoTitle(
+                        widget.fileInfo.name,
+                      ),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
@@ -78,40 +83,68 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildInfoSection('基本信息', [
-                      _buildInfoRow('名称', widget.fileInfo.name),
-                      _buildInfoRow('路径', widget.fileInfo.path),
                       _buildInfoRow(
-                        '类型',
-                        widget.fileInfo.isDirectory ? '文件夹' : '文件',
+                        LocalizationService.instance.current.nameLabel_4821,
+                        widget.fileInfo.name,
+                      ),
+                      _buildInfoRow(
+                        LocalizationService.instance.current.pathLabel_4821,
+                        widget.fileInfo.path,
+                      ),
+                      _buildInfoRow(
+                        LocalizationService.instance.current.typeLabel_5421,
+                        widget.fileInfo.isDirectory
+                            ? LocalizationService
+                                  .instance
+                                  .current
+                                  .folderType_5421
+                            : LocalizationService
+                                  .instance
+                                  .current
+                                  .fileType_5421,
                       ),
                       if (!widget.fileInfo.isDirectory)
                         _buildInfoRow(
-                          '大小',
+                          LocalizationService.instance.current.fileSize_4821,
                           _formatFileSize(widget.fileInfo.size),
                         ),
                       _buildInfoRow(
-                        '修改时间',
+                        LocalizationService
+                            .instance
+                            .current
+                            .modifiedTimeLabel_4821,
                         _formatDateTime(widget.fileInfo.modifiedAt),
                       ),
                       _buildInfoRow(
-                        '创建时间',
+                        LocalizationService.instance.current.creationTime_7281
+                            .toString(),
                         _formatDateTime(widget.fileInfo.createdAt),
                       ),
                     ]),
                     const SizedBox(height: 16),
                     if (widget.fileInfo.metadata != null &&
                         widget.fileInfo.metadata!.isNotEmpty) ...[
-                      _buildInfoSection('元数据', [
-                        for (final entry in widget.fileInfo.metadata!.entries)
-                          _buildInfoRow(entry.key, entry.value.toString()),
-                      ]),
+                      _buildInfoSection(
+                        LocalizationService.instance.current.metadataTitle_4821,
+                        [
+                          for (final entry in widget.fileInfo.metadata!.entries)
+                            _buildInfoRow(entry.key, entry.value.toString()),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                     ],
                     if (!widget.fileInfo.isDirectory) ...[
                       _buildInfoSection('文件详情', [
                         _buildInfoRow(
-                          'MIME类型',
-                          widget.fileInfo.mimeType ?? '未知',
+                          LocalizationService
+                              .instance
+                              .current
+                              .mimeTypeLabel_4721,
+                          widget.fileInfo.mimeType ??
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .unknownLabel_4721,
                         ),
                       ]),
                     ],
@@ -134,12 +167,16 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                 children: [
                   TextButton(
                     onPressed: () => _copyToClipboard(),
-                    child: const Text('复制信息'),
+                    child: Text(
+                      LocalizationService.instance.current.copyInfo_4821,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('关闭'),
+                    child: Text(
+                      LocalizationService.instance.current.closeButton_7281,
+                    ),
                   ),
                 ],
               ),
@@ -234,21 +271,37 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
 
   void _copyToClipboard() {
     final buffer = StringBuffer();
-    buffer.writeln('文件信息:');
-    buffer.writeln('名称: ${widget.fileInfo.name}');
-    buffer.writeln('路径: ${widget.fileInfo.path}');
-    buffer.writeln('类型: ${widget.fileInfo.isDirectory ? '文件夹' : '文件'}');
+    buffer.writeln(LocalizationService.instance.current.fileInfo_7281);
+    buffer.writeln(
+      LocalizationService.instance.current.fileNameLabel(widget.fileInfo.name),
+    );
+    buffer.writeln(
+      LocalizationService.instance.current.filePathLabel(widget.fileInfo.path),
+    );
+    buffer.writeln(
+      '类型: ${widget.fileInfo.isDirectory ? LocalizationService.instance.current.folderType_4821 : LocalizationService.instance.current.fileType_4821}',
+    );
 
     if (!widget.fileInfo.isDirectory) {
-      buffer.writeln('大小: ${_formatFileSize(widget.fileInfo.size)}');
+      buffer.writeln(
+        LocalizationService.instance.current.fileSizeLabel(
+          _formatFileSize(widget.fileInfo.size),
+        ),
+      );
     }
 
-    buffer.writeln('修改时间: ${_formatDateTime(widget.fileInfo.modifiedAt)}');
-    buffer.writeln('创建时间: ${_formatDateTime(widget.fileInfo.createdAt)}');
+    buffer.writeln(
+      '${LocalizationService.instance.current.modifiedTimeLabel_7421}: ${_formatDateTime(widget.fileInfo.modifiedAt)}',
+    );
+    buffer.writeln(
+      LocalizationService.instance.current.creationTimeLabel_5421(
+        _formatDateTime(widget.fileInfo.createdAt),
+      ),
+    );
 
     if (widget.fileInfo.metadata != null &&
         widget.fileInfo.metadata!.isNotEmpty) {
-      buffer.writeln('\n元数据:');
+      buffer.writeln(LocalizationService.instance.current.metadataLabel_7281);
       for (final entry in widget.fileInfo.metadata!.entries) {
         buffer.writeln('${entry.key}: ${entry.value}');
       }
@@ -256,14 +309,21 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
 
     if (!widget.fileInfo.isDirectory) {
       if (widget.fileInfo.mimeType != null) {
-        buffer.writeln('MIME类型: ${widget.fileInfo.mimeType}');
+        buffer.writeln(
+          LocalizationService.instance.current.mimeTypeLabel(
+            widget.fileInfo.mimeType ??
+                LocalizationService.instance.current.unknownLabel_4721,
+          ),
+        );
       }
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
 
     if (mounted) {
-      context.showSuccessSnackBar('文件信息已复制到剪贴板');
+      context.showSuccessSnackBar(
+        LocalizationService.instance.current.fileInfoCopiedToClipboard_4821,
+      );
     }
   }
 }

@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+// This file has been processed by AI for internationalization
+import 'package:flutter/material.dart';
+import '../../services/localization_service.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -27,11 +29,15 @@ class _AboutPageContentState extends State<_AboutPageContent> {
   String? _licenseText;
 
   // 自定义致谢项目列表 - 您可以在这里添加更多项目
-  static const List<Map<String, String>> _customAcknowledgments = [
+  static List<Map<String, String>> _getCustomAcknowledgments() => [
     {
       'name': 'R6 Operators Assets',
-      'description': '彩虹六号干员头像和图标资源',
-      'subtitle': 'marcopixel/r6operators 仓库提供的干员素材',
+      'description': LocalizationService
+          .instance
+          .current
+          .r6OperatorsAssetsDescription_4821,
+      'subtitle':
+          LocalizationService.instance.current.r6OperatorsAssetsSubtitle_7539,
       'url': 'https://github.com/marcopixel/r6operators',
       'icon': 'image',
     },
@@ -217,8 +223,15 @@ class _AboutPageContentState extends State<_AboutPageContent> {
             ),
             ListTile(
               leading: const Icon(Icons.bug_report),
-              title: const Text('问题反馈'),
-              subtitle: const Text('报告 Bug 或提出功能建议'),
+              title: Text(
+                LocalizationService.instance.current.feedbackTitle_4271,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .reportBugOrFeatureSuggestion_7281,
+              ),
               trailing: const Icon(Icons.open_in_new),
               onTap: () =>
                   _launchUrl('https://github.com/Kevin-2483/GameMaps/issues'),
@@ -244,16 +257,22 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('开源项目致谢', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService
+                  .instance
+                  .current
+                  .openSourceAcknowledgement_7281,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
-              '本项目使用了以下优秀的开源项目和资源：',
+              LocalizationService.instance.current.openSourceProjectsIntro_4821,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
 
             // 动态生成自定义致谢项目
-            ..._customAcknowledgments.map(
+            ..._getCustomAcknowledgments().map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: _buildCustomAcknowledgment(
@@ -270,7 +289,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
             const Divider(height: 24),
 
             Text(
-              '此外，本项目还依赖众多 Flutter 生态系统中的优秀开源包，点击下方按钮查看完整的依赖项列表和许可证信息。',
+              LocalizationService.instance.current.dependencyDescription_4821,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -279,7 +298,9 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               child: ElevatedButton.icon(
                 onPressed: () => _showFullLicensePage(context),
                 icon: const Icon(Icons.list),
-                label: const Text('查看完整许可证列表'),
+                label: Text(
+                  LocalizationService.instance.current.viewFullLicenseList_7281,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -403,16 +424,21 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_4821),
           ),
           if (_licenseText != null)
             TextButton(
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _licenseText!));
                 Navigator.of(context).pop();
-                context.showSuccessSnackBar('许可证文本已复制到剪贴板');
+                context.showSuccessSnackBar(
+                  LocalizationService
+                      .instance
+                      .current
+                      .licenseCopiedToClipboard_4821,
+                );
               },
-              child: const Text('复制'),
+              child: Text(LocalizationService.instance.current.copyText_4821),
             ),
         ],
       ),
@@ -429,7 +455,8 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         size: 64,
         color: Theme.of(context).colorScheme.primary,
       ),
-      applicationLegalese: '© 2024 R6BOX Team\n使用 GPL v3 许可证发布',
+      applicationLegalese:
+          LocalizationService.instance.current.licenseLegalese_7281,
     );
   }
 }

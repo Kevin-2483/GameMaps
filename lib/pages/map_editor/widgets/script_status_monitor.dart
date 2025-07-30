@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../data/new_reactive_script_manager.dart';
 import '../../../models/script_data.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 脚本状态监控组件
 /// 显示详细的脚本执行状态、线程信息和系统指标
@@ -122,7 +125,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             ),
             const SizedBox(width: 6),
             Text(
-              '$runningCount 个脚本运行中',
+              LocalizationService.instance.current.runningScriptsCount(
+                runningCount,
+              ),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -132,14 +137,17 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           ] else ...[
             Icon(Icons.check_circle, size: 16, color: Colors.green),
             const SizedBox(width: 6),
-            Text('空闲状态', style: TextStyle(fontSize: 12, color: Colors.green)),
+            Text(
+              LocalizationService.instance.current.idleStatus_7421,
+              style: TextStyle(fontSize: 12, color: Colors.green),
+            ),
           ],
 
           const SizedBox(width: 12),
 
           // 脚本总数
           Text(
-            '${scripts.length} 个脚本',
+            LocalizationService.instance.current.scriptCount(scripts.length),
             style: TextStyle(
               fontSize: 11,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -156,7 +164,13 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
       children: [
         Icon(Icons.monitor_heart, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text('脚本引擎状态监控', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          LocalizationService
+              .instance
+              .current
+              .scriptEngineStatusMonitoring_7281,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const Spacer(),
         _buildSystemStatusIndicator(),
       ],
@@ -193,7 +207,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '执行引擎',
+              LocalizationService.instance.current.executionEngine_4821,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             Text(
@@ -226,26 +240,30 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('系统指标', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.systemMetrics_4521,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 12,
           runSpacing: 8,
           children: [
             _buildMetricChip(
-              label: '总脚本',
+              label:
+                  LocalizationService.instance.current.totalScriptsLabel_4821,
               value: '$totalScripts',
               icon: Icons.code,
               color: Theme.of(context).colorScheme.primary,
             ),
             _buildMetricChip(
-              label: '已启用',
+              label: LocalizationService.instance.current.enabledStatus_4821,
               value: '$enabledScripts',
               icon: Icons.toggle_on,
               color: Colors.green,
             ),
             _buildMetricChip(
-              label: '运行中',
+              label: LocalizationService.instance.current.runningStatus_4821,
               value: '$runningScripts',
               icon: Icons.play_circle,
               color: Colors.orange,
@@ -253,13 +271,13 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
             ),
             if (errorScripts > 0)
               _buildMetricChip(
-                label: '错误',
+                label: LocalizationService.instance.current.errorLabel_4821,
                 value: '$errorScripts',
                 icon: Icons.error,
                 color: Colors.red,
               ),
             _buildMetricChip(
-              label: '执行引擎',
+              label: LocalizationService.instance.current.executionEngine_4521,
               value: kIsWeb ? 'Web Worker' : 'Isolate',
               icon: kIsWeb ? Icons.web : Icons.desktop_windows,
               color: Theme.of(context).colorScheme.tertiary,
@@ -342,7 +360,9 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '运行中的脚本 (${runningScripts.length})',
+          LocalizationService.instance.current.runningScriptsCount(
+            runningScripts.length,
+          ),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
@@ -360,7 +380,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
                 Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
                 Text(
-                  '当前没有运行中的脚本',
+                  LocalizationService.instance.current.noRunningScripts_7421,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -428,7 +448,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
           IconButton(
             onPressed: () => widget.scriptManager.stopScript(script.id),
             icon: const Icon(Icons.stop, color: Colors.red),
-            tooltip: '停止脚本',
+            tooltip: LocalizationService.instance.current.stopScript_7421,
           ),
         ],
       ),
@@ -452,7 +472,10 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('最近执行记录', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocalizationService.instance.current.recentExecutionRecords_4821,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         if (recentExecutions.isEmpty) ...[
           Container(
@@ -471,7 +494,7 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '暂无执行记录',
+                  LocalizationService.instance.current.noExecutionRecords_4521,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -557,13 +580,16 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
     final diff = now.difference(dateTime);
 
     if (diff.inMinutes < 1) {
-      return '刚刚';
+      return LocalizationService.instance.current.justNow_4821;
     } else if (diff.inHours < 1) {
-      return '${diff.inMinutes}分钟前';
+      return LocalizationService.instance.current.minutesAgo_7421(
+        diff.inMinutes,
+      );
     } else if (diff.inDays < 1) {
-      return '${diff.inHours}小时前';
+      return LocalizationService.instance.current.hoursAgo_7281(diff.inHours);
     } else {
-      return '${diff.inDays}天前';
+      return '${diff.inDays}' +
+          LocalizationService.instance.current.daysAgo_7283;
     }
   }
 }

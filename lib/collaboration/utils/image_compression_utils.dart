@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 图片压缩工具类
 /// 用于压缩地图封面图片以便在协作中同步
@@ -38,7 +41,9 @@ class ImageCompressionUtils {
       // 转换为base64
       return base64Encode(compressedBytes);
     } catch (e) {
-      debugPrint('压缩图片失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.imageCompressionFailed_7284(e),
+      );
       return null;
     }
   }
@@ -48,7 +53,7 @@ class ImageCompressionUtils {
     try {
       return base64Decode(base64String);
     } catch (e) {
-      debugPrint('解码base64图片失败: $e');
+      debugPrint(LocalizationService.instance.current.base64DecodeFailed(e));
       return null;
     }
   }

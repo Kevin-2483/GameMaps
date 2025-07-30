@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 图层绑定抽屉 - 从图例组角度选择要绑定的图层
 class LayerBindingDrawer extends StatefulWidget {
@@ -114,7 +117,9 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '图例组: ${widget.legendGroup.name}',
+                        LocalizationService.instance.current.legendGroupName(
+                          widget.legendGroup.name,
+                        ),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -135,7 +140,10 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '选择要绑定到此图例组的图层',
+                  LocalizationService
+                      .instance
+                      .current
+                      .selectLayersForLegendGroup_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -158,7 +166,9 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
                 // 已绑定的图层
                 if (boundLayers.isNotEmpty) ...[
                   Text(
-                    '已绑定的图层 (${boundLayers.length})',
+                    LocalizationService.instance.current.boundLayersTitle(
+                      boundLayers.length,
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -173,7 +183,9 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
 
                 // 未绑定的图层
                 Text(
-                  '可用的图层 (${unboundLayers.length})',
+                  LocalizationService.instance.current.availableLayersCount(
+                    unboundLayers.length,
+                  ),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -181,11 +193,14 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
                 ),
                 const SizedBox(height: 8),
                 if (unboundLayers.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.all(16),
                     child: Text(
-                      '暂无可用的图层',
-                      style: TextStyle(
+                      LocalizationService
+                          .instance
+                          .current
+                          .noAvailableLayers_7281,
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontStyle: FontStyle.italic,
                       ),
@@ -244,7 +259,9 @@ class _LayerBindingDrawerState extends State<LayerBindingDrawer> {
             ),
             const SizedBox(width: 4),
             Text(
-              '${layer.elements.length} 个元素',
+              LocalizationService.instance.current.elementCount(
+                layer.elements.length,
+              ),
               style: const TextStyle(fontSize: 11),
             ),
             const SizedBox(width: 8),

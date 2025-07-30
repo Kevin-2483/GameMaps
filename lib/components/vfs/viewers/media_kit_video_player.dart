@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/notification/notification_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// 基于 media_kit 的跨平台视频播放器
 /// 支持所有平台：Windows、macOS、Linux、Android、iOS、Web
@@ -13,11 +16,11 @@ class MediaKitVideoPlayer extends StatefulWidget {
   final bool muted;
 
   const MediaKitVideoPlayer({
-    Key? key,
+    super.key,
     required this.url,
     this.config,
     this.muted = false,
-  }) : super(key: key);
+  });
 
   @override
   _MediaKitVideoPlayerState createState() => _MediaKitVideoPlayerState();
@@ -63,7 +66,9 @@ class _MediaKitVideoPlayerState extends State<MediaKitVideoPlayer> {
       await _initializeVideo();
     } catch (e) {
       setState(() {
-        _errorMessage = '播放器初始化失败: $e';
+        _errorMessage = LocalizationService.instance.current.playerInitFailed(
+          e,
+        );
       });
     }
   }

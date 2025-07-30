@@ -1,0 +1,21 @@
+{
+  "webDavPasswordRemoved": "WebDAV密码已从 SharedPreferences 删除 (macOS): {authAccountId}",
+  "webDavPasswordDeleted": "WebDAV密码已删除: {authAccountId}",
+  "checkWebDavPasswordExistenceFailed_4821": "检查WebDAV密码存在性失败: {e}",
+  "webDavPasswordDeletionFailed": "删除WebDAV密码失败: {e}",
+  "failedToGetWebDavAccountIds": "获取所有WebDAV认证账户ID失败: {e}",
+  "webDavPasswordsClearedMacOs": "所有WebDAV密码已从 SharedPreferences 清理 (macOS)",
+  "allWebDavPasswordsCleared_7281": "所有WebDAV密码已清理",
+  "clearWebDavPasswordsFailed": "清理所有WebDAV密码失败: {e}",
+  "webDavStatsError_4821": "获取WebDAV存储统计信息失败: {e}",
+  "webDavAuthFailed_7285": "WebDAV认证凭据验证失败: {e}",
+  "webDavAuthFailed_7281": "WebDAV认证凭据验证失败：密码未找到",
+  "webDavPasswordStored": "WebDAV密码已安全存储: {authAccountId}",
+  "webDavPasswordStored_7421": "WebDAV密码已存储到 SharedPreferences (macOS): {authAccountId}",
+  "webDavInitializationComplete_7281": "WebDAV安全存储服务初始化完成",
+  "webDavPasswordSaveFailed": "存储WebDAV密码失败: {e}",
+  "webDavPasswordRetrievedMacos": "WebDAV密码从 SharedPreferences 获取成功 (macOS): {authAccountId}",
+  "webDavPasswordSuccess_7285": "WebDAV密码获取成功: {authAccountId}",
+  "webDavPasswordNotFound": "WebDAV密码未找到: {authAccountId}",
+  "webDavPasswordError": "获取WebDAV密码失败: {e}"
+}

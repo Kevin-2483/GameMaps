@@ -1,0 +1,22 @@
+{
+  "share_7281": "分享",
+  "openInWindow_4281": "在窗口中打开",
+  "fileInfo_7281": "文件信息",
+  "backButton_7421": "返回",
+  "openInWindowTooltip_4271": "在窗口中打开",
+  "openInWindowHint_7281": "在窗口中打开功能需要导入窗口组件",
+  "shareFeatureInDevelopment_7281": "分享功能开发中...",
+  "fileInfo_4821": "文件信息",
+  "fileUnavailable_4287": "文件信息不可用",
+  "fileName_4821": "文件名",
+  "creationTime_4821": "创建时间",
+  "fileSizeLabel_4821": "大小",
+  "pathLabel_5421": "路径",
+  "typeLabel_4821": "类型",
+  "directory_4821": "目录",
+  "file_4821": "文件",
+  "closeButton_7281": "关闭",
+  "modifiedTime_4821": "修改时间",
+  "fullScreenModeInDevelopment_7281": "全屏模式开发中...",
+  "fullscreenMode_7281": "全屏模式"
+}

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
@@ -11,6 +12,8 @@ import '../../models/map_item_summary.dart';
 import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
 import '../../utils/filename_sanitizer.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// VFS地图服务具体实现
 /// 基于VFS虚拟文件系统存储地图数据
@@ -169,7 +172,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return maps;
     } catch (e) {
-      debugPrint('获取所有地图失败: $e');
+      debugPrint(LocalizationService.instance.current.fetchMapFailed_7285(e));
       return [];
     }
   }
@@ -224,7 +227,9 @@ class VfsMapServiceImpl implements VfsMapService {
               final coverFile = await _storageService.readFile(coverPath);
               coverData = coverFile?.data;
             } catch (e) {
-              debugPrint('加载地图封面失败: $e');
+              debugPrint(
+                LocalizationService.instance.current.mapCoverLoadFailed_7285(e),
+              );
             }
 
             final summary = MapItemSummary(
@@ -240,14 +245,21 @@ class VfsMapServiceImpl implements VfsMapService {
 
             summaries.add(summary);
           } catch (e) {
-            debugPrint('加载地图摘要失败 [$desanitizedTitle]: $e');
+            debugPrint(
+              LocalizationService.instance.current.mapSummaryLoadFailed(
+                desanitizedTitle,
+                e,
+              ),
+            );
           }
         }
       }
 
       return summaries;
     } catch (e) {
-      debugPrint('获取所有地图摘要失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchMapSummariesFailed_7285(e),
+      );
       return [];
     }
   }
@@ -291,7 +303,9 @@ class VfsMapServiceImpl implements VfsMapService {
         final coverFile = await _storageService.readFile(coverPath);
         coverData = coverFile?.data;
       } catch (e) {
-        debugPrint('加载地图封面失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.mapCoverLoadFailed_7285(e),
+        );
       }
 
       final summary = MapItemSummary(
@@ -307,7 +321,9 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return summary;
     } catch (e) {
-      debugPrint('根据路径获取地图摘要失败 [$mapPath]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapSummaryError_4821(mapPath, e),
+      );
       return null;
     }
   }
@@ -332,7 +348,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return count;
     } catch (e) {
-      debugPrint('获取地图数量失败: $e');
+      debugPrint(LocalizationService.instance.current.mapFetchFailed_7284(e));
       return 0;
     }
   }
@@ -348,10 +364,12 @@ class VfsMapServiceImpl implements VfsMapService {
       }
 
       // 如果找不到，可能是数字ID，在这种情况下我们无法处理
-      debugPrint('无法通过ID查找地图，VFS系统使用基于标题的存储: $id');
+      debugPrint(
+        LocalizationService.instance.current.mapIdLookupFailed_7421(id),
+      );
       return null;
     } catch (e) {
-      debugPrint('通过ID加载地图失败 [$id]: $e');
+      debugPrint(LocalizationService.instance.current.mapLoadFailedById(id, e));
       return null;
     }
   }
@@ -393,7 +411,9 @@ class VfsMapServiceImpl implements VfsMapService {
         final coverPath = _buildVfsPath(_getMapCoverPath(title, folderPath));
         coverData = await _storageService.readFile(coverPath);
       } catch (e) {
-        debugPrint('加载地图封面失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.mapCoverLoadFailed_7285(e),
+        );
       }
 
       final map = MapItem(
@@ -412,7 +432,7 @@ class VfsMapServiceImpl implements VfsMapService {
       _mapCache[cacheKey] = map;
       return map;
     } catch (e) {
-      debugPrint('加载地图失败 [$title]: $e');
+      debugPrint(LocalizationService.instance.current.mapLoadFailed(title, e));
       return null;
     }
   }
@@ -456,7 +476,9 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return map.title; // 返回标题作为标识符
     } catch (e) {
-      debugPrint('保存地图失败 [${map.title}]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapSaveFailed(map.title, e),
+      );
       rethrow;
     }
   }
@@ -475,7 +497,12 @@ class VfsMapServiceImpl implements VfsMapService {
           : '$folderPath/$mapTitle:default';
       _layerCache.remove(layerCacheKey);
     } catch (e) {
-      debugPrint('删除地图失败 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapDeletionFailed_7421(
+          mapTitle,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -538,7 +565,11 @@ class VfsMapServiceImpl implements VfsMapService {
       final dataExists = await _storageService.exists(dataPath);
       if (dataExists) {
         await _storageService.delete(dataPath, recursive: true);
-        debugPrint('已递归删除旧的data目录及其所有内容: $dataPath');
+        debugPrint(
+          LocalizationService.instance.current.recursivelyDeletedOldDataDir(
+            dataPath,
+          ),
+        );
       }
 
       // 删除assets目录（递归删除所有子文件和子目录）
@@ -546,10 +577,16 @@ class VfsMapServiceImpl implements VfsMapService {
       final assetsExists = await _storageService.exists(assetsPath);
       if (assetsExists) {
         await _storageService.delete(assetsPath, recursive: true);
-        debugPrint('已递归删除旧的assets目录及其所有内容: $assetsPath');
+        debugPrint(
+          LocalizationService.instance.current.recursivelyDeletedOldAssets(
+            assetsPath,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('删除旧数据目录时出错 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteOldDataError(mapTitle, e),
+      );
       // 继续执行，不抛出异常，因为旧数据不存在是正常情况
     }
   }
@@ -596,7 +633,13 @@ class VfsMapServiceImpl implements VfsMapService {
       _layerCache[cacheKey] = layers;
       return layers;
     } catch (e) {
-      debugPrint('加载图层列表失败 [$mapTitle:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.layerListLoadFailed(
+          mapTitle,
+          version,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -636,9 +679,17 @@ class VfsMapServiceImpl implements VfsMapService {
         final hash = imageConfig['hash'] as String;
         imageData = await getAsset(mapTitle, hash, folderPath);
         if (imageData != null) {
-          debugPrint('图层背景图已从资产系统加载，哈希: $hash (${imageData.length} bytes)');
+          debugPrint(
+            LocalizationService.instance.current.layerBackgroundLoaded(
+              hash,
+              imageData.length,
+            ),
+          );
         } else {
-          debugPrint('警告：无法从资产系统加载图层背景图，哈希: $hash');
+          debugPrint(
+            LocalizationService.instance.current
+                .warningLayerBackgroundLoadFailed(hash),
+          );
         }
       }
 
@@ -674,7 +725,14 @@ class VfsMapServiceImpl implements VfsMapService {
         isLinkedToNext: configJson['isLinkedToNext'] as bool? ?? false,
       );
     } catch (e) {
-      debugPrint('加载图层失败 [$mapTitle/$layerId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.layerLoadingFailed_4821(
+          mapTitle,
+          layerId,
+          version,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -715,7 +773,10 @@ class VfsMapServiceImpl implements VfsMapService {
           'mimeType': 'image/png',
         };
         debugPrint(
-          '图层背景图已保存到资产系统，哈希: $hash (${layer.imageData!.length} bytes)',
+          LocalizationService.instance.current.layerImageSavedToAssets(
+            hash,
+            layer.imageData!.length,
+          ),
         );
       }
 
@@ -748,7 +809,14 @@ class VfsMapServiceImpl implements VfsMapService {
           : '$folderPath/$mapTitle:$version';
       _layerCache.remove(cacheKey);
     } catch (e) {
-      debugPrint('保存图层失败 [$mapTitle/${layer.id}:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.layerSaveFailed_7421(
+          mapTitle,
+          layer.id,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -772,7 +840,14 @@ class VfsMapServiceImpl implements VfsMapService {
           : '$folderPath/$mapTitle:$version';
       _layerCache.remove(cacheKey);
     } catch (e) {
-      debugPrint('删除图层失败 [$mapTitle/$layerId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.layerDeletionFailed(
+          mapTitle,
+          layerId,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -831,7 +906,14 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return elements;
     } catch (e) {
-      debugPrint('加载绘制元素失败 [$mapTitle/$layerId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.failedToLoadDrawingElement(
+          mapTitle,
+          layerId,
+          version,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -871,16 +953,31 @@ class VfsMapServiceImpl implements VfsMapService {
           // 将资产数据恢复到元素的imageData字段
           element = element.copyWith(imageData: imageData);
           debugPrint(
-            '已从资产系统加载图像数据，哈希: ${element.imageHash} (${imageData.length} bytes)',
+            LocalizationService.instance.current.imageDataLoadedFromAssets(
+              element.imageHash ?? 'null',
+              imageData.length,
+            ),
           );
         } else {
-          debugPrint('警告：无法从资产系统加载图像，哈希: ${element.imageHash}');
+          debugPrint(
+            LocalizationService.instance.current.imageLoadWarning(
+              element.imageHash ?? 'null',
+            ),
+          );
         }
       }
 
       return element;
     } catch (e) {
-      debugPrint('加载绘制元素失败 [$mapTitle/$layerId/$elementId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.failedToLoadElement_4821(
+          mapTitle,
+          layerId,
+          elementId,
+          version,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -907,7 +1004,10 @@ class VfsMapServiceImpl implements VfsMapService {
           folderPath,
         );
         debugPrint(
-          '图像已保存到地图资产系统，哈希: $hash (${element.imageData!.length} bytes)',
+          LocalizationService.instance.current.imageSavedToMapAssets(
+            hash,
+            element.imageData!.length,
+          ),
         );
 
         // 创建使用哈希引用而不是直接数据的元素
@@ -924,7 +1024,12 @@ class VfsMapServiceImpl implements VfsMapService {
       final elementJson = jsonEncode(elementToSave.toJson());
       await _storageService.writeFile(elementPath, utf8.encode(elementJson));
     } catch (e) {
-      debugPrint('保存绘制元素失败 [$mapTitle/$layerId/${element.id}:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.saveDrawingElementError_7281(
+          '$mapTitle/$layerId/${element.id}:$version',
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -943,7 +1048,15 @@ class VfsMapServiceImpl implements VfsMapService {
       );
       await _storageService.delete(elementPath);
     } catch (e) {
-      debugPrint('删除绘制元素失败 [$mapTitle/$layerId/$elementId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteElementError_4821(
+          mapTitle,
+          layerId,
+          elementId,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1001,7 +1114,13 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return groups;
     } catch (e) {
-      debugPrint('加载图例组失败[$mapTitle:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupLoadFailed(
+          mapTitle,
+          version,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -1046,7 +1165,13 @@ class VfsMapServiceImpl implements VfsMapService {
         updatedAt: DateTime.parse(configJson['updatedAt'] as String),
       );
     } catch (e) {
-      debugPrint('加载图例组失败[$mapTitle/$groupId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupLoadFailed(
+          mapTitle,
+          version,
+          e.toString(),
+        ),
+      );
       return null;
     }
   }
@@ -1084,7 +1209,14 @@ class VfsMapServiceImpl implements VfsMapService {
         await saveLegendItem(mapTitle, group.id, item, version, folderPath);
       }
     } catch (e) {
-      debugPrint('保存图例组失败[$mapTitle/${group.id}:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.saveLegendGroupFailed(
+          mapTitle,
+          group.id,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1102,7 +1234,14 @@ class VfsMapServiceImpl implements VfsMapService {
       );
       await _storageService.delete(groupPath);
     } catch (e) {
-      debugPrint('删除图例组失败[$mapTitle/$groupId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteLegendGroupFailed(
+          '$mapTitle',
+          '$groupId',
+          '$version',
+          '$e',
+        ),
+      );
       rethrow;
     }
   }
@@ -1116,17 +1255,27 @@ class VfsMapServiceImpl implements VfsMapService {
   ]) async {
     try {
       debugPrint(
-        '开始加载图例组项: mapTitle=$mapTitle, groupId=$groupId, version=$version, folderPath=$folderPath',
+        LocalizationService.instance.current.startLoadingLegendGroup(
+          mapTitle,
+          groupId,
+          version,
+          folderPath ?? 'null',
+        ),
       );
 
       final itemsPath = _buildVfsPath(
         _getLegendItemsPath(mapTitle, groupId, version, folderPath),
       );
-      debugPrint('图例项路径: $itemsPath');
+      debugPrint(
+        LocalizationService.instance.current.legendItemsPath_7285(itemsPath),
+      );
 
       final files = await _storageService.listDirectory(itemsPath);
       debugPrint(
-        '找到 ${files.length} 个文件: ${files.map((f) => f.name).join(', ')}',
+        LocalizationService.instance.current.foundFilesCount_7421(
+          files.length,
+          files.map((f) => f.name).join(', '),
+        ),
       );
 
       final items = <LegendItem>[];
@@ -1134,7 +1283,9 @@ class VfsMapServiceImpl implements VfsMapService {
       for (final file in files) {
         if (file.name.endsWith('.json')) {
           final itemId = file.name.replaceAll('.json', '');
-          debugPrint('正在加载图例项: $itemId');
+          debugPrint(
+            LocalizationService.instance.current.loadingLegendItem(itemId),
+          );
 
           try {
             final item = await getLegendItemById(
@@ -1146,26 +1297,58 @@ class VfsMapServiceImpl implements VfsMapService {
             );
             if (item != null) {
               debugPrint(
-                '成功加载图例项: $itemId, legendPath=${item.legendPath}, legendId=${item.legendId}',
+                LocalizationService.instance.current.legendItemLoaded(
+                  itemId,
+                  item.legendPath,
+                  item.legendId ?? 'null',
+                ),
               );
               items.add(item);
             } else {
-              debugPrint('图例项加载失败: $itemId (返回null)');
+              debugPrint(
+                LocalizationService.instance.current.legendItemLoadFailed(
+                  mapTitle,
+                  groupId,
+                  itemId,
+                  version,
+                  'Item data is null',
+                ),
+              );
             }
           } catch (itemError) {
             debugPrint(
-              '加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $itemError',
+              LocalizationService.instance.current.legendItemLoadFailed(
+                mapTitle,
+                groupId,
+                itemId,
+                version,
+                itemError.toString(),
+              ),
             );
           }
         } else {
-          debugPrint('跳过非JSON文件: ${file.name}');
+          debugPrint(
+            LocalizationService.instance.current.skippingNonJsonFile(file.name),
+          );
         }
       }
 
-      debugPrint('图例组项加载完成: 共 ${items.length} 个项目');
+      debugPrint(
+        LocalizationService.instance.current.legendGroupItemsLoaded(
+          items.length,
+        ),
+      );
       return items;
     } catch (e) {
-      debugPrint('加载图例项失败[$mapTitle/$groupId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendItemLoadFailed(
+          mapTitle,
+          groupId,
+          'unknown',
+          version,
+          e.toString(),
+        ),
+      );
       return [];
     }
   }
@@ -1180,34 +1363,62 @@ class VfsMapServiceImpl implements VfsMapService {
   ]) async {
     try {
       debugPrint(
-        '开始加载图例项: mapTitle=$mapTitle, groupId=$groupId, itemId=$itemId, version=$version, folderPath=$folderPath',
+        LocalizationService.instance.current.startLoadingLegendItems_7421(
+          mapTitle,
+          groupId,
+          itemId,
+          version,
+          folderPath ?? 'null',
+        ),
       );
 
       final itemPath = _buildVfsPath(
         _getLegendItemPath(mapTitle, groupId, itemId, version, folderPath),
       );
-      debugPrint('图例项文件路径: $itemPath');
+      debugPrint(
+        LocalizationService.instance.current.legendItemFilePath(itemPath),
+      );
 
       final itemData = await _storageService.readFile(itemPath);
 
       if (itemData == null) {
-        debugPrint('图例项文件不存在: $itemPath');
+        debugPrint(
+          LocalizationService.instance.current.legendItemNotFound(itemPath),
+        );
         return null;
       }
 
-      debugPrint('图例项JSON数据大小: ${itemData.data.length} bytes');
+      debugPrint(
+        LocalizationService.instance.current.legendItemJsonSize(
+          itemData.data.length,
+        ),
+      );
       final itemJson =
           jsonDecode(utf8.decode(itemData.data)) as Map<String, dynamic>;
-      debugPrint('图例项JSON内容: $itemJson');
+      debugPrint(
+        LocalizationService.instance.current.legendItemJsonContent(itemJson),
+      );
 
       final item = LegendItem.fromJson(itemJson);
       debugPrint(
-        '成功解析图例项: id=${item.id}, legendPath=${item.legendPath}, legendId=${item.legendId}',
+        LocalizationService.instance.current.legendItemParsedSuccessfully(
+          item.id,
+          item.legendPath,
+          item.legendId ?? 'null',
+        ),
       );
 
       return item;
     } catch (e) {
-      debugPrint('加载图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendItemLoadFailed(
+          mapTitle,
+          groupId,
+          itemId,
+          version,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1233,7 +1444,15 @@ class VfsMapServiceImpl implements VfsMapService {
       final itemJson = jsonEncode(item.toJson());
       await _storageService.writeFile(itemPath, utf8.encode(itemJson));
     } catch (e) {
-      debugPrint('保存图例项失败[$mapTitle/$groupId/${item.id}:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendItemSaveFailed(
+          mapTitle,
+          groupId,
+          item.id,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1252,7 +1471,15 @@ class VfsMapServiceImpl implements VfsMapService {
       );
       await _storageService.delete(itemPath);
     } catch (e) {
-      debugPrint('删除图例项失败[$mapTitle/$groupId/$itemId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.legendItemDeletionFailed_4827(
+          mapTitle,
+          groupId,
+          itemId,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1294,11 +1521,18 @@ class VfsMapServiceImpl implements VfsMapService {
                     backgroundImageData: imageData,
                   );
                   debugPrint(
-                    '便签背景图片已从资产系统加载，哈希: ${stickyNote.backgroundImageHash} (${imageData.length} bytes)',
+                    LocalizationService.instance.current
+                        .stickyNoteBackgroundLoaded(
+                          stickyNote.backgroundImageHash ?? 'null',
+                          imageData.length,
+                        ),
                   );
                 } else {
                   debugPrint(
-                    '警告：无法从资产系统加载便签背景图片，哈希: ${stickyNote.backgroundImageHash}',
+                    LocalizationService.instance.current
+                        .warningFailedToLoadStickyNoteBackground_7285(
+                          stickyNote.backgroundImageHash ?? 'null',
+                        ),
                   );
                 }
               }
@@ -1322,11 +1556,16 @@ class VfsMapServiceImpl implements VfsMapService {
                       // 将资产数据恢复到元素的imageData字段
                       restoredElement = element.copyWith(imageData: imageData);
                       debugPrint(
-                        '便签绘画元素图像已从资产系统加载，哈希: ${element.imageHash} (${imageData.length} bytes)',
+                        LocalizationService.instance.current
+                            .noteDrawingElementLoaded(
+                              element.imageHash ?? 'null',
+                              imageData.length,
+                            ),
                       );
                     } else {
                       debugPrint(
-                        '警告：无法从资产系统加载便签绘画元素图像，哈希: ${element.imageHash}',
+                        LocalizationService.instance.current
+                            .warningCannotLoadStickerImage(element.imageHash ?? 'null'),
                       );
                     }
                   }
@@ -1340,7 +1579,12 @@ class VfsMapServiceImpl implements VfsMapService {
 
               stickyNotes.add(stickyNote);
             } catch (e) {
-              debugPrint('解析便签数据失败 [${file.path}]: $e');
+              debugPrint(
+                LocalizationService.instance.current.parseNoteDataFailed(
+                  file.path,
+                  e,
+                ),
+              );
             }
           }
         }
@@ -1350,7 +1594,13 @@ class VfsMapServiceImpl implements VfsMapService {
       stickyNotes.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       return stickyNotes;
     } catch (e) {
-      debugPrint('加载便签数据失败 [$mapTitle:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.loadNoteDataFailed(
+          mapTitle,
+          version,
+          e,
+        ),
+      );
       return [];
     }
   }
@@ -1377,7 +1627,10 @@ class VfsMapServiceImpl implements VfsMapService {
           folderPath,
         );
         debugPrint(
-          '便签背景图片已保存到资产系统，哈希: $hash (${stickyNote.backgroundImageData!.length} bytes)',
+          LocalizationService.instance.current.stickyNoteBackgroundSaved(
+            hash,
+            stickyNote.backgroundImageData!.length,
+          ),
         );
 
         // 创建用于磁盘存储的便签副本（使用哈希引用，清除直接数据以节省空间）
@@ -1404,7 +1657,10 @@ class VfsMapServiceImpl implements VfsMapService {
               folderPath,
             );
             debugPrint(
-              '便签绘画元素图像已保存到资产系统，哈希: $hash (${element.imageData!.length} bytes)',
+              LocalizationService.instance.current.noteDrawingElementSaved(
+                hash,
+                element.imageData!.length,
+              ),
             );
 
             // 创建使用哈希引用而不是直接数据的元素（用于磁盘存储）
@@ -1429,9 +1685,22 @@ class VfsMapServiceImpl implements VfsMapService {
         stickyNotePath,
         utf8.encode(stickyNoteJson),
       );
-      debugPrint('便签数据已保存 [$mapTitle/${stickyNote.id}:$version]');
+      debugPrint(
+        LocalizationService.instance.current.stickyNoteSaved(
+          mapTitle,
+          stickyNote.id,
+          version,
+        ),
+      );
     } catch (e) {
-      debugPrint('保存便签数据失败 [$mapTitle/${stickyNote.id}:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.saveStickyNoteError(
+          mapTitle,
+          stickyNote.id,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1448,9 +1717,22 @@ class VfsMapServiceImpl implements VfsMapService {
         _getStickyNotePath(mapTitle, stickyNoteId, version, folderPath),
       );
       await _storageService.delete(stickyNotePath);
-      debugPrint('便签数据已删除 [$mapTitle/$stickyNoteId:$version]');
+      debugPrint(
+        LocalizationService.instance.current.stickyNoteDeleted(
+          mapTitle,
+          stickyNoteId,
+          version,
+        ),
+      );
     } catch (e) {
-      debugPrint('删除便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteStickyNoteError_7425(
+          mapTitle,
+          stickyNoteId,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1488,11 +1770,17 @@ class VfsMapServiceImpl implements VfsMapService {
           // 将资产数据恢复到便签的backgroundImageData字段
           stickyNote = stickyNote.copyWith(backgroundImageData: imageData);
           debugPrint(
-            '便签背景图片已从资产系统加载，哈希: ${stickyNote.backgroundImageHash} (${imageData.length} bytes)',
+            LocalizationService.instance.current.stickyNoteBackgroundLoaded(
+              stickyNote.backgroundImageHash ?? 'null',
+              imageData.length,
+            ),
           );
         } else {
           debugPrint(
-            '警告：无法从资产系统加载便签背景图片，哈希: ${stickyNote.backgroundImageHash}',
+            LocalizationService.instance.current
+                .warningCannotLoadStickyNoteBackground(
+                  stickyNote.backgroundImageHash ?? 'null',
+                ),
           );
         }
       }
@@ -1515,10 +1803,18 @@ class VfsMapServiceImpl implements VfsMapService {
               // 将资产数据恢复到元素的imageData字段
               restoredElement = element.copyWith(imageData: imageData);
               debugPrint(
-                '便签绘画元素图像已从资产系统加载，哈希: ${element.imageHash} (${imageData.length} bytes)',
+                LocalizationService.instance.current.noteDrawingElementLoaded(
+                  element.imageHash ?? 'unknown',
+                  imageData.length,
+                ),
               );
             } else {
-              debugPrint('警告：无法从资产系统加载便签绘画元素图像，哈希: ${element.imageHash}');
+              debugPrint(
+                LocalizationService.instance.current
+                    .warningFailedToLoadNoteDrawingElement(
+                      element.imageHash ?? 'unknown',
+                    ),
+              );
             }
           }
 
@@ -1531,7 +1827,14 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return stickyNote;
     } catch (e) {
-      debugPrint('加载便签数据失败 [$mapTitle/$stickyNoteId:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.loadStickyNoteError_4827(
+          mapTitle,
+          stickyNoteId,
+          version,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1557,7 +1860,9 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return versions;
     } catch (e) {
-      debugPrint('获取地图版本失败 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapVersionFetchFailed(mapTitle, e),
+      );
       return [];
     }
   }
@@ -1571,7 +1876,9 @@ class VfsMapServiceImpl implements VfsMapService {
   ]) async {
     try {
       if (await mapVersionExists(mapTitle, version, folderPath)) {
-        throw Exception('版本已存在: $version');
+        throw Exception(
+          LocalizationService.instance.current.versionExists_7284(version),
+        );
       }
       // 如果 sourceVersion 为 null，创建空的版本目录
       if (sourceVersion == null) {
@@ -1579,14 +1886,29 @@ class VfsMapServiceImpl implements VfsMapService {
           '${_getMapPath(mapTitle, folderPath)}/data/$version',
         );
         await _storageService.createDirectory(versionPath);
-        debugPrint('创建空版本目录: $version');
+        debugPrint(
+          LocalizationService.instance.current.createEmptyVersionDirectory(
+            version,
+          ),
+        );
       } else {
         // 否则从指定源版本复制数据
         await copyVersionData(mapTitle, sourceVersion, version, folderPath);
-        debugPrint('从版本 $sourceVersion 复制数据到版本 $version');
+        debugPrint(
+          LocalizationService.instance.current.copyDataFromVersion(
+            sourceVersion,
+            version,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('创建地图版本失败 [$mapTitle:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapVersionCreationFailed_7421(
+          mapTitle,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1599,7 +1921,9 @@ class VfsMapServiceImpl implements VfsMapService {
   ]) async {
     try {
       if (version == 'default') {
-        throw Exception('无法删除默认版本');
+        throw Exception(
+          LocalizationService.instance.current.cannotDeleteDefaultVersion_4271,
+        );
       }
 
       final versionPath = _buildVfsPath(
@@ -1607,7 +1931,13 @@ class VfsMapServiceImpl implements VfsMapService {
       );
       await _storageService.delete(versionPath, recursive: true);
     } catch (e) {
-      debugPrint('删除地图版本失败 [$mapTitle:$version]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapVersionDeletionFailed_7421(
+          mapTitle,
+          version,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1646,7 +1976,14 @@ class VfsMapServiceImpl implements VfsMapService {
       // 递归复制整个版本目录
       await _copyDirectory(sourcePath, targetPath);
     } catch (e) {
-      debugPrint('复制版本数据失败 [$mapTitle:$sourceVersion->$targetVersion]: $e');
+      debugPrint(
+        LocalizationService.instance.current.copyVersionDataFailed(
+          mapTitle,
+          sourceVersion,
+          targetVersion,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1677,7 +2014,9 @@ class VfsMapServiceImpl implements VfsMapService {
         }
       } catch (e) {
         // 文件不存在或解析失败，使用空元数据
-        debugPrint('读取版本元数据失败，将创建新文件: $e');
+        debugPrint(
+          LocalizationService.instance.current.versionMetadataReadFailed(e),
+        );
       }
 
       final now = DateTime.now();
@@ -1691,9 +2030,21 @@ class VfsMapServiceImpl implements VfsMapService {
       final metadataJson = jsonEncode(metadata);
       await _storageService.writeFile(metadataPath, utf8.encode(metadataJson));
 
-      debugPrint('保存版本元数据成功 [$mapTitle:$versionId -> $versionName]');
+      debugPrint(
+        LocalizationService.instance.current.versionMetadataSaved_7281(
+          mapTitle,
+          versionId,
+          versionName,
+        ),
+      );
     } catch (e) {
-      debugPrint('保存版本元数据失败 [$mapTitle:$versionId]: $e');
+      debugPrint(
+        LocalizationService.instance.current.versionMetadataSaveFailed(
+          mapTitle,
+          versionId,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1718,7 +2069,13 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return versionInfo?['name'] as String?;
     } catch (e) {
-      debugPrint('获取版本名称失败 [$mapTitle:$versionId]: $e');
+      debugPrint(
+        LocalizationService.instance.current.versionFetchFailed(
+          mapTitle,
+          versionId,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1747,7 +2104,12 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return versionNames;
     } catch (e) {
-      debugPrint('获取所有版本名称失败 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchVersionNamesFailed(
+          mapTitle,
+          e,
+        ),
+      );
       return {};
     }
   }
@@ -1774,9 +2136,19 @@ class VfsMapServiceImpl implements VfsMapService {
       final metadataJson = jsonEncode(metadata);
       await _storageService.writeFile(metadataPath, utf8.encode(metadataJson));
 
-      debugPrint('删除版本元数据成功 [$mapTitle:$versionId]');
+      debugPrint(
+        LocalizationService.instance.current.versionMetadataDeletedSuccessfully(
+          '$mapTitle:$versionId',
+        ),
+      );
     } catch (e) {
-      debugPrint('删除版本元数据失败 [$mapTitle:$versionId]: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteVersionMetadataFailed(
+          mapTitle,
+          versionId,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1807,7 +2179,13 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return fileContent?.data;
     } catch (e) {
-      debugPrint('获取资产失败 [$mapTitle/$hash]: $e');
+      debugPrint(
+        LocalizationService.instance.current.assetFetchFailed(
+          mapTitle,
+          hash,
+          e,
+        ),
+      );
       return null;
     }
   }
@@ -1833,7 +2211,13 @@ class VfsMapServiceImpl implements VfsMapService {
 
       _assetHashIndex.remove(hash);
     } catch (e) {
-      debugPrint('删除资产失败 [$mapTitle/$hash]: $e');
+      debugPrint(
+        LocalizationService.instance.current.assetDeletionFailed_7425(
+          mapTitle,
+          hash,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1876,7 +2260,12 @@ class VfsMapServiceImpl implements VfsMapService {
               as Map<String, dynamic>;
       return Map<String, String>.from(localizationJson);
     } catch (e) {
-      debugPrint('获取地图本地化失败[$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapLocalizationFailed_7421(
+          mapTitle,
+          e,
+        ),
+      );
       return {};
     }
   }
@@ -1897,7 +2286,12 @@ class VfsMapServiceImpl implements VfsMapService {
         utf8.encode(localizationJson),
       );
     } catch (e) {
-      debugPrint('保存地图本地化失败[$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapLocalizationFailed_7421(
+          mapTitle,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -1955,7 +2349,11 @@ class VfsMapServiceImpl implements VfsMapService {
       // 检查源目录是否存在
       final sourceExists = await _storageService.exists(sourcePath);
       if (!sourceExists) {
-        debugPrint('源目录不存在: $sourcePath');
+        debugPrint(
+          LocalizationService.instance.current.sourceDirectoryNotExist_7285(
+            sourcePath,
+          ),
+        );
         return;
       }
 
@@ -1978,9 +2376,20 @@ class VfsMapServiceImpl implements VfsMapService {
         }
       }
 
-      debugPrint('目录复制完成: $sourcePath -> $targetPath');
+      debugPrint(
+        LocalizationService.instance.current.directoryCopyComplete(
+          sourcePath,
+          targetPath,
+        ),
+      );
     } catch (e) {
-      debugPrint('复制目录失败 [$sourcePath -> $targetPath]: $e');
+      debugPrint(
+        LocalizationService.instance.current.copyDirectoryFailed(
+          sourcePath,
+          targetPath,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -2022,7 +2431,9 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return folders;
     } catch (e) {
-      debugPrint('获取文件夹列表失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchFolderListFailed_4821(e),
+      );
       return [];
     }
   }
@@ -2036,7 +2447,12 @@ class VfsMapServiceImpl implements VfsMapService {
       // 确保文件夹存在（VFS会自动创建父目录）
       await _storageService.writeFile('$vfsPath/.keep', utf8.encode(''));
     } catch (e) {
-      debugPrint('创建文件夹失败 [$folderPath]: $e');
+      debugPrint(
+        LocalizationService.instance.current.folderCreationFailed_7421(
+          e,
+          folderPath,
+        ),
+      );
       rethrow;
     }
   }
@@ -2049,7 +2465,12 @@ class VfsMapServiceImpl implements VfsMapService {
 
       await _storageService.delete(vfsPath, recursive: true);
     } catch (e) {
-      debugPrint('删除文件夹失败 [$folderPath]: $e');
+      debugPrint(
+        LocalizationService.instance.current.folderDeletionFailed(
+          folderPath,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -2065,21 +2486,38 @@ class VfsMapServiceImpl implements VfsMapService {
       // 检查旧路径是否存在
       final oldExists = await _storageService.exists(oldVfsPath);
       if (!oldExists) {
-        throw Exception('源文件夹不存在: $oldPath');
+        throw Exception(
+          LocalizationService.instance.current.sourceFolderNotExist_7285(
+            oldPath,
+          ),
+        );
       }
 
       // 检查新路径是否已存在
       final newExists = await _storageService.exists(newVfsPath);
       if (newExists) {
-        throw Exception('目标文件夹已存在: $newPath');
+        throw Exception(
+          LocalizationService.instance.current.targetFolderExists(newPath),
+        );
       }
 
       // 使用VFS的move方法重命名文件夹
       await _storageService.move(oldVfsPath, newVfsPath);
 
-      debugPrint('文件夹重命名成功: $oldPath -> $newPath');
+      debugPrint(
+        LocalizationService.instance.current.folderRenameSuccess_4827(
+          oldPath,
+          newPath,
+        ),
+      );
     } catch (e) {
-      debugPrint('重命名文件夹失败 [$oldPath -> $newPath]: $e');
+      debugPrint(
+        LocalizationService.instance.current.renameFolderFailed(
+          oldPath,
+          newPath,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -2094,7 +2532,9 @@ class VfsMapServiceImpl implements VfsMapService {
       // 1. 从原位置加载地图
       final map = await getMapByTitle(mapTitle, fromFolder);
       if (map == null) {
-        throw Exception('找不到地图: $mapTitle');
+        throw Exception(
+          LocalizationService.instance.current.mapNotFoundError(mapTitle),
+        );
       }
 
       // 2. 保存到新位置
@@ -2103,7 +2543,9 @@ class VfsMapServiceImpl implements VfsMapService {
       // 3. 删除原位置的地图
       await deleteMap(mapTitle, fromFolder);
     } catch (e) {
-      debugPrint('移动地图失败 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapMoveFailed(mapTitle, e),
+      );
       rethrow;
     }
   }
@@ -2147,9 +2589,20 @@ class VfsMapServiceImpl implements VfsMapService {
       if (existingData == null) {
         // 保存新资产文件
         await _storageService.writeFile(assetPath, data);
-        debugPrint('保存新图像资产到地图 [$mapTitle]: $filename (${data.length} bytes)');
+        debugPrint(
+          LocalizationService.instance.current.saveImageAssetToMap(
+            mapTitle,
+            filename,
+            data.length,
+          ),
+        );
       } else {
-        debugPrint('图像资产已在地图 [$mapTitle] 中存在，跳过保存: $filename');
+        debugPrint(
+          LocalizationService.instance.current.imageAssetExistsOnMap_7421(
+            mapTitle,
+            filename,
+          ),
+        );
       }
 
       // 更新哈希索引
@@ -2157,7 +2610,7 @@ class VfsMapServiceImpl implements VfsMapService {
 
       return hash;
     } catch (e) {
-      debugPrint('保存资产失败: $e');
+      debugPrint(LocalizationService.instance.current.saveAssetFailed_7281(e));
       rethrow;
     }
   }
@@ -2173,14 +2626,18 @@ class VfsMapServiceImpl implements VfsMapService {
       final newMapDataPath = _buildVfsPath(_getMapPath(newTitle, folderPath));
       final newMapDataExists = await _storageService.exists(newMapDataPath);
       if (newMapDataExists) {
-        throw Exception('地图标题 "$newTitle" 已存在');
+        throw Exception(
+          LocalizationService.instance.current.duplicateMapTitle(newTitle),
+        );
       }
 
       // 2. 获取旧地图路径
       final oldMapDataPath = _buildVfsPath(_getMapPath(oldTitle, folderPath));
       final oldMapDataExists = await _storageService.exists(oldMapDataPath);
       if (!oldMapDataExists) {
-        throw Exception('找不到地图: $oldTitle');
+        throw Exception(
+          LocalizationService.instance.current.mapNotFoundError_7285(oldTitle),
+        );
       }
 
       // 3. 读取并更新JSON元数据
@@ -2221,9 +2678,20 @@ class VfsMapServiceImpl implements VfsMapService {
       _layerCache.remove(oldLayerCacheKey);
       _layerCache.remove(newLayerCacheKey);
 
-      debugPrint('地图重命名成功: $oldTitle -> $newTitle');
+      debugPrint(
+        LocalizationService.instance.current.mapRenameSuccess_7285(
+          oldTitle,
+          newTitle,
+        ),
+      );
     } catch (e) {
-      debugPrint('重命名地图失败 [$oldTitle -> $newTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.renameMapFailed(
+          oldTitle,
+          newTitle,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -2239,7 +2707,9 @@ class VfsMapServiceImpl implements VfsMapService {
       final mapDataPath = _buildVfsPath(_getMapPath(mapTitle, folderPath));
       final mapDataExists = await _storageService.exists(mapDataPath);
       if (!mapDataExists) {
-        throw Exception('找不到地图: $mapTitle');
+        throw Exception(
+          LocalizationService.instance.current.mapNotFoundError(mapTitle),
+        );
       }
 
       // 2. 直接保存新的封面图片文件
@@ -2264,9 +2734,15 @@ class VfsMapServiceImpl implements VfsMapService {
       final cacheKey = folderPath == null ? mapTitle : '$folderPath/$mapTitle';
       _mapCache.remove(cacheKey);
 
-      debugPrint('地图封面更新成功: $mapTitle');
+      debugPrint(
+        LocalizationService.instance.current.mapCoverUpdatedSuccessfully(
+          mapTitle,
+        ),
+      );
     } catch (e) {
-      debugPrint('更新地图封面失败 [$mapTitle]: $e');
+      debugPrint(
+        LocalizationService.instance.current.mapCoverUpdateFailed(mapTitle, e),
+      );
       rethrow;
     }
   }

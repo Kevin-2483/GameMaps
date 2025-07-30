@@ -1,5 +1,6 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:markdown_widget/markdown_widget.dart';
@@ -16,6 +17,8 @@ import 'video_processor.dart';
 import 'audio_processor.dart';
 import 'media_kit_video_player.dart';
 import '../../../services/notification/notification_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// Markdown渲染器配置
 class MarkdownRendererConfig {
@@ -153,10 +156,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 清理VFS临时文件
     VfsServiceProvider.cleanupTempFiles()
         .then((_) {
-          debugPrint('🔗 VfsMarkdownRenderer: 已清理临时文件');
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .vfsMarkdownRendererCleanedTempFiles_7281,
+          );
         })
         .catchError((e) {
-          debugPrint('🔗 VfsMarkdownRenderer: 清理临时文件失败 - $e');
+          debugPrint(
+            '🔗 VfsMarkdownRenderer: ${LocalizationService.instance.current.tempFileCleanupFailed_4821} - $e',
+          );
         });
     _audioUuidMap.clear();
     _tocController.dispose();
@@ -180,26 +190,34 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           textContent = latin1.decode(fileContent.data);
         } // 如果启用HTML渲染，预处理HTML内容
         if (_enableHtmlRendering && HtmlProcessor.containsHtml(textContent)) {
-          debugPrint('🔧 _loadMarkdownFile: 预处理HTML内容');
+          debugPrint(
+            LocalizationService.instance.current.preprocessHtmlContent_7281,
+          );
           textContent = _preprocessHtmlContent(textContent);
         }
 
         // 如果启用LaTeX渲染，预处理LaTeX内容
         if (_enableLatexRendering &&
             LatexProcessor.containsLatex(textContent)) {
-          debugPrint('🔧 _loadMarkdownFile: 预处理LaTeX内容');
+          debugPrint(
+            LocalizationService.instance.current.preprocessLatexContent_7281,
+          );
           textContent = _preprocessLatexContent(textContent);
         } // 如果启用视频渲染，预处理视频内容
         if (_enableVideoRendering &&
             VideoProcessor.containsVideo(textContent)) {
-          debugPrint('🎥 _loadMarkdownFile: 预处理视频内容');
+          debugPrint(
+            LocalizationService.instance.current.preprocessVideoContent_7281,
+          );
           textContent = _preprocessVideoContent(textContent);
         }
 
         // 如果启用音频渲染，预处理音频内容
         if (_enableAudioRendering &&
             AudioProcessor.containsAudio(textContent)) {
-          debugPrint('🎵 _loadMarkdownFile: 预处理音频内容');
+          debugPrint(
+            LocalizationService.instance.current.preprocessAudioContent_7281,
+          );
           textContent = _preprocessAudioContent(textContent);
         }
 
@@ -209,7 +227,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         for (final src in audioSources) {
           _audioUuidMap[src] = const Uuid().v4();
         }
-        debugPrint('🎵 渲染器: _audioUuidMap=$_audioUuidMap');
+        debugPrint(
+          '🎵 ${LocalizationService.instance.current.rendererAudioUuidMap_4821}=$_audioUuidMap',
+        );
 
         setState(() {
           _markdownContent = textContent;
@@ -220,7 +240,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         // 通知加载完成
         widget.onLoaded?.call();
       } else {
-        final error = '无法读取Markdown文件';
+        final error =
+            LocalizationService.instance.current.markdownReadError_4821;
         setState(() {
           _errorMessage = error;
           _isLoading = false;
@@ -228,7 +249,8 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         widget.onError?.call(error);
       }
     } catch (e) {
-      final error = '加载Markdown文件失败: $e';
+      final error = LocalizationService.instance.current
+          .markdownLoadFailed_7421(e);
       setState(() {
         _errorMessage = error;
         _isLoading = false;
@@ -292,7 +314,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _toggleToc,
         icon: Icon(_showToc ? Icons.menu_open : Icons.menu),
-        tooltip: _showToc ? '隐藏目录' : '显示目录',
+        tooltip: _showToc
+            ? LocalizationService.instance.current.hideToc_4821
+            : LocalizationService.instance.current.showToc_7532,
       ),
 
       const SizedBox(width: 16),
@@ -302,15 +326,21 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         onPressed: _toggleTheme,
         icon: Icon(_effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode),
         tooltip: _isDarkTheme == null
-            ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
-            : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
+            ? (_effectiveIsDarkTheme
+                  ? LocalizationService.instance.current.autoThemeDark
+                  : LocalizationService.instance.current.autoThemeLight)
+            : (_effectiveIsDarkTheme
+                  ? LocalizationService.instance.current.lightTheme_5421
+                  : LocalizationService.instance.current.darkTheme_7632),
       ),
 
       const SizedBox(width: 16), // HTML渲染切换
       IconButton(
         onPressed: _toggleHtmlRendering,
         icon: Icon(_enableHtmlRendering ? Icons.code : Icons.code_off),
-        tooltip: _enableHtmlRendering ? '禁用HTML渲染' : '启用HTML渲染',
+        tooltip: _enableHtmlRendering
+            ? LocalizationService.instance.current.disableHtmlRendering_4721
+            : LocalizationService.instance.current.enableHtmlRendering_5832,
         style: IconButton.styleFrom(
           foregroundColor: _enableHtmlRendering
               ? Theme.of(context).colorScheme.primary
@@ -324,7 +354,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         icon: Icon(
           _enableLatexRendering ? Icons.functions : Icons.functions_outlined,
         ),
-        tooltip: _enableLatexRendering ? '禁用LaTeX渲染' : '启用LaTeX渲染',
+        tooltip: _enableLatexRendering
+            ? LocalizationService.instance.current.disableLatexRendering_4821
+            : LocalizationService.instance.current.enableLatexRendering_4822,
         style: IconButton.styleFrom(
           foregroundColor: _enableLatexRendering
               ? Theme.of(context).colorScheme.primary
@@ -336,7 +368,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _toggleVideoRendering,
         icon: Icon(_enableVideoRendering ? Icons.videocam : Icons.videocam_off),
-        tooltip: _enableVideoRendering ? '禁用视频渲染' : '启用视频渲染',
+        tooltip: _enableVideoRendering
+            ? LocalizationService.instance.current.disableVideoRendering_4821
+            : LocalizationService.instance.current.enableVideoRendering_4822,
         style: IconButton.styleFrom(
           foregroundColor: _enableVideoRendering
               ? Theme.of(context).colorScheme.primary
@@ -352,7 +386,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         icon: Icon(
           _enableAudioRendering ? Icons.audiotrack : Icons.audiotrack_outlined,
         ),
-        tooltip: _enableAudioRendering ? '禁用音频渲染' : '启用音频渲染',
+        tooltip: _enableAudioRendering
+            ? LocalizationService.instance.current.disableAudioRendering_4821
+            : LocalizationService.instance.current.enableAudioRendering_4821,
         style: IconButton.styleFrom(
           foregroundColor: _enableAudioRendering
               ? Theme.of(context).colorScheme.primary
@@ -368,7 +404,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _canZoomOut() ? _zoomOut : null,
         icon: const Icon(Icons.zoom_out),
-        tooltip: '缩小',
+        tooltip: LocalizationService.instance.current.zoomOutTooltip_7281,
       ),
       Text(
         '${(_contentScale * 100).toInt()}%',
@@ -377,7 +413,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _canZoomIn() ? _zoomIn : null,
         icon: const Icon(Icons.zoom_in),
-        tooltip: '放大',
+        tooltip: LocalizationService.instance.current.zoomInTooltip_4821,
       ),
 
       const SizedBox(width: 16),
@@ -386,7 +422,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       IconButton(
         onPressed: _resetZoom,
         icon: const Icon(Icons.crop_free),
-        tooltip: '重置缩放',
+        tooltip: LocalizationService.instance.current.resetZoomTooltip_4821,
       ),
     ];
   }
@@ -399,13 +435,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         IconButton(
           onPressed: _showHtmlInfo,
           icon: const Icon(Icons.info_outline),
-          tooltip: 'HTML信息',
+          tooltip: LocalizationService.instance.current.htmlInfo_7421,
         ), // LaTeX信息按钮（如果包含LaTeX）
       if (_containsLatex())
         IconButton(
           onPressed: _showLatexInfo,
           icon: const Icon(Icons.analytics_outlined),
-          tooltip: 'LaTeX信息',
+          tooltip: LocalizationService.instance.current.latexInfoTooltip_7281,
         ),
 
       // 视频信息按钮（如果包含视频）
@@ -413,7 +449,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         IconButton(
           onPressed: _showVideoInfo,
           icon: const Icon(Icons.videocam_outlined),
-          tooltip: '视频信息',
+          tooltip: LocalizationService.instance.current.videoInfo_7421,
         ),
 
       // 音频信息按钮（如果包含音频）
@@ -421,28 +457,28 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         IconButton(
           onPressed: _showAudioInfo,
           icon: const Icon(Icons.audiotrack),
-          tooltip: '音频信息',
+          tooltip: LocalizationService.instance.current.audioInfo_7421,
         ),
 
       // 使用文本编辑器打开
       IconButton(
         onPressed: _openWithTextEditor,
         icon: const Icon(Icons.edit),
-        tooltip: '使用文本编辑器打开',
+        tooltip: LocalizationService.instance.current.openWithTextEditor_7421,
       ),
 
       // 复制按钮
       IconButton(
         onPressed: _copyContent,
         icon: const Icon(Icons.copy),
-        tooltip: '复制Markdown内容',
+        tooltip: LocalizationService.instance.current.copyMarkdownContent_7281,
       ),
 
       // 刷新按钮
       IconButton(
         onPressed: _loadMarkdownFile,
         icon: const Icon(Icons.refresh),
-        tooltip: '刷新',
+        tooltip: LocalizationService.instance.current.refreshButton_7421,
       ),
     ];
   }
@@ -450,13 +486,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   /// 构建内容区域
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('加载Markdown文件中...'),
+            Text(LocalizationService.instance.current.loadingMarkdownFile_7421),
           ],
         ),
       );
@@ -477,7 +513,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadMarkdownFile,
-              child: const Text('重试'),
+              child: Text(LocalizationService.instance.current.retry_4821),
             ),
           ],
         ),
@@ -485,13 +521,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     }
 
     if (_markdownContent.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.description, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('Markdown文件为空'),
+            Text(LocalizationService.instance.current.markdownFileEmpty_7281),
           ],
         ),
       );
@@ -519,7 +555,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '目录',
+            LocalizationService.instance.current.catalogTitle_4821,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -533,7 +569,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
   /// 构建Markdown内容
   Widget _buildMarkdownContent() {
-    debugPrint('🔧 _buildMarkdownContent: 开始构建');
+    debugPrint(LocalizationService.instance.current.buildMarkdownStart_7283);
     debugPrint(
       '🔧 _buildMarkdownContent: _enableVideoRendering = $_enableVideoRendering',
     );
@@ -557,14 +593,18 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       generators.add(LatexProcessor.createGenerator());
     } // 添加视频支持
     if (_enableVideoRendering) {
-      debugPrint('🎥 _buildMarkdownContent: 添加视频语法解析器和生成器');
+      debugPrint(
+        LocalizationService.instance.current.videoSyntaxParserAdded_7281,
+      );
       inlineSyntaxList.add(VideoProcessor.createSyntax());
       generators.add(VideoProcessor.createGenerator());
     }
 
     // 添加音频支持
     if (_enableAudioRendering) {
-      debugPrint('🎵 _buildMarkdownContent: 添加音频语法解析器和生成器');
+      debugPrint(
+        LocalizationService.instance.current.audioSyntaxParserAdded_7281,
+      );
       inlineSyntaxList.add(AudioProcessor.createSyntax());
       generators.add(AudioProcessor.createGenerator(_audioUuidMap));
     }
@@ -572,7 +612,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     // 如果有任何自定义生成器或语法，创建MarkdownGenerator
     if (generators.isNotEmpty || inlineSyntaxList.isNotEmpty) {
       debugPrint(
-        '🔧 _buildMarkdownContent: 创建MarkdownGenerator - generators: ${generators.length}, syntaxes: ${inlineSyntaxList.length}',
+        LocalizationService.instance.current.markdownGeneratorCreation(
+          generators.length,
+          inlineSyntaxList.length,
+        ),
       );
       markdownGenerator = MarkdownGenerator(
         inlineSyntaxList: inlineSyntaxList,
@@ -868,18 +911,27 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             border: Border(
               top: BorderSide(color: Theme.of(context).dividerColor),
             ),
           ),
       child: Row(
         children: [
-          Text('行数: $lineCount', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            LocalizationService.instance.current.lineCountText(lineCount),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(width: 16),
-          Text('字数: $wordCount', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            LocalizationService.instance.current.wordCountLabel(wordCount),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(width: 16),
-          Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            LocalizationService.instance.current.characterCount_7421(charCount),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           // 显示HTML信息
           if (htmlStats['hasHtml'] == true) ...[
             const SizedBox(width: 16),
@@ -906,7 +958,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'HTML${_enableHtmlRendering ? '' : '(禁用)'}',
+                    LocalizationService.instance.current.htmlStatusLabel_4821(
+                      _enableHtmlRendering ? '' : '(禁用)',
+                    ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableHtmlRendering
                           ? Colors.green
@@ -921,7 +975,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 htmlStats['linkCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
-                '链接: ${htmlStats['linkCount']}',
+                LocalizationService.instance.current.linkCount_7281(
+                  htmlStats['linkCount'],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -929,7 +985,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 htmlStats['imageCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
-                '图片: ${htmlStats['imageCount']}',
+                LocalizationService.instance.current.imageCountText_7281(
+                  htmlStats['imageCount'],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -963,7 +1021,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'LaTeX${_enableLatexRendering ? '' : '(禁用)'}',
+                    'LaTeX${_enableLatexRendering ? '' : LocalizationService.instance.current.latexDisabled_7421}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableLatexRendering
                           ? Colors.blue
@@ -978,7 +1036,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 latexStats['totalCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
-                '公式: ${latexStats['totalCount']}',
+                LocalizationService.instance.current.formulaWithCount_7421(
+                  latexStats['totalCount'],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1012,7 +1072,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '视频${_enableVideoRendering ? '' : '(禁用)'}',
+                    LocalizationService.instance.current.videoStatusLabel_4829(
+                      _enableVideoRendering
+                          ? ''
+                          : LocalizationService
+                                .instance
+                                .current
+                                .disabledInParentheses_4829,
+                    ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableVideoRendering
                           ? Colors.purple
@@ -1027,7 +1094,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 videoStats['videoCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
-                '视频: ${videoStats['videoCount']}',
+                LocalizationService.instance.current.videoCountLabel_7281(
+                  videoStats['videoCount'],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1061,7 +1130,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '音频${_enableAudioRendering ? '' : '(禁用)'}',
+                    LocalizationService.instance.current.audioStatus_7421(
+                      _enableAudioRendering ? '' : '(禁用)',
+                    ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableAudioRendering
                           ? Colors.green
@@ -1076,7 +1147,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 audioStats['audioCount'] > 0) ...[
               const SizedBox(width: 8),
               Text(
-                '音频: ${audioStats['audioCount']}',
+                LocalizationService.instance.current.audioCountLabel(
+                  audioStats['audioCount'],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1085,13 +1158,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           const Spacer(),
           if (_fileInfo != null) ...[
             Text(
-              '文件大小: ${_formatFileSize(_fileInfo!.size)}',
+              LocalizationService.instance.current.fileSizeLabel(
+                _formatFileSize(_fileInfo!.size),
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(width: 16),
           ],
           Text(
-            '缩放: ${(_contentScale * 100).toInt()}%',
+            LocalizationService.instance.current.zoomPercentage(
+              (_contentScale * 100).toInt(),
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -1123,7 +1200,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     try {
       await VfsFileOpenerService.openFile(context, vfsUrl);
     } catch (e) {
-      _showErrorSnackBar('打开VFS链接失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.vfsLinkOpenFailed(e),
+      );
     }
   }
 
@@ -1134,10 +1213,14 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        _showErrorSnackBar('无法打开链接: $url');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.unableToOpenLink_7285(url),
+        );
       }
     } catch (e) {
-      _showErrorSnackBar('打开链接失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.openLinkFailed_4821(e),
+      );
     }
   }
 
@@ -1148,7 +1231,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       String anchorId = Uri.decodeComponent(anchor.substring(1));
       _scrollToText(anchorId);
     } catch (e) {
-      _showErrorSnackBar('跳转到锚点失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.anchorJumpFailed_7285(e),
+      );
     }
   }
 
@@ -1167,16 +1252,24 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           // 尝试匹配标题文本
           if (headingText.toLowerCase().contains(searchText.toLowerCase())) {
             _tocController.jumpToIndex(toc.widgetIndex);
-            context.showSuccessSnackBar('已跳转到: $headingText');
+            context.showSuccessSnackBar(
+              LocalizationService.instance.current.jumpToDestination(
+                headingText,
+              ),
+            );
             return;
           }
         }
       }
 
       // 如果TOC中没找到，显示未找到提示
-      _showErrorSnackBar('未找到锚点: $searchText');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.anchorNotFound_7425(searchText),
+      );
     } catch (e) {
-      _showErrorSnackBar('锚点跳转失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.anchorJumpFailed_4829(e),
+      );
     }
   }
 
@@ -1192,7 +1285,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       // 使用VFS文件打开服务打开文件
       await VfsFileOpenerService.openFile(context, absolutePath);
     } catch (e) {
-      _showErrorSnackBar('打开相对路径链接失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.openRelativePathFailed_7285(e),
+      );
     }
   }
 
@@ -1287,7 +1382,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
-          return _buildImageError(vfsUrl, snapshot.error?.toString() ?? '加载失败');
+          return _buildImageError(
+            vfsUrl,
+            snapshot.error?.toString() ??
+                LocalizationService.instance.current.loadFailed_4821,
+          );
         }
 
         return Container(
@@ -1371,7 +1470,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
           Icon(Icons.broken_image, color: Colors.red.shade400, size: 32),
           const SizedBox(height: 8),
           Text(
-            '图片加载失败',
+            LocalizationService.instance.current.imageLoadFailed_7281,
             style: TextStyle(
               color: Colors.red.shade600,
               fontSize: 14,
@@ -1399,7 +1498,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
       final fileContent = await _vfsService.vfs.readFile(vfsUrl);
       return fileContent?.data;
     } catch (e) {
-      debugPrint('加载VFS图片失败: $e');
+      debugPrint(LocalizationService.instance.current.vfsImageLoadFailed(e));
       return null;
     }
   }
@@ -1465,7 +1564,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   void _copyContent() {
     Clipboard.setData(ClipboardData(text: _markdownContent));
 
-    context.showSuccessSnackBar('已复制到剪贴板');
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current.copiedToClipboard_4821,
+    );
   }
 
   /// 显示错误提示
@@ -1480,11 +1581,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.code, size: 24),
-            SizedBox(width: 8),
-            Text('HTML内容信息'),
+            const Icon(Icons.code, size: 24),
+            const SizedBox(width: 8),
+            Text(LocalizationService.instance.current.htmlContentInfo_7281),
           ],
         ),
         content: SizedBox(
@@ -1512,11 +1613,22 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'HTML渲染状态',
+                            LocalizationService
+                                .instance
+                                .current
+                                .htmlRenderingStatus_4821,
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           Text(
-                            _enableHtmlRendering ? '已启用' : '已禁用',
+                            _enableHtmlRendering
+                                ? LocalizationService
+                                      .instance
+                                      .current
+                                      .enabledStatus_4821
+                                : LocalizationService
+                                      .instance
+                                      .current
+                                      .disabledStatus_4821,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: _enableHtmlRendering
@@ -1532,7 +1644,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                           Navigator.of(context).pop();
                           _toggleHtmlRendering();
                         },
-                        child: Text(_enableHtmlRendering ? '禁用' : '启用'),
+                        child: Text(
+                          _enableHtmlRendering
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .disable_4821
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .enable_4821,
+                        ),
                       ),
                     ],
                   ),
@@ -1543,7 +1665,13 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
               // HTML内容统计
               if (htmlStats['hasHtml'] == true) ...[
-                Text('HTML内容统计', style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .htmlContentStatistics_7281,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 8),
 
                 if (htmlStats['linkCount'] != null &&
@@ -1552,7 +1680,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                     children: [
                       const Icon(Icons.link, size: 16),
                       const SizedBox(width: 8),
-                      Text('HTML链接: ${htmlStats['linkCount']}个'),
+                      Text(
+                        LocalizationService.instance.current.htmlLinkCount(
+                          htmlStats['linkCount'],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1564,7 +1696,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                     children: [
                       const Icon(Icons.image, size: 16),
                       const SizedBox(width: 8),
-                      Text('HTML图片: ${htmlStats['imageCount']}个'),
+                      Text(
+                        LocalizationService.instance.current.htmlImageCount(
+                          htmlStats['imageCount'],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1574,11 +1710,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
 
                 // 支持的HTML标签
                 Text(
-                  '支持的HTML标签',
+                  LocalizationService.instance.current.supportedHtmlTags_7281,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                Container(
+                SizedBox(
                   height: 120,
                   child: SingleChildScrollView(
                     child: Wrap(
@@ -1606,7 +1742,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -1620,11 +1756,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.functions, size: 24),
-            SizedBox(width: 8),
-            Text('LaTeX公式信息'),
+            const Icon(Icons.functions, size: 24),
+            const SizedBox(width: 8),
+            Text(LocalizationService.instance.current.latexFormulaInfo_7281),
           ],
         ),
         content: SizedBox(
@@ -1652,11 +1788,22 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LaTeX渲染状态',
+                            LocalizationService
+                                .instance
+                                .current
+                                .latexRenderingStatus_4821,
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           Text(
-                            _enableLatexRendering ? '已启用' : '已禁用',
+                            _enableLatexRendering
+                                ? LocalizationService
+                                      .instance
+                                      .current
+                                      .enabledStatus_4821
+                                : LocalizationService
+                                      .instance
+                                      .current
+                                      .disabledStatus_4821,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: _enableLatexRendering
@@ -1672,7 +1819,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                           Navigator.of(context).pop();
                           _toggleLatexRendering();
                         },
-                        child: Text(_enableLatexRendering ? '禁用' : '启用'),
+                        child: Text(
+                          _enableLatexRendering
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .disable_4821
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .enable_4821,
+                        ),
                       ),
                     ],
                   ),
@@ -1682,14 +1839,19 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
               const SizedBox(height: 16), // LaTeX统计信息
               if (latexStats['hasLatex'] == true) ...[
                 Text(
-                  'LaTeX公式统计',
+                  LocalizationService
+                      .instance
+                      .current
+                      .latexFormulaStatistics_4821,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -1698,8 +1860,15 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('行内公式'),
-                            Text('${latexStats['inlineCount']}个'),
+                            Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .inlineFormula_7284,
+                            ),
+                            Text(
+                              '${latexStats['inlineCount']}${LocalizationService.instance.current.inlineCountUnit_4821}',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -1708,8 +1877,15 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('块级公式'),
-                            Text('${latexStats['blockCount']}个'),
+                            Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .blockFormula_4821,
+                            ),
+                            Text(
+                              '${latexStats['blockCount']}${LocalizationService.instance.current.blockCountUnit_7281}',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -1718,9 +1894,11 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('总计'),
                             Text(
-                              '${latexStats['totalCount']}个',
+                              LocalizationService.instance.current.total_7284,
+                            ),
+                            Text(
+                              '${latexStats['totalCount']}${LocalizationService.instance.current.countUnit_7281}',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
@@ -1731,7 +1909,10 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 ),
               ] else ...[
                 Text(
-                  '此文档不包含LaTeX公式',
+                  LocalizationService
+                      .instance
+                      .current
+                      .documentWithoutLatex_4721,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -1741,7 +1922,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -1755,17 +1936,21 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('音频信息'),
+        title: Text(LocalizationService.instance.current.audioInfo_7284),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('音频数量: ${audioStats['audioCount']}'),
+              Text(
+                LocalizationService.instance.current.audioCountLabel(
+                  audioStats['audioCount'],
+                ),
+              ),
               const SizedBox(height: 16),
               if (audioStats['hasAudio'] as bool) ...[
-                const Text('音频列表:'),
+                Text(LocalizationService.instance.current.audioList_7421),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 200),
@@ -1780,7 +1965,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.surfaceVariant,
+                                ).colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
@@ -1805,12 +1990,17 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                 ),
                 if ((audioStats['audios'] as List).length > 10)
                   Text(
-                    '... 还有${(audioStats['audios'] as List).length - 10}个音频',
+                    LocalizationService.instance.current.remainingAudiosCount(
+                      (audioStats['audios'] as List).length - 10,
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
               ] else ...[
                 Text(
-                  '此文档不包含音频内容',
+                  LocalizationService
+                      .instance
+                      .current
+                      .documentNoAudioContent_4821,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -1820,7 +2010,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -1837,7 +2027,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
         config: VfsFileOpenConfig.forText,
       );
     } catch (e) {
-      _showErrorSnackBar('打开文本编辑器失败: $e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.openTextEditorFailed_7281(e),
+      );
     }
   }
 
@@ -1938,8 +2130,9 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
+    if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
@@ -2152,7 +2345,7 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.surfaceVariant,
+                                ).colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(

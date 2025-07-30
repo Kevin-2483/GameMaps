@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 响应式版本管理标签页组件
 class ReactiveVersionTabBar extends StatelessWidget {
@@ -49,7 +52,11 @@ class ReactiveVersionTabBar extends StatelessWidget {
 
     // 添加调试信息
     debugPrint(
-      '响应式版本标签栏构建: 版本数量=${versions.length}, 当前版本=$currentVersionId, 未保存版本=$_hasAnyUnsavedVersions',
+      LocalizationService.instance.current.responsiveVersionTabDebug(
+        versions.length,
+        currentVersionId ?? 'null',
+        _hasAnyUnsavedVersions,
+      ),
     );
 
     return Container(
@@ -76,7 +83,8 @@ class ReactiveVersionTabBar extends StatelessWidget {
               child: IconButton(
                 onPressed: () => _showCreateVersionDialog(context),
                 icon: const Icon(Icons.add),
-                tooltip: '创建新版本',
+                tooltip:
+                    LocalizationService.instance.current.createNewVersion_4821,
                 iconSize: 20,
               ),
             ),
@@ -86,8 +94,11 @@ class ReactiveVersionTabBar extends StatelessWidget {
   }
 
   Widget _buildEmptyVersions(BuildContext context) {
-    return const Center(
-      child: Text('暂无版本', style: TextStyle(color: Colors.grey)),
+    return Center(
+      child: Text(
+        LocalizationService.instance.current.noVersionAvailable_7281,
+        style: TextStyle(color: Colors.grey),
+      ),
     );
   }
 
@@ -185,15 +196,17 @@ class ReactiveVersionTabBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建新版本'),
+        title: Text(LocalizationService.instance.current.createNewVersion_4271),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: '版本名称',
-                hintText: '输入版本名称',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.versionNameLabel_4821,
+                hintText:
+                    LocalizationService.instance.current.versionNameHint_4822,
               ),
               autofocus: true,
             ),
@@ -202,7 +215,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           FilledButton(
             onPressed: () {
@@ -212,7 +225,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
                 onVersionCreated(name);
               }
             },
-            child: const Text('创建'),
+            child: Text(LocalizationService.instance.current.createButton_7421),
           ),
         ],
       ),
@@ -226,12 +239,16 @@ class ReactiveVersionTabBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除版本'),
-        content: Text('确定要删除版本 "${version.versionName}" 吗？\n此操作无法撤销。'),
+        title: Text(LocalizationService.instance.current.deleteVersion_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteVersion(
+            version.versionName,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           FilledButton(
             onPressed: () {
@@ -242,7 +259,7 @@ class ReactiveVersionTabBar extends StatelessWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_4821),
           ),
         ],
       ),

@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import '../providers/user_preferences_provider.dart';
+
+import '../services/localization_service.dart';
 
 /// 扩展设置的键常量定义
 class ExtensionSettingsKeys {
@@ -52,7 +55,13 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, isHidden);
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 地图 $mapId 的图例组 $legendGroupId 智能隐藏状态已设置为 $isHidden');
+      debugPrint(
+        LocalizationService.instance.current.mapLegendAutoHideStatus(
+          mapId,
+          legendGroupId,
+          isHidden,
+        ),
+      );
     }
   }
 
@@ -85,7 +94,9 @@ class ExtensionSettingsHelper {
     }
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 已清除地图 $mapId 的所有图例组智能隐藏设置');
+      debugPrint(
+        LocalizationService.instance.current.debugClearMapLegendSettings(mapId),
+      );
     }
   }
 
@@ -109,7 +120,13 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, zoomFactor);
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 地图 $mapId 的图例组 $legendGroupId 缩放因子已设置为 $zoomFactor');
+      debugPrint(
+        LocalizationService.instance.current.mapLegendZoomFactorLog_4821(
+          mapId,
+          legendGroupId,
+          zoomFactor,
+        ),
+      );
     }
   }
 
@@ -142,7 +159,10 @@ class ExtensionSettingsHelper {
     }
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 已清除地图 $mapId 的所有图例组缩放因子设置');
+      debugPrint(
+        LocalizationService.instance.current
+            .extensionSettingsClearedMapLegendZoom_7421(mapId),
+      );
     }
   }
 
@@ -165,7 +185,13 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, presets);
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 地图 $mapId 的图层 $layerId 透明度预设已设置: $presets');
+      debugPrint(
+        LocalizationService.instance.current.mapLayerPresetSet(
+          mapId,
+          layerId,
+          presets,
+        ),
+      );
     }
   }
 
@@ -196,7 +222,12 @@ class ExtensionSettingsHelper {
       await _provider.setExtensionSetting(key, currentLevels);
 
       if (kDebugMode) {
-        debugPrint('扩展设置: 地图 $mapId 添加缩放级别记录 $zoomLevel');
+        debugPrint(
+          LocalizationService.instance.current.mapZoomLevelRecord(
+            mapId,
+            zoomLevel,
+          ),
+        );
       }
     }
   }
@@ -229,7 +260,13 @@ class ExtensionSettingsHelper {
     await _provider.setExtensionSetting(key, position);
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 工具栏 $toolbarId 位置已设置为 ($x, $y)');
+      debugPrint(
+        LocalizationService.instance.current.toolbarPositionSet(
+          toolbarId,
+          x,
+          y,
+        ),
+      );
     }
   }
 
@@ -259,7 +296,9 @@ class ExtensionSettingsHelper {
     }
 
     if (kDebugMode) {
-      debugPrint('扩展设置: 已清除前缀为 $prefix 的所有设置');
+      debugPrint(
+        LocalizationService.instance.current.clearedSettingsWithPrefix(prefix),
+      );
     }
   }
 

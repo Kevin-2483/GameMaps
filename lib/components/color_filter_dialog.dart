@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_preferences_provider.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 色彩滤镜类型
 enum ColorFilterType {
@@ -260,12 +263,14 @@ class ColorFilterDialog extends StatefulWidget {
   final String title;
   final String? layerId; // 图层ID
 
-  const ColorFilterDialog({
+  ColorFilterDialog({
     super.key,
     this.initialSettings = const ColorFilterSettings(),
-    this.title = '色彩滤镜设置',
+    String? title,
     this.layerId,
-  });
+  }) : title =
+           title ??
+           LocalizationService.instance.current.colorFilterSettingsTitle_4287;
 
   @override
   State<ColorFilterDialog> createState() => _ColorFilterDialogState();
@@ -394,7 +399,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_4271),
         ),
         ElevatedButton(
           onPressed: () {
@@ -413,7 +418,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
             }
             Navigator.of(context).pop(_settings);
           },
-          child: const Text('确定'),
+          child: Text(LocalizationService.instance.current.confirmButton_7281),
         ),
       ],
     );
@@ -445,15 +450,18 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
 
     String statusText;
     if (isUserDisabled) {
-      statusText = '您已禁用此图层的主题适配，当前使用自定义设置。';
+      statusText = LocalizationService.instance.current.layerThemeDisabled_4821;
     } else if (hasUserFilter && !isUsingThemeFilter) {
-      statusText = '深色模式下已自动应用颜色反转，当前显示您的自定义设置。';
+      statusText =
+          LocalizationService.instance.current.darkModeAutoInvertApplied_4821;
     } else if (isUsingThemeFilter) {
-      statusText = '深色模式下已自动应用颜色反转，当前正在使用主题滤镜。';
+      statusText =
+          LocalizationService.instance.current.darkModeFilterApplied_4821;
     } else if (_settings.type == ColorFilterType.none) {
-      statusText = '当前未应用任何滤镜。';
+      statusText = LocalizationService.instance.current.noFilterApplied_4821;
     } else {
-      statusText = '深色模式下将自动应用颜色反转。';
+      statusText =
+          LocalizationService.instance.current.darkModeColorInversion_4821;
     }
 
     return Container(
@@ -479,7 +487,10 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               ),
               const SizedBox(width: 8),
               Text(
-                '画布主题适配已启用',
+                LocalizationService
+                    .instance
+                    .current
+                    .canvasThemeAdaptationEnabled_7421,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -505,7 +516,12 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 TextButton.icon(
                   onPressed: _resetToAutoSettings,
                   icon: const Icon(Icons.auto_awesome, size: 16),
-                  label: const Text('重新应用主题滤镜'),
+                  label: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .reapplyThemeFilter_7281,
+                  ),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -520,7 +536,12 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 TextButton.icon(
                   onPressed: _resetToAutoSettings,
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('重置为自动设置'),
+                  label: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .resetToAutoSettings_4821,
+                  ),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -535,7 +556,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               TextButton.icon(
                 onPressed: _clearAllFilters,
                 icon: const Icon(Icons.clear, size: 16),
-                label: const Text('清除所有滤镜'),
+                label: Text(
+                  LocalizationService.instance.current.clearAllFilters_4271,
+                ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -606,8 +629,8 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '滤镜类型',
+        Text(
+          LocalizationService.instance.current.filterType_4821,
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -681,9 +704,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                '滤镜预览',
+                LocalizationService.instance.current.filterPreview_4821,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -730,7 +753,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '强度: ${(_settings.intensity * 100).round()}%',
+          LocalizationService.instance.current.intensityPercentage(
+            (_settings.intensity * 100).round(),
+          ),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -752,7 +777,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '亮度: ${(_settings.brightness * 100).round()}%',
+          LocalizationService.instance.current.brightnessPercentage(
+            (_settings.brightness * 100).round(),
+          ),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -774,7 +801,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '对比度: ${(_settings.contrast * 100).round()}%',
+          LocalizationService.instance.current.contrastPercentage(
+            (_settings.contrast * 100).round(),
+          ),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -796,7 +825,9 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '饱和度: ${(_settings.saturation * 100).round()}%',
+          LocalizationService.instance.current.saturationPercentage(
+            (_settings.saturation * 100).round(),
+          ),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -818,7 +849,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '色相: ${_settings.hue.round()}°',
+          LocalizationService.instance.current.hueValue(_settings.hue.round()),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -837,21 +868,21 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
   String _getFilterTypeName(ColorFilterType type) {
     switch (type) {
       case ColorFilterType.none:
-        return '无滤镜';
+        return LocalizationService.instance.current.noFilter_4821;
       case ColorFilterType.grayscale:
-        return '灰度';
+        return LocalizationService.instance.current.grayscale_4822;
       case ColorFilterType.sepia:
-        return '棕褐色';
+        return LocalizationService.instance.current.sepia_4823;
       case ColorFilterType.invert:
-        return '反色';
+        return LocalizationService.instance.current.invert_4824;
       case ColorFilterType.brightness:
-        return '亮度';
+        return LocalizationService.instance.current.brightness_4825;
       case ColorFilterType.contrast:
-        return '对比度';
+        return LocalizationService.instance.current.contrast_4826;
       case ColorFilterType.saturation:
-        return '饱和度';
+        return LocalizationService.instance.current.saturation_4827;
       case ColorFilterType.hue:
-        return '色相';
+        return LocalizationService.instance.current.hue_4828;
     }
   }
 }

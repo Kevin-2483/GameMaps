@@ -1,0 +1,21 @@
+{
+  "updateLayerReactiveCall_7281": "=== updateLayerReactive 调用 ===",
+  "releaseMapEditorResources_7281": "释放地图编辑器响应式系统资源",
+  "updateLayerDebug": "更新图层: {name}, ID: {id}",
+  "updateLayerLog": "执行更新图层: {name}, isLinkedToNext: {isLinkedToNext}",
+  "throttleLayerUpdate_7281": "=== 节流执行图层更新 ===",
+  "updateLayerReactiveComplete_7281": "=== updateLayerReactive 完成 ===",
+  "reorderLayersCall_7284": "=== reorderLayersReactive 调用 ===",
+  "reorderLayerLog": "重排序图层: oldIndex={oldIndex}, newIndex={newIndex}",
+  "reorderLayersInGroupReactiveCall_7281": "=== reorderLayersInGroupReactive 调用 ===",
+  "reorderLayersComplete_7281": "=== reorderLayersInGroupReactive 完成 ===",
+  "layerReorderDebug_7281": "组内重排序图层: oldIndex={oldIndex}, newIndex={newIndex}, 更新图层数量: {length}",
+  "saveMapDataStart_7281": "=== saveMapDataReactive 开始 ===",
+  "forceUpdateMessage_7285": "强制更新: {forceUpdate}",
+  "forceExecutePendingTasks_7281": "强制执行所有待处理的节流任务...",
+  "saveMapDataComplete_7281": "=== saveMapDataReactive 完成 ===",
+  "forceExecuteThrottleTasks": "强制执行{activeCount}个待处理的节流任务",
+  "initMapEditorSystem_7281": "初始化地图编辑器响应式系统",
+  "responsiveSystemInitialized_7421": "响应式系统初始化完成",
+  "loadingMapToReactiveSystem": "加载地图到响应式系统: {title}"
+}

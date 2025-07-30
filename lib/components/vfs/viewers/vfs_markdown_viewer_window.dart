@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../components/common/floating_window.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import 'vfs_markdown_renderer.dart';
 import '../../../services/notification/notification_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// VFS Markdown查看器窗口
 class VfsMarkdownViewerWindow extends StatefulWidget {
@@ -67,7 +70,10 @@ class VfsMarkdownViewerWindow extends StatefulWidget {
   /// 从路径获取副标题
   static String _getSubtitleFromPath(String vfsPath, VfsFileInfo? fileInfo) {
     if (fileInfo != null) {
-      return '大小: ${_formatFileSize(fileInfo.size)} • 修改时间: ${_formatDateTime(fileInfo.modifiedAt)}';
+      return LocalizationService.instance.current.fileSizeInfo_7425(
+        _formatFileSize(fileInfo.size),
+        _formatDateTime(fileInfo.modifiedAt),
+      );
     }
     return vfsPath;
   }
@@ -75,8 +81,9 @@ class VfsMarkdownViewerWindow extends StatefulWidget {
   static String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
+    if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 

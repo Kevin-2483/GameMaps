@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../components/common/floating_window.dart';
@@ -7,6 +8,8 @@ import '../../../services/virtual_file_system/vfs_protocol.dart';
 import '../../../services/audio/audio_player_service.dart';
 import 'audio_player_widget.dart';
 import '../../../services/notification/notification_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// VFS音频播放器窗口
 class VfsAudioPlayerWindow extends StatefulWidget {
@@ -78,13 +81,19 @@ class VfsAudioPlayerWindow extends StatefulWidget {
         parts.add(_formatFileSize(fileInfo.size));
       }
       // 显示修改时间
-      parts.add('修改于 ${_formatDateTime(fileInfo.modifiedAt)}');
+      parts.add(
+        LocalizationService.instance.current.modifiedAtTime_7281(
+          _formatDateTime(fileInfo.modifiedAt),
+        ),
+      );
     }
 
     // 如果没有其他信息，显示文件类型
     if (parts.isEmpty) {
       final extension = vfsPath.split('.').last.toUpperCase();
-      parts.add('$extension 音频文件');
+      parts.add(
+        '$extension ${LocalizationService.instance.current.audioFile_7281}',
+      );
     }
 
     return parts.join(' • ');
@@ -159,7 +168,9 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
             });
           }
         } catch (e) {
-          debugPrint('获取VFS文件信息失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.vfsFileInfoError_4821(e),
+          );
         }
       } else {
         _fileInfo = widget.fileInfo;
@@ -173,7 +184,8 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = '加载音频信息失败: $e';
+          _errorMessage =
+              LocalizationService.instance.current.audioLoadFailed_7281;
           _isLoading = false;
         });
       }
@@ -196,7 +208,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
       isVfsPath: true,
       connectToExisting: true, // 连接到现有播放器实例
       forcePlayFirst: true, // 插播到队列最前并立即播放
-      config: const AudioPlayerConfig(autoPlay: false, looping: false),
+      config: AudioPlayerConfig(autoPlay: false, looping: false),
       onError: (message) {
         if (mounted) {
           setState(() {
@@ -229,13 +241,13 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('正在加载音频...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(LocalizationService.instance.current.loadingAudio_7421),
           ],
         ),
       ),
@@ -258,7 +270,7 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
             Icon(Icons.error, color: Colors.red.shade400, size: 48),
             const SizedBox(height: 16),
             Text(
-              '音频加载失败',
+              LocalizationService.instance.current.audioLoadFailed_7281,
               style: TextStyle(
                 color: Colors.red.shade600,
                 fontSize: 16,
@@ -285,13 +297,15 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
                 ElevatedButton.icon(
                   onPressed: () => _retryLoading(),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('重试'),
+                  label: Text(LocalizationService.instance.current.retry_7284),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
                   onPressed: () => _copyUrlToClipboard(),
                   icon: const Icon(Icons.copy),
-                  label: const Text('复制链接'),
+                  label: Text(
+                    LocalizationService.instance.current.copyLink_4821,
+                  ),
                 ),
               ],
             ),
@@ -311,9 +325,13 @@ class _VfsAudioPlayerWindowState extends State<VfsAudioPlayerWindow> {
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    debugPrint('复制音频链接: ${widget.vfsPath}');
+    debugPrint(
+      LocalizationService.instance.current.copyAudioLink_4821(widget.vfsPath),
+    );
     if (mounted) {
-      context.showSuccessSnackBar('音频链接已复制到剪贴板');
+      context.showSuccessSnackBar(
+        LocalizationService.instance.current.audioLinkCopiedToClipboard_4821,
+      );
     }
   }
 }

@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../common/floating_window.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 演示如何使用浮动窗口组件的简单示例
 class SimpleFloatingWindowDemo extends StatelessWidget {
@@ -10,7 +13,9 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('浮动窗口演示'),
+        title: Text(
+          LocalizationService.instance.current.floatingWindowDemo_4271,
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(
@@ -21,7 +26,9 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _showSimpleWindow(context),
               icon: const Icon(Icons.window),
-              label: const Text('简单窗口'),
+              label: Text(
+                LocalizationService.instance.current.simpleWindow_7421,
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -29,7 +36,9 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _showSettingsWindow(context),
               icon: const Icon(Icons.settings),
-              label: const Text('设置窗口'),
+              label: Text(
+                LocalizationService.instance.current.settingsWindow_4271,
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -37,7 +46,9 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _showDraggableWindow(context),
               icon: const Icon(Icons.open_with),
-              label: const Text('可拖拽窗口'),
+              label: Text(
+                LocalizationService.instance.current.draggableWindow_4271,
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -45,12 +56,17 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _showFileManagerWindow(context),
               icon: const Icon(Icons.folder),
-              label: const Text('文件管理器风格'),
+              label: Text(
+                LocalizationService.instance.current.fileManagerStyle_4821,
+              ),
             ),
 
             const SizedBox(height: 24),
 
-            const Text('点击按钮体验不同类型的浮动窗口', style: TextStyle(color: Colors.grey)),
+            Text(
+              LocalizationService.instance.current.floatingWindowTip_7281,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -62,20 +78,20 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
     context.showFloatingWindow(
       title: '简单浮动窗口',
       icon: Icons.info,
-      child: const Padding(
-        padding: EdgeInsets.all(20.0),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 16),
             Text(
-              '欢迎使用浮动窗口组件！',
+              LocalizationService.instance.current.welcomeFloatingWidget_7421,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
-              '这是一个简单的浮动窗口示例，模仿了VFS文件选择器的设计风格。',
+              LocalizationService.instance.current.floatingWindowExample_4521,
               textAlign: TextAlign.center,
             ),
           ],
@@ -88,8 +104,8 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
   void _showSettingsWindow(BuildContext context) {
     FloatingWindow.show(
       context,
-      title: '应用设置',
-      subtitle: '配置您的首选项',
+      title: LocalizationService.instance.current.appSettings_4821,
+      subtitle: LocalizationService.instance.current.configurePreferences_5732,
       icon: Icons.settings,
       widthRatio: 0.7,
       heightRatio: 0.6,
@@ -107,20 +123,20 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
       draggable: true,
       widthRatio: 0.6,
       heightRatio: 0.5,
-      child: const Padding(
-        padding: EdgeInsets.all(20.0),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Icon(Icons.touch_app, size: 48, color: Colors.blue),
             SizedBox(height: 16),
             Text(
-              '拖拽功能演示',
+              LocalizationService.instance.current.dragDemoTitle_4821,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
             Text(
-              '您可以通过拖拽标题栏来移动这个窗口。'
-              '窗口会自动保持在屏幕可见区域内。',
+              LocalizationService.instance.current.windowDragHint_4721 +
+                  LocalizationService.instance.current.windowAutoSnapHint_4721,
               textAlign: TextAlign.center,
             ),
             Spacer(),
@@ -128,7 +144,7 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
-                  '💡 提示：在标题栏区域按住鼠标并拖拽',
+                  LocalizationService.instance.current.dragToMoveHint_7281,
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
@@ -142,24 +158,28 @@ class SimpleFloatingWindowDemo extends StatelessWidget {
   /// 显示模仿VFS文件管理器风格的窗口
   void _showFileManagerWindow(BuildContext context) {
     FloatingWindowBuilder()
-        .title('文件管理器')
+        .title(LocalizationService.instance.current.fileManager_1234)
         .icon(Icons.folder_special)
-        .subtitle('VFS文件选择器风格')
+        .subtitle(LocalizationService.instance.current.vfsFilePickerStyle_4821)
         .size(widthRatio: 0.85, heightRatio: 0.8)
         .headerActions([
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.showInfoSnackBar('刷新文件列表');
+              context.showInfoSnackBar(
+                LocalizationService.instance.current.refreshFileList_4821,
+              );
             },
-            tooltip: '刷新',
+            tooltip: LocalizationService.instance.current.refresh_4822,
           ),
           IconButton(
             icon: const Icon(Icons.view_list),
             onPressed: () {
-              context.showInfoSnackBar('切换视图');
+              context.showInfoSnackBar(
+                LocalizationService.instance.current.switchView_4821,
+              );
             },
-            tooltip: '视图',
+            tooltip: LocalizationService.instance.current.view_4822,
           ),
         ])
         .child(_FileManagerContent())
@@ -189,26 +209,28 @@ class _SettingsContentState extends State<_SettingsContent> {
             child: ListView(
               children: [
                 _buildSwitchTile(
-                  '推送通知',
+                  LocalizationService.instance.current.pushNotifications_4821,
                   Icons.notifications,
                   _notifications,
                   (value) => setState(() => _notifications = value),
                 ),
                 _buildSwitchTile(
-                  '深色模式',
+                  LocalizationService.instance.current.darkModeTitle_4721,
                   Icons.dark_mode,
                   _darkMode,
                   (value) => setState(() => _darkMode = value),
                 ),
                 _buildSwitchTile(
-                  '自动保存',
+                  LocalizationService.instance.current.autoSaveSetting_7421,
                   Icons.save,
                   _autoSave,
                   (value) => setState(() => _autoSave = value),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '音量: ${_volume.round()}%',
+                  LocalizationService.instance.current.volumePercentage(
+                    _volume.round(),
+                  ),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 Slider(
@@ -226,12 +248,16 @@ class _SettingsContentState extends State<_SettingsContent> {
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('取消'),
+                child: Text(
+                  LocalizationService.instance.current.cancelButton_4271,
+                ),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('保存'),
+                child: Text(
+                  LocalizationService.instance.current.saveButton_7421,
+                ),
               ),
             ],
           ),
@@ -274,7 +300,7 @@ class _FileManagerContent extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '/ 根目录 / 文档 / 项目文件',
+                  LocalizationService.instance.current.breadcrumbPath,
                   style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
               ),
@@ -296,11 +322,19 @@ class _FileManagerContent extends StatelessWidget {
                 title: Text(file['name']),
                 subtitle: Text(
                   file['isDirectory']
-                      ? '文件夹'
-                      : '${file['size']} • ${file['date']}',
+                      ? LocalizationService.instance.current.folderLabel_5421
+                      : LocalizationService.instance.current
+                            .fileInfoWithSizeAndDate_5421(
+                              file['size'],
+                              file['date'],
+                            ),
                 ),
                 onTap: () {
-                  context.showInfoSnackBar('选择了: ${file['name']}');
+                  context.showInfoSnackBar(
+                    LocalizationService.instance.current.selectedFile(
+                      file['name'],
+                    ),
+                  );
                 },
               );
             },
@@ -316,11 +350,18 @@ class _FileManagerContent extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton(onPressed: () {}, child: const Text('新建文件夹')),
+              OutlinedButton(
+                onPressed: () {},
+                child: Text(
+                  LocalizationService.instance.current.createNewFolder_4821,
+                ),
+              ),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('选择'),
+                child: Text(
+                  LocalizationService.instance.current.selectOption_4271,
+                ),
               ),
             ],
           ),
@@ -332,8 +373,18 @@ class _FileManagerContent extends StatelessWidget {
 
 // 示例文件数据
 final List<Map<String, dynamic>> _sampleFiles = [
-  {'name': '文档', 'isDirectory': true, 'size': '', 'date': '2024-01-15'},
-  {'name': '图片', 'isDirectory': true, 'size': '', 'date': '2024-01-14'},
+  {
+    'name': LocalizationService.instance.current.documentName_4821,
+    'isDirectory': true,
+    'size': '',
+    'date': '2024-01-15',
+  },
+  {
+    'name': LocalizationService.instance.current.image_4821,
+    'isDirectory': true,
+    'size': '',
+    'date': '2024-01-14',
+  },
   {
     'name': 'readme.txt',
     'isDirectory': false,

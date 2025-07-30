@@ -1,0 +1,6 @@
+{
+  "vfsInitFailed_7281": "VFS系统初始化失败: {e}",
+  "vfsInitializationSuccess_7281": "VFS系统初始化成功",
+  "globalCollaborationServiceInitialized_7281": "全局协作服务初始化成功",
+  "globalCollaborationServiceInitFailed": "全局协作服务初始化失败: {e}"
+}

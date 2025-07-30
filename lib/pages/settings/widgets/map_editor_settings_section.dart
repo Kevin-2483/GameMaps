@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,9 @@ import '../../../providers/user_preferences_provider.dart';
 import '../../../widgets/key_capture_widget.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class MapEditorSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -127,7 +131,7 @@ class MapEditorSettingsSection extends StatelessWidget {
   Widget _buildShortcutChips(List<String> shortcuts, BuildContext context) {
     if (shortcuts.isEmpty) {
       return Text(
-        '未设置',
+        LocalizationService.instance.current.notSet_4821,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 12,
@@ -431,7 +435,9 @@ class MapEditorSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('快捷键管理'),
+        title: Text(
+          LocalizationService.instance.current.shortcutManagement_4821,
+        ),
         content: SizedBox(
           width: 600,
           height: 500,
@@ -440,7 +446,7 @@ class MapEditorSettingsSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '点击编辑按钮可以修改对应功能的快捷键',
+                  LocalizationService.instance.current.shortcutEditHint_7281,
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
@@ -458,7 +464,10 @@ class MapEditorSettingsSection extends StatelessWidget {
                           entry.value,
                         ),
                         icon: Icon(Icons.edit),
-                        tooltip: '编辑快捷键',
+                        tooltip: LocalizationService
+                            .instance
+                            .current
+                            .editShortcutTooltip_4821,
                       ),
                     ),
                   ),
@@ -470,11 +479,13 @@ class MapEditorSettingsSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => _resetAllShortcuts(context, provider),
-            child: Text('恢复默认'),
+            child: Text(
+              LocalizationService.instance.current.restoreDefaults_7421,
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -489,12 +500,16 @@ class MapEditorSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('恢复默认快捷键'),
-        content: Text('确定要将所有快捷键恢复到默认设置吗？此操作将覆盖您的自定义快捷键设置。'),
+        title: Text(
+          LocalizationService.instance.current.restoreDefaultShortcuts_4821,
+        ),
+        content: Text(
+          LocalizationService.instance.current.resetShortcutsConfirmation_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -512,9 +527,14 @@ class MapEditorSettingsSection extends StatelessWidget {
               Navigator.of(context).pop();
 
               // 显示成功提示
-              context.showSuccessSnackBar('已恢复所有快捷键到默认设置');
+              context.showSuccessSnackBar(
+                LocalizationService
+                    .instance
+                    .current
+                    .shortcutsResetToDefault_4821,
+              );
             },
-            child: Text('确定'),
+            child: Text(LocalizationService.instance.current.confirm_4821),
           ),
         ],
       ),
@@ -537,23 +557,27 @@ class MapEditorSettingsSection extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('编辑快捷键'),
+          title: Text(LocalizationService.instance.current.editShortcuts_7421),
           content: SizedBox(
             width: 400,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('为 ${_getShortcutDisplayName(action)} 设置快捷键'),
+                Text(
+                  LocalizationService.instance.current.setShortcutForAction(
+                    _getShortcutDisplayName(action),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
-                  '当前快捷键:',
+                  LocalizationService.instance.current.currentShortcutKey_4821,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 if (newShortcuts.isEmpty)
                   Text(
-                    '未设置',
+                    LocalizationService.instance.current.notSet_7421,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -613,12 +637,12 @@ class MapEditorSettingsSection extends StatelessWidget {
                   ),
                 const SizedBox(height: 16),
                 Text(
-                  '添加新快捷键:',
+                  LocalizationService.instance.current.addNewShortcut_7421,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '点击下方区域，然后按下您想要添加的快捷键组合',
+                  LocalizationService.instance.current.shortcutInstruction_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -636,7 +660,12 @@ class MapEditorSettingsSection extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     if (tempShortcut.isEmpty) {
-                      context.showInfoSnackBar('请先按下快捷键组合');
+                      context.showInfoSnackBar(
+                        LocalizationService
+                            .instance
+                            .current
+                            .pressShortcutFirst_4821,
+                      );
                       return;
                     }
 
@@ -650,7 +679,10 @@ class MapEditorSettingsSection extends StatelessWidget {
                       }
                     }
                     if (isDuplicate) {
-                      context.showInfoSnackBar('快捷键重复: $tempShortcut 已在当前列表中');
+                      context.showInfoSnackBar(
+                        LocalizationService.instance.current
+                            .duplicateShortcutWarning(tempShortcut),
+                      );
                       return;
                     }
 
@@ -663,7 +695,11 @@ class MapEditorSettingsSection extends StatelessWidget {
                     if (conflictResult != null) {
                       // 显示冲突警告
                       context.showErrorSnackBar(
-                        '快捷键冲突: $tempShortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用',
+                        LocalizationService.instance.current
+                            .shortcutConflict_4827(
+                              tempShortcut,
+                              _getShortcutDisplayName(conflictResult),
+                            ),
                       );
                       return;
                     }
@@ -675,7 +711,9 @@ class MapEditorSettingsSection extends StatelessWidget {
                     // 清空KeyCaptureWidget的预览框
                     keyCaptureKey.currentState?.clearCapturedKeys();
                   },
-                  child: Text('添加快捷键'),
+                  child: Text(
+                    LocalizationService.instance.current.addShortcut_7421,
+                  ),
                 ),
               ],
             ),
@@ -683,7 +721,7 @@ class MapEditorSettingsSection extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             ElevatedButton(
               onPressed: () {
@@ -701,7 +739,8 @@ class MapEditorSettingsSection extends StatelessWidget {
 
                 if (duplicates.isNotEmpty) {
                   context.showInfoSnackBar(
-                    '列表中存在重复快捷键: ${duplicates.join(", ")}',
+                    LocalizationService.instance.current
+                        .duplicateShortcutsWarning_7421(duplicates.join(", ")),
                   );
                   return;
                 }
@@ -718,8 +757,11 @@ class MapEditorSettingsSection extends StatelessWidget {
                   );
                   if (conflictResult != null) {
                     hasConflict = true;
-                    conflictMessage =
-                        '快捷键冲突: $shortcut 已被 "${_getShortcutDisplayName(conflictResult)}" 使用';
+                    conflictMessage = LocalizationService.instance.current
+                        .shortcutConflictMessage(
+                          shortcut,
+                          _getShortcutDisplayName(conflictResult),
+                        );
                     break;
                   }
                 }
@@ -732,7 +774,7 @@ class MapEditorSettingsSection extends StatelessWidget {
                 provider.updateMapEditorShortcut(action, newShortcuts);
                 Navigator.of(context).pop();
               },
-              child: Text('保存'),
+              child: Text(LocalizationService.instance.current.saveButton_7421),
             ),
           ],
         ),
@@ -744,7 +786,7 @@ class MapEditorSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<UserPreferencesProvider>();
     final mapEditor = preferences.mapEditor;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
 
     return Card(
       child: Padding(
@@ -753,7 +795,7 @@ class MapEditorSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '地图编辑器设置',
+              LocalizationService.instance.current.mapEditorSettings_7421,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -762,13 +804,17 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 撤销历史记录数量
             ListTile(
-              title: Text('撤销历史记录数量'),
+              title: Text(
+                LocalizationService.instance.current.undoHistoryCount_4821,
+              ),
               subtitle: Slider(
                 value: mapEditor.undoHistoryLimit.toDouble(),
                 min: 5.0,
                 max: 100.0,
                 divisions: 19,
-                label: '${mapEditor.undoHistoryLimit} 步',
+                label: LocalizationService.instance.current.undoStepsLabel(
+                  mapEditor.undoHistoryLimit,
+                ),
                 onChanged: (value) =>
                     provider.updateMapEditor(undoHistoryLimit: value.round()),
               ),
@@ -777,7 +823,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 背景图案设置
             ListTile(
-              title: Text('背景图案'),
+              title: Text(
+                LocalizationService.instance.current.backgroundPattern_4271,
+              ),
               subtitle: DropdownButtonFormField<BackgroundPattern>(
                 value: mapEditor.backgroundPattern,
                 decoration: const InputDecoration(
@@ -791,13 +839,20 @@ class MapEditorSettingsSection extends StatelessWidget {
                   String displayText;
                   switch (pattern) {
                     case BackgroundPattern.blank:
-                      displayText = '空白';
+                      displayText = LocalizationService
+                          .instance
+                          .current
+                          .blankPattern_4821;
                       break;
                     case BackgroundPattern.grid:
-                      displayText = '网格';
+                      displayText =
+                          LocalizationService.instance.current.gridPattern_4821;
                       break;
                     case BackgroundPattern.checkerboard:
-                      displayText = '棋盘格';
+                      displayText = LocalizationService
+                          .instance
+                          .current
+                          .checkerboardPattern_4821;
                       break;
                   }
                   return DropdownMenuItem(
@@ -815,7 +870,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 8), // 缩放敏感度
             ListTile(
-              title: Text('缩放敏感度'),
+              title: Text(
+                LocalizationService.instance.current.zoomSensitivity_4271,
+              ),
               subtitle: Slider(
                 value: mapEditor.zoomSensitivity,
                 min: 0.5,
@@ -831,7 +888,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 画布边距
             ListTile(
-              title: Text('画布边距'),
+              title: Text(
+                LocalizationService.instance.current.canvasMargin_4821,
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -845,7 +904,10 @@ class MapEditorSettingsSection extends StatelessWidget {
                         provider.updateMapEditor(canvasBoundaryMargin: value),
                   ),
                   Text(
-                    '控制画布内容与容器边缘的距离：${mapEditor.canvasBoundaryMargin.round()}px',
+                    LocalizationService.instance.current
+                        .canvasBoundaryMarginDescription(
+                          mapEditor.canvasBoundaryMargin.round(),
+                        ),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
@@ -856,7 +918,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单设置标题
             Text(
-              '轮盘菜单设置',
+              LocalizationService.instance.current.rouletteMenuSettings_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -865,7 +927,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单触发按键
             ListTile(
-              title: Text('触发按键'),
+              title: Text(
+                LocalizationService.instance.current.triggerButton_7421,
+              ),
               subtitle: DropdownButtonFormField<int>(
                 value: mapEditor.radialMenuButton,
                 decoration: const InputDecoration(
@@ -876,8 +940,18 @@ class MapEditorSettingsSection extends StatelessWidget {
                   ),
                 ),
                 items: [
-                  DropdownMenuItem(value: 2, child: Text('右键')),
-                  DropdownMenuItem(value: 4, child: Text('中键')),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text(
+                      LocalizationService.instance.current.rightClick_4271,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 4,
+                    child: Text(
+                      LocalizationService.instance.current.middleButton_7281,
+                    ),
+                  ),
                 ],
                 onChanged: (button) {
                   if (button != null) {
@@ -891,7 +965,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单半径
             ListTile(
-              title: Text('菜单半径'),
+              title: Text(LocalizationService.instance.current.menuRadius_4271),
               subtitle: Slider(
                 value: mapEditor.radialMenuRadius,
                 min: 60.0,
@@ -907,7 +981,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单中心区域半径
             ListTile(
-              title: Text('中心区域半径'),
+              title: Text(
+                LocalizationService.instance.current.centerRadius_4821,
+              ),
               subtitle: Slider(
                 value: mapEditor.radialMenuCenterRadius,
                 min: 15.0,
@@ -923,7 +999,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单背景透明度
             ListTile(
-              title: Text('背景不透明度'),
+              title: Text(
+                LocalizationService.instance.current.backgroundOpacity_4271,
+              ),
               subtitle: Slider(
                 value: mapEditor.radialMenuBackgroundOpacity,
                 min: 0.1,
@@ -941,7 +1019,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单对象透明度
             ListTile(
-              title: Text('对象不透明度'),
+              title: Text(
+                LocalizationService.instance.current.objectOpacity_4271,
+              ),
               subtitle: Slider(
                 value: mapEditor.radialMenuObjectOpacity,
                 min: 0.1,
@@ -957,7 +1037,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单返回延迟
             ListTile(
-              title: Text('返回延迟'),
+              title: Text(LocalizationService.instance.current.backButton_7421),
               subtitle: Slider(
                 value: mapEditor.radialMenuReturnDelay.toDouble(),
                 min: 50.0,
@@ -974,7 +1054,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单动画持续时间
             ListTile(
-              title: Text('动画持续时间'),
+              title: Text(
+                LocalizationService.instance.current.animationDuration_4271,
+              ),
               subtitle: Slider(
                 value: mapEditor.radialMenuAnimationDuration.toDouble(),
                 min: 100.0,
@@ -991,7 +1073,9 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 轮盘菜单子菜单延迟
             ListTile(
-              title: Text('子菜单延迟'),
+              title: Text(
+                LocalizationService.instance.current.submenuDelay_4821,
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1001,16 +1085,27 @@ class MapEditorSettingsSection extends StatelessWidget {
                     max: 200.0,
                     divisions: 20,
                     label: mapEditor.radialMenuSubMenuDelay == 0
-                        ? '立即进入'
-                        : '${mapEditor.radialMenuSubMenuDelay}ms',
+                        ? LocalizationService
+                              .instance
+                              .current
+                              .enterImmediately_4821
+                        : LocalizationService.instance.current.delayWithMs(
+                            mapEditor.radialMenuSubMenuDelay,
+                          ),
                     onChanged: (value) => provider.updateMapEditor(
                       radialMenuSubMenuDelay: value.round(),
                     ),
                   ),
                   Text(
                     mapEditor.radialMenuSubMenuDelay == 0
-                        ? '立即进入子菜单'
-                        : '鼠标停止移动${mapEditor.radialMenuSubMenuDelay}ms后进入子菜单',
+                        ? LocalizationService
+                              .instance
+                              .current
+                              .enterSubMenuImmediately_4721
+                        : LocalizationService.instance.current
+                              .enterSubMenuAfterDelay_4721(
+                                mapEditor.radialMenuSubMenuDelay,
+                              ),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
@@ -1021,7 +1116,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 默认图例大小设置标题
             Text(
-              '默认图例大小',
+              LocalizationService.instance.current.defaultLegendSize_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -1030,7 +1125,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 默认图例大小
             ListTile(
-              title: Text('图例大小'),
+              title: Text(LocalizationService.instance.current.legendSize_4821),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1040,15 +1135,24 @@ class MapEditorSettingsSection extends StatelessWidget {
                     max: 3.0,
                     divisions: 30,
                     label: mapEditor.defaultLegendSize == 0.0
-                        ? '动态大小'
-                        : '${mapEditor.defaultLegendSize.toStringAsFixed(1)}',
+                        ? LocalizationService.instance.current.dynamicSize_4821
+                        : LocalizationService.instance.current
+                              .legendSizeValue_4821(
+                                mapEditor.defaultLegendSize.toStringAsFixed(1),
+                              ),
                     onChanged: (value) =>
                         provider.updateMapEditor(defaultLegendSize: value),
                   ),
                   Text(
                     mapEditor.defaultLegendSize == 0.0
-                        ? '使用动态公式：1/(缩放*系数)'
-                        : '固定大小：${mapEditor.defaultLegendSize.toStringAsFixed(1)}',
+                        ? LocalizationService
+                              .instance
+                              .current
+                              .dynamicFormulaText_7281
+                        : LocalizationService.instance.current
+                              .fixedSizeText_7281(
+                                mapEditor.defaultLegendSize.toStringAsFixed(1),
+                              ),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
@@ -1079,7 +1183,7 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 快捷键设置标题
             Text(
-              '快捷键设置',
+              LocalizationService.instance.current.shortcutSettings_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -1088,8 +1192,15 @@ class MapEditorSettingsSection extends StatelessWidget {
 
             // 快捷键设置按钮
             ListTile(
-              title: Text('管理快捷键'),
-              subtitle: Text('点击查看和编辑所有快捷键设置'),
+              title: Text(
+                LocalizationService.instance.current.shortcutManagement_4821,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .viewEditShortcutSettings_4821,
+              ),
               trailing: Icon(Icons.keyboard),
               onTap: () => _showShortcutManagementDialog(context, provider),
             ),

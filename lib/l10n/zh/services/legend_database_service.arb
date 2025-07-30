@@ -1,0 +1,7 @@
+{
+  "exportLegendFailed_7285": "导出图例数据库失败: {e}",
+  "exportLegendDatabaseTitle_4821": "导出图例数据库",
+  "importLegendDbFailed": "导入图例数据库失败: {e}",
+  "metadataTableCreated_7281": "元数据表创建完成",
+  "creatingMetadataTable_7281": "元数据表不存在，正在创建..."
+}

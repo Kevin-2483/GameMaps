@@ -1,5 +1,8 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+
+import '../../services/localization_service.dart';
 
 /// Web平台只读模式提示组件
 class WebReadOnlyBanner extends StatelessWidget {
@@ -19,7 +22,7 @@ class WebReadOnlyBanner extends StatelessWidget {
     }
 
     return Banner(
-      message: '只读模式',
+      message: LocalizationService.instance.current.readOnlyMode_4821,
       location: BannerLocation.topEnd,
       color: Colors.orange.withValues(alpha: 0.8),
       child: child,
@@ -35,18 +38,21 @@ class WebReadOnlyDialog {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.info, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('只读模式'),
+            const Icon(Icons.info, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(LocalizationService.instance.current.readOnlyMode_7421),
           ],
         ),
-        content: Text('Web版本为只读模式，无法执行"$operation"操作。\n\n如需编辑功能，请使用桌面版本。'),
+        content: Text(
+          LocalizationService.instance.current
+              .webReadOnlyModeWithOperation_7421(operation),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('了解'),
+            child: Text(LocalizationService.instance.current.learnMore_7421),
           ),
         ],
       ),

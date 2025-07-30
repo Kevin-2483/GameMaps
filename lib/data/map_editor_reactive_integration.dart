@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+// This file has been processed by AI for internationalization
 import 'package:flutter/widgets.dart';
 import 'dart:async';
 import '../models/map_item.dart';
@@ -11,6 +11,7 @@ import 'map_data_bloc.dart';
 import 'map_data_state.dart';
 import 'new_reactive_script_manager.dart';
 import 'map_editor_integration_adapter.dart';
+import '../services/localization_service.dart';
 
 /// 地图编辑器响应式系统集成
 /// 为现有地图编辑器提供完整的响应式数据管理支持
@@ -53,7 +54,9 @@ class MapEditorReactiveIntegration with ThrottleMixin {
   Future<void> initialize({String? mapAbsolutePath}) async {
     if (_isInitialized) return;
 
-    debugPrint('初始化地图编辑器响应式系统'); // 1. 创建VFS地图服务
+    debugPrint(
+      LocalizationService.instance.current.initMapEditorSystem_7281,
+    ); // 1. 创建VFS地图服务
     _mapService = VfsMapServiceFactory.createVfsMapService(); // 2. 创建地图数据Bloc
     _mapDataBloc = MapDataBloc(mapService: _mapService);
 
@@ -72,7 +75,9 @@ class MapEditorReactiveIntegration with ThrottleMixin {
     await _newScriptManager.initialize();
 
     _isInitialized = true;
-    debugPrint('响应式系统初始化完成');
+    debugPrint(
+      LocalizationService.instance.current.responsiveSystemInitialized_7421,
+    );
   }
 
   /// 加载地图到响应式系统
@@ -81,7 +86,11 @@ class MapEditorReactiveIntegration with ThrottleMixin {
       await initialize();
     }
 
-    debugPrint('加载地图到响应式系统: ${mapItem.title}');
+    debugPrint(
+      LocalizationService.instance.current.loadingMapToReactiveSystem(
+        mapItem.title,
+      ),
+    );
     await _adapter.initializeMap(mapItem);
   }
 
@@ -127,7 +136,9 @@ class MapEditorReactiveIntegration with ThrottleMixin {
 
   /// 释放资源
   void dispose() {
-    debugPrint('释放地图编辑器响应式系统资源'); // 清理节流管理器
+    debugPrint(
+      LocalizationService.instance.current.releaseMapEditorResources_7281,
+    ); // 清理节流管理器
     disposeThrottle();
 
     _adapter.dispose();
@@ -175,8 +186,15 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
   /// 2. 性能优化：减少BLoC事件频率（约60Hz）
   /// 3. 数据一致性：最终状态正确同步
   void updateLayerReactive(MapLayer layer) {
-    debugPrint('=== updateLayerReactive 调用 ===');
-    debugPrint('更新图层: ${layer.name}, ID: ${layer.id}');
+    debugPrint(
+      LocalizationService.instance.current.updateLayerReactiveCall_7281,
+    );
+    debugPrint(
+      LocalizationService.instance.current.updateLayerDebug(
+        layer.name,
+        layer.id,
+      ),
+    );
     debugPrint(
       'isLinkedToNext: ${layer.isLinkedToNext}, order: ${layer.order}',
     );
@@ -185,15 +203,22 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
     reactiveIntegration.throttled<MapLayer>(
       'updateLayer_${layer.id}', // 使用图层ID作为唯一标识
       (value) {
-        debugPrint('=== 节流执行图层更新 ===');
         debugPrint(
-          '执行更新图层: ${value!.name}, isLinkedToNext: ${value.isLinkedToNext}',
+          LocalizationService.instance.current.throttleLayerUpdate_7281,
+        );
+        debugPrint(
+          LocalizationService.instance.current.updateLayerLog(
+            value!.name,
+            value.isLinkedToNext,
+          ),
         );
         return reactiveIntegration._adapter.updateLayer(value);
       },
       value: layer,
     );
-    debugPrint('=== updateLayerReactive 完成 ===');
+    debugPrint(
+      LocalizationService.instance.current.updateLayerReactiveComplete_7281,
+    );
   }
 
   /// 批量更新图层（响应式）
@@ -213,10 +238,12 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
 
   /// 重新排序图层（响应式）
   void reorderLayersReactive(int oldIndex, int newIndex) {
-    debugPrint('=== reorderLayersReactive 调用 ===');
-    debugPrint('重排序图层: oldIndex=$oldIndex, newIndex=$newIndex');
+    debugPrint(LocalizationService.instance.current.reorderLayersCall_7284);
+    debugPrint(
+      LocalizationService.instance.current.reorderLayerLog(oldIndex, newIndex),
+    );
     reactiveIntegration.adapter.reorderLayers(oldIndex, newIndex);
-    debugPrint('=== reorderLayersReactive 完成 ===');
+    debugPrint(LocalizationService.instance.current.reorderLayersComplete_7281);
   }
 
   /// 组内重排序图层（响应式）
@@ -225,16 +252,25 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
     int newIndex,
     List<MapLayer> layersToUpdate,
   ) {
-    debugPrint('=== reorderLayersInGroupReactive 调用 ===');
     debugPrint(
-      '组内重排序图层: oldIndex=$oldIndex, newIndex=$newIndex, 更新图层数量: ${layersToUpdate.length}',
+      LocalizationService
+          .instance
+          .current
+          .reorderLayersInGroupReactiveCall_7281,
+    );
+    debugPrint(
+      LocalizationService.instance.current.layerReorderDebug_7281(
+        oldIndex,
+        newIndex,
+        layersToUpdate.length,
+      ),
     );
     reactiveIntegration.adapter.reorderLayersInGroup(
       oldIndex,
       newIndex,
       layersToUpdate,
     );
-    debugPrint('=== reorderLayersInGroupReactive 完成 ===');
+    debugPrint(LocalizationService.instance.current.reorderLayersComplete_7281);
   }
 
   /// 设置图层可见性（响应式）
@@ -304,15 +340,19 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
 
   /// 保存地图数据（响应式）
   Future<void> saveMapDataReactive({bool forceUpdate = false}) async {
-    debugPrint('=== saveMapDataReactive 开始 ===');
-    debugPrint('强制更新: $forceUpdate');
+    debugPrint(LocalizationService.instance.current.saveMapDataStart_7281);
+    debugPrint(
+      LocalizationService.instance.current.forceUpdateMessage_7285(forceUpdate),
+    );
 
     // 在保存前强制执行所有待处理的节流任务
-    debugPrint('强制执行所有待处理的节流任务...');
+    debugPrint(
+      LocalizationService.instance.current.forceExecutePendingTasks_7281,
+    );
     flushAllThrottledUpdates();
 
     await reactiveIntegration.saveMapData(forceUpdate: forceUpdate);
-    debugPrint('=== saveMapDataReactive 完成 ===');
+    debugPrint(LocalizationService.instance.current.saveMapDataComplete_7281);
   }
 
   /// 启用自动保存（响应式）
@@ -398,7 +438,11 @@ mixin MapEditorReactiveMixin<T extends StatefulWidget> on State<T> {
 
       // 可以通过遍历所有活跃的key来强制执行
       // 或者提供特定的flush方法
-      debugPrint('强制执行${throttleManager.activeCount}个待处理的节流任务');
+      debugPrint(
+        LocalizationService.instance.current.forceExecuteThrottleTasks(
+          throttleManager.activeCount,
+        ),
+      );
     }
   }
 

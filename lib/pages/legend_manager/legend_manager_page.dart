@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../components/layout/main_layout.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 import '../../models/legend_item.dart';
 import '../../services/legend_vfs/legend_vfs_service.dart';
 // import '../../components/common/config_aware_widgets.dart';
@@ -36,7 +37,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
   List<String> _folders = [];
   bool _isLoading = true;
   String _currentPath = ''; // 当前文件夹路径
-  List<String> _pathHistory = []; // 路径历史，用于面包屑导航
+  final List<String> _pathHistory = []; // 路径历史，用于面包屑导航
 
   @override
   void initState() {
@@ -59,7 +60,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        _showErrorSnackBar('加载图例失败: $e');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.legendLoadingFailed_7421(e),
+        );
       }
     }
   }
@@ -80,7 +83,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
             .toList();
       }
     } catch (e) {
-      debugPrint('加载文件夹失败: $e');
+      debugPrint(LocalizationService.instance.current.loadFolderFailed_7285(e));
       return [];
     }
   }
@@ -129,7 +132,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           : _compressImage(imageBytes);
 
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = LocalizationService.instance.current;
         final legendInfo = await _showAddLegendDialog(
           l10n,
           processedImage,
@@ -171,9 +174,13 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               _currentPath.isEmpty ? null : _currentPath,
             );
             await _loadLegends();
-            _showSuccessSnackBar('添加图例成功');
+            _showSuccessSnackBar(
+              LocalizationService.instance.current.legendAddedSuccessfully_4821,
+            );
           } catch (e) {
-            _showErrorSnackBar('添加图例失败: $e');
+            _showErrorSnackBar(
+              LocalizationService.instance.current.addLegendFailed_7285(e),
+            );
           }
         }
       }
@@ -190,7 +197,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         return Uint8List.fromList(img.encodePng(resized));
       }
     } catch (e) {
-      debugPrint('图片压缩失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.imageCompressionFailed_7284(e),
+      );
     }
     return imageBytes;
   }
@@ -203,16 +212,22 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('图例已存在'),
-          content: Text('图例 "$legendTitle" 已存在，是否要覆盖现有图例？'),
+          title: Text(
+            LocalizationService.instance.current.legendAlreadyExists_4271,
+          ),
+          content: Text(
+            LocalizationService.instance.current.legendExistsConfirmation(
+              legendTitle,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('覆盖'),
+              child: Text(LocalizationService.instance.current.coverText_7281),
             ),
           ],
         );
@@ -240,7 +255,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('编辑图例'),
+              title: Text(LocalizationService.instance.current.editLegend_4271),
               content: SizedBox(
                 width: 500,
                 child: SingleChildScrollView(
@@ -250,7 +265,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                       TextField(
                         controller: titleController,
                         decoration: InputDecoration(
-                          labelText: l10n.legendTitle,
+                          labelText: 'Legend Title',
                           hintText: l10n.enterLegendTitle,
                         ),
                         autofocus: true,
@@ -261,7 +276,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                         controller: versionController,
                         decoration: InputDecoration(
                           labelText: l10n.legendVersion,
-                          hintText: '输入图例版本号',
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .legendVersionHint_4821,
                         ),
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.done,
@@ -289,7 +307,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_7421,
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -304,7 +324,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                       });
                     }
                   },
-                  child: const Text('确定'),
+                  child: Text(
+                    LocalizationService.instance.current.confirmButton_7281,
+                  ),
                 ),
               ],
             );
@@ -343,7 +365,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                       TextField(
                         controller: titleController,
                         decoration: InputDecoration(
-                          labelText: l10n.legendTitle,
+                          labelText: 'Legend Title',
                           hintText: l10n.enterLegendTitle,
                         ),
                         autofocus: true,
@@ -354,7 +376,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                         controller: versionController,
                         decoration: InputDecoration(
                           labelText: l10n.legendVersion,
-                          hintText: '输入图例版本号',
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .legendVersionHintText_4821,
                         ),
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.done,
@@ -382,7 +407,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(
+                    LocalizationService.instance.current.cancelButton_4271,
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -397,7 +424,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                       });
                     }
                   },
-                  child: const Text('确定'),
+                  child: Text(
+                    LocalizationService.instance.current.confirmButton_7281,
+                  ),
                 ),
               ],
             );
@@ -409,7 +438,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   /// 编辑图例
   Future<void> _editLegend(LegendItem legend) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
 
     final result = await _showEditLegendDialog(l10n, legend);
     if (result != null) {
@@ -459,15 +488,19 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         );
 
         await _loadLegends();
-        _showSuccessSnackBar('图例更新成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.legendUpdateSuccess_7284,
+        );
       } catch (e) {
-        _showErrorSnackBar('更新图例失败: ${e.toString()}');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.updateLegendFailed(e.toString()),
+        );
       }
     }
   }
 
   Future<void> _deleteLegend(LegendItem legend) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -477,11 +510,11 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4821),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除'),
+              child: Text(LocalizationService.instance.current.delete_4821),
             ),
           ],
         );
@@ -497,7 +530,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         await _loadLegends();
         _showSuccessSnackBar(l10n.legendDeletedSuccessfully);
       } catch (e) {
-        _showErrorSnackBar(l10n.deleteLegendFailed(e.toString()));
+        if (mounted) {
+          _showErrorSnackBar(l10n.deleteLegendFailed(e, legend.title));
+        }
       }
     }
   }
@@ -513,16 +548,6 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       }
     });
     _loadLegends();
-  }
-
-  /// 返回上级文件夹
-  void _navigateBack() {
-    if (_pathHistory.isNotEmpty) {
-      setState(() {
-        _currentPath = _pathHistory.removeLast();
-      });
-      _loadLegends();
-    }
   }
 
   /// 导航到根目录
@@ -558,7 +583,10 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
     final pathSegments = _currentPath.split('/');
     final breadcrumbs = <Map<String, String>>[
-      {'name': '根目录', 'path': ''},
+      {
+        'name': LocalizationService.instance.current.rootDirectory_7281,
+        'path': '',
+      },
     ];
 
     String currentPath = '';
@@ -625,7 +653,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   /// 创建新文件夹
   Future<void> _createFolder() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
     final folderName = await _showCreateFolderDialog(l10n);
 
     if (folderName != null && folderName.isNotEmpty) {
@@ -636,13 +664,21 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         final success = await _vfsService.createFolder(fullPath);
 
         if (success) {
-          _showSuccessSnackBar('文件夹创建成功');
+          _showSuccessSnackBar(
+            LocalizationService.instance.current.folderCreatedSuccessfully_7281,
+          );
           await _loadLegends();
         } else {
-          _showErrorSnackBar('文件夹创建失败');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.folderCreationFailed_4821,
+          );
         }
       } catch (e) {
-        _showErrorSnackBar('文件夹创建失败: ${e.toString()}');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.folderCreationFailed(
+            e.toString(),
+          ),
+        );
       }
     }
   }
@@ -654,19 +690,20 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建文件夹'),
+        title: Text(LocalizationService.instance.current.createFolder_4271),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '文件夹名称',
-            hintText: '输入文件夹名称',
+          decoration: InputDecoration(
+            labelText:
+                LocalizationService.instance.current.folderNameLabel_4821,
+            hintText: LocalizationService.instance.current.folderNameHint_4821,
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           TextButton(
             onPressed: () {
@@ -675,7 +712,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                 Navigator.of(context).pop(name);
               }
             },
-            child: const Text('创建'),
+            child: Text(LocalizationService.instance.current.createButton_7421),
           ),
         ],
       ),
@@ -691,7 +728,7 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current;
     return Scaffold(
       body: Column(
         children: [
@@ -714,14 +751,18 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
               IconButton(
                 onPressed: _addLegend,
                 icon: const Icon(Icons.add),
-                tooltip: '添加图例',
+                tooltip:
+                    LocalizationService.instance.current.addLegendTooltip_7281,
               ),
               const SizedBox(width: 4),
               // 创建文件夹按钮
               IconButton(
                 onPressed: _createFolder,
                 icon: const Icon(Icons.create_new_folder),
-                tooltip: '创建文件夹',
+                tooltip: LocalizationService
+                    .instance
+                    .current
+                    .createFolderTooltip_7281,
               ),
             ],
           ),
@@ -840,16 +881,22 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('删除文件夹'),
-          content: Text('确定要删除文件夹 "$folderName" 吗？\n\n注意：只能删除空文件夹。'),
+          title: Text(LocalizationService.instance.current.deleteFolder_4271),
+          content: Text(
+            LocalizationService.instance.current.confirmDeleteFolder_7281(
+              folderName,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除'),
+              child: Text(LocalizationService.instance.current.delete_4821),
             ),
           ],
         );
@@ -857,19 +904,28 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     );
 
     if (confirmed == true) {
+      final folderPath = _currentPath.isEmpty
+          ? folderName
+          : '$_currentPath/$folderName';
       try {
-        final folderPath = _currentPath.isEmpty
-            ? folderName
-            : '$_currentPath/$folderName';
         final success = await _vfsService.deleteFolder(folderPath);
         if (success) {
           await _loadLegends();
-          _showSuccessSnackBar('文件夹删除成功');
+          _showSuccessSnackBar(
+            LocalizationService.instance.current.folderDeletedSuccessfully_4821,
+          );
         } else {
-          _showErrorSnackBar('删除失败：文件夹不为空或不存在');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.deleteFolderFailed_4821,
+          );
         }
       } catch (e) {
-        _showErrorSnackBar('删除文件夹失败: ${e.toString()}');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.folderDeletionFailed(
+            e,
+            folderPath,
+          ),
+        );
       }
     }
   }
@@ -895,7 +951,12 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
 
       return true;
     } catch (e) {
-      debugPrint('检查文件夹是否为空失败: $folderName, 错误: $e');
+      debugPrint(
+        LocalizationService.instance.current.checkFolderEmptyFailed_7421(
+          folderName,
+          e,
+        ),
+      );
       return false;
     }
   }
@@ -907,11 +968,11 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('重命名文件夹'),
+          title: Text(LocalizationService.instance.current.renameFolder_4271),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              labelText: '文件夹名称',
+            decoration: InputDecoration(
+              labelText: LocalizationService.instance.current.folderName_4821,
               border: OutlineInputBorder(),
             ),
             autofocus: true,
@@ -919,7 +980,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_7421,
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -930,7 +993,9 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_7281,
+              ),
             ),
           ],
         );
@@ -938,20 +1003,19 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
     );
 
     if (newName != null && newName != oldFolderName) {
+      final oldPath = _currentPath.isEmpty
+          ? oldFolderName
+          : '$_currentPath/$oldFolderName';
+      final newPath = _currentPath.isEmpty ? newName : '$_currentPath/$newName';
       try {
-        final oldPath = _currentPath.isEmpty
-            ? oldFolderName
-            : '$_currentPath/$oldFolderName';
-        final newPath = _currentPath.isEmpty
-            ? newName
-            : '$_currentPath/$newName';
-
         // 检查新名称是否已存在
         final folders = await _vfsService.getFolders(
           _currentPath.isEmpty ? null : _currentPath,
         );
         if (folders.contains(newName)) {
-          _showErrorSnackBar('文件夹名称已存在');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.folderNameExists_4821,
+          );
           return;
         }
 
@@ -959,12 +1023,22 @@ class _LegendManagerContentState extends State<_LegendManagerContent> {
         final success = await _vfsService.renameFolder(oldPath, newPath);
         if (success) {
           await _loadLegends();
-          _showSuccessSnackBar('文件夹重命名成功');
+          _showSuccessSnackBar(
+            LocalizationService.instance.current.folderRenameSuccess_4821,
+          );
         } else {
-          _showErrorSnackBar('重命名失败');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.renameFailed_4821,
+          );
         }
       } catch (e) {
-        _showErrorSnackBar('重命名文件夹失败: ${e.toString()}');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.renameFolderFailed(
+            e.toString(),
+            newPath,
+            oldPath,
+          ),
+        );
       }
     }
   }
@@ -988,45 +1062,47 @@ class _LegendCard extends StatelessWidget {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
-    showMenu(
-      context: context,
-      position: RelativeRect.fromRect(
-        details.globalPosition & const Size(40, 40),
-        Offset.zero & overlay.size,
-      ),
-      items: [
-        if (onEdit != null)
-          const PopupMenuItem<String>(
-            value: 'edit',
+    if (context.mounted) {
+      showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+          details.globalPosition & const Size(40, 40),
+          Offset.zero & overlay.size,
+        ),
+        items: [
+          if (onEdit != null)
+            PopupMenuItem<String>(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 16, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text(LocalizationService.instance.current.edit_7281),
+                ],
+              ),
+            ),
+          PopupMenuItem<String>(
+            value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.edit, size: 16, color: Colors.blue),
+                Icon(Icons.delete, size: 16, color: Colors.red),
                 SizedBox(width: 8),
-                Text('编辑'),
+                Text(LocalizationService.instance.current.delete_4821),
               ],
             ),
           ),
-        const PopupMenuItem<String>(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(Icons.delete, size: 16, color: Colors.red),
-              SizedBox(width: 8),
-              Text('删除'),
-            ],
-          ),
-        ),
-      ],
-    ).then((value) {
-      switch (value) {
-        case 'edit':
-          onEdit?.call();
-          break;
-        case 'delete':
-          onDelete.call();
-          break;
-      }
-    });
+        ],
+      ).then((value) {
+        switch (value) {
+          case 'edit':
+            onEdit?.call();
+            break;
+          case 'delete':
+            onDelete.call();
+            break;
+        }
+      });
+    }
   }
 
   Widget _buildImageWidget(LegendItem legend) {
@@ -1073,18 +1149,7 @@ class _LegendCard extends StatelessWidget {
               child: Stack(
                 children: [
                   // 图片
-                  Positioned.fill(
-                    child: legend.imageData != null
-                        ? _buildImageWidget(legend)
-                        : Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 32,
-                              color: Colors.grey,
-                            ),
-                          ),
-                  ),
+                  Positioned.fill(child: _buildImageWidget(legend)),
                   // 中心点指示器
                   if (legend.imageData != null)
                     Positioned.fill(
@@ -1153,24 +1218,24 @@ class _FolderCard extends StatelessWidget {
       ),
       items: [
         if (onRename != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'rename',
             child: Row(
               children: [
-                Icon(Icons.edit, size: 16, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('重命名'),
+                const Icon(Icons.edit, size: 16, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text(LocalizationService.instance.current.rename_4821),
               ],
             ),
           ),
         if (onDelete != null && isEmpty)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.delete, size: 16, color: Colors.red),
-                SizedBox(width: 8),
-                Text('删除'),
+                const Icon(Icons.delete, size: 16, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(LocalizationService.instance.current.delete_7281),
               ],
             ),
           ),
@@ -1198,7 +1263,7 @@ class _FolderCard extends StatelessWidget {
             onSecondaryTapDown: onDelete != null || onRename != null
                 ? (details) => _showFolderContextMenu(context, details)
                 : null,
-            child: Container(
+            child: SizedBox(
               width: double.infinity,
               child: Icon(
                 Icons.folder,

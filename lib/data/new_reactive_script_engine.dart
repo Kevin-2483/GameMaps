@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/script_data.dart';
@@ -8,6 +9,7 @@ import '../services/scripting/script_executor_factory.dart';
 import '../services/scripting/external_function_handler.dart';
 import 'map_data_bloc.dart';
 import 'map_data_state.dart';
+import '../services/localization_service.dart';
 
 /// 重构后的响应式脚本引擎
 /// 使用消息传递机制，支持异步隔离执行和并发脚本执行
@@ -67,7 +69,11 @@ class NewReactiveScriptEngine {
   /// 更新数据访问器
   void _updateDataAccessor(MapDataLoaded mapData) {
     debugPrint(
-      '更新脚本引擎数据访问器，图层数量: ${mapData.layers.length}，便签数量: ${mapData.mapItem.stickyNotes.length}，图例组数量: ${mapData.legendGroups.length}',
+      LocalizationService.instance.current.scriptEngineDataUpdater(
+        mapData.layers.length,
+        mapData.mapItem.stickyNotes.length,
+        mapData.legendGroups.length,
+      ),
     );
 
     // 在新架构中，脚本通过消息传递直接访问最新数据
@@ -76,7 +82,9 @@ class NewReactiveScriptEngine {
 
   /// 清空数据访问器
   void _clearDataAccessor() {
-    debugPrint('清空脚本引擎数据访问器');
+    debugPrint(
+      LocalizationService.instance.current.clearScriptEngineDataAccessor_7281,
+    );
     // 在新架构中不需要清空缓存字段
   }
 
@@ -84,7 +92,9 @@ class NewReactiveScriptEngine {
   void setVfsAccessor(VirtualFileSystem vfsService, String mapTitle) {
     // 在新架构中，VFS访问通过消息传递机制实现
     // 这里保留接口以便将来扩展文件操作外部函数
-    debugPrint('设置VFS访问器，地图标题: $mapTitle');
+    debugPrint(
+      LocalizationService.instance.current.setVfsAccessorWithMapTitle(mapTitle),
+    );
   }
 
   /// 执行脚本（使用消息传递机制）
@@ -97,16 +107,24 @@ class NewReactiveScriptEngine {
 
       // 使用消息传递机制执行脚本
       final result = await _executeScriptWithMessagePassing(script);
-      debugPrint('脚本执行${result.success ? '成功' : '失败'}: ${script.name}');
+      debugPrint(
+        '${LocalizationService.instance.current.scriptExecutionResult_7421} ${result.success ? LocalizationService.instance.current.success_7422 : LocalizationService.instance.current.failure_7423}: ${script.name}',
+      );
       if (!result.success) {
-        debugPrint('脚本错误: ${result.error}');
+        debugPrint(
+          LocalizationService.instance.current.scriptError_7284(
+            result.error ?? '',
+          ),
+        );
         // 如果执行失败，清理该脚本的执行器以避免状态污染
         _cleanupExecutor(script.id);
       }
 
       return result;
     } catch (e) {
-      debugPrint('脚本执行异常: $e');
+      debugPrint(
+        LocalizationService.instance.current.scriptExecutionError_7284(e),
+      );
       // 发生异常时也清理执行器
       _cleanupExecutor(script.id);
       return ScriptExecutionResult(
@@ -155,7 +173,11 @@ class NewReactiveScriptEngine {
 
     // 检查是否达到最大并发数
     if (_executorPool.length >= _maxConcurrentExecutors) {
-      throw Exception('达到最大并发脚本数限制 ($_maxConcurrentExecutors)');
+      throw Exception(
+        LocalizationService.instance.current.maxConcurrentScriptsReached(
+          _maxConcurrentExecutors,
+        ),
+      );
     }
 
     // 为该脚本创建独立的外部函数处理器
@@ -174,7 +196,12 @@ class NewReactiveScriptEngine {
     // 加入执行器池
     _executorPool[scriptId] = executor;
 
-    debugPrint('为脚本 $scriptId 创建新的执行器和函数处理器 (当前池大小: ${_executorPool.length})');
+    debugPrint(
+      LocalizationService.instance.current.scriptExecutorCreation_7281(
+        scriptId,
+        _executorPool.length,
+      ),
+    );
 
     return executor;
   }
@@ -356,7 +383,12 @@ class NewReactiveScriptEngine {
       functionHandler.handleTtsGetSpeechRateRange,
     );
 
-    debugPrint('已注册所有外部函数到Isolate执行器');
+    debugPrint(
+      LocalizationService
+          .instance
+          .current
+          .externalFunctionsRegisteredToIsolateExecutor_7281,
+    );
   }
 
   /// 处理获取图层函数  /// 清空执行日志
@@ -364,7 +396,7 @@ class NewReactiveScriptEngine {
     for (final handler in _functionHandlerPool.values) {
       handler.clearExecutionLogs();
     }
-    debugPrint('清空所有脚本执行日志');
+    debugPrint(LocalizationService.instance.current.clearAllScriptLogs_7281);
   }
 
   /// 重置脚本引擎
@@ -415,13 +447,21 @@ class NewReactiveScriptEngine {
 
   /// 初始化脚本引擎
   Future<void> initializeScriptEngine() async {
-    debugPrint('初始化新响应式脚本引擎 (支持 $_maxConcurrentExecutors 个并发脚本)');
+    debugPrint(
+      LocalizationService.instance.current.initializingScriptEngine(
+        _maxConcurrentExecutors,
+      ),
+    );
   }
 
   /// 清理指定脚本的执行器
   void _cleanupExecutor(String scriptId) {
     if (_executorPool.containsKey(scriptId)) {
-      debugPrint('清理脚本执行器: $scriptId');
+      debugPrint(
+        LocalizationService.instance.current.scriptExecutorCleanup_7421(
+          scriptId,
+        ),
+      );
       _executorPool[scriptId]!.dispose();
       _executorPool.remove(scriptId);
     }
@@ -435,7 +475,9 @@ class NewReactiveScriptEngine {
 
   /// 释放资源
   void dispose() {
-    debugPrint('释放新响应式脚本引擎资源');
+    debugPrint(
+      LocalizationService.instance.current.releaseScriptEngineResources_4821,
+    );
 
     _isListening = false;
     _mapDataSubscription?.cancel();
@@ -469,7 +511,9 @@ class NewReactiveScriptEngine {
   void stopScript(String scriptId) {
     if (_executorPool.containsKey(scriptId)) {
       _executorPool[scriptId]!.stop();
-      debugPrint('停止脚本: $scriptId');
+      debugPrint(
+        LocalizationService.instance.current.stopScript_7285(scriptId),
+      );
       // 停止后清理执行器，确保下次执行时使用全新的状态
       _cleanupExecutor(scriptId);
     }

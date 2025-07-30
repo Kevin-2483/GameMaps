@@ -1,0 +1,20 @@
+{
+  "loadingVfsDirectory_7421": "正在加载VFS目录结构...",
+  "failedToLoadVfsDirectory_7281": "无法加载VFS目录",
+  "selectedDirectoriesCount": "已选中: {count} 个目录",
+  "stepSelectionModeHint_4821": "步进型选择模式：只选择当前目录，不会递归选择子目录",
+  "refreshDirectoryTree_7281": "刷新目录树",
+  "stepperSelection_4821": "步进型选择: 选中目录 {path}",
+  "stepperCancelLog": "步进型取消: 取消选中目录 {path}",
+  "startLoadingLegendsToCache": "开始从目录加载图例到缓存: {directoryPath}",
+  "foundLegendFilesInDirectory": "在目录 {directoryPath} 中找到 {count} 个图例文件",
+  "cachedLegendPath_7421": "已缓存图例: {legendPath}",
+  "legendLoadFailed_7421": "加载图例失败: {legendFile}, 错误: {e}",
+  "loadLegendFailed": "从目录加载图例失败: {directoryPath}, 错误: {e}",
+  "directorySelectedByOthers_4821": "此目录已被其他图例组选择",
+  "directorySelectedByGroup": "此目录已被图例组 \"{groupName}\" 选择",
+  "directoryUsedByGroups": "此目录已被以下图例组选择：{groupNames}",
+  "selectedPathsCount_7421": "当前组选中路径: {selectedCount} 个，其他组选中: {otherCount} 个",
+  "currentVersionLabel": "当前版本: {currentVersionId}",
+  "syncTreeStatusLegendGroup": "同步树状态（步进型）- 当前图例组: {legendGroupId}"
+}

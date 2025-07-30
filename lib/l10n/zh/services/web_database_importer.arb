@@ -1,0 +1,11 @@
+{
+  "sampleDataCreated_7421": "WebDatabaseImporter: 示例数据创建完成",
+  "webDatabaseImporterWebOnly_7281": "WebDatabaseImporter: 只能在Web平台使用",
+  "webDatabaseImportComplete_4821": "WebDatabaseImporter: 数据导入完成",
+  "mapImportSuccess": "成功导入地图: {title}",
+  "legendImportSuccess_7421": "成功导入图例",
+  "importLegendFailed_7281": "导入图例失败",
+  "createSampleData_7421": "WebDatabaseImporter: 创建示例数据",
+  "sampleMapTitle_7281": "示例地图",
+  "createSampleDataFailed_7281": "创建示例数据失败"
+}

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,8 @@ import 'map_database_service.dart';
 import 'vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
 import 'map_localization_service.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 合并数据库导出服务
 /// 用于将地图、图例和本地化数据导出为单个JSON文件，供Web平台使用
@@ -120,14 +123,17 @@ class CombinedDatabaseExporter {
             'count': localizationDb.maps.length,
           };
         } catch (e) {
-          debugPrint('获取本地化数据失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.fetchLocalizationFailed(e),
+          );
           // 本地化数据失败不影响整体导出
         }
       }
 
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: '导出R6Box数据库 (Web平台专用)',
+        dialogTitle:
+            LocalizationService.instance.current.exportDatabaseDialogTitle_4721,
         fileName:
             'r6box_database_web_v${mapVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
@@ -154,7 +160,9 @@ class CombinedDatabaseExporter {
         return outputFile;
       }
     } catch (e) {
-      debugPrint('合并数据库导出失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.databaseExportFailed_4829(e),
+      );
       rethrow;
     }
     return null;
@@ -165,7 +173,11 @@ class CombinedDatabaseExporter {
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        debugPrint('导出文件不存在: $filePath');
+        debugPrint(
+          LocalizationService.instance.current.exportFileNotExist_7285(
+            filePath,
+          ),
+        );
         return false;
       }
 
@@ -176,28 +188,40 @@ class CombinedDatabaseExporter {
       if (!data.containsKey('exportInfo') ||
           !data.containsKey('maps') ||
           !data.containsKey('legends')) {
-        debugPrint('导出文件格式不正确，缺少必要字段');
+        debugPrint(
+          LocalizationService.instance.current.invalidExportFileFormat_4821,
+        );
         return false;
       }
 
       // 检查地图数据
       final mapsData = data['maps'] as Map<String, dynamic>;
       if (!mapsData.containsKey('data') || mapsData['data'] is! List) {
-        debugPrint('地图数据格式不正确');
+        debugPrint(
+          LocalizationService.instance.current.invalidMapDataFormat_7281,
+        );
         return false;
       }
 
       // 检查图例数据
       final legendsData = data['legends'] as Map<String, dynamic>;
       if (!legendsData.containsKey('data') || legendsData['data'] is! List) {
-        debugPrint('图例数据格式不正确');
+        debugPrint(
+          LocalizationService.instance.current.invalidLegendDataFormat_7281,
+        );
         return false;
       }
 
-      debugPrint('导出文件验证通过: $filePath');
+      debugPrint(
+        LocalizationService.instance.current.exportFileValidationPassed(
+          filePath,
+        ),
+      );
       return true;
     } catch (e) {
-      debugPrint('验证导出文件失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportValidationFailed_4821(e),
+      );
       return false;
     }
   }
@@ -230,7 +254,7 @@ class CombinedDatabaseExporter {
         'fileSize': await file.length(),
       };
     } catch (e) {
-      debugPrint('获取导出文件信息失败: $e');
+      debugPrint(LocalizationService.instance.current.exportFileInfoFailed(e));
       return null;
     }
   }
@@ -240,7 +264,9 @@ class CombinedDatabaseExporter {
     try {
       return await _mapService.getAllMapsSummary();
     } catch (e) {
-      debugPrint('获取地图列表失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchMapListFailed_7285(e),
+      );
       return [];
     }
   }
@@ -250,7 +276,9 @@ class CombinedDatabaseExporter {
     try {
       return await _legendService.getAllLegends();
     } catch (e) {
-      debugPrint('获取图例列表失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.fetchLegendListFailed_4821(e),
+      );
       return [];
     }
   }
@@ -263,7 +291,9 @@ class CombinedDatabaseExporter {
 
       return {'mapsCount': maps.length, 'legendsCount': legends.length};
     } catch (e) {
-      debugPrint('获取数据库统计信息失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.databaseStatsError_4821(e),
+      );
       return {'mapsCount': 0, 'legendsCount': 0};
     }
   }

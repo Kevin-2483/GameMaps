@@ -1,0 +1,10 @@
+{
+  "generateFileUrl": "生成文件URL - {vfsPath}",
+  "generateFileUrlFailed_4821": "生成文件URL失败 - {e}",
+  "fileSizeExceededWebLimit": "文件过大（{fileSize}MB，超过4MB限制），无法在Web平台生成URL",
+  "generateDataUri_7425": "生成Data URI",
+  "length_8921": "长度",
+  "largeFileWarning": "🔗 VfsServiceProvider: 警告 - 文件较大（{fileSize}MB），可能影响性能",
+  "fileNotExist_4721": "文件不存在 - {vfsPath}",
+  "tempFileGenerationFailed_4821": "生成临时文件失败"
+}

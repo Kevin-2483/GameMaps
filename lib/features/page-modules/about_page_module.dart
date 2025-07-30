@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/about/about_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 关于页模块
 class AboutPageModule extends PageModule {
@@ -14,7 +17,8 @@ class AboutPageModule extends PageModule {
   String get path => '/about';
 
   @override
-  String get displayName => '关于';
+  String get displayName =>
+      LocalizationService.instance.current.aboutPageTitle_4821;
 
   @override
   IconData get icon => Icons.info_outline;

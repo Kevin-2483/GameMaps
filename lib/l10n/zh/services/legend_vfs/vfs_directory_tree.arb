@@ -1,0 +1,12 @@
+{
+  "vfsDirectoryTreeLoaded": "VFS目录树: 加载完成，根节点包含 {count} 个子目录",
+  "vfsDirectoryLoadFailed_7421": "VFS目录树: 加载失败 {e}",
+  "rootDirectoryName_4721": "根目录",
+  "exampleLibrary_7421": "图例库",
+  "vfsDirectoryTreeStartBuilding": "VFS目录树: 开始构建，输入文件夹数量: {count}",
+  "vfsDirectoryTreeProcessingPath": "VFS目录树: 处理路径 \"{folderPath}\"，分段: {pathSegments}",
+  "vfsDirectoryTreeCreateNode": "VFS目录树: 创建节点 \"{segment}\" (路径: {currentPath})，添加到父节点 \"{parentName}\" (路径: {parentPath})",
+  "vfsTreeWarningParentNotFound": "VFS目录树: 警告 - 找不到父节点: {parentPath}",
+  "vfsNodeExists_7281": "VFS目录树: 节点已存在: {currentPath}",
+  "vfsDirectoryTreeBuilt_7281": "VFS目录树: 构建完成，根节点包含 {count} 个子节点"
+}

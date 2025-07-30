@@ -1,0 +1,6 @@
+{
+  "webDownloadUtilsWebOnly_7281": "WebDownloadUtils只能在Web平台使用",
+  "webFileDownloadFailed_7285": "Web文件下载失败: {e}",
+  "webDownloadFailed_7285": "Web压缩包下载失败: {e}",
+  "batchDownloadFailed": "批量下载文件 \"{fileName}\" 失败: {error}"
+}

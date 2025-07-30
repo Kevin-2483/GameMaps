@@ -1,0 +1,9 @@
+{
+  "layerName_7421": "图层: {name}",
+  "selectLegendGroupToBind_7281": "选择要绑定到此图层的图例组",
+  "boundLegendGroupsTitle": "已绑定的图例组 ({count})",
+  "availableLegendGroups": "可用的图例组 ({count})",
+  "noLegendAvailable_4251": "暂无可用的图例组",
+  "legendCount": "{count} 个图例",
+  "manageLegendGroup_7421": "管理图例组"
+}

@@ -1,0 +1,9 @@
+{
+  "configDeletedSuccessfully": "配置删除成功: {configId}",
+  "deleteConfigFailed_7281": "删除配置失败: {e}",
+  "fetchConfigFailed_7284": "获取配置信息失败: {e}",
+  "userPreferencesInitComplete_4821": "用户偏好设置配置管理系统初始化完成",
+  "configInitFailed_7285": "初始化配置管理系统失败: {e}",
+  "configDirCreatedOrExists_7281": "配置目录已创建或已存在",
+  "configDirCreationError_4821": "配置目录创建: {e}"
+}

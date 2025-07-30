@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,8 @@ import '../services/user_preferences/user_preferences_service.dart';
 import '../services/user_preferences/user_preferences_config_service.dart';
 import '../utils/extension_settings_helper.dart';
 import 'theme_provider.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 用户偏好设置状态管理Provider
 class UserPreferencesProvider extends ChangeNotifier {
@@ -79,13 +82,23 @@ class UserPreferencesProvider extends ChangeNotifier {
       ExtensionSettingsManager.initialize(this);
 
       if (kDebugMode) {
-        debugPrint('用户偏好设置初始化完成: ${_currentPreferences?.displayName}');
-        debugPrint('扩展设置管理器已初始化');
+        debugPrint(
+          LocalizationService.instance.current.preferencesInitialized(
+            _currentPreferences?.displayName ?? 'unknown',
+          ),
+        );
+        debugPrint(
+          LocalizationService.instance.current.extensionManagerInitialized_7281,
+        );
       }
     } catch (e) {
-      _setError('初始化用户偏好设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.initUserPrefsFailed(e.toString()),
+      );
       if (kDebugMode) {
-        debugPrint('初始化用户偏好设置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.userPrefsInitFailed_4829(e),
+        );
       }
     } finally {
       _setLoading(false);
@@ -135,7 +148,9 @@ class UserPreferencesProvider extends ChangeNotifier {
         }
       });
     } catch (e) {
-      _setError('更新主题设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.themeUpdateFailed(e.toString()),
+      );
     }
   }
 
@@ -182,7 +197,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新地图编辑器设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.mapEditorUpdateFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -237,7 +256,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新界面布局设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateLayoutFailed(e.toString()),
+      );
     }
   }
 
@@ -258,7 +279,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('更新窗口大小失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.windowSizeUpdateFailed(e),
+        );
       }
       return false;
     }
@@ -291,7 +314,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新工具设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.toolSettingsUpdateFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -314,7 +341,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新用户信息失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateUserInfoFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -325,7 +356,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('添加最近使用颜色失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.addRecentColorFailed(e.toString()),
+      );
     }
   }
 
@@ -336,7 +369,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('添加常用线条宽度失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.addLineWidthFailed(e.toString()),
+      );
     }
   }
 
@@ -344,20 +379,30 @@ class UserPreferencesProvider extends ChangeNotifier {
   Future<void> addCustomColor(int color) async {
     try {
       if (kDebugMode) {
-        debugPrint('开始添加自定义颜色: ${color.toRadixString(16).padLeft(8, '0')}');
+        debugPrint(
+          LocalizationService.instance.current.addingCustomColor_7281(
+            color.toRadixString(16).padLeft(8, '0'),
+          ),
+        );
       }
       await _service.addCustomColor(color);
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
       if (kDebugMode) {
         debugPrint(
-          '自定义颜色添加成功，当前自定义颜色数量: ${_currentPreferences!.tools.customColors.length}',
+          LocalizationService.instance.current.customColorAddedSuccessfully(
+            _currentPreferences!.tools.customColors.length,
+          ),
         );
       }
     } catch (e) {
-      _setError('添加自定义颜色失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.addCustomColorFailed(e.toString()),
+      );
       if (kDebugMode) {
-        debugPrint('添加自定义颜色失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.addCustomColorFailed_7285(e),
+        );
       }
       rethrow; // 重新抛出错误，让调用方能够处理
     }
@@ -375,7 +420,11 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       await updateTools(customColors: customColors);
     } catch (e) {
-      _setError('移除自定义颜色失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.removeCustomColorFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -386,7 +435,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('添加自定义标签失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.addCustomTagFailed(e.toString()),
+      );
     }
   }
 
@@ -397,7 +448,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('移除自定义标签失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.removeCustomTagFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -408,7 +463,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新自定义标签失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateCustomTagFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -419,7 +478,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('添加最近使用标签失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.addRecentTagFailed(e.toString()),
+      );
     }
   }
 
@@ -438,7 +499,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新面板状态失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.panelUpdateFailed_7285(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -455,7 +520,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      _setError('创建用户失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.userCreationFailed_7421(
+          e.toString(),
+        ),
+      );
     } finally {
       _setLoading(false);
     }
@@ -469,7 +538,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('切换用户失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.switchUserFailed_7421(
+          e.toString(),
+        ),
+      );
     } finally {
       _setLoading(false);
     }
@@ -482,7 +555,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('删除用户失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.deleteUserFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -496,7 +573,11 @@ class UserPreferencesProvider extends ChangeNotifier {
     try {
       return await _service.exportSettings();
     } catch (e) {
-      _setError('导出设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.exportSettingsFailed_7421(
+          e.toString(),
+        ),
+      );
       rethrow;
     }
   }
@@ -515,7 +596,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       currentShortcuts[action] = shortcuts;
       await updateMapEditor(shortcuts: currentShortcuts);
     } catch (e) {
-      _setError('更新地图编辑器快捷键失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateShortcutFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -527,7 +612,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('导入设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.importSettingsFailed_7421(
+          e.toString(),
+        ),
+      );
     } finally {
       _setLoading(false);
     }
@@ -541,7 +630,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('重置设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.resetSettingsFailed_7421(
+          e.toString(),
+        ),
+      );
     } finally {
       _setLoading(false);
     }
@@ -614,7 +707,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新扩展设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateExtensionSettingsFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -654,7 +751,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       final Map<String, dynamic> settings = jsonDecode(jsonString);
       await updateExtensionSettings(settings);
     } catch (e) {
-      _setError('解析扩展设置JSON失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.parseExtensionSettingsFailed(
+          e.toString(),
+        ),
+      );
       rethrow;
     }
   }
@@ -683,7 +784,11 @@ class UserPreferencesProvider extends ChangeNotifier {
       _currentPreferences = await _service.getCurrentPreferences();
       notifyListeners();
     } catch (e) {
-      _setError('更新主页设置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateHomeSettingsFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -693,7 +798,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       await _service.flushPendingChanges();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('强制保存待处理更改失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.forceSaveFailed_4829(e),
+        );
       }
     }
   }
@@ -705,7 +812,11 @@ class UserPreferencesProvider extends ChangeNotifier {
     try {
       return await _configService.getAllConfigs();
     } catch (e) {
-      _setError('获取配置列表失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.fetchConfigListFailed_7285(
+          e.toString(),
+        ),
+      );
       return [];
     }
   }
@@ -716,7 +827,7 @@ class UserPreferencesProvider extends ChangeNotifier {
     required String description,
   }) async {
     if (_currentPreferences == null) {
-      _setError('当前没有可保存的偏好设置');
+      _setError(LocalizationService.instance.current.noPreferencesToSave_7281);
       return null;
     }
 
@@ -729,12 +840,19 @@ class UserPreferencesProvider extends ChangeNotifier {
       );
 
       if (kDebugMode) {
-        debugPrint('配置保存成功: $name ($configId)');
+        debugPrint(
+          LocalizationService.instance.current.configSavedSuccessfully(
+            name,
+            configId,
+          ),
+        );
       }
 
       return configId;
     } catch (e) {
-      _setError('保存配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.saveConfigFailed(e.toString()),
+      );
       return null;
     } finally {
       _setLoading(false);
@@ -748,7 +866,9 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       final preferences = await _configService.loadConfig(configId);
       if (preferences == null) {
-        _setError('配置不存在或加载失败');
+        _setError(
+          LocalizationService.instance.current.configNotFoundOrLoadFailed_4821,
+        );
         return false;
       }
 
@@ -791,12 +911,18 @@ class UserPreferencesProvider extends ChangeNotifier {
       }
 
       if (kDebugMode) {
-        debugPrint('配置加载并应用成功: $configId');
+        debugPrint(
+          LocalizationService.instance.current.configLoadedSuccessfully(
+            configId,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
-      _setError('加载配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.loadConfigFailed(e.toString()),
+      );
       return false;
     } finally {
       _setLoading(false);
@@ -811,15 +937,27 @@ class UserPreferencesProvider extends ChangeNotifier {
       final success = await _configService.deleteConfig(configId);
       if (success) {
         if (kDebugMode) {
-          debugPrint('配置删除成功: $configId');
+          debugPrint(
+            LocalizationService.instance.current.configDeletedSuccessfully(
+              configId,
+            ),
+          );
         }
       } else {
-        _setError('删除配置失败');
+        _setError(
+          LocalizationService.instance.current.deleteConfigFailed_7281(
+            'unknown error',
+          ),
+        );
       }
 
       return success;
     } catch (e) {
-      _setError('删除配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.deleteConfigFailed_7281(
+          e.toString(),
+        ),
+      );
       return false;
     } finally {
       _setLoading(false);
@@ -832,7 +970,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       return await _configService.configExists(configId);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('检查配置存在性失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.configCheckFailed_7425(e),
+        );
       }
       return false;
     }
@@ -844,7 +984,9 @@ class UserPreferencesProvider extends ChangeNotifier {
       return await _configService.getConfigInfo(configId);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取配置信息失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fetchConfigFailed_7284(e),
+        );
       }
       return null;
     }
@@ -862,7 +1004,9 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       final configPreferences = preferences ?? _currentPreferences;
       if (configPreferences == null) {
-        _setError('没有可更新的偏好设置');
+        _setError(
+          LocalizationService.instance.current.noUpdatablePreferences_4821,
+        );
         return false;
       }
 
@@ -874,12 +1018,21 @@ class UserPreferencesProvider extends ChangeNotifier {
       );
 
       if (kDebugMode) {
-        debugPrint('配置更新成功: $name ($configId)');
+        debugPrint(
+          LocalizationService.instance.current.configUpdateSuccess(
+            name,
+            configId,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
-      _setError('更新配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.updateConfigFailed_7421(
+          e.toString(),
+        ),
+      );
       return false;
     } finally {
       _setLoading(false);
@@ -891,13 +1044,13 @@ class UserPreferencesProvider extends ChangeNotifier {
     try {
       final preferences = await _configService.loadConfig(configId);
       if (preferences == null) {
-        _setError('配置不存在');
+        _setError(LocalizationService.instance.current.configNotFound_4821);
         return null;
       }
 
       final configInfo = await _configService.getConfigInfo(configId);
       if (configInfo == null) {
-        _setError('获取配置信息失败');
+        _setError(LocalizationService.instance.current.fetchConfigFailed_4821);
         return null;
       }
 
@@ -910,7 +1063,11 @@ class UserPreferencesProvider extends ChangeNotifier {
 
       return jsonEncode(exportData);
     } catch (e) {
-      _setError('导出配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.exportConfigFailed_7421(
+          e.toString(),
+        ),
+      );
       return null;
     }
   }
@@ -932,19 +1089,32 @@ class UserPreferencesProvider extends ChangeNotifier {
       final newConfigId = DateTime.now().millisecondsSinceEpoch.toString();
 
       final importedConfigId = await _configService.saveConfig(
-        name: '${configInfo.name} (导入)',
-        description: '${configInfo.description} (从JSON导入)',
+        name:
+            '${configInfo.name} ' +
+            LocalizationService.instance.current.importedSuffix_4821,
+        description:
+            '${configInfo.description} ' +
+            LocalizationService.instance.current.importedFromJson_4822,
         preferences: preferences,
         configId: newConfigId,
       );
 
       if (kDebugMode) {
-        debugPrint('配置导入成功: ${configInfo.name} ($importedConfigId)');
+        debugPrint(
+          LocalizationService.instance.current.configImportSuccess(
+            configInfo.name,
+            importedConfigId,
+          ),
+        );
       }
 
       return importedConfigId;
     } catch (e) {
-      _setError('导入配置失败: ${e.toString()}');
+      _setError(
+        LocalizationService.instance.current.importConfigFailed_7421(
+          e.toString(),
+        ),
+      );
       return null;
     } finally {
       _setLoading(false);

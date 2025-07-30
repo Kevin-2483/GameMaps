@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,8 @@ import '../../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/vfs/vfs_file_opener_service.dart';
 import '../../../services/virtual_file_system/vfs_protocol.dart';
 import '../../../services/notification/notification_service.dart';
+
+import '../../../services/localization_service.dart';
 
 /// VFS文本查看器窗口
 class VfsTextViewerWindow extends StatefulWidget {
@@ -80,7 +83,7 @@ class VfsTextViewerWindow extends StatefulWidget {
   /// 从路径获取副标题
   static String _getSubtitleFromPath(String vfsPath, VfsFileInfo? fileInfo) {
     if (fileInfo != null) {
-      return '大小: ${_formatFileSize(fileInfo.size)} • 修改时间: ${_formatDateTime(fileInfo.modifiedAt)}';
+      return '${LocalizationService.instance.current.fileSizeLabel_7421}: ${_formatFileSize(fileInfo.size)} • ${LocalizationService.instance.current.modifiedTimeLabel_8532}: ${_formatDateTime(fileInfo.modifiedAt)}';
     }
     return vfsPath;
   }
@@ -88,8 +91,9 @@ class VfsTextViewerWindow extends StatefulWidget {
   static String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
+    if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
@@ -176,13 +180,15 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         });
       } else {
         setState(() {
-          _errorMessage = '无法读取文本文件';
+          _errorMessage =
+              LocalizationService.instance.current.failedToReadTextFile_4821;
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = '加载文本文件失败: $e';
+        _errorMessage = LocalizationService.instance.current
+            .loadTextFileFailed_7421(e);
         _isLoading = false;
       });
     }
@@ -279,7 +285,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           IconButton(
             onPressed: _toggleReadOnlyMode,
             icon: Icon(_isReadOnly ? Icons.edit_off : Icons.edit),
-            tooltip: _isReadOnly ? '启用编辑' : '只读模式',
+            tooltip: _isReadOnly
+                ? LocalizationService.instance.current.enableEditing_5421
+                : LocalizationService.instance.current.readOnlyMode_6732,
           ),
 
           // 保存按钮（仅在编辑模式下显示）
@@ -288,7 +296,8 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
             IconButton(
               onPressed: _saveFile,
               icon: const Icon(Icons.save),
-              tooltip: '保存文件',
+              tooltip:
+                  LocalizationService.instance.current.saveFileTooltip_4521,
             ),
           ],
 
@@ -301,8 +310,12 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               _effectiveIsDarkTheme ? Icons.light_mode : Icons.dark_mode,
             ),
             tooltip: _isDarkTheme == null
-                ? (_effectiveIsDarkTheme ? '自动主题(当前深色)' : '自动主题(当前浅色)')
-                : (_effectiveIsDarkTheme ? '浅色主题' : '深色主题'),
+                ? (_effectiveIsDarkTheme
+                      ? LocalizationService.instance.current.autoThemeDark
+                      : LocalizationService.instance.current.autoThemeLight)
+                : (_effectiveIsDarkTheme
+                      ? LocalizationService.instance.current.lightTheme_4821
+                      : LocalizationService.instance.current.darkTheme_5732),
           ),
 
           const SizedBox(width: 16),
@@ -312,7 +325,8 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
             IconButton(
               onPressed: _formatJson,
               icon: const Icon(Icons.code),
-              tooltip: '格式化JSON',
+              tooltip:
+                  LocalizationService.instance.current.formatJsonTooltip_7281,
             ),
             const SizedBox(width: 8),
           ],
@@ -323,14 +337,14 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           IconButton(
             onPressed: _copyContent,
             icon: const Icon(Icons.copy),
-            tooltip: '复制所有内容',
+            tooltip: LocalizationService.instance.current.copyAllContent_7281,
           ),
 
           // 刷新按钮
           IconButton(
             onPressed: _loadTextFile,
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: LocalizationService.instance.current.refreshTooltip_7281,
           ),
         ],
       ),
@@ -340,13 +354,13 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   /// 构建代码编辑器
   Widget _buildCodeEditor() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('加载文本文件中...'),
+            Text(LocalizationService.instance.current.loadingTextFile_7281),
           ],
         ),
       );
@@ -365,7 +379,12 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               style: const TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadTextFile, child: const Text('重试')),
+            ElevatedButton(
+              onPressed: _loadTextFile,
+              child: Text(
+                LocalizationService.instance.current.retryButton_7284,
+              ),
+            ),
           ],
         ),
       );
@@ -403,18 +422,6 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
               ),
             ),
             wrap: true,
-            lineNumberStyle: LineNumberStyle(
-              width: _lineNumberWidth,
-              margin: 8,
-              textAlign: TextAlign.right,
-              background: _effectiveIsDarkTheme
-                  ? const Color(0xFF3C3C3C)
-                  : const Color(0xFFF5F5F5),
-              textStyle: TextStyle(
-                color: _effectiveIsDarkTheme ? Colors.white70 : Colors.black54,
-                fontSize: 12,
-              ),
-            ),
             background: _effectiveIsDarkTheme
                 ? const Color(0xFF2B2B2B)
                 : const Color(0xFFFAFAFA),
@@ -444,24 +451,34 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         children: [
-          Text('行数: $lineCount', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            LocalizationService.instance.current.lineCountText(lineCount),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(width: 16),
-          Text('字符数: $charCount', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            LocalizationService.instance.current.characterCount_7421(charCount),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const Spacer(),
           if (_fileInfo != null) ...[
             Text(
-              '文件大小: ${_formatFileSize(_fileInfo!.size)}',
+              LocalizationService.instance.current.fileSizeLabel(
+                _formatFileSize(_fileInfo!.size),
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
           const SizedBox(width: 16),
           Text(
-            _isReadOnly ? '只读模式' : '编辑模式',
+            _isReadOnly
+                ? LocalizationService.instance.current.readOnlyMode_5421
+                : LocalizationService.instance.current.editMode_5421,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -505,9 +522,13 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
         '  ',
       ).convert(jsonObject);
       _codeController.text = formattedJson;
-      context.showSuccessSnackBar('JSON格式化完成');
+      context.showSuccessSnackBar(
+        LocalizationService.instance.current.jsonFormatComplete_4821,
+      );
     } catch (e) {
-      context.showErrorSnackBar('JSON格式化失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.jsonFormatFailed(e),
+      );
     }
   }
 
@@ -515,7 +536,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   void _copyContent() {
     Clipboard.setData(ClipboardData(text: _codeController.text));
 
-    context.showSuccessSnackBar('已复制到剪贴板');
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current.copiedToClipboard_4821,
+    );
   }
 
   /// 保存文件
@@ -547,9 +570,17 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
           );
         }
       });
-      context.showSuccessSnackBar('文件保存成功');
+      if (mounted) {
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.fileSavedSuccessfully_4821,
+        );
+      }
     } catch (e) {
-      context.showErrorSnackBar('保存文件失败: $e');
+      if (mounted) {
+        context.showErrorSnackBar(
+          LocalizationService.instance.current.fileSaveFailed(e),
+        );
+      }
     }
   }
 
@@ -557,8 +588,9 @@ class _VfsTextViewerWindowState extends State<VfsTextViewerWindow> {
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
+    if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 }

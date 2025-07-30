@@ -1,0 +1,15 @@
+{
+  "noteImagePreloadFailed_7421": "便签图片预加载失败: element.id={elementId}, 错误={error}",
+  "noteRendererElementCount": "便签绘制器: 元素数量={count}",
+  "elementDebugInfo_7428": "元素[{i}]: 类型={typeName}, imageData={imageData}",
+  "noteBackgroundLoadFailed": "便签背景图片加载失败 (直接数据): {error}",
+  "noteBackgroundImageHashRef": "便签背景图片只有VFS哈希引用: {backgroundImageHash}",
+  "drawingAreaHint_4821": "可在此区域绘制",
+  "noteBackgroundImageHint_4821": "提示: 便签背景图片应该在加载时已恢复为直接数据",
+  "backgroundImage_7421": "背景图片",
+  "imageLoadFailed_7281": "图片加载失败",
+  "noteDrawingStats": "便签绘制: 元素={elementCount}, 图片缓存={imageCacheCount}",
+  "noteQueueDebugPrint": "便签队列渲染: 便签ID={noteId}, 队列项目={queueLength}",
+  "editNoteDebug": "编辑便签: {id}",
+  "noteImagePreloadComplete": "便签图片预加载完成: element.id={id}, 图片尺寸={width}x{height}"
+}

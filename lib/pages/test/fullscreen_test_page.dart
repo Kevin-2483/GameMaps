@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/layout/main_layout.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 测试页面 - 演示如何禁用 TrayNavigation
 class FullscreenTestPage extends BasePage {
@@ -19,14 +22,14 @@ class FullscreenTestPage extends BasePage {
             const Icon(Icons.fullscreen, size: 100, color: Colors.white),
             const SizedBox(height: 20),
             Text(
-              '全屏测试页面',
+              LocalizationService.instance.current.fullScreenTestPage_7421,
               style: Theme.of(
                 context,
               ).textTheme.headlineLarge?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 10),
             Text(
-              '此页面已禁用 TrayNavigation',
+              LocalizationService.instance.current.disabledTrayNavigation_4821,
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
@@ -35,7 +38,7 @@ class FullscreenTestPage extends BasePage {
             ElevatedButton.icon(
               onPressed: () => context.go('/'),
               icon: const Icon(Icons.arrow_back),
-              label: const Text('返回'),
+              label: Text(LocalizationService.instance.current.backButton_7421),
             ),
           ],
         ),

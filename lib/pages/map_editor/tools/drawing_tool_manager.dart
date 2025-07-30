@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 // drawing_tool_manager.dart - 专门的绘制工具管理类
 // 用于管理所有绘制相关的操作和状态
 
@@ -7,6 +8,7 @@ import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../widgets/map_canvas.dart';
 import 'preview_queue_manager.dart';
+import '../../../services/localization_service.dart';
 
 /// 绘制工具管理器 - 负责管理所有绘制工具相关的操作
 class DrawingToolManager {
@@ -365,15 +367,16 @@ class DrawingToolManager {
     final result = await showDialog<Map<String, dynamic>>(
       context: context!,
       builder: (context) => AlertDialog(
-        title: const Text('添加文本'),
+        title: Text(LocalizationService.instance.current.addText_4271),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: textController,
-              decoration: const InputDecoration(
-                labelText: '文本内容',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.textContent_4521,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
               autofocus: true,
@@ -383,7 +386,11 @@ class DrawingToolManager {
               valueListenable: fontSize,
               builder: (context, value, child) => Column(
                 children: [
-                  Text('字体大小: ${value.round()}px'),
+                  Text(
+                    LocalizationService.instance.current.fontSizeLabel(
+                      value.round(),
+                    ),
+                  ),
                   Slider(
                     value: value,
                     min: 10.0,
@@ -399,7 +406,7 @@ class DrawingToolManager {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           TextButton(
             onPressed: () {
@@ -410,7 +417,9 @@ class DrawingToolManager {
                 });
               }
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -449,11 +458,15 @@ class DrawingToolManager {
     final result = await showDialog<String>(
       context: context!,
       builder: (context) => AlertDialog(
-        title: Text('添加文本 (字体大小: ${presetFontSize.round()}px)'),
+        title: Text(
+          LocalizationService.instance.current.addTextWithFontSize(
+            presetFontSize.round(),
+          ),
+        ),
         content: TextField(
           controller: textController,
-          decoration: const InputDecoration(
-            labelText: '文本内容',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.textContent_4521,
             border: OutlineInputBorder(),
           ),
           maxLines: 3,
@@ -462,7 +475,7 @@ class DrawingToolManager {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           TextButton(
             onPressed: () {
@@ -470,7 +483,9 @@ class DrawingToolManager {
                 Navigator.of(context).pop(textController.text);
               }
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -550,14 +565,15 @@ class DrawingToolManager {
     final result = await showDialog<Map<String, dynamic>>(
       context: context!,
       builder: (context) => AlertDialog(
-        title: const Text('添加文本到便签'),
+        title: Text(LocalizationService.instance.current.addTextToNote_7421),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: textController,
-              decoration: const InputDecoration(
-                labelText: '文本内容',
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.textContent_4521,
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -568,7 +584,11 @@ class DrawingToolManager {
               valueListenable: fontSize,
               builder: (context, value, child) => Column(
                 children: [
-                  Text('字体大小: ${value.round()}px'),
+                  Text(
+                    LocalizationService.instance.current.fontSizeLabel(
+                      value.round(),
+                    ),
+                  ),
                   Slider(
                     value: value,
                     min: 10.0,
@@ -584,7 +604,7 @@ class DrawingToolManager {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           TextButton(
             onPressed: () {
@@ -595,7 +615,9 @@ class DrawingToolManager {
                 });
               }
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -634,11 +656,15 @@ class DrawingToolManager {
     final result = await showDialog<String>(
       context: context!,
       builder: (context) => AlertDialog(
-        title: Text('添加文本到便签 (字体大小: ${presetFontSize.round()}px)'),
+        title: Text(
+          LocalizationService.instance.current.addTextToNoteWithFontSize(
+            presetFontSize.round(),
+          ),
+        ),
         content: TextField(
           controller: textController,
-          decoration: const InputDecoration(
-            labelText: '文本内容',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.textContent_4521,
             border: OutlineInputBorder(),
           ),
           maxLines: 3,
@@ -647,7 +673,7 @@ class DrawingToolManager {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () {
@@ -655,7 +681,9 @@ class DrawingToolManager {
                 Navigator.of(context).pop(textController.text);
               }
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -690,7 +718,6 @@ class DrawingToolManager {
     Uint8List? imageBufferData,
     BoxFit imageBufferFit,
   ) {
-
     // 创建预览数据
     final previewData = DrawingPreviewData(
       start: normalizedStart,
@@ -897,7 +924,9 @@ class DrawingToolManager {
     // 调试信息：检查图片选区工具的缓冲区数据
     if (effectiveDrawingTool == DrawingElementType.imageArea) {
       debugPrint(
-        '便签创建图片选区: 缓冲区数据=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}',
+        LocalizationService.instance.current.noteImageSelectionDebug_7421(
+          imageBufferData != null ? '${imageBufferData.length} bytes' : 'null',
+        ),
       );
     }
 
@@ -1008,7 +1037,12 @@ class DrawingToolManager {
     } // 调试信息：检查图片选区元素创建
     if (elementType == DrawingElementType.imageArea) {
       debugPrint(
-        '创建便签图片选区元素: imageData=${imageBufferData != null ? '${imageBufferData.length} bytes' : 'null'}',
+        LocalizationService.instance.current
+            .createNoteImageSelectionElement_7421(
+              imageBufferData != null
+                  ? '${imageBufferData.length} bytes'
+                  : 'null',
+            ),
       );
     }
 
@@ -1124,7 +1158,12 @@ class DrawingToolManager {
 
   /// 处理从预览队列中取出的元素
   void _handleElementFromQueue(MapDrawingElement element, String layerId) {
-    debugPrint('处理队列元素: ${element.id} 添加到图层: $layerId');
+    debugPrint(
+      LocalizationService.instance.current.processingQueueElement_7421(
+        element.id,
+        layerId,
+      ),
+    );
 
     // 获取当前选中的图层ID，如果没有提供layerId的话
     String targetLayerId = layerId;
@@ -1140,7 +1179,12 @@ class DrawingToolManager {
     if (addDrawingElement != null && targetLayerId.isNotEmpty) {
       addDrawingElement!(targetLayerId, element);
     } else {
-      debugPrint('DrawingToolManager: addDrawingElement回调未设置或目标图层ID为空，无法添加元素');
+      debugPrint(
+        LocalizationService
+            .instance
+            .current
+            .drawingToolManagerCallbackNotSet_4821,
+      );
     }
   }
 

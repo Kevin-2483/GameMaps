@@ -1,0 +1,16 @@
+{
+  "delete_5421": "删除",
+  "editLegendGroup_4271": "编辑图例组",
+  "legendGroupName_4821": "图例组名称",
+  "cancelButton_4271": "取消",
+  "saveButton_7421": "保存",
+  "deleteLegendGroup_4271": "删除图例组",
+  "cancelButton_7421": "取消",
+  "confirmDeleteLegendGroup_7281": "确定要删除图例组 \"{name}\" 吗？此操作不可撤销。",
+  "delete_4821": "删除",
+  "legendItemCount": "{count} 个图例",
+  "opacityPercentage": "透明度: {percentage}%",
+  "noLegendGroup_4521": "暂无图例组",
+  "edit_7281": "编辑",
+  "layerBinding_4271": "图层绑定"
+}

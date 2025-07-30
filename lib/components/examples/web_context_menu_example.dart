@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../web/web_context_menu_handler.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// Web兼容的右键菜单组件示例
 /// 用于演示如何在Web平台上实现与客户端一致的右键菜单体验
@@ -12,20 +15,29 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
     return WebContextMenuHandler(
       preventWebContextMenu: true,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Web兼容右键菜单示例')),
+        appBar: AppBar(
+          title: Text(
+            LocalizationService.instance.current.webContextMenuExample_7281,
+          ),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Web平台右键菜单说明',
+                LocalizationService
+                    .instance
+                    .current
+                    .webPlatformRightClickMenuDescription_4821,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
-              const Text(
-                '在Web平台上，浏览器默认会显示自己的右键菜单。'
-                '通过我们的处理方案，可以禁用浏览器默认菜单，使用Flutter自定义菜单。',
+              Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .webPlatformMenuDescription_4821,
               ),
               const SizedBox(height: 24),
 
@@ -53,25 +65,37 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('示例1：简单右键菜单', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.exampleRightClickMenu_4821,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ContextMenuWrapper(
               menuBuilder: (context) => [
                 ContextMenuItem(
                   label: '复制',
                   icon: Icons.copy,
-                  onTap: () => _showSnackBar(context, '已复制'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.copiedMessage_7421,
+                  ),
                 ),
                 ContextMenuItem(
-                  label: '粘贴',
+                  label: LocalizationService.instance.current.paste_4821,
                   icon: Icons.paste,
-                  onTap: () => _showSnackBar(context, '已粘贴'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.pasted_4822,
+                  ),
                 ),
                 const ContextMenuItem.divider(),
                 ContextMenuItem(
                   label: '删除',
                   icon: Icons.delete,
-                  onTap: () => _showSnackBar(context, '已删除'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.deletedMessage_7421,
+                  ),
                 ),
               ],
               child: Container(
@@ -81,7 +105,14 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(child: Text('右键点击这里试试')),
+                child: Center(
+                  child: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .rightClickHereHint_4821,
+                  ),
+                ),
               ),
             ),
           ],
@@ -97,41 +128,62 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('示例2：图片编辑菜单', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.imageEditMenuTitle_7421,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ContextMenuWrapper(
               menuBuilder: (context) => [
                 ContextMenuItem(
-                  label: '编辑',
+                  label: LocalizationService.instance.current.editLabel_4521,
                   icon: Icons.edit,
-                  onTap: () => _showSnackBar(context, '打开编辑器'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.openEditorMessage_4521,
+                  ),
                 ),
                 ContextMenuItem(
                   label: '旋转',
                   icon: Icons.rotate_right,
-                  onTap: () => _showSnackBar(context, '图片已旋转'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.imageRotated_4821,
+                  ),
                 ),
                 ContextMenuItem(
                   label: '缩放',
                   icon: Icons.zoom_in,
-                  onTap: () => _showSnackBar(context, '缩放图片'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.zoomImage_4821,
+                  ),
                 ),
                 const ContextMenuItem.divider(),
                 ContextMenuItem(
-                  label: '另存为',
+                  label: LocalizationService.instance.current.saveAs_7421,
                   icon: Icons.save_as,
-                  onTap: () => _showSnackBar(context, '另存为'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.saveAs_7421,
+                  ),
                 ),
                 ContextMenuItem(
                   label: '导出',
                   icon: Icons.file_download,
-                  onTap: () => _showSnackBar(context, '正在导出'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.exporting_7421,
+                  ),
                 ),
                 const ContextMenuItem.divider(),
                 ContextMenuItem(
                   label: '属性',
                   icon: Icons.info,
-                  onTap: () => _showSnackBar(context, '显示属性'),
+                  onTap: () => _showSnackBar(
+                    context,
+                    LocalizationService.instance.current.showProperties_4281,
+                  ),
                 ),
               ],
               child: Container(
@@ -141,13 +193,18 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.image, size: 48),
-                      SizedBox(height: 8),
-                      Text('图片编辑区域 - 右键查看选项'),
+                      const Icon(Icons.image, size: 48),
+                      const SizedBox(height: 8),
+                      Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .imageEditAreaRightClickOptions_4821,
+                      ),
                     ],
                   ),
                 ),
@@ -166,7 +223,10 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('示例3：列表项菜单', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.example3ListItemMenu_7421,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ...List.generate(3, (index) {
               return ContextMenuWrapper(
@@ -174,36 +234,66 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ContextMenuItem(
                     label: '查看详情',
                     icon: Icons.visibility,
-                    onTap: () => _showSnackBar(context, '查看项目 ${index + 1} 详情'),
+                    onTap: () => _showSnackBar(
+                      context,
+                      LocalizationService.instance.current.viewProjectDetails(
+                        index + 1,
+                      ),
+                    ),
                   ),
                   ContextMenuItem(
-                    label: '编辑',
+                    label: LocalizationService.instance.current.editLabel_4821,
                     icon: Icons.edit,
-                    onTap: () => _showSnackBar(context, '编辑项目 ${index + 1}'),
+                    onTap: () => _showSnackBar(
+                      context,
+                      LocalizationService.instance.current.editItemMessage_4821(
+                        index + 1,
+                      ),
+                    ),
                   ),
                   const ContextMenuItem.divider(),
                   ContextMenuItem(
                     label: '复制链接',
                     icon: Icons.link,
-                    onTap: () =>
-                        _showSnackBar(context, '已复制项目 ${index + 1} 链接'),
+                    onTap: () => _showSnackBar(
+                      context,
+                      LocalizationService.instance.current.copiedProjectLink(
+                        index + 1,
+                      ),
+                    ),
                   ),
                   ContextMenuItem(
                     label: '分享',
                     icon: Icons.share,
-                    onTap: () => _showSnackBar(context, '分享项目 ${index + 1}'),
+                    onTap: () => _showSnackBar(
+                      context,
+                      LocalizationService.instance.current.shareProject(
+                        index + 1,
+                      ),
+                    ),
                   ),
                   const ContextMenuItem.divider(),
                   ContextMenuItem(
-                    label: '删除',
+                    label: LocalizationService.instance.current.delete_4821,
                     icon: Icons.delete,
-                    onTap: () => _showSnackBar(context, '删除项目 ${index + 1}'),
+                    onTap: () => _showSnackBar(
+                      context,
+                      LocalizationService.instance.current.deleteItem_4822(
+                        index + 1,
+                      ),
+                    ),
                   ),
                 ],
                 child: ListTile(
                   leading: CircleAvatar(child: Text('${index + 1}')),
-                  title: Text('列表项 ${index + 1}'),
-                  subtitle: Text('右键点击查看选项'),
+                  title: Text(
+                    LocalizationService.instance.current.listItemTitle(
+                      index + 1,
+                    ),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.instance.current.rightClickOptions_4821,
+                  ),
                   trailing: const Icon(Icons.more_vert),
                 ),
               );

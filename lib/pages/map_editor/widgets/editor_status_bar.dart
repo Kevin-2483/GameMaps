@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 地图编辑器状态栏组件
 /// 显示图层数量、图层组数量、便签数量、当前选中的图层、工具等状态信息
@@ -128,7 +131,7 @@ class EditorStatusBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '编辑器状态',
+            LocalizationService.instance.current.editorStatus_4521,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -157,7 +160,7 @@ class EditorStatusBar extends StatelessWidget {
       highPriorityItems.add(
         StatusItem(
           icon: _getToolIcon(selectedDrawingTool!),
-          label: '工具',
+          label: LocalizationService.instance.current.toolLabel_4821,
           value: _getToolName(selectedDrawingTool!),
           color: Colors.red,
         ),
@@ -171,7 +174,7 @@ class EditorStatusBar extends StatelessWidget {
         highPriorityItems.add(
           StatusItem(
             icon: Icons.tune,
-            label: '参数',
+            label: LocalizationService.instance.current.parameters_4821,
             value: params,
             color: Colors.teal,
           ),
@@ -184,7 +187,7 @@ class EditorStatusBar extends StatelessWidget {
       mediumPriorityItems.add(
         StatusItem(
           icon: Icons.check_circle,
-          label: '选中图层',
+          label: LocalizationService.instance.current.selectedLayerLabel_4821,
           value: selectedLayer!.name,
           color: Colors.green,
         ),
@@ -196,8 +199,10 @@ class EditorStatusBar extends StatelessWidget {
         mediumPriorityItems.add(
           StatusItem(
             icon: Icons.layers_outlined,
-            label: '绘制图层',
-            value: '${defaultLayer.name} (默认)',
+            label: LocalizationService.instance.current.drawingLayer_4821,
+            value:
+                '${defaultLayer.name} ' +
+                LocalizationService.instance.current.defaultLayerSuffix_7532,
             color: Colors.orange,
           ),
         );
@@ -212,8 +217,11 @@ class EditorStatusBar extends StatelessWidget {
       mediumPriorityItems.add(
         StatusItem(
           icon: Icons.group_work,
-          label: '选中组',
-          value: '${selectedLayerGroup!.length}层: $layerNames',
+          label: LocalizationService.instance.current.selectedGroup_4821,
+          value: LocalizationService.instance.current.selectedLayersInfo_4821(
+            selectedLayerGroup!.length,
+            layerNames,
+          ),
           color: Colors.purple,
         ),
       );
@@ -224,7 +232,7 @@ class EditorStatusBar extends StatelessWidget {
       lowPriorityItems.add(
         StatusItem(
           icon: Icons.layers,
-          label: '图层',
+          label: LocalizationService.instance.current.layersLabel_7281,
           value: '${layers!.length}',
           color: Colors.blue,
         ),
@@ -236,7 +244,7 @@ class EditorStatusBar extends StatelessWidget {
       lowPriorityItems.add(
         StatusItem(
           icon: Icons.sticky_note_2,
-          label: '便签',
+          label: LocalizationService.instance.current.stickyNoteLabel_4281,
           value: '${stickyNotes!.length}',
           color: Colors.yellow.shade700,
         ),
@@ -256,7 +264,7 @@ class EditorStatusBar extends StatelessWidget {
         lowPriorityItems.add(
           StatusItem(
             icon: Icons.folder,
-            label: '图层组',
+            label: LocalizationService.instance.current.layerGroup_4821,
             value: '${groupNames.length}',
             color: Colors.orange,
           ),
@@ -332,31 +340,31 @@ class EditorStatusBar extends StatelessWidget {
   String _getToolName(DrawingElementType tool) {
     switch (tool) {
       case DrawingElementType.line:
-        return '实线';
+        return LocalizationService.instance.current.solidLine_4821;
       case DrawingElementType.dashedLine:
-        return '虚线';
+        return LocalizationService.instance.current.dashedLine_4822;
       case DrawingElementType.arrow:
-        return '箭头';
+        return LocalizationService.instance.current.arrow_4823;
       case DrawingElementType.rectangle:
-        return '实心矩形';
+        return LocalizationService.instance.current.solidRectangle_4824;
       case DrawingElementType.hollowRectangle:
-        return '空心矩形';
+        return LocalizationService.instance.current.hollowRectangle_4825;
       case DrawingElementType.diagonalLines:
-        return '斜线区域';
+        return LocalizationService.instance.current.diagonalArea_4826;
       case DrawingElementType.crossLines:
-        return '交叉线区域';
+        return LocalizationService.instance.current.crossLineArea_4827;
       case DrawingElementType.dotGrid:
-        return '点阵区域';
+        return LocalizationService.instance.current.dotGridArea_4828;
       case DrawingElementType.eraser:
-        return '橡皮擦';
+        return LocalizationService.instance.current.eraser_4829;
       case DrawingElementType.freeDrawing:
-        return '自由绘制';
+        return LocalizationService.instance.current.freeDrawing_4830;
       case DrawingElementType.text:
-        return '文本';
+        return LocalizationService.instance.current.text_4831;
       case DrawingElementType.imageArea:
-        return '图片选区';
+        return LocalizationService.instance.current.imageSelection_4832;
       default:
-        return '未知工具';
+        return LocalizationService.instance.current.unknownTool_4833;
     }
   }
 
@@ -368,25 +376,39 @@ class EditorStatusBar extends StatelessWidget {
     if (selectedColor != null) {
       final colorHex =
           '#${selectedColor!.value.toRadixString(16).substring(2).toUpperCase()}';
-      params.add('颜色:$colorHex');
+      params.add(
+        LocalizationService.instance.current.colorWithHex_7421(colorHex),
+      );
     }
 
     // 总是显示线宽参数
     if (selectedStrokeWidth != null) {
-      params.add('线宽:${selectedStrokeWidth!.toStringAsFixed(1)}px');
+      params.add(
+        LocalizationService.instance.current.strokeWidthLabel(
+          selectedStrokeWidth!.toStringAsFixed(1),
+        ),
+      );
     }
 
     // 显示密度参数（根据drawing_toolbar.dart的逻辑）
     if (selectedDrawingTool != null && _shouldShowDensityControl()) {
       if (selectedDensity != null) {
-        params.add('密度:${selectedDensity!.toStringAsFixed(1)}');
+        params.add(
+          LocalizationService.instance.current.densityValue_7281(
+            selectedDensity!.toStringAsFixed(1),
+          ),
+        );
       }
     }
 
     // 显示弧度参数（根据drawing_toolbar.dart的逻辑）
     if (selectedDrawingTool != null && _shouldShowCurvatureControl()) {
       if (selectedCurvature != null && selectedCurvature! != 0.0) {
-        params.add('弧度:${selectedCurvature!.toStringAsFixed(1)}');
+        params.add(
+          LocalizationService.instance.current.radianValue(
+            selectedCurvature!.toStringAsFixed(1),
+          ),
+        );
       }
     }
 
@@ -394,7 +416,11 @@ class EditorStatusBar extends StatelessWidget {
     if (selectedDrawingTool != null && _shouldShowTriangleCutControl()) {
       if (selectedTriangleCut != null &&
           selectedTriangleCut != TriangleCutType.none) {
-        params.add('切割:${_getTriangleCutName(selectedTriangleCut!)}');
+        params.add(
+          LocalizationService.instance.current.cuttingTriangleName_7421(
+            _getTriangleCutName(selectedTriangleCut!),
+          ),
+        );
       }
     }
 
@@ -406,17 +432,17 @@ class EditorStatusBar extends StatelessWidget {
   String _getTriangleCutName(TriangleCutType cutType) {
     switch (cutType) {
       case TriangleCutType.none:
-        return '无';
+        return LocalizationService.instance.current.none_4821;
       case TriangleCutType.topLeft:
-        return '左上';
+        return LocalizationService.instance.current.topLeft_5723;
       case TriangleCutType.topRight:
-        return '右上';
+        return LocalizationService.instance.current.topRight_6934;
       case TriangleCutType.bottomLeft:
-        return '左下';
+        return LocalizationService.instance.current.bottomLeft_7145;
       case TriangleCutType.bottomRight:
-        return '右下';
+        return LocalizationService.instance.current.bottomRight_8256;
       default:
-        return '未知';
+        return LocalizationService.instance.current.unknown_9367;
     }
   }
 

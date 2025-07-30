@@ -1,4 +1,7 @@
-﻿/*
+// This file has been processed by AI for internationalization
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
+/*
 🎯 R6BOX 智能动态显示系统控制指南 - 解决图标闪烁问题
 
 📋 【核心统一参数】:
@@ -555,45 +558,105 @@ class _HomePageContentState extends State<_HomePageContent>
         math.max(_perspectiveAngleX.abs(), _perspectiveAngleY.abs()) /
         (math.pi / 6);
 
-    debugPrint('📏 智能动态显示区域信息:');
     debugPrint(
-      '   - 基础屏幕尺寸: ${_screenSize.width.toInt()} x ${_screenSize.height.toInt()}',
-    );
-    debugPrint('   - 显示区域倍数: ${_displayAreaMultiplier}x (影响透视缓冲)');
-    debugPrint('   - 基础缓冲区倍数: ${_baseBufferMultiplier}x');
-    debugPrint('   - 透视缓冲调节系数: ${_perspectiveBufferFactor}x');
-    debugPrint('   - 当前透视强度: ${perspectiveStrength.toStringAsFixed(3)} (0~1)');
-    debugPrint(
-      '   - 动态缓冲区倍数: ${dynamicBufferMultiplier.toStringAsFixed(2)}x (智能计算)',
-    );
-    debugPrint('   - X方向透视因子: ${factorX.toStringAsFixed(2)}');
-    debugPrint('   - Y方向透视因子: ${factorY.toStringAsFixed(2)}');
-    debugPrint(
-      '   - 基础显示区域: ${perspectiveArea.width.toInt()} x ${perspectiveArea.height.toInt()}',
+      LocalizationService.instance.current.smartDynamicDisplayInfo_7284,
     );
     debugPrint(
-      '   - 缓冲后区域: ${(perspectiveArea.width * dynamicBufferMultiplier).toInt()} x ${(perspectiveArea.height * dynamicBufferMultiplier).toInt()}',
+      LocalizationService.instance.current.basicScreenSize(
+        _screenSize.width.toInt(),
+        _screenSize.height.toInt(),
+      ),
     );
     debugPrint(
-      '   - 中心偏移: (${perspectiveArea.center.dx.toInt()}, ${perspectiveArea.center.dy.toInt()})',
-    );
-    debugPrint('🎯 性能优化信息:');
-    debugPrint(
-      '   - 基础网格间距: ${_baseNodeSpacing.toInt()}px → 实际间距: ${_nodeSpacing.toInt()}px',
+      '   - ${LocalizationService.instance.current.displayAreaMultiplierLabel_4821}: ${_displayAreaMultiplier}x (${LocalizationService.instance.current.affectsPerspectiveBuffer_4821})',
     );
     debugPrint(
-      '   - 基础图标大小: ${_baseSvgRenderSize.toInt()}px → 实际大小: ${_svgRenderSize.toInt()}px',
+      LocalizationService.instance.current.baseBufferMultiplierLog(
+        _baseBufferMultiplier,
+      ),
     );
-    debugPrint('   - 三角形高度: ${_triangleHeight.toInt()}px (行间距)');
-    debugPrint('   - 窗口随动系数: $_windowScalingFactor (影响内容缩放)');
     debugPrint(
-      '💡 缓冲计算公式: ${_baseBufferMultiplier} × (1 + ${perspectiveStrength.toStringAsFixed(3)} × ${_perspectiveBufferFactor} × ${_displayAreaMultiplier}) = ${dynamicBufferMultiplier.toStringAsFixed(2)}',
+      LocalizationService.instance.current.perspectiveBufferFactorDebug(
+        _perspectiveBufferFactor,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.perspectiveStrengthDebug(
+        perspectiveStrength.toStringAsFixed(3),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.dynamicBufferMultiplierInfo(
+        dynamicBufferMultiplier.toStringAsFixed(2),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.xPerspectiveFactor(
+        factorX.toStringAsFixed(2),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.yPerspectiveFactor(
+        factorY.toStringAsFixed(2),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.basicDisplayArea_7421(
+        perspectiveArea.width.toInt(),
+        perspectiveArea.height.toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.bufferedAreaSize(
+        (perspectiveArea.width * dynamicBufferMultiplier).toInt(),
+        (perspectiveArea.height * dynamicBufferMultiplier).toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.centerOffsetDebug(
+        perspectiveArea.center.dx.toInt(),
+        perspectiveArea.center.dy.toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.performanceOptimizationInfo_7281,
+    );
+    debugPrint(
+      LocalizationService.instance.current.gridSpacingInfo(
+        _baseNodeSpacing.toInt(),
+        _nodeSpacing.toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.iconSizeDebug(
+        _baseSvgRenderSize.toInt(),
+        _svgRenderSize.toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.triangleHeightInfo(
+        _triangleHeight.toInt(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.windowScalingFactorDebug(
+        _windowScalingFactor,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.bufferCalculationFormula_4821(
+        _baseBufferMultiplier,
+        perspectiveStrength.toStringAsFixed(3),
+        _perspectiveBufferFactor,
+        _displayAreaMultiplier,
+        dynamicBufferMultiplier.toStringAsFixed(2),
+      ),
     );
   }
 
   // 缓存所有SVG文件
   Future<void> _cacheAllSvgs() async {
-    debugPrint('🎨 开始缓存SVG文件...');
+    debugPrint(LocalizationService.instance.current.startCachingSvgFiles_7281);
 
     for (String svgPath in _svgPaths) {
       try {
@@ -601,7 +664,13 @@ class _HomePageContentState extends State<_HomePageContent>
         final svgImage = ScalableImage.fromSvgString(svgString);
         _cachedSvgs[svgPath] = svgImage;
       } catch (e) {
-        debugPrint('❌ 加载SVG失败: $svgPath - $e');
+        debugPrint(
+          '❌ ' +
+              LocalizationService.instance.current.svgLoadFailed_4821(
+                svgPath,
+                e,
+              ),
+        );
       }
     }
 

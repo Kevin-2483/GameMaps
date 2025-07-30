@@ -1,0 +1,13 @@
+{
+  "legendSessionManagerInitialized": "图例会话管理器: 初始化完成，预加载图例数量: {count}",
+  "legendSessionManagerLoaded": "图例会话管理器: 成功加载 {legendPath}",
+  "legendPathConversion_7281": "图例会话管理器: 路径转换 {legendPath} -> {actualPath}",
+  "legendSessionManagerLoadFailed": "图例会话管理器: 加载失败 {legendPath}",
+  "legendSessionManagerError": "图例会话管理器: 加载异常 {legendPath}, 错误: {e}",
+  "legendSessionManagerRemoveLegend_7281": "图例会话管理器: 移除图例 {legendPath}",
+  "legendSessionManagerBatchPreloadComplete": "图例会话管理器: 批量预加载完成，数量: {count}",
+  "legendSessionManagerRetryCount": "图例会话管理器: 重试失败的图例，数量: {count}",
+  "sessionManagerClearData_7281": "图例会话管理器: 清除会话数据",
+  "legendSessionManagerPathConversion": "图例会话管理器: 路径转换 {legendPath} -> {actualPath}",
+  "legendSessionManagerLoadFailed_7421": "图例会话管理器: 加载单个图例失败 {legendPath}, 错误: {e}"
+}

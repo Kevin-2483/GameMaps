@@ -1,0 +1,14 @@
+{
+  "openSourceAcknowledgement_7281": "开源项目致谢",
+  "feedbackTitle_4271": "问题反馈",
+  "reportBugOrFeatureSuggestion_7281": "报告 Bug 或提出功能建议",
+  "viewFullLicenseList_7281": "查看完整许可证列表",
+  "openSourceProjectsIntro_4821": "本项目使用了以下优秀的开源项目和资源：",
+  "dependencyDescription_4821": "此外，本项目还依赖众多 Flutter 生态系统中的优秀开源包，点击下方按钮查看完整的依赖项列表和许可证信息。",
+  "closeButton_4821": "关闭",
+  "licenseCopiedToClipboard_4821": "许可证文本已复制到剪贴板",
+  "r6OperatorsAssetsDescription_4821": "彩虹六号干员头像和图标资源",
+  "r6OperatorsAssetsSubtitle_7539": "marcopixel/r6operators 仓库提供的干员素材",
+  "copyText_4821": "复制",
+  "licenseLegalese_7281": "© 2024 R6BOX Team\n使用 GPL v3 许可证发布"
+}

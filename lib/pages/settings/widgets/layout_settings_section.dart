@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -6,6 +7,7 @@ import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 // import '../../../services/window_manager_service.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../../services/localization_service.dart';
 
 class LayoutSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -23,7 +25,7 @@ class LayoutSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '界面布局设置',
+              LocalizationService.instance.current.layoutSettings_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -32,7 +34,7 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 面板折叠状态设置
             Text(
-              '面板折叠状态',
+              LocalizationService.instance.current.panelCollapseStatus_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -42,7 +44,9 @@ class LayoutSettingsSection extends StatelessWidget {
             ...layout.panelCollapsedStates.entries.map(
               (entry) => SwitchListTile(
                 title: Text(_getPanelDisplayName(entry.key)),
-                subtitle: Text('面板默认${entry.value ? "折叠" : "展开"}状态'),
+                subtitle: Text(
+                  '面板默认${entry.value ? LocalizationService.instance.current.collapsedState_5421 : LocalizationService.instance.current.expandedState_5421}状态',
+                ),
                 value: entry.value,
                 onChanged: (value) => provider.updateLayout(
                   panelCollapsedStates: {
@@ -57,7 +61,7 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 面板自动关闭设置
             Text(
-              '面板自动关闭',
+              LocalizationService.instance.current.panelAutoClose_4821,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -67,7 +71,9 @@ class LayoutSettingsSection extends StatelessWidget {
             ...layout.panelAutoCloseStates.entries.map(
               (entry) => SwitchListTile(
                 title: Text(_getPanelDisplayName(entry.key)),
-                subtitle: Text('失去焦点时${entry.value ? "自动关闭" : "保持开启"}'),
+                subtitle: Text(
+                  '${entry.value ? LocalizationService.instance.current.autoCloseWhenLoseFocus_7281 : LocalizationService.instance.current.keepOpenWhenLoseFocus_7281}',
+                ),
                 value: entry.value,
                 onChanged: (value) => provider.updateLayout(
                   panelAutoCloseStates: {
@@ -80,8 +86,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
             const SizedBox(height: 16), // 面板状态恢复设置
             SwitchListTile(
-              title: Text('保存面板状态变更'),
-              subtitle: Text('退出地图编辑器时自动保存面板折叠/展开状态'),
+              title: Text(
+                LocalizationService.instance.current.savePanelStateChange_4821,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .autoSavePanelStateOnExit_4821,
+              ),
               value: layout.autoRestorePanelStates,
               onChanged: (value) =>
                   provider.updateLayout(autoRestorePanelStates: value),
@@ -91,7 +104,9 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 侧边栏宽度
             ListTile(
-              title: Text('侧边栏宽度'),
+              title: Text(
+                LocalizationService.instance.current.sidebarWidth_4271,
+              ),
               subtitle: Slider(
                 value: layout.sidebarWidth,
                 min: 200.0,
@@ -107,7 +122,9 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 紧凑模式
             SwitchListTile(
-              title: Text('紧凑模式'),
+              title: Text(
+                LocalizationService.instance.current.compactMode_7281,
+              ),
               subtitle: Text('减少界面元素间距，适合小屏幕'),
               value: layout.compactMode,
               onChanged: (value) => provider.updateLayout(compactMode: value),
@@ -117,8 +134,12 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 显示工具提示
             SwitchListTile(
-              title: Text('显示工具提示'),
-              subtitle: Text('鼠标悬停时显示帮助信息'),
+              title: Text(
+                LocalizationService.instance.current.showTooltip_4271,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.hoverHelpText_4821,
+              ),
               value: layout.showTooltips,
               onChanged: (value) => provider.updateLayout(showTooltips: value),
             ),
@@ -127,8 +148,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 右侧垂直导航
             SwitchListTile(
-              title: Text('右侧垂直导航'),
-              subtitle: Text('将导航栏显示在屏幕右侧（垂直布局）'),
+              title: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .rightVerticalNavigation_4271,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.verticalLayoutNavBar_4821,
+              ),
               value: layout.enableRightSideVerticalNavigation,
               onChanged: (value) => provider.updateLayout(
                 enableRightSideVerticalNavigation: value,
@@ -139,8 +167,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 合并窗口控件
             ListTile(
-              title: Text('窗口控件模式'),
-              subtitle: Text('选择窗口控制按钮的显示方式'),
+              title: Text(
+                LocalizationService.instance.current.windowControlMode_4821,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .windowControlDisplayMode_4821,
+              ),
               trailing: DropdownButton<WindowControlsMode>(
                 value: layout.windowControlsMode,
                 onChanged: (value) {
@@ -148,18 +183,24 @@ class LayoutSettingsSection extends StatelessWidget {
                     provider.updateLayout(windowControlsMode: value);
                   }
                 },
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: WindowControlsMode.separated,
-                    child: Text('分离'),
+                    child: Text(
+                      LocalizationService.instance.current.separate_7281,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: WindowControlsMode.merged,
-                    child: Text('合并'),
+                    child: Text(
+                      LocalizationService.instance.current.mergeText_7421,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: WindowControlsMode.mergedExpanded,
-                    child: Text('合并展开'),
+                    child: Text(
+                      LocalizationService.instance.current.mergeExpand_4281,
+                    ),
                   ),
                 ],
               ),
@@ -169,8 +210,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 动画设置
             SwitchListTile(
-              title: Text('启用动画'),
-              subtitle: Text('界面切换和过渡动画'),
+              title: Text(
+                LocalizationService.instance.current.enableAnimation_7281,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .interfaceSwitchAnimation_7281,
+              ),
               value: layout.enableAnimations,
               onChanged: (value) =>
                   provider.updateLayout(enableAnimations: value),
@@ -179,7 +227,9 @@ class LayoutSettingsSection extends StatelessWidget {
             if (layout.enableAnimations) ...[
               const SizedBox(height: 8),
               ListTile(
-                title: Text('动画持续时间'),
+                title: Text(
+                  LocalizationService.instance.current.animationDuration_4271,
+                ),
                 subtitle: Slider(
                   value: layout.animationDuration.toDouble(),
                   min: 100.0,
@@ -200,7 +250,7 @@ class LayoutSettingsSection extends StatelessWidget {
                     Platform.isLinux ||
                     Platform.isMacOS)) ...[
               Text(
-                '窗口设置',
+                LocalizationService.instance.current.windowSettings_4821,
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -209,8 +259,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
               // 自动保存窗口大小
               SwitchListTile(
-                title: Text('自动保存窗口大小'),
-                subtitle: Text('自动记录窗口大小变化并在下次启动时恢复'),
+                title: Text(
+                  LocalizationService.instance.current.autoSaveWindowSize_4271,
+                ),
+                subtitle: Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .autoResizeWindowHint_4821,
+                ),
                 value: layout.autoSaveWindowSize,
                 onChanged: (value) =>
                     provider.updateLayout(autoSaveWindowSize: value),

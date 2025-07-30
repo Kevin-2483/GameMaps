@@ -1,0 +1,5 @@
+{
+  "parseNoteDataFailed_7284": "解析便签数据失败: {e}",
+  "layerDataParseFailed_7421": "解析图层数据失败: {e}",
+  "legendDataParseFailed_7285": "解析图例组数据失败: {e}"
+}

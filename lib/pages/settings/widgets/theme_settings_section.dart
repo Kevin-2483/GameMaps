@@ -1,9 +1,13 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 import '../../../models/user_preferences.dart';
 import '../../../providers/user_preferences_provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 class ThemeSettingsSection extends StatelessWidget {
   final UserPreferences preferences;
@@ -36,7 +40,7 @@ class ThemeSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = LocalizationService.instance.current!;
     final provider = context.read<UserPreferencesProvider>();
     final currentThemeMode = _getThemeModeFromString(
       preferences.theme.themeMode,
@@ -87,7 +91,10 @@ class ThemeSettingsSection extends StatelessWidget {
             const SizedBox(height: 16),
 
             // 主色调选择
-            Text('主色调', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              LocalizationService.instance.current.primaryColor_7285,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -119,7 +126,9 @@ class ThemeSettingsSection extends StatelessWidget {
             // Material You 设置
             SwitchListTile(
               title: Text('Material You'),
-              subtitle: Text('使用系统颜色主题'),
+              subtitle: Text(
+                LocalizationService.instance.current.useSystemColorTheme_4821,
+              ),
               value: preferences.theme.useMaterialYou,
               onChanged: (value) => provider.updateTheme(useMaterialYou: value),
             ),
@@ -127,7 +136,10 @@ class ThemeSettingsSection extends StatelessWidget {
             const SizedBox(height: 8),
 
             // 字体大小设置
-            Text('字体大小', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              LocalizationService.instance.current.fontSize_4821,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Slider(
               value: preferences.theme.fontScale,
@@ -142,8 +154,12 @@ class ThemeSettingsSection extends StatelessWidget {
 
             // 高对比度设置
             SwitchListTile(
-              title: Text('高对比度'),
-              subtitle: Text('提高文本和背景的对比度'),
+              title: Text(
+                LocalizationService.instance.current.highContrastMode_4271,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.increaseTextContrast_4821,
+              ),
               value: preferences.theme.highContrast,
               onChanged: (value) => provider.updateTheme(highContrast: value),
             ),
@@ -152,8 +168,15 @@ class ThemeSettingsSection extends StatelessWidget {
 
             // 画布主题适配设置
             SwitchListTile(
-              title: Text('画布主题适配'),
-              subtitle: Text('在暗色主题下调整画布背景和绘制元素的可见性'),
+              title: Text(
+                LocalizationService.instance.current.canvasThemeAdaptation_7281,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .darkThemeCanvasAdjustment_4821,
+              ),
               value: preferences.theme.canvasThemeAdaptation,
               onChanged: (value) =>
                   provider.updateTheme(canvasThemeAdaptation: value),

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_localization.dart';
 import 'database_path_service.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 地图本地化服务
 class MapLocalizationService {
@@ -126,7 +129,10 @@ class MapLocalizationService {
         final currentVersion = await getCurrentVersion();
         if (localizationDb.version <= currentVersion) {
           debugPrint(
-            '本地化文件版本 ${localizationDb.version} 不高于当前版本 $currentVersion，跳过导入',
+            LocalizationService.instance.current.localizationVersionNotHigher(
+              localizationDb.version,
+              currentVersion,
+            ),
           );
           return false;
         }
@@ -136,7 +142,9 @@ class MapLocalizationService {
         return true;
       }
     } catch (e) {
-      debugPrint('导入本地化文件失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.importLocalizationFailed_7285(e),
+      );
       rethrow;
     }
     return false;
@@ -315,7 +323,10 @@ class MapLocalizationService {
 
       // 选择保存位置
       String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: '导出地图本地化文件',
+        dialogTitle: LocalizationService
+            .instance
+            .current
+            .exportMapLocalizationFileTitle_4821,
         fileName: 'map_localizations_v${localizationDb.version}.json',
         type: FileType.custom,
         allowedExtensions: ['json'],
@@ -327,7 +338,7 @@ class MapLocalizationService {
         return outputFile;
       }
     } catch (e) {
-      debugPrint('导出本地化数据库失败: $e');
+      debugPrint(LocalizationService.instance.current.exportLocalDbFailed(e));
       rethrow;
     }
     return null;

@@ -1,0 +1,19 @@
+{
+  "cachedLegendCategories": "[CachedLegendsDisplay] 缓存图例分类完成：自己组 {totalOwnSelected}，其他组 {totalOtherSelected}，未选中 {totalUnselected}",
+  "noCachedLegend": "暂无缓存图例",
+  "selectVfsDirectoryHint_4821": "选择VFS目录来加载图例到缓存",
+  "ownSelectedHeader_5421": "自己组选中",
+  "otherSelectedGroup_4821": "其他组选中",
+  "loadedButUnselected_7281": "未选中但已加载",
+  "dragLegendStart": "开始拖拽图例: {legendPath}",
+  "dragEndLegend_7281": "结束拖拽图例: {legendPath}, 是否被接受: {wasAccepted}",
+  "dragComplete_7281": "拖拽完成: {legendPath}",
+  "legendGroupIdChanged": "[CachedLegendsDisplay] 图例组ID变化: {oldId} -> {newId}，刷新缓存显示",
+  "draggingText_4821": "拖拽中...",
+  "svgThumbnailLoadFailed_7285": "SVG图例缩略图加载失败: {e}",
+  "rootDirectory_4721": "根目录",
+  "updatingCachedLegendsList": "[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: {currentLegendGroupId}",
+  "ownSelectedPaths_7425": "自己组选中路径",
+  "cachedLegendsCount_7421": "当前缓存图例数量: {count}",
+  "otherGroupSelectedPaths_7425": "其他组选中路径"
+}

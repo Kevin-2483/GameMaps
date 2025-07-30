@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 标签管理组件
 /// 可以被其他组件调用来为元素分配和管理tags
@@ -149,7 +152,9 @@ class _TagsManagerState extends State<TagsManager> {
         }
       } catch (e) {
         // 如果获取偏好设置失败，使用默认的建议标签
-        debugPrint('获取自定义标签失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fetchCustomTagFailed_7285(e),
+        );
       }
     }
   }
@@ -170,13 +175,15 @@ class _TagsManagerState extends State<TagsManager> {
 
     // 检查是否已存在
     if (widget.tags.contains(trimmedTag)) {
-      _showError('标签已存在');
+      _showError(LocalizationService.instance.current.tagAlreadyExists_7281);
       return;
     }
 
     // 检查最大数量限制
     if (widget.maxTags != null && widget.tags.length >= widget.maxTags!) {
-      _showError('最多只能添加${widget.maxTags}个标签');
+      _showError(
+        '${LocalizationService.instance.current.maxTagsLimit}: ${widget.maxTags}',
+      );
       return;
     }
 
@@ -208,7 +215,9 @@ class _TagsManagerState extends State<TagsManager> {
           _updateAllSuggestedTags();
         }
       } catch (e) {
-        debugPrint('保存标签到偏好设置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.saveTagPreferenceFailed(e),
+        );
       }
     }
 
@@ -305,7 +314,8 @@ class _TagsManagerState extends State<TagsManager> {
               suffixIcon: IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () => _addTag(_textController.text),
-                tooltip: '添加标签',
+                tooltip:
+                    LocalizationService.instance.current.addTagTooltip_7281,
               ),
             ),
             onChanged: (value) {
@@ -324,7 +334,7 @@ class _TagsManagerState extends State<TagsManager> {
             _filteredSuggestions.isNotEmpty &&
             !widget.readOnly) ...[
           Text(
-            '建议标签：',
+            LocalizationService.instance.current.suggestedTagsLabel_4821,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
@@ -347,8 +357,13 @@ class _TagsManagerState extends State<TagsManager> {
           const SizedBox(height: 8),
           Text(
             widget.maxTags != null
-                ? '${widget.tags.length} / ${widget.maxTags} 个标签'
-                : '${widget.tags.length} 个标签',
+                ? LocalizationService.instance.current.tagCountWithMax_7281(
+                    widget.tags.length,
+                    widget.maxTags ?? 0,
+                  )
+                : LocalizationService.instance.current.tagCount(
+                    widget.tags.length,
+                  ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
@@ -378,15 +393,16 @@ class TagsManagerDialog extends StatefulWidget {
   /// 是否启用自定义标签管理
   final bool enableCustomTagsManagement;
 
-  const TagsManagerDialog({
+  TagsManagerDialog({
     super.key,
     required this.initialTags,
-    this.title = '管理标签',
+    String? title,
     this.maxTags,
     this.suggestedTags = const [],
     this.tagValidator,
     this.enableCustomTagsManagement = true,
-  });
+  }) : title =
+           title ?? LocalizationService.instance.current.manageTagsTitle_4821;
 
   @override
   State<TagsManagerDialog> createState() => _TagsManagerDialogState();
@@ -426,7 +442,9 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
         });
       }
     } catch (e) {
-      debugPrint('加载自定义标签失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.customTagLoadFailed_7421(e),
+      );
     }
   }
 
@@ -450,8 +468,12 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
         _customTagController.clear();
       }
     } catch (e) {
-      debugPrint('添加自定义标签失败: $e');
-      context.showErrorSnackBar('添加自定义标签失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.addCustomTagFailed_7285(e),
+      );
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.addCustomTagFailed(e),
+      );
     }
   }
 
@@ -488,8 +510,8 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          '自定义标签',
+                        Text(
+                          LocalizationService.instance.current.customLabel_7281,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -499,7 +521,10 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                         IconButton(
                           onPressed: _showCustomTagsManager,
                           icon: const Icon(Icons.settings, size: 18),
-                          tooltip: '管理自定义标签',
+                          tooltip: LocalizationService
+                              .instance
+                              .current
+                              .manageCustomTags_7421,
                         ),
                       ],
                     ),
@@ -525,8 +550,11 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                                 Expanded(
                                   child: TextField(
                                     controller: _customTagController,
-                                    decoration: const InputDecoration(
-                                      hintText: '添加自定义标签',
+                                    decoration: InputDecoration(
+                                      hintText: LocalizationService
+                                          .instance
+                                          .current
+                                          .addCustomTagHint_4821,
                                       border: OutlineInputBorder(),
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -543,7 +571,10 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                                   onPressed: () =>
                                       _addCustomTag(_customTagController.text),
                                   icon: const Icon(Icons.add, size: 18),
-                                  tooltip: '添加',
+                                  tooltip: LocalizationService
+                                      .instance
+                                      .current
+                                      .addTag_7421,
                                 ),
                               ],
                             ),
@@ -614,8 +645,8 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '标签管理',
+                  Text(
+                    LocalizationService.instance.current.tagManagement_7281,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -630,7 +661,10 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
                       maxTags: widget.maxTags,
                       suggestedTags: [..._customTags, ...widget.suggestedTags],
                       tagValidator: widget.tagValidator,
-                      hintText: '添加新标签',
+                      hintText: LocalizationService
+                          .instance
+                          .current
+                          .addNewTagHint_4821,
                       enablePreferencesIntegration:
                           widget.enableCustomTagsManagement,
                       autoSaveCustomTags: widget.enableCustomTagsManagement,
@@ -645,11 +679,11 @@ class _TagsManagerDialogState extends State<TagsManagerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(_currentTags),
-          child: const Text('确定'),
+          child: Text(LocalizationService.instance.current.confirmButton_7281),
         ),
       ],
     );
@@ -662,12 +696,13 @@ class TagsManagerUtils {
   static Future<List<String>?> showTagsDialog(
     BuildContext context, {
     required List<String> initialTags,
-    String title = '管理标签',
+    String? title,
     int? maxTags,
     List<String> suggestedTags = const [],
     String? Function(String tag)? tagValidator,
     bool enableCustomTagsManagement = true,
   }) {
+    title ??= LocalizationService.instance.current.manageTagsTitle_4821;
     return showDialog<List<String>>(
       context: context,
       builder: (context) => TagsManagerDialog(
@@ -684,16 +719,16 @@ class TagsManagerUtils {
   /// 默认标签验证器
   static String? defaultTagValidator(String tag) {
     if (tag.trim().isEmpty) {
-      return '标签不能为空';
+      return LocalizationService.instance.current.tagCannotBeEmpty_4821;
     }
     if (tag.length > 20) {
-      return '标签长度不能超过20个字符';
+      return LocalizationService.instance.current.tagLengthExceeded_4821;
     }
     if (tag.contains(' ')) {
-      return '标签不能包含空格';
+      return LocalizationService.instance.current.tagNoSpacesAllowed_7281;
     }
-    if (RegExp(r'[<>"/\\|?*]').hasMatch(tag)) {
-      return '标签包含非法字符';
+    if (RegExp(r'[<>"\/\\|?*]').hasMatch(tag)) {
+      return LocalizationService.instance.current.invalidTagCharacters_4821;
     }
     return null;
   }
@@ -701,17 +736,17 @@ class TagsManagerUtils {
   /// 获取预设的建议标签
   static List<String> getDefaultSuggestedTags() {
     return [
-      '重要',
-      '紧急',
-      '完成',
-      '临时',
-      '备注',
-      '标记',
-      '高优先级',
-      '低优先级',
-      '计划',
-      '想法',
-      '参考',
+      LocalizationService.instance.current.importantTag_1234,
+      LocalizationService.instance.current.urgentTag_5678,
+      LocalizationService.instance.current.completedTag_9012,
+      LocalizationService.instance.current.temporaryTag_3456,
+      LocalizationService.instance.current.remarkTag_7890,
+      LocalizationService.instance.current.markTag_2345,
+      LocalizationService.instance.current.highPriorityTag_6789,
+      LocalizationService.instance.current.lowPriorityTag_0123,
+      LocalizationService.instance.current.planTag_4567,
+      LocalizationService.instance.current.ideaTag_8901,
+      LocalizationService.instance.current.referenceTag_1235,
     ];
   }
 
@@ -825,7 +860,9 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
         _textController.clear();
       }
     } catch (e) {
-      debugPrint('添加自定义标签失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.addCustomTagFailed_7285(e),
+      );
     }
   }
 
@@ -844,14 +881,16 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
         });
       }
     } catch (e) {
-      debugPrint('删除自定义标签失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.deleteCustomTagFailed_7421(e),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('管理自定义标签'),
+      title: Text(LocalizationService.instance.current.manageCustomTags_4271),
       content: SizedBox(
         width: 450,
         height: 400,
@@ -864,8 +903,11 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: '输入自定义标签',
+                    decoration: InputDecoration(
+                      hintText: LocalizationService
+                          .instance
+                          .current
+                          .customTagHintText_4521,
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 12,
@@ -880,7 +922,8 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
                 IconButton(
                   onPressed: () => _addCustomTag(_textController.text),
                   icon: const Icon(Icons.add),
-                  tooltip: '添加标签',
+                  tooltip:
+                      LocalizationService.instance.current.addTagTooltip_7281,
                 ),
               ],
             ),
@@ -889,7 +932,9 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
 
             // 标签数量统计
             Text(
-              '自定义标签 (${_customTags.length})',
+              LocalizationService.instance.current.customTagCount(
+                _customTags.length,
+              ),
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -902,7 +947,10 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
               child: _customTags.isEmpty
                   ? Center(
                       child: Text(
-                        '暂无自定义标签\n点击上方输入框添加新标签',
+                        LocalizationService
+                            .instance
+                            .current
+                            .noCustomTagsMessage_7421,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -942,7 +990,7 @@ class _CustomTagsManagerDialogState extends State<_CustomTagsManagerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: Text(LocalizationService.instance.current.closeButton_7421),
         ),
       ],
     );

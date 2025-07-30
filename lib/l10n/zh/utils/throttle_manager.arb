@@ -1,0 +1,5 @@
+{
+  "throttleErrorImmediate": "节流立即执行出错 [{key}]: {e}",
+  "throttleManagerReleased": "ThrottleManager已释放，清理了{count}个定时器",
+  "throttleError_7425": "节流执行出错 [{0}]: {1}"
+}

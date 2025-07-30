@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/home/home_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 主页模块 - 始终优先级最高（0）
 class HomePageModule extends PageModule {
@@ -16,7 +19,8 @@ class HomePageModule extends PageModule {
   String get path => '/';
 
   @override
-  String get displayName => '首页';
+  String get displayName =>
+      LocalizationService.instance.current.homePageTitle_4821;
 
   @override
   IconData get icon => Icons.home;

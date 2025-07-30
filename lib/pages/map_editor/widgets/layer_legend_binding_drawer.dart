@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/map_layer.dart';
 import '../../../providers/user_preferences_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 图层图例组绑定抽屉
 class LayerLegendBindingDrawer extends StatefulWidget {
@@ -108,7 +111,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '图层: ${widget.layer.name}',
+                        LocalizationService.instance.current.layerName_7421(
+                          widget.layer.name,
+                        ),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -129,7 +134,10 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '选择要绑定到此图层的图例组',
+                  LocalizationService
+                      .instance
+                      .current
+                      .selectLegendGroupToBind_7281,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -152,7 +160,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 // 已绑定的图例组
                 if (boundGroups.isNotEmpty) ...[
                   Text(
-                    '已绑定的图例组 (${boundGroups.length})',
+                    LocalizationService.instance.current.boundLegendGroupsTitle(
+                      boundGroups.length,
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -169,7 +179,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
 
                 // 未绑定的图例组
                 Text(
-                  '可用的图例组 (${unboundGroups.length})',
+                  LocalizationService.instance.current.availableLegendGroups(
+                    unboundGroups.length,
+                  ),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -177,11 +189,14 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
                 ),
                 const SizedBox(height: 8),
                 if (unboundGroups.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.all(16),
                     child: Text(
-                      '暂无可用的图例组',
-                      style: TextStyle(
+                      LocalizationService
+                          .instance
+                          .current
+                          .noLegendAvailable_4251,
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontStyle: FontStyle.italic,
                       ),
@@ -240,7 +255,9 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
             ),
             const SizedBox(width: 4),
             Text(
-              '${group.legendItems.length} 个图例',
+              LocalizationService.instance.current.legendCount(
+                group.legendItems.length,
+              ),
               style: const TextStyle(fontSize: 11),
             ),
             const SizedBox(width: 8),
@@ -253,7 +270,7 @@ class _LayerLegendBindingDrawerState extends State<LayerLegendBindingDrawer> {
         trailing: IconButton(
           icon: const Icon(Icons.settings, size: 16),
           onPressed: () => widget.onLegendGroupTapped(group),
-          tooltip: '管理图例组',
+          tooltip: LocalizationService.instance.current.manageLegendGroup_7421,
         ),
         onTap: () => _toggleLegendGroup(
           group.id,

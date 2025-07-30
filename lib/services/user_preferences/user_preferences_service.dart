@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
 // import 'dart:typed_data';
@@ -5,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import '../../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
 import 'user_preferences_migration_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 // import 'user_preferences_migration_service.dart';
 
 /// 用户偏好设置服务
@@ -46,13 +49,17 @@ class UserPreferencesService {
       // 只在真正需要时执行迁移
       if (await _migrationService.needsMigration()) {
         if (kDebugMode) {
-          debugPrint('执行用户偏好设置数据迁移...');
+          debugPrint(
+            LocalizationService.instance.current.userPreferencesMigration_7281,
+          );
         }
 
         final migrationSuccess = await _migrationService.performMigration();
         if (migrationSuccess) {
           if (kDebugMode) {
-            debugPrint('数据迁移完成');
+            debugPrint(
+              LocalizationService.instance.current.dataMigrationComplete_7281,
+            );
           }
           // 迁移成功后可选择清理旧数据
           // await _migrationService.cleanupLegacyData();
@@ -64,11 +71,15 @@ class UserPreferencesService {
       _initialized = true;
 
       if (kDebugMode) {
-        debugPrint('用户偏好设置服务初始化完成');
+        debugPrint(
+          LocalizationService.instance.current.userPreferencesInitialized_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('用户偏好设置服务初始化失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.userPreferenceInitFailed_7421(e),
+        );
       }
       // 即使迁移失败，也要继续初始化服务
       await _loadCurrentUser();
@@ -138,11 +149,17 @@ class UserPreferencesService {
       await _dbService.savePreferences(preferences);
 
       if (kDebugMode) {
-        debugPrint('用户偏好设置已保存: ${preferences.displayName}');
+        debugPrint(
+          LocalizationService.instance.current.userPreferencesSaved_7281(
+            preferences.displayName,
+          ),
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('保存用户偏好设置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.saveUserPreferenceFailed(e),
+        );
       }
       rethrow;
     }
@@ -202,7 +219,9 @@ class UserPreferencesService {
   /// 获取所有用户配置文件
   List<UserPreferences> getAllUsers() {
     // 使用异步包装器来处理数据库调用
-    throw UnimplementedError('请使用 getAllUsersAsync() 方法');
+    throw UnimplementedError(
+      LocalizationService.instance.current.useGetAllUsersAsyncMethod,
+    );
   }
 
   /// 获取所有用户配置文件（异步版本）
@@ -290,7 +309,9 @@ class UserPreferencesService {
 
     // 检查颜色是否已存在
     if (customColors.contains(color)) {
-      throw Exception('该颜色已存在');
+      throw Exception(
+        LocalizationService.instance.current.colorAlreadyExists_7281,
+      );
     }
 
     // 添加新颜色到开头
@@ -304,7 +325,11 @@ class UserPreferencesService {
     await updateTools(updatedTools);
 
     if (kDebugMode) {
-      debugPrint('自定义颜色已添加: ${color.toRadixString(16).padLeft(8, '0')}');
+      debugPrint(
+        LocalizationService.instance.current.customColorAdded_7281(
+          color.toRadixString(16).padLeft(8, '0'),
+        ),
+      );
     }
   }
 
@@ -330,7 +355,11 @@ class UserPreferencesService {
     await updateTools(updatedTools);
 
     if (kDebugMode) {
-      debugPrint('常用线条宽度已添加: ${strokeWidth}px');
+      debugPrint(
+        LocalizationService.instance.current.commonStrokeWidthAdded(
+          strokeWidth,
+        ),
+      );
     }
   }
 
@@ -393,7 +422,9 @@ class UserPreferencesService {
       await savePreferences(importedPreferences, immediate: true);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('导入设置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.importSettingsFailed_7421(e),
+        );
       }
       rethrow;
     }
@@ -416,7 +447,9 @@ class UserPreferencesService {
       _currentPreferences = await _dbService.getCurrentPreferences();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('加载当前用户偏好设置失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.loadUserPreferencesFailed(e),
+        );
       }
     }
   }

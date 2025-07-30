@@ -1,0 +1,9 @@
+{
+  "debugAsyncFunction_7425": "处理异步外部函数",
+  "asyncFunctionCompleteDebug": "异步函数 {functionName} 完成，结果类型: {runtimeType}",
+  "serializedResultDebug_7281": "序列化后的结果: {serializedResult}",
+  "asyncFunctionError_4821": "异步函数 {functionName} 出错: {error}",
+  "syncExternalFunctionDebug_7421": "处理同步外部函数: {functionName}，结果类型: {runtimeType}",
+  "externalFunctionError_4821": "外部函数 {functionName} 执行出错: {error}",
+  "serializedResultDebug_7425": "序列化后的结果"
+}

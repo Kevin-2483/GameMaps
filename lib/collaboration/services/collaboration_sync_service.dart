@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import '../models/collaboration_state.dart';
 import 'collaboration_state_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 协作状态同步服务
 /// 负责与远程服务器同步协作状态数据
@@ -59,7 +62,9 @@ class CollaborationSyncService {
     Duration? batchDelay,
   }) async {
     if (_isInitialized) {
-      debugPrint('[CollaborationSyncService] 服务已初始化');
+      debugPrint(
+        '[CollaborationSyncService] ${LocalizationService.instance.current.serviceInitialized_7421}',
+      );
       return;
     }
 
@@ -86,11 +91,16 @@ class CollaborationSyncService {
       _isInitialized = true;
       _eventController.add(const CollaborationSyncInitialized());
 
-      debugPrint('[CollaborationSyncService] 同步服务初始化完成');
+      debugPrint(
+        '[CollaborationSyncService] ' +
+            LocalizationService.instance.current.syncServiceInitialized,
+      );
     } catch (e, stackTrace) {
       _eventController.add(
         CollaborationSyncError(
-          message: '初始化同步服务失败: ${e.toString()}',
+          message: LocalizationService.instance.current.syncServiceInitFailed(
+            e.toString(),
+          ),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -102,7 +112,9 @@ class CollaborationSyncService {
   /// 启用同步
   void enableSync() {
     if (!_isInitialized) {
-      throw StateError('同步服务未初始化');
+      throw StateError(
+        LocalizationService.instance.current.syncServiceNotInitialized_7281,
+      );
     }
 
     if (_isSyncEnabled) return;
@@ -111,7 +123,9 @@ class CollaborationSyncService {
     _startSyncTimer();
     _eventController.add(const CollaborationSyncEnabled());
 
-    debugPrint('[CollaborationSyncService] 同步已启用');
+    debugPrint(
+      '[CollaborationSyncService] ${LocalizationService.instance.current.syncEnabled_7421}',
+    );
   }
 
   /// 禁用同步
@@ -122,13 +136,21 @@ class CollaborationSyncService {
     _stopSyncTimer();
     _eventController.add(const CollaborationSyncDisabled());
 
-    debugPrint('[CollaborationSyncService] 同步已禁用');
+    debugPrint(
+      '[CollaborationSyncService] ${LocalizationService.instance.current.syncDisabled_7421}',
+    );
   }
 
   /// 处理接收到的远程数据
   Future<void> handleRemoteData(Map<String, dynamic> data) async {
     if (!_isInitialized) {
-      debugPrint('[CollaborationSyncService] 服务未初始化，忽略远程数据');
+      debugPrint(
+        '[CollaborationSyncService] ' +
+            LocalizationService
+                .instance
+                .current
+                .serviceNotInitializedIgnoreData_7283,
+      );
       return;
     }
 
@@ -137,7 +159,10 @@ class CollaborationSyncService {
       final payload = data['payload'] as Map<String, dynamic>?;
 
       if (type == null || payload == null) {
-        debugPrint('[CollaborationSyncService] 无效的远程数据格式');
+        debugPrint(
+          '[CollaborationSyncService] ' +
+              LocalizationService.instance.current.invalidRemoteDataFormat_7281,
+        );
         return;
       }
 
@@ -161,12 +186,18 @@ class CollaborationSyncService {
           await _handleRemoteConflict(payload);
           break;
         default:
-          debugPrint('[CollaborationSyncService] 未知的远程数据类型: $type');
+          debugPrint(
+            '[CollaborationSyncService] ' +
+                LocalizationService.instance.current.unknownRemoteDataType_4721(
+                  type,
+                ),
+          );
       }
     } catch (e, stackTrace) {
       _eventController.add(
         CollaborationSyncError(
-          message: '处理远程数据失败: ${e.toString()}',
+          message: LocalizationService.instance.current
+              .remoteDataProcessingFailed_7421(e.toString()),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -192,7 +223,9 @@ class CollaborationSyncService {
     _isInitialized = false;
     _isSyncEnabled = false;
 
-    debugPrint('[CollaborationSyncService] 同步服务已清理');
+    debugPrint(
+      '[CollaborationSyncService] ${LocalizationService.instance.current.syncServiceCleanedUp_7421}',
+    );
   }
 
   // ==================== 私有方法 ====================
@@ -306,7 +339,9 @@ class CollaborationSyncService {
     } catch (e, stackTrace) {
       _eventController.add(
         CollaborationSyncError(
-          message: '发送同步数据失败: ${e.toString()}',
+          message: LocalizationService.instance.current.syncDataFailed_7285(
+            e.toString(),
+          ),
           error: e,
           stackTrace: stackTrace,
         ),
@@ -330,7 +365,9 @@ class CollaborationSyncService {
       final selectionState = UserSelectionState.fromJson(data);
       _stateManager.receiveRemoteSelectionState(selectionState);
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程用户选择失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ${LocalizationService.instance.current.remoteUserSelectionFailed_7421}: $e',
+      );
     }
   }
 
@@ -340,7 +377,9 @@ class CollaborationSyncService {
       final cursorState = UserCursorState.fromJson(data);
       _stateManager.receiveRemoteCursorState(cursorState);
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程用户指针失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ${LocalizationService.instance.current.remotePointerError_4821}: $e',
+      );
     }
   }
 
@@ -356,7 +395,9 @@ class CollaborationSyncService {
         CollaborationUserJoined(userId: userId, displayName: displayName),
       );
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程用户加入失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ${LocalizationService.instance.current.remoteUserJoinFailure_4821}: $e',
+      );
     }
   }
 

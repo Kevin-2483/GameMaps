@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/widgets.dart';
 import 'reactive_version_manager.dart';
 import '../../data/map_data_bloc.dart';
@@ -8,6 +9,7 @@ import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
 import '../legend_session_manager.dart';
 import 'dart:async';
+import '../localization_service.dart';
 
 /// 响应式版本管理适配器
 /// 将响应式版本管理器与地图数据BLoC系统集成
@@ -67,7 +69,9 @@ class ReactiveVersionAdapter {
           stickyNotes: currentState.mapItem.stickyNotes,
         );
         await _initializeLegendSession(mapItem);
-        debugPrint('已为现有地图数据初始化图例会话');
+        debugPrint(
+          LocalizationService.instance.current.legendSessionInitialized_4821,
+        );
       });
     }
   }
@@ -78,7 +82,9 @@ class ReactiveVersionAdapter {
 
     final activeVersionId = _versionManager.activeEditingVersionId;
     if (activeVersionId == null) {
-      debugPrint('没有正在编辑的版本，跳过数据同步');
+      debugPrint(
+        LocalizationService.instance.current.noEditingVersionSkipSync_4821,
+      );
       return;
     }
     if (state is MapDataLoaded) {
@@ -109,20 +115,36 @@ class ReactiveVersionAdapter {
         );
 
         debugPrint(
-          '同步地图数据到版本 [$activeVersionId], 图层数: ${newMapItem.layers.length}, 便签数: ${newMapItem.stickyNotes.length}, 图例组数: ${newMapItem.legendGroups.length}',
+          LocalizationService.instance.current.syncMapDataToVersion(
+            activeVersionId,
+            newMapItem.layers.length,
+            newMapItem.stickyNotes.length,
+            newMapItem.legendGroups.length,
+          ),
         );
 
         // 详细日志：便签绘画元素数量
         for (int i = 0; i < newMapItem.stickyNotes.length; i++) {
           final note = newMapItem.stickyNotes[i];
-          debugPrint('  便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+          debugPrint(
+            LocalizationService.instance.current.noteDebugInfo(
+              i,
+              note.title,
+              note.elements.length,
+            ),
+          );
         }
 
         // 详细日志：图例组和图例项数量
         for (int i = 0; i < newMapItem.legendGroups.length; i++) {
           final group = newMapItem.legendGroups[i];
           debugPrint(
-            '  图例组[$i] ${group.name}: ${group.legendItems.length}个图例项',
+            LocalizationService.instance.current.legendGroupInfo(
+              i,
+              group.name,
+              group.isVisible,
+              group.legendItems.length,
+            ),
           );
         }
 
@@ -146,10 +168,14 @@ class ReactiveVersionAdapter {
         mapAbsolutePath: mapAbsolutePath,
       );
       debugPrint(
-        '图例会话初始化完成，图例数量: ${_legendSessionManager.sessionData.loadedLegends.length}',
+        LocalizationService.instance.current.legendSessionInitialized(
+          _legendSessionManager.sessionData.loadedLegends.length,
+        ),
       );
     } catch (e) {
-      debugPrint('图例会话初始化失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.chartSessionInitFailed_7421(e),
+      );
     }
   }
 
@@ -413,16 +439,26 @@ class ReactiveVersionAdapter {
     if (_isUpdating) return; // 防止循环更新
 
     // 这里可以添加版本切换时需要的额外处理逻辑
-    debugPrint('版本管理器状态变化: ${_versionManager.getSessionSummary()}');
+    debugPrint(
+      LocalizationService.instance.current.versionManagerStatusChanged_7281(
+        _versionManager.getSessionSummary(),
+      ),
+    );
   }
 
   /// 切换到指定版本并加载其数据到BLoC
   Future<void> switchToVersionAndLoad(String versionId) async {
     if (!_versionManager.versionExists(versionId)) {
-      throw ArgumentError('版本不存在: $versionId');
+      throw ArgumentError(
+        LocalizationService.instance.current.versionNotFoundError(versionId),
+      );
     }
 
-    debugPrint('开始切换版本: $versionId');
+    debugPrint(
+      LocalizationService.instance.current.startSwitchingVersion_7281(
+        versionId,
+      ),
+    );
 
     _isUpdating = true;
     try {
@@ -435,13 +471,23 @@ class ReactiveVersionAdapter {
         // 3. 将版本数据加载到地图数据BLoC（通过集成适配器）
         await _integrationAdapter.initializeMap(versionData);
         debugPrint(
-          '切换并加载版本数据 [$versionId] 到响应式系统，图层数: ${versionData.layers.length}, 便签数: ${versionData.stickyNotes.length}',
+          LocalizationService.instance.current.switchAndLoadVersionData(
+            versionId,
+            versionData.layers.length,
+            versionData.stickyNotes.length,
+          ),
         );
 
         // 详细日志：便签绘画元素数量
         for (int i = 0; i < versionData.stickyNotes.length; i++) {
           final note = versionData.stickyNotes[i];
-          debugPrint('  加载便签[$i] ${note.title}: ${note.elements.length}个绘画元素');
+          debugPrint(
+            LocalizationService.instance.current.loadingNoteWithElements(
+              i,
+              note.title,
+              note.elements.length,
+            ),
+          );
         }
 
         // 初始化图例会话（等待完成，确保图例状态同步）
@@ -453,7 +499,11 @@ class ReactiveVersionAdapter {
           version: versionId,
           folderPath: _versionManager.folderPath,
         );
-        debugPrint('从VFS加载版本数据 [$versionId] 到响应式系统');
+        debugPrint(
+          LocalizationService.instance.current.loadVersionDataToReactiveSystem(
+            versionId,
+          ),
+        );
       }
 
       // 5. 等待一个事件循环，确保BLoC状态更新完成
@@ -461,12 +511,21 @@ class ReactiveVersionAdapter {
 
       // 6. 开始编辑该版本
       _versionManager.startEditingVersion(versionId);
-      debugPrint('开始编辑版本 [$versionId]');
+      debugPrint(
+        LocalizationService.instance.current.startEditingVersion(
+          _versionManager.mapTitle,
+          versionId,
+        ),
+      );
     } finally {
       // 延迟重置更新标志，确保数据加载完成
       await Future.delayed(const Duration(milliseconds: 100));
       _isUpdating = false;
-      debugPrint('版本切换完成，重置更新标志 [$versionId]');
+      debugPrint(
+        LocalizationService.instance.current.versionSwitchCompleteResetFlag(
+          versionId,
+        ),
+      );
     }
   }
 
@@ -477,7 +536,12 @@ class ReactiveVersionAdapter {
     String? sourceVersionId,
     Map<String, dynamic>? metadata,
   }) async {
-    debugPrint('开始创建新版本: $versionId, 源版本: $sourceVersionId');
+    debugPrint(
+      LocalizationService.instance.current.versionCreationStart(
+        versionId,
+        sourceVersionId ?? 'null',
+      ),
+    );
 
     _isUpdating = true;
     try {
@@ -488,7 +552,13 @@ class ReactiveVersionAdapter {
         // 从指定源版本获取数据
         initialData = _versionManager.getVersionSessionData(sourceVersionId);
         debugPrint(
-          '从源版本 [$sourceVersionId] 获取数据: ${initialData != null ? '成功(图层数: ${initialData.layers.length})' : '失败'}',
+          LocalizationService.instance.current.fetchDataResult_7281(
+            sourceVersionId,
+            initialData != null
+                ? LocalizationService.instance.current
+                      .successWithLayerCount_4592(initialData.layers.length)
+                : LocalizationService.instance.current.failure_8364,
+          ),
         );
       }
 
@@ -501,7 +571,11 @@ class ReactiveVersionAdapter {
           legendGroups: List.from(currentState.legendGroups), // 深度复制图例组列表
           updatedAt: DateTime.now(),
         );
-        debugPrint('从当前BLoC状态获取数据: 图层数: ${initialData.layers.length}');
+        debugPrint(
+          LocalizationService.instance.current.debugLayerCount(
+            initialData.layers.length,
+          ),
+        );
       }
 
       // 2. 创建新版本（不传递initialData，避免重复设置）
@@ -519,9 +593,15 @@ class ReactiveVersionAdapter {
           initialData,
           markAsChanged: false, // 初始数据不标记为已修改
         );
-        debugPrint('为新版本 [$versionId] 设置初始数据成功');
+        debugPrint(
+          LocalizationService.instance.current.initialDataSetupSuccess(
+            versionId,
+          ),
+        );
       } else {
-        debugPrint('警告: 新版本 [$versionId] 没有初始数据');
+        debugPrint(
+          LocalizationService.instance.current.versionWarning_7284(versionId),
+        );
       }
 
       // 4. 先重置更新标志，再切换版本
@@ -530,11 +610,19 @@ class ReactiveVersionAdapter {
       // 5. 切换到新版本并加载数据
       await switchToVersionAndLoad(versionId);
 
-      debugPrint('新版本创建并切换完成: $versionId');
+      debugPrint(
+        LocalizationService.instance.current.versionCreatedAndSwitched_7281(
+          versionId,
+        ),
+      );
       return newVersionState;
     } catch (e) {
       _isUpdating = false;
-      debugPrint('创建新版本失败 [$versionId]: $e');
+      debugPrint(
+        LocalizationService.instance.current.versionCreationFailed(
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -543,13 +631,19 @@ class ReactiveVersionAdapter {
   Future<void> saveCurrentVersion() async {
     final activeVersionId = _versionManager.activeEditingVersionId;
     if (activeVersionId == null) {
-      debugPrint('没有正在编辑的版本，无需保存');
+      debugPrint(
+        LocalizationService.instance.current.noEditingVersionToSave_4821,
+      );
       return;
     }
 
     final versionData = _versionManager.getVersionSessionData(activeVersionId);
     if (versionData == null) {
-      debugPrint('版本 [$activeVersionId] 没有会话数据，无法保存');
+      debugPrint(
+        LocalizationService.instance.current.versionNoSessionDataToSave(
+          activeVersionId,
+        ),
+      );
       return;
     }
 
@@ -560,9 +654,18 @@ class ReactiveVersionAdapter {
       // 标记版本已保存
       _versionManager.markVersionSaved(activeVersionId);
 
-      debugPrint('保存版本数据 [$activeVersionId] 完成');
+      debugPrint(
+        LocalizationService.instance.current.versionDataSaved_7281(
+          activeVersionId,
+        ),
+      );
     } catch (e) {
-      debugPrint('保存版本数据失败 [$activeVersionId]: $e');
+      debugPrint(
+        LocalizationService.instance.current.versionSaveFailed_7281(
+          activeVersionId,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -579,18 +682,25 @@ class ReactiveVersionAdapter {
         // 保存该版本
         await saveCurrentVersion();
       } catch (e) {
-        debugPrint('保存版本数据失败 [$versionId]: $e');
+        debugPrint(
+          LocalizationService.instance.current.versionSaveFailed_7281(
+            versionId,
+            e,
+          ),
+        );
         // 继续保存其他版本
       }
     }
 
-    debugPrint('所有版本保存完成');
+    debugPrint(LocalizationService.instance.current.allVersionsSaved_7281(_versionManager.mapTitle));
   }
 
   /// 删除版本及其数据
   Future<void> deleteVersionCompletely(String versionId) async {
     if (versionId == 'default') {
-      throw ArgumentError('无法删除默认版本');
+      throw ArgumentError(
+        LocalizationService.instance.current.cannotDeleteDefaultVersion_7281,
+      );
     }
 
     // 1. 从内存中删除版本状态
@@ -599,7 +709,9 @@ class ReactiveVersionAdapter {
     // 2. 如果需要，也可以从VFS中删除版本数据
     // 这里暂时不实现VFS删除，因为需求明确说明只做内存管理
 
-    debugPrint('删除版本完成 [$versionId]');
+    debugPrint(
+      LocalizationService.instance.current.versionDeletedLog(versionId),
+    );
   }
 
   /// 复制版本及其数据
@@ -630,7 +742,10 @@ class ReactiveVersionAdapter {
     final data2 = _versionManager.getVersionSessionData(versionId2);
 
     if (data1 == null || data2 == null) {
-      return {'error': '版本数据不完整'};
+      return {
+        'error':
+            LocalizationService.instance.current.incompleteVersionData_7281,
+      };
     }
 
     return {
@@ -648,19 +763,29 @@ class ReactiveVersionAdapter {
   bool validateVersionData(String versionId) {
     final versionState = _versionManager.getVersionState(versionId);
     if (versionState == null) {
-      debugPrint('版本状态不存在: $versionId');
+      debugPrint(
+        LocalizationService.instance.current.versionStatusNotFound(versionId),
+      );
       return false;
     }
 
     final sessionData = versionState.sessionData;
     if (sessionData == null) {
-      debugPrint('版本会话数据不存在: $versionId');
+      debugPrint(
+        LocalizationService.instance.current.versionSessionDataMissing_7281(
+          versionId,
+        ),
+      );
       return false;
     }
 
     // 基本数据完整性检查
     if (sessionData.title.isEmpty) {
-      debugPrint('版本数据标题为空: $versionId');
+      debugPrint(
+        LocalizationService.instance.current.versionDataTitleEmpty_7281(
+          versionId,
+        ),
+      );
       return false;
     }
 
@@ -671,43 +796,72 @@ class ReactiveVersionAdapter {
 
   /// 更新图层（响应式版本管理支持，通过集成适配器）
   void updateLayer(MapLayer layer) {
-    debugPrint('响应式版本管理器: 更新图层 ${layer.name}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerUpdateLayer(
+        layer.name,
+      ),
+    );
     _integrationAdapter.updateLayer(layer);
   }
 
   /// 批量更新图层（响应式版本管理支持，通过集成适配器）
   void updateLayers(List<MapLayer> layers) {
-    debugPrint('响应式版本管理器: 批量更新图层，数量: ${layers.length}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerBatchUpdate(
+        layers.length,
+      ),
+    );
     _integrationAdapter.updateLayers(layers);
   }
 
   /// 添加图层（响应式版本管理支持，通过集成适配器）
   void addLayer(MapLayer layer) {
-    debugPrint('响应式版本管理器: 添加图层 ${layer.name}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerAddLayer(
+        layer.name,
+      ),
+    );
     _integrationAdapter.addLayer(layer);
   }
 
   /// 删除图层（响应式版本管理支持，通过集成适配器）
   void deleteLayer(String layerId) {
-    debugPrint('响应式版本管理器: 删除图层 $layerId');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerDeleteLayer(
+        layerId,
+      ),
+    );
     _integrationAdapter.deleteLayer(layerId);
   }
 
   /// 设置图层可见性（响应式版本管理支持，通过集成适配器）
   void setLayerVisibility(String layerId, bool isVisible) {
-    debugPrint('响应式版本管理器: 设置图层可见性 $layerId = $isVisible');
+    debugPrint(
+      LocalizationService.instance.current
+          .responsiveVersionManagerSetVisibility(layerId, isVisible),
+    );
     _integrationAdapter.setLayerVisibility(layerId, isVisible);
   }
 
   /// 设置图层透明度（响应式版本管理支持，通过集成适配器）
   void setLayerOpacity(String layerId, double opacity) {
-    debugPrint('响应式版本管理器: 设置图层透明度 $layerId = $opacity');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerSetOpacity(
+        layerId,
+        opacity,
+      ),
+    );
     _integrationAdapter.setLayerOpacity(layerId, opacity);
   }
 
   /// 重新排序图层（响应式版本管理支持，通过集成适配器）
   void reorderLayers(int oldIndex, int newIndex) {
-    debugPrint('响应式版本管理器: 重新排序图层 $oldIndex -> $newIndex');
+    debugPrint(
+      LocalizationService.instance.current.responsiveLayerManagerReorder(
+        oldIndex,
+        newIndex,
+      ),
+    );
     _integrationAdapter.reorderLayers(oldIndex, newIndex);
   }
 
@@ -718,7 +872,11 @@ class ReactiveVersionAdapter {
     List<MapLayer> layersToUpdate,
   ) {
     debugPrint(
-      '响应式版本管理器: 组内重排序图层 $oldIndex -> $newIndex，更新图层数量: ${layersToUpdate.length}',
+      LocalizationService.instance.current.responsiveVersionManagerReorder(
+        oldIndex,
+        newIndex,
+        layersToUpdate.length,
+      ),
     );
     _integrationAdapter.reorderLayersInGroup(
       oldIndex,
@@ -731,31 +889,49 @@ class ReactiveVersionAdapter {
 
   /// 添加便签（响应式版本管理支持，通过集成适配器）
   void addStickyNote(StickyNote note) {
-    debugPrint('响应式版本管理器: 添加便签 ${note.title}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerAddNote(
+        note.title,
+      ),
+    );
     _integrationAdapter.addStickyNote(note);
   }
 
   /// 更新便签（响应式版本管理支持，通过集成适配器）
   void updateStickyNote(StickyNote note) {
-    debugPrint('响应式版本管理器: 更新便签 ${note.title}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveVersionManagerUpdateNote(
+        note.title,
+      ),
+    );
     _integrationAdapter.updateStickyNote(note);
   }
 
   /// 删除便签（响应式版本管理支持，通过集成适配器）
   void deleteStickyNote(String noteId) {
-    debugPrint('响应式版本管理器: 删除便签 $noteId');
+    debugPrint(
+      LocalizationService.instance.current.responsiveNoteManagerDeleteNote_7421(
+        noteId,
+      ),
+    );
     _integrationAdapter.deleteStickyNote(noteId);
   }
 
   /// 重新排序便签（响应式版本管理支持，通过集成适配器）
   void reorderStickyNotes(int oldIndex, int newIndex) {
-    debugPrint('响应式版本管理器: 重新排序便签 $oldIndex -> $newIndex');
+    debugPrint(
+      LocalizationService.instance.current.reorderNoteLog(oldIndex, newIndex),
+    );
     _integrationAdapter.reorderStickyNotes(oldIndex, newIndex);
   }
 
   /// 根据拖拽重新排序便签（响应式版本管理支持，通过集成适配器）
   void reorderStickyNotesByDrag(List<StickyNote> reorderedNotes) {
-    debugPrint('响应式版本管理器: 拖拽重新排序便签，数量: ${reorderedNotes.length}');
+    debugPrint(
+      LocalizationService.instance.current.responsiveNoteManager_7281(
+        reorderedNotes.length,
+      ),
+    );
     _integrationAdapter.reorderStickyNotesByDrag(reorderedNotes);
   }
 
@@ -773,25 +949,37 @@ class ReactiveVersionAdapter {
 
   /// 添加图例组（响应式版本管理支持，通过集成适配器）
   void addLegendGroup(LegendGroup legendGroup) {
-    debugPrint('响应式版本管理器: 添加图例组 ${legendGroup.name}');
+    debugPrint(
+      LocalizationService.instance.current
+          .responsiveVersionManagerAddLegendGroup_7421(legendGroup.name),
+    );
     _integrationAdapter.addLegendGroup(legendGroup);
   }
 
   /// 更新图例组（响应式版本管理支持，通过集成适配器）
   void updateLegendGroup(LegendGroup legendGroup) {
-    debugPrint('响应式版本管理器: 更新图例组 ${legendGroup.name}');
+    debugPrint(
+      LocalizationService.instance.current
+          .responsiveVersionManagerUpdateLegendGroup(legendGroup.name),
+    );
     _integrationAdapter.updateLegendGroup(legendGroup);
   }
 
   /// 删除图例组（响应式版本管理支持，通过集成适配器）
   void deleteLegendGroup(String legendGroupId) {
-    debugPrint('响应式版本管理器: 删除图例组 $legendGroupId');
+    debugPrint(
+      LocalizationService.instance.current
+          .responsiveVersionManagerDeleteLegendGroup(legendGroupId),
+    );
     _integrationAdapter.deleteLegendGroup(legendGroupId);
   }
 
   /// 设置图例组可见性（响应式版本管理支持，通过集成适配器）
   void setLegendGroupVisibility(String groupId, bool isVisible) {
-    debugPrint('响应式版本管理器: 设置图例组可见性 $groupId = $isVisible');
+    debugPrint(
+      LocalizationService.instance.current
+          .responsiveVersionManagerSetVisibility(groupId, isVisible),
+    );
     _integrationAdapter.setLegendGroupVisibility(groupId, isVisible);
   }
 
@@ -864,7 +1052,12 @@ class ReactiveVersionAdapter {
     _versionManager.removeListener(_onVersionManagerChanged);
     _legendSessionManager.dispose();
 
-    debugPrint('响应式版本管理适配器已释放资源');
+    debugPrint(
+      LocalizationService
+          .instance
+          .current
+          .responsiveVersionManagerAdapterReleased_7421,
+    );
   }
 }
 

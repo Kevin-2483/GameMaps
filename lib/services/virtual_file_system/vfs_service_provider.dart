@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'vfs_protocol.dart';
@@ -9,6 +10,8 @@ import 'vfs_storage_service.dart';
 import 'vfs_platform_io.dart'
     if (dart.library.html) 'vfs_platform_web.dart'
     as platform;
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// 虚拟文件系统服务提供者
 /// 为其他组件提供文件系统服务接口
@@ -474,12 +477,18 @@ class VfsServiceProvider {
   /// 对于客户端平台：生成临时文件路径
   Future<String?> generateFileUrl(String vfsPath) async {
     try {
-      debugPrint('🔗 VfsServiceProvider: 生成文件URL - $vfsPath');
+      debugPrint(
+        '🔗 VfsServiceProvider: ' +
+            LocalizationService.instance.current.generateFileUrl(vfsPath),
+      );
 
       // 读取文件内容
       final fileContent = await _vfs.readFile(vfsPath);
       if (fileContent == null) {
-        debugPrint('🔗 VfsServiceProvider: 文件不存在 - $vfsPath');
+        debugPrint(
+          '🔗 VfsServiceProvider: ' +
+              LocalizationService.instance.current.fileNotExist_4721(vfsPath),
+        );
         return null;
       }
 
@@ -495,7 +504,10 @@ class VfsServiceProvider {
         );
       }
     } catch (e) {
-      debugPrint('🔗 VfsServiceProvider: 生成文件URL失败 - $e');
+      debugPrint(
+        '🔗 VfsServiceProvider: ' +
+            LocalizationService.instance.current.generateFileUrlFailed_4821(e),
+      );
       return null;
     }
   }
@@ -509,20 +521,26 @@ class VfsServiceProvider {
     if (data.length > 4 * 1024 * 1024) {
       // 4MB限制，提高Web端性能
       throw Exception(
-        '文件过大（${fileSizeMB.toStringAsFixed(1)}MB，超过4MB限制），无法在Web平台生成URL',
+        LocalizationService.instance.current.fileSizeExceededWebLimit(
+          fileSizeMB.toStringAsFixed(1),
+        ),
       );
     }
 
     // 对于接近限制的文件给出警告
     if (data.length > 2 * 1024 * 1024) {
       debugPrint(
-        '🔗 VfsServiceProvider: 警告 - 文件较大（${fileSizeMB.toStringAsFixed(1)}MB），可能影响性能',
+        LocalizationService.instance.current.largeFileWarning(
+          fileSizeMB.toStringAsFixed(1),
+        ),
       );
     }
 
     final base64Data = _encodeBase64(data);
     final dataUri = 'data:$mime;base64,$base64Data';
-    debugPrint('🔗 VfsServiceProvider: 生成Data URI, 长度: ${dataUri.length}');
+    debugPrint(
+      '🔗 VfsServiceProvider: ${LocalizationService.instance.current.generateDataUri_7425}, ${LocalizationService.instance.current.length_8921}: ${dataUri.length}',
+    );
     return dataUri;
   }
 
@@ -542,7 +560,9 @@ class VfsServiceProvider {
         mimeType,
       );
     } catch (e) {
-      debugPrint('🔗 VfsServiceProvider: 生成临时文件失败 - $e');
+      debugPrint(
+        '🔗 VfsServiceProvider: ${LocalizationService.instance.current.tempFileGenerationFailed_4821} - $e',
+      );
       return null;
     }
   }

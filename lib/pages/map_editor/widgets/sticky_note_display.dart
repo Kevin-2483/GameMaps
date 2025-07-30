@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
@@ -6,6 +7,8 @@ import '../../../models/map_layer.dart';
 import '../renderers/eraser_renderer.dart';
 import '../tools/preview_queue_manager.dart';
 import '../renderers/preview_renderer.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 便签点击类型枚举
 enum StickyNoteHitType {
@@ -97,11 +100,20 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
                 _localImageCache[element.id] = frame.image;
               });
               debugPrint(
-                '便签图片预加载完成: element.id=${element.id}, 图片尺寸=${frame.image.width}x${frame.image.height}',
+                LocalizationService.instance.current.noteImagePreloadComplete(
+                  element.id,
+                  frame.image.width,
+                  frame.image.height,
+                ),
               );
             }
           } catch (e) {
-            debugPrint('便签图片预加载失败: element.id=${element.id}, 错误=$e');
+            debugPrint(
+              LocalizationService.instance.current.noteImagePreloadFailed_7421(
+                element.id,
+                e,
+              ),
+            );
           }
         }
       }
@@ -282,7 +294,10 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '可在此区域绘制',
+                        LocalizationService
+                            .instance
+                            .current
+                            .drawingAreaHint_4821,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(
@@ -331,7 +346,10 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
                   widget.note.backgroundImageData!,
                   fit: widget.note.backgroundImageFit,
                   errorBuilder: (context, error, stackTrace) {
-                    debugPrint('便签背景图片加载失败 (直接数据): $error');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .noteBackgroundLoadFailed(error),
+                    );
                     return _buildBackgroundImageError();
                   },
                 )
@@ -345,8 +363,14 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
   Widget _buildVfsBackgroundPlaceholder() {
     // 当便签只有哈希引用而没有直接数据时显示占位符
     // 这种情况在正常使用中不应该出现，因为加载时会恢复直接数据
-    debugPrint('便签背景图片只有VFS哈希引用: ${widget.note.backgroundImageHash}');
-    debugPrint('提示: 便签背景图片应该在加载时已恢复为直接数据');
+    debugPrint(
+      LocalizationService.instance.current.noteBackgroundImageHashRef(
+        widget.note.backgroundImageHash ?? 'null',
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.noteBackgroundImageHint_4821,
+    );
 
     return Container(
       color: Colors.grey.shade100,
@@ -357,7 +381,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
             Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 24),
             const SizedBox(height: 4),
             Text(
-              '背景图片',
+              LocalizationService.instance.current.backgroundImage_7421,
               style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
             ),
           ],
@@ -381,7 +405,7 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
             ),
             const SizedBox(height: 4),
             Text(
-              '图片加载失败',
+              LocalizationService.instance.current.imageLoadFailed_7281,
               style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
           ],
@@ -419,7 +443,10 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
     };
 
     debugPrint(
-      '便签绘制: 元素=${widget.note.elements.length}, 图片缓存=${combinedImageCache.length}',
+      LocalizationService.instance.current.noteDrawingStats(
+        widget.note.elements.length,
+        combinedImageCache.length,
+      ),
     );
 
     return Positioned.fill(
@@ -462,7 +489,10 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
           }
 
           debugPrint(
-            '便签队列渲染: 便签ID=${widget.note.id}, 队列项目=${stickyNoteQueueItems.length}',
+            LocalizationService.instance.current.noteQueueDebugPrint(
+              widget.note.id,
+              stickyNoteQueueItems.length,
+            ),
           );
 
           return CustomPaint(
@@ -518,7 +548,9 @@ class _StickyNoteDisplayState extends State<StickyNoteDisplay>
     // 这里只是一个占位符方法
     // 实际的编辑逻辑将在地图画布中处理
     // 通过onNoteUpdated回调通知上层组件
-    debugPrint('编辑便签: ${widget.note.id}');
+    debugPrint(
+      LocalizationService.instance.current.editNoteDebug(widget.note.id),
+    );
   }
 
   /// 检查当前便签是否没有队列项目
@@ -1092,11 +1124,21 @@ class _StickyNoteDrawingPainter extends CustomPainter {
     if (elements.isEmpty) return;
 
     // 调试信息：检查便签绘制元素
-    debugPrint('便签绘制器: 元素数量=${elements.length}');
+    debugPrint(
+      LocalizationService.instance.current.noteRendererElementCount(
+        elements.length,
+      ),
+    );
     for (int i = 0; i < elements.length; i++) {
       final element = elements[i];
       debugPrint(
-        '  元素[$i]: 类型=${element.type.name}, imageData=${element.imageData != null ? '${element.imageData!.length} bytes' : 'null'}',
+        LocalizationService.instance.current.elementDebugInfo_7428(
+          i,
+          element.type.name,
+          element.imageData != null
+              ? '${element.imageData!.length} bytes'
+              : 'null',
+        ),
       );
     }
 

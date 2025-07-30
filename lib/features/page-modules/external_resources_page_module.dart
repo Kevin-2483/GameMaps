@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/external_resources/external_resources_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 外部资源页模块
 class ExternalResourcesPageModule extends PageModule {
@@ -14,7 +17,8 @@ class ExternalResourcesPageModule extends PageModule {
   String get path => '/external-resources';
 
   @override
-  String get displayName => '外部资源管理';
+  String get displayName =>
+      LocalizationService.instance.current.externalResourcesManagement_4821;
 
   @override
   IconData get icon => Icons.cloud_sync;

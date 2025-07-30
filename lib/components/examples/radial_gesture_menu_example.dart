@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../common/radial_gesture_menu.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 轮盘手势菜单示例
 class RadialGestureMenuExample extends StatefulWidget {
@@ -35,34 +38,44 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         subItems: [
           RadialMenuItem(
             id: 'brush_small',
-            label: '小画笔',
+            label: LocalizationService.instance.current.smallBrush_4821,
             icon: Icons.brush,
             color: Colors.red.shade300,
-            onTap: () => _onItemSelected('小画笔'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.smallBrush_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'brush_medium',
-            label: '中画笔',
+            label: LocalizationService.instance.current.mediumBrush_4821,
             icon: Icons.brush,
             color: Colors.red.shade500,
-            onTap: () => _onItemSelected('中画笔'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.mediumBrush_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'brush_large',
             label: '大画笔',
             icon: Icons.brush,
             color: Colors.red.shade700,
-            onTap: () => _onItemSelected('大画笔'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.largeBrush_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'eraser',
             label: '橡皮擦',
             icon: Icons.auto_fix_high,
             color: Colors.grey,
-            onTap: () => _onItemSelected('橡皮擦'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.eraserItem_4821,
+            ),
           ),
         ],
-        onTap: () => _onItemSelected('画笔'),
+        onTap: () => _onItemSelected(
+          LocalizationService.instance.current.brushTool_4821,
+        ),
       ),
 
       // 图层 (左侧)
@@ -77,31 +90,40 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
             label: '新建图层',
             icon: Icons.add,
             color: Colors.blue.shade300,
-            onTap: () => _onItemSelected('新建图层'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.createNewLayer_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'layer_duplicate',
             label: '复制图层',
             icon: Icons.copy,
             color: Colors.blue.shade500,
-            onTap: () => _onItemSelected('复制图层'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.copyLayer_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'layer_delete',
-            label: '删除图层',
+            label: LocalizationService.instance.current.deleteLayer_4821,
             icon: Icons.delete,
             color: Colors.blue.shade700,
-            onTap: () => _onItemSelected('删除图层'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.deleteLayer_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'layer_merge',
             label: '合并图层',
             icon: Icons.merge,
             color: Colors.blue.shade900,
-            onTap: () => _onItemSelected('合并图层'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.mergeLayers_7281,
+            ),
           ),
         ],
-        onTap: () => _onItemSelected('图层'),
+        onTap: () =>
+            _onItemSelected(LocalizationService.instance.current.layer_4821),
       ),
 
       // 图层组 (右侧)
@@ -113,27 +135,35 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         subItems: [
           RadialMenuItem(
             id: 'group_create',
-            label: '创建组',
+            label: LocalizationService.instance.current.createGroup_4821,
             icon: Icons.create_new_folder,
             color: Colors.green.shade300,
-            onTap: () => _onItemSelected('创建图层组'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.createLayerGroup_7532,
+            ),
           ),
           RadialMenuItem(
             id: 'group_ungroup',
-            label: '取消分组',
+            label: LocalizationService.instance.current.ungroupAction_4821,
             icon: Icons.folder_open,
             color: Colors.green.shade500,
-            onTap: () => _onItemSelected('取消分组'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.ungroupAction_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'group_rename',
-            label: '重命名组',
+            label: LocalizationService.instance.current.renameGroup_4821,
             icon: Icons.edit,
             color: Colors.green.shade700,
-            onTap: () => _onItemSelected('重命名图层组'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.renameLayerGroup_7539,
+            ),
           ),
         ],
-        onTap: () => _onItemSelected('图层组'),
+        onTap: () => _onItemSelected(
+          LocalizationService.instance.current.layerGroup_7281,
+        ),
       ),
 
       // 便签 (底部)
@@ -145,34 +175,43 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         subItems: [
           RadialMenuItem(
             id: 'note_text',
-            label: '文本便签',
+            label: LocalizationService.instance.current.textNoteLabel_4821,
             icon: Icons.text_fields,
             color: Colors.orange.shade300,
-            onTap: () => _onItemSelected('文本便签'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.textNoteLabel_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'note_image',
-            label: '图片便签',
+            label: LocalizationService.instance.current.imageNoteLabel_4821,
             icon: Icons.image,
             color: Colors.orange.shade500,
-            onTap: () => _onItemSelected('图片便签'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.imageNoteLabel_4821,
+            ),
           ),
           RadialMenuItem(
             id: 'note_voice',
             label: '语音便签',
             icon: Icons.mic,
             color: Colors.orange.shade700,
-            onTap: () => _onItemSelected('语音便签'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.voiceNote_7281,
+            ),
           ),
           RadialMenuItem(
             id: 'note_delete',
             label: '删除便签',
             icon: Icons.delete_outline,
             color: Colors.orange.shade900,
-            onTap: () => _onItemSelected('删除便签'),
+            onTap: () => _onItemSelected(
+              LocalizationService.instance.current.deleteNote_7421,
+            ),
           ),
         ],
-        onTap: () => _onItemSelected('便签'),
+        onTap: () =>
+            _onItemSelected(LocalizationService.instance.current.noteItem_4821),
       ),
     ];
   }
@@ -183,14 +222,18 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
     });
 
     // 显示选择结果
-    context.showInfoSnackBar('选择了: $action');
+    context.showInfoSnackBar(
+      LocalizationService.instance.current.selectedAction_7421(action),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('轮盘手势菜单示例'),
+        title: Text(
+          LocalizationService.instance.current.rouletteGestureMenuExample_4271,
+        ),
         actions: [
           IconButton(
             icon: Icon(
@@ -201,7 +244,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
                 _debugMode = !_debugMode;
               });
             },
-            tooltip: '切换调试模式',
+            tooltip: LocalizationService.instance.current.toggleDebugMode_4721,
           ),
         ],
       ),
@@ -214,7 +257,9 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         animationDuration: const Duration(milliseconds: 300),
         debugMode: _debugMode,
         onItemSelected: (item) {
-          print('菜单选择: ${item.label}');
+          print(
+            LocalizationService.instance.current.menuSelection_7281(item.label),
+          );
         },
         child: Container(
           width: double.infinity,
@@ -231,8 +276,8 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
             children: [
               const Icon(Icons.touch_app, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
-              const Text(
-                '使用中键或触摸板双指按下\n来调起轮盘菜单',
+              Text(
+                LocalizationService.instance.current.wheelMenuInstruction_4521,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
@@ -253,8 +298,11 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      '当前选择:',
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .currentSelection_4821,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -289,7 +337,10 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
                         Icon(Icons.info_outline, color: Colors.amber.shade700),
                         const SizedBox(width: 8),
                         Text(
-                          '使用说明',
+                          LocalizationService
+                              .instance
+                              .current
+                              .usageInstructions_4521,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../localization_service.dart';
 
 /// 用户偏好设置数据迁移服务
 /// 用于将SharedPreferences中的数据迁移到SQLite数据库
@@ -67,13 +70,17 @@ class UserPreferencesMigrationService {
       _needsMigration = hasLegacyData;
 
       if (kDebugMode && hasLegacyData) {
-        debugPrint('检测到需要迁移的旧数据');
+        debugPrint(
+          LocalizationService.instance.current.detectOldDataMigration_7281,
+        );
       }
 
       return hasLegacyData;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('检查迁移状态失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.migrationCheckFailed_4821(e),
+        );
       }
       _migrationChecked = true;
       _needsMigration = false;
@@ -89,7 +96,9 @@ class UserPreferencesMigrationService {
       // 如果已经迁移过，跳过
       if (prefs.getBool(_migrationCompleteKey) == true) {
         if (kDebugMode) {
-          debugPrint('数据已经迁移过，跳过迁移');
+          debugPrint(
+            LocalizationService.instance.current.dataMigrationSkipped_7281,
+          );
         }
         return true;
       }
@@ -112,12 +121,18 @@ class UserPreferencesMigrationService {
             migratedUsersCount++;
 
             if (kDebugMode) {
-              debugPrint('迁移用户配置: ${preferences.displayName}');
+              debugPrint(
+                LocalizationService.instance.current.migrateUserConfig(
+                  preferences.displayName,
+                ),
+              );
             }
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('迁移用户配置文件失败: $e');
+            debugPrint(
+              LocalizationService.instance.current.migrationFailed_7285(e),
+            );
           }
         }
       }
@@ -143,11 +158,17 @@ class UserPreferencesMigrationService {
           migratedUsersCount++;
 
           if (kDebugMode) {
-            debugPrint('迁移传统用户偏好设置: ${preferences.displayName}');
+            debugPrint(
+              LocalizationService.instance.current.migrateLegacyPreferences(
+                preferences.displayName,
+              ),
+            );
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('迁移传统用户偏好设置失败: $e');
+            debugPrint(
+              LocalizationService.instance.current.migrationFailed_7285(e),
+            );
           }
         }
       }
@@ -159,7 +180,11 @@ class UserPreferencesMigrationService {
         if (userExists) {
           await _dbService.setCurrentUser(currentUserId);
           if (kDebugMode) {
-            debugPrint('设置当前用户: $currentUserId');
+            debugPrint(
+              LocalizationService.instance.current.setCurrentUser_7421(
+                currentUserId,
+              ),
+            );
           }
         }
       }
@@ -168,13 +193,19 @@ class UserPreferencesMigrationService {
       await prefs.setBool(_migrationCompleteKey, true);
 
       if (kDebugMode) {
-        debugPrint('用户偏好设置迁移完成，迁移了 $migratedUsersCount 个用户');
+        debugPrint(
+          LocalizationService.instance.current.userPreferencesMigrationComplete(
+            migratedUsersCount,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('数据迁移失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.dataMigrationFailed_7281(e),
+        );
       }
       return false;
     }
@@ -191,11 +222,11 @@ class UserPreferencesMigrationService {
       await prefs.remove(_legacyCurrentUserKey);
 
       if (kDebugMode) {
-        debugPrint('旧数据清理完成');
+        debugPrint(LocalizationService.instance.current.oldDataCleanedUp_7281);
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('清理旧数据失败: $e');
+        debugPrint(LocalizationService.instance.current.cleanupFailed_7285(e));
       }
     }
   }
@@ -207,11 +238,15 @@ class UserPreferencesMigrationService {
       await prefs.remove(_migrationCompleteKey);
 
       if (kDebugMode) {
-        debugPrint('迁移状态已重置');
+        debugPrint(
+          LocalizationService.instance.current.migrationStatusReset_7281,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('重置迁移状态失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.resetMigrationFailed_4821(e),
+        );
       }
     }
   }
@@ -231,7 +266,9 @@ class UserPreferencesMigrationService {
       };
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取迁移统计信息失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.migrationStatsFailed_5421(e),
+        );
       }
       return {'error': e.toString()};
     }

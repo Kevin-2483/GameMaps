@@ -86,7 +86,7 @@ class ConfigValidator {
       return;
     }
 
-    final platforms = platformConfig as Map<String, dynamic>;
+    final platforms = platformConfig;
 
     // 检查是否至少有一个平台
     if (platforms.isEmpty) {
@@ -109,7 +109,7 @@ class ConfigValidator {
         continue;
       }
 
-      final platform = platformData as Map<String, dynamic>;
+      final platform = platformData;
 
       // 验证 pages 字段
       if (!platform.containsKey('pages')) {
@@ -151,7 +151,7 @@ class ConfigValidator {
       return;
     }
 
-    final list = array as List;
+    final list = array;
     for (final item in list) {
       if (item is! String) {
         result.addError('平台 $platformName 的 $fieldName 数组中包含非字符串值: $item');
@@ -179,7 +179,7 @@ class ConfigValidator {
       return;
     }
 
-    final build = buildConfig as Map<String, dynamic>;
+    final build = buildConfig;
 
     // 验证必需字段
     final requiredFields = ['appName', 'version', 'buildNumber'];

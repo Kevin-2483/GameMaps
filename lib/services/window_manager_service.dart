@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:async';
 import '../providers/user_preferences_provider.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 /// 窗口管理服务
 class WindowManagerService {
@@ -45,12 +48,18 @@ class WindowManagerService {
 
         if (kDebugMode) {
           debugPrint(
-            '窗口大小已应用: ${layout.windowWidth}x${layout.windowHeight}, 位置由系统决定, 最大化: ${layout.isMaximized}',
+            LocalizationService.instance.current.windowSizeApplied(
+              layout.windowWidth,
+              layout.windowHeight,
+              layout.isMaximized,
+            ),
           );
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('应用窗口大小失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.windowSizeError_7425(e),
+          );
         }
       }
     }
@@ -79,17 +88,25 @@ class WindowManagerService {
         if (kDebugMode) {
           if (success) {
             debugPrint(
-              '窗口大小已保存: ${currentSize.width}x${currentSize.height}, 最大化: $currentMaximized (位置由系统决定)',
+              LocalizationService.instance.current.windowSizeSaved(
+                currentSize.width,
+                currentSize.height,
+                currentMaximized,
+              ),
             );
           } else {
-            debugPrint('窗口大小保存失败');
+            debugPrint(
+              LocalizationService.instance.current.windowSizeSaveFailed_7281,
+            );
           }
         }
 
         return success;
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('手动保存窗口大小失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.saveWindowSizeFailed_7285(e),
+          );
         }
         return false;
       }
@@ -117,11 +134,15 @@ class WindowManagerService {
         }
 
         if (kDebugMode) {
-          debugPrint('窗口大小已重置为默认值');
+          debugPrint(
+            LocalizationService.instance.current.windowSizeResetToDefault_4821,
+          );
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('重置窗口大小失败: $e');
+          debugPrint(
+            LocalizationService.instance.current.resetWindowSizeFailed_4829(e),
+          );
         }
       }
     }
@@ -144,14 +165,23 @@ class WindowManagerService {
 
         if (kDebugMode) {
           debugPrint(
-            '退出时读取窗口状态: ${currentSize.width}x${currentSize.height}, 最大化: $currentMaximized',
+            LocalizationService.instance.current.windowStateOnExit(
+              currentSize.width,
+              currentSize.height,
+              currentMaximized,
+            ),
           );
         }
 
         // 2. 检查是否启用了自动保存窗口大小
         if (!layout.autoSaveWindowSize) {
           if (kDebugMode) {
-            debugPrint('自动保存窗口大小已禁用，跳过保存');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .autoSaveWindowSizeDisabled_7281,
+            );
           }
           return true; // 不保存但返回成功
         }
@@ -162,18 +192,33 @@ class WindowManagerService {
           // 如果当前是最大化状态且开启了记住最大化状态设置，则保存最大化状态
           shouldSaveMaximizedState = true;
           if (kDebugMode) {
-            debugPrint('保存最大化状态：已开启记住最大化状态设置');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .saveMaximizeStatusEnabled_4821,
+            );
           }
         } else if (!currentMaximized) {
           // 如果当前不是最大化状态，保存窗口大小
           shouldSaveMaximizedState = false;
           if (kDebugMode) {
-            debugPrint('保存窗口大小：当前非最大化状态');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .saveWindowSizeNotMaximized_4821,
+            );
           }
         } else {
           // 当前是最大化状态但未开启记住最大化状态设置，不保存
           if (kDebugMode) {
-            debugPrint('跳过保存：最大化状态但未开启记住最大化状态设置');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .skipSaveMaximizedStateNotEnabled_4821,
+            );
           }
           return true;
         }
@@ -190,16 +235,25 @@ class WindowManagerService {
 
         if (kDebugMode) {
           if (success) {
-            debugPrint('退出时窗口状态保存成功');
+            debugPrint(
+              LocalizationService
+                  .instance
+                  .current
+                  .windowStateSavedSuccessfully_7281,
+            );
           } else {
-            debugPrint('退出时窗口状态保存失败');
+            debugPrint(
+              LocalizationService.instance.current.windowStateSaveFailed_7281,
+            );
           }
         }
 
         return success;
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('退出时保存窗口状态异常: $e');
+          debugPrint(
+            LocalizationService.instance.current.windowStateSaveError(e),
+          );
         }
         return false;
       }

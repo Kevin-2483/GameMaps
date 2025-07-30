@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 配置感知组件 - 根据配置决定是否渲染子组件
 class ConfigAwareWidget extends StatelessWidget {
@@ -176,11 +179,23 @@ class ConfigUtils {
   /// 打印配置调试信息
   void printConfigInfo() {
     if (shouldShowDebugInfo) {
-      debugPrint('=== 配置信息 ===');
-      debugPrint('当前平台: ${ConfigManager.instance.getCurrentPlatform()}');
-      debugPrint('可用页面: ${availablePages.join(', ')}');
-      debugPrint('可用功能: ${availableFeatures.join(', ')}');
-      debugPrint('构建时信息:');
+      debugPrint(LocalizationService.instance.current.configurationInfo_7284);
+      debugPrint(
+        LocalizationService.instance.current.currentPlatform(
+          ConfigManager.instance.getCurrentPlatform(),
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.availablePagesList_7281(
+          availablePages.join(', '),
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.availableFeaturesMessage_7281(
+          availableFeatures.join(', '),
+        ),
+      );
+      debugPrint(LocalizationService.instance.current.buildInfo_7421);
       debugPrint(BuildTimeConfig.buildInfo);
       debugPrint('================');
     }

@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,8 @@ import '../../../services/user_preferences/user_preferences_service.dart';
 // 当前实现不再直接依赖 MapDataBloc
 import 'presence_event.dart';
 import 'presence_state.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 用户在线状态管理Bloc
 class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
@@ -90,7 +93,10 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('获取用户偏好设置失败: $e');
+          debugPrint(
+            LocalizationService.instance.current
+                .fetchUserPreferencesFailed_4821(e),
+          );
         }
         // 使用默认值
         displayName = event.currentUserName;
@@ -120,13 +126,19 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         await _broadcastPresenceUpdate(currentUser);
       } else {
         if (kDebugMode) {
-          debugPrint('WebSocket未连接，跳过广播用户状态（离线模式）');
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .websocketNotConnectedSkipBroadcast_7281,
+          );
         }
       }
     } catch (error, stackTrace) {
       emit(
         PresenceError(
-          message: '初始化用户状态失败',
+          message:
+              LocalizationService.instance.current.userStateInitFailed_4821,
           error: error,
           stackTrace: stackTrace,
         ),
@@ -184,12 +196,22 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     // 只有状态真正变化时才广播
     if (statusChanged) {
       if (kDebugMode) {
-        debugPrint('用户状态发生变化，准备广播: ${currentUser.status} -> ${event.status}');
+        debugPrint(
+          LocalizationService.instance.current.userStatusChangeBroadcast(
+            currentUser.status,
+            event.status,
+          ),
+        );
       }
       await _broadcastPresenceUpdate(updatedUser);
     } else {
       if (kDebugMode) {
-        debugPrint('用户状态无变化，跳过广播');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .userStatusUnchangedSkipBroadcast_4821,
+        );
       }
     }
   }
@@ -260,13 +282,21 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     if (mapInfoChanged) {
       if (kDebugMode) {
         debugPrint(
-          '地图信息发生变化，准备广播: mapId=${event.mapId}, mapTitle=${event.mapTitle}',
+          LocalizationService.instance.current.mapInfoChangedBroadcast(
+            event.mapId.toString(),
+            event.mapTitle.toString(),
+          ),
         );
       }
       await _broadcastPresenceUpdate(updatedUser);
     } else {
       if (kDebugMode) {
-        debugPrint('地图信息无变化，跳过广播');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .mapInfoUnchangedSkipBroadcast_4821,
+        );
       }
     }
   }
@@ -405,7 +435,9 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       }
     } catch (error) {
       // 记录错误但不中断处理
-      debugPrint('处理WebSocket消息时出错: $error');
+      debugPrint(
+        LocalizationService.instance.current.websocketError_4829(error),
+      );
     }
   }
 
@@ -485,7 +517,11 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
 
       add(ReceiveRemoteUserPresence(userPresence: userPresence));
     } catch (error) {
-      debugPrint('处理用户状态广播时出错: $error');
+      debugPrint(
+        LocalizationService.instance.current.userStatusBroadcastError_4821(
+          error,
+        ),
+      );
     }
   }
 
@@ -495,7 +531,11 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       final success = data['success'] as bool? ?? false;
 
       if (!success) {
-        debugPrint('获取在线状态列表失败: ${data['error'] ?? "未知错误"}');
+        debugPrint(
+          LocalizationService.instance.current.fetchOnlineStatusFailed(
+            data['error'] ?? LocalizationService.instance.current.unknownError,
+          ),
+        );
         return;
       }
 
@@ -508,9 +548,17 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
         }
       }
 
-      debugPrint('成功处理在线状态列表，共 ${usersList.length} 个用户');
+      debugPrint(
+        LocalizationService.instance.current.onlineStatusProcessed(
+          usersList.length,
+        ),
+      );
     } catch (error) {
-      debugPrint('处理在线状态列表响应时出错: $error');
+      debugPrint(
+        LocalizationService.instance.current.handleOnlineStatusError_4821(
+          error,
+        ),
+      );
     }
   }
 
@@ -519,7 +567,12 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     // 检查WebSocket连接状态，如果未连接则不广播
     if (!_webSocketManager.isConnected) {
       if (kDebugMode) {
-        debugPrint('WebSocket未连接，跳过广播用户状态更新（离线模式）');
+        debugPrint(
+          LocalizationService
+              .instance
+              .current
+              .websocketNotConnectedSkipBroadcast_7281,
+        );
       }
       return;
     }
@@ -584,17 +637,27 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
 
               if (kDebugMode) {
                 debugPrint(
-                  '地图封面已重新压缩: ${(coverSizeBytes / 1024).toStringAsFixed(1)}KB -> ${(newSizeBytes / 1024).toStringAsFixed(1)}KB',
+                  LocalizationService.instance.current.mapCoverRecompressed(
+                    (coverSizeBytes / 1024).toStringAsFixed(1),
+                    (newSizeBytes / 1024).toStringAsFixed(1),
+                  ),
                 );
               }
             } else {
               if (kDebugMode) {
-                debugPrint('地图封面压缩失败，无法满足大小限制，跳过发送');
+                debugPrint(
+                  LocalizationService
+                      .instance
+                      .current
+                      .mapCoverCompressionFailed_7281,
+                );
               }
             }
           } catch (compressionError) {
             if (kDebugMode) {
-              debugPrint('地图封面压缩失败: $compressionError，跳过发送');
+              debugPrint(
+                '${LocalizationService.instance.current.mapCoverCompressionFailed_4821}: $compressionError',
+              );
             }
           }
         }
@@ -606,7 +669,9 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
       // 使用扩展的状态更新API
       await _webSocketManager.sendUserStatusUpdateWithData(statusData);
     } catch (error) {
-      debugPrint('广播用户状态更新失败: $error');
+      debugPrint(
+        LocalizationService.instance.current.broadcastStatusUpdateFailed(error),
+      );
     }
   }
 
@@ -662,7 +727,9 @@ class PresenceBloc extends Bloc<PresenceEvent, PresenceState> {
     try {
       await _webSocketManager.requestOnlineStatusList();
     } catch (error) {
-      debugPrint('请求在线状态列表失败: $error');
+      debugPrint(
+        LocalizationService.instance.current.requestOnlineStatusFailed(error),
+      );
     }
   }
 

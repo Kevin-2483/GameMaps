@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../../models/map_layer.dart';
 import '../../../models/sticky_note.dart';
 import '../../../components/common/tags_manager.dart';
 import '../../../components/color_picker_dialog.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// Z层级元素检视器 - 显示图层或便签中的绘制元素并支持删除操作
 class ZIndexInspector extends StatelessWidget {
@@ -42,7 +45,9 @@ class ZIndexInspector extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Text(
-          '当前${selectedStickyNote != null ? '便签' : '图层'}没有绘制元素',
+          selectedStickyNote != null
+              ? LocalizationService.instance.current.stickyNoteNoElements_4821
+              : LocalizationService.instance.current.layerNoElements_4822,
           style: TextStyle(
             fontSize: 12,
             color: Theme.of(
@@ -64,7 +69,9 @@ class ZIndexInspector extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: Text(
-            '元素列表 (${sortedElements.length})',
+            LocalizationService.instance.current.elementListWithCount(
+              sortedElements.length,
+            ),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -137,7 +144,7 @@ class ZIndexInspector extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Z层级: ${element.zIndex}',
+              LocalizationService.instance.current.zIndexLabel(element.zIndex),
               style: TextStyle(
                 fontSize: 10,
                 color: Theme.of(context).textTheme.bodySmall?.color,
@@ -145,7 +152,7 @@ class ZIndexInspector extends StatelessWidget {
             ),
             if (element.text != null && element.text!.isNotEmpty)
               Text(
-                '内容: ${element.text!.length > 10 ? element.text!.substring(0, 10) + "..." : element.text!}',
+                '${element.text!.length > 10 ? element.text!.substring(0, 10) + "..." : element.text!}',
                 style: TextStyle(
                   fontSize: 10,
                   color: Theme.of(context).textTheme.bodySmall?.color,
@@ -153,7 +160,9 @@ class ZIndexInspector extends StatelessWidget {
               ),
             if (element.type == DrawingElementType.freeDrawing)
               Text(
-                '点数: ${element.points.length}',
+                LocalizationService.instance.current.pointsCount(
+                  element.points.length,
+                ),
                 style: TextStyle(
                   fontSize: 10,
                   color: Theme.of(context).textTheme.bodySmall?.color,
@@ -235,7 +244,7 @@ class ZIndexInspector extends StatelessWidget {
                     : Theme.of(context).iconTheme.color,
               ),
               onPressed: () => _showTagsDialog(context, element),
-              tooltip: '管理标签',
+              tooltip: LocalizationService.instance.current.manageTags_4821,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             ),
@@ -247,7 +256,10 @@ class ZIndexInspector extends StatelessWidget {
                 color: Theme.of(context).iconTheme.color,
               ),
               onPressed: () => _showDeleteConfirmDialog(context, element),
-              tooltip: '删除元素',
+              tooltip: LocalizationService
+                  .instance
+                  .current
+                  .deleteElementTooltip_7281,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             ),
@@ -295,29 +307,29 @@ class ZIndexInspector extends StatelessWidget {
   String _getElementTypeDisplayName(DrawingElementType type) {
     switch (type) {
       case DrawingElementType.line:
-        return '直线';
+        return LocalizationService.instance.current.line_4821;
       case DrawingElementType.dashedLine:
-        return '虚线';
+        return LocalizationService.instance.current.dashedLine_4822;
       case DrawingElementType.arrow:
-        return '箭头';
+        return LocalizationService.instance.current.arrow_4823;
       case DrawingElementType.rectangle:
-        return '实心矩形';
+        return LocalizationService.instance.current.solidRectangle_4824;
       case DrawingElementType.hollowRectangle:
-        return '空心矩形';
+        return LocalizationService.instance.current.hollowRectangle_4825;
       case DrawingElementType.diagonalLines:
-        return '单斜线';
+        return LocalizationService.instance.current.singleDiagonalLine_4826;
       case DrawingElementType.crossLines:
-        return '交叉线';
+        return LocalizationService.instance.current.crossLines_4827;
       case DrawingElementType.dotGrid:
-        return '点阵';
+        return LocalizationService.instance.current.dotGrid_4828;
       case DrawingElementType.freeDrawing:
-        return '像素笔';
+        return LocalizationService.instance.current.pixelPen_4829;
       case DrawingElementType.text:
-        return '文本';
+        return LocalizationService.instance.current.text_4830;
       case DrawingElementType.eraser:
-        return '橡皮擦';
+        return LocalizationService.instance.current.eraser_4831;
       case DrawingElementType.imageArea:
-        return '图片选区';
+        return LocalizationService.instance.current.imageSelectionArea_4832;
     }
   }
 
@@ -336,12 +348,12 @@ class ZIndexInspector extends StatelessWidget {
         // 基本信息
         _buildDetailRow(
           context,
-          '类型',
+          LocalizationService.instance.current.typeLabel_4821,
           _getElementTypeDisplayName(element.type),
         ),
         _buildDetailRow(
           context,
-          'Z层级',
+          LocalizationService.instance.current.zLevel_4821,
           element.zIndex.toString(),
           element: element,
           propertyName: 'zIndex',
@@ -349,7 +361,7 @@ class ZIndexInspector extends StatelessWidget {
         if (element.text != null && element.text!.isNotEmpty)
           _buildDetailRow(
             context,
-            '文本内容',
+            LocalizationService.instance.current.textContent_4821,
             element.text!,
             element: element,
             propertyName: 'text',
@@ -357,7 +369,7 @@ class ZIndexInspector extends StatelessWidget {
         if (element.fontSize != null)
           _buildDetailRow(
             context,
-            '字体大小',
+            LocalizationService.instance.current.fontSize_4821,
             element.fontSize!.toStringAsFixed(1),
             element: element,
             propertyName: 'fontSize',
@@ -371,7 +383,7 @@ class ZIndexInspector extends StatelessWidget {
         ),
         _buildDetailRow(
           context,
-          '描边宽度',
+          LocalizationService.instance.current.strokeWidth_4821,
           element.strokeWidth.toStringAsFixed(1),
           element: element,
           propertyName: 'strokeWidth',
@@ -379,7 +391,7 @@ class ZIndexInspector extends StatelessWidget {
         if (element.rotation != 0)
           _buildDetailRow(
             context,
-            '旋转角度',
+            LocalizationService.instance.current.rotationAngle_4721,
             '${element.rotation.toStringAsFixed(1)}°',
             element: element,
             propertyName: 'rotation',
@@ -392,7 +404,7 @@ class ZIndexInspector extends StatelessWidget {
             element.type != DrawingElementType.arrow)
           _buildDetailRow(
             context,
-            '弧度',
+            LocalizationService.instance.current.curvatureLabel_7281,
             '${element.curvature}',
             element: element,
             propertyName: 'curvature',
@@ -403,7 +415,7 @@ class ZIndexInspector extends StatelessWidget {
             element.type == DrawingElementType.dotGrid)
           _buildDetailRow(
             context,
-            '密度',
+            LocalizationService.instance.current.densityLabel_4821,
             '${element.density}',
             element: element,
             propertyName: 'density',
@@ -416,7 +428,7 @@ class ZIndexInspector extends StatelessWidget {
             element.type == DrawingElementType.eraser)
           _buildDetailRow(
             context,
-            '三角分割',
+            LocalizationService.instance.current.triangleDivision_4821,
             '${element.triangleCut}',
             element: element,
             propertyName: 'triangleCut',
@@ -460,7 +472,9 @@ class ZIndexInspector extends StatelessWidget {
     TagsManagerUtils.showTagsDialog(
       context,
       initialTags: element.tags ?? [],
-      title: '管理 ${_getElementTypeDisplayName(element.type)} 标签',
+      title: LocalizationService.instance.current.manageTagsTitle_7421(
+        _getElementTypeDisplayName(element.type),
+      ),
       maxTags: 10,
       suggestedTags: _getElementSuggestedTags(element.type),
       tagValidator: TagsManagerUtils.defaultTagValidator,
@@ -477,7 +491,12 @@ class ZIndexInspector extends StatelessWidget {
 
   /// 根据元素类型获取建议标签
   List<String> _getElementSuggestedTags(DrawingElementType type) {
-    final baseTags = ['重要', '标记', '临时', '完成'];
+    final baseTags = [
+      LocalizationService.instance.current.importantTag_1234,
+      LocalizationService.instance.current.markedTag_5678,
+      LocalizationService.instance.current.temporaryTag_9012,
+      LocalizationService.instance.current.completedTag_3456,
+    ];
 
     switch (type) {
       case DrawingElementType.text:
@@ -507,17 +526,24 @@ class ZIndexInspector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
+        title: Text(LocalizationService.instance.current.confirmDelete_7281),
         content: Text(
-          '确定要删除这个${_getElementTypeDisplayName(element.type)}元素吗？\n\n'
-          'Z层级: ${element.zIndex}\n'
-          '${element.text != null && element.text!.isNotEmpty ? "内容: ${element.text}" : ""}'
-          '\n\n此操作可以通过撤销功能恢复。',
+          LocalizationService.instance.current.confirmDeleteElement_4821(
+                _getElementTypeDisplayName(element.type),
+              ) +
+              '\n\n' +
+              LocalizationService.instance.current.zIndexLabel(element.zIndex) +
+              '\n' +
+              (element.text != null && element.text!.isNotEmpty
+                  ? '${LocalizationService.instance.current.contentLabel_4521}: ${element.text!}'
+                  : "") +
+              '\n\n' +
+              LocalizationService.instance.current.operationCanBeUndone_8245,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () {
@@ -525,7 +551,7 @@ class ZIndexInspector extends StatelessWidget {
               onElementDeleted(element.id);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(LocalizationService.instance.current.delete_7281),
           ),
         ],
       ),
@@ -607,7 +633,7 @@ class ZIndexInspector extends StatelessWidget {
     final color = await ColorPicker.showColorPicker(
       context: context,
       initialColor: element.color,
-      title: '选择颜色',
+      title: LocalizationService.instance.current.selectColor_4821,
       enableAlpha: true,
     );
 
@@ -624,20 +650,20 @@ class ZIndexInspector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑Z层级'),
+        title: Text(LocalizationService.instance.current.editZIndexTitle_7281),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Z层级',
-            hintText: '输入数字',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.zLevelLabel_4521,
+            hintText: LocalizationService.instance.current.inputNumberHint_4522,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7421),
           ),
           ElevatedButton(
             onPressed: () {
@@ -648,7 +674,9 @@ class ZIndexInspector extends StatelessWidget {
               }
               Navigator.of(context).pop();
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -662,19 +690,20 @@ class ZIndexInspector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑文本内容'),
+        title: Text(LocalizationService.instance.current.editTextContent_4821),
         content: TextField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: '文本内容',
+          decoration: InputDecoration(
+            labelText:
+                LocalizationService.instance.current.textContentLabel_4821,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           ElevatedButton(
             onPressed: () {
@@ -684,7 +713,9 @@ class ZIndexInspector extends StatelessWidget {
               }
               Navigator.of(context).pop();
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -700,20 +731,20 @@ class ZIndexInspector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑字体大小'),
+        title: Text(LocalizationService.instance.current.editFontSize_4821),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: '字体大小',
-            hintText: '输入数字',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.fontSizeLabel_4821,
+            hintText: LocalizationService.instance.current.inputNumberHint_5732,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
@@ -724,7 +755,9 @@ class ZIndexInspector extends StatelessWidget {
               }
               Navigator.of(context).pop();
             },
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -739,11 +772,17 @@ class ZIndexInspector extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('编辑描边宽度'),
+          title: Text(
+            LocalizationService.instance.current.editStrokeWidth_4271,
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('当前值: ${currentValue.toStringAsFixed(1)}px'),
+              Text(
+                LocalizationService.instance.current.currentValueWithUnit(
+                  currentValue.toStringAsFixed(1),
+                ),
+              ),
               const SizedBox(height: 16),
               Slider(
                 value: currentValue,
@@ -762,7 +801,9 @@ class ZIndexInspector extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -774,7 +815,9 @@ class ZIndexInspector extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_4821,
+              ),
             ),
           ],
         ),
@@ -790,11 +833,17 @@ class ZIndexInspector extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('编辑旋转角度'),
+          title: Text(
+            LocalizationService.instance.current.editRotationAngle_4271,
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('当前值: ${currentValue.toStringAsFixed(1)}°'),
+              Text(
+                LocalizationService.instance.current.currentValueWithUnit(
+                  currentValue.toStringAsFixed(1),
+                ),
+              ),
               const SizedBox(height: 16),
               Slider(
                 value: currentValue,
@@ -813,7 +862,9 @@ class ZIndexInspector extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -825,7 +876,9 @@ class ZIndexInspector extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_7281,
+              ),
             ),
           ],
         ),
@@ -841,11 +894,15 @@ class ZIndexInspector extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('编辑弧度'),
+          title: Text(LocalizationService.instance.current.editRadial_7421),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('当前值: ${(currentValue * 100).round()}%'),
+              Text(
+                LocalizationService.instance.current.currentValuePercentage(
+                  (currentValue * 100).round(),
+                ),
+              ),
               const SizedBox(height: 16),
               Slider(
                 value: currentValue,
@@ -864,7 +921,9 @@ class ZIndexInspector extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_7421,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -876,7 +935,9 @@ class ZIndexInspector extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_7281,
+              ),
             ),
           ],
         ),
@@ -892,11 +953,15 @@ class ZIndexInspector extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('编辑密度'),
+          title: Text(LocalizationService.instance.current.editDensity_4271),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('当前值: ${currentValue.toStringAsFixed(1)}x'),
+              Text(
+                LocalizationService.instance.current.currentValueWithUnit(
+                  currentValue.toStringAsFixed(1),
+                ),
+              ),
               const SizedBox(height: 16),
               Slider(
                 value: currentValue,
@@ -915,7 +980,9 @@ class ZIndexInspector extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(
+                LocalizationService.instance.current.cancelButton_4271,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -927,7 +994,9 @@ class ZIndexInspector extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('确定'),
+              child: Text(
+                LocalizationService.instance.current.confirmButton_7281,
+              ),
             ),
           ],
         ),
@@ -942,7 +1011,9 @@ class ZIndexInspector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择三角分割'),
+        title: Text(
+          LocalizationService.instance.current.selectTriangulation_4271,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: TriangleCutType.values.map((type) {
@@ -968,7 +1039,7 @@ class ZIndexInspector extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancelButton_7281),
           ),
         ],
       ),
@@ -979,15 +1050,15 @@ class ZIndexInspector extends StatelessWidget {
   String _getTriangleCutDisplayName(TriangleCutType type) {
     switch (type) {
       case TriangleCutType.none:
-        return '无切割';
+        return LocalizationService.instance.current.noCut_4821;
       case TriangleCutType.topLeft:
-        return '左上三角';
+        return LocalizationService.instance.current.topLeftTriangle_4821;
       case TriangleCutType.topRight:
-        return '右上三角';
+        return LocalizationService.instance.current.topRightTriangle_4821;
       case TriangleCutType.bottomRight:
-        return '右下三角';
+        return LocalizationService.instance.current.bottomRightTriangle_4821;
       case TriangleCutType.bottomLeft:
-        return '左下三角';
+        return LocalizationService.instance.current.bottomLeftTriangle_4821;
     }
   }
 }

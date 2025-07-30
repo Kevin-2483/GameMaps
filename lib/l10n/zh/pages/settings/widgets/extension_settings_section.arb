@@ -1,0 +1,21 @@
+{
+  "copiedToClipboard_4821": "已复制到剪贴板",
+  "cancelButton_7281": "取消",
+  "confirmButton_7281": "确定",
+  "extendedSettingsStorage_4821": "扩展设置存储",
+  "mapPreferencesDescription_4821": "用于存储临时的地图相关偏好设置，如图例组智能隐藏状态等。这些设置不会影响地图数据本身。",
+  "storageStats_7281": "存储大小: {size} KB | 键值对数量: {count}",
+  "editJson_7281": "编辑JSON",
+  "clearText_4821": "清空",
+  "copyText_4821": "复制",
+  "saveButton_7281": "保存",
+  "cancelButton_4271": "取消",
+  "noExtensionSettingsData_7421": "当前没有扩展设置数据",
+  "jsonData_4821": "JSON数据",
+  "extensionStorageDisabled_4821": "扩展设置存储已禁用",
+  "clearExtensionSettingsTitle_4821": "清空扩展设置",
+  "clearExtensionSettingsWarning_4821": "确定要清空所有扩展设置吗？此操作不可撤销。",
+  "extensionSettingsCleared_4821": "扩展设置已清空",
+  "extensionSettingsSaved_4821": "扩展设置已保存",
+  "saveFailedError_7281": "保存失败: {error}"
+}

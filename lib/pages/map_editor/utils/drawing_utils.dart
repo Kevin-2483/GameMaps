@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 // drawing_utils.dart - 绘制工具函数库
 // 从 map_canvas.dart 中提取的通用绘制工具函数
 
@@ -5,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 // import 'dart:ui' as ui;
 import '../../../models/map_layer.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// ================= 路径创建工具函数 =================
 
@@ -711,7 +714,7 @@ void drawImageEmptyPlaceholder(Canvas canvas, Rect rect, BoxFit fit) {
   // 绘制提示文本
   final textPainter = TextPainter(
     text: TextSpan(
-      text: '点击上传图片',
+      text: LocalizationService.instance.current.clickToUploadImage_4821,
       style: TextStyle(
         color: Colors.grey.shade600,
         fontSize: 10,
@@ -733,18 +736,18 @@ void drawImageEmptyPlaceholder(Canvas canvas, Rect rect, BoxFit fit) {
 String getBoxFitDisplayName(BoxFit boxFit) {
   switch (boxFit) {
     case BoxFit.fill:
-      return '填充';
+      return LocalizationService.instance.current.boxFitFill_4821;
     case BoxFit.contain:
-      return '包含';
+      return LocalizationService.instance.current.boxFitContain_4822;
     case BoxFit.cover:
-      return '覆盖';
+      return LocalizationService.instance.current.boxFitCover_4823;
     case BoxFit.fitWidth:
-      return '适宽';
+      return LocalizationService.instance.current.boxFitFitWidth_4824;
     case BoxFit.fitHeight:
-      return '适高';
+      return LocalizationService.instance.current.boxFitFitHeight_4825;
     case BoxFit.none:
-      return '原始';
+      return LocalizationService.instance.current.boxFitNone_4826;
     case BoxFit.scaleDown:
-      return '缩小';
+      return LocalizationService.instance.current.boxFitScaleDown_4827;
   }
 }

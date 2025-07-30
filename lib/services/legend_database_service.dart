@@ -1,3 +1,4 @@
+// This file has been processed by AI for internationalization
 import 'package:sqflite/sqflite.dart';
 // import 'package:path/path.dart';
 import 'dart:io';
@@ -6,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/legend_item.dart';
 import 'database_path_service.dart';
+import '../l10n/app_localizations.dart';
+import 'localization_service.dart';
 
 class LegendDatabaseService {
   static Database? _database;
@@ -40,7 +43,9 @@ class LegendDatabaseService {
     );
 
     if (result.isEmpty) {
-      debugPrint('元数据表不存在，正在创建...');
+      debugPrint(
+        LocalizationService.instance.current.creatingMetadataTable_7281,
+      );
       await db.execute('''
         CREATE TABLE $_metaTableName (
           key TEXT PRIMARY KEY,
@@ -53,7 +58,9 @@ class LegendDatabaseService {
         'key': 'db_version',
         'value': _currentDbVersion.toString(),
       });
-      debugPrint('元数据表创建完成');
+      debugPrint(
+        LocalizationService.instance.current.metadataTableCreated_7281,
+      );
     }
   }
 
@@ -219,7 +226,8 @@ class LegendDatabaseService {
 
       // 选择保存文件位置
       String? filePath = await FilePicker.platform.saveFile(
-        dialogTitle: '导出图例数据库',
+        dialogTitle:
+            LocalizationService.instance.current.exportLegendDatabaseTitle_4821,
         fileName:
             'legends_v${dbVersion}_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
@@ -233,7 +241,9 @@ class LegendDatabaseService {
       }
       return null;
     } catch (e) {
-      debugPrint('导出图例数据库失败: $e');
+      debugPrint(
+        LocalizationService.instance.current.exportLegendFailed_7285(e),
+      );
       rethrow;
     }
   }
@@ -266,7 +276,7 @@ class LegendDatabaseService {
       }
       return false;
     } catch (e) {
-      debugPrint('导入图例数据库失败: $e');
+      debugPrint(LocalizationService.instance.current.importLegendDbFailed(e));
       rethrow;
     }
   }

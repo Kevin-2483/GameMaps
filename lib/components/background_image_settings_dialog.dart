@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 // background_image_settings_dialog.dart
 import 'package:flutter/material.dart';
 import '../models/map_layer.dart';
+import '../l10n/app_localizations.dart';
+import '../services/localization_service.dart';
 
 /// 背景图片设置结果
 class BackgroundImageSettings {
@@ -22,11 +25,10 @@ class BackgroundImageSettingsDialog extends StatefulWidget {
   final MapLayer layer;
   final String title;
 
-  const BackgroundImageSettingsDialog({
-    super.key,
-    required this.layer,
-    this.title = '背景图片设置',
-  });
+  BackgroundImageSettingsDialog({super.key, required this.layer, String? title})
+    : title =
+          title ??
+          LocalizationService.instance.current.backgroundImageSettings_7421;
 
   @override
   State<BackgroundImageSettingsDialog> createState() =>
@@ -85,7 +87,7 @@ class _BackgroundImageSettingsDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancelButton_4271),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(
@@ -96,7 +98,7 @@ class _BackgroundImageSettingsDialogState
               imageFit: _imageFit,
             ),
           ),
-          child: const Text('确定'),
+          child: Text(LocalizationService.instance.current.confirmButton_7281),
         ),
       ],
     );
@@ -211,7 +213,10 @@ class _BackgroundImageSettingsDialogState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '无背景图片',
+                      LocalizationService
+                          .instance
+                          .current
+                          .noBackgroundImage_7421,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 14,
@@ -237,7 +242,7 @@ class _BackgroundImageSettingsDialogState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '当前设置',
+            LocalizationService.instance.current.currentSettings_4521,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -248,16 +253,25 @@ class _BackgroundImageSettingsDialogState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildValueDisplay('缩放', '${(_imageScale * 100).round()}%'),
-              _buildValueDisplay('X偏移', '${(_xOffset * 100).round()}%'),
-              _buildValueDisplay('Y偏移', '${(_yOffset * 100).round()}%'),
+              _buildValueDisplay(
+                LocalizationService.instance.current.zoomLabel_4821,
+                '${(_imageScale * 100).round()}%',
+              ),
+              _buildValueDisplay(
+                LocalizationService.instance.current.xOffsetLabel_4821,
+                '${(_xOffset * 100).round()}%',
+              ),
+              _buildValueDisplay(
+                LocalizationService.instance.current.yOffsetLabel_4821,
+                '${(_yOffset * 100).round()}%',
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Text(
-                '填充模式: ',
+                LocalizationService.instance.current.fillModeLabel_4821,
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -302,7 +316,9 @@ class _BackgroundImageSettingsDialogState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '缩放比例: ${(_imageScale * 100).round()}%',
+          LocalizationService.instance.current.zoomPercentage(
+            (_imageScale * 100).round(),
+          ),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -353,7 +369,9 @@ class _BackgroundImageSettingsDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'X轴偏移: ${(_xOffset * 100).round()}%',
+              LocalizationService.instance.current.xAxisOffset(
+                (_xOffset * 100).round(),
+              ),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
@@ -376,21 +394,21 @@ class _BackgroundImageSettingsDialogState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '左',
+                  LocalizationService.instance.current.leftText_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
-                  '中',
+                  LocalizationService.instance.current.chineseCharacter_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
-                  '右',
+                  LocalizationService.instance.current.rightDirection_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -406,7 +424,9 @@ class _BackgroundImageSettingsDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Y轴偏移: ${(_yOffset * 100).round()}%',
+              LocalizationService.instance.current.yAxisOffset(
+                (_yOffset * 100).round(),
+              ),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
@@ -429,21 +449,21 @@ class _BackgroundImageSettingsDialogState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '上',
+                  LocalizationService.instance.current.upText_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
-                  '中',
+                  LocalizationService.instance.current.chineseCharacter_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
-                  '下',
+                  LocalizationService.instance.current.downText_4821,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -472,8 +492,8 @@ class _BackgroundImageSettingsDialogState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '填充模式',
+        Text(
+          LocalizationService.instance.current.fillMode_4821,
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
@@ -527,19 +547,19 @@ class _BackgroundImageSettingsDialogState
   String _getBoxFitDisplayName(BoxFit fit) {
     switch (fit) {
       case BoxFit.contain:
-        return '包含';
+        return LocalizationService.instance.current.boxFitContain_4821;
       case BoxFit.cover:
-        return '覆盖';
+        return LocalizationService.instance.current.boxFitCover_4822;
       case BoxFit.fill:
-        return '填充';
+        return LocalizationService.instance.current.boxFitFill_4823;
       case BoxFit.fitWidth:
-        return '适宽';
+        return LocalizationService.instance.current.boxFitFitWidth_4824;
       case BoxFit.fitHeight:
-        return '适高';
+        return LocalizationService.instance.current.boxFitFitHeight_4825;
       case BoxFit.none:
-        return '原始';
+        return LocalizationService.instance.current.boxFitNone_4826;
       case BoxFit.scaleDown:
-        return '缩小';
+        return LocalizationService.instance.current.boxFitScaleDown_4827;
     }
   }
 }

@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../../services/legend_cache_manager.dart';
 import '../../../services/reactive_version/reactive_version_manager.dart';
 import '../../../models/legend_item.dart' as legend_db;
+import '../../../l10n/app_localizations.dart';
+import '../../../services/localization_service.dart';
 
 /// 缓存图例展示组件
 class CachedLegendsDisplay extends StatefulWidget {
@@ -54,7 +57,10 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     // 如果当前图例组ID变化，需要重新计算分类
     if (widget.currentLegendGroupId != oldWidget.currentLegendGroupId) {
       debugPrint(
-        '[CachedLegendsDisplay] 图例组ID变化: ${oldWidget.currentLegendGroupId} -> ${widget.currentLegendGroupId}，刷新缓存显示',
+        LocalizationService.instance.current.legendGroupIdChanged(
+          oldWidget.currentLegendGroupId ?? 'null',
+          widget.currentLegendGroupId ?? 'null',
+        ),
       );
       _updateCachedLegends();
     }
@@ -70,11 +76,15 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
   /// 更新缓存图例列表
   void _updateCachedLegends() {
     debugPrint(
-      '[CachedLegendsDisplay] 开始更新缓存图例列表，当前图例组ID: ${widget.currentLegendGroupId}',
+      LocalizationService.instance.current.updatingCachedLegendsList(
+        widget.currentLegendGroupId ?? 'null',
+      ),
     );
 
     final cachedItems = _cacheManager.getAllCachedLegends();
-    debugPrint('[CachedLegendsDisplay] 当前缓存图例数量: ${cachedItems.length}');
+    debugPrint(
+      '[CachedLegendsDisplay] ${LocalizationService.instance.current.cachedLegendsCount_7421(cachedItems.length)}',
+    );
 
     final Map<String, List<String>> ownSelected = {};
     final Map<String, List<String>> otherSelected = {};
@@ -92,8 +102,12 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       otherSelectedPaths = Set<String>.from(allSelectedPaths)
         ..removeAll(ownSelectedPaths);
 
-      debugPrint('[CachedLegendsDisplay] 自己组选中路径: $ownSelectedPaths');
-      debugPrint('[CachedLegendsDisplay] 其他组选中路径: $otherSelectedPaths');
+      debugPrint(
+        '[CachedLegendsDisplay] ${LocalizationService.instance.current.ownSelectedPaths_7425}: $ownSelectedPaths',
+      );
+      debugPrint(
+        '[CachedLegendsDisplay] ${LocalizationService.instance.current.otherGroupSelectedPaths_7425}: $otherSelectedPaths',
+      );
     }
 
     for (final legendPath in cachedItems) {
@@ -103,7 +117,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       if (lastSlashIndex != -1) {
         directory = legendPath.substring(0, lastSlashIndex);
       }
-      final displayDirectory = directory.isEmpty ? '根目录' : directory;
+      final displayDirectory = directory.isEmpty
+          ? LocalizationService.instance.current.rootDirectory_4721
+          : directory;
 
       // 判断图例属于哪个分类
       bool isOwnSelected = false;
@@ -164,7 +180,11 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
       (sum, list) => sum + list.length,
     );
     debugPrint(
-      '[CachedLegendsDisplay] 缓存图例分类完成：自己组 $totalOwnSelected，其他组 $totalOtherSelected，未选中 $totalUnselected',
+      LocalizationService.instance.current.cachedLegendCategories(
+        totalOwnSelected,
+        totalOtherSelected,
+        totalUnselected,
+      ),
     );
   }
 
@@ -195,14 +215,14 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无缓存图例',
+              LocalizationService.instance.current.noCachedLegend,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '选择VFS目录来加载图例到缓存',
+              LocalizationService.instance.current.selectVfsDirectoryHint_4821,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
@@ -219,7 +239,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         // 1. 自己组选中的图例（最上方，绿色主题）
         if (_ownSelectedLegends.isNotEmpty) ...[
           _buildCategoryHeader(
-            '自己组选中',
+            LocalizationService.instance.current.ownSelectedHeader_5421,
             totalOwnSelected,
             Colors.green,
             Icons.check_circle,
@@ -237,7 +257,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         // 2. 其他组选中的图例（中间，橙色主题）
         if (_otherSelectedLegends.isNotEmpty) ...[
           _buildCategoryHeader(
-            '其他组选中',
+            LocalizationService.instance.current.otherSelectedGroup_4821,
             totalOtherSelected,
             Colors.orange,
             Icons.group,
@@ -255,7 +275,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         // 3. 未选中但已加载的图例（最下方，灰色主题）
         if (_unselectedLegends.isNotEmpty) ...[
           _buildCategoryHeader(
-            '未选中但已加载',
+            LocalizationService.instance.current.loadedButUnselected_7281,
             totalUnselected,
             Colors.grey,
             Icons.storage,
@@ -308,7 +328,10 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
     Color? backgroundColor,
   ]) {
     // 只显示路径的最后一节
-    final displayName = directory == '根目录' ? '根目录' : directory.split('/').last;
+    final displayName =
+        directory == LocalizationService.instance.current.rootDirectory_4721
+        ? LocalizationService.instance.current.rootDirectory_4721
+        : directory.split('/').last;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 1),
@@ -410,15 +433,26 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
         return Draggable<String>(
           data: legendPath,
           onDragStarted: () {
-            debugPrint('开始拖拽图例: $legendPath');
+            debugPrint(
+              LocalizationService.instance.current.dragLegendStart(legendPath),
+            );
             // 通知抽屉关闭
             widget.onDragStart?.call();
           },
           onDragEnd: (details) {
-            debugPrint('结束拖拽图例: $legendPath, 是否被接受: ${details.wasAccepted}');
+            debugPrint(
+              LocalizationService.instance.current.dragEndLegend_7281(
+                legendPath,
+                details.wasAccepted,
+              ),
+            );
           },
           onDragCompleted: () {
-            debugPrint('拖拽完成: $legendPath');
+            debugPrint(
+              LocalizationService.instance.current.dragComplete_7281(
+                legendPath,
+              ),
+            );
             widget.onDragEnd?.call();
           },
           feedback: Material(
@@ -521,7 +555,7 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '拖拽中...',
+                  LocalizationService.instance.current.draggingText_4821,
                   style: TextStyle(
                     fontSize: 10,
                     color: Theme.of(
@@ -622,7 +656,9 @@ class _CachedLegendsDisplayState extends State<CachedLegendsDisplay> {
           fit: BoxFit.cover,
         );
       } catch (e) {
-        debugPrint('SVG图例缩略图加载失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.svgThumbnailLoadFailed_7285(e),
+        );
         return Icon(
           Icons.image_not_supported,
           size: width * 0.6,

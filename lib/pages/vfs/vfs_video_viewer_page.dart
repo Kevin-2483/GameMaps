@@ -1,9 +1,12 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/vfs/viewers/media_kit_video_player.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/notification/notification_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// VFS 视频查看器页面
 class VfsVideoViewerPage extends BasePage {
@@ -93,7 +96,7 @@ class _VfsVideoViewerPageContentState
             });
           }
         } catch (e) {
-          debugPrint('获取VFS文件信息失败: $e');
+          debugPrint(LocalizationService.instance.current.vfsFileInfoError(e));
         }
       } else {
         _fileInfo = widget.fileInfo;
@@ -104,7 +107,8 @@ class _VfsVideoViewerPageContentState
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '加载视频信息失败: $e';
+        _errorMessage = LocalizationService.instance.current
+            .videoInfoLoadFailed(e);
         _isLoading = false;
       });
     }
@@ -138,7 +142,9 @@ class _VfsVideoViewerPageContentState
             color: _autoPlay ? Colors.green : Colors.white,
           ),
           onPressed: () => setState(() => _autoPlay = !_autoPlay),
-          tooltip: _autoPlay ? '关闭自动播放' : '开启自动播放',
+          tooltip: _autoPlay
+              ? LocalizationService.instance.current.disableAutoPlay_5421
+              : LocalizationService.instance.current.enableAutoPlay_5421,
         ),
 
         // 循环播放开关
@@ -148,7 +154,9 @@ class _VfsVideoViewerPageContentState
             color: _looping ? Colors.green : Colors.white,
           ),
           onPressed: () => setState(() => _looping = !_looping),
-          tooltip: _looping ? '关闭循环播放' : '开启循环播放',
+          tooltip: _looping
+              ? LocalizationService.instance.current.disableLoopPlayback_7281
+              : LocalizationService.instance.current.enableLoopPlayback_7282,
         ),
 
         // 静音开关
@@ -158,14 +166,16 @@ class _VfsVideoViewerPageContentState
             color: _muted ? Colors.red : Colors.white,
           ),
           onPressed: () => setState(() => _muted = !_muted),
-          tooltip: _muted ? '取消静音' : '静音',
+          tooltip: _muted
+              ? LocalizationService.instance.current.unmute_5421
+              : LocalizationService.instance.current.mute_5422,
         ),
 
         // 全屏按钮
         IconButton(
           icon: const Icon(Icons.fullscreen),
           onPressed: _toggleFullscreen,
-          tooltip: '全屏模式',
+          tooltip: LocalizationService.instance.current.fullscreenMode_7281,
         ),
 
         // 更多选项
@@ -173,30 +183,34 @@ class _VfsVideoViewerPageContentState
           onSelected: _handleMenuAction,
           icon: const Icon(Icons.more_vert, color: Colors.white),
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'window',
               child: Row(
                 children: [
                   Icon(Icons.open_in_new),
                   SizedBox(width: 8),
-                  Text('在窗口中打开'),
+                  Text(LocalizationService.instance.current.openInWindow_7281),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'info',
               child: Row(
                 children: [
                   Icon(Icons.info_outline),
                   SizedBox(width: 8),
-                  Text('视频信息'),
+                  Text(LocalizationService.instance.current.videoInfo_4821),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'copy_url',
               child: Row(
-                children: [Icon(Icons.copy), SizedBox(width: 8), Text('复制链接')],
+                children: [
+                  Icon(Icons.copy),
+                  SizedBox(width: 8),
+                  Text(LocalizationService.instance.current.copyLink_4821),
+                ],
               ),
             ),
           ],
@@ -235,13 +249,16 @@ class _VfsVideoViewerPageContentState
       width: double.infinity,
       height: double.infinity,
       color: Colors.black,
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(color: Colors.white),
             SizedBox(height: 16),
-            Text('正在加载视频...', style: TextStyle(color: Colors.white)),
+            Text(
+              LocalizationService.instance.current.loadingVideo_7281,
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
       ),
@@ -260,8 +277,8 @@ class _VfsVideoViewerPageContentState
           children: [
             const Icon(Icons.error, color: Colors.red, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              '视频加载失败',
+            Text(
+              LocalizationService.instance.current.videoLoadFailed_7281,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -288,13 +305,15 @@ class _VfsVideoViewerPageContentState
                 ElevatedButton.icon(
                   onPressed: () => _loadVideoInfo(),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('重试'),
+                  label: Text(LocalizationService.instance.current.retry_4281),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
                   onPressed: () => _copyUrlToClipboard(),
                   icon: const Icon(Icons.copy),
-                  label: const Text('复制链接'),
+                  label: Text(
+                    LocalizationService.instance.current.copyLink_4821,
+                  ),
                   style: TextButton.styleFrom(foregroundColor: Colors.white),
                 ),
               ],
@@ -332,7 +351,9 @@ class _VfsVideoViewerPageContentState
     // 导入视频窗口查看器并在窗口中打开
     Navigator.of(context).pop(); // 关闭当前页面
     // 这里应该调用窗口版本的视频查看器
-    debugPrint('在窗口中打开视频: ${widget.vfsPath}');
+    debugPrint(
+      LocalizationService.instance.current.openVideoInWindow(widget.vfsPath),
+    );
   }
 
   /// 显示视频信息
@@ -340,27 +361,43 @@ class _VfsVideoViewerPageContentState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('视频信息'),
+        title: Text(LocalizationService.instance.current.videoInfo_4821),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('文件名', widget.vfsPath.split('/').last),
-            _buildInfoRow('路径', widget.vfsPath),
+            _buildInfoRow(
+              LocalizationService.instance.current.fileName_5421,
+              widget.vfsPath.split('/').last,
+            ),
+            _buildInfoRow(
+              LocalizationService.instance.current.pathLabel_7421,
+              widget.vfsPath,
+            ),
             if (_fileInfo != null) ...[
-              _buildInfoRow('大小', _formatFileSize(_fileInfo!.size)),
-              _buildInfoRow('修改时间', _formatDateTime(_fileInfo!.modifiedAt)),
+              _buildInfoRow(
+                LocalizationService.instance.current.fileSizeLabel_4821,
+                _formatFileSize(_fileInfo!.size),
+              ),
+              _buildInfoRow(
+                LocalizationService.instance.current.modifiedTime_4821,
+                _formatDateTime(_fileInfo!.modifiedAt),
+              ),
             ],
             _buildInfoRow(
-              '文件类型',
-              widget.vfsPath.split('.').last.toUpperCase() + ' 视频文件',
+              LocalizationService.instance.current.fileType_4821,
+              widget.vfsPath.split('.').last.toUpperCase() +
+                  ' ' +
+                  LocalizationService.instance.current.videoFile_5732,
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(
+              LocalizationService.instance.current.confirmButton_7281,
+            ),
           ),
         ],
       ),
@@ -392,9 +429,13 @@ class _VfsVideoViewerPageContentState
   /// 复制URL到剪贴板
   void _copyUrlToClipboard() {
     // 这里可以添加复制到剪贴板的功能
-    debugPrint('复制视频链接: ${widget.vfsPath}');
+    debugPrint(
+      LocalizationService.instance.current.copyVideoLink_5421(widget.vfsPath),
+    );
 
-    context.showSuccessSnackBar('视频链接已复制到剪贴板');
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current.videoLinkCopiedToClipboard_4821,
+    );
   }
 
   /// 格式化文件大小

@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/legend_manager/legend_manager_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 图例管理页面模块
 class LegendManagerPageModule extends PageModule {
@@ -16,7 +19,8 @@ class LegendManagerPageModule extends PageModule {
   String get path => '/legend-manager';
 
   @override
-  String get displayName => '图例管理';
+  String get displayName =>
+      LocalizationService.instance.current.legendManagement_4821;
 
   @override
   IconData get icon => Icons.legend_toggle;

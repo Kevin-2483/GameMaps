@@ -1,8 +1,11 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'package:lpinyin/lpinyin.dart';
 import '../../models/webdav_config.dart';
 import 'webdav_database_service.dart';
 import 'webdav_secure_storage_service.dart';
+
+import '../localization_service.dart';
 
 // 条件导入WebDAV客户端（仅非web平台）
 import 'webdav_client/webdav_client_stub.dart'
@@ -26,7 +29,9 @@ class WebDavClientService {
     await _secureStorage.initialize();
 
     if (kDebugMode) {
-      debugPrint('WebDAV客户端服务初始化完成');
+      debugPrint(
+        LocalizationService.instance.current.webDavClientInitialized_7281,
+      );
     }
   }
 
@@ -36,7 +41,9 @@ class WebDavClientService {
       final config = await _dbService.getConfigById(configId);
       if (config == null) {
         if (kDebugMode) {
-          debugPrint('WebDAV配置未找到: $configId');
+          debugPrint(
+            LocalizationService.instance.current.webDavConfigNotFound(configId),
+          );
         }
         return null;
       }
@@ -46,7 +53,11 @@ class WebDavClientService {
       );
       if (authAccount == null) {
         if (kDebugMode) {
-          debugPrint('WebDAV认证账户未找到: ${config.authAccountId}');
+          debugPrint(
+            LocalizationService.instance.current.webDavAuthAccountNotFound(
+              config.authAccountId,
+            ),
+          );
         }
         return null;
       }
@@ -54,7 +65,11 @@ class WebDavClientService {
       final password = await _secureStorage.getPassword(config.authAccountId);
       if (password == null) {
         if (kDebugMode) {
-          debugPrint('WebDAV密码未找到: ${config.authAccountId}');
+          debugPrint(
+            LocalizationService.instance.current.webDavPasswordNotFound(
+              config.authAccountId,
+            ),
+          );
         }
         return null;
       }
@@ -75,7 +90,9 @@ class WebDavClientService {
       return client;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('创建WebDAV客户端失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.webDavClientCreationFailed(e),
+        );
       }
       return null;
     }
@@ -88,15 +105,22 @@ class WebDavClientService {
     try {
       final client = await _createClient(configId);
       if (client == null) {
-        return const WebDavTestResult(
+        return WebDavTestResult(
           success: false,
-          errorMessage: '无法创建WebDAV客户端，请检查配置',
+          errorMessage: LocalizationService
+              .instance
+              .current
+              .webDavClientCreationError_4821,
         );
       }
 
       final config = await _dbService.getConfigById(configId);
       if (config == null) {
-        return const WebDavTestResult(success: false, errorMessage: '配置未找到');
+        return WebDavTestResult(
+          success: false,
+          errorMessage:
+              LocalizationService.instance.current.configurationNotFound_7281,
+        );
       }
 
       // 测试连接 - 尝试列出根目录
@@ -115,7 +139,11 @@ class WebDavClientService {
             e.toString().contains('Not Found')) {
           await client.mkdirAll(storagePath);
           if (kDebugMode) {
-            debugPrint('WebDAV存储目录已创建: $storagePath');
+            debugPrint(
+              LocalizationService.instance.current.webDavStorageCreated(
+                storagePath,
+              ),
+            );
           }
         } else {
           rethrow;
@@ -144,14 +172,18 @@ class WebDavClientService {
       String errorMessage = '连接失败';
       if (e.toString().contains('401') ||
           e.toString().contains('Unauthorized')) {
-        errorMessage = '认证失败，请检查用户名和密码';
+        errorMessage =
+            LocalizationService.instance.current.authFailedMessage_4821;
       } else if (e.toString().contains('404') ||
           e.toString().contains('Not Found')) {
-        errorMessage = '服务器地址不正确或路径不存在';
+        errorMessage =
+            LocalizationService.instance.current.invalidServerPath_4821;
       } else if (e.toString().contains('timeout')) {
-        errorMessage = '连接超时，请检查网络和服务器地址';
+        errorMessage =
+            LocalizationService.instance.current.connectionTimeoutError_4821;
       } else {
-        errorMessage = '连接失败: ${e.toString()}';
+        errorMessage = LocalizationService.instance.current
+            .connectionFailed_7281(e.toString());
       }
 
       return WebDavTestResult(
@@ -192,13 +224,17 @@ class WebDavClientService {
       await client.writeFromFile(localFilePath, fullRemotePath);
 
       if (kDebugMode) {
-        debugPrint('文件上传成功: $localFilePath -> $fullRemotePath');
+        debugPrint(
+          LocalizationService.instance.current.fileUploadSuccess(localFilePath),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('文件上传失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fileUploadFailed_7284(e),
+        );
       }
       return false;
     }
@@ -228,13 +264,20 @@ class WebDavClientService {
       await client.read2File(fullRemotePath, localFilePath);
 
       if (kDebugMode) {
-        debugPrint('文件下载成功: $fullRemotePath -> $localFilePath');
+        debugPrint(
+          LocalizationService.instance.current.fileDownloadSuccess(
+            fullRemotePath,
+            localFilePath,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('文件下载失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fileDownloadFailed_7281(e),
+        );
       }
       return false;
     }
@@ -263,13 +306,20 @@ class WebDavClientService {
       final files = await client.readDir(fullRemotePath);
 
       if (kDebugMode) {
-        debugPrint('目录列表获取成功: $fullRemotePath (${files.length} 个项目)');
+        debugPrint(
+          LocalizationService.instance.current.directoryListSuccess(
+            fullRemotePath,
+            files.length,
+          ),
+        );
       }
 
       return files;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('获取目录列表失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.fetchDirectoryFailed_7285(e),
+        );
       }
       return null;
     }
@@ -295,13 +345,17 @@ class WebDavClientService {
       await client.remove(fullRemotePath);
 
       if (kDebugMode) {
-        debugPrint('删除成功: $fullRemotePath');
+        debugPrint(
+          LocalizationService.instance.current.deleteSuccessLog_7421(
+            fullRemotePath,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('删除失败: $e');
+        debugPrint(LocalizationService.instance.current.deleteFailed_7425(e));
       }
       return false;
     }
@@ -327,13 +381,19 @@ class WebDavClientService {
       await client.mkdirAll(fullRemotePath);
 
       if (kDebugMode) {
-        debugPrint('目录创建成功: $fullRemotePath');
+        debugPrint(
+          LocalizationService.instance.current.directoryCreatedSuccessfully(
+            fullRemotePath,
+          ),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('目录创建失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.directoryCreationFailed_7285(e),
+        );
       }
       return false;
     }
@@ -359,13 +419,17 @@ class WebDavClientService {
       await client.readDir(fullRemotePath);
 
       if (kDebugMode) {
-        debugPrint('路径存在: $fullRemotePath');
+        debugPrint(
+          LocalizationService.instance.current.pathExists_4821(fullRemotePath),
+        );
       }
 
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('路径检查失败: $remotePath - $e');
+        debugPrint(
+          LocalizationService.instance.current.pathCheckFailed(remotePath, e),
+        );
       }
       return false;
     }
@@ -395,7 +459,9 @@ class WebDavClientService {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('拼音转换失败: $e');
+        debugPrint(
+          LocalizationService.instance.current.pinyinConversionFailed_4821(e),
+        );
       }
       // 如果转换失败，将中文字符替换为'a'
       return input.replaceAll(RegExp(r'[\u4e00-\u9fa5]'), 'a');

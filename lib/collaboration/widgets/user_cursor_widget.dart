@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../models/collaboration_state.dart';
 import 'collaboration_overlay.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 用户指针组件
 /// 显示其他用户的鼠标指针位置和用户信息
@@ -225,7 +228,9 @@ class UserCursorsList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '在线用户 (${cursors.length})',
+            LocalizationService.instance.current.onlineUsersCount(
+              cursors.length,
+            ),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 12,

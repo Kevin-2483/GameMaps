@@ -1,0 +1,12 @@
+{
+  "audioProcessorConvertStart_7281": "🎵 AudioProcessor.convertMarkdownAudios: 开始转换",
+  "audioProcessorConvertMarkdownAudios": "AudioProcessor.convertMarkdownAudios: 生成标签 {audioTag}",
+  "audioProcessorConvertMarkdownAudios_7428": "AudioProcessor.convertMarkdownAudios: 转换 {src}",
+  "audioConversionComplete_7284": "🎵 AudioProcessor.convertMarkdownAudios: 转换完成",
+  "audioNodeBuildStart_7421": "🎵 AudioNode.build: 开始构建 - src: \\{src}",
+  "parseAttributesLog_7281": "解析属性 - {attributes}",
+  "audioProcessorDebugInfo": "🎵 AudioProcessor.containsAudio: text长度={textLength}, 包含音频={result}",
+  "audioProcessorCreated_4821": "🎵 AudioProcessor: 创建音频生成器",
+  "audioNodeGenerationLog": "🎵 AudioProcessor: 生成AudioNode - tag: \\{tag}, attributes: \\{attributes}, textContent: \\{textContent}, uuid: {playerId}",
+  "audioPlayerError_4821": "AudioNode: 播放器错误 - {error}"
+}

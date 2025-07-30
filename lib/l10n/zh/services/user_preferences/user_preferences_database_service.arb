@@ -1,0 +1,13 @@
+{
+  "databaseUpgradeMessage_7281": "数据库升级：添加 home_page_data 字段",
+  "databaseUpgradeLayoutData_7281": "数据库升级：为 layout_data 添加 windowControlsMode 字段",
+  "userPreferenceDbUpgrade_7421": "用户偏好设置数据库从版本 {oldVersion} 升级到 {newVersion}",
+  "userPreferencesSavedToDatabase": "用户偏好设置已保存到数据库: {displayName}",
+  "userConfigDeleted": "用户配置已删除: {userId}",
+  "allUserPreferencesCleared_4821": "所有用户偏好设置数据已清除",
+  "migratedWindowControlsMode": "已为用户 {userId} 迁移 enableMergedWindowControls 到 windowControlsMode",
+  "userFieldAdded": "已为用户 {userId} 添加 windowControlsMode 字段",
+  "parseUserLayoutFailed": "解析用户 {userId} 的 layout_data 失败: {e}",
+  "layoutDataMigrationError": "迁移 layout_data 时发生错误: {e}",
+  "userPreferencesTableCreated_7281": "用户偏好设置数据库表创建完成"
+}

@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/demo/web_context_menu_demo_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// Web右键菜单演示页面模块
 class WebContextMenuDemoPageModule extends PageModule {
@@ -11,7 +14,8 @@ class WebContextMenuDemoPageModule extends PageModule {
   String get path => '/demo/web-context-menu';
 
   @override
-  String get displayName => 'Web右键菜单演示';
+  String get displayName =>
+      LocalizationService.instance.current.webContextMenuDemoTitle_4721;
 
   @override
   IconData get icon => Icons.mouse;

@@ -1,7 +1,10 @@
+// This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// Offset扩展方法
 extension OffsetExtension on Offset {
@@ -188,7 +191,9 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     _initCardAnimations();
 
     if (widget.debugMode) {
-      debugPrint('显示菜单于位置: $position');
+      debugPrint(
+        LocalizationService.instance.current.showMenuAtPosition(position),
+      );
     }
 
     HapticFeedback.lightImpact();
@@ -226,7 +231,7 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     });
 
     if (widget.debugMode) {
-      debugPrint('隐藏菜单');
+      debugPrint(LocalizationService.instance.current.hiddenMenu_7281);
     }
   }
 
@@ -310,7 +315,12 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                   }
 
                   if (widget.debugMode) {
-                    debugPrint('延迟返回主菜单');
+                    debugPrint(
+                      LocalizationService
+                          .instance
+                          .current
+                          .delayReturnToMenu_7281,
+                    );
                   }
                 }
               });
@@ -353,7 +363,12 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                   }
 
                   if (widget.debugMode) {
-                    debugPrint('延迟返回主菜单');
+                    debugPrint(
+                      LocalizationService
+                          .instance
+                          .current
+                          .delayReturnToMenu_7281,
+                    );
                   }
                 }
               });
@@ -406,7 +421,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
       });
 
       if (widget.debugMode) {
-        debugPrint('悬停项目: ${selectedItem.label}');
+        debugPrint(
+          LocalizationService.instance.current.hoverItem_7421(
+            selectedItem.label,
+          ),
+        );
       }
 
       HapticFeedback.selectionClick();
@@ -423,7 +442,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
         if (widget.subMenuDelay == Duration.zero) {
           _enterSubMenu(selectedItem);
           if (widget.debugMode) {
-            debugPrint('立即进入子菜单: ${selectedItem.label}');
+            debugPrint(
+              LocalizationService.instance.current.enterSubMenuNow_7421(
+                selectedItem.label,
+              ),
+            );
           }
         } else {
           // 设置新的待处理子菜单项目
@@ -450,7 +473,10 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
                   timer.cancel();
                   _enterSubMenu(selectedItem);
                   if (widget.debugMode) {
-                    debugPrint('鼠标停止移动，延迟进入子菜单: ${selectedItem.label}');
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .mouseStopAndEnterSubmenu(selectedItem.label),
+                    );
                   }
                 }
               }
@@ -458,7 +484,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
           );
 
           if (widget.debugMode) {
-            debugPrint('设置子菜单延迟计时器: ${selectedItem.label}');
+            debugPrint(
+              LocalizationService.instance.current.submenuDelayTimer(
+                selectedItem.label,
+              ),
+            );
           }
         }
       }
@@ -508,7 +538,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
   void _selectItem() {
     if (_hoveredItem != null) {
       if (widget.debugMode) {
-        debugPrint('选择项目: ${_hoveredItem!.label}');
+        debugPrint(
+          LocalizationService.instance.current.selectedItemLabel(
+            _hoveredItem!.label,
+          ),
+        );
       }
 
       HapticFeedback.mediumImpact();
@@ -560,7 +594,11 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
     });
 
     if (widget.debugMode) {
-      debugPrint('子菜单初始悬停项目: ${selectedItem.label}');
+      debugPrint(
+        LocalizationService.instance.current.subMenuInitialHoverItem(
+          selectedItem.label,
+        ),
+      );
     }
   }
 
@@ -572,7 +610,10 @@ class _RadialGestureMenuState extends State<RadialGestureMenu>
         if (event.buttons == widget.menuButton) {
           _showMenu(event.localPosition);
           if (widget.debugMode) {
-            debugPrint('中键按下，显示径向菜单于位置: ${event.localPosition}');
+            debugPrint(
+              LocalizationService.instance.current
+                  .middleKeyPressedShowRadialMenu(event.localPosition),
+            );
           }
         }
       },

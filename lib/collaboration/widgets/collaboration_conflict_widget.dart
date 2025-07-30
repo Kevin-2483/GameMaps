@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../models/collaboration_state.dart';
 import 'collaboration_overlay.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 协作冲突组件
 /// 显示协作冲突信息和解决选项
@@ -198,7 +201,9 @@ class _CollaborationConflictWidgetState
 
         const SizedBox(height: 4),
         Text(
-          '发生时间: ${_formatTimestamp(widget.conflict.timestamp)}',
+          LocalizationService.instance.current.occurrenceTime_4821(
+            _formatTimestamp(widget.conflict.timestamp),
+          ),
           style: TextStyle(
             color: widget.style.textColor.withValues(alpha: 0.7),
             fontSize: widget.style.fontSize - 2,
@@ -240,7 +245,7 @@ class _CollaborationConflictWidgetState
             foregroundColor: widget.style.textColor.withValues(alpha: 0.7),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           ),
-          child: const Text('忽略'),
+          child: Text(LocalizationService.instance.current.ignore_4821),
         ),
         const SizedBox(width: 8),
         ElevatedButton(
@@ -251,7 +256,7 @@ class _CollaborationConflictWidgetState
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             elevation: 0,
           ),
-          child: const Text('解决'),
+          child: Text(LocalizationService.instance.current.solve_7421),
         ),
       ],
     );
@@ -285,25 +290,28 @@ class _CollaborationConflictWidgetState
   String _getConflictTitle() {
     switch (widget.conflict.type) {
       case ConflictType.elementLockConflict:
-        return '元素锁定冲突';
+        return LocalizationService.instance.current.elementLockConflict_4821;
       case ConflictType.simultaneousEdit:
-        return '同时编辑冲突';
+        return LocalizationService
+            .instance
+            .current
+            .simultaneousEditConflict_4822;
       case ConflictType.versionMismatch:
-        return '版本不匹配';
+        return LocalizationService.instance.current.versionMismatch_4823;
       case ConflictType.permissionDenied:
-        return '权限被拒绝';
+        return LocalizationService.instance.current.permissionDenied_4824;
       case ConflictType.networkError:
-        return '网络错误';
+        return LocalizationService.instance.current.networkError_4825;
       case ConflictType.other:
-        return '协作冲突';
+        return LocalizationService.instance.current.collaborationConflict_4826;
       case ConflictType.editConflict:
-        return '编辑冲突';
+        return LocalizationService.instance.current.editConflict_4827;
       case ConflictType.lockConflict:
-        return '锁定冲突';
+        return LocalizationService.instance.current.lockConflict_4828;
       case ConflictType.deleteConflict:
-        return '删除冲突';
+        return LocalizationService.instance.current.deleteConflict_4829;
       case ConflictType.permissionConflict:
-        return '权限冲突';
+        return LocalizationService.instance.current.permissionConflict_4830;
     }
   }
 
@@ -312,11 +320,14 @@ class _CollaborationConflictWidgetState
     final difference = now.difference(timestamp);
 
     if (difference.inMinutes < 1) {
-      return '刚刚';
+      return LocalizationService.instance.current.justNow_4821;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}分钟前';
+      return LocalizationService.instance.current.minutesAgo_7421(
+        difference.inMinutes,
+      );
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}小时前';
+      return '${difference.inHours}' +
+          LocalizationService.instance.current.hoursAgo_4827;
     } else {
       return '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     }
@@ -404,7 +415,9 @@ class ConflictStatsWidget extends StatelessWidget {
             Icon(Icons.warning, color: Colors.red.shade700, size: 16),
             const SizedBox(width: 4),
             Text(
-              '${unresolvedConflicts.length}个冲突',
+              LocalizationService.instance.current.conflictCount(
+                unresolvedConflicts.length,
+              ),
               style: TextStyle(
                 color: Colors.red.shade700,
                 fontSize: 12,

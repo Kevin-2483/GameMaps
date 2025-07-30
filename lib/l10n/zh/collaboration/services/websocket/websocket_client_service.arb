@@ -1,0 +1,5 @@
+{
+  "connectionInProgress_4821": "连接正在进行中，忽略重复连接请求",
+  "clientConfigNotFound_7281": "未找到客户端配置",
+  "connectingToWebSocketServer": "开始连接到 WebSocket 服务器: {host}:{port}"
+}

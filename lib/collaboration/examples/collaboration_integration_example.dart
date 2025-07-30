@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../collaboration.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 /// 协作功能集成示例
 /// 展示如何在地图页面中集成协作状态管理
@@ -46,7 +49,7 @@ class _CollaborationIntegrationExampleState
 
     await _syncService.initialize(
       userId: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      displayName: '演示用户',
+      displayName: LocalizationService.instance.current.demoUser_4721,
       userColor: Colors.blue,
       onSendToRemote: _handleSendToRemote,
       onUserJoined: _handleUserJoined,
@@ -73,7 +76,9 @@ class _CollaborationIntegrationExampleState
 
   void _handleSendToRemote(Map<String, dynamic> data) {
     // 在实际应用中，这里会通过WebSocket或其他方式发送到远程服务器
-    debugPrint('[CollaborationExample] 发送数据到远程: ${data['type']}');
+    debugPrint(
+      '[CollaborationExample] ${LocalizationService.instance.current.sendDataToRemote_7428}: ${data['type']}',
+    );
 
     // 模拟接收远程数据（用于演示）
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -82,11 +87,16 @@ class _CollaborationIntegrationExampleState
   }
 
   void _handleUserJoined(String userId, String displayName) {
-    debugPrint('[CollaborationExample] 用户加入: $displayName ($userId)');
+    debugPrint(
+      '[CollaborationExample] ${LocalizationService.instance.current.userJoined_7425(displayName, userId)}',
+    );
   }
 
   void _handleUserLeft(String userId) {
-    debugPrint('[CollaborationExample] 用户离开: $userId');
+    debugPrint(
+      '[CollaborationExample] ' +
+          LocalizationService.instance.current.userLeft_7421(userId),
+    );
   }
 
   void _simulateRemoteData(Map<String, dynamic> originalData) {
@@ -97,7 +107,7 @@ class _CollaborationIntegrationExampleState
       'type': 'user_selection',
       'payload': {
         'userId': remoteUserId,
-        'userDisplayName': '远程用户',
+        'userDisplayName': LocalizationService.instance.current.remoteUser_4521,
         'userColor': Colors.red.toARGB32(),
         'selectedElementIds': ['element_2'],
         'selectionType': 'single',
@@ -151,7 +161,9 @@ class _CollaborationIntegrationExampleState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('协作功能集成示例'),
+        title: Text(
+          LocalizationService.instance.current.collaborationFeatureExample_4821,
+        ),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
@@ -324,8 +336,8 @@ class _CollaborationIntegrationExampleState
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '操作面板',
+          Text(
+            LocalizationService.instance.current.controlPanel_4821,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -337,7 +349,9 @@ class _CollaborationIntegrationExampleState
                 _selectedElementId = null;
               });
             },
-            child: const Text('清除选择'),
+            child: Text(
+              LocalizationService.instance.current.clearSelection_4821,
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -346,7 +360,7 @@ class _CollaborationIntegrationExampleState
             onPressed: () {
               _collaborationBloc.add(const HideUserCursor());
             },
-            child: const Text('隐藏指针'),
+            child: Text(LocalizationService.instance.current.hidePointer_4271),
           ),
 
           const SizedBox(height: 8),
@@ -370,7 +384,9 @@ class _CollaborationIntegrationExampleState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                     ),
-                    child: const Text('解锁元素'),
+                    child: Text(
+                      LocalizationService.instance.current.unlockElement_4271,
+                    ),
                   );
                 }
               }
@@ -389,7 +405,9 @@ class _CollaborationIntegrationExampleState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('协作冲突'),
+        title: Text(
+          LocalizationService.instance.current.collaborationConflict_7281,
+        ),
         content: SizedBox(
           width: 400,
           child: ConflictListWidget(
@@ -406,7 +424,7 @@ class _CollaborationIntegrationExampleState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.closeButton_7281),
           ),
         ],
       ),

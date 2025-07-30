@@ -1,0 +1,4 @@
+{
+  "unsupportedKey_7425": "不支持的按键: {key}",
+  "shortcutCheckResult": "快捷键检查: {shortcut}, 主键匹配: {keyMatch}, 修饰键匹配: {modifierMatch}, 最终结果: {result}"
+}

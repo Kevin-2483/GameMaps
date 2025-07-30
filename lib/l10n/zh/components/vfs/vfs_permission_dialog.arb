@@ -1,0 +1,23 @@
+{
+  "systemProtectedFileWarning_4821": "系统保护文件 - 此文件受系统保护，不可删除或修改权限",
+  "permissionSettings_7281": "权限设置",
+  "currentPermissions_7421": "当前权限: {permissions}",
+  "userPermissionsTitle_7281": "用户权限",
+  "otherPermissions_7281": "其他权限",
+  "groupPermissions_7421": "组权限",
+  "userPermissions_7281": "用户权限",
+  "permissionDetails_7281": "权限详情",
+  "groupPermissions_4821": "组权限",
+  "cancelButton_4271": "取消",
+  "saveButton_7284": "保存",
+  "writePermission_4821": "写入",
+  "executePermission_4821": "执行",
+  "readPermission_4821": "读取",
+  "readPermission_5421": "读取",
+  "writePermission_7421": "写入",
+  "executeAction_7421": "执行",
+  "permissionSaved_7421": "权限已保存",
+  "savePermissionFailed": "保存权限失败: {e}",
+  "filePermissionFailed_7285": "获取文件权限失败: {e}",
+  "permissionManagement_7421": "权限管理"
+}

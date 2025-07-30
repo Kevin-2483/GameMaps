@@ -1,6 +1,9 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/websocket/websocket_connection_manager_page.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/localization_service.dart';
 
 class WebSocketConnectionManagerPageModule extends PageModule {
   @override
@@ -10,7 +13,8 @@ class WebSocketConnectionManagerPageModule extends PageModule {
   String get path => '/websocket-manager';
 
   @override
-  String get displayName => 'WebSocket 连接管理';
+  String get displayName =>
+      LocalizationService.instance.current.webSocketConnectionManager_4821;
 
   @override
   IconData get icon => Icons.wifi;

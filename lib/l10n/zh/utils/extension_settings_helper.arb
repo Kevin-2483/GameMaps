@@ -1,0 +1,10 @@
+{
+  "mapLegendZoomFactorLog_4821": "扩展设置: 地图 {mapId} 的图例组 {legendGroupId} 缩放因子已设置为 {zoomFactor}",
+  "extensionSettingsClearedMapLegendZoom_7421": "扩展设置: 已清除地图 {mapId} 的所有图例组缩放因子设置",
+  "mapLayerPresetSet": "扩展设置: 地图 {mapId} 的图层 {layerId} 透明度预设已设置: {presets}",
+  "toolbarPositionSet": "扩展设置: 工具栏 {toolbarId} 位置已设置为 ({x}, {y})",
+  "clearedSettingsWithPrefix": "扩展设置: 已清除前缀为 {prefix} 的所有设置",
+  "mapZoomLevelRecord": "扩展设置: 地图 {mapId} 添加缩放级别记录 {zoomLevel}",
+  "mapLegendAutoHideStatus": "扩展设置: 地图 {mapId} 的图例组 {legendGroupId} 智能隐藏状态已设置为 {isHidden}",
+  "debugClearMapLegendSettings": "扩展设置: 已清除地图 {mapId} 的所有图例组智能隐藏设置"
+}

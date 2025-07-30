@@ -1,0 +1,4 @@
+{
+  "imageCompressionFailed_7284": "压缩图片失败: {e}",
+  "base64DecodeFailed": "解码base64图片失败: {e}"
+}
