@@ -14,7 +14,7 @@ import '../../services/work_status_action.dart';
 import '../../services/work_status_service.dart';
 import '../dialogs/work_status_exit_dialog.dart';
 import '../../models/user_preferences.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 托盘导航组件 - 悬浮在页面上层的导航栏

@@ -9,7 +9,7 @@ import '../models/user_presence.dart';
 import 'websocket/websocket_client_manager.dart';
 import 'websocket/websocket_client_service.dart';
 import 'map_sync_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 自动在线状态管理器

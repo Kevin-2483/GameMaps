@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/about/about_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 关于页模块

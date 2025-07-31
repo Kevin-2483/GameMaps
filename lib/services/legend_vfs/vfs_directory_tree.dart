@@ -1,7 +1,7 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'legend_vfs_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS目录节点

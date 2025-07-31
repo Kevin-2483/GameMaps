@@ -22,7 +22,6 @@ import 'services/window_manager_service.dart';
 import 'services/notification/notification_service.dart';
 import 'services/notification/notification_models.dart';
 import 'collaboration/global_collaboration_service.dart';
-import 'l10n/app_localizations.dart';
 import 'services/localization_service.dart';
 
 void main() async {
@@ -138,13 +137,14 @@ class R6BoxApp extends StatelessWidget {
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, UserPreferencesProvider>(
         builder: (context, themeProvider, localeProvider, userPrefsProvider, child) {
-          // When user preferences are loaded, establish connection with ThemeProvider
+          // When user preferences are loaded, establish connection with ThemeProvider and LocaleProvider
           if (userPrefsProvider.isInitialized) {
             // It's generally good practice to ensure this connection setup
             // and the subsequent update don't cause unnecessary rebuild cycles.
             // The _isUpdatingFromUserPrefs flag in ThemeProvider helps,
             // and calling setThemeProvider ideally should be idempotent or guarded.
             userPrefsProvider.setThemeProvider(themeProvider);
+            userPrefsProvider.setLocaleProvider(localeProvider);
 
             final theme = userPrefsProvider.theme;
             themeProvider.updateFromUserPreferences(

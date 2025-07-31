@@ -6,7 +6,7 @@ import '../../components/vfs/viewers/vfs_markdown_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_video_viewer_window.dart';
 import '../../components/vfs/viewers/vfs_audio_player_window.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS文件打开配置

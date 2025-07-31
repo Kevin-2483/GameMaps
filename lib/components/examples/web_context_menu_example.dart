@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../web/web_context_menu_handler.dart';
 import '../../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// Web兼容的右键菜单组件示例

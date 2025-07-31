@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/config_manager.dart';
 import '../../config/app_config.dart';
 import '../../components/common/config_aware_widgets.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 import '../../../services/notification/notification_service.dart';
 

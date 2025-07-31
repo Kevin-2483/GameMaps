@@ -9,7 +9,6 @@ import '../../models/webdav_config.dart';
 import '../../services/webdav/webdav_database_service.dart';
 import '../../services/webdav/webdav_secure_storage_service.dart';
 import '../../services/webdav/webdav_client_service.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/localization_service.dart';
 
 /// WebDAV管理页面

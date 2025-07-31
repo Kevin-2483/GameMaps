@@ -1,12 +1,13 @@
 // This file has been processed by AI for internationalization
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 // import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../models/user_preferences.dart';
 import 'user_preferences_database_service.dart';
 import 'user_preferences_migration_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 // import 'user_preferences_migration_service.dart';
 
@@ -277,6 +278,19 @@ class UserPreferencesService {
       avatarData: avatarData,
       locale: locale,
     );
+
+    // 如果更新了语言设置，需要同步更新LocalizationService
+    if (locale != null && locale != current.locale) {
+      // 将locale字符串转换为Locale对象
+      final parts = locale.split('_');
+      final languageCode = parts[0];
+      final countryCode = parts.length > 1 ? parts[1] : null;
+      final newLocale = countryCode != null
+          ? Locale(languageCode, countryCode)
+          : Locale(languageCode);
+
+      LocalizationService.instance.setLocale(newLocale);
+    }
 
     // 用户基本信息变更立即保存
     final immediate =

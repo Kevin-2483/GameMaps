@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 标签管理组件

@@ -10,7 +10,7 @@ import 'vfs_storage_service.dart';
 import 'vfs_platform_io.dart'
     if (dart.library.html) 'vfs_platform_web.dart'
     as platform;
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// 虚拟文件系统服务提供者

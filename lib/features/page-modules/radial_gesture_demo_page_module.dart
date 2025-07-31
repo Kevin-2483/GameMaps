@@ -4,7 +4,7 @@ import '../page_registry.dart';
 import '../../components/examples/radial_gesture_menu_example.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 径向手势菜单演示页面模块

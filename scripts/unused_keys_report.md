@@ -1,0 +1,1235 @@
+# ARB文件未使用键报告
+
+扫描项目: .
+ARB目录: lib\l10n
+
+## 统计信息
+- 总键数: 4850
+- 已使用键数: 4454
+- 未使用键数: 396
+- 使用率: 91.8%
+
+## 未使用的键（按文件分组）
+### app_en.arb
+未使用键数: 396/4850
+
+- `addMapOrCreateFolderHint_4827`: Click the menu in the top right corner to add maps or create folders
+- `addTag_1589`: Add tag
+- `adjustNewIndexTo_7421`: Adjust newIndex to: {newIndex}
+- `allExamplesCompleted_7281`: ✅ All examples completed!
+- `allScriptsCompleted_7281`: All concurrent scripts completed
+- `architectureFeatures_4821`: Architecture Features
+- `ascending_4965`: Ascending
+- `asyncExecution_4521`: Asynchronous Execution
+- `asyncInternalFunctionLog_7428`: Asynchronous internal function: {asyncInternalFunctionNames}
+- `asyncIsolateMessagePassing_4821`: Asynchronous Isolate Execution + Message Passing
+- `asyncMessageError_7284`: Asynchronous message processing error: {error}
+- `asyncMessageError_7285`: Async message processing error: {e}
+- `asyncScriptEngineTitle_7281`: New Async Script Engine | Messaging Mechanism
+- `audioCountLabel_7281`: Audio: {audioCount}
+- `audioLoadFailed_7421`: Failed to load audio information: {e}
+- `authMessageSent_7421`: Authentication message sent: {clientId}
+- `autoSwitchLegendGroupDrawer_7421`: Automatically switch the legend group drawer to the bound legend group: {name}
+- `autoTypeAliasRegistrationComplete_7421`: Automatic type alias registration complete
+- `backupOnEventCalled`: Fallback onEvent called: {message}
+- `batchOperationBar_5001`: Batch Operation Bar
+- `batchOperations_4991`: Batch Operations
+- `breadcrumbs_4986`: Breadcrumbs
+- `cancel_4922`: Cancel
+- `cannotAccessEventData_4821`: Unable to access event.data: {e}
+- `characterCount_4821`: Character count: {charCount}
+- `cleanScriptHandler_7281`: Clean script function handler: {scriptId}
+- `clearSearch_4985`: Clear Search
+- `clientCreatedSuccessfully_7281`: Client created successfully: {clientId}
+- `clientInfoFetchFailed_7421`: Failed to fetch client information: {e}
+- `closeEditor_7421`: Close editor
+- `close_4936`: Close
+- `compressionFailed_5014`: Compression failed
+- `compressionSuccess_5013`: Compression successful, file size: {size}
+- `concurrentExecutionFailed_7285`: Concurrent execution failed: {e}
+- `concurrentScriptDescription_7539`: The {i}th concurrently executing script
+- `concurrentScriptName_4821`: Concurrent script {i}
+- `confirmAction_7281`: Confirm action
+- `confirmDeleteFiles_4919`: Confirm Delete Files
+- `confirmDeleteVersion_7281`: Are you sure you want to delete version "{versionName}"?  
+This action cannot be undone.
+- `confirmationDialog_4997`: Confirmation Dialog
+- `contentLabel_7392`: Content: {text}
+- `contextMenu_4989`: Context Menu
+- `copyDataFromVersion_4821`: Copy data from version {sourceVersionId}: {dataStatus}
+- `copy_3632`: Copy
+- `copy_7421`: Copy
+- `copyingFile_4991`: Copying file...
+- `copyingWebDAVFile_5002`: Copying WebDAV file...
+- `createFolderFailed_4950`: Failed to create folder: {error}
+- `createFolderTitle_4830`: Create Folder
+- `createFolder_4908`: Create Folder
+- `createMapFailed_7421`: Failed to create sample map: {e}
+- `createNewFolder_4946`: Create New Folder
+- `createNewVersionTooltip_7421`: Create new version
+- `createSampleMapTooltip_4521`: Create sample map
+- `createScriptPending_4821`: New script creation feature pending implementation
+- `create_4948`: Create
+- `creatingFolder_4993`: Creating folder...
+- `creatingSampleMap_4821`: Creating sample map...
+- `creatingVersion_4821`: Creating version...
+- `creatingWebDAVDirectory_4999`: Creating WebDAV directory...
+- `creationTimeLabel_4821`: Creation time: {dateTime}
+- `crossPlatform_4821`: Cross-platform
+- `currentCount_7421`: Current count: {count}/5
+- `currentPlatform_4821`: Current platform: {platform}
+- `currentPlatform_7421`: Current platform: {platform}
+- `customMessageError_4821`: Custom message processing error: {e}
+- `customMessageTypeLog_7421`: Processing custom message type: {type}, task ID: {executionId}
+- `dartIsolate_9352`: Dart Isolate (Desktop)
+- `debugInfo`: Debug Info
+- `debugInfo_4271`: Debug Info
+- `debugInfo_7421`: Debug information
+- `defaultClientConfigCreated_7421`: Default client configuration created: {displayName}
+- `delayImplementationComment_8476`: There will be a delay in the actual implementation.
+- `deleteButton_7421`: Delete
+- `deleteClientConfigFailed_7421`: Failed to delete client configuration: {e}
+- `deleteConfigFailed_7421`: Failed to delete configuration: {error}
+- `deleteFilesWarning_4920`: Are you sure you want to delete the selected {count} files? This action cannot be undone.
+- `deleteFolderConfirmation_4837`: Are you sure you want to delete folder "{folderName}"? This will delete all maps and subfolders w...
+- `deleteFolderFailed_4839`: Failed to delete folder: {error}
+- `deleteFolderTitle_4836`: Delete Folder
+- `deleteSelectedFiles_4918`: Delete Selected Files
+- `deleteTempFile_7421`: Delete temporary file: {path}
+- `deleteTimerFailed_7281`: Failed to delete timer: {e}
+- `deleteVersionFailed_7421`: Failed to delete version: {e}
+- `deleteVersionTooltip_7281`: Delete version
+- `delete_4921`: Delete
+- `deletingFile_4992`: Deleting file...
+- `deletingMap_7421`: Deleting map...
+- `deletingVersion_4821`: Deleting version...
+- `deletingWebDAVDirectory_5000`: Deleting WebDAV directory...
+- `densityValue_7421`: Density: {value}
+- `descending_4966`: Descending
+- `deselectAll_4978`: Deselect All
+- `diskSpaceInsufficient_5029`: Insufficient disk space
+- `downloadFailed_5018`: Download failed: {error}
+- `downloadSuccess_5017`: Download successful
+- `downloadingFileProgress_7281`: Downloading file... {progress}%
+- `downloadingFile_4997`: Downloading file...
+- `drawingTools`: Drawing tools
+- `dualEngine_4821`: Web Worker + Isolate Dual Engine
+- `editScriptParamsFailed_7421`: Failed to edit script parameters: {e}
+- `enableScript_4821`: Enable script
+- `enterFolderName_4832`: Enter folder name
+- `enterSearchTerm_4952`: Enter search term
+- `errorHandlingExampleFailed_7285`: Error handling example execution failed: {e}
+- `errorHandlingWorking_7421`: Error handling is working properly
+- `errorStackTrace_4821`: Error stack: {stackTrace}
+- `errorStackTrace_5421`: Error stack: {stackTrace}
+- `errorTestScriptDesc_4821`: Error-inducing script
+- `errorTestScriptName_4821`: Error test script
+- `errorWithDetails`: Error: {error}
+- `example2MapDataQueryScript_4821`: === Example 2: Map Data Query Script ===
+- `example3ConcurrentScriptExecution_7281`: === Example 3: Concurrent Script Execution ===
+- `example4ScriptStatusMonitoring_7281`: === Example 4: Script Status Monitoring ===
+- `example5ScriptErrorHandling_7891`: === Example 5: Script Error Handling ===
+- `exampleFailed_7285`: ❌ Example execution failed: {e}
+- `exampleLogScriptDescription_7539`: A simple log output script
+- `exampleLogScriptName_4821`: Example log script
+- `exampleLogScript_7281`: === Example 1: Simple Log Script ===
+- `executable_4942`: Executable
+- `executionEngine_7421`: Execution Engine
+- `executionLogsWithCount`: Execution Logs ({count} items):
+- `executionTimeWithMs`: Execution time: {executionTime}ms
+- `expectedError_7421`: Expected error: {error}
+- `exportButton_7281`: Export
+- `exportCancelledMessage`: Export operation was canceled
+- `exportFailed_7421`: Export failed: {error}
+- `exportMapDataFailed`: Failed to export map data: {e}
+- `exportNameDuplicate_4962`: Export name duplicate
+- `exportSuccessMessage_7421`: Successfully exported {count} images
+- `exportingMapData_4821`: Exporting map data...
+- `externalFunctionBindingRequired`: External functions to be bound: {uniqueExternalFunctions}
+- `extractZip_5007`: Extract ZIP
+- `failedToExtractCoreType_7421`: Failed to extract core type: {fullTypeName}
+- `failedToGetAudioFile_7281`: Failed to retrieve audio file from VFS
+- `failure_9356`: Failed
+- `fallbackFailed_7285`: Fallback also failed: {e2}
+- `fetchConfigFailed_7281`: Failed to fetch configuration: {e}
+- `fileAlreadyExists_5026`: File already exists
+- `fileBrowser_4902`: File Browser
+- `fileDownload_5004`: File Download
+- `fileGrid_4988`: File Grid
+- `fileIcon_4994`: File Icon
+- `fileList_4987`: File List
+- `fileMetadataView_4992`: File Metadata View
+- `fileMetadata_4930`: File Metadata
+- `fileNameLabel_7281`: File: {fileName}
+- `fileName_4931`: File Name
+- `fileNotFound_4958`: File not found
+- `fileOperationInProgress_5021`: File operation in progress...
+- `filePath_4935`: File Path
+- `filePermissions_4939`: File Permissions
+- `fileRenamed_4928`: File renamed
+- `fileSelection_4993`: File Selection
+- `fileSizeLabel_7281`: File size: {size}
+- `fileSize_4932`: File Size
+- `fileType_4933`: File Type
+- `fileUploadSuccess_7421`: File uploaded successfully: {localFilePath} -> {fullRemotePath}
+- `fileUpload_5002`: File Upload
+- `file_7281`: File
+- `filesCompressedInfo_7281`: {totalFiles} files have been compressed and downloaded to {zipPath}  
+Compressed file size: {file...
+- `filesDeleted_4923`: Deleted {count} files
+- `filesDownloaded_7281`: {fileCount} files downloaded to {downloadPath}
+- `folderAlreadyExists_5027`: Folder already exists
+- `folderCreated_4949`: Folder created
+- `folderDeletedSuccessfully_4838`: Folder deleted successfully
+- `folderDownload_5005`: Folder Download
+- `folderName_4831`: Folder Name
+- `folderName_4947`: Folder Name
+- `folderUpload_5003`: Folder Upload
+- `folder_4917`: Folder
+- `formatDateTime_4996`: Format Date Time
+- `formatFileSize_4995`: Format File Size
+- `foundFiles_4984`: Found {count} files
+- `hideHidden_4980`: Hide Hidden Files
+- `hideStatusMonitor_5421`: Hide Status Monitor
+- `highPerformanceDesc_4822`: Messaging mechanism with rapid response
+- `highPerformanceTitle_4821`: High Performance
+- `imageSpacing_7281`: Image spacing:
+- `imageUploadFailed_7281`: Image upload failed: {errorMessage}
+- `imageUploadFailed_7421`: Failed to upload image: {e}
+- `importConfigFailed_7281`: Failed to import configuration: {error}
+- `initializationFailed_7281`: Initialization failed: {e}
+- `initializationFailed_7421`: Initialization failed: {e}
+- `insufficientPermissions_5028`: Insufficient permissions
+- `invalidFileName_5025`: Invalid file name
+- `isolatedEnvironment_4522`: The script runs in an isolated environment without blocking the UI
+- `jsonParseError`: The parsed JSON is not a Map type: {type}, content: {content}
+- `jsonParseFailed`: JSON parsing failed: {e}
+- `jsonParseFailedWithData`: JSON parsing failed: {error}, raw data: {data}
+- `jsonParseSuccess`: JSON parsed successfully, data type: {runtimeType}
+- `lastModifiedLabel`: Last modified: {lastModified}
+- `lastModified_4934`: Last Modified
+- `layerAndLegendGroupCount`: Layers: {layers} | Legend groups: {legendGroups}
+- `legendCacheCleaned_7281`: Legend cache: {count} cached items cleaned from directory "{folderPath}
+- `legendGroupInfo_7421`: Legend group [{index}] {groupName}: {itemCount} legend items
+- `legendGroupName_7421`: Legend group: {name}
+- `legendItemLoadFailed_7421`: Failed to load legend item [{mapTitle}/{groupId}/{itemId}:{version}]: {itemError}
+- `legendLoadFailed_7421`: Failed to load legend: {legendFile}, error: {e}
+- `legendSessionManagerLoadFailed_7421`: Legend Session Manager: Failed to load individual legend {legendPath}, error: {e}
+- `listingWebDAVDirectory_4998`: Listing WebDAV directory...
+- `loadConfigFailed_7421`: Failed to load configuration: {error}
+- `loadUserPreferencesFailed_7421`: Failed to load user preferences: {error}
+- `loadingMap_7421`: Loading map...
+- `managePermissions_4938`: Manage Permissions
+- `mapCount_4851`: {count} maps
+- `mapCoverCompressionFailed_7421`: Map cover compression failed: {compressionError}, skipped sending
+- `mapCreationSuccess_7421`: Successfully created sample map (ID: {mapId})
+- `mapDataQueryScript_4821`: Map data query script
+- `mapDataUpdatedWithTaskId_7421`: Map data updated, task ID: {executionId}
+- `mapData_4821`: Map data
+- `mapDeletedSuccessfully_7281`: Map "{title}" deleted successfully
+- `mapLoadingFailed_7281`: Failed to load map: {e}
+- `mapQueryResult_7281`: Map data query result: {result}
+- `mapScriptFailed_7285`: Map data script execution failed: {e}
+- `map_4916`: Map
+- `mapsLoadedSuccessfully`: Successfully loaded {count} maps
+- `marginLabel_4821`: Page margin:
+- `messageFormatError`: Message format error: expected Map type, actual: {runtimeType}
+- `metadata_4903`: Metadata
+- `migrationDisabledNote_7281`: Migration feature is disabled, using VFS storage directly
+- `movingFile_4995`: Moving file...
+- `movingWebDAVFile_5001`: Moving WebDAV file...
+- `native_5678`: Native
+- `navigateToFile_4957`: Navigate to File
+- `navigationFailed_4959`: Navigation failed: {error}
+- `networkError_5030`: Network error
+- `newAsyncScriptEngine_4821`: New Async Script Engine
+- `newDragged_4914`: New Dragged
+- `newFileName_4926`: New File Name
+- `newScriptSystemDemo_4271`: New Script System Demo
+- `newScriptSystemInfo_4821`: New Script System Info
+- `noData_6391`: No data
+- `noLegendInGroup_4860`: No legends in this legend group
+- `noMapData_7281`: No map data available
+- `noSearchResults_4955`: No matching files found
+- `nonStringMessageReceived_7285`: Non-string message received: {runtimeType}
+- `notZipFile_5008`: Not a ZIP file
+- `notificationClicked_7281`: Notification clicked: {message}
+- `openFileFailed_4937`: Failed to open file: {error}
+- `operationCancelled_5024`: Operation cancelled
+- `operationCompleted_5023`: Operation completed
+- `originalMessageError`: Original message processing error: {e}
+- `pageOrientation_7281`: Page orientation:
+- `paperSize_4821`: Paper size:
+- `pathInvalid_4957`: Path invalid
+- `pathNavigation_4981`: Path Navigation
+- `pdfPrintFailed_7281`: PDF printing failed: {e}
+- `pdfSaveFailed_7421`: Failed to save PDF: {e}
+- `permissionIndicator_5000`: Permission Indicator
+- `permissionsUpdated_4944`: Permissions updated
+- `pleaseWait_5022`: Please wait
+- `previewQueueProcessed_7421`: [PreviewQueueManager] Preview in queue processed: {id}, z-index: {zIndex} (based on real-time lay...
+- `processingDataTypeLog`: Processing data type: {runtimeType}
+- `queryMapLayerInfo_5739`: Query the current map's layer and element information
+- `rawMessageError_4821`: Raw message processing error: {error}
+- `readable_4940`: Readable
+- `receivedStringMessage_7421`: Received string message, attempting JSON parsing: {data}
+- `registerCoreObfuscationName`: Register core obfuscation name: {coreTypeName} -> {logicalName}
+- `registerGenericTypeName`: Register generic type name: {fullTypeName} -> {logicalName}
+- `registrationFailed_4827`: Registration type failed: {fullTypeName}/{coreTypeName} -> {logicalName}, error: {e}
+- `renameFileFailed_4929`: Failed to rename file: {error}
+- `renameFile_4925`: Rename File
+- `renameFolderFailed_7281`: Failed to rename folder: {oldPath} -> {newPath}, error: {e}
+- `rename_4927`: Rename
+- `renamingFile_4994`: Renaming file...
+- `requiredParameter_7281`: {name} is a required parameter
+- `responsiveVersionManagementExample_4821`: Responsive Version Management Example
+- `responsiveVersionSystemInitialized_7281`: Responsive version management system initialized
+- `returnValue_7421`: Return value: {result}
+- `runningScriptsTitle_4821`: Running Scripts
+- `sandboxEnvironment_5421`: Sandbox Environment + Controlled API
+- `saveConfigFailed_7281`: Failed to save configuration: {error}
+- `saveCurrentVersion_7421`: Save current version
+- `saveFailed_7285`: Save failed: {e}
+- `saveScript_4821`: Save Script
+- `saveSuccess_4821`: Saved successfully
+- `saveVersionSuccess_4821`: Current version saved successfully
+- `saveZipFile_5015`: Save ZIP File
+- `save_4943`: Save
+- `savingStatus_4821`: Saving...
+- `scriptAdded_7281`: Script added: {name}
+- `scriptComment_4821`: Intentionally calling a non-existent function
+- `scriptCompleteExecution_1265`: Script {i} execution completed
+- `scriptCount_4821`: Script count
+- `scriptExecutionFailed_7421`: Script execution failed, task ID {executionId}: {error}
+- `scriptExecutionRequestLog`: Execute script request, task ID: {executionId}
+- `scriptExecutionSuccess_7421`: Script executed successfully in {executionTime}ms, Task ID: {executionId}
+- `scriptManagerDescription_4821`: The new script manager adopts a modern asynchronous architecture, ensuring script execution won't...
+- `scriptReturnValue_4821`: Should not reach here
+- `scriptStartExecution_1642`: Script {i} started execution
+- `scriptStartLog_4821`: Start error test script
+- `scriptStatusUpdate_7281`: Script status update: {length} scripts in total
+- `scriptStep_6183`: Script {i} - Step {step}
+- `scriptSystemExampleCleaned_4821`: New script system example cleaned
+- `scriptSystemExampleStart_7281`: 🚀 Starting new script system example...
+- `scriptSystemInitialized_7281`: New script system example initialization completed
+- `scriptUnreachableLog_4821`: This line will not be executed
+- `searchFailed_4956`: Search failed: {error}
+- `searchFiles_4951`: Search Files
+- `searchMapsAndFolders_4907`: Search Maps and Folders
+- `searchResults_4954`: Search Results
+- `searchStatus_4982`: Search Status
+- `search_4953`: Search
+- `searchingIn_4983`: Searching in: {path}
+- `securitySandboxDescription_4822`: Script errors will not affect the main program
+- `securitySandboxTitle_4821`: Security Sandbox
+- `securityTitle_5421`: Security
+- `selectAll_4977`: Select All
+- `selectOrCreateScript_4821`: Select a script on the left to edit, or create a new one to get started
+- `selectTargetPath_5009`: Select Target Path
+- `selectedLayerGroup_7281`: Selected layer group: {group}
+- `selected_4906`: Selected
+- `sendCustomMessageError_4821`: Failed to send custom message: {e}
+- `sendCustomMessageWithTaskId`: Send custom message: {type} Task ID: {executionId}
+- `sendErrorMessageFailed_4827`: Failed to send error message: {e2}
+- `sendStartSignal`: Send start signal, task ID: {executionId}
+- `settings_4904`: Settings
+- `showHidden_4979`: Show Hidden Files
+- `showStatusMonitor_5421`: Show Status Monitor
+- `simulateAsyncWorkComment_2957`: Simulate some asynchronous work
+- `singleFileOperations_4990`: Single File Operations
+- `smartHide_4910`: Smart Hide
+- `snackbarMessage_4999`: Snackbar Message
+- `sortBy_4960`: Sort By
+- `sqliteStorage_2634`: Traditional SQLite database
+- `statusMessage_4821`: Status: $_statusMessage
+- `statusMessage_7284`: Status: $_statusMessage
+- `stopSignalReceived_7421`: Stop signal received, task ID: {executionId}
+- `storageMode_7421`: Storage mode: {mode}
+- `success_8423`: Success
+- `switchToDarkTheme_8532`: Switch to dark theme
+- `switchToLightTheme_7421`: Switch to light theme
+- `switchToVersion_4821`: Switch to this version
+- `switchToVersion_7281`: Switch to version: {versionId}
+- `switchingVersion_4821`: Switching version...
+- `syncDataFailed_7421`: Failed to send sync data: {error}
+- `syncInternalFunctionsLog`: Sync internal functions: {internalFunctionNames}
+- `systemInfo_4821`: System Information
+- `systemInfo_7421`: System Information
+- `systemStatus_7281`: System status: {status}
+- `systemTestFeaturePending_7281`: System test feature pending implementation
+- `systemTest_4271`: System Test
+- `tagCount_4592`: {count} tags
+- `tagCount_7421`: {count} tags
+- `targetFolderExists_7281`: Target folder already exists: {newPath}
+- `taskProcessingLog`: Processing task ID: {executionId}, message type: {messageType}
+- `textInputDialog_4998`: Text Input Dialog
+- `traditionalMode`: (Traditional Mode)
+- `transparency_4909`: Transparency
+- `typeMapping`: Type mapping: {logicalName} -> {fullTypeName}
+- `unexpectedSuccess_7281`: Unexpected: Error script executed successfully
+- `unknownError_5031`: Unknown error
+- `unknownMessageType`: Unknown message type: {type}
+- `unknownMessageTypeWithId`: Unknown message type: {type}, task ID: {executionId}
+- `unsavedChangesStatus`: Unsaved changes: {status}
+- `unsavedChanges_7421`: There are unsaved changes
+- `updateLayerLog_7421`: Update layer: {name}
+- `updatePermissionsFailed_4945`: Failed to update permissions: {error}
+- `uploadFailed_5020`: Upload failed: {error}
+- `uploadLocalizationFile`: Upload localization file
+- `uploadSuccess_5019`: Upload successful
+- `upload_4970`: Upload
+- `uploadingFile_4996`: Uploading file...
+- `userProfiles`: User Profiles
+- `versionCreatedSuccessfully`: Version created successfully: {versionId}
+- `versionCreationFailed_7421`: Failed to create new version [{versionId}]: {error}
+- `versionCreationSuccess_7281`: Version created successfully: {versionName}
+- `versionDeletedSuccessfully`: Version deleted successfully: {versionId}
+- `versionDeletionFailed`: Failed to delete version: {e}
+- `versionLoadFailed_7421`: Failed to load data for version {versionId}, creating empty version state: {e}
+- `versionManagementInitialized_4821`: Version management system initialized
+- `versionOrSessionNotFound_7421`: Version or session data not found, unable to update layer: {versionId}
+- `versionSaveFailed_4821`: Failed to save version data [{activeVersionId}]: {e}
+- `versionSaveFailed_7421`: Failed to save version data [{versionId}]: {error}
+- `versionSwitchFailed_7285`: Failed to switch version: {e}
+- `versionSwitchFailed_7421`: Version switch failed: {error}
+- `versionSwitched`: Switched to version: {versionId}
+- `versionWithNumber`: Version: {version}
+- `vfsFileManager_4901`: VFS File Manager
+- `vfsMapExampleTitle`: VFS Map Storage Example {storageMode}
+- `vfsMode`: (VFS Mode)
+- `vfsSampleMapTitle`: VFS Sample Map {timestamp}
+- `vfsStorage_1589`: VFS Virtual File System
+- `videoInfoLoadFailed_7281`: Failed to load video info: {e}
+- `viewMapWithTitle`: View map: {title}
+- `viewType_4967`: View Type
+- `webDavPasswordStored_7421`: WebDAV password has been stored in SharedPreferences (macOS): {authAccountId}
+- `webDownloadFailed_5016`: Web download failed: {error}
+- `webSocketDemoTitle_4271`: WebSocket Client Demo
+- `webWorker_8423`: Web Worker (Browser)
+- `web_1234`: Web
+- `writable_4941`: Writable
+- `zIndexLabel_1567`: Z level: {zIndex}
+- `zipExtraction_5006`: ZIP Extraction
+- `zipReadError_5012`: Failed to read ZIP file
+
+### app_zh.arb
+未使用键数: 396/4850
+
+- `addMapOrCreateFolderHint_4827`: 点击右上角菜单添加地图或创建文件夹
+- `addTag_1589`: 添加标签
+- `adjustNewIndexTo_7421`: 调整 newIndex 到: {newIndex}
+- `allExamplesCompleted_7281`: ✅ 所有示例执行完成！
+- `allScriptsCompleted_7281`: 所有并发脚本执行完成
+- `architectureFeatures_4821`: 架构特性
+- `ascending_4965`: 升序
+- `asyncExecution_4521`: 异步执行
+- `asyncInternalFunctionLog_7428`: 异步内部函数: {asyncInternalFunctionNames}
+- `asyncIsolateMessagePassing_4821`: 异步隔离执行 + 消息传递
+- `asyncMessageError_7284`: 异步消息处理错误: {error}
+- `asyncMessageError_7285`: 异步消息处理错误: {e}
+- `asyncScriptEngineTitle_7281`: 新异步脚本引擎 | 消息传递机制
+- `audioCountLabel_7281`: 音频: {audioCount}
+- `audioLoadFailed_7421`: 加载音频信息失败: {e}
+- `authMessageSent_7421`: 已发送认证消息: {clientId}
+- `autoSwitchLegendGroupDrawer_7421`: 自动切换图例组抽屉到绑定的图例组: {name}
+- `autoTypeAliasRegistrationComplete_7421`: 自动类型别名注册完成
+- `backupOnEventCalled`: 备用onEvent被调用: {message}
+- `batchOperationBar_5001`: 批量操作栏
+- `batchOperations_4991`: 批量操作
+- `breadcrumbs_4986`: 面包屑导航
+- `cancel_4922`: 取消
+- `cannotAccessEventData_4821`: 无法访问event.data: {e}
+- `characterCount_4821`: 字符数: {charCount}
+- `cleanScriptHandler_7281`: 清理脚本函数处理器: {scriptId}
+- `clearSearch_4985`: 清除搜索
+- `clientCreatedSuccessfully_7281`: 客户端创建成功: {clientId}
+- `clientInfoFetchFailed_7421`: 获取客户端信息失败: {e}
+- `closeEditor_7421`: 关闭编辑器
+- `close_4936`: 关闭
+- `compressionFailed_5014`: 压缩失败
+- `compressionSuccess_5013`: 压缩成功，文件大小: {size}
+- `concurrentExecutionFailed_7285`: 并发执行失败: {e}
+- `concurrentScriptDescription_7539`: 第{i}个并发执行的脚本
+- `concurrentScriptName_4821`: 并发脚本 {i}
+- `confirmAction_7281`: 确认操作
+- `confirmDeleteFiles_4919`: 确认删除文件
+- `confirmDeleteVersion_7281`: 确定要删除版本 "{versionName}" 吗？
+此操作无法撤销。
+- `confirmationDialog_4997`: 确认对话框
+- `contentLabel_7392`: 内容: {text}
+- `contextMenu_4989`: 右键菜单
+- `copyDataFromVersion_4821`: 从版本 {sourceVersionId} 复制数据: {dataStatus}
+- `copy_3632`: 副本
+- `copy_7421`: 副本
+- `copyingFile_4991`: 正在复制文件...
+- `copyingWebDAVFile_5002`: 正在复制WebDAV文件...
+- `createFolderFailed_4950`: 创建文件夹失败: {error}
+- `createFolderTitle_4830`: 创建文件夹
+- `createFolder_4908`: 创建文件夹
+- `createMapFailed_7421`: 创建示例地图失败: {e}
+- `createNewFolder_4946`: 创建新文件夹
+- `createNewVersionTooltip_7421`: 创建新版本
+- `createSampleMapTooltip_4521`: 创建示例地图
+- `createScriptPending_4821`: 创建新脚本功能待实现
+- `create_4948`: 创建
+- `creatingFolder_4993`: 正在创建文件夹...
+- `creatingSampleMap_4821`: 正在创建示例地图...
+- `creatingVersion_4821`: 正在创建版本...
+- `creatingWebDAVDirectory_4999`: 正在创建WebDAV目录...
+- `creationTimeLabel_4821`: 创建时间: {dateTime}
+- `crossPlatform_4821`: 跨平台
+- `currentCount_7421`: 当前数量: {count}/5
+- `currentPlatform_4821`: 当前平台: {platform}
+- `currentPlatform_7421`: 当前平台: {platform}
+- `customMessageError_4821`: 自定义消息处理错误: {e}
+- `customMessageTypeLog_7421`: 处理自定义消息类型: {type}, 任务ID: {executionId}
+- `dartIsolate_9352`: Dart Isolate (桌面)
+- `debugInfo`: 调试信息
+- `debugInfo_4271`: 调试信息
+- `debugInfo_7421`: 调试信息
+- `defaultClientConfigCreated_7421`: 创建默认客户端配置: {displayName}
+- `delayImplementationComment_8476`: 这里在实际实现中会有延迟
+- `deleteButton_7421`: 删除
+- `deleteClientConfigFailed_7421`: 删除客户端配置失败: {e}
+- `deleteConfigFailed_7421`: 删除配置失败: {error}
+- `deleteFilesWarning_4920`: 确定要删除选中的 {count} 个文件吗？此操作不可撤销。
+- `deleteFolderConfirmation_4837`: deleteFolderConfirmation_4837
+- `deleteFolderFailed_4839`: deleteFolderFailed_4839
+- `deleteFolderTitle_4836`: deleteFolderTitle_4836
+- `deleteSelectedFiles_4918`: 删除选中的文件
+- `deleteTempFile_7421`: 删除临时文件: {path}
+- `deleteTimerFailed_7281`: 删除计时器失败: {e}
+- `deleteVersionFailed_7421`: 删除版本失败: {e}
+- `deleteVersionTooltip_7281`: 删除版本
+- `delete_4921`: 删除
+- `deletingFile_4992`: 正在删除文件...
+- `deletingMap_7421`: 正在删除地图...
+- `deletingVersion_4821`: 正在删除版本...
+- `deletingWebDAVDirectory_5000`: 正在删除WebDAV目录...
+- `densityValue_7421`: 密度:{value}
+- `descending_4966`: 降序
+- `deselectAll_4978`: 取消全选
+- `diskSpaceInsufficient_5029`: 磁盘空间不足
+- `downloadFailed_5018`: 下载失败: {error}
+- `downloadSuccess_5017`: 下载成功
+- `downloadingFileProgress_7281`: 正在下载文件... {progress}%
+- `downloadingFile_4997`: 正在下载文件...
+- `drawingTools`: 绘制工具
+- `dualEngine_4821`: Web Worker + Isolate 双引擎
+- `editScriptParamsFailed_7421`: 编辑脚本参数失败: {e}
+- `enableScript_4821`: 启用脚本
+- `enterFolderName_4832`: 输入文件夹名称
+- `enterSearchTerm_4952`: 输入搜索词
+- `errorHandlingExampleFailed_7285`: 错误处理示例执行失败: {e}
+- `errorHandlingWorking_7421`: 错误处理工作正常
+- `errorStackTrace_4821`: 错误堆栈: {stackTrace}
+- `errorStackTrace_5421`: 错误堆栈: {stackTrace}
+- `errorTestScriptDesc_4821`: 故意产生错误的脚本
+- `errorTestScriptName_4821`: 错误测试脚本
+- `errorWithDetails`: 错误: {error}
+- `example2MapDataQueryScript_4821`: === 示例2：地图数据查询脚本 ===
+- `example3ConcurrentScriptExecution_7281`: === 示例3：并发脚本执行 ===
+- `example4ScriptStatusMonitoring_7281`: === 示例4：脚本状态监听 ===
+- `example5ScriptErrorHandling_7891`: === 示例5：脚本错误处理 ===
+- `exampleFailed_7285`: ❌ 示例执行失败: {e}
+- `exampleLogScriptDescription_7539`: 一个简单的日志输出脚本
+- `exampleLogScriptName_4821`: 示例日志脚本
+- `exampleLogScript_7281`: === 示例1：简单日志脚本 ===
+- `executable_4942`: 可执行
+- `executionEngine_7421`: 执行引擎
+- `executionLogsWithCount`: 执行日志 ({count} 条):
+- `executionTimeWithMs`: 执行时间: {executionTime}ms
+- `expectedError_7421`: 预期的错误: {error}
+- `exportButton_7281`: 导出
+- `exportCancelledMessage`: 导出操作被取消
+- `exportFailed_7421`: 导出失败：{error}
+- `exportMapDataFailed`: 导出地图数据失败: {e}
+- `exportNameDuplicate_4962`: exportNameDuplicate_4962
+- `exportSuccessMessage_7421`: 成功导出 {count} 张图片
+- `exportingMapData_4821`: 正在导出地图数据...
+- `externalFunctionBindingRequired`: 需要绑定的外部函数: {uniqueExternalFunctions}
+- `extractZip_5007`: 解压ZIP
+- `failedToExtractCoreType_7421`: 提取核心类型失败: {fullTypeName}
+- `failedToGetAudioFile_7281`: 无法从VFS获取音频文件
+- `failure_9356`: 失败
+- `fallbackFailed_7285`: 回退方案也失败: {e2}
+- `fetchConfigFailed_7281`: 获取配置信息失败: {e}
+- `fileAlreadyExists_5026`: 文件已存在
+- `fileBrowser_4902`: 文件浏览
+- `fileDownload_5004`: 文件下载
+- `fileGrid_4988`: 文件网格
+- `fileIcon_4994`: 文件图标
+- `fileList_4987`: 文件列表
+- `fileMetadataView_4992`: 文件元数据视图
+- `fileMetadata_4930`: 文件元数据
+- `fileNameLabel_7281`: 文件: {fileName}
+- `fileName_4931`: 文件名
+- `fileNotFound_4958`: 文件未找到
+- `fileOperationInProgress_5021`: 文件操作进行中...
+- `filePath_4935`: 文件路径
+- `filePermissions_4939`: 文件权限
+- `fileRenamed_4928`: 文件已重命名
+- `fileSelection_4993`: 文件选择
+- `fileSizeLabel_7281`: 文件大小: {size}
+- `fileSize_4932`: 文件大小
+- `fileType_4933`: 文件类型
+- `fileUploadSuccess_7421`: 文件上传成功: {localFilePath} -> {fullRemotePath}
+- `fileUpload_5002`: 文件上传
+- `file_7281`: 文件
+- `filesCompressedInfo_7281`: 已压缩下载 {totalFiles} 个文件到 {zipPath}
+压缩包大小: {fileSize}
+- `filesDeleted_4923`: 已删除 {count} 个文件
+- `filesDownloaded_7281`: 已下载 {fileCount} 个文件到 {downloadPath}
+- `folderAlreadyExists_5027`: 文件夹已存在
+- `folderCreated_4949`: 文件夹已创建
+- `folderDeletedSuccessfully_4838`: folderDeletedSuccessfully_4838
+- `folderDownload_5005`: 文件夹下载
+- `folderName_4831`: 文件夹名称
+- `folderName_4947`: 文件夹名称
+- `folderUpload_5003`: 文件夹上传
+- `folder_4917`: 文件夹
+- `formatDateTime_4996`: 格式化日期时间
+- `formatFileSize_4995`: 格式化文件大小
+- `foundFiles_4984`: 找到 {count} 个文件
+- `hideHidden_4980`: 隐藏隐藏文件
+- `hideStatusMonitor_5421`: 隐藏状态监控
+- `highPerformanceDesc_4822`: 消息传递机制，响应迅速
+- `highPerformanceTitle_4821`: 高性能
+- `imageSpacing_7281`: 图片间距: 
+- `imageUploadFailed_7281`: 图片上传失败: {errorMessage}
+- `imageUploadFailed_7421`: 上传图片失败: {e}
+- `importConfigFailed_7281`: 导入配置失败: {error}
+- `initializationFailed_7281`: 初始化失败: {e}
+- `initializationFailed_7421`: 初始化失败: {e}
+- `insufficientPermissions_5028`: 权限不足
+- `invalidFileName_5025`: 无效的文件名
+- `isolatedEnvironment_4522`: 脚本在隔离环境运行，不阻塞UI
+- `jsonParseError`: JSON解析后仍非Map类型: {type}, 内容: {content}
+- `jsonParseFailed`: JSON解析失败: {e}
+- `jsonParseFailedWithData`: JSON解析失败: {error}, 原始数据: {data}
+- `jsonParseSuccess`: JSON解析成功，数据类型: {runtimeType}
+- `lastModifiedLabel`: 最后修改: {lastModified}
+- `lastModified_4934`: 最后修改
+- `layerAndLegendGroupCount`: 图层: {layers} | 图例组: {legendGroups}
+- `legendCacheCleaned_7281`: 图例缓存: 清理了目录 "{folderPath}" 下的 {count} 个缓存项
+- `legendGroupInfo_7421`: 图例组[{index}] {groupName}: {itemCount}个图例项
+- `legendGroupName_7421`: 图例组: {name}
+- `legendItemLoadFailed_7421`: 加载图例项失败[{mapTitle}/{groupId}/{itemId}:{version}]: {itemError}
+- `legendLoadFailed_7421`: 加载图例失败: {legendFile}, 错误: {e}
+- `legendSessionManagerLoadFailed_7421`: 图例会话管理器: 加载单个图例失败 {legendPath}, 错误: {e}
+- `listingWebDAVDirectory_4998`: 正在列出WebDAV目录...
+- `loadConfigFailed_7421`: 加载配置失败: {error}
+- `loadUserPreferencesFailed_7421`: 加载用户偏好设置失败: {error}
+- `loadingMap_7421`: 正在加载地图...
+- `managePermissions_4938`: 管理权限
+- `mapCount_4851`: {count} 个地图
+- `mapCoverCompressionFailed_7421`: 地图封面压缩失败: {compressionError}，跳过发送
+- `mapCreationSuccess_7421`: 成功创建示例地图 (ID: {mapId})
+- `mapDataQueryScript_4821`: 地图数据查询脚本
+- `mapDataUpdatedWithTaskId_7421`: 地图数据更新，任务ID: {executionId}
+- `mapData_4821`: 地图数据
+- `mapDeletedSuccessfully_7281`: 成功删除地图 "{title}"
+- `mapLoadingFailed_7281`: 加载地图失败: {e}
+- `mapQueryResult_7281`: 地图数据查询结果: {result}
+- `mapScriptFailed_7285`: 地图数据脚本执行失败: {e}
+- `map_4916`: 地图
+- `mapsLoadedSuccessfully`: 成功加载 {count} 个地图
+- `marginLabel_4821`: 页边距: 
+- `messageFormatError`: 消息格式错误: 期望Map类型，实际: {runtimeType}
+- `metadata_4903`: 元数据
+- `migrationDisabledNote_7281`: 迁移功能已禁用，直接使用VFS存储
+- `movingFile_4995`: 正在移动文件...
+- `movingWebDAVFile_5001`: 正在移动WebDAV文件...
+- `native_5678`: Native
+- `navigateToFile_4957`: 导航到文件
+- `navigationFailed_4959`: 导航失败: {error}
+- `networkError_5030`: 网络错误
+- `newAsyncScriptEngine_4821`: 新异步脚本执行引擎
+- `newDragged_4914`: 新拖拽的
+- `newFileName_4926`: 新文件名
+- `newScriptSystemDemo_4271`: 新脚本系统演示
+- `newScriptSystemInfo_4821`: 新脚本系统信息
+- `noData_6391`: 无数据
+- `noLegendInGroup_4860`: 此图例组暂无图例
+- `noMapData_7281`: 暂无地图数据
+- `noSearchResults_4955`: 未找到匹配的文件
+- `nonStringMessageReceived_7285`: 收到非字符串消息: {runtimeType}
+- `notZipFile_5008`: 不是ZIP文件
+- `notificationClicked_7281`: 通知被点击: {message}
+- `openFileFailed_4937`: 打开文件失败: {error}
+- `operationCancelled_5024`: 操作已取消
+- `operationCompleted_5023`: 操作完成
+- `originalMessageError`: 原始消息处理错误: {e}
+- `pageOrientation_7281`: 页面方向: 
+- `paperSize_4821`: 纸张大小: 
+- `pathInvalid_4957`: 路径无效
+- `pathNavigation_4981`: 路径导航
+- `pdfPrintFailed_7281`: PDF打印失败: {e}
+- `pdfSaveFailed_7421`: 保存PDF失败: {e}
+- `permissionIndicator_5000`: 权限指示器
+- `permissionsUpdated_4944`: 权限已更新
+- `pleaseWait_5022`: 请稍候
+- `previewQueueProcessed_7421`: [PreviewQueueManager] 队列中的预览已处理: {id}, z值: {zIndex} (基于实时图层状态)
+- `processingDataTypeLog`: 处理数据类型: {runtimeType}
+- `queryMapLayerInfo_5739`: 查询当前地图的图层和元素信息
+- `rawMessageError_4821`: 原始消息处理错误: {error}
+- `readable_4940`: 可读
+- `receivedStringMessage_7421`: 收到字符串消息，尝试JSON解析: {data}
+- `registerCoreObfuscationName`: 注册核心混淆名: {coreTypeName} -> {logicalName}
+- `registerGenericTypeName`: 注册泛型类型名: {fullTypeName} -> {logicalName}
+- `registrationFailed_4827`: 注册类型失败: {fullTypeName}/{coreTypeName} -> {logicalName}, 错误: {e}
+- `renameFileFailed_4929`: 重命名文件失败: {error}
+- `renameFile_4925`: 重命名文件
+- `renameFolderFailed_7281`: 重命名文件夹失败: {oldPath} -> {newPath}, 错误: {e}
+- `rename_4927`: 重命名
+- `renamingFile_4994`: 正在重命名文件...
+- `requiredParameter_7281`: {name}是必填参数
+- `responsiveVersionManagementExample_4821`: 响应式版本管理示例
+- `responsiveVersionSystemInitialized_7281`: 响应式版本管理系统初始化完成
+- `returnValue_7421`: 返回值: {result}
+- `runningScriptsTitle_4821`: 运行中脚本
+- `sandboxEnvironment_5421`: 沙盒环境 + 受控API
+- `saveConfigFailed_7281`: 保存配置失败: {error}
+- `saveCurrentVersion_7421`: 保存当前版本
+- `saveFailed_7285`: 保存失败: {e}
+- `saveScript_4821`: 保存脚本
+- `saveSuccess_4821`: 保存成功
+- `saveVersionSuccess_4821`: 保存当前版本成功
+- `saveZipFile_5015`: 保存ZIP文件
+- `save_4943`: 保存
+- `savingStatus_4821`: 正在保存...
+- `scriptAdded_7281`: 脚本已添加: {name}
+- `scriptComment_4821`: 故意调用不存在的函数
+- `scriptCompleteExecution_1265`: 脚本 {i} 执行完成
+- `scriptCount_4821`: 脚本数量
+- `scriptExecutionFailed_7421`: 脚本执行失败，任务ID {executionId}: {error}
+- `scriptExecutionRequestLog`: 执行脚本请求，任务ID: {executionId}
+- `scriptExecutionSuccess_7421`: 脚本执行成功，用时 {executionTime}ms，任务ID: {executionId}
+- `scriptManagerDescription_4821`: 新的脚本管理器采用现代化的异步架构，确保脚本执行不会阻塞用户界面，同时提供更好的安全性和性能。
+- `scriptReturnValue_4821`: Should not reach here
+- `scriptStartExecution_1642`: 脚本 {i} 开始执行
+- `scriptStartLog_4821`: 开始错误测试脚本
+- `scriptStatusUpdate_7281`: 脚本状态更新: 共{length}个脚本
+- `scriptStep_6183`: 脚本 {i} - 步骤 {step}
+- `scriptSystemExampleCleaned_4821`: 新脚本系统示例已清理
+- `scriptSystemExampleStart_7281`: 🚀 开始运行新脚本系统示例...
+- `scriptSystemInitialized_7281`: 新脚本系统示例初始化完成
+- `scriptUnreachableLog_4821`: 这行不会被执行
+- `searchFailed_4956`: 搜索失败: {error}
+- `searchFiles_4951`: 搜索文件
+- `searchMapsAndFolders_4907`: 搜索地图和文件夹
+- `searchResults_4954`: 搜索结果
+- `searchStatus_4982`: 搜索状态
+- `search_4953`: 搜索
+- `searchingIn_4983`: 正在搜索: {path}
+- `securitySandboxDescription_4822`: 脚本错误不会影响主程序
+- `securitySandboxTitle_4821`: 安全沙盒
+- `securityTitle_5421`: 安全性
+- `selectAll_4977`: 全选
+- `selectOrCreateScript_4821`: 选择左侧脚本进行编辑，或创建新脚本开始使用
+- `selectTargetPath_5009`: 选择目标路径
+- `selectedLayerGroup_7281`: 选择图层组: {group}
+- `selected_4906`: 已选择
+- `sendCustomMessageError_4821`: 发送自定义消息错误: {e}
+- `sendCustomMessageWithTaskId`: 发送自定义消息: {type} 任务ID: {executionId}
+- `sendErrorMessageFailed_4827`: 发送错误消息也失败: {e2}
+- `sendStartSignal`: 发送开始信号，任务ID: {executionId}
+- `settings_4904`: 设置
+- `showHidden_4979`: 显示隐藏文件
+- `showStatusMonitor_5421`: 显示状态监控
+- `simulateAsyncWorkComment_2957`: 模拟一些异步工作
+- `singleFileOperations_4990`: 单文件操作
+- `smartHide_4910`: 智能隐藏
+- `snackbarMessage_4999`: 提示消息
+- `sortBy_4960`: 排序方式
+- `sqliteStorage_2634`: 传统SQLite数据库
+- `statusMessage_4821`: 状态: $_statusMessage
+- `statusMessage_7284`: 状态: $_statusMessage
+- `stopSignalReceived_7421`: 收到停止信号，任务ID: {executionId}
+- `storageMode_7421`: 存储模式: {mode}
+- `success_8423`: 成功
+- `switchToDarkTheme_8532`: 切换到暗色主题
+- `switchToLightTheme_7421`: 切换到亮色主题
+- `switchToVersion_4821`: 切换到此版本
+- `switchToVersion_7281`: 切换到版本: {versionId}
+- `switchingVersion_4821`: 正在切换版本...
+- `syncDataFailed_7421`: 发送同步数据失败: {error}
+- `syncInternalFunctionsLog`: 同步内部函数: {internalFunctionNames}
+- `systemInfo_4821`: 系统信息
+- `systemInfo_7421`: 系统信息
+- `systemStatus_7281`: 系统状态: {status}
+- `systemTestFeaturePending_7281`: 系统测试功能待实现
+- `systemTest_4271`: 系统测试
+- `tagCount_4592`: {count} 个标签
+- `tagCount_7421`: {count} 个标签
+- `targetFolderExists_7281`: 目标文件夹已存在: {newPath}
+- `taskProcessingLog`: 处理任务ID: {executionId}, 消息类型: {messageType}
+- `textInputDialog_4998`: 文本输入对话框
+- `traditionalMode`:  (传统模式)
+- `transparency_4909`: 透明度
+- `typeMapping`: 类型映射: {logicalName} -> {fullTypeName}
+- `unexpectedSuccess_7281`: 意外：错误脚本执行成功了
+- `unknownError_5031`: 未知错误
+- `unknownMessageType`: 未知消息类型: {type}
+- `unknownMessageTypeWithId`: 未知消息类型: {type}, 任务ID: {executionId}
+- `unsavedChangesStatus`: 未保存更改: {status}
+- `unsavedChanges_7421`: 有未保存的更改
+- `updateLayerLog_7421`: 更新图层: {name}
+- `updatePermissionsFailed_4945`: 更新权限失败: {error}
+- `uploadFailed_5020`: 上传失败: {error}
+- `uploadLocalizationFile`: 上传本地化文件
+- `uploadSuccess_5019`: 上传成功
+- `upload_4970`: 上传
+- `uploadingFile_4996`: 正在上传文件...
+- `userProfiles`: 用户配置文件
+- `versionCreatedSuccessfully`: 创建版本成功: {versionId}
+- `versionCreationFailed_7421`: 创建新版本失败 [{versionId}]: {error}
+- `versionCreationSuccess_7281`: 创建版本成功: {versionName}
+- `versionDeletedSuccessfully`: 删除版本成功: {versionId}
+- `versionDeletionFailed`: 删除版本失败: {e}
+- `versionLoadFailed_7421`: 加载版本 {versionId} 数据失败，创建空版本状态: {e}
+- `versionManagementInitialized_4821`: 版本管理系统初始化完成
+- `versionOrSessionNotFound_7421`: 版本或会话数据不存在，无法更新图层: {versionId}
+- `versionSaveFailed_4821`: 保存版本数据失败 [{activeVersionId}]: {e}
+- `versionSaveFailed_7421`: 保存版本数据失败 [{versionId}]: {error}
+- `versionSwitchFailed_7285`: 切换版本失败: {e}
+- `versionSwitchFailed_7421`: 切换版本失败: {error}
+- `versionSwitched`: 已切换到版本: {versionId}
+- `versionWithNumber`: 版本: {version}
+- `vfsFileManager_4901`: VFS 文件管理器
+- `vfsMapExampleTitle`: VFS地图存储示例{storageMode}
+- `vfsMode`:  (VFS模式)
+- `vfsSampleMapTitle`: VFS示例地图 {timestamp}
+- `vfsStorage_1589`: VFS虚拟文件系统
+- `videoInfoLoadFailed_7281`: 加载视频信息失败: {e}
+- `viewMapWithTitle`: 查看地图: {title}
+- `viewType_4967`: 视图类型
+- `webDavPasswordStored_7421`: WebDAV密码已存储到 SharedPreferences (macOS): {authAccountId}
+- `webDownloadFailed_5016`: Web下载失败: {error}
+- `webSocketDemoTitle_4271`: WebSocket 客户端演示
+- `webWorker_8423`: Web Worker (浏览器)
+- `web_1234`: Web
+- `writable_4941`: 可写
+- `zIndexLabel_1567`: Z层级: {zIndex}
+- `zipExtraction_5006`: ZIP解压
+- `zipReadError_5012`: 读取ZIP文件失败
+
+## 使用频率最低的键（前20个）
+- `layerDataParseFailed_7421`: 使用 1 次
+- `parseNoteDataFailed_7284`: 使用 1 次
+- `legendDataParseFailed_7285`: 使用 1 次
+- `vfsInitializationSuccess_7281`: 使用 1 次
+- `vfsInitFailed_7281`: 使用 1 次
+- `autoSave`: 使用 1 次
+- `defaultVersionName_7281`: 使用 1 次
+- `defaultVersionName_4721`: 使用 1 次
+- `timerCompleted_4824`: 使用 1 次
+- `timerStopped_4821`: 使用 1 次
+- `timerRunning_4822`: 使用 1 次
+- `countdownMode_4821`: 使用 1 次
+- `timerPaused_4823`: 使用 1 次
+- `stopwatchMode_7532`: 使用 1 次
+- `countdownDescription_4821`: 使用 1 次
+- `stopwatchDescription_7532`: 使用 1 次
+- `defaultUser_4821`: 使用 1 次
+- `noteTag_7890`: 使用 1 次
+- `chineseLanguage_5732`: 使用 1 次
+- `englishLanguage_4821`: 使用 1 次
+
+## 完整未使用键列表
+- addMapOrCreateFolderHint_4827
+- addTag_1589
+- adjustNewIndexTo_7421
+- allExamplesCompleted_7281
+- allScriptsCompleted_7281
+- architectureFeatures_4821
+- ascending_4965
+- asyncExecution_4521
+- asyncInternalFunctionLog_7428
+- asyncIsolateMessagePassing_4821
+- asyncMessageError_7284
+- asyncMessageError_7285
+- asyncScriptEngineTitle_7281
+- audioCountLabel_7281
+- audioLoadFailed_7421
+- authMessageSent_7421
+- autoSwitchLegendGroupDrawer_7421
+- autoTypeAliasRegistrationComplete_7421
+- backupOnEventCalled
+- batchOperationBar_5001
+- batchOperations_4991
+- breadcrumbs_4986
+- cancel_4922
+- cannotAccessEventData_4821
+- characterCount_4821
+- cleanScriptHandler_7281
+- clearSearch_4985
+- clientCreatedSuccessfully_7281
+- clientInfoFetchFailed_7421
+- closeEditor_7421
+- close_4936
+- compressionFailed_5014
+- compressionSuccess_5013
+- concurrentExecutionFailed_7285
+- concurrentScriptDescription_7539
+- concurrentScriptName_4821
+- confirmAction_7281
+- confirmDeleteFiles_4919
+- confirmDeleteVersion_7281
+- confirmationDialog_4997
+- contentLabel_7392
+- contextMenu_4989
+- copyDataFromVersion_4821
+- copy_3632
+- copy_7421
+- copyingFile_4991
+- copyingWebDAVFile_5002
+- createFolderFailed_4950
+- createFolderTitle_4830
+- createFolder_4908
+- createMapFailed_7421
+- createNewFolder_4946
+- createNewVersionTooltip_7421
+- createSampleMapTooltip_4521
+- createScriptPending_4821
+- create_4948
+- creatingFolder_4993
+- creatingSampleMap_4821
+- creatingVersion_4821
+- creatingWebDAVDirectory_4999
+- creationTimeLabel_4821
+- crossPlatform_4821
+- currentCount_7421
+- currentPlatform_4821
+- currentPlatform_7421
+- customMessageError_4821
+- customMessageTypeLog_7421
+- dartIsolate_9352
+- debugInfo
+- debugInfo_4271
+- debugInfo_7421
+- defaultClientConfigCreated_7421
+- delayImplementationComment_8476
+- deleteButton_7421
+- deleteClientConfigFailed_7421
+- deleteConfigFailed_7421
+- deleteFilesWarning_4920
+- deleteFolderConfirmation_4837
+- deleteFolderFailed_4839
+- deleteFolderTitle_4836
+- deleteSelectedFiles_4918
+- deleteTempFile_7421
+- deleteTimerFailed_7281
+- deleteVersionFailed_7421
+- deleteVersionTooltip_7281
+- delete_4921
+- deletingFile_4992
+- deletingMap_7421
+- deletingVersion_4821
+- deletingWebDAVDirectory_5000
+- densityValue_7421
+- descending_4966
+- deselectAll_4978
+- diskSpaceInsufficient_5029
+- downloadFailed_5018
+- downloadSuccess_5017
+- downloadingFileProgress_7281
+- downloadingFile_4997
+- drawingTools
+- dualEngine_4821
+- editScriptParamsFailed_7421
+- enableScript_4821
+- enterFolderName_4832
+- enterSearchTerm_4952
+- errorHandlingExampleFailed_7285
+- errorHandlingWorking_7421
+- errorStackTrace_4821
+- errorStackTrace_5421
+- errorTestScriptDesc_4821
+- errorTestScriptName_4821
+- errorWithDetails
+- example2MapDataQueryScript_4821
+- example3ConcurrentScriptExecution_7281
+- example4ScriptStatusMonitoring_7281
+- example5ScriptErrorHandling_7891
+- exampleFailed_7285
+- exampleLogScriptDescription_7539
+- exampleLogScriptName_4821
+- exampleLogScript_7281
+- executable_4942
+- executionEngine_7421
+- executionLogsWithCount
+- executionTimeWithMs
+- expectedError_7421
+- exportButton_7281
+- exportCancelledMessage
+- exportFailed_7421
+- exportMapDataFailed
+- exportNameDuplicate_4962
+- exportSuccessMessage_7421
+- exportingMapData_4821
+- externalFunctionBindingRequired
+- extractZip_5007
+- failedToExtractCoreType_7421
+- failedToGetAudioFile_7281
+- failure_9356
+- fallbackFailed_7285
+- fetchConfigFailed_7281
+- fileAlreadyExists_5026
+- fileBrowser_4902
+- fileDownload_5004
+- fileGrid_4988
+- fileIcon_4994
+- fileList_4987
+- fileMetadataView_4992
+- fileMetadata_4930
+- fileNameLabel_7281
+- fileName_4931
+- fileNotFound_4958
+- fileOperationInProgress_5021
+- filePath_4935
+- filePermissions_4939
+- fileRenamed_4928
+- fileSelection_4993
+- fileSizeLabel_7281
+- fileSize_4932
+- fileType_4933
+- fileUploadSuccess_7421
+- fileUpload_5002
+- file_7281
+- filesCompressedInfo_7281
+- filesDeleted_4923
+- filesDownloaded_7281
+- folderAlreadyExists_5027
+- folderCreated_4949
+- folderDeletedSuccessfully_4838
+- folderDownload_5005
+- folderName_4831
+- folderName_4947
+- folderUpload_5003
+- folder_4917
+- formatDateTime_4996
+- formatFileSize_4995
+- foundFiles_4984
+- hideHidden_4980
+- hideStatusMonitor_5421
+- highPerformanceDesc_4822
+- highPerformanceTitle_4821
+- imageSpacing_7281
+- imageUploadFailed_7281
+- imageUploadFailed_7421
+- importConfigFailed_7281
+- initializationFailed_7281
+- initializationFailed_7421
+- insufficientPermissions_5028
+- invalidFileName_5025
+- isolatedEnvironment_4522
+- jsonParseError
+- jsonParseFailed
+- jsonParseFailedWithData
+- jsonParseSuccess
+- lastModifiedLabel
+- lastModified_4934
+- layerAndLegendGroupCount
+- legendCacheCleaned_7281
+- legendGroupInfo_7421
+- legendGroupName_7421
+- legendItemLoadFailed_7421
+- legendLoadFailed_7421
+- legendSessionManagerLoadFailed_7421
+- listingWebDAVDirectory_4998
+- loadConfigFailed_7421
+- loadUserPreferencesFailed_7421
+- loadingMap_7421
+- managePermissions_4938
+- mapCount_4851
+- mapCoverCompressionFailed_7421
+- mapCreationSuccess_7421
+- mapDataQueryScript_4821
+- mapDataUpdatedWithTaskId_7421
+- mapData_4821
+- mapDeletedSuccessfully_7281
+- mapLoadingFailed_7281
+- mapQueryResult_7281
+- mapScriptFailed_7285
+- map_4916
+- mapsLoadedSuccessfully
+- marginLabel_4821
+- messageFormatError
+- metadata_4903
+- migrationDisabledNote_7281
+- movingFile_4995
+- movingWebDAVFile_5001
+- native_5678
+- navigateToFile_4957
+- navigationFailed_4959
+- networkError_5030
+- newAsyncScriptEngine_4821
+- newDragged_4914
+- newFileName_4926
+- newScriptSystemDemo_4271
+- newScriptSystemInfo_4821
+- noData_6391
+- noLegendInGroup_4860
+- noMapData_7281
+- noSearchResults_4955
+- nonStringMessageReceived_7285
+- notZipFile_5008
+- notificationClicked_7281
+- openFileFailed_4937
+- operationCancelled_5024
+- operationCompleted_5023
+- originalMessageError
+- pageOrientation_7281
+- paperSize_4821
+- pathInvalid_4957
+- pathNavigation_4981
+- pdfPrintFailed_7281
+- pdfSaveFailed_7421
+- permissionIndicator_5000
+- permissionsUpdated_4944
+- pleaseWait_5022
+- previewQueueProcessed_7421
+- processingDataTypeLog
+- queryMapLayerInfo_5739
+- rawMessageError_4821
+- readable_4940
+- receivedStringMessage_7421
+- registerCoreObfuscationName
+- registerGenericTypeName
+- registrationFailed_4827
+- renameFileFailed_4929
+- renameFile_4925
+- renameFolderFailed_7281
+- rename_4927
+- renamingFile_4994
+- requiredParameter_7281
+- responsiveVersionManagementExample_4821
+- responsiveVersionSystemInitialized_7281
+- returnValue_7421
+- runningScriptsTitle_4821
+- sandboxEnvironment_5421
+- saveConfigFailed_7281
+- saveCurrentVersion_7421
+- saveFailed_7285
+- saveScript_4821
+- saveSuccess_4821
+- saveVersionSuccess_4821
+- saveZipFile_5015
+- save_4943
+- savingStatus_4821
+- scriptAdded_7281
+- scriptComment_4821
+- scriptCompleteExecution_1265
+- scriptCount_4821
+- scriptExecutionFailed_7421
+- scriptExecutionRequestLog
+- scriptExecutionSuccess_7421
+- scriptManagerDescription_4821
+- scriptReturnValue_4821
+- scriptStartExecution_1642
+- scriptStartLog_4821
+- scriptStatusUpdate_7281
+- scriptStep_6183
+- scriptSystemExampleCleaned_4821
+- scriptSystemExampleStart_7281
+- scriptSystemInitialized_7281
+- scriptUnreachableLog_4821
+- searchFailed_4956
+- searchFiles_4951
+- searchMapsAndFolders_4907
+- searchResults_4954
+- searchStatus_4982
+- search_4953
+- searchingIn_4983
+- securitySandboxDescription_4822
+- securitySandboxTitle_4821
+- securityTitle_5421
+- selectAll_4977
+- selectOrCreateScript_4821
+- selectTargetPath_5009
+- selectedLayerGroup_7281
+- selected_4906
+- sendCustomMessageError_4821
+- sendCustomMessageWithTaskId
+- sendErrorMessageFailed_4827
+- sendStartSignal
+- settings_4904
+- showHidden_4979
+- showStatusMonitor_5421
+- simulateAsyncWorkComment_2957
+- singleFileOperations_4990
+- smartHide_4910
+- snackbarMessage_4999
+- sortBy_4960
+- sqliteStorage_2634
+- statusMessage_4821
+- statusMessage_7284
+- stopSignalReceived_7421
+- storageMode_7421
+- success_8423
+- switchToDarkTheme_8532
+- switchToLightTheme_7421
+- switchToVersion_4821
+- switchToVersion_7281
+- switchingVersion_4821
+- syncDataFailed_7421
+- syncInternalFunctionsLog
+- systemInfo_4821
+- systemInfo_7421
+- systemStatus_7281
+- systemTestFeaturePending_7281
+- systemTest_4271
+- tagCount_4592
+- tagCount_7421
+- targetFolderExists_7281
+- taskProcessingLog
+- textInputDialog_4998
+- traditionalMode
+- transparency_4909
+- typeMapping
+- unexpectedSuccess_7281
+- unknownError_5031
+- unknownMessageType
+- unknownMessageTypeWithId
+- unsavedChangesStatus
+- unsavedChanges_7421
+- updateLayerLog_7421
+- updatePermissionsFailed_4945
+- uploadFailed_5020
+- uploadLocalizationFile
+- uploadSuccess_5019
+- upload_4970
+- uploadingFile_4996
+- userProfiles
+- versionCreatedSuccessfully
+- versionCreationFailed_7421
+- versionCreationSuccess_7281
+- versionDeletedSuccessfully
+- versionDeletionFailed
+- versionLoadFailed_7421
+- versionManagementInitialized_4821
+- versionOrSessionNotFound_7421
+- versionSaveFailed_4821
+- versionSaveFailed_7421
+- versionSwitchFailed_7285
+- versionSwitchFailed_7421
+- versionSwitched
+- versionWithNumber
+- vfsFileManager_4901
+- vfsMapExampleTitle
+- vfsMode
+- vfsSampleMapTitle
+- vfsStorage_1589
+- videoInfoLoadFailed_7281
+- viewMapWithTitle
+- viewType_4967
+- webDavPasswordStored_7421
+- webDownloadFailed_5016
+- webSocketDemoTitle_4271
+- webWorker_8423
+- web_1234
+- writable_4941
+- zIndexLabel_1567
+- zipExtraction_5006
+- zipReadError_5012

@@ -1,5 +1,5 @@
 // This file has been processed by AI for internationalization
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 /*
 🎯 R6BOX 智能动态显示系统控制指南 - 解决图标闪烁问题

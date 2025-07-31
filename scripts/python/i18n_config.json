@@ -9,7 +9,7 @@
     "presence_penalty": 0.0
   },
   "processing_settings": {
-    "max_concurrent": 3,
+    "max_concurrent": 100,
     "retry_attempts": 3,
     "retry_delay": 2.0,
     "timeout": 120,

@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 用户活动状态枚举

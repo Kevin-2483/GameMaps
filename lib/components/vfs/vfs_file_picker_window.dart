@@ -21,7 +21,7 @@ import 'vfs_permission_dialog.dart';
 import '../common/floating_window.dart';
 import '../../services/vfs/vfs_file_opener_service.dart';
 import '../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 文件选择回调类型定义
@@ -1322,7 +1322,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     final isSelectionMode = widget.onFilesSelected != null;
 
     return FloatingWindow(
-      title: isSelectionMode ? '选择文件' : 'VFS 文件管理器',
+      title: isSelectionMode
+          ? LocalizationService.instance.current.selectFiles_4821
+          : LocalizationService.instance.current.vfsFileManager_4821,
       subtitle: _buildSubtitle(),
       icon: Icons.folder_special,
       onClose: widget.onClose,
@@ -1371,7 +1373,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           onPressed: () {
             widget.onClose?.call();
           },
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel),
         ),
         const SizedBox(width: 8),
         ElevatedButton(
@@ -1380,7 +1382,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                   widget.onFilesSelected?.call(_selectedFiles.toList());
                 }
               : null,
-          child: const Text('确认'),
+          child: Text(LocalizationService.instance.current.confirmButton_4821),
         ),
       ];
     } else {
@@ -1388,7 +1390,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
         IconButton(
           onPressed: widget.onClose,
           icon: const Icon(Icons.close),
-          tooltip: '关闭',
+          tooltip: LocalizationService.instance.current.close,
         ),
       ];
     }
@@ -1479,7 +1481,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                             }
                           : null,
                       icon: const Icon(Icons.arrow_back),
-                      tooltip: '后退',
+                      tooltip: LocalizationService.instance.current.back_4821,
                     ),
                     IconButton(
                       onPressed: _historyIndex < _pathHistory.length - 1
@@ -1491,12 +1493,16 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                             }
                           : null,
                       icon: const Icon(Icons.arrow_forward),
-                      tooltip: '前进',
+                      tooltip:
+                          LocalizationService.instance.current.forward_4821,
                     ),
                     IconButton(
                       onPressed: () => _navigateToPath(''),
                       icon: const Icon(Icons.home),
-                      tooltip: '根目录',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .rootDirectory_4821,
                     ),
                   ],
                 ),
@@ -1525,7 +1531,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                           _copyFiles(selectedFileInfos);
                         },
                         icon: const Icon(Icons.copy),
-                        tooltip: '复制选中项',
+                        tooltip: LocalizationService
+                            .instance
+                            .current
+                            .copySelected_4821,
                       ),
                       IconButton(
                         onPressed: () {
@@ -1537,7 +1546,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                           _cutFiles(selectedFileInfos);
                         },
                         icon: const Icon(Icons.cut),
-                        tooltip: '剪切选中项',
+                        tooltip: LocalizationService
+                            .instance
+                            .current
+                            .cutSelected_4821,
                       ),
                       IconButton(
                         onPressed: () {
@@ -1549,7 +1561,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                           _deleteFiles(selectedFileInfos);
                         },
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        tooltip: '删除选中项',
+                        tooltip: LocalizationService
+                            .instance
+                            .current
+                            .deleteSelected_4821,
                       ),
                       IconButton(
                         onPressed: () {
@@ -1558,33 +1573,41 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                           });
                         },
                         icon: const Icon(Icons.clear),
-                        tooltip: '清除选择',
+                        tooltip:
+                            LocalizationService.instance.current.clear_4821,
                       ),
                       const SizedBox(width: 16),
                     ],
                     IconButton(
                       onPressed: _createNewFolder,
                       icon: const Icon(Icons.create_new_folder),
-                      tooltip: '新建文件夹',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .createFolder_4821,
                     ),
                     IconButton(
                       onPressed: () => _navigateToPath(_currentPath),
                       icon: const Icon(Icons.refresh),
-                      tooltip: '刷新',
+                      tooltip:
+                          LocalizationService.instance.current.refresh_4976,
                     ),
                     IconButton(
                       onPressed: _showCurrentPathPermissions,
                       icon: const Icon(Icons.security),
-                      tooltip: '查看文件夹权限',
+                      tooltip: LocalizationService
+                          .instance
+                          .current
+                          .viewFolderPermissions_4821,
                     ),
                     IconButton(
                       onPressed: _showSearchDialog,
                       icon: const Icon(Icons.search),
-                      tooltip: '搜索',
+                      tooltip: LocalizationService.instance.current.search_4821,
                     ),
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.sort),
-                      tooltip: '排序',
+                      tooltip: LocalizationService.instance.current.sort_4821,
                       onSelected: (value) {
                         setState(() {
                           if (value == _sortType.name) {
@@ -1671,7 +1694,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                             ? Icons.view_list
                             : Icons.grid_view,
                       ),
-                      tooltip: '视图',
+                      tooltip: LocalizationService.instance.current.view_4821,
                       onSelected: (value) {
                         setState(() {
                           _viewType = value;
@@ -1705,32 +1728,43 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                       IconButton(
                         onPressed: _pasteFiles,
                         icon: const Icon(Icons.paste),
-                        tooltip: '粘贴',
+                        tooltip:
+                            LocalizationService.instance.current.paste_4821,
                       ),
                     ],
 
                     // 上传按钮（支持文件和文件夹）
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.upload),
-                      tooltip: '上传',
+                      tooltip: LocalizationService.instance.current.upload_4821,
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'files',
                           child: Row(
                             children: [
                               Icon(Icons.upload_file),
                               SizedBox(width: 8),
-                              Text('上传文件'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .uploadFiles_4821,
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'folder',
                           child: Row(
                             children: [
                               Icon(Icons.drive_folder_upload),
                               SizedBox(width: 8),
-                              Text('上传文件夹'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .uploadFolder_4821,
+                              ),
                             ],
                           ),
                         ),
@@ -1739,46 +1773,67 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                     ), // 下载按钮（支持文件和文件夹）
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.download),
-                      tooltip: '下载',
+                      tooltip:
+                          LocalizationService.instance.current.download_4821,
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'selected',
                           child: Row(
                             children: [
                               Icon(Icons.download),
                               SizedBox(width: 8),
-                              Text('下载选中项'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .downloadSelected_4821,
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'selected_zip',
                           child: Row(
                             children: [
                               Icon(Icons.archive),
                               SizedBox(width: 8),
-                              Text('下载选中项（压缩）'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .downloadSelectedCompressed_4821,
+                              ),
                             ],
                           ),
                         ),
                         const PopupMenuDivider(),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'all',
                           child: Row(
                             children: [
                               Icon(Icons.download_for_offline),
                               SizedBox(width: 8),
-                              Text('下载当前目录'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .downloadCurrentDirectory_4821,
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'all_zip',
                           child: Row(
                             children: [
                               Icon(Icons.folder_zip),
                               SizedBox(width: 8),
-                              Text('下载当前目录（压缩）'),
+                              Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .downloadCurrentDirectoryCompressed_4821,
+                              ),
                             ],
                           ),
                         ),
@@ -1796,10 +1851,19 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                 controller: _tabController,
                 isScrollable: true,
                 labelColor: Theme.of(context).colorScheme.primary,
-                tabs: const [
-                  Tab(icon: Icon(Icons.folder), text: '文件浏览'),
-                  Tab(icon: Icon(Icons.info), text: '元数据'),
-                  Tab(icon: Icon(Icons.settings), text: '设置'),
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.folder),
+                    text: LocalizationService.instance.current.fileBrowser_4821,
+                  ),
+                  Tab(
+                    icon: Icon(Icons.info),
+                    text: LocalizationService.instance.current.metadata_4821,
+                  ),
+                  Tab(
+                    icon: Icon(Icons.settings),
+                    text: LocalizationService.instance.current.settings_4821,
+                  ),
                 ],
               ),
             ],
@@ -1826,7 +1890,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _initializeFileManager,
-              child: const Text('重试'),
+              child: Text(LocalizationService.instance.current.retry_4821),
             ),
           ],
         ),
@@ -1857,7 +1921,15 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _isSearchMode ? '未找到匹配的文件' : '此文件夹为空',
+                          _isSearchMode
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .noMatchingFiles_4821
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .folderEmpty_4821,
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 16,
@@ -1865,7 +1937,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '使用工具栏按钮创建文件夹',
+                          LocalizationService
+                              .instance
+                              .current
+                              .useToolbarToCreateFolder_4821,
                           style: TextStyle(
                             color: Colors.grey.shade400,
                             fontSize: 12,
@@ -1907,7 +1982,10 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
             ),
             const SizedBox(width: 6),
             Text(
-              '请选择数据库和集合',
+              LocalizationService
+                  .instance
+                  .current
+                  .pleaseSelectDatabaseAndCollection_4821,
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(
@@ -1977,7 +2055,9 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              '搜索结果: "$_searchQuery"',
+              LocalizationService.instance.current.searchResults_4821(
+                _searchQuery,
+              ),
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onTertiaryContainer,
@@ -1998,7 +2078,7 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             ),
             child: Text(
-              '清除',
+              LocalizationService.instance.current.clear_4821,
               style: TextStyle(
                 fontSize: 11,
                 color: Theme.of(context).colorScheme.tertiary,
@@ -2015,7 +2095,11 @@ class _VfsFileManagerWindowState extends State<VfsFileManagerWindow>
     final parts = <Map<String, String>>[];
 
     // 添加根路径
-    parts.add({'name': '🏠 根目录', 'path': '', 'isLast': 'false'});
+    parts.add({
+      'name': '🏠 ${LocalizationService.instance.current.rootDirectory_4821}',
+      'path': '',
+      'isLast': 'false',
+    });
 
     // 如果有选择的数据库，添加数据库路径
     if (_selectedDatabase != null) {

@@ -578,7 +578,10 @@ class _ExternalResourcesPageContentState
                       child: Center(
                         child: IconButton(
                           icon: const Icon(Icons.folder_open),
-                          tooltip: '选择目标文件夹',
+                          tooltip: LocalizationService
+                              .instance
+                              .current
+                              .selectTargetFolder_4916,
                           style: IconButton.styleFrom(
                             backgroundColor: Theme.of(context)
                                 .colorScheme
@@ -619,7 +622,11 @@ class _ExternalResourcesPageContentState
       try {
         await _cleanupTempFiles(_tempPath);
       } catch (e) {
-        debugPrint('清理临时文件失败：$e');
+        debugPrint(
+          LocalizationService.instance.current.cleanupTempFilesFailed_4917(
+            e.toString(),
+          ),
+        );
       }
     }
 
@@ -642,7 +649,11 @@ class _ExternalResourcesPageContentState
         .where((mapping) => !mapping.isValidPath)
         .toList();
     if (invalidMappings.isNotEmpty) {
-      _showErrorSnackBar('存在无效路径，请修正后再试。无效路径数量：${invalidMappings.length}');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.invalidPathsFound_4918(
+          invalidMappings.length.toString(),
+        ),
+      );
       return;
     }
 
@@ -658,19 +669,27 @@ class _ExternalResourcesPageContentState
       });
 
       // 更新工作状态描述
-      workStatusService.updateWorkDescription('正在验证文件路径...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.validatingFilePaths_4919,
+      );
 
       // 再次检查路径合法性（防止用户手动修改后未更新isValidPath）
       for (final mapping in _fileMappings) {
         final isValid = _isValidTargetPath(mapping.targetPath);
         mapping.isValidPath = isValid;
         if (!isValid) {
-          throw Exception('目标路径不合法：${mapping.targetPath}');
+          throw Exception(
+            LocalizationService.instance.current.invalidTargetPath_4920(
+              mapping.targetPath,
+            ),
+          );
         }
       }
 
       // 更新工作状态描述
-      workStatusService.updateWorkDescription('正在检查文件冲突...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.checkingFileConflicts_4921,
+      );
 
       // 检查文件冲突
       final conflicts = await _checkFileConflicts();
@@ -688,14 +707,20 @@ class _ExternalResourcesPageContentState
       final totalFiles = _fileMappings.length;
       int processedFiles = 0;
       workStatusService.updateWorkDescription(
-        '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
+        LocalizationService.instance.current.copyingFiles_4922(
+          processedFiles.toString(),
+          totalFiles.toString(),
+        ),
       );
 
       // 处理文件映射
       for (final mapping in _fileMappings) {
         processedFiles++;
         workStatusService.updateWorkDescription(
-          '正在复制文件到目标位置... ($processedFiles/$totalFiles)',
+          LocalizationService.instance.current.copyingFiles_4922(
+            processedFiles.toString(),
+            totalFiles.toString(),
+          ),
         );
         // 确保目标目录存在
         final targetDir = mapping.targetPath.substring(
@@ -732,7 +757,9 @@ class _ExternalResourcesPageContentState
       }
 
       // 更新工作状态描述
-      workStatusService.updateWorkDescription('正在清理临时文件...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.cleaningTempFiles_4923,
+      );
 
       // 清理临时文件
       await _cleanupTempFiles(_tempPath);
@@ -745,7 +772,12 @@ class _ExternalResourcesPageContentState
         _webdavWorkStatusService = null;
       }
 
-      _showSuccessSnackBar('外部资源更新成功');
+      _showSuccessSnackBar(
+        LocalizationService
+            .instance
+            .current
+            .externalResourcesUpdateSuccess_4924,
+      );
       _cancelPreview();
     } catch (e) {
       // 发生错误时清理工作状态
@@ -756,7 +788,9 @@ class _ExternalResourcesPageContentState
         _webdavWorkStatusService = null;
       }
 
-      _showErrorSnackBar('更新失败：$e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.updateFailed_4925(e.toString()),
+      );
     } finally {
       setState(() {
         _isUploading = false;
@@ -785,14 +819,21 @@ class _ExternalResourcesPageContentState
           context: context,
           builder: (context) => StatefulBuilder(
             builder: (context, setState) => AlertDialog(
-              title: const Text('文件冲突'),
+              title: Text(
+                LocalizationService.instance.current.fileConflict_4926,
+              ),
               content: SizedBox(
                 width: 500,
                 height: 300,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('以下文件已存在，是否覆盖？'),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .filesExistOverwrite_4927,
+                    ),
                     const SizedBox(height: 16),
                     Expanded(
                       child: SingleChildScrollView(
@@ -824,7 +865,7 @@ class _ExternalResourcesPageContentState
                   onPressed: isProcessing
                       ? null
                       : () => Navigator.of(context).pop(false),
-                  child: const Text('取消'),
+                  child: Text(LocalizationService.instance.current.cancel_4928),
                 ),
                 ElevatedButton(
                   onPressed: isProcessing
@@ -846,7 +887,9 @@ class _ExternalResourcesPageContentState
                             ),
                           ),
                         )
-                      : const Text('覆盖'),
+                      : Text(
+                          LocalizationService.instance.current.overwrite_4929,
+                        ),
                 ),
               ],
             ),
@@ -859,7 +902,8 @@ class _ExternalResourcesPageContentState
     try {
       final result = await VfsFileManagerWindow.showPathPicker(
         context,
-        title: '选择目标文件夹',
+        title:
+            LocalizationService.instance.current.selectTargetFolderTitle_4930,
         initialDatabase: 'r6box',
         initialCollection: 'fs',
         initialPath: '',
@@ -880,7 +924,11 @@ class _ExternalResourcesPageContentState
         });
       }
     } catch (e) {
-      _showErrorSnackBar('选择路径失败：$e');
+      _showErrorSnackBar(
+        LocalizationService.instance.current.selectPathFailed_4931(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -913,7 +961,7 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '元数据信息',
+                  LocalizationService.instance.current.metadataInfo_4932,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -932,9 +980,15 @@ class _ExternalResourcesPageContentState
                     Expanded(
                       child: TextField(
                         controller: _exportNameController,
-                        decoration: const InputDecoration(
-                          labelText: '资源包名称 *',
-                          hintText: '输入资源包名称',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .resourcePackName_4933,
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .enterResourcePackName_4934,
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -943,9 +997,13 @@ class _ExternalResourcesPageContentState
                     Expanded(
                       child: TextField(
                         controller: _exportVersionController,
-                        decoration: const InputDecoration(
-                          labelText: '版本 *',
-                          hintText: '如: 1.0.0',
+                        decoration: InputDecoration(
+                          labelText:
+                              LocalizationService.instance.current.version_4935,
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .versionHint_4936,
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -958,9 +1016,13 @@ class _ExternalResourcesPageContentState
                     Expanded(
                       child: TextField(
                         controller: _exportAuthorController,
-                        decoration: const InputDecoration(
-                          labelText: '作者',
-                          hintText: '输入作者名称',
+                        decoration: InputDecoration(
+                          labelText:
+                              LocalizationService.instance.current.author_4937,
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .enterAuthorName_4938,
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -970,9 +1032,15 @@ class _ExternalResourcesPageContentState
                       child: TextField(
                         controller: _exportLicenseController,
                         maxLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: '使用要求',
-                          hintText: '如：不允许私自转发、仅供学习使用、需注明出处等',
+                        decoration: InputDecoration(
+                          labelText: LocalizationService
+                              .instance
+                              .current
+                              .usageRequirements_4939,
+                          hintText: LocalizationService
+                              .instance
+                              .current
+                              .usageRequirementsHint_4940,
                           border: OutlineInputBorder(),
                           alignLabelWithHint: true,
                         ),
@@ -985,9 +1053,13 @@ class _ExternalResourcesPageContentState
                 TextField(
                   controller: _exportDescriptionController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: '描述',
-                    hintText: '输入资源包的详细描述',
+                  decoration: InputDecoration(
+                    labelText:
+                        LocalizationService.instance.current.description_4941,
+                    hintText: LocalizationService
+                        .instance
+                        .current
+                        .descriptionHint_4942,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -997,7 +1069,7 @@ class _ExternalResourcesPageContentState
                   const Divider(),
                   const SizedBox(height: 8),
                   Text(
-                    '自定义字段',
+                    LocalizationService.instance.current.customFields_4943,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -1014,9 +1086,15 @@ class _ExternalResourcesPageContentState
                             flex: 2,
                             child: TextField(
                               controller: field.key,
-                              decoration: const InputDecoration(
-                                labelText: '字段名',
-                                hintText: '输入字段名',
+                              decoration: InputDecoration(
+                                labelText: LocalizationService
+                                    .instance
+                                    .current
+                                    .fieldName_4944,
+                                hintText: LocalizationService
+                                    .instance
+                                    .current
+                                    .enterFieldName_4945,
                                 border: OutlineInputBorder(),
                               ),
                             ),
@@ -1026,9 +1104,15 @@ class _ExternalResourcesPageContentState
                             flex: 3,
                             child: TextField(
                               controller: field.value,
-                              decoration: const InputDecoration(
-                                labelText: '字段值',
-                                hintText: '输入字段值',
+                              decoration: InputDecoration(
+                                labelText: LocalizationService
+                                    .instance
+                                    .current
+                                    .fieldValue_4946,
+                                hintText: LocalizationService
+                                    .instance
+                                    .current
+                                    .enterFieldValue_4947,
                                 border: OutlineInputBorder(),
                               ),
                             ),
@@ -1037,7 +1121,10 @@ class _ExternalResourcesPageContentState
                           IconButton(
                             onPressed: () => _removeCustomField(index),
                             icon: const Icon(Icons.delete_outline),
-                            tooltip: '删除字段',
+                            tooltip: LocalizationService
+                                .instance
+                                .current
+                                .deleteField_4948,
                             color: Theme.of(context).colorScheme.error,
                           ),
                         ],
@@ -1051,7 +1138,12 @@ class _ExternalResourcesPageContentState
                     TextButton.icon(
                       onPressed: _addCustomField,
                       icon: const Icon(Icons.add),
-                      label: const Text('添加自定义字段'),
+                      label: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .addCustomField_4949,
+                      ),
                     ),
                   ],
                 ),
@@ -1089,7 +1181,7 @@ class _ExternalResourcesPageContentState
               ),
               const SizedBox(width: 8),
               Text(
-                '资源包信息',
+                LocalizationService.instance.current.resourcePackInfo_4950,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.primary,
@@ -1106,25 +1198,25 @@ class _ExternalResourcesPageContentState
               if (_importMetadata!['name'] != null)
                 _buildMetadataChip(
                   context,
-                  '名称',
+                  LocalizationService.instance.current.name_4951,
                   _importMetadata!['name'].toString(),
                 ),
               if (_importMetadata!['version'] != null)
                 _buildMetadataChip(
                   context,
-                  '版本',
+                  LocalizationService.instance.current.version_4935,
                   _importMetadata!['version'].toString(),
                 ),
               if (_importMetadata!['author'] != null)
                 _buildMetadataChip(
                   context,
-                  '作者',
+                  LocalizationService.instance.current.author_4937,
                   _importMetadata!['author'].toString(),
                 ),
               if (_importMetadata!['license'] != null)
                 _buildMetadataChip(
                   context,
-                  '使用要求',
+                  LocalizationService.instance.current.usageRequirements_4939,
                   _importMetadata!['license'].toString(),
                 ),
             ],
@@ -1148,7 +1240,7 @@ class _ExternalResourcesPageContentState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '描述',
+                    LocalizationService.instance.current.description_4941,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w500,
                       color: Theme.of(context).colorScheme.primary,
@@ -1241,7 +1333,10 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '导出外部资源',
+                  LocalizationService
+                      .instance
+                      .current
+                      .exportExternalResources_4952,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1250,7 +1345,7 @@ class _ExternalResourcesPageContentState
             ),
             const SizedBox(height: 16),
             Text(
-              '选择要导出的文件或文件夹，并为它们指定导出名称。系统将创建一个包含所选资源和元数据的ZIP文件。',
+              LocalizationService.instance.current.exportDescription_4953,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(
                   context,
@@ -1293,7 +1388,10 @@ class _ExternalResourcesPageContentState
                           Expanded(
                             flex: 3,
                             child: Text(
-                              '源路径',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .sourcePath_4954,
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
@@ -1301,7 +1399,10 @@ class _ExternalResourcesPageContentState
                           Expanded(
                             flex: 2,
                             child: Text(
-                              '导出名称',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .exportName_4955,
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
@@ -1334,7 +1435,10 @@ class _ExternalResourcesPageContentState
                                   Expanded(
                                     child: TextField(
                                       decoration: InputDecoration(
-                                        hintText: '选择源文件或文件夹',
+                                        hintText: LocalizationService
+                                            .instance
+                                            .current
+                                            .selectSourceFileOrFolder_4956,
                                         border: OutlineInputBorder(
                                           borderSide: BorderSide(
                                             color:
@@ -1386,11 +1490,17 @@ class _ExternalResourcesPageContentState
                                         errorText:
                                             !mapping.isValidPath &&
                                                 mapping.sourcePath.isNotEmpty
-                                            ? '路径无效'
+                                            ? LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .invalidPath_4957
                                             : !_isValidSourcePathField(
                                                 mapping.sourcePath,
                                               )
-                                            ? '请选择源路径'
+                                            ? LocalizationService
+                                                  .instance
+                                                  .current
+                                                  .pleaseSelectSourcePath_4958
                                             : null,
                                       ),
                                       controller: TextEditingController(
@@ -1405,7 +1515,10 @@ class _ExternalResourcesPageContentState
                                   IconButton(
                                     onPressed: () => _selectSourcePath(index),
                                     icon: const Icon(Icons.folder_open),
-                                    tooltip: '选择路径',
+                                    tooltip: LocalizationService
+                                        .instance
+                                        .current
+                                        .selectPath_4959,
                                   ),
                                 ],
                               ),
@@ -1416,7 +1529,10 @@ class _ExternalResourcesPageContentState
                               flex: 2,
                               child: TextField(
                                 decoration: InputDecoration(
-                                  hintText: '输入导出名称',
+                                  hintText: LocalizationService
+                                      .instance
+                                      .current
+                                      .enterExportName_4960,
                                   border: OutlineInputBorder(
                                     borderSide: BorderSide(
                                       color:
@@ -1462,12 +1578,18 @@ class _ExternalResourcesPageContentState
                                     vertical: 8,
                                   ),
                                   errorText: mapping.exportName.trim().isEmpty
-                                      ? '请输入导出名称'
+                                      ? LocalizationService
+                                            .instance
+                                            .current
+                                            .pleaseEnterExportName_4961
                                       : !_isValidExportName(
                                           index,
                                           mapping.exportName,
                                         )
-                                      ? '导出名称重复'
+                                      ? LocalizationService
+                                            .instance
+                                            .current
+                                            .duplicateExportName_4962
                                       : null,
                                 ),
                                 controller: TextEditingController(
@@ -1482,7 +1604,10 @@ class _ExternalResourcesPageContentState
                             IconButton(
                               onPressed: () => _removeExportMapping(index),
                               icon: const Icon(Icons.delete_outline),
-                              tooltip: '删除',
+                              tooltip: LocalizationService
+                                  .instance
+                                  .current
+                                  .delete_4963,
                               color: Theme.of(context).colorScheme.error,
                             ),
                           ],
@@ -1501,7 +1626,9 @@ class _ExternalResourcesPageContentState
                 OutlinedButton.icon(
                   onPressed: _addExportMapping,
                   icon: const Icon(Icons.add),
-                  label: const Text('添加导出项'),
+                  label: Text(
+                    LocalizationService.instance.current.addExportItem_4964,
+                  ),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1531,7 +1658,14 @@ class _ExternalResourcesPageContentState
                             ),
                           )
                         : const Icon(Icons.download),
-                    label: Text(_isExporting ? '导出中...' : '下载导出文件'),
+                    label: Text(
+                      _isExporting
+                          ? LocalizationService.instance.current.exporting_4965
+                          : LocalizationService
+                                .instance
+                                .current
+                                .downloadExportFile_4966,
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       foregroundColor: Theme.of(
@@ -1567,7 +1701,17 @@ class _ExternalResourcesPageContentState
                                 ),
                               )
                             : const Icon(Icons.folder),
-                        label: Text(_isExporting ? '导出中...' : '导出到文件夹'),
+                        label: Text(
+                          _isExporting
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .exporting_4965
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .exportToFolder_4967,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(
                             context,
@@ -1602,7 +1746,17 @@ class _ExternalResourcesPageContentState
                                 ),
                               )
                             : const Icon(Icons.cloud_upload),
-                        label: Text(_isExporting ? '上传中...' : '上传到WebDAV'),
+                        label: Text(
+                          _isExporting
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .uploading_4968
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .uploadToWebDAV_4969,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(
                             context,
@@ -1647,7 +1801,10 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '更新外部资源',
+                  LocalizationService
+                      .instance
+                      .current
+                      .updateExternalResources_4970,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1671,7 +1828,7 @@ class _ExternalResourcesPageContentState
               child: SizedBox(
                 width: double.infinity, // 占满父组件宽度
                 child: Text(
-                  '上传包含外部资源的ZIP文件，系统将自动解压并根据元数据文件将资源复制到指定位置。',
+                  LocalizationService.instance.current.uploadDescription_4971,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -1705,7 +1862,12 @@ class _ExternalResourcesPageContentState
                         )
                       : const Icon(Icons.upload_file, size: 20),
                   label: Text(
-                    _isUploading ? '正在处理...' : '选择并上传ZIP文件',
+                    _isUploading
+                        ? LocalizationService.instance.current.processing_4972
+                        : LocalizationService
+                              .instance
+                              .current
+                              .selectAndUploadZip_4973,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -1743,7 +1905,15 @@ class _ExternalResourcesPageContentState
                               )
                             : const Icon(Icons.upload_file, size: 20),
                         label: Text(
-                          _isUploading ? '正在处理...' : '本地导入',
+                          _isUploading
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .processing_4972
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .localImport_4974,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -1777,7 +1947,15 @@ class _ExternalResourcesPageContentState
                               )
                             : const Icon(Icons.cloud_download, size: 20),
                         label: Text(
-                          _isUploading ? '正在处理...' : 'WebDAV导入',
+                          _isUploading
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .processing_4972
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .webdavImport_4975,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -1811,7 +1989,7 @@ class _ExternalResourcesPageContentState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '使用说明',
+                  LocalizationService.instance.current.usageInstructions_4976,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1822,11 +2000,16 @@ class _ExternalResourcesPageContentState
             _buildInstructionItem(
               context,
               '1',
-              'ZIP文件结构',
-              'ZIP文件应包含一个metadata.json文件，用于指定资源的目标位置',
+              LocalizationService.instance.current.zipFileStructure_4977,
+              LocalizationService.instance.current.zipFileDescription_4978,
             ),
             const SizedBox(height: 16),
-            _buildInstructionItem(context, '2', '元数据格式', 'metadata.json格式示例：'),
+            _buildInstructionItem(
+              context,
+              '2',
+              LocalizationService.instance.current.metadataFormat_4979,
+              LocalizationService.instance.current.metadataFormatExample_4980,
+            ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -1871,11 +2054,19 @@ class _ExternalResourcesPageContentState
             _buildInstructionItem(
               context,
               '3',
-              '处理流程',
-              '系统会在VFS的fs集合中创建临时文件夹进行处理',
+              LocalizationService.instance.current.processingFlow_4981,
+              LocalizationService
+                  .instance
+                  .current
+                  .processingFlowDescription_4982,
             ),
             const SizedBox(height: 16),
-            _buildInstructionItem(context, '4', '自动清理', '处理完成后会自动清理临时文件'),
+            _buildInstructionItem(
+              context,
+              '4',
+              LocalizationService.instance.current.autoCleanup_4983,
+              LocalizationService.instance.current.autoCleanupDescription_4984,
+            ),
           ],
         ),
       ),
@@ -1956,19 +2147,26 @@ class _ExternalResourcesPageContentState
             fileBytes = await localFile.readAsBytes();
           }
         } catch (e) {
-          _showErrorSnackBar('读取文件失败：$e');
+          _showErrorSnackBar(
+            '${LocalizationService.instance.current.readFileFailed_4985}：$e',
+          );
           return;
         }
       }
 
       if (fileBytes == null) {
-        _showErrorSnackBar('无法读取文件内容，请确保文件存在且有读取权限');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.cannotReadFileContent_4986,
+        );
         return;
       }
 
       // 设置工作状态
       WorkStatusService().startWorking(
-        '正在处理外部资源文件...',
+        LocalizationService
+            .instance
+            .current
+            .processingExternalResourceFile_4987,
         taskId: 'upload_external_resources',
       );
 
@@ -1980,7 +2178,9 @@ class _ExternalResourcesPageContentState
     } catch (e) {
       // 发生错误时清理工作状态
       WorkStatusService().stopWorking(taskId: 'upload_external_resources');
-      _showErrorSnackBar('更新失败：$e');
+      _showErrorSnackBar(
+        '${LocalizationService.instance.current.updateFailed_4988}：$e',
+      );
     } finally {
       setState(() {
         _isUploading = false;
@@ -1993,7 +2193,9 @@ class _ExternalResourcesPageContentState
     String fileName,
   ) async {
     // 更新工作状态描述
-    WorkStatusService().updateWorkDescription('正在解压ZIP文件...');
+    WorkStatusService().updateWorkDescription(
+      LocalizationService.instance.current.extractingZipFile_4989,
+    );
 
     // 解压ZIP文件
     final archive = ZipDecoder().decodeBytes(zipBytes);
@@ -2008,7 +2210,9 @@ class _ExternalResourcesPageContentState
       await _vfsService.createDirectory('fs', tempPath);
 
       // 更新工作状态描述
-      WorkStatusService().updateWorkDescription('正在提取文件到临时目录...');
+      WorkStatusService().updateWorkDescription(
+        LocalizationService.instance.current.extractingFilesToTempDir_4990,
+      );
 
       // 2. 解压所有文件到临时文件夹，查找根目录的metadata.json
       Map<String, dynamic>? metadata;
@@ -2155,7 +2359,9 @@ class _ExternalResourcesPageContentState
       // 检查源路径是否存在
       final exists = await _vfsService.vfs.exists(sourcePath);
       if (!exists) {
-        debugPrint('警告：源路径不存在，跳过：$sourceFileName');
+        debugPrint(
+          '${LocalizationService.instance.current.warningSourcePathNotExists_5003}: $sourceFileName',
+        );
         continue;
       }
 
@@ -2635,24 +2841,30 @@ class _ExternalResourcesPageContentState
       for (int i = 0; i < validMappings.length; i++) {
         final mapping = validMappings[i];
         workStatusService.updateWorkDescription(
-          '正在复制文件 ${i + 1}/${validMappings.length}',
+          '${LocalizationService.instance.current.copyingFileProgress_5004} ${i + 1}/${validMappings.length}',
         );
         await _copyToTempFolder(mapping, tempPath, fileMapping);
       }
 
       // 创建 metadata.json
-      workStatusService.updateWorkDescription('正在生成元数据...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.generatingMetadata_5005,
+      );
       await _createMetadataFile(tempPath, fileMapping);
 
       // 压缩文件夹
-      workStatusService.updateWorkDescription('正在压缩文件...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.compressingFiles_5006,
+      );
       final zipBytes = await _compressTempFolder(tempPath);
 
       // 根据选择的选项进行保存
       final exportType = option['type'] as String;
       if (exportType == 'local') {
         // 本地保存
-        workStatusService.updateWorkDescription('正在保存文件...');
+        workStatusService.updateWorkDescription(
+          LocalizationService.instance.current.savingFile_5007,
+        );
         if (kIsWeb) {
           await _downloadFile(zipBytes);
         } else {
@@ -2661,22 +2873,34 @@ class _ExternalResourcesPageContentState
       } else if (exportType == 'webdav') {
         // WebDAV上传
         final config = option['config'] as WebDavConfig;
-        workStatusService.updateWorkDescription('正在上传到WebDAV...');
+        workStatusService.updateWorkDescription(
+          LocalizationService.instance.current.uploadingToWebDAV_5008,
+        );
         await _uploadToWebDAV(zipBytes, config, fileMapping);
       }
 
       // 清理临时文件
-      workStatusService.updateWorkDescription('正在清理临时文件...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.cleaningTempFiles_5009,
+      );
       await _vfsService.vfs.delete(tempPath, recursive: true);
 
-      _showSuccessSnackBar('导出成功！');
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.exportSuccess_5010,
+      );
 
       workStatusService.stopWorking(taskId: 'export');
     } catch (e) {
       final workStatusService = WorkStatusService();
-      workStatusService.updateWorkDescription('导出失败：$e');
-      _showErrorSnackBar('导出失败：$e');
-      debugPrint('导出失败：$e');
+      workStatusService.updateWorkDescription(
+        '${LocalizationService.instance.current.exportFailed_5011}: $e',
+      );
+      _showErrorSnackBar(
+        '${LocalizationService.instance.current.exportFailed_5011}: $e',
+      );
+      debugPrint(
+        '${LocalizationService.instance.current.exportFailed_5011}: $e',
+      );
       // 延迟结束工作状态以显示错误信息
       Future.delayed(const Duration(seconds: 2), () {
         workStatusService.stopWorking(taskId: 'export');
@@ -2834,7 +3058,9 @@ class _ExternalResourcesPageContentState
         tempMetadataPath,
       );
       if (systemTempPath == null) {
-        throw Exception('无法生成metadata.json系统临时文件路径');
+        throw Exception(
+          LocalizationService.instance.current.cannotGenerateMetadataPath_5012,
+        );
       }
 
       // 上传metadata.json到WebDAV的指定文件夹中
@@ -2852,7 +3078,9 @@ class _ExternalResourcesPageContentState
       // 清理VFS临时文件
       await _vfsService.vfs.delete(tempMetadataPath);
 
-      debugPrint('成功上传metadata.json到WebDAV：$remoteMetadataPath');
+      debugPrint(
+        '${LocalizationService.instance.current.successUploadMetadataToWebDAV_5013}: $remoteMetadataPath',
+      );
     } catch (e) {
       throw Exception('metadata.json WebDAV上传失败：$e');
     }
@@ -2874,7 +3102,9 @@ class _ExternalResourcesPageContentState
     // 检查源路径是否存在
     final exists = await _vfsService.vfs.exists(sourcePath);
     if (!exists) {
-      throw Exception('源路径不存在：$sourcePath');
+      throw Exception(
+        '${LocalizationService.instance.current.sourcePathNotExists_5014}: $sourcePath',
+      );
     }
 
     // 检查是文件还是文件夹
@@ -3173,7 +3403,9 @@ class _ExternalResourcesPageContentState
         }
       }
     } catch (e) {
-      debugPrint('处理文件夹映射失败：$folderName, 错误：$e');
+      debugPrint(
+        '${LocalizationService.instance.current.processFolderMappingFailed_5015}: $folderName, ${LocalizationService.instance.current.error_5016}: $e',
+      );
     }
   }
 
@@ -3187,14 +3419,16 @@ class _ExternalResourcesPageContentState
       onPressed: () {
         workStatusService.stopWorking(taskId: 'webdav_import');
         if (mounted) {
-          _showInfoSnackBar('WebDAV导入已取消');
+          _showInfoSnackBar(
+            LocalizationService.instance.current.webdavImportCancelled_5043,
+          );
         }
       },
-      tooltip: '取消WebDAV导入',
+      tooltip: LocalizationService.instance.current.cancelWebDAVImport_5017,
     );
 
     workStatusService.startWorking(
-      '正在连接WebDAV...',
+      LocalizationService.instance.current.connectingWebDAV_5018,
       taskId: 'webdav_import',
       actions: [cancelAction],
     );
@@ -3208,7 +3442,9 @@ class _ExternalResourcesPageContentState
 
       if (enabledWebdavConfigs.isEmpty) {
         workStatusService.stopWorking(taskId: 'webdav_import');
-        _showErrorSnackBar('没有可用的WebDAV配置，请先在WebDAV管理页面添加配置');
+        _showErrorSnackBar(
+          LocalizationService.instance.current.noWebDAVConfig_5019,
+        );
         return;
       }
 
@@ -3223,7 +3459,9 @@ class _ExternalResourcesPageContentState
 
       try {
         // 更新工作状态
-        workStatusService.updateWorkDescription('正在读取WebDAV目录...');
+        workStatusService.updateWorkDescription(
+          LocalizationService.instance.current.readingWebDAVDirectory_5020,
+        );
 
         // 读取WebDAV根目录
         final directories = await _webdavClientService.listDirectory(
@@ -3233,7 +3471,9 @@ class _ExternalResourcesPageContentState
 
         if (directories == null) {
           workStatusService.stopWorking(taskId: 'webdav_import');
-          _showErrorSnackBar('无法读取WebDAV目录');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.cannotReadWebDAVDirectory_5021,
+          );
           return;
         }
 
@@ -3249,7 +3489,9 @@ class _ExternalResourcesPageContentState
         }
 
         // 更新工作状态
-        workStatusService.updateWorkDescription('正在扫描目录...');
+        workStatusService.updateWorkDescription(
+          LocalizationService.instance.current.scanningDirectories_5022,
+        );
 
         // 读取每个目录的metadata.json
         final importItems = <WebDAVImportItem>[];
@@ -3304,28 +3546,41 @@ class _ExternalResourcesPageContentState
               }
             }
           } catch (e) {
-            debugPrint('读取目录 $dirName 的内容失败: $e');
+            debugPrint(
+              '${LocalizationService.instance.current.readDirectoryContentFailed_5023} $dirName: $e',
+            );
           }
         }
 
         if (importItems.isEmpty) {
           workStatusService.stopWorking(taskId: 'webdav_import');
-          _showErrorSnackBar('没有找到包含有效metadata.json的目录');
+          _showErrorSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .noValidMetadataDirectoryFound_5024,
+          );
           return;
         }
 
         // 更新工作状态为等待用户选择
-        workStatusService.updateWorkDescription('等待用户选择导入项...');
+        workStatusService.updateWorkDescription(
+          LocalizationService.instance.current.waitingUserSelectImport_5025,
+        );
 
         // 显示导入项列表对话框
         _showWebDAVImportDialog(importItems, workStatusService);
       } catch (e) {
         workStatusService.stopWorking(taskId: 'webdav_import');
-        _showErrorSnackBar('读取WebDAV目录失败: $e');
+        _showErrorSnackBar(
+          '${LocalizationService.instance.current.readWebDAVDirectoryFailed_5026}: $e',
+        );
       }
     } catch (e) {
       workStatusService.stopWorking(taskId: 'webdav_import');
-      _showErrorSnackBar('WebDAV导入失败: $e');
+      _showErrorSnackBar(
+        '${LocalizationService.instance.current.webdavImportFailed_5046}: $e',
+      );
     }
   }
 
@@ -3337,7 +3592,7 @@ class _ExternalResourcesPageContentState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('WebDAV导入列表'),
+        title: Text(LocalizationService.instance.current.webdavImportList_5044),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
@@ -3370,7 +3625,7 @@ class _ExternalResourcesPageContentState
                                 ),
                                 if (metadata['version'] != null)
                                   Text(
-                                    '版本: ${metadata['version']}',
+                                    '${LocalizationService.instance.current.version_5027}: ${metadata['version']}',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -3378,7 +3633,7 @@ class _ExternalResourcesPageContentState
                                   ),
                                 if (metadata['author'] != null)
                                   Text(
-                                    '作者: ${metadata['author']}',
+                                    '${LocalizationService.instance.current.author_5028}: ${metadata['author']}',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -3402,7 +3657,12 @@ class _ExternalResourcesPageContentState
                               }
                             },
                             icon: const Icon(Icons.download, size: 16),
-                            label: const Text('下载并导入'),
+                            label: Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .downloadAndImport_5029,
+                            ),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -3426,7 +3686,7 @@ class _ExternalResourcesPageContentState
                       ],
                       const SizedBox(height: 8),
                       Text(
-                        '目录: ${item.directoryName}',
+                        '${LocalizationService.instance.current.directory_5030}: ${item.directoryName}',
                         style: TextStyle(color: Colors.grey[500], fontSize: 11),
                       ),
                     ],
@@ -3442,7 +3702,7 @@ class _ExternalResourcesPageContentState
               workStatusService.stopWorking(taskId: 'webdav_import');
               Navigator.of(context).pop();
             },
-            child: const Text('关闭'),
+            child: Text(LocalizationService.instance.current.close_5031),
           ),
         ],
       ),
@@ -3460,16 +3720,20 @@ class _ExternalResourcesPageContentState
         onPressed: () {
           workStatusService.stopWorking(taskId: 'webdav_import');
           if (mounted) {
-            _showInfoSnackBar('WebDAV下载已取消');
+            _showInfoSnackBar(
+              LocalizationService.instance.current.webdavDownloadCancelled_5045,
+            );
           }
         },
-        tooltip: '取消WebDAV下载',
+        tooltip: LocalizationService.instance.current.cancelWebDAVDownload_5032,
       );
 
       workStatusService.updateActions([cancelAction]);
 
       // 更新工作状态
-      workStatusService.updateWorkDescription('正在准备下载...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.preparingDownload_5033,
+      );
       // 查找ZIP文件
       final directories = await _webdavClientService.listDirectory(
         item.config.configId,
@@ -3479,7 +3743,12 @@ class _ExternalResourcesPageContentState
       if (directories == null) {
         workStatusService.stopWorking(taskId: 'webdav_import');
         if (mounted) {
-          _showErrorSnackBar('无法读取目录内容');
+          _showErrorSnackBar(
+            LocalizationService
+                .instance
+                .current
+                .cannotReadDirectoryContent_5034,
+          );
         }
         return;
       }
@@ -3494,7 +3763,9 @@ class _ExternalResourcesPageContentState
       if (zipFiles.isEmpty) {
         workStatusService.stopWorking(taskId: 'webdav_import');
         if (mounted) {
-          _showErrorSnackBar('目录中没有找到ZIP文件');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.noZipFileFoundInDirectory_5035,
+          );
         }
         return;
       }
@@ -3504,7 +3775,9 @@ class _ExternalResourcesPageContentState
       final zipFileName = zipFile.name!;
 
       // 更新工作状态
-      workStatusService.updateWorkDescription('正在下载 $zipFileName...');
+      workStatusService.updateWorkDescription(
+        '${LocalizationService.instance.current.downloading_5036} $zipFileName...',
+      );
 
       // 下载ZIP文件到自定义临时目录
       final tempZipFilePath =
@@ -3520,13 +3793,17 @@ class _ExternalResourcesPageContentState
       if (!downloadSuccess || !await tempZipFile.exists()) {
         workStatusService.stopWorking(taskId: 'webdav_import');
         if (mounted) {
-          _showErrorSnackBar('下载ZIP文件失败');
+          _showErrorSnackBar(
+            LocalizationService.instance.current.downloadZipFileFailed_5037,
+          );
         }
         return;
       }
 
       // 更新工作状态
-      workStatusService.updateWorkDescription('正在处理ZIP文件...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.processingZipFile_5038,
+      );
 
       // 读取ZIP文件内容
       final zipBytes = await tempZipFile.readAsBytes();
@@ -3545,7 +3822,9 @@ class _ExternalResourcesPageContentState
     } catch (e) {
       workStatusService.stopWorking(taskId: 'webdav_import');
       if (mounted) {
-        _showErrorSnackBar('下载并导入失败: $e');
+        _showErrorSnackBar(
+          '${LocalizationService.instance.current.downloadAndImportFailed_5039}: $e',
+        );
       }
     }
   }
@@ -3561,7 +3840,9 @@ class _ExternalResourcesPageContentState
       _webdavWorkStatusService = workStatusService;
 
       // 更新工作状态到预览阶段
-      workStatusService.updateWorkDescription('正在准备预览...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.preparingPreview_5040,
+      );
 
       // 清理之前的状态
       setState(() {
@@ -3574,40 +3855,44 @@ class _ExternalResourcesPageContentState
       await _processZipFileForPreview(zipBytes, fileName);
 
       // 更新工作状态到等待用户确认
-      workStatusService.updateWorkDescription('等待用户确认导入...');
+      workStatusService.updateWorkDescription(
+        LocalizationService.instance.current.waitingUserConfirmImport_5041,
+      );
     } catch (e) {
       // 出错时停止工作状态
       workStatusService.stopWorking(taskId: 'webdav_import');
       _webdavWorkStatusService = null;
-      _showErrorSnackBar('处理ZIP文件失败: $e');
+      _showErrorSnackBar(
+        '${LocalizationService.instance.current.processZipFileFailed_5042}: $e',
+      );
     }
   }
 
-  /// 处理ZIP文件导入（用于常规导入）
-  Future<void> _handleZipImport(Uint8List zipBytes, String fileName) async {
-    try {
-      // 开始工作状态
-      final workStatusService = WorkStatusService();
-      workStatusService.startWorking('正在处理ZIP文件...', taskId: 'import');
+  // /// 处理ZIP文件导入（用于常规导入）
+  // Future<void> _handleZipImport(Uint8List zipBytes, String fileName) async {
+  //   try {
+  //     // 开始工作状态
+  //     final workStatusService = WorkStatusService();
+  //     workStatusService.startWorking('正在处理ZIP文件...', taskId: 'import');
 
-      // 清理之前的状态
-      setState(() {
-        _showPreview = false;
-        _fileMappings.clear();
-        _importMetadata = null;
-      });
+  //     // 清理之前的状态
+  //     setState(() {
+  //       _showPreview = false;
+  //       _fileMappings.clear();
+  //       _importMetadata = null;
+  //     });
 
-      // 处理ZIP文件并显示预览
-      await _processZipFileForPreview(zipBytes, fileName);
+  //     // 处理ZIP文件并显示预览
+  //     await _processZipFileForPreview(zipBytes, fileName);
 
-      // 完成工作状态
-      workStatusService.stopWorking(taskId: 'import');
-    } catch (e) {
-      // 完成工作状态（即使出错）
-      WorkStatusService().stopWorking(taskId: 'import');
-      _showErrorSnackBar('处理ZIP文件失败: $e');
-    }
-  }
+  //     // 完成工作状态
+  //     workStatusService.stopWorking(taskId: 'import');
+  //   } catch (e) {
+  //     // 完成工作状态（即使出错）
+  //     WorkStatusService().stopWorking(taskId: 'import');
+  //     _showErrorSnackBar('处理ZIP文件失败: $e');
+  //   }
+  // }
 }
 
 /// WebDAV导入项

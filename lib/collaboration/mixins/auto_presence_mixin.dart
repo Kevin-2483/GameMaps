@@ -13,7 +13,7 @@ import '../models/user_presence.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
 import '../global_collaboration_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 自动在线状态管理Mixin

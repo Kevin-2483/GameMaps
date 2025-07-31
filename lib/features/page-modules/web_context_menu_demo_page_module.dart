@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/demo/web_context_menu_demo_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// Web右键菜单演示页面模块

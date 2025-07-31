@@ -7,7 +7,7 @@ import 'package:hetu_script/hetu_script.dart';
 import '../../models/script_data.dart';
 import 'script_executor_base.dart';
 import 'external_function_registry.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// 支持并发的Isolate脚本执行器

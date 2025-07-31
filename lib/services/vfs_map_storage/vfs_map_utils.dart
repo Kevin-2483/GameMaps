@@ -6,7 +6,7 @@ import '../virtual_file_system/vfs_protocol.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_layer.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS地图缓存管理器

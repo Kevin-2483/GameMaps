@@ -5,7 +5,7 @@ import '../../components/vfs/viewers/media_kit_video_player.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
 import '../../services/virtual_file_system/vfs_service_provider.dart';
 import '../../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// VFS 视频查看器页面

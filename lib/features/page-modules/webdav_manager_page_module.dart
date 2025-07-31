@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/webdav/webdav_manager_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class WebDavManagerPageModule extends PageModule {

@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 // import 'package:path/path.dart';
 import '../../models/user_preferences.dart';
 import '../database_path_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// 用户偏好设置数据库服务

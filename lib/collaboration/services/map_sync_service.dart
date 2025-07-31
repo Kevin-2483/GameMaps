@@ -7,7 +7,7 @@ import '../blocs/presence/presence_event.dart';
 import '../utils/image_compression_utils.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 地图信息同步服务

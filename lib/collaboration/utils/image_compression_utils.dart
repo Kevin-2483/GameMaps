@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 图片压缩工具类

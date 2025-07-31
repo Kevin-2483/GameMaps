@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../models/legend_item.dart';
 import '../virtual_file_system/virtual_file_system.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 // import '../virtual_file_system/vfs_database_initializer.dart';
 

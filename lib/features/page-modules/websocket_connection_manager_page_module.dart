@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/websocket/websocket_connection_manager_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class WebSocketConnectionManagerPageModule extends PageModule {

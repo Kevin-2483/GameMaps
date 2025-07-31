@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 配置感知组件 - 根据配置决定是否渲染子组件

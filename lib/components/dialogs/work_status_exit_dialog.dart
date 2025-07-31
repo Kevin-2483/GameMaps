@@ -1,7 +1,7 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../services/work_status_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 工作状态退出确认对话框

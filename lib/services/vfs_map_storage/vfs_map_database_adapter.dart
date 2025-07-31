@@ -6,7 +6,7 @@ import '../map_database_service.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
 import '../../models/map_item_summary.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS地图数据库服务适配器

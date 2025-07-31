@@ -4,7 +4,7 @@ import '../page_registry.dart';
 import '../../pages/map_atlas/map_atlas_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 地图册页面模块

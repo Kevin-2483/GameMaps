@@ -1,6 +1,6 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// Web平台的VFS平台接口实现

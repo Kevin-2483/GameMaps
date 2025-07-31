@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_service_provider.dart';
 import '../../models/user_preferences.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// 用户偏好设置多配置管理服务

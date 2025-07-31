@@ -1286,7 +1286,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           // 文件夹部分
           if (folders.isNotEmpty) ...[
             Text(
-              '文件夹',
+              LocalizationService.instance.current.folders_4822,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -1306,7 +1306,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           // 地图部分
           if (maps.isNotEmpty) ...[
             Text(
-              '地图',
+              LocalizationService.instance.current.maps_4823,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -1367,7 +1367,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 final isReadOnly = await ConfigManager.instance
                     .isFeatureEnabled('ReadOnlyMode');
                 if (isReadOnly) {
-                  WebReadOnlyDialog.show(context, '删除文件夹');
+                  WebReadOnlyDialog.show(
+                    context,
+                    LocalizationService.instance.current.deleteFolder_4836,
+                  );
                 } else {
                   _deleteFolder(item);
                 }
@@ -1378,7 +1381,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             'ReadOnlyMode',
           );
           if (isReadOnly) {
-            WebReadOnlyDialog.show(context, '重命名文件夹');
+            WebReadOnlyDialog.show(
+              context,
+              LocalizationService.instance.current.renameFolder_4841,
+            );
           } else {
             _showRenameFolderDialog(item);
           }
@@ -1394,7 +1400,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             'ReadOnlyMode',
           );
           if (isReadOnly) {
-            WebReadOnlyDialog.show(context, '删除地图');
+            WebReadOnlyDialog.show(
+              context,
+              LocalizationService.instance.current.deleteMap,
+            );
           } else {
             _deleteMap(map);
           }
@@ -1411,7 +1420,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             'ReadOnlyMode',
           );
           if (isReadOnly) {
-            WebReadOnlyDialog.show(context, '重命名地图');
+            WebReadOnlyDialog.show(
+              context,
+              LocalizationService.instance.current.renameMap_4846,
+            );
           } else {
             _showRenameMapDialog(map.title);
           }
@@ -1421,7 +1433,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             'ReadOnlyMode',
           );
           if (isReadOnly) {
-            WebReadOnlyDialog.show(context, '更换封面');
+            WebReadOnlyDialog.show(
+              context,
+              LocalizationService.instance.current.updateCover_4853,
+            );
           } else {
             _showUpdateCoverDialog(map.title);
           }
@@ -1456,7 +1471,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: '搜索地图和文件夹...',
+                      hintText: LocalizationService
+                          .instance
+                          .current
+                          .searchMapsAndFolders_4824,
                       prefixIcon: const Icon(Icons.search, size: 20),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -1526,7 +1544,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   _showCreateFolderDialog();
                 },
                 icon: const Icon(Icons.create_new_folder),
-                tooltip: '创建文件夹',
+                tooltip: LocalizationService.instance.current.createFolder_4825,
               ),
             ],
           ),
@@ -1632,12 +1650,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                             Text(
                               _currentPath.isEmpty
                                   ? l10n.mapAtlasEmpty
-                                  : '此文件夹为空',
+                                  : LocalizationService
+                                        .instance
+                                        .current
+                                        .emptyFolderMessage_4826,
                               style: Theme.of(context).textTheme.headlineSmall,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '点击右上角菜单添加地图或创建文件夹',
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .emptyFolderDescription_4827,
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -1684,12 +1708,18 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '未找到匹配的结果',
+                        LocalizationService
+                            .instance
+                            .current
+                            .noMatchingResults_4828,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '尝试使用不同的关键词搜索',
+                        LocalizationService
+                            .instance
+                            .current
+                            .tryDifferentKeywords_4829,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -1710,19 +1740,20 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('创建文件夹'),
+          title: Text(LocalizationService.instance.current.createFolder_4825),
           content: TextField(
             controller: folderNameController,
-            decoration: const InputDecoration(
-              labelText: '文件夹名称',
-              hintText: '输入文件夹名称',
+            decoration: InputDecoration(
+              labelText: LocalizationService.instance.current.folderName_4830,
+              hintText:
+                  LocalizationService.instance.current.enterFolderName_4831,
             ),
             autofocus: true,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4832),
             ),
             TextButton(
               onPressed: () {
@@ -1731,7 +1762,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                   Navigator.of(context).pop(name);
                 }
               },
-              child: const Text('创建'),
+              child: Text(LocalizationService.instance.current.create_4833),
             ),
           ],
         );
@@ -1747,9 +1778,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         await _loadDirectoryContents(
           _currentPath.isEmpty ? null : _currentPath,
         );
-        _showSuccessSnackBar('文件夹创建成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.folderCreatedSuccessfully_4834,
+        );
       } catch (e) {
-        _showErrorSnackBar('创建文件夹失败: ${e.toString()}');
+        _showErrorSnackBar(
+          '${LocalizationService.instance.current.createFolderFailed_4835}: ${e.toString()}',
+        );
       }
     }
   }
@@ -1759,16 +1794,19 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('删除文件夹'),
-          content: Text('确定要删除文件夹 "${folder.name}" 吗？这将删除文件夹内的所有地图和子文件夹。'),
+          title: Text(LocalizationService.instance.current.deleteFolder_4836),
+          content: Text(
+            LocalizationService.instance.current.confirmDeleteFolder_4837
+                .replaceAll('{folderName}', folder.name),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(LocalizationService.instance.current.cancel_4832),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除'),
+              child: Text(LocalizationService.instance.current.delete_4838),
             ),
           ],
         );
@@ -1781,9 +1819,13 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         await _loadDirectoryContents(
           _currentPath.isEmpty ? null : _currentPath,
         );
-        _showSuccessSnackBar('文件夹删除成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.folderDeletedSuccessfully_4839,
+        );
       } catch (e) {
-        _showErrorSnackBar('删除文件夹失败: ${e.toString()}');
+        _showErrorSnackBar(
+          '${LocalizationService.instance.current.deleteFolderFailed_4840}: ${e.toString()}',
+        );
       }
     }
   }
@@ -1793,19 +1835,19 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名文件夹'),
+        title: Text(LocalizationService.instance.current.renameFolder_4841),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '新文件夹名称',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.newFolderName_4842,
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4832),
           ),
           TextButton(
             onPressed: () {
@@ -1814,7 +1856,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 Navigator.of(context).pop(newName);
               }
             },
-            child: const Text('确定'),
+            child: Text(LocalizationService.instance.current.confirm_4843),
           ),
         ],
       ),
@@ -1829,12 +1871,16 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         final newPath = parentPath.isEmpty ? result : '$parentPath/$result';
 
         await _vfsMapService.renameFolder(folder.path, newPath);
-        _showSuccessSnackBar('文件夹重命名成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.folderRenamedSuccessfully_4844,
+        );
         await _loadDirectoryContents(
           _currentPath.isEmpty ? null : _currentPath,
         );
       } catch (e) {
-        _showErrorSnackBar('重命名失败: ${e.toString()}');
+        _showErrorSnackBar(
+          '${LocalizationService.instance.current.renameFailed_4845}: ${e.toString()}',
+        );
       }
     }
   }
@@ -1844,11 +1890,11 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名地图'),
+        title: Text(LocalizationService.instance.current.renameMap_4846),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '新地图名称',
+          decoration: InputDecoration(
+            labelText: LocalizationService.instance.current.newMapName_4847,
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -1856,7 +1902,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4832),
           ),
           TextButton(
             onPressed: () {
@@ -1865,7 +1911,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
                 Navigator.of(context).pop(newTitle);
               }
             },
-            child: const Text('确定'),
+            child: Text(LocalizationService.instance.current.confirm_4843),
           ),
         ],
       ),
@@ -1878,7 +1924,9 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           result,
           _currentPath.isEmpty ? null : _currentPath,
         );
-        _showSuccessSnackBar('地图重命名成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.mapRenamedSuccessfully_4848,
+        );
         await _loadDirectoryContents(
           _currentPath.isEmpty ? null : _currentPath,
         );
@@ -1913,13 +1961,17 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
           _currentPath.isEmpty ? null : _currentPath,
         );
 
-        _showSuccessSnackBar('地图封面更新成功');
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.mapCoverUpdatedSuccessfully_4849,
+        );
         await _loadDirectoryContents(
           _currentPath.isEmpty ? null : _currentPath,
         );
       }
     } catch (e) {
-      _showErrorSnackBar('更新封面失败: ${e.toString()}');
+      _showErrorSnackBar(
+        '${LocalizationService.instance.current.updateCoverFailed_4850}: ${e.toString()}',
+      );
     }
   }
 }
@@ -2018,32 +2070,35 @@ class _MapCard extends StatelessWidget {
         if (onRename != null)
           PopupMenuItem(
             value: 'rename',
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.edit, size: 16),
-                SizedBox(width: 8),
-                Text('重命名'),
+                const Icon(Icons.edit, size: 16),
+                const SizedBox(width: 8),
+                Text(LocalizationService.instance.current.rename_4852),
               ],
             ),
           ),
         if (onUpdateCover != null)
           PopupMenuItem(
             value: 'update_cover',
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.image, size: 16),
-                SizedBox(width: 8),
-                Text('更换封面'),
+                const Icon(Icons.image, size: 16),
+                const SizedBox(width: 8),
+                Text(LocalizationService.instance.current.updateCover_4853),
               ],
             ),
           ),
         PopupMenuItem(
           value: 'delete',
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.delete, size: 16, color: Colors.red),
-              SizedBox(width: 8),
-              Text('删除', style: TextStyle(color: Colors.red)),
+              const Icon(Icons.delete, size: 16, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(
+                LocalizationService.instance.current.delete_4838,
+                style: const TextStyle(color: Colors.red),
+              ),
             ],
           ),
         ),
@@ -2125,7 +2180,7 @@ class _FolderCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '${folder.mapCount} 个地图',
+                '${folder.mapCount} ${LocalizationService.instance.current.maps_4823}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -2163,11 +2218,14 @@ class _FolderCard extends StatelessWidget {
         if (folder.mapCount == 0 && onDelete != null)
           PopupMenuItem(
             value: 'delete',
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.delete, size: 16, color: Colors.red),
-                SizedBox(width: 8),
-                Text('删除', style: TextStyle(color: Colors.red)),
+                const Icon(Icons.delete, size: 16, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(
+                  LocalizationService.instance.current.delete_4838,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ],
             ),
           ),

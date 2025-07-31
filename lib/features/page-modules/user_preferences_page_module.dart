@@ -4,7 +4,7 @@ import '../page_registry.dart';
 import '../../pages/settings/user_preferences_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 用户偏好设置页面模块

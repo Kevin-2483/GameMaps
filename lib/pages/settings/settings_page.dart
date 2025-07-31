@@ -6,8 +6,6 @@ import '../../l10n/app_localizations.dart';
 import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 import '../../components/common/draggable_title_bar.dart';
-import '../../l10n/app_localizations.dart';
-import '../../services/localization_service.dart';
 
 class SettingsPage extends BasePage {
   const SettingsPage({super.key});

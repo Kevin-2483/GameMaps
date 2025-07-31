@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 import '../../providers/user_preferences_provider.dart';
@@ -17,7 +17,7 @@ import 'widgets/extension_settings_section.dart';
 
 import '../../components/common/draggable_title_bar.dart';
 import '../../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class UserPreferencesPage extends BasePage {

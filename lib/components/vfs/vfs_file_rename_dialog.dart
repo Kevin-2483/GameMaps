@@ -1,7 +1,7 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
 import '../../services/virtual_file_system/vfs_protocol.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// VFS文件重命名对话框

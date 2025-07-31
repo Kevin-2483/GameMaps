@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/external_resources/external_resources_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 外部资源页模块

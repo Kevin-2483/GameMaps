@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// IO平台（移动端/桌面端）的VFS平台接口实现

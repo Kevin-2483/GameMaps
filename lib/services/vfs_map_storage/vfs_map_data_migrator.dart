@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../virtual_file_system/vfs_storage_service.dart';
 import 'vfs_map_service.dart';
 import '../../models/map_item.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS地图数据迁移工具

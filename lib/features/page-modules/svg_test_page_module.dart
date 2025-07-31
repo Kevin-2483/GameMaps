@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../page_registry.dart';
 import '../../pages/test/svg_test_page.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class SvgTestPageModule extends PageModule {

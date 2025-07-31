@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../common/radial_gesture_menu.dart';
 import '../../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 轮盘手势菜单示例

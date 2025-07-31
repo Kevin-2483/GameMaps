@@ -5,7 +5,7 @@ import 'vfs_storage_service.dart';
 import 'vfs_protocol.dart';
 import 'vfs_permission_system.dart';
 import 'virtual_file_system.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS数据库初始化服务

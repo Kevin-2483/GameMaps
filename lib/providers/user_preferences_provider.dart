@@ -9,6 +9,7 @@ import '../services/user_preferences/user_preferences_config_service.dart';
 import '../utils/extension_settings_helper.dart';
 import 'theme_provider.dart';
 import '../services/localization_service.dart';
+import 'locale_provider.dart';
 
 /// 用户偏好设置状态管理Provider
 class UserPreferencesProvider extends ChangeNotifier {
@@ -20,6 +21,7 @@ class UserPreferencesProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   ThemeProvider? _themeProvider;
+  LocaleProvider? _localeProvider;
 
   /// 当前用户偏好设置
   UserPreferences? get currentPreferences => _currentPreferences;
@@ -340,6 +342,16 @@ class UserPreferencesProvider extends ChangeNotifier {
         locale: locale,
       );
       _currentPreferences = await _service.getCurrentPreferences();
+
+      // 如果更新了语言设置，同步到 LocaleProvider
+      if (locale != null && _localeProvider != null) {
+        final parts = locale.split('_');
+        final languageCode = parts[0];
+        final countryCode = parts.length > 1 ? parts[1] : '';
+        final newLocale = Locale(languageCode, countryCode);
+        await _localeProvider!.setLocale(newLocale);
+      }
+
       notifyListeners();
     } catch (e) {
       _setError(
@@ -670,6 +682,11 @@ class UserPreferencesProvider extends ChangeNotifier {
   /// 设置 ThemeProvider 引用以同步主题更新
   void setThemeProvider(ThemeProvider themeProvider) {
     _themeProvider = themeProvider;
+  }
+
+  /// 设置 LocaleProvider 引用以同步语言更新
+  void setLocaleProvider(LocaleProvider localeProvider) {
+    _localeProvider = localeProvider;
   }
 
   /// 获取面板折叠状态

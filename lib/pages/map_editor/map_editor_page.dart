@@ -16,7 +16,6 @@ import 'utils/keyboard_shortcut_actions.dart';
 import '../../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../../services/vfs_map_storage/vfs_map_service.dart';
 
-import '../../l10n/app_localizations.dart';
 import '../../services/localization_service.dart';
 import '../../components/layout/main_layout.dart';
 // import '../../components/web/web_readonly_components.dart';
@@ -56,7 +55,7 @@ import '../../../services/notification/notification_service.dart';
 import '../../utils/legend_path_resolver.dart'; // 导入图例路径解析器
 import '../../collaboration/mixins/auto_presence_mixin.dart'; // 导入在线状态管理混入
 import '../../collaboration/services/websocket/websocket_client_manager.dart'; // 导入WebSocket客户端管理器
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class MapEditorPage extends BasePage {

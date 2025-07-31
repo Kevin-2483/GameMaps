@@ -4,7 +4,7 @@ import '../page_registry.dart';
 import '../../pages/settings/settings_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 设置页模块 - 始终优先级最低（999）

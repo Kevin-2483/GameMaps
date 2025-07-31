@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/collaboration_state.dart';
 import 'collaboration_overlay.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 用户指针组件

@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../providers/user_preferences_provider.dart';
 import '../../services/window_manager_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 通用窗口控制组件

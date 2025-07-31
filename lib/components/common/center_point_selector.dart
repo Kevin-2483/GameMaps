@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:jovial_svg/jovial_svg.dart';
 import '../../models/legend_item.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 class CenterPointSelector extends StatefulWidget {

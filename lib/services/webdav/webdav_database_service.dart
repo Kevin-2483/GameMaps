@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../models/webdav_config.dart';
 import '../database_path_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// WebDAV数据库服务

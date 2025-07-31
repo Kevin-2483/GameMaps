@@ -100,7 +100,11 @@ class _AboutPageContentState extends State<_AboutPageContent> {
       }
     } catch (e) {
       // LICENSE 文件不存在或无法读取
-      debugPrint('无法加载 LICENSE 文件: $e');
+      debugPrint(
+        LocalizationService.instance.current.cannotLoadLicense_4913(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -109,7 +113,10 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     return Scaffold(
       body: Column(
         children: [
-          DraggableTitleBar(title: '关于', icon: Icons.info_outline),
+          DraggableTitleBar(
+            title: LocalizationService.instance.current.aboutPageTitle_4901,
+            icon: Icons.info_outline,
+          ),
           Expanded(
             child: SafeArea(
               child: ListView(
@@ -160,7 +167,10 @@ class _AboutPageContentState extends State<_AboutPageContent> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '版本 ${_packageInfo?.version ?? '1.2.0'} (${_packageInfo?.buildNumber ?? '1'})',
+                        LocalizationService.instance.current.appVersion_4902(
+                          _packageInfo?.version ?? '1.2.0',
+                          _packageInfo?.buildNumber ?? '1',
+                        ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -171,10 +181,13 @@ class _AboutPageContentState extends State<_AboutPageContent> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('应用描述', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.appDescription_4903,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
-              'R6BOX 是一款专为《彩虹六号：围攻》玩家设计的综合工具箱应用。提供地图编辑器、战术分析、数据统计等功能，帮助玩家提升游戏体验和竞技水平。',
+              LocalizationService.instance.current.appDescriptionText_4904,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
@@ -190,12 +203,17 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('许可证', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.licenseSection_4905,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.gavel),
-              title: const Text('GPL v3 License'),
-              subtitle: const Text('开源许可证，保证软件自由'),
+              title: Text(LocalizationService.instance.current.gplLicense_4906),
+              subtitle: Text(
+                LocalizationService.instance.current.licenseDescription_4907,
+              ),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () => _showLicenseDialog(context),
             ),
@@ -212,12 +230,19 @@ class _AboutPageContentState extends State<_AboutPageContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('项目地址', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              LocalizationService.instance.current.projectLinksSection_4908,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.code),
-              title: const Text('GitHub 仓库'),
-              subtitle: const Text('查看源代码、报告问题和贡献代码'),
+              title: Text(
+                LocalizationService.instance.current.githubRepository_4909,
+              ),
+              subtitle: Text(
+                LocalizationService.instance.current.githubDescription_4910,
+              ),
               trailing: const Icon(Icons.open_in_new),
               onTap: () => _launchUrl('https://github.com/Kevin-2483/GameMaps'),
             ),
@@ -238,8 +263,15 @@ class _AboutPageContentState extends State<_AboutPageContent> {
             ),
             ListTile(
               leading: const Icon(Icons.description),
-              title: const Text('项目文档'),
-              subtitle: const Text('查看详细的使用说明和开发文档'),
+              title: Text(
+                LocalizationService.instance.current.projectDocumentation_4911,
+              ),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .documentationDescription_4912,
+              ),
               trailing: const Icon(Icons.open_in_new),
               onTap: () =>
                   _launchUrl('https://github.com/Kevin-2483/GameMaps/wiki'),
@@ -406,7 +438,7 @@ class _AboutPageContentState extends State<_AboutPageContent> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('GPL v3 License'),
+        title: Text(LocalizationService.instance.current.gplLicense_4906),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
@@ -448,8 +480,12 @@ class _AboutPageContentState extends State<_AboutPageContent> {
   void _showFullLicensePage(BuildContext context) {
     showLicensePage(
       context: context,
-      applicationName: _packageInfo?.appName ?? 'R6BOX',
-      applicationVersion: _packageInfo?.version ?? '1.2.0',
+      applicationName:
+          _packageInfo?.appName ??
+          LocalizationService.instance.current.appName_4914,
+      applicationVersion:
+          _packageInfo?.version ??
+          LocalizationService.instance.current.defaultVersion_4915,
       applicationIcon: Icon(
         Icons.videogame_asset,
         size: 64,

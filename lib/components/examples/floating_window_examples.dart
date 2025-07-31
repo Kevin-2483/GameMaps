@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../common/floating_window.dart';
 import '../../../services/notification/notification_service.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// 浮动窗口使用示例

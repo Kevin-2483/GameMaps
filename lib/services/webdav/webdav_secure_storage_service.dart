@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// WebDAV安全存储服务

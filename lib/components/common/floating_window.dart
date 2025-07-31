@@ -1,5 +1,5 @@
 // This file has been processed by AI for internationalization
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

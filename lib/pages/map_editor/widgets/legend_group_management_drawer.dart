@@ -1517,7 +1517,7 @@ class _LegendGroupManagementDrawerState
       buttons.addAll([
         IconButton(
           icon: const Icon(Icons.code, size: 16),
-          tooltip: '添加脚本',
+          tooltip: LocalizationService.instance.current.addScript,
           onPressed: () async {
             final selectedScript = await _showScriptPickerDialog();
             if (selectedScript != null) {
@@ -1527,7 +1527,7 @@ class _LegendGroupManagementDrawerState
         ),
         IconButton(
           icon: const Icon(Icons.folder, size: 16),
-          tooltip: '选择VFS文件',
+          tooltip: LocalizationService.instance.current.selectVfsFile,
           onPressed: () async {
             final selectedFile = await _showVfsFilePicker();
             if (selectedFile != null) {
@@ -1543,7 +1543,7 @@ class _LegendGroupManagementDrawerState
         buttons.add(
           IconButton(
             icon: const Icon(Icons.code, size: 16),
-            tooltip: '编辑脚本参数',
+            tooltip: LocalizationService.instance.current.editScriptParams,
             onPressed: () async {
               await _editExistingScriptParameters(item);
             },
@@ -1556,7 +1556,7 @@ class _LegendGroupManagementDrawerState
         buttons.add(
           IconButton(
             icon: const Icon(Icons.open_in_new, size: 16),
-            tooltip: '打开链接',
+            tooltip: LocalizationService.instance.current.openLink,
             onPressed: () => _openUrl(url),
           ),
         );
@@ -1566,7 +1566,7 @@ class _LegendGroupManagementDrawerState
       buttons.add(
         IconButton(
           icon: const Icon(Icons.clear, size: 16),
-          tooltip: '清空链接',
+          tooltip: LocalizationService.instance.current.clearLink,
           color: Theme.of(context).colorScheme.error,
           onPressed: () {
             // 清空输入框内容
@@ -1601,7 +1601,9 @@ class _LegendGroupManagementDrawerState
           fit: BoxFit.contain,
         );
       } catch (e) {
-        debugPrint('SVG图例缩略图加载失败: $e');
+        debugPrint(
+          '${LocalizationService.instance.current.svgThumbnailLoadFailed}: $e',
+        );
         return Icon(
           Icons.image_not_supported,
           size: 24,
@@ -1638,7 +1640,9 @@ class _LegendGroupManagementDrawerState
         legendPath,
         widget.absoluteMapPath,
       );
-      debugPrint('图例路径转换: $legendPath -> $actualPath');
+      debugPrint(
+        '${LocalizationService.instance.current.legendPathConversion}: $legendPath -> $actualPath',
+      );
 
       // 直接使用绝对路径，让legendService处理路径解析
       if (actualPath.startsWith('indexeddb://')) {
@@ -2799,12 +2803,18 @@ class _LegendGroupManagementDrawerState
       _updateLegendItem(item.copyWith(url: scriptUrl));
 
       if (mounted) {
-        context.showSuccessSnackBar('已绑定脚本: ${script.name}');
+        context.showSuccessSnackBar(
+          '${LocalizationService.instance.current.scriptBound}: ${script.name}',
+        );
       }
     } catch (e) {
-      debugPrint('绑定脚本失败: $e');
+      debugPrint(
+        '${LocalizationService.instance.current.bindScriptFailed}: $e',
+      );
       if (mounted) {
-        context.showErrorSnackBar('绑定脚本失败: $e');
+        context.showErrorSnackBar(
+          '${LocalizationService.instance.current.bindScriptFailed}: $e',
+        );
       }
     }
   }
@@ -2908,7 +2918,10 @@ class _LegendGroupManagementDrawerState
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '智能隐藏',
+                            LocalizationService
+                                .instance
+                                .current
+                                .smartHiding_4854,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -2964,7 +2977,7 @@ class _LegendGroupManagementDrawerState
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '缩放因子',
+                          LocalizationService.instance.current.zoomFactor_4911,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -2976,7 +2989,10 @@ class _LegendGroupManagementDrawerState
                         IconButton(
                           onPressed: _clearZoomFactorSetting,
                           icon: const Icon(Icons.clear, size: 16),
-                          tooltip: '重置为默认值 (1.0)',
+                          tooltip: LocalizationService
+                              .instance
+                              .current
+                              .resetToDefault_4855,
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
                         ),
@@ -3025,7 +3041,7 @@ class _LegendGroupManagementDrawerState
                         ],
                       ),
                       Text(
-                        '当前值: ${_currentZoomFactor.toStringAsFixed(1)}',
+                        '${LocalizationService.instance.current.currentValue_4913}: ${_currentZoomFactor.toStringAsFixed(1)}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -3036,7 +3052,10 @@ class _LegendGroupManagementDrawerState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '新拖拽的图例将根据此缩放因子和当前画布缩放级别自动调整大小',
+                    LocalizationService
+                        .instance
+                        .current
+                        .legendScaleDescription_4856,
                     style: TextStyle(
                       fontSize: 11,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -3057,7 +3076,7 @@ class _LegendGroupManagementDrawerState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '图例组标签',
+                  LocalizationService.instance.current.legendGroupLabel_4912,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -3069,7 +3088,10 @@ class _LegendGroupManagementDrawerState
                   TextButton.icon(
                     onPressed: _showTagsManagerDialog,
                     icon: const Icon(Icons.edit, size: 14),
-                    label: const Text('管理', style: TextStyle(fontSize: 12)),
+                    label: Text(
+                      LocalizationService.instance.current.manage_4915,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -3106,7 +3128,7 @@ class _LegendGroupManagementDrawerState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '此图例组暂无图例',
+                      LocalizationService.instance.current.legendManagerEmpty,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -3154,7 +3176,10 @@ class _LegendGroupManagementDrawerState
     if (usedPathsInThisFolder.isNotEmpty) {
       // 如果有图例在使用，显示信息但继续清理（排除正在使用的）
       context.showInfoSnackBar(
-        '目录 "$folderPath" 中有 ${usedPathsInThisFolder.length} 个图例正在使用，将排除这些图例进行清理',
+        LocalizationService.instance.current.legendCacheCleanupInfo_4857(
+          usedPathsInThisFolder.length,
+          folderPath,
+        ),
       );
     }
 
@@ -3168,16 +3193,21 @@ class _LegendGroupManagementDrawerState
 
       // 通知用户清理完成
       context.showSuccessSnackBar(
-        '已清理目录 "$folderPath" 下的图例缓存（排除 ${usedPathsInThisFolder.length} 个正在使用的图例）',
+        LocalizationService.instance.current.legendCacheCleanupSuccess_4858(
+          usedPathsInThisFolder.length,
+          folderPath,
+        ),
       );
 
       debugPrint(
-        '智能清理完成: 目录=$folderPath, 排除=${usedPathsInThisFolder.length}个正在使用的图例',
+        'Smart cleanup completed: folder=$folderPath, excluded=${usedPathsInThisFolder.length} legends in use',
       );
-      debugPrint('排除的图例路径: $usedPathsInThisFolder');
+      debugPrint('Excluded legend paths: $usedPathsInThisFolder');
     } catch (e) {
       // 清理失败显示错误消息
-      context.showErrorSnackBar('清理缓存失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.cleanupCacheFailed_4859(e),
+      );
     }
   }
 
@@ -3185,7 +3215,7 @@ class _LegendGroupManagementDrawerState
   void _onCachedLegendSelected(String legendPath) {
     // 这里可以添加将缓存图例添加到当前图例组的逻辑
     // 或者直接应用图例到地图的逻辑
-    debugPrint('选择了缓存图例: $legendPath');
+    debugPrint('Selected cached legend: $legendPath');
 
     // 通知父组件选中状态变化
     widget.onLegendItemSelected?.call(legendPath);
@@ -3194,7 +3224,9 @@ class _LegendGroupManagementDrawerState
   /// 显示图层绑定抽屉
   void _showLayerBindingDialog() {
     if (widget.allLayers == null || widget.allLayers!.isEmpty) {
-      context.showErrorSnackBar('暂无可用图层');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.noAvailableLayers,
+      );
       return;
     }
 

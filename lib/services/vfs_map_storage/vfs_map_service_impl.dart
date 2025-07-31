@@ -12,7 +12,7 @@ import '../../models/map_item_summary.dart';
 import '../../models/map_layer.dart';
 import '../../models/sticky_note.dart';
 import '../../utils/filename_sanitizer.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../localization_service.dart';
 
 /// VFS地图服务具体实现

@@ -4,7 +4,7 @@ import '../page_registry.dart';
 import '../../pages/vfs/vfs_file_manager_page.dart';
 import '../../config/build_config.dart';
 import '../../config/config_manager.dart';
-import '../../l10n/app_localizations.dart';
+
 import '../../services/localization_service.dart';
 
 /// VFS文件管理器页面模块
